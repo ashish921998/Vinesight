@@ -1,103 +1,140 @@
-import Image from "next/image";
+"use client";
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Sprout, Calculator, FileText, Settings, Activity, Users, Bug, TrendingUp } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { LoginButton } from "@/components/auth/LoginButton";
+import { useTranslation } from "react-i18next";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const { user, loading } = useAuth();
+  const { t } = useTranslation();
+  
+  const features = [
+    {
+      title: t('home.features.farmManagement.title'),
+      description: t('home.features.farmManagement.description'),
+      icon: Sprout,
+      href: "/farms"
+    },
+    {
+      title: t('home.features.calculators.title'),
+      description: t('home.features.calculators.description'),
+      icon: Calculator,
+      href: "/calculators"
+    },
+    {
+      title: t('home.features.diseasePredict.title'),
+      description: t('home.features.diseasePredict.description'),
+      icon: Bug,
+      href: "/disease-prediction"
+    },
+    {
+      title: t('home.features.yieldPredict.title'),
+      description: t('home.features.yieldPredict.description'),
+      icon: TrendingUp,
+      href: "/yield-prediction"
+    },
+    {
+      title: t('home.features.journal.title'),
+      description: t('home.features.journal.description'),
+      icon: FileText,
+      href: "/journal"
+    },
+    {
+      title: t('home.features.analytics.title'),
+      description: t('home.features.analytics.description'),
+      icon: Activity,
+      href: "/analytics"
+    },
+    {
+      title: t('home.features.reminders.title'),
+      description: t('home.features.reminders.description'),
+      icon: Users,
+      href: "/reminders"
+    },
+    {
+      title: t('home.features.settings.title'),
+      description: t('home.features.settings.description'),
+      icon: Settings,
+      href: "/settings"
+    }
+  ];
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <header className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-primary mb-4">
+          🍇 {t('home.title')}
+        </h1>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          {t('home.subtitle')}
+        </p>
+        <p className="text-sm text-muted-foreground mt-2">
+          {t('home.description')}
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {features.map((feature) => {
+          const Icon = feature.icon;
+          return (
+            <Card key={feature.title} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Icon className="h-6 w-6 text-primary" />
+                  <CardTitle className="text-lg">{feature.title}</CardTitle>
+                </div>
+                <CardDescription>{feature.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => window.location.href = feature.href}
+                >
+                  {t('common.buttons.openModule')}
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <div className="mt-12 text-center">
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle className="text-lg">
+              {user ? t('home.gettingStarted.title') : t('home.joinToday.title')}
+            </CardTitle>
+            <CardDescription>
+              {user 
+                ? t('home.gettingStarted.description')
+                : t('home.joinToday.description')
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Button disabled className="w-full">
+                {t('common.loading')}
+              </Button>
+            ) : user ? (
+              <Button 
+                className="w-full"
+                onClick={() => window.location.href = "/farms"}
+              >
+                {t('home.gettingStarted.button')}
+              </Button>
+            ) : (
+              <LoginButton className="w-full">
+                {t('home.joinToday.button')}
+              </LoginButton>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

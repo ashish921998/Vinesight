@@ -1,26 +1,211 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+  }
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Mobile-specific optimizations */
+@layer utilities {
+  /* Better touch targets for mobile */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Smooth scrolling on mobile */
+  html {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    /* Better mobile scrolling performance */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Allow selection for inputs and text content */
+  input, textarea, [contenteditable="true"], p, h1, h2, h3, h4, h5, h6, span {
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
+  
+  /* Better tap highlights */
+  * {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Prevent zoom on input focus on iOS */
+  input, select, textarea {
+    font-size: 16px;
+  }
+  
+  /* Better button press feedback on mobile */
+  button:active,
+  [role="button"]:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Ultra-narrow mobile optimization */
+  @media (max-width: 360px) {
+    /* Smaller padding for very narrow screens */
+    .mobile-container {
+      padding: 12px;
+    }
+    
+    /* Compact top bar */
+    .mobile-top-bar {
+      padding-left: 8px;
+      padding-right: 8px;
+      gap: 8px;
+    }
+    
+    /* Smaller text on very narrow screens */
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.25rem; }
+    h3 { font-size: 1.125rem; }
+    
+    /* Compact buttons */
+    button {
+      min-height: 44px;
+      padding: 10px 16px;
+      font-size: 14px;
+    }
+    
+    /* More compact grid for cards */
+    .mobile-grid {
+      gap: 12px;
+    }
+    
+    /* Tighter card padding */
+    .card-mobile {
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+  }
+
+  /* Optimized form fields for mobile */
+  @media (max-width: 768px) {
+    input[type="number"],
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    select,
+    textarea {
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    
+    /* Better spacing for mobile cards */
+    .card-mobile {
+      margin-bottom: 20px;
+      padding: 16px;
+    }
+    
+    /* Improved mobile navigation */
+    .mobile-nav-item {
+      padding: 18px 24px;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+    }
+    
+    /* Mobile-specific button improvements */
+    button {
+      min-height: 48px;
+      padding: 12px 20px;
+      border-radius: 10px;
+    }
+    
+    /* Better mobile grid layouts */
+    .mobile-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    
+    /* Mobile-optimized text sizes */
+    h1 { font-size: 1.875rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; }
+    
+    /* Improved mobile padding */
+    .mobile-container {
+      padding: 16px;
+    }
+    
+    /* Better mobile card layouts */
+    .mobile-card {
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+  }
+  
+  /* Safe area insets for modern mobile devices */
+  @supports (padding: env(safe-area-inset-top)) {
+    .safe-top {
+      padding-top: env(safe-area-inset-top);
+    }
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
 }

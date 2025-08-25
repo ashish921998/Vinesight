@@ -1,0 +1,31 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with grape green -->
+  <circle cx="256" cy="256" r="240" fill="#059669" stroke="#ffffff" stroke-width="16"/>
+  
+  <!-- Grape cluster -->
+  <g transform="translate(256, 180)">
+    <!-- Stem -->
+    <rect x="-4" y="-40" width="8" height="40" fill="#8B4513"/>
+    
+    <!-- Leaves -->
+    <path d="M-30,-20 Q-40,-35 -25,-45 Q-10,-40 -15,-25 Z" fill="#22C55E"/>
+    <path d="M30,-20 Q40,-35 25,-45 Q10,-40 15,-25 Z" fill="#22C55E"/>
+    
+    <!-- Grape berries arranged in cluster -->
+    <circle cx="0" cy="0" r="20" fill="#7C3AED"/>
+    <circle cx="-25" cy="15" r="18" fill="#7C3AED"/>
+    <circle cx="25" cy="15" r="18" fill="#7C3AED"/>
+    <circle cx="-15" cy="35" r="17" fill="#8B5CF6"/>
+    <circle cx="15" cy="35" r="17" fill="#8B5CF6"/>
+    <circle cx="0" cy="50" r="16" fill="#8B5CF6"/>
+    <circle cx="-25" cy="65" r="15" fill="#A855F7"/>
+    <circle cx="25" cy="65" r="15" fill="#A855F7"/>
+    <circle cx="0" cy="80" r="14" fill="#A855F7"/>
+    <circle cx="-15" cy="95" r="13" fill="#C084FC"/>
+    <circle cx="15" cy="95" r="13" fill="#C084FC"/>
+    <circle cx="0" cy="110" r="12" fill="#C084FC"/>
+  </g>
+  
+  <!-- App name -->
+  <text x="256" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#ffffff">VineSight</text>
+</svg>
