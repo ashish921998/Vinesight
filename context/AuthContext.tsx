@@ -9,6 +9,8 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signInWithGoogle: () => Promise<{ data: any; error: AuthError | null }>;
+  signInWithEmail: (email: string, password: string) => Promise<{ data: any; error: AuthError | null }>;
+  signUpWithEmail: (email: string, password: string) => Promise<{ data: any; error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
 }
 
@@ -80,6 +82,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithEmail = async (email: string, password: string) => {
+    try {
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      return { data, error };
+    } catch (error) {
+      console.error('Email sign-in error:', error);
+      return { data: null, error: error as AuthError };
+    }
+  };
+
+  const signUpWithEmail = async (email: string, password: string) => {
+    try {
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      return { data, error };
+    } catch (error) {
+      console.error('Email sign-up error:', error);
+      return { data: null, error: error as AuthError };
+    }
+  };
+
   const signOut = async () => {
     try {
       const supabase = getSupabaseClient();
@@ -96,6 +126,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     loading,
     signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
     signOut,
   };
 

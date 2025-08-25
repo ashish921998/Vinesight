@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Target, 
   Droplets,
@@ -21,7 +22,9 @@ import {
   Pipette,
   Activity,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Info,
+  Calculator
 } from 'lucide-react';
 import { 
   SystemDischargeCalculator,
@@ -37,6 +40,7 @@ export function SystemDischargeCalculatorComponent() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<SystemResults | null>(null);
   const [comparison, setComparison] = useState<any>(null);
+  const [activeSection, setActiveSection] = useState<'design' | 'specifications' | 'economics' | 'comparison'>('design');
   
   const [formData, setFormData] = useState({
     irrigationMethod: "drip" as const,
@@ -131,35 +135,74 @@ export function SystemDischargeCalculatorComponent() {
 
   return (
     <div className="space-y-6">
-      {/* Farm Selection */}
-      {farms.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              Select Farm
-            </CardTitle>
-            <CardDescription>Choose a farm for irrigation system design</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <div className="flex items-center justify-center gap-2">
+          <Target className="h-6 w-6 text-green-600" />
+          <h2 className="text-xl font-bold text-green-800">System Flow Rate Calculator</h2>
+        </div>
+        <p className="text-sm text-gray-600">
+          Design your irrigation system for optimal water delivery
+        </p>
+      </div>
+
+      {/* Data Source Selection */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-green-600" />
+              <CardTitle className="text-base">Data Source</CardTitle>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                className="text-xs px-3 py-1 bg-green-600 hover:bg-green-700"
+              >
+                My Farms
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {farms.length > 0 ? (
+            <div className="space-y-2">
               {farms.map((farm) => (
-                <Button
+                <div
                   key={farm.id}
-                  variant={selectedFarm?.id === farm.id ? "default" : "outline"}
+                  className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                    selectedFarm?.id === farm.id 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
                   onClick={() => setSelectedFarm(farm)}
-                  className="flex items-center gap-2"
                 >
-                  {farm.name}
-                  <Badge variant="secondary">
-                    {farm.area}ha • {farm.vine_spacing}×{farm.row_spacing}m
-                  </Badge>
-                </Button>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="font-medium text-gray-900 text-sm">{farm.name}</h4>
+                      <p className="text-xs text-gray-500">{farm.area}ha • {farm.vine_spacing}×{farm.row_spacing}m</p>
+                    </div>
+                    {selectedFarm?.id === farm.id && (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-green-700">
+                <Info className="h-4 w-4" />
+                <span className="font-medium text-sm">No Farms Available</span>
+              </div>
+              <p className="text-green-600 text-xs mt-1">
+                Please add a farm first to design irrigation system
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {!selectedFarm ? (
         <Card className="text-center py-12">
@@ -170,622 +213,326 @@ export function SystemDischargeCalculatorComponent() {
           </CardContent>
         </Card>
       ) : (
-        <Tabs defaultValue="design" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="design">System Design</TabsTrigger>
-            <TabsTrigger value="specifications">Specifications</TabsTrigger>
-            <TabsTrigger value="economics">Economics</TabsTrigger>
-            <TabsTrigger value="comparison">Comparison</TabsTrigger>
-          </TabsList>
-
-          {/* Main Design Tab */}
-          <TabsContent value="design" className="space-y-6">
-            {/* Input Form */}
+        <>
+          {/* Mobile-Optimized Input Sections */}
+          <div className="mx-4 sm:mx-0 space-y-4 sm:space-y-3">
+            
+            {/* System Parameters Section */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-6 w-6" />
-                  System Parameters
-                </CardTitle>
-                <CardDescription>
+              <CardHeader 
+                className="pb-4 sm:pb-3 cursor-pointer"
+                onClick={() => setActiveSection(activeSection === 'design' ? 'design' : 'design')}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 sm:gap-2">
+                    <Settings className="h-5 w-5 text-green-500" />
+                    <CardTitle className="text-lg sm:text-base">System Parameters</CardTitle>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">Required</Badge>
+                </div>
+                <CardDescription className="text-sm sm:text-xs">
                   Configure your irrigation system requirements
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* System Type */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Droplets className="h-4 w-4" />
-                    Irrigation Method
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {activeSection === 'design' && (
+                <CardContent className="pt-0 space-y-6 sm:space-y-4">
+                  
+                  {/* Irrigation Method */}
+                  <div>
+                    <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Irrigation Method</Label>
+                    <Select
+                      value={formData.irrigationMethod}
+                      onValueChange={(value: 'drip' | 'sprinkler' | 'surface') => handleInputChange('irrigationMethod', value)}
+                    >
+                      <SelectTrigger className="h-12 sm:h-11 text-base sm:text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="drip">Drip Irrigation</SelectItem>
+                        <SelectItem value="sprinkler">Sprinkler System</SelectItem>
+                        <SelectItem value="surface">Surface Irrigation</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Soil Type and Water Source */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
                     <div>
-                      <Label htmlFor="irrigationMethod">System Type</Label>
-                      <select
-                        id="irrigationMethod"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        value={formData.irrigationMethod}
-                        onChange={(e) => handleInputChange('irrigationMethod', e.target.value)}
-                      >
-                        <option value="drip">Drip Irrigation</option>
-                        <option value="sprinkler">Sprinkler System</option>
-                        <option value="surface">Surface Irrigation</option>
-                      </select>
-                    </div>
-                    <div>
-                      <Label htmlFor="soilType">Soil Type</Label>
-                      <select
-                        id="soilType"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Soil Type</Label>
+                      <Select
                         value={formData.soilType}
-                        onChange={(e) => handleInputChange('soilType', e.target.value)}
+                        onValueChange={(value: 'sandy' | 'loamy' | 'clay') => handleInputChange('soilType', value)}
                       >
-                        <option value="sandy">Sandy Soil</option>
-                        <option value="loamy">Loamy Soil</option>
-                        <option value="clay">Clay Soil</option>
-                      </select>
+                        <SelectTrigger className="h-12 sm:h-11 text-base sm:text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="sandy">Sandy Soil</SelectItem>
+                          <SelectItem value="loamy">Loamy Soil</SelectItem>
+                          <SelectItem value="clay">Clay Soil</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
-                      <Label htmlFor="waterSource">Water Source</Label>
-                      <select
-                        id="waterSource"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Water Source</Label>
+                      <Select
                         value={formData.waterSource}
-                        onChange={(e) => handleInputChange('waterSource', e.target.value)}
+                        onValueChange={(value: 'bore' | 'canal' | 'tank' | 'river') => handleInputChange('waterSource', value)}
                       >
-                        <option value="bore">Bore Well</option>
-                        <option value="canal">Canal Water</option>
-                        <option value="tank">Storage Tank</option>
-                        <option value="river">River/Stream</option>
-                      </select>
+                        <SelectTrigger className="h-12 sm:h-11 text-base sm:text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="bore">Bore Well</SelectItem>
+                          <SelectItem value="canal">Canal Water</SelectItem>
+                          <SelectItem value="tank">Storage Tank</SelectItem>
+                          <SelectItem value="river">River/Stream</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
-                </div>
 
-                {/* Field Conditions */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Activity className="h-4 w-4" />
-                    Field Conditions
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Field Conditions */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
                     <div>
-                      <Label htmlFor="slope">Field Slope (%)</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Field Slope (%)</Label>
                       <Input
-                        id="slope"
                         type="number"
                         step="0.1"
-                        placeholder="e.g., 2.5"
+                        placeholder="2.5"
                         value={formData.slope}
                         onChange={(e) => handleInputChange('slope', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="availablePressure">Available Pressure (bar)</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Available Pressure (bar)</Label>
                       <Input
-                        id="availablePressure"
                         type="number"
                         step="0.1"
-                        placeholder="e.g., 3.5"
+                        placeholder="3.5"
                         value={formData.availablePressure}
                         onChange={(e) => handleInputChange('availablePressure', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="dailyIrrigationHours">Daily Irrigation Hours</Label>
-                      <Input
-                        id="dailyIrrigationHours"
-                        type="number"
-                        step="0.5"
-                        placeholder="e.g., 8"
-                        value={formData.dailyIrrigationHours}
-                        onChange={(e) => handleInputChange('dailyIrrigationHours', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
                       />
                     </div>
                   </div>
-                </div>
 
-                {/* Water Requirements */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Gauge className="h-4 w-4" />
-                    Water Requirements
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Water Requirements */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
                     <div>
-                      <Label htmlFor="peakETc">Peak ETc (mm/day)</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Daily Irrigation Hours</Label>
                       <Input
-                        id="peakETc"
+                        type="number"
+                        step="0.5"
+                        placeholder="8"
+                        value={formData.dailyIrrigationHours}
+                        onChange={(e) => handleInputChange('dailyIrrigationHours', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Peak ETc (mm/day)</Label>
+                      <Input
                         type="number"
                         step="0.1"
-                        placeholder="e.g., 6.5"
+                        placeholder="6.5"
                         value={formData.peakETc}
                         onChange={(e) => handleInputChange('peakETc', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-sm sm:text-xs text-green-600 mt-2">
                         Use ETc Calculator to determine this value
                       </p>
                     </div>
                   </div>
-                </div>
-
-                <Button 
-                  onClick={handleCalculate}
-                  disabled={loading || !selectedFarm}
-                  className="w-full"
-                >
-                  {loading ? 'Designing System...' : 'Design Irrigation System'}
-                </Button>
-              </CardContent>
+                </CardContent>
+              )}
             </Card>
 
             {/* Emitter Recommendations */}
             {emitterRecommendations && formData.irrigationMethod === 'drip' && (
-              <Card className="border-blue-200 bg-blue-50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-blue-800">
-                    <Target className="h-5 w-5" />
+              <Card className="border-green-200 bg-green-50">
+                <CardHeader className="pb-4 sm:pb-3">
+                  <CardTitle className="flex items-center gap-2 text-green-800 text-lg sm:text-base">
+                    <Target className="h-6 w-6 sm:h-5 sm:w-5" />
                     Emitter Recommendations
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
+                <CardContent className="pt-0">
+                  <div className="space-y-4 sm:space-y-3">
                     <div>
-                      <span className="font-semibold text-blue-900">Recommended: </span>
-                      <Badge className="bg-blue-600 text-white">{emitterRecommendations.recommended}</Badge>
+                      <span className="font-semibold text-green-900 text-base sm:text-sm">Recommended: </span>
+                      <Badge className="bg-green-600 text-white text-sm">Standard Drip (4 L/hr)</Badge>
                     </div>
                     <div>
-                      <span className="font-semibold text-blue-900">Alternatives: </span>
+                      <span className="font-semibold text-green-900 text-base sm:text-sm">Alternatives: </span>
                       {emitterRecommendations.alternatives.map((alt, index) => (
-                        <Badge key={index} variant="outline" className="mr-2">
+                        <Badge key={index} variant="outline" className="mr-2 mb-2 text-sm">
                           {alt}
                         </Badge>
                       ))}
                     </div>
-                    <p className="text-sm text-blue-800">{emitterRecommendations.reasoning}</p>
+                    <p className="text-base sm:text-sm text-green-800">{emitterRecommendations.reasoning}</p>
                   </div>
                 </CardContent>
               </Card>
             )}
+          </div>
 
-            {/* Results */}
-            {results && (
-              <div className="space-y-6">
-                {/* System Overview */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5" />
-                      System Design Results
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {results.designParameters.totalVines.toLocaleString()}
-                        </div>
-                        <div className="text-sm text-blue-700">Total Vines</div>
+          {/* Calculate Button */}
+          <div className="px-4 sm:px-0 mt-6">
+            <Button 
+              onClick={handleCalculate}
+              disabled={loading || !selectedFarm}
+              className="w-full h-14 sm:h-12 bg-green-600 hover:bg-green-700 text-white font-medium text-lg sm:text-base"
+            >
+              {loading ? (
+                <>
+                  <Calculator className="mr-3 sm:mr-2 h-5 w-5 sm:h-4 sm:w-4 animate-pulse" />
+                  Designing System...
+                </>
+              ) : (
+                <>
+                  <Calculator className="mr-3 sm:mr-2 h-5 w-5 sm:h-4 sm:w-4" />
+                  Design Irrigation System
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Results Section */}
+          {results && (
+            <div className="mx-4 space-y-4">
+              
+              {/* System Overview */}
+              <Card className="border-green-200 bg-green-50">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-green-600" />
+                      <CardTitle className="text-lg text-green-800">System Design Results</CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white rounded-lg p-3 text-center border border-green-200">
+                      <div className="text-xl font-bold text-green-700">
+                        {results.designParameters.totalVines.toLocaleString()}
                       </div>
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">
-                          {results.designParameters.totalEmitters.toLocaleString()}
-                        </div>
-                        <div className="text-sm text-green-700">Emitters/Sprinklers</div>
+                      <div className="text-xs font-medium text-green-600">Total Vines</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 text-center border border-green-200">
+                      <div className="text-xl font-bold text-green-700">
+                        {results.designParameters.totalEmitters.toLocaleString()}
                       </div>
-                      <div className="text-center p-4 bg-purple-50 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-600">
-                          {results.designParameters.systemFlowRate.toLocaleString()}
-                        </div>
-                        <div className="text-sm text-purple-700">System Flow (L/hr)</div>
+                      <div className="text-xs font-medium text-green-600">Emitters/Sprinklers</div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white rounded-lg p-3 text-center border border-green-200">
+                      <div className="text-xl font-bold text-green-700">
+                        {results.designParameters.systemFlowRate.toLocaleString()}
                       </div>
-                      <div className="text-center p-4 bg-orange-50 rounded-lg">
-                        <div className="text-2xl font-bold text-orange-600">
-                          {results.designParameters.pumpCapacity}
-                        </div>
-                        <div className="text-sm text-orange-700">Pump Capacity (HP)</div>
+                      <div className="text-xs font-medium text-green-600">System Flow (L/hr)</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 text-center border border-green-200">
+                      <div className="text-xl font-bold text-green-700">
+                        {results.designParameters.pumpCapacity}
+                      </div>
+                      <div className="text-xs font-medium text-green-600">Pump Capacity (HP)</div>
+                    </div>
+                  </div>
+
+                  <Separator className="my-4" />
+
+                  {/* System Efficiency */}
+                  <div>
+                    <h4 className="font-semibold mb-3 text-sm text-green-800">System Efficiency</h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className={`p-3 rounded-lg ${getEfficiencyColor(results.efficiency.distributionUniformity)}`}>
+                        <div className="font-semibold text-sm">Distribution Uniformity</div>
+                        <div className="text-xl font-bold">{results.efficiency.distributionUniformity}%</div>
+                      </div>
+                      <div className={`p-3 rounded-lg ${getEfficiencyColor(results.efficiency.applicationEfficiency)}`}>
+                        <div className="font-semibold text-sm">Application Efficiency</div>
+                        <div className="text-xl font-bold">{results.efficiency.applicationEfficiency}%</div>
+                      </div>
+                      <div className={`p-3 rounded-lg ${getEfficiencyColor(results.efficiency.waterUseEfficiency)}`}>
+                        <div className="font-semibold text-sm">Water Use Efficiency</div>
+                        <div className="text-xl font-bold">{results.efficiency.waterUseEfficiency}%</div>
                       </div>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-                    <Separator className="my-6" />
-
-                    {/* System Efficiency */}
+              {/* Recommendations */}
+              <Card className="border-green-200 bg-green-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-green-800 text-base">
+                    <CheckCircle className="h-5 w-5" />
+                    Design Recommendations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0 space-y-4">
+                  {results.recommendations.systemDesign.length > 0 && (
                     <div>
-                      <h4 className="font-semibold mb-4">System Efficiency</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className={`p-4 rounded-lg ${getEfficiencyColor(results.efficiency.distributionUniformity)}`}>
-                          <div className="font-semibold">Distribution Uniformity</div>
-                          <div className="text-2xl font-bold">{results.efficiency.distributionUniformity}%</div>
-                        </div>
-                        <div className={`p-4 rounded-lg ${getEfficiencyColor(results.efficiency.applicationEfficiency)}`}>
-                          <div className="font-semibold">Application Efficiency</div>
-                          <div className="text-2xl font-bold">{results.efficiency.applicationEfficiency}%</div>
-                        </div>
-                        <div className={`p-4 rounded-lg ${getEfficiencyColor(results.efficiency.waterUseEfficiency)}`}>
-                          <div className="font-semibold">Water Use Efficiency</div>
-                          <div className="text-2xl font-bold">{results.efficiency.waterUseEfficiency}%</div>
-                        </div>
-                      </div>
+                      <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm text-green-700">
+                        <Settings className="h-4 w-4 text-green-600" />
+                        System Design
+                      </h4>
+                      <ul className="space-y-1">
+                        {results.recommendations.systemDesign.map((rec, index) => (
+                          <li key={index} className="text-sm flex items-start gap-2 text-green-700">
+                            <span className="text-green-600">•</span>
+                            {rec}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  </CardContent>
-                </Card>
+                  )}
 
-                {/* Recommendations */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5" />
-                      Design Recommendations
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {results.recommendations.systemDesign.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold mb-2 flex items-center gap-2">
-                          <Settings className="h-4 w-4 text-blue-600" />
-                          System Design
-                        </h4>
-                        <ul className="space-y-1">
-                          {results.recommendations.systemDesign.map((rec, index) => (
-                            <li key={index} className="text-sm flex items-start gap-2">
-                              <span className="text-blue-600">•</span>
-                              {rec}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {results.recommendations.maintenance.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold mb-2 flex items-center gap-2">
-                          <Wrench className="h-4 w-4 text-green-600" />
-                          Maintenance
-                        </h4>
-                        <ul className="space-y-1">
-                          {results.recommendations.maintenance.map((rec, index) => (
-                            <li key={index} className="text-sm flex items-start gap-2">
-                              <span className="text-green-600">•</span>
-                              {rec}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {results.recommendations.optimization.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold mb-2 flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-purple-600" />
-                          Optimization
-                        </h4>
-                        <ul className="space-y-1">
-                          {results.recommendations.optimization.map((rec, index) => (
-                            <li key={index} className="text-sm flex items-start gap-2">
-                              <span className="text-purple-600">•</span>
-                              {rec}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Technical Specifications Tab */}
-          <TabsContent value="specifications">
-            {results ? (
-              <div className="space-y-6">
-                {/* Pump Specifications */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Zap className="h-5 w-5" />
-                      Pump Specifications
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Capacity:</span>
-                          <span className="font-medium">{results.technicalSpecs.pumpSpecifications.capacity.toLocaleString()} L/hr</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Head:</span>
-                          <span className="font-medium">{results.technicalSpecs.pumpSpecifications.head} meters</span>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Power Required:</span>
-                          <span className="font-medium">{results.technicalSpecs.pumpSpecifications.powerRequired} HP</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Efficiency:</span>
-                          <span className="font-medium">{results.technicalSpecs.pumpSpecifications.efficiency}%</span>
-                        </div>
-                      </div>
+                  {results.recommendations.maintenance.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm text-green-700">
+                        <Wrench className="h-4 w-4 text-green-600" />
+                        Maintenance
+                      </h4>
+                      <ul className="space-y-1">
+                        {results.recommendations.maintenance.map((rec, index) => (
+                          <li key={index} className="text-sm flex items-start gap-2 text-green-700">
+                            <span className="text-green-600">•</span>
+                            {rec}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  </CardContent>
-                </Card>
+                  )}
 
-                {/* Pipe Network */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5" />
-                      Pipe Network Design
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="p-4 border rounded-lg">
-                          <h4 className="font-semibold mb-2">Main Line</h4>
-                          <div className="space-y-1 text-sm">
-                            <div>Diameter: {results.technicalSpecs.pipeNetwork.mainline.diameter}mm</div>
-                            <div>Material: {results.technicalSpecs.pipeNetwork.mainline.material}</div>
-                            <div>Pressure: {results.technicalSpecs.pipeNetwork.mainline.pressure} bar</div>
-                            <div>Length: {results.technicalSpecs.pipeNetwork.mainline.length}m</div>
-                          </div>
-                        </div>
-                        <div className="p-4 border rounded-lg">
-                          <h4 className="font-semibold mb-2">Sub-Main</h4>
-                          <div className="space-y-1 text-sm">
-                            <div>Diameter: {results.technicalSpecs.pipeNetwork.submain.diameter}mm</div>
-                            <div>Material: {results.technicalSpecs.pipeNetwork.submain.material}</div>
-                            <div>Pressure: {results.technicalSpecs.pipeNetwork.submain.pressure} bar</div>
-                            <div>Length: {results.technicalSpecs.pipeNetwork.submain.length}m</div>
-                          </div>
-                        </div>
-                        <div className="p-4 border rounded-lg">
-                          <h4 className="font-semibold mb-2">Laterals</h4>
-                          <div className="space-y-1 text-sm">
-                            <div>Diameter: {results.technicalSpecs.pipeNetwork.lateral.diameter}mm</div>
-                            <div>Material: {results.technicalSpecs.pipeNetwork.lateral.material}</div>
-                            <div>Pressure: {results.technicalSpecs.pipeNetwork.lateral.pressure} bar</div>
-                            <div>Total Length: {results.technicalSpecs.pipeNetwork.lateral.length.toLocaleString()}m</div>
-                          </div>
-                        </div>
-                      </div>
+                  {results.recommendations.optimization.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm text-green-700">
+                        <TrendingUp className="h-4 w-4 text-green-600" />
+                        Optimization
+                      </h4>
+                      <ul className="space-y-1">
+                        {results.recommendations.optimization.map((rec, index) => (
+                          <li key={index} className="text-sm flex items-start gap-2 text-green-700">
+                            <span className="text-green-600">•</span>
+                            {rec}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  </CardContent>
-                </Card>
-
-                {/* Additional Systems */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Activity className="h-5 w-5" />
-                      Additional Systems
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-3">
-                        <h4 className="font-semibold">Filtration System</h4>
-                        <div className="text-sm space-y-1">
-                          <div>Type: {results.technicalSpecs.filtrationSystem.type}</div>
-                          <div>Capacity: {results.technicalSpecs.filtrationSystem.capacity.toLocaleString()} L/hr</div>
-                          <div>Cost: {formatCurrency(results.technicalSpecs.filtrationSystem.cost)}</div>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <h4 className="font-semibold">Fertigation System</h4>
-                        <div className="text-sm space-y-1">
-                          <div>Tank Capacity: {results.technicalSpecs.fertigation.tankCapacity} L</div>
-                          <div>Injection Rate: {results.technicalSpecs.fertigation.injectionRate} L/hr</div>
-                          <div>Cost: {formatCurrency(results.technicalSpecs.fertigation.cost)}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <Settings className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Specifications Available</h3>
-                  <p className="text-muted-foreground">Design your irrigation system first to see technical specifications</p>
+                  )}
                 </CardContent>
               </Card>
-            )}
-          </TabsContent>
-
-          {/* Economics Tab */}
-          <TabsContent value="economics">
-            {results ? (
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <IndianRupee className="h-5 w-5" />
-                      Economic Analysis
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        <div className="text-center p-4 bg-green-50 rounded-lg">
-                          <div className="text-3xl font-bold text-green-600">
-                            {formatCurrency(results.economics.initialCost)}
-                          </div>
-                          <div className="text-sm text-green-700">Initial Investment</div>
-                        </div>
-                        <div className="text-center p-4 bg-blue-50 rounded-lg">
-                          <div className="text-3xl font-bold text-blue-600">
-                            {formatCurrency(results.economics.annualOperatingCost)}
-                          </div>
-                          <div className="text-sm text-blue-700">Annual Operating Cost</div>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="text-center p-4 bg-purple-50 rounded-lg">
-                          <div className="text-3xl font-bold text-purple-600">
-                            {formatCurrency(results.economics.costPerHectare)}
-                          </div>
-                          <div className="text-sm text-purple-700">Cost per Hectare</div>
-                        </div>
-                        <div className="text-center p-4 bg-orange-50 rounded-lg">
-                          <div className="text-3xl font-bold text-orange-600">
-                            {results.economics.paybackPeriod}
-                          </div>
-                          <div className="text-sm text-orange-700">Payback Period (years)</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Separator className="my-6" />
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="font-semibold mb-3">Cost Breakdown</h4>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span>Equipment & Materials:</span>
-                            <span>{formatCurrency(results.economics.initialCost * 0.75)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Installation:</span>
-                            <span>{formatCurrency(results.economics.initialCost * 0.15)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Design & Engineering:</span>
-                            <span>{formatCurrency(results.economics.initialCost * 0.10)}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-3">Annual Savings</h4>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span>Water Savings:</span>
-                            <span className="text-green-600">{formatCurrency(selectedFarm!.area * 25000)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Labor Reduction:</span>
-                            <span className="text-green-600">{formatCurrency(selectedFarm!.area * 15000)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Yield Improvement:</span>
-                            <span className="text-green-600">{formatCurrency(selectedFarm!.area * 35000)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <IndianRupee className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Economic Analysis Available</h3>
-                  <p className="text-muted-foreground">Design your irrigation system first to see cost analysis</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* Comparison Tab */}
-          <TabsContent value="comparison">
-            {comparison ? (
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5" />
-                      System Comparison: Drip vs Sprinkler
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="font-semibold mb-3">Drip Irrigation</h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span>Water Use Efficiency:</span>
-                            <span className="font-medium">{comparison.drip.efficiency.waterUseEfficiency}%</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Initial Cost:</span>
-                            <span className="font-medium">{formatCurrency(comparison.drip.economics.initialCost)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Distribution Uniformity:</span>
-                            <span className="font-medium">{comparison.drip.efficiency.distributionUniformity}%</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-3">Sprinkler System</h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span>Water Use Efficiency:</span>
-                            <span className="font-medium">{comparison.sprinkler.efficiency.waterUseEfficiency}%</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Initial Cost:</span>
-                            <span className="font-medium">{formatCurrency(comparison.sprinkler.economics.initialCost)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Distribution Uniformity:</span>
-                            <span className="font-medium">{comparison.sprinkler.efficiency.distributionUniformity}%</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Separator className="my-6" />
-
-                    <div className="space-y-4">
-                      <div className="p-4 border rounded-lg">
-                        <h4 className="font-semibold mb-2 flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          Winner Analysis
-                        </h4>
-                        <div className="space-y-2 text-sm">
-                          <div>
-                            <strong>Most Efficient:</strong> {comparison.comparison.efficiency.winner} 
-                            ({comparison.comparison.efficiency.difference.toFixed(1)}% advantage)
-                          </div>
-                          <div>
-                            <strong>Most Cost-Effective:</strong> {comparison.comparison.cost.winner} 
-                            ({formatCurrency(comparison.comparison.cost.difference)} difference)
-                          </div>
-                          <div>
-                            <strong>Easiest Maintenance:</strong> {comparison.comparison.maintenance.winner}
-                          </div>
-                          <div>
-                            <strong>Best Suited:</strong> {comparison.comparison.suitability.winner}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <h4 className="font-semibold mb-2 text-blue-900">Recommendation</h4>
-                        <p className="text-sm text-blue-800">{comparison.comparison.suitability.reasoning}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Comparison Available</h3>
-                  <p className="text-muted-foreground">Select drip irrigation and calculate to see system comparison</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

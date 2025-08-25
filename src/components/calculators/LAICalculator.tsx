@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Leaf, 
   TreePine,
@@ -20,7 +20,8 @@ import {
   CheckCircle,
   Info,
   Calendar,
-  BarChart3
+  BarChart3,
+  Calculator
 } from 'lucide-react';
 import { 
   LAICalculator,
@@ -35,6 +36,7 @@ export function LAICalculatorComponent() {
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<LAIResults | null>(null);
+  const [activeSection, setActiveSection] = useState<'measurement' | 'results' | 'analysis'>('measurement');
   
   const [formData, setFormData] = useState({
     leavesPerShoot: "",
@@ -104,23 +106,32 @@ export function LAICalculatorComponent() {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const getCanopyDensityColor = (density: LAIResults['canopyDensity']) => {
-    switch (density) {
-      case 'sparse': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'optimal': return 'text-green-600 bg-green-50 border-green-200';
-      case 'dense': return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'overcrowded': return 'text-red-600 bg-red-50 border-red-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
-    }
+  const resetForm = () => {
+    setFormData({
+      leavesPerShoot: "",
+      shootsPerVine: "",
+      avgLeafLength: "",
+      avgLeafWidth: "",
+      canopyHeight: "",
+      canopyWidth: "",
+      leafShape: "heart",
+      trellisSystem: "vsp",
+      season: "summer",
+      productionGoal: "wine"
+    });
+    setResults(null);
   };
 
   const getQualityIcon = (rating: string) => {
     switch (rating) {
       case 'excellent': return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'good': return <CheckCircle className="h-4 w-4 text-blue-600" />;
+      case 'good': return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'adequate': return <Info className="h-4 w-4 text-yellow-600" />;
       case 'poor': return <AlertTriangle className="h-4 w-4 text-red-600" />;
       case 'high': return <AlertTriangle className="h-4 w-4 text-red-600" />;
@@ -135,58 +146,74 @@ export function LAICalculatorComponent() {
 
   return (
     <div className="space-y-6">
-      {/* Farm Selection */}
-      {farms.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TreePine className="h-5 w-5" />
-              Select Farm
-            </CardTitle>
-            <CardDescription>Choose a farm to calculate LAI for canopy management</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {farms.map((farm) => (
-                <Button
-                  key={farm.id}
-                  variant={selectedFarm?.id === farm.id ? "default" : "outline"}
-                  onClick={() => setSelectedFarm(farm)}
-                  className="flex items-center gap-2"
-                >
-                  {farm.name}
-                  <Badge variant="secondary">
-                    {farm.vine_spacing}×{farm.row_spacing}m
-                  </Badge>
-                </Button>
-              ))}
-            </div>
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <div className="flex items-center justify-center gap-2">
+          <Leaf className="h-6 w-6 text-green-600" />
+          <h2 className="text-xl font-bold text-green-800">Leaf Coverage Calculator</h2>
+        </div>
+        <p className="text-sm text-gray-600">
+          Measure how well your vines cover the ground for optimal canopy management
+        </p>
+      </div>
 
-            {selectedFarm && (
-              <div className="mt-4 p-4 bg-muted rounded-lg">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Variety:</span>
-                    <div className="font-medium">{selectedFarm.grape_variety}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Area:</span>
-                    <div className="font-medium">{selectedFarm.area} ha</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Vine Spacing:</span>
-                    <div className="font-medium">{selectedFarm.vine_spacing} m</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Row Spacing:</span>
-                    <div className="font-medium">{selectedFarm.row_spacing} m</div>
+      {/* Data Source Selection */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TreePine className="h-5 w-5 text-green-600" />
+              <CardTitle className="text-base">Data Source</CardTitle>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                className="text-xs px-3 py-1 bg-green-600 hover:bg-green-700"
+              >
+                My Farms
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {farms.length > 0 ? (
+            <div className="space-y-2">
+              {farms.map((farm) => (
+                <div
+                  key={farm.id}
+                  className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                    selectedFarm?.id === farm.id 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => setSelectedFarm(farm)}
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="font-medium text-gray-900 text-sm">{farm.name}</h4>
+                      <p className="text-xs text-gray-500">{farm.area}ha • {farm.vine_spacing}×{farm.row_spacing}m</p>
+                    </div>
+                    {selectedFarm?.id === farm.id && (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    )}
                   </div>
                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-green-700">
+                <Info className="h-4 w-4" />
+                <span className="font-medium text-sm">No Farms Available</span>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+              <p className="text-green-600 text-xs mt-1">
+                Please add a farm first to calculate LAI
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {!selectedFarm ? (
         <Card className="text-center py-12">
@@ -197,460 +224,313 @@ export function LAICalculatorComponent() {
           </CardContent>
         </Card>
       ) : (
-        <Tabs defaultValue="calculator" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="calculator">LAI Calculator</TabsTrigger>
-            <TabsTrigger value="targets">Optimal Targets</TabsTrigger>
-            <TabsTrigger value="monitoring">Seasonal Schedule</TabsTrigger>
-          </TabsList>
-
-          {/* Main Calculator */}
-          <TabsContent value="calculator" className="space-y-6">
-            {/* Input Form */}
+        <>
+          {/* Mobile-Optimized Input Sections */}
+          <div className="mx-4 sm:mx-0 space-y-4 sm:space-y-3">
+            
+            {/* Canopy Measurements Section */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Leaf className="h-6 w-6" />
-                  Canopy Measurements
-                </CardTitle>
-                <CardDescription>
+              <CardHeader 
+                className="pb-4 sm:pb-3 cursor-pointer"
+                onClick={() => setActiveSection(activeSection === 'measurement' ? 'measurement' : 'measurement')}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 sm:gap-2">
+                    <Leaf className="h-5 w-5 text-green-500" />
+                    <CardTitle className="text-lg sm:text-base">Canopy Measurements</CardTitle>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">Required</Badge>
+                </div>
+                <CardDescription className="text-sm sm:text-xs">
                   Enter your vineyard canopy measurements for LAI calculation
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Vine Structure */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <TreePine className="h-4 w-4" />
-                    Vine Structure
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {activeSection === 'measurement' && (
+                <CardContent className="pt-0 space-y-6 sm:space-y-4">
+                  
+                  {/* Vine Structure */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
                     <div>
-                      <Label htmlFor="shootsPerVine">Shoots per Vine</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Shoots per Vine</Label>
                       <Input
-                        id="shootsPerVine"
                         type="number"
-                        placeholder="e.g., 25"
+                        placeholder="25"
                         value={formData.shootsPerVine}
                         onChange={(e) => handleInputChange('shootsPerVine', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="leavesPerShoot">Leaves per Shoot</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Leaves per Shoot</Label>
                       <Input
-                        id="leavesPerShoot"
                         type="number"
-                        placeholder="e.g., 18"
+                        placeholder="18"
                         value={formData.leavesPerShoot}
                         onChange={(e) => handleInputChange('leavesPerShoot', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
                       />
                     </div>
                   </div>
-                </div>
 
-                {/* Leaf Characteristics */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Leaf className="h-4 w-4" />
-                    Leaf Characteristics
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Leaf Characteristics */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
                     <div>
-                      <Label htmlFor="avgLeafLength">Average Leaf Length (cm)</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Avg Leaf Length (cm)</Label>
                       <Input
-                        id="avgLeafLength"
                         type="number"
                         step="0.1"
-                        placeholder="e.g., 15.5"
+                        placeholder="15.5"
                         value={formData.avgLeafLength}
                         onChange={(e) => handleInputChange('avgLeafLength', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="avgLeafWidth">Average Leaf Width (cm)</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Avg Leaf Width (cm)</Label>
                       <Input
-                        id="avgLeafWidth"
                         type="number"
                         step="0.1"
-                        placeholder="e.g., 14.0"
+                        placeholder="14.0"
                         value={formData.avgLeafWidth}
                         onChange={(e) => handleInputChange('avgLeafWidth', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="leafShape">Leaf Shape</Label>
-                      <select
-                        id="leafShape"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                        value={formData.leafShape}
-                        onChange={(e) => handleInputChange('leafShape', e.target.value)}
-                      >
-                        <option value="heart">Heart-shaped</option>
-                        <option value="round">Round</option>
-                        <option value="lobed">Deeply lobed</option>
-                      </select>
-                    </div>
                   </div>
-                </div>
 
-                {/* Canopy Architecture */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Target className="h-4 w-4" />
-                    Canopy Architecture
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Canopy Dimensions */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
                     <div>
-                      <Label htmlFor="canopyHeight">Canopy Height (m)</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Canopy Height (m)</Label>
                       <Input
-                        id="canopyHeight"
                         type="number"
                         step="0.1"
-                        placeholder="e.g., 2.5"
+                        placeholder="2.5"
                         value={formData.canopyHeight}
                         onChange={(e) => handleInputChange('canopyHeight', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="canopyWidth">Canopy Width (m)</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Canopy Width (m)</Label>
                       <Input
-                        id="canopyWidth"
                         type="number"
                         step="0.1"
-                        placeholder="e.g., 1.2"
+                        placeholder="1.8"
                         value={formData.canopyWidth}
                         onChange={(e) => handleInputChange('canopyWidth', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="trellisSystem">Trellis System</Label>
-                      <select
-                        id="trellisSystem"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                        value={formData.trellisSystem}
-                        onChange={(e) => handleInputChange('trellisSystem', e.target.value)}
-                      >
-                        <option value="vsp">VSP (Vertical Shoot Positioning)</option>
-                        <option value="geneva">Geneva Double Curtain</option>
-                        <option value="scott-henry">Scott Henry</option>
-                        <option value="lyre">Lyre System</option>
-                        <option value="pergola">Pergola</option>
-                      </select>
-                    </div>
                   </div>
-                </div>
 
-                {/* Context Settings */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Context
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Growth Parameters */}
+                  <div className="grid grid-cols-1 gap-4 sm:gap-3">
                     <div>
-                      <Label htmlFor="season">Current Season</Label>
-                      <select
-                        id="season"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Growth Stage</Label>
+                      <Select
                         value={formData.season}
-                        onChange={(e) => handleInputChange('season', e.target.value)}
+                        onValueChange={(value: 'dormant' | 'bud_break' | 'flowering' | 'fruit_set' | 'veraison' | 'harvest' | 'post_harvest') => handleInputChange('season', value)}
                       >
-                        <option value="spring">Spring</option>
-                        <option value="summer">Summer</option>
-                        <option value="autumn">Autumn</option>
-                      </select>
+                        <SelectTrigger className="h-12 sm:h-11 text-base sm:text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="dormant">Dormant (Dec-Jan)</SelectItem>
+                          <SelectItem value="bud_break">Bud Break (Feb-Mar)</SelectItem>
+                          <SelectItem value="flowering">Flowering (Apr-May)</SelectItem>
+                          <SelectItem value="fruit_set">Fruit Set (May-Jun)</SelectItem>
+                          <SelectItem value="veraison">Veraison (Jul-Aug)</SelectItem>
+                          <SelectItem value="harvest">Harvest (Aug-Oct)</SelectItem>
+                          <SelectItem value="post_harvest">Post Harvest (Oct-Nov)</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
-                      <Label htmlFor="productionGoal">Production Goal</Label>
-                      <select
-                        id="productionGoal"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Production Goal</Label>
+                      <Select
                         value={formData.productionGoal}
-                        onChange={(e) => handleInputChange('productionGoal', e.target.value)}
+                        onValueChange={(value: 'wine' | 'table' | 'raisin') => handleInputChange('productionGoal', value)}
                       >
-                        <option value="table">Table Grapes</option>
-                        <option value="wine">Wine Grapes</option>
-                        <option value="raisin">Raisin Production</option>
-                      </select>
+                        <SelectTrigger className="h-12 sm:h-11 text-base sm:text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="wine">Wine Grapes</SelectItem>
+                          <SelectItem value="table">Table Grapes</SelectItem>
+                          <SelectItem value="raisin">Raisin Production</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
-                </div>
+                </CardContent>
+              )}
+            </Card>
+          </div>
 
-                <Button 
-                  onClick={handleCalculate}
-                  disabled={loading || !selectedFarm}
-                  className="w-full"
+          {/* Calculate Button */}
+          <div className="px-4 sm:px-0 mt-6">
+            <div className="flex gap-3 sm:gap-2">
+              <Button 
+                onClick={handleCalculate}
+                disabled={loading || !selectedFarm}
+                className="flex-1 h-14 sm:h-12 bg-green-600 hover:bg-green-700 text-white font-medium text-lg sm:text-base"
+              >
+                {loading ? (
+                  <>
+                    <Calculator className="mr-3 sm:mr-2 h-5 w-5 sm:h-4 sm:w-4 animate-pulse" />
+                    Calculating...
+                  </>
+                ) : (
+                  <>
+                    <Calculator className="mr-3 sm:mr-2 h-5 w-5 sm:h-4 sm:w-4" />
+                    Calculate LAI
+                  </>
+                )}
+              </Button>
+              {results && (
+                <Button
+                  variant="outline"
+                  onClick={resetForm}
+                  className="px-6 sm:px-4 h-14 sm:h-12 text-lg sm:text-base"
                 >
-                  {loading ? 'Calculating...' : 'Calculate LAI'}
+                  Reset
                 </Button>
-              </CardContent>
-            </Card>
-
-            {/* Results */}
-            {results && (
-              <div className="space-y-6">
-                {/* Key Metrics */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5" />
-                      LAI Results
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-3xl font-bold text-blue-600">{results.lai}</div>
-                        <div className="text-sm text-blue-700">Leaf Area Index</div>
-                      </div>
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <div className="text-3xl font-bold text-green-600">{results.lightInterception}%</div>
-                        <div className="text-sm text-green-700">Light Interception</div>
-                      </div>
-                      <div className="text-center p-4 bg-purple-50 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-600">{results.leafAreaPerVine}</div>
-                        <div className="text-sm text-purple-700">m² per Vine</div>
-                      </div>
-                      <div className="text-center p-4 bg-orange-50 rounded-lg">
-                        <div className="text-2xl font-bold text-orange-600">{results.plantDensity}</div>
-                        <div className="text-sm text-orange-700">Vines per Ha</div>
-                      </div>
-                    </div>
-
-                    <Separator className="my-6" />
-
-                    {/* Canopy Density Assessment */}
-                    <div className={`p-4 rounded-lg border ${getCanopyDensityColor(results.canopyDensity)}`}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <TreePine className="h-5 w-5" />
-                        <span className="font-semibold">
-                          Canopy Density: {results.canopyDensity.charAt(0).toUpperCase() + results.canopyDensity.slice(1)}
-                        </span>
-                      </div>
-                      <div className="text-sm">
-                        Current LAI of {results.lai} indicates {results.canopyDensity} canopy conditions
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Quality Metrics */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Eye className="h-5 w-5" />
-                      Quality Assessment
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                        <div>
-                          <div className="font-medium">Fruit Exposure</div>
-                          <div className="text-sm text-muted-foreground">Light penetration to fruit</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getQualityIcon(results.qualityMetrics.fruitExposure)}
-                          <span className="font-medium capitalize">{results.qualityMetrics.fruitExposure}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                        <div>
-                          <div className="font-medium">Air Flow</div>
-                          <div className="text-sm text-muted-foreground">Ventilation through canopy</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getQualityIcon(results.qualityMetrics.airflow)}
-                          <span className="font-medium capitalize">{results.qualityMetrics.airflow}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                        <div>
-                          <div className="font-medium">Disease Risk</div>
-                          <div className="text-sm text-muted-foreground">Humidity and air circulation</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getQualityIcon(results.qualityMetrics.diseaseRisk)}
-                          <span className="font-medium capitalize">{results.qualityMetrics.diseaseRisk}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Recommendations */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Target className="h-5 w-5" />
-                      Management Recommendations
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {results.recommendations.canopyManagement.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold mb-2 flex items-center gap-2">
-                          <Leaf className="h-4 w-4 text-green-600" />
-                          Canopy Management
-                        </h4>
-                        <ul className="space-y-1">
-                          {results.recommendations.canopyManagement.map((rec, index) => (
-                            <li key={index} className="text-sm flex items-start gap-2">
-                              <span className="text-green-600">•</span>
-                              {rec}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {results.recommendations.pruningAdvice.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold mb-2 flex items-center gap-2">
-                          <TreePine className="h-4 w-4 text-blue-600" />
-                          Pruning Advice
-                        </h4>
-                        <ul className="space-y-1">
-                          {results.recommendations.pruningAdvice.map((rec, index) => (
-                            <li key={index} className="text-sm flex items-start gap-2">
-                              <span className="text-blue-600">•</span>
-                              {rec}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {results.recommendations.trellisAdjustments.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold mb-2 flex items-center gap-2">
-                          <Target className="h-4 w-4 text-purple-600" />
-                          Trellis System
-                        </h4>
-                        <ul className="space-y-1">
-                          {results.recommendations.trellisAdjustments.map((rec, index) => (
-                            <li key={index} className="text-sm flex items-start gap-2">
-                              <span className="text-purple-600">•</span>
-                              {rec}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Optimal Targets Tab */}
-          <TabsContent value="targets">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Optimal LAI Targets
-                </CardTitle>
-                <CardDescription>
-                  LAI targets for {formData.productionGoal} grape production
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="text-center p-4 bg-red-50 rounded-lg">
-                      <div className="text-2xl font-bold text-red-600">{optimalTargets.minLAI}</div>
-                      <div className="text-sm text-red-700">Minimum LAI</div>
-                    </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <div className="text-xl font-bold text-green-600">{optimalTargets.optimalRange}</div>
-                      <div className="text-sm text-green-700">Optimal Range</div>
-                    </div>
-                    <div className="text-center p-4 bg-red-50 rounded-lg">
-                      <div className="text-2xl font-bold text-red-600">{optimalTargets.maxLAI}</div>
-                      <div className="text-sm text-red-700">Maximum LAI</div>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-blue-900">Reasoning:</h4>
-                    <p className="text-blue-800 text-sm">{optimalTargets.reasoning}</p>
-                  </div>
-
-                  {results && (
-                    <div className={`p-4 rounded-lg border ${
-                      results.lai >= optimalTargets.minLAI && results.lai <= optimalTargets.maxLAI
-                        ? 'bg-green-50 border-green-200 text-green-800'
-                        : 'bg-yellow-50 border-yellow-200 text-yellow-800'
-                    }`}>
-                      <div className="font-semibold mb-1">Current Status:</div>
-                      <div className="text-sm">
-                        Your LAI of {results.lai} is {
-                          results.lai >= optimalTargets.minLAI && results.lai <= optimalTargets.maxLAI
-                            ? 'within the optimal range'
-                            : results.lai < optimalTargets.minLAI
-                            ? 'below the optimal range - consider increasing canopy density'
-                            : 'above the optimal range - consider canopy management'
-                        }
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Monitoring Schedule Tab */}
-          <TabsContent value="monitoring">
-            <div className="space-y-4">
-              {seasonalSchedule.map((period, index) => (
-                <Card key={index}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5" />
-                      {period.season}
-                    </CardTitle>
-                    <CardDescription>{period.timing}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="font-semibold mb-2 flex items-center gap-2">
-                          <Eye className="h-4 w-4" />
-                          Focus Areas
-                        </h4>
-                        <ul className="space-y-1">
-                          {period.focus.map((item, idx) => (
-                            <li key={idx} className="text-sm flex items-start gap-2">
-                              <span className="text-blue-600">•</span>
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-2 flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4" />
-                          Recommended Actions
-                        </h4>
-                        <ul className="space-y-1">
-                          {period.actions.map((action, idx) => (
-                            <li key={idx} className="text-sm flex items-start gap-2">
-                              <span className="text-green-600">•</span>
-                              {action}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              )}
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+
+          {/* Results Section */}
+          {results && (
+            <div className="mx-4 space-y-4">
+              
+              {/* LAI Results */}
+              <Card className="border-green-200 bg-green-50">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-green-600" />
+                      <CardTitle className="text-lg text-green-800">LAI Results</CardTitle>
+                    </div>
+                    <Badge 
+                      variant={results.canopyDensity === 'optimal' ? 'default' : results.canopyDensity === 'dense' ? 'secondary' : 'destructive'}
+                      className="text-xs bg-green-600"
+                    >
+                      {results.canopyDensity.toUpperCase()} DENSITY
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 space-y-4">
+                  
+                  {/* Key Metrics */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white rounded-lg p-3 text-center border border-green-200">
+                      <div className="text-2xl font-bold text-green-700">{results.lai.toFixed(2)}</div>
+                      <div className="text-xs font-medium text-green-600">LAI Value</div>
+                      <div className="text-xs text-gray-600">Leaf Area Index</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 text-center border border-green-200">
+                      <div className="text-2xl font-bold text-green-700">{results.leafAreaPerVine.toFixed(1)}</div>
+                      <div className="text-xs font-medium text-green-600">Total Leaf Area</div>
+                      <div className="text-xs text-gray-600">m² per vine</div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white rounded-lg p-3 text-center border border-green-200">
+                      <div className="text-2xl font-bold text-green-700">{results.lightInterception.toFixed(1)}%</div>
+                      <div className="text-xs font-medium text-green-600">Light Interception</div>
+                      <div className="text-xs text-gray-600">Canopy efficiency</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 text-center border border-green-200">
+                      <div className="text-2xl font-bold text-green-700">{results.canopyDensity}</div>
+                      <div className="text-xs font-medium text-green-600">Canopy Density</div>
+                      <div className="text-xs text-gray-600">Density rating</div>
+                    </div>
+                  </div>
+
+                  {/* Quality Assessment */}
+                  <Card className="border-green-200 bg-white">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base text-green-800 flex items-center gap-2">
+                        <Eye className="h-4 w-4" />
+                        Quality Assessment
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="space-y-3">
+                                                 <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                           <div className="flex items-center justify-between mb-2">
+                             <Badge className="bg-green-600 text-white text-sm">
+                               {results.canopyDensity.toUpperCase()}
+                             </Badge>
+                             {getQualityIcon(results.canopyDensity)}
+                           </div>
+                           <p className="text-sm text-green-700">Canopy density is {results.canopyDensity}</p>
+                         </div>
+                         
+                         {results.recommendations.canopyManagement && results.recommendations.canopyManagement.length > 0 && (
+                           <div>
+                             <h4 className="font-medium text-green-800 text-sm mb-2">Canopy Management:</h4>
+                             <ul className="text-xs text-green-700 space-y-1">
+                               {results.recommendations.canopyManagement.map((rec, index) => (
+                                 <li key={index} className="flex items-start gap-1">
+                                   <div className="w-1 h-1 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
+                                   <span>{rec}</span>
+                                 </li>
+                               ))}
+                             </ul>
+                           </div>
+                         )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CardContent>
+              </Card>
+
+              {/* Optimal Targets */}
+              <Card className="border-green-200 bg-green-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-green-800 text-base">
+                    <Target className="h-5 w-5" />
+                    Optimal LAI Targets
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-3">
+                                         <div className="bg-white rounded-lg p-3 border border-green-200">
+                       <div className="flex justify-between items-center mb-2">
+                         <span className="text-sm font-medium text-green-700">Target LAI Range:</span>
+                         <Badge className="bg-green-600 text-white text-sm">
+                           {optimalTargets.minLAI} - {optimalTargets.maxLAI}
+                         </Badge>
+                       </div>
+                       <p className="text-xs text-green-600">{optimalTargets.reasoning}</p>
+                     </div>
+                     
+                     <div className="bg-white rounded-lg p-3 border border-green-200">
+                       <div className="flex justify-between items-center mb-2">
+                         <span className="text-sm font-medium text-green-700">Current Status:</span>
+                         <Badge 
+                           variant={results.lai >= optimalTargets.minLAI && results.lai <= optimalTargets.maxLAI ? 'default' : 'destructive'}
+                           className={results.lai >= optimalTargets.minLAI && results.lai <= optimalTargets.maxLAI ? 'bg-green-600' : 'bg-red-600'}
+                         >
+                           {results.lai >= optimalTargets.minLAI && results.lai <= optimalTargets.maxLAI ? 'OPTIMAL' : 'NEEDS ADJUSTMENT'}
+                         </Badge>
+                       </div>
+                       {results.lai < optimalTargets.minLAI && (
+                         <p className="text-xs text-red-600">Increase canopy density for better yield potential</p>
+                       )}
+                       {results.lai > optimalTargets.maxLAI && (
+                         <p className="text-xs text-red-600">Reduce canopy density to prevent disease and improve quality</p>
+                       )}
+                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

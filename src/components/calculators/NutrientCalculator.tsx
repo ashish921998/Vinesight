@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Beaker, 
   Target,
@@ -20,7 +20,9 @@ import {
   Leaf,
   FlaskConical,
   Activity,
-  BarChart3
+  BarChart3,
+  Calculator,
+  DollarSign
 } from 'lucide-react';
 import { 
   NutrientCalculator,
@@ -36,6 +38,7 @@ export function NutrientCalculatorComponent() {
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<NutrientResults | null>(null);
+  const [activeSection, setActiveSection] = useState<'calculator' | 'symptoms' | 'schedule'>('calculator');
   
   const [formData, setFormData] = useState({
     targetYield: "",
@@ -99,12 +102,12 @@ export function NutrientCalculatorComponent() {
 
       const inputs: NutrientCalculationInputs = {
         farmId: selectedFarm.id!,
-        targetYield: parseFloat(formData.targetYield) || 10,
+        targetYield: parseFloat(formData.targetYield) || 12,
         currentGrowthStage: formData.currentGrowthStage,
-        soilTest,
         grapeVariety: formData.grapeVariety,
         irrigationMethod: formData.irrigationMethod,
-        previousApplications: [], // Could be loaded from database
+        soilTest: soilTest,
+        previousApplications: [],
         farmArea: selectedFarm.area
       };
 
@@ -120,62 +123,121 @@ export function NutrientCalculatorComponent() {
         outputs: calculationResults
       });
     } catch (error) {
-      console.error('Error calculating nutrients:', error);
+      console.error('Error calculating nutrient requirements:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'optimal': case 'good': case 'adequate': case 'high':
-        return 'text-green-600 bg-green-50 border-green-200';
-      case 'fair': case 'moderate':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'poor': case 'low': case 'acidic': case 'alkaline':
-        return 'text-red-600 bg-red-50 border-red-200';
-      default:
-        return 'text-gray-600 bg-gray-50 border-gray-200';
-    }
+  const resetForm = () => {
+    setFormData({
+      targetYield: "",
+      currentGrowthStage: "budbreak",
+      grapeVariety: "wine",
+      irrigationMethod: "drip",
+      ph: "",
+      organicMatter: "",
+      nitrogen: "",
+      phosphorus: "",
+      potassium: "",
+      calcium: "",
+      magnesium: "",
+      sulfur: "",
+      boron: "",
+      zinc: "",
+      manganese: "",
+      iron: "",
+      copper: "",
+      cec: ""
+    });
+    setResults(null);
+  };
+
+  const getNutrientStatus = (deficit: number) => {
+    if (deficit > 50) return { variant: 'destructive' as const, status: 'High Need' };
+    if (deficit > 20) return { variant: 'secondary' as const, status: 'Moderate Need' };
+    return { variant: 'default' as const, status: 'Low Need' };
   };
 
   const deficiencySymptoms = NutrientCalculator.getDeficiencySymptoms();
 
   return (
     <div className="space-y-6">
-      {/* Farm Selection */}
-      {farms.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Beaker className="h-5 w-5" />
-              Select Farm
-            </CardTitle>
-            <CardDescription>Choose a farm for nutrient analysis and fertilizer recommendations</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <div className="flex items-center justify-center gap-2">
+          <Beaker className="h-6 w-6 text-green-600" />
+          <h2 className="text-xl font-bold text-green-800">Fertilizer Calculator</h2>
+        </div>
+        <p className="text-sm text-gray-600">
+          Find out exactly how much fertilizer to apply for optimal grape production
+        </p>
+      </div>
+
+      {/* Data Source Selection */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-green-600" />
+              <CardTitle className="text-base">Data Source</CardTitle>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                className="text-xs px-3 py-1 bg-green-600 hover:bg-green-700"
+              >
+                My Farms
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {farms.length > 0 ? (
+            <div className="space-y-2">
               {farms.map((farm) => (
-                <Button
+                <div
                   key={farm.id}
-                  variant={selectedFarm?.id === farm.id ? "default" : "outline"}
+                  className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                    selectedFarm?.id === farm.id 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
                   onClick={() => setSelectedFarm(farm)}
-                  className="flex items-center gap-2"
                 >
-                  {farm.name}
-                  <Badge variant="secondary">
-                    {farm.area}ha • {farm.grape_variety}
-                  </Badge>
-                </Button>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="font-medium text-gray-900 text-sm">{farm.name}</h4>
+                      <p className="text-xs text-gray-500">{farm.area}ha • {farm.grape_variety}</p>
+                    </div>
+                    {selectedFarm?.id === farm.id && (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-green-700">
+                <Info className="h-4 w-4" />
+                <span className="font-medium text-sm">No Farms Available</span>
+              </div>
+              <p className="text-green-600 text-xs mt-1">
+                Please add a farm first to calculate nutrient requirements
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {!selectedFarm ? (
         <Card className="text-center py-12">
@@ -186,478 +248,410 @@ export function NutrientCalculatorComponent() {
           </CardContent>
         </Card>
       ) : (
-        <Tabs defaultValue="calculator" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="calculator">Nutrient Calculator</TabsTrigger>
-            <TabsTrigger value="symptoms">Deficiency Guide</TabsTrigger>
-            <TabsTrigger value="schedule">Application Schedule</TabsTrigger>
-          </TabsList>
-
-          {/* Main Calculator */}
-          <TabsContent value="calculator" className="space-y-6">
-            {/* Input Form */}
+        <>
+          {/* Mobile-Optimized Input Sections */}
+          <div className="mx-4 sm:mx-0 space-y-4 sm:space-y-3">
+            
+            {/* Production Goals Section */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-6 w-6" />
-                  Production Goals & Soil Analysis
-                </CardTitle>
-                <CardDescription>
-                  Enter your yield targets and soil test results for precise nutrient recommendations
+              <CardHeader 
+                className="pb-4 sm:pb-3 cursor-pointer"
+                onClick={() => setActiveSection(activeSection === 'calculator' ? 'calculator' : 'calculator')}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 sm:gap-2">
+                    <TrendingUp className="h-5 w-5 text-green-500" />
+                    <CardTitle className="text-lg sm:text-base">Production Goals</CardTitle>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">Required</Badge>
+                </div>
+                <CardDescription className="text-sm sm:text-xs">
+                  Enter your yield targets and production details
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Production Goals */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    Production Goals
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {activeSection === 'calculator' && (
+                <CardContent className="pt-0 space-y-6 sm:space-y-4">
+                  
+                  {/* Basic Production Info */}
+                  <div className="grid grid-cols-1 gap-4 sm:gap-3">
                     <div>
-                      <Label htmlFor="targetYield">Target Yield (tons/ha)</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Target Yield (tons/ha)</Label>
                       <Input
-                        id="targetYield"
                         type="number"
                         step="0.5"
-                        placeholder="e.g., 12.5"
+                        placeholder="12.5"
                         value={formData.targetYield}
                         onChange={(e) => handleInputChange('targetYield', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="currentGrowthStage">Current Growth Stage</Label>
-                      <select
-                        id="currentGrowthStage"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Current Growth Stage</Label>
+                      <Select
                         value={formData.currentGrowthStage}
-                        onChange={(e) => handleInputChange('currentGrowthStage', e.target.value)}
+                        onValueChange={(value: 'dormant' | 'budbreak' | 'flowering' | 'fruit_set' | 'veraison' | 'harvest' | 'post_harvest') => handleInputChange('currentGrowthStage', value)}
                       >
-                        <option value="dormant">Dormant</option>
-                        <option value="budbreak">Bud Break</option>
-                        <option value="flowering">Flowering</option>
-                        <option value="fruit_set">Fruit Set</option>
-                        <option value="veraison">Veraison</option>
-                        <option value="harvest">Harvest</option>
-                        <option value="post_harvest">Post Harvest</option>
-                      </select>
+                        <SelectTrigger className="h-12 sm:h-11 text-base sm:text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="dormant">Dormant</SelectItem>
+                          <SelectItem value="budbreak">Bud Break</SelectItem>
+                          <SelectItem value="flowering">Flowering</SelectItem>
+                          <SelectItem value="fruit_set">Fruit Set</SelectItem>
+                          <SelectItem value="veraison">Veraison</SelectItem>
+                          <SelectItem value="harvest">Harvest</SelectItem>
+                          <SelectItem value="post_harvest">Post Harvest</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
-                      <Label htmlFor="grapeVariety">Production Type</Label>
-                      <select
-                        id="grapeVariety"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Production Type</Label>
+                      <Select
                         value={formData.grapeVariety}
-                        onChange={(e) => handleInputChange('grapeVariety', e.target.value)}
+                        onValueChange={(value: 'table' | 'wine' | 'raisin') => handleInputChange('grapeVariety', value)}
                       >
-                        <option value="table">Table Grapes</option>
-                        <option value="wine">Wine Grapes</option>
-                        <option value="raisin">Raisin Production</option>
-                      </select>
+                        <SelectTrigger className="h-12 sm:h-11 text-base sm:text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="table">Table Grapes</SelectItem>
+                          <SelectItem value="wine">Wine Grapes</SelectItem>
+                          <SelectItem value="raisin">Raisin Production</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
-                </div>
-
-                {/* Basic Soil Properties */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <FlaskConical className="h-4 w-4" />
-                    Basic Soil Properties
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <Label htmlFor="ph">pH</Label>
-                      <Input
-                        id="ph"
-                        type="number"
-                        step="0.1"
-                        placeholder="e.g., 6.8"
-                        value={formData.ph}
-                        onChange={(e) => handleInputChange('ph', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="organicMatter">Organic Matter (%)</Label>
-                      <Input
-                        id="organicMatter"
-                        type="number"
-                        step="0.1"
-                        placeholder="e.g., 3.2"
-                        value={formData.organicMatter}
-                        onChange={(e) => handleInputChange('organicMatter', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="cec">CEC (meq/100g)</Label>
-                      <Input
-                        id="cec"
-                        type="number"
-                        step="0.1"
-                        placeholder="e.g., 15.0"
-                        value={formData.cec}
-                        onChange={(e) => handleInputChange('cec', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Primary Nutrients */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Leaf className="h-4 w-4" />
-                    Primary Nutrients (NPK)
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="nitrogen">Nitrogen (ppm)</Label>
-                      <Input
-                        id="nitrogen"
-                        type="number"
-                        placeholder="e.g., 25"
-                        value={formData.nitrogen}
-                        onChange={(e) => handleInputChange('nitrogen', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="phosphorus">Phosphorus (ppm)</Label>
-                      <Input
-                        id="phosphorus"
-                        type="number"
-                        placeholder="e.g., 30"
-                        value={formData.phosphorus}
-                        onChange={(e) => handleInputChange('phosphorus', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="potassium">Potassium (ppm)</Label>
-                      <Input
-                        id="potassium"
-                        type="number"
-                        placeholder="e.g., 180"
-                        value={formData.potassium}
-                        onChange={(e) => handleInputChange('potassium', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Secondary Nutrients */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Activity className="h-4 w-4" />
-                    Secondary Nutrients
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="calcium">Calcium (ppm)</Label>
-                      <Input
-                        id="calcium"
-                        type="number"
-                        placeholder="e.g., 1200"
-                        value={formData.calcium}
-                        onChange={(e) => handleInputChange('calcium', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="magnesium">Magnesium (ppm)</Label>
-                      <Input
-                        id="magnesium"
-                        type="number"
-                        placeholder="e.g., 180"
-                        value={formData.magnesium}
-                        onChange={(e) => handleInputChange('magnesium', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="sulfur">Sulfur (ppm)</Label>
-                      <Input
-                        id="sulfur"
-                        type="number"
-                        placeholder="e.g., 12"
-                        value={formData.sulfur}
-                        onChange={(e) => handleInputChange('sulfur', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Micronutrients */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <FlaskConical className="h-4 w-4" />
-                    Micronutrients
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <Label htmlFor="boron">Boron (ppm)</Label>
-                      <Input
-                        id="boron"
-                        type="number"
-                        step="0.1"
-                        placeholder="e.g., 0.8"
-                        value={formData.boron}
-                        onChange={(e) => handleInputChange('boron', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="zinc">Zinc (ppm)</Label>
-                      <Input
-                        id="zinc"
-                        type="number"
-                        step="0.1"
-                        placeholder="e.g., 2.5"
-                        value={formData.zinc}
-                        onChange={(e) => handleInputChange('zinc', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="iron">Iron (ppm)</Label>
-                      <Input
-                        id="iron"
-                        type="number"
-                        placeholder="e.g., 25"
-                        value={formData.iron}
-                        onChange={(e) => handleInputChange('iron', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="manganese">Manganese (ppm)</Label>
-                      <Input
-                        id="manganese"
-                        type="number"
-                        placeholder="e.g., 15"
-                        value={formData.manganese}
-                        onChange={(e) => handleInputChange('manganese', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={handleCalculate}
-                  disabled={loading || !selectedFarm}
-                  className="w-full"
-                >
-                  {loading ? 'Calculating Nutrient Requirements...' : 'Calculate Fertilizer Program'}
-                </Button>
-              </CardContent>
+                </CardContent>
+              )}
             </Card>
 
-            {/* Results */}
-            {results && (
-              <div className="space-y-6">
-                {/* Soil Health Assessment */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FlaskConical className="h-5 w-5" />
-                      Soil Health Assessment
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                      <div className={`p-4 rounded-lg border ${getStatusColor(results.soilHealthAssessment.phStatus)}`}>
-                        <div className="font-semibold mb-1">pH Status</div>
-                        <div className="text-sm capitalize">{results.soilHealthAssessment.phStatus}</div>
-                      </div>
-                      <div className={`p-4 rounded-lg border ${getStatusColor(results.soilHealthAssessment.organicMatterStatus)}`}>
-                        <div className="font-semibold mb-1">Organic Matter</div>
-                        <div className="text-sm capitalize">{results.soilHealthAssessment.organicMatterStatus}</div>
-                      </div>
-                      <div className={`p-4 rounded-lg border ${getStatusColor(results.soilHealthAssessment.cationBalance)}`}>
-                        <div className="font-semibold mb-1">Cation Balance</div>
-                        <div className="text-sm capitalize">{results.soilHealthAssessment.cationBalance}</div>
-                      </div>
+            {/* Soil Test Data Section */}
+            <Card>
+              <CardHeader 
+                className="pb-4 sm:pb-3 cursor-pointer"
+                onClick={() => setActiveSection(activeSection === 'calculator' ? 'calculator' : 'calculator')}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 sm:gap-2">
+                    <FlaskConical className="h-5 w-5 text-green-500" />
+                    <CardTitle className="text-lg sm:text-base">Soil Test Results</CardTitle>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">Required</Badge>
+                </div>
+                <CardDescription className="text-sm sm:text-xs">
+                  Enter your soil test results for precise recommendations
+                </CardDescription>
+              </CardHeader>
+              {activeSection === 'calculator' && (
+                <CardContent className="pt-0 space-y-6 sm:space-y-4">
+                  
+                  {/* Basic Soil Properties */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
+                    <div>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">pH</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        placeholder="6.8"
+                        value={formData.ph}
+                        onChange={(e) => handleInputChange('ph', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
+                      />
                     </div>
-
-                    {results.soilHealthAssessment.recommendations.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold mb-2">Soil Improvement Recommendations:</h4>
-                        <ul className="space-y-1">
-                          {results.soilHealthAssessment.recommendations.map((rec, index) => (
-                            <li key={index} className="text-sm flex items-start gap-2">
-                              <span className="text-blue-600">•</span>
-                              {rec}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Nutrient Requirements */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5" />
-                      Nutrient Requirements (kg/ha)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">
-                          {results.recommendations.nitrogen.deficit.toFixed(1)}
-                        </div>
-                        <div className="text-sm text-green-700">Nitrogen (N) Needed</div>
-                        <div className="text-xs text-green-600 mt-1">
-                          {results.recommendations.nitrogen.available.toFixed(1)} available
-                        </div>
-                      </div>
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {results.recommendations.phosphorus.deficit.toFixed(1)}
-                        </div>
-                        <div className="text-sm text-blue-700">Phosphorus (P) Needed</div>
-                        <div className="text-xs text-blue-600 mt-1">
-                          {results.recommendations.phosphorus.available.toFixed(1)} available
-                        </div>
-                      </div>
-                      <div className="text-center p-4 bg-purple-50 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-600">
-                          {results.recommendations.potassium.deficit.toFixed(1)}
-                        </div>
-                        <div className="text-sm text-purple-700">Potassium (K) Needed</div>
-                        <div className="text-xs text-purple-600 mt-1">
-                          {results.recommendations.potassium.available.toFixed(1)} available
-                        </div>
-                      </div>
+                    <div>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Organic Matter (%)</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        placeholder="2.5"
+                        value={formData.organicMatter}
+                        onChange={(e) => handleInputChange('organicMatter', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
+                      />
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
 
-                {/* Fertilizer Program */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Beaker className="h-5 w-5" />
-                      Recommended Fertilizer Program
-                      <Badge variant="secondary">
-                        ₹{results.totalCost.toLocaleString('en-IN')} Total Cost
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {results.fertilizerProgram.map((program, index) => (
-                        <div key={index} className="border rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h4 className="font-semibold">{program.fertilizer}</h4>
-                              <Badge variant="outline" className="mt-1">
-                                {program.stage.charAt(0).toUpperCase() + program.stage.slice(1).replace('_', ' ')}
-                              </Badge>
-                            </div>
-                            <div className="text-right">
-                              <div className="font-semibold text-green-600">
-                                ₹{(program.totalCost * selectedFarm.area).toLocaleString('en-IN')}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                {program.rate.toFixed(1)} kg/ha
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-sm space-y-1">
-                            <div><strong>Timing:</strong> {program.timing}</div>
-                            <div><strong>Method:</strong> {program.method}</div>
-                            <div><strong>Notes:</strong> {program.notes}</div>
-                          </div>
-                        </div>
-                      ))}
+                  {/* Macronutrients */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
+                    <div>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Nitrogen (N) ppm</Label>
+                      <Input
+                        type="number"
+                        placeholder="20"
+                        value={formData.nitrogen}
+                        onChange={(e) => handleInputChange('nitrogen', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
+                      />
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </TabsContent>
+                    <div>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Phosphorus (P) ppm</Label>
+                      <Input
+                        type="number"
+                        placeholder="25"
+                        value={formData.phosphorus}
+                        onChange={(e) => handleInputChange('phosphorus', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
+                      />
+                    </div>
+                  </div>
 
-          {/* Deficiency Symptoms Guide */}
-          <TabsContent value="symptoms">
-            <div className="space-y-4">
-              {deficiencySymptoms.map((symptom, index) => (
-                <Card key={index}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                      {symptom.nutrient} Deficiency
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="font-semibold mb-2 text-red-700">Symptoms:</h4>
-                        <ul className="space-y-1">
-                          {symptom.symptoms.map((s, idx) => (
-                            <li key={idx} className="text-sm flex items-start gap-2">
-                              <span className="text-red-600">•</span>
-                              {s}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-2 text-green-700">Management:</h4>
-                        <ul className="space-y-1">
-                          {symptom.management.map((m, idx) => (
-                            <li key={idx} className="text-sm flex items-start gap-2">
-                              <span className="text-green-600">•</span>
-                              {m}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
+                    <div>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Potassium (K) ppm</Label>
+                      <Input
+                        type="number"
+                        placeholder="150"
+                        value={formData.potassium}
+                        onChange={(e) => handleInputChange('potassium', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
+                      />
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    <div>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Calcium (Ca) ppm</Label>
+                      <Input
+                        type="number"
+                        placeholder="1200"
+                        value={formData.calcium}
+                        onChange={(e) => handleInputChange('calcium', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Micronutrients */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
+                    <div>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Zinc (Zn) ppm</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        placeholder="2.5"
+                        value={formData.zinc}
+                        onChange={(e) => handleInputChange('zinc', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Iron (Fe) ppm</Label>
+                      <Input
+                        type="number"
+                        placeholder="25"
+                        value={formData.iron}
+                        onChange={(e) => handleInputChange('iron', e.target.value)}
+                        className="h-12 sm:h-11 text-base sm:text-sm"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          </div>
+
+          {/* Calculate Button */}
+          <div className="px-4 sm:px-0 mt-6">
+            <div className="flex gap-3 sm:gap-2">
+              <Button 
+                onClick={handleCalculate}
+                disabled={loading || !selectedFarm}
+                className="flex-1 h-14 sm:h-12 bg-green-600 hover:bg-green-700 text-white font-medium text-lg sm:text-base"
+              >
+                {loading ? (
+                  <>
+                    <Calculator className="mr-3 sm:mr-2 h-5 w-5 sm:h-4 sm:w-4 animate-pulse" />
+                    Calculating...
+                  </>
+                ) : (
+                  <>
+                    <Calculator className="mr-3 sm:mr-2 h-5 w-5 sm:h-4 sm:w-4" />
+                    Calculate Nutrients
+                  </>
+                )}
+              </Button>
+              {results && (
+                <Button
+                  variant="outline"
+                  onClick={resetForm}
+                  className="px-6 sm:px-4 h-14 sm:h-12 text-lg sm:text-base"
+                >
+                  Reset
+                </Button>
+              )}
             </div>
-          </TabsContent>
+          </div>
 
-          {/* Application Schedule */}
-          <TabsContent value="schedule">
-            {results && results.applicationSchedule.length > 0 ? (
-              <div className="space-y-4">
-                {results.applicationSchedule.map((schedule, index) => (
-                  <Card key={index}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Calendar className="h-5 w-5" />
-                        {schedule.month}
-                        <Badge variant="outline">
-                          {schedule.stage.charAt(0).toUpperCase() + schedule.stage.slice(1).replace('_', ' ')}
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {schedule.applications.map((app, idx) => (
-                          <div key={idx} className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                            <div>
-                              <div className="font-medium">{app.fertilizer}</div>
-                              <div className="text-sm text-muted-foreground">{app.method}</div>
-                            </div>
-                            <div className="text-right">
-                              <div className="font-semibold">{app.rate.toFixed(1)} kg/ha</div>
-                            </div>
+          {/* Results Display */}
+          {results && (
+            <div className="mx-4 sm:mx-0 space-y-4 sm:space-y-3">
+              
+              {/* Nutrient Recommendations */}
+              <Card>
+                <CardHeader className="pb-4 sm:pb-3">
+                  <div className="flex items-center gap-3 sm:gap-2">
+                    <Leaf className="h-5 w-5 text-green-500" />
+                    <CardTitle className="text-lg sm:text-base">Nutrient Recommendations</CardTitle>
+                  </div>
+                  <CardDescription className="text-sm sm:text-xs">
+                    Based on your soil test results and production goals
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0 space-y-6 sm:space-y-4">
+                  
+                  {/* Macronutrients */}
+                  <div className="space-y-4 sm:space-y-3">
+                    <h4 className="font-semibold text-base sm:text-sm text-gray-800">Macronutrients</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-3">
+                      <div className="bg-gray-50 p-4 sm:p-3 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-700">Nitrogen (N)</span>
+                          <Badge variant={getNutrientStatus(results.recommendations.nitrogen.deficit).variant} className="text-xs">
+                            {getNutrientStatus(results.recommendations.nitrogen.deficit).status}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-xs text-gray-600">
+                          <div>Required: {results.recommendations.nitrogen.required.toFixed(1)} kg/ha</div>
+                          <div>Available: {results.recommendations.nitrogen.available.toFixed(1)} kg/ha</div>
+                          <div>Deficit: {results.recommendations.nitrogen.deficit.toFixed(1)} kg/ha</div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-50 p-4 sm:p-3 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-700">Phosphorus (P)</span>
+                          <Badge variant={getNutrientStatus(results.recommendations.phosphorus.deficit).variant} className="text-xs">
+                            {getNutrientStatus(results.recommendations.phosphorus.deficit).status}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-xs text-gray-600">
+                          <div>Required: {results.recommendations.phosphorus.required.toFixed(1)} kg/ha</div>
+                          <div>Available: {results.recommendations.phosphorus.available.toFixed(1)} kg/ha</div>
+                          <div>Deficit: {results.recommendations.phosphorus.deficit.toFixed(1)} kg/ha</div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-50 p-4 sm:p-3 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-700">Potassium (K)</span>
+                          <Badge variant={getNutrientStatus(results.recommendations.potassium.deficit).variant} className="text-xs">
+                            {getNutrientStatus(results.recommendations.potassium.deficit).status}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-xs text-gray-600">
+                          <div>Required: {results.recommendations.potassium.required.toFixed(1)} kg/ha</div>
+                          <div>Available: {results.recommendations.potassium.available.toFixed(1)} kg/ha</div>
+                          <div>Deficit: {results.recommendations.potassium.deficit.toFixed(1)} kg/ha</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Secondary Nutrients */}
+                  <div className="space-y-4 sm:space-y-3">
+                    <h4 className="font-semibold text-base sm:text-sm text-gray-800">Secondary Nutrients</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-3">
+                      <div className="bg-gray-50 p-4 sm:p-3 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-700">Calcium (Ca)</span>
+                          <Badge variant={getNutrientStatus(results.recommendations.secondary.calcium.deficit).variant} className="text-xs">
+                            {getNutrientStatus(results.recommendations.secondary.calcium.deficit).status}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-xs text-gray-600">
+                          <div>Required: {results.recommendations.secondary.calcium.required.toFixed(1)} kg/ha</div>
+                          <div>Available: {results.recommendations.secondary.calcium.available.toFixed(1)} kg/ha</div>
+                          <div>Deficit: {results.recommendations.secondary.calcium.deficit.toFixed(1)} kg/ha</div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-50 p-4 sm:p-3 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-700">Magnesium (Mg)</span>
+                          <Badge variant={getNutrientStatus(results.recommendations.secondary.magnesium.deficit).variant} className="text-xs">
+                            {getNutrientStatus(results.recommendations.secondary.magnesium.deficit).status}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-xs text-gray-600">
+                          <div>Required: {results.recommendations.secondary.magnesium.required.toFixed(1)} kg/ha</div>
+                          <div>Available: {results.recommendations.secondary.magnesium.available.toFixed(1)} kg/ha</div>
+                          <div>Deficit: {results.recommendations.secondary.magnesium.deficit.toFixed(1)} kg/ha</div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-50 p-4 sm:p-3 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-700">Sulfur (S)</span>
+                          <Badge variant={getNutrientStatus(results.recommendations.secondary.sulfur.deficit).variant} className="text-xs">
+                            {getNutrientStatus(results.recommendations.secondary.sulfur.deficit).status}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-xs text-gray-600">
+                          <div>Required: {results.recommendations.secondary.sulfur.required.toFixed(1)} kg/ha</div>
+                          <div>Available: {results.recommendations.secondary.sulfur.available.toFixed(1)} kg/ha</div>
+                          <div>Deficit: {results.recommendations.secondary.sulfur.deficit.toFixed(1)} kg/ha</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Application Schedule */}
+              <Card>
+                <CardHeader className="pb-4 sm:pb-3">
+                  <div className="flex items-center gap-3 sm:gap-2">
+                    <Calendar className="h-5 w-5 text-green-500" />
+                    <CardTitle className="text-lg sm:text-base">Application Schedule</CardTitle>
+                  </div>
+                  <CardDescription className="text-sm sm:text-xs">
+                    Recommended timing and methods for nutrient applications
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0 space-y-4 sm:space-y-3">
+                  {results.applicationSchedule.map((schedule, index) => (
+                    <div key={index} className="bg-gray-50 p-4 sm:p-3 rounded-lg">
+                      <div className="flex items-center justify-between mb-3 sm:mb-2">
+                        <h5 className="font-medium text-base sm:text-sm text-gray-800">{schedule.month}</h5>
+                        <Badge variant="outline" className="text-xs">{schedule.stage}</Badge>
+                      </div>
+                      <div className="space-y-2 sm:space-y-1">
+                        {schedule.applications.map((app, appIndex) => (
+                          <div key={appIndex} className="text-sm sm:text-xs text-gray-600">
+                            <span className="font-medium">{app.fertilizer}:</span> {app.rate.toFixed(1)} kg/ha - {app.method}
                           </div>
                         ))}
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Schedule Available</h3>
-                  <p className="text-muted-foreground">Calculate nutrient requirements first to see the application schedule</p>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+
+              {/* Cost Summary */}
+              <Card>
+                <CardHeader className="pb-4 sm:pb-3">
+                  <div className="flex items-center gap-3 sm:gap-2">
+                    <DollarSign className="h-5 w-5 text-green-500" />
+                    <CardTitle className="text-lg sm:text-base">Cost Summary</CardTitle>
+                  </div>
+                  <CardDescription className="text-sm sm:text-xs">
+                    Estimated costs for the nutrient program
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="bg-green-50 p-4 sm:p-3 rounded-lg">
+                    <div className="text-center">
+                      <div className="text-2xl sm:text-xl font-bold text-green-600">
+                        ${results.totalCost.toFixed(2)}
+                      </div>
+                      <div className="text-sm sm:text-xs text-green-700 mt-1">
+                        Total cost per hectare
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

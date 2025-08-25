@@ -94,7 +94,9 @@ export default function Navigation() {
             ) : user ? (
               <UserMenu />
             ) : (
-              <LoginButton className="w-full" />
+              <Link href="/auth" className="w-full">
+                <LoginButton className="w-full" />
+              </Link>
             )}
           </div>
         </div>

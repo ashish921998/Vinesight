@@ -13,143 +13,165 @@ import {
   ArrowRight,
   ChevronRight
 } from "lucide-react";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+// Removed ProtectedRoute - calculators work without authentication
 import { ETcCalculatorComponent } from "@/components/calculators/ETcCalculator";
 import { LAICalculatorComponent } from "@/components/calculators/LAICalculator";
 import { NutrientCalculatorComponent } from "@/components/calculators/NutrientCalculator";
 import { SystemDischargeCalculatorComponent } from "@/components/calculators/SystemDischargeCalculator";
 
-export default function CalculatorsPage() {
-  const [activeCalculator, setActiveCalculator] = useState<string | null>(null);
+const calculators = [
+  {
+    id: "etc",
+    title: "Water Needs Calculator",
+    description: "Calculate how much water your grapes need daily",
+    icon: Droplets,
+    color: "text-blue-600",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
+    component: ETcCalculatorComponent,
+  },
+  {
+    id: "system-discharge",
+    title: "System Flow Rate",
+    description: "Check if your irrigation system delivers enough water",
+    icon: Target,
+    color: "text-green-600",
+    bgColor: "bg-green-50",
+    borderColor: "border-green-200",
+    component: SystemDischargeCalculatorComponent,
+  },
+  {
+    id: "lai",
+    title: "Leaf Coverage Calculator",
+    description: "Measure how well your vines cover the ground",
+    icon: Leaf,
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-50",
+    borderColor: "border-emerald-200",
+    component: LAICalculatorComponent,
+  },
+  {
+    id: "nutrient",
+    title: "Fertilizer Calculator",
+    description: "Find out exactly how much fertilizer to apply",
+    icon: Beaker,
+    color: "text-purple-600",
+    bgColor: "bg-purple-50",
+    borderColor: "border-purple-200",
+    component: NutrientCalculatorComponent,
+  },
+];
 
-  const calculators = [
-    {
-      id: "etc",
-      title: "Water Needs Calculator",
-      shortTitle: "Water",
-      description: "Calculate how much water your grapes need daily",
-      simpleDesc: "Daily water requirement",
-      icon: Droplets,
-      bgGradient: "from-green-500 to-green-600"
-    },
-    {
-      id: "discharge",
-      title: "System Flow Rate",
-      shortTitle: "Flow Rate", 
-      description: "Check if your irrigation system delivers enough water",
-      simpleDesc: "System capacity check",
-      icon: Target,
-      bgGradient: "from-green-400 to-green-500"
-    },
-    {
-      id: "lai",
-      title: "Leaf Coverage Calculator",
-      shortTitle: "Leaf Cover",
-      description: "Measure how well your vines cover the ground",
-      simpleDesc: "Canopy density check",
-      icon: Leaf,
-      bgGradient: "from-green-600 to-green-700"
-    },
-    {
-      id: "nutrients",
-      title: "Fertilizer Calculator",
-      shortTitle: "Fertilizer",
-      description: "Find out exactly how much fertilizer to apply",
-      simpleDesc: "Nutrient requirements",
-      icon: Beaker,
-      bgGradient: "from-green-500 to-green-600"
-    }
-  ];
+export default function CalculatorsPage() {
+  const [selectedCalculator, setSelectedCalculator] = useState<string | null>(null);
+
+  const handleCalculatorSelect = (calculatorId: string) => {
+    setSelectedCalculator(calculatorId);
+  };
+
+  const handleBackToCalculators = () => {
+    setSelectedCalculator(null);
+  };
+
+  if (selectedCalculator) {
+    const calculator = calculators.find((calc) => calc.id === selectedCalculator);
+    if (!calculator) return null;
+
+    const CalculatorComponent = calculator.component;
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-6">
+          <div className="mb-6">
+            <Button
+              onClick={handleBackToCalculators}
+              variant="ghost"
+              className="mb-4 w-full sm:w-auto h-12 sm:h-10 px-6 sm:px-4 text-base sm:text-sm bg-white hover:bg-gray-50 border border-gray-200"
+            >
+              <ChevronRight className="mr-2 h-5 w-5 rotate-180" />
+              Back to Calculators
+            </Button>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <calculator.icon className="h-8 w-8 sm:h-6 sm:w-6 text-green-600" />
+                <h1 className="text-2xl sm:text-xl font-bold text-gray-900">
+                  {calculator.title}
+                </h1>
+              </div>
+              <p className="text-base sm:text-sm text-gray-600 max-w-2xl mx-auto">
+                {calculator.description}
+              </p>
+            </div>
+          </div>
+          <CalculatorComponent />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <ProtectedRoute>
-      <div className="container mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-6">
         {/* Header */}
-        <div className="mb-6 px-3">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Farm Calculators</h1>
-          <p className="text-gray-600">
+        <div className="text-center mb-8 sm:mb-6">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <Calculator className="h-10 w-10 sm:h-8 sm:w-8 text-green-600" />
+            <h1 className="text-3xl sm:text-2xl font-bold text-gray-900">
+              Farm Calculators
+            </h1>
+          </div>
+          <p className="text-lg sm:text-base text-gray-600 max-w-2xl mx-auto">
             Get accurate calculations for your vineyard needs
           </p>
         </div>
 
-        {/* No Active Calculator - Show Grid */}
-        {!activeCalculator && (
-          <div className="px-3 space-y-3">
-            {calculators.map((calc) => {
-              const Icon = calc.icon;
-              
-              return (
-                <Card 
-                  key={calc.id} 
-                  className="hover:shadow-md transition-all duration-200 cursor-pointer border-0 shadow-sm"
-                  onClick={() => setActiveCalculator(calc.id)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                      {/* Icon */}
-                      <div className={`
-                        w-14 h-14 rounded-2xl bg-gradient-to-br ${calc.bgGradient} 
-                        flex items-center justify-center flex-shrink-0
-                      `}>
-                        <Icon className="h-7 w-7 text-white" />
-                      </div>
-                      
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 text-lg leading-tight">
-                          {calc.title}
-                        </h3>
-                        <p className="text-gray-600 text-sm mt-1 leading-relaxed">
-                          {calc.description}
-                        </p>
-                      </div>
-                      
-                      {/* Arrow */}
-                      <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Active Calculator View */}
-        {activeCalculator && (
-          <div className="px-3">
-            {/* Back Button */}
-            <Button
-              variant="ghost"
-              onClick={() => setActiveCalculator(null)}
-              className="mb-4 text-gray-600 hover:text-gray-900 p-0 h-auto"
+        {/* Calculator Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-4 mb-8">
+          {calculators.map((calculator) => (
+            <Card
+              key={calculator.id}
+              className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 border-2 hover:border-green-300 ${calculator.bgColor} ${calculator.borderColor}`}
+              onClick={() => handleCalculatorSelect(calculator.id)}
             >
-              <ArrowRight className="h-4 w-4 mr-2 rotate-180" />
-              Back to Calculators
-            </Button>
-            
-            {/* Calculator Content */}
-            {activeCalculator === "etc" && <ETcCalculatorComponent />}
-            {activeCalculator === "discharge" && <SystemDischargeCalculatorComponent />}
-            {activeCalculator === "lai" && <LAICalculatorComponent />}
-            {activeCalculator === "nutrients" && <NutrientCalculatorComponent />}
-          </div>
-        )}
+              <CardHeader className="p-6 sm:p-5 text-center">
+                <div className="flex justify-center mb-4">
+                  <div className={`p-4 sm:p-3 rounded-full ${calculator.bgColor} border-2 ${calculator.borderColor}`}>
+                    <calculator.icon className={`h-10 w-10 sm:h-8 sm:w-8 ${calculator.color}`} />
+                  </div>
+                </div>
+                <CardTitle className="text-xl sm:text-lg font-bold text-gray-900 mb-2">
+                  {calculator.title}
+                </CardTitle>
+                <CardDescription className="text-base sm:text-sm text-gray-600 leading-relaxed">
+                  {calculator.description}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 sm:p-5 pt-0">
+                <div className="flex items-center justify-center text-green-600 font-medium text-sm">
+                  <span>Get Started</span>
+                  <ArrowRight className="ml-2 h-5 w-5 sm:h-4 sm:w-4" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-        {/* Bottom Tip - Only show when no calculator is active */}
-        {!activeCalculator && (
-          <div className="mx-3 mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
-            <div className="flex items-start gap-3">
-              <Calculator className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <h4 className="font-medium text-green-800 mb-1">Science-Based Results</h4>
-                <p className="text-green-700 text-sm leading-relaxed">
-                  All calculations use internationally recognized agricultural formulas for accurate, reliable results.
-                </p>
+        {/* Info Section */}
+        <Card className="max-w-4xl mx-auto">
+          <CardContent className="p-8 sm:p-6 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="p-3 rounded-full bg-green-100 border-2 border-green-200">
+                <Calculator className="h-8 w-8 sm:h-6 sm:w-6 text-green-600" />
               </div>
             </div>
-          </div>
-        )}
+            <h2 className="text-2xl sm:text-xl font-bold text-gray-900 mb-3">
+              Science-Based Results
+            </h2>
+            <p className="text-base sm:text-sm text-gray-600 leading-relaxed max-w-2xl mx-auto">
+              All calculations use internationally recognized agricultural formulas for accurate, reliable results.
+            </p>
+          </CardContent>
+        </Card>
       </div>
-    </ProtectedRoute>
+    </div>
   );
 }

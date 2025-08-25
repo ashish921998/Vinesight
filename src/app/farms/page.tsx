@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Edit, Sprout, Loader2 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { SupabaseService } from "@/lib/supabase-service";
+import { HybridDataService } from "@/lib/hybrid-data-service";
 import type { Farm } from "@/lib/supabase";
 
 export default function FarmsPage() {
@@ -33,10 +33,11 @@ export default function FarmsPage() {
   const loadFarms = async () => {
     try {
       setLoading(true);
-      const farmList = await SupabaseService.getAllFarms();
+      const farmList = await HybridDataService.getAllFarms();
       setFarms(farmList);
     } catch (error) {
       console.error("Error loading farms:", error);
+      // Show user-friendly error but don't break the app
     } finally {
       setLoading(false);
     }
@@ -48,7 +49,7 @@ export default function FarmsPage() {
     try {
       setSubmitLoading(true);
       if (editingFarm) {
-        await SupabaseService.updateFarm(editingFarm.id!, {
+        await HybridDataService.updateFarm(editingFarm.id!, {
           name: formData.name,
           region: formData.region,
           area: parseFloat(formData.area),
@@ -58,7 +59,7 @@ export default function FarmsPage() {
           row_spacing: parseFloat(formData.row_spacing)
         });
       } else {
-        await SupabaseService.createFarm({
+        await HybridDataService.createFarm({
           name: formData.name,
           region: formData.region,
           area: parseFloat(formData.area),
@@ -95,7 +96,7 @@ export default function FarmsPage() {
   const handleDelete = async (id: number) => {
     if (confirm("Are you sure you want to delete this farm? This will also delete all associated records.")) {
       try {
-        await SupabaseService.deleteFarm(id);
+        await HybridDataService.deleteFarm(id);
         await loadFarms();
       } catch (error) {
         console.error("Error deleting farm:", error);
