@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,34 +54,49 @@ export function IrrigationForm({ selectedFarm, onRecordAdded, onCancel }: Irriga
     'Very Dry', 'Dry', 'Moderate', 'Adequate', 'Wet'
   ];
 
-  const calculateETc = () => {
+  // Memoized ETc calculation inputs
+  const etcInputs = useMemo(() => {
     if (!formData.temperature_max || !formData.temperature_min || !formData.humidity || !formData.wind_speed) {
-      return;
+      return null;
     }
 
-    try {
-      const inputs = {
-        farmId: selectedFarm.id!,
-        weatherData: {
-          date: formData.date,
-          temperatureMax: parseFloat(formData.temperature_max),
-          temperatureMin: parseFloat(formData.temperature_min),
-          humidity: parseFloat(formData.humidity),
-          windSpeed: parseFloat(formData.wind_speed),
-          rainfall: formData.rainfall ? parseFloat(formData.rainfall) : 0
-        },
-        growthStage: formData.growth_stage as GrapeGrowthStage,
-        plantingDate: selectedFarm.planting_date,
-        location: {
-          latitude: 19.1, // Default for Maharashtra, should be from farm data
-          longitude: 73.7,
-          elevation: 500
-        },
-        irrigationMethod: 'drip' as const,
-        soilType: 'loamy' as const
-      };
+    return {
+      farmId: selectedFarm.id!,
+      weatherData: {
+        date: formData.date,
+        temperatureMax: parseFloat(formData.temperature_max),
+        temperatureMin: parseFloat(formData.temperature_min),
+        humidity: parseFloat(formData.humidity),
+        windSpeed: parseFloat(formData.wind_speed),
+        rainfall: formData.rainfall ? parseFloat(formData.rainfall) : 0
+      },
+      growthStage: formData.growth_stage as GrapeGrowthStage,
+      plantingDate: selectedFarm.planting_date,
+      location: {
+        latitude: 19.1, // Default for Maharashtra, should be from farm data
+        longitude: 73.7,
+        elevation: 500
+      },
+      irrigationMethod: 'drip' as const,
+      soilType: 'loamy' as const
+    };
+  }, [
+    formData.temperature_max,
+    formData.temperature_min,
+    formData.humidity,
+    formData.wind_speed,
+    formData.rainfall,
+    formData.growth_stage,
+    formData.date,
+    selectedFarm.id,
+    selectedFarm.planting_date
+  ]);
 
-      const results = ETcCalculator.calculateETc(inputs);
+  const calculateETc = useCallback(() => {
+    if (!etcInputs) return;
+
+    try {
+      const results = ETcCalculator.calculateETc(etcInputs);
       setEtcResults(results);
       setShowEtcCalculation(true);
 
@@ -95,7 +110,7 @@ export function IrrigationForm({ selectedFarm, onRecordAdded, onCancel }: Irriga
     } catch (error) {
       console.error('Error calculating ETc:', error);
     }
-  };
+  }, [etcInputs]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

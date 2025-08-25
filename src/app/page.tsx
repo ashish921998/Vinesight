@@ -2,99 +2,73 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sprout, Calculator, FileText, Settings, Activity, Users, Bug, TrendingUp } from "lucide-react";
+import { Sprout, Calculator, FileText } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { LoginButton } from "@/components/auth/LoginButton";
-import { useTranslation } from "react-i18next";
+import { QuickActions } from "@/components/mobile/QuickActions";
 
 export default function Home() {
   const { user, loading } = useAuth();
-  const { t } = useTranslation();
   
   const features = [
     {
-      title: t('home.features.farmManagement.title'),
-      description: t('home.features.farmManagement.description'),
+      title: "Farm Management",
+      description: "Manage your grape farms and vineyard details",
       icon: Sprout,
       href: "/farms"
     },
     {
-      title: t('home.features.calculators.title'),
-      description: t('home.features.calculators.description'),
+      title: "Calculators",
+      description: "Scientific calculations for irrigation and nutrients",
       icon: Calculator,
       href: "/calculators"
     },
     {
-      title: t('home.features.diseasePredict.title'),
-      description: t('home.features.diseasePredict.description'),
-      icon: Bug,
-      href: "/disease-prediction"
-    },
-    {
-      title: t('home.features.yieldPredict.title'),
-      description: t('home.features.yieldPredict.description'),
-      icon: TrendingUp,
-      href: "/yield-prediction"
-    },
-    {
-      title: t('home.features.journal.title'),
-      description: t('home.features.journal.description'),
+      title: "Farm Journal",
+      description: "Track daily operations and activities",
       icon: FileText,
       href: "/journal"
-    },
-    {
-      title: t('home.features.analytics.title'),
-      description: t('home.features.analytics.description'),
-      icon: Activity,
-      href: "/analytics"
-    },
-    {
-      title: t('home.features.reminders.title'),
-      description: t('home.features.reminders.description'),
-      icon: Users,
-      href: "/reminders"
-    },
-    {
-      title: t('home.features.settings.title'),
-      description: t('home.features.settings.description'),
-      icon: Settings,
-      href: "/settings"
     }
   ];
 
   return (
     <div className="container mx-auto">
-      <header className="text-center mb-8 sm:mb-12 px-2">
-        <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-3 sm:mb-4">
-          🍇 {t('home.title')}
+      {/* Header */}
+      <header className="text-center mb-8 px-3">
+        <h1 className="text-3xl font-bold text-green-800 mb-2">
+          🍇 VineSight
         </h1>
-        <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
-          {t('home.subtitle')}
-        </p>
-        <p className="text-sm text-muted-foreground mt-2 px-2">
-          {t('home.description')}
+        <p className="text-gray-600">
+          Your digital grape farming companion
         </p>
       </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-2">
+      {/* Mobile Quick Actions - Only show on mobile */}
+      <div className="lg:hidden px-3 mb-6">
+        <QuickActions />
+      </div>
+
+      {/* Main Features - Only show on desktop */}
+      <div className="hidden lg:grid lg:grid-cols-3 gap-6 px-3 mb-8">
         {features.map((feature) => {
           const Icon = feature.icon;
           return (
-            <Card key={feature.title} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3 sm:pb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
-                  <CardTitle className="text-base sm:text-lg leading-tight">{feature.title}</CardTitle>
+            <Card key={feature.title} className="hover:shadow-md transition-shadow border-green-100">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <Icon className="h-5 w-5 text-green-600" />
+                  </div>
+                  <CardTitle className="text-lg text-gray-900">{feature.title}</CardTitle>
                 </div>
-                <CardDescription className="text-sm leading-relaxed">{feature.description}</CardDescription>
+                <CardDescription className="text-gray-600">{feature.description}</CardDescription>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent>
                 <Button 
-                  variant="outline" 
-                  className="w-full h-10 sm:h-11 text-sm sm:text-base"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
                   onClick={() => window.location.href = feature.href}
                 >
-                  {t('common.buttons.openModule')}
+                  Open
                 </Button>
               </CardContent>
             </Card>
@@ -102,39 +76,50 @@ export default function Home() {
         })}
       </div>
 
-      <div className="mt-8 sm:mt-12 text-center px-2">
-        <Card className="max-w-md mx-auto">
-          <CardHeader className="pb-3 sm:pb-4">
-            <CardTitle className="text-base sm:text-lg">
-              {user ? t('home.gettingStarted.title') : t('home.joinToday.title')}
-            </CardTitle>
-            <CardDescription className="text-sm">
-              {user 
-                ? t('home.gettingStarted.description')
-                : t('home.joinToday.description')
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {loading ? (
-              <Button disabled className="w-full h-11">
-                {t('common.loading')}
-              </Button>
-            ) : user ? (
+      {/* Get Started Section */}
+      {!user && (
+        <div className="px-3 mt-8">
+          <Card className="max-w-md mx-auto border-green-200 bg-green-50">
+            <CardHeader className="text-center">
+              <CardTitle className="text-green-800">Start Your Journey</CardTitle>
+              <CardDescription className="text-green-700">
+                Join thousands of grape farmers using VineSight
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <Button disabled className="w-full h-12 bg-green-600">
+                  Loading...
+                </Button>
+              ) : (
+                <LoginButton className="w-full h-12 bg-green-600 hover:bg-green-700 text-white">
+                  Get Started
+                </LoginButton>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Welcome Back Section */}
+      {user && (
+        <div className="px-3 mt-8 lg:hidden">
+          <Card className="border-green-200 bg-green-50">
+            <CardContent className="p-6 text-center">
+              <h3 className="font-semibold text-green-800 mb-2">Welcome back!</h3>
+              <p className="text-green-700 text-sm mb-4">
+                Ready to manage your vineyard?
+              </p>
               <Button 
-                className="w-full h-11"
+                className="bg-green-600 hover:bg-green-700 text-white"
                 onClick={() => window.location.href = "/farms"}
               >
-                {t('home.gettingStarted.button')}
+                Go to My Farms
               </Button>
-            ) : (
-              <LoginButton className="w-full h-11">
-                {t('home.joinToday.button')}
-              </LoginButton>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

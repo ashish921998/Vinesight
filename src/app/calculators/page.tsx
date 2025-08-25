@@ -10,8 +10,8 @@ import {
   Leaf, 
   Beaker, 
   Target,
-  Info,
-  Star
+  ArrowRight,
+  ChevronRight
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ETcCalculatorComponent } from "@/components/calculators/ETcCalculator";
@@ -25,205 +25,130 @@ export default function CalculatorsPage() {
   const calculators = [
     {
       id: "etc",
-      title: "ETc Calculator (Advanced)",
-      description: "Scientific evapotranspiration calculator using Penman-Monteith equation with grape-specific crop coefficients",
+      title: "Water Needs Calculator",
+      shortTitle: "Water",
+      description: "Calculate how much water your grapes need daily",
+      simpleDesc: "Daily water requirement",
       icon: Droplets,
-      formula: "ETc = ETo × Kc (Penman-Monteith based)",
-      inputs: ["Weather Data", "Growth Stage", "Location", "Irrigation Method"],
-      status: "advanced",
-      featured: true,
-      color: "border-blue-200 bg-blue-50"
+      bgGradient: "from-green-500 to-green-600"
     },
     {
       id: "discharge",
-      title: "System Discharge Calculator",
-      description: "Calculate irrigation system discharge and flow rates",
+      title: "System Flow Rate",
+      shortTitle: "Flow Rate", 
+      description: "Check if your irrigation system delivers enough water",
+      simpleDesc: "System capacity check",
       icon: Target,
-      formula: "Based on system specifications",
-      inputs: ["Emitter Flow Rate", "Number of Emitters", "System Pressure"],
-      status: "advanced",
-      featured: true,
-      color: "border-orange-200 bg-orange-50"
+      bgGradient: "from-green-400 to-green-500"
     },
     {
       id: "lai",
-      title: "Leaf Area Index (LAI) Calculator",
-      description: "Calculate leaf area index for canopy management",
+      title: "Leaf Coverage Calculator",
+      shortTitle: "Leaf Cover",
+      description: "Measure how well your vines cover the ground",
+      simpleDesc: "Canopy density check",
       icon: Leaf,
-      formula: "LAI = Total Leaf Area / Ground Area",
-      inputs: ["Leaves per Shoot", "Shoots per Vine", "Vine Spacing", "Row Spacing"],
-      status: "advanced",
-      featured: true,
-      color: "border-green-200 bg-green-50"
+      bgGradient: "from-green-600 to-green-700"
     },
     {
       id: "nutrients",
-      title: "Nutrient Calculator",
-      description: "Calculate fertilizer requirements for different growth stages",
+      title: "Fertilizer Calculator",
+      shortTitle: "Fertilizer",
+      description: "Find out exactly how much fertilizer to apply",
+      simpleDesc: "Nutrient requirements",
       icon: Beaker,
-      formula: "Based on yield targets and soil analysis",
-      inputs: ["Target Yield", "Soil Test Results", "Growth Stage", "Previous Applications"],
-      status: "advanced",
-      featured: true,
-      color: "border-purple-200 bg-purple-50"
+      bgGradient: "from-green-500 to-green-600"
     }
   ];
-
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      advanced: { variant: 'default' as const, text: 'ADVANCED', color: 'bg-blue-600' },
-      coming_soon: { variant: 'secondary' as const, text: 'COMING SOON', color: 'bg-gray-500' }
-    };
-    
-    const config = variants[status as keyof typeof variants] || variants.coming_soon;
-    return (
-      <Badge variant={config.variant} className={config.color}>
-        {config.text}
-      </Badge>
-    );
-  };
 
   return (
     <ProtectedRoute>
       <div className="container mx-auto">
-        <div className="mb-6 sm:mb-8 px-2">
-          <h1 className="text-2xl sm:text-3xl font-bold text-primary flex items-center gap-2">
-            <Calculator className="h-6 w-6 sm:h-8 sm:w-8" />
-            Scientific Calculators
-          </h1>
-          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-            Advanced agricultural calculations for precision farming and irrigation management
+        {/* Header */}
+        <div className="mb-6 px-3">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Farm Calculators</h1>
+          <p className="text-gray-600">
+            Get accurate calculations for your vineyard needs
           </p>
         </div>
 
-        {/* Calculator Selection Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8 px-2">
-          {calculators.map((calc) => {
-            const Icon = calc.icon;
-            const isActive = activeCalculator === calc.id;
-            const isAvailable = calc.status === 'advanced';
-            
-            return (
-              <Card 
-                key={calc.id} 
-                className={`hover:shadow-lg transition-all duration-200 cursor-pointer ${
-                  isActive ? 'ring-2 ring-primary shadow-lg' : ''
-                } ${calc.color || 'border-gray-200'} ${
-                  !isAvailable ? 'opacity-75' : ''
-                }`}
-                onClick={() => isAvailable && setActiveCalculator(isActive ? null : calc.id)}
-              >
-                <CardHeader className="pb-3 sm:pb-4">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className="relative flex-shrink-0">
-                        <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${calc.status === 'advanced' ? 'text-blue-600' : 'text-gray-500'}`} />
-                        {calc.featured && (
-                          <Star className="h-3 w-3 text-yellow-500 absolute -top-1 -right-1" />
-                        )}
+        {/* No Active Calculator - Show Grid */}
+        {!activeCalculator && (
+          <div className="px-3 space-y-3">
+            {calculators.map((calc) => {
+              const Icon = calc.icon;
+              
+              return (
+                <Card 
+                  key={calc.id} 
+                  className="hover:shadow-md transition-all duration-200 cursor-pointer border-0 shadow-sm"
+                  onClick={() => setActiveCalculator(calc.id)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      {/* Icon */}
+                      <div className={`
+                        w-14 h-14 rounded-2xl bg-gradient-to-br ${calc.bgGradient} 
+                        flex items-center justify-center flex-shrink-0
+                      `}>
+                        <Icon className="h-7 w-7 text-white" />
                       </div>
+                      
+                      {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-base sm:text-lg flex items-center gap-2 leading-tight">
+                        <h3 className="font-semibold text-gray-900 text-lg leading-tight">
                           {calc.title}
-                          {calc.featured && <Star className="h-4 w-4 text-yellow-500 flex-shrink-0" />}
-                        </CardTitle>
-                        <CardDescription className="mt-1 text-sm leading-relaxed">{calc.description}</CardDescription>
+                        </h3>
+                        <p className="text-gray-600 text-sm mt-1 leading-relaxed">
+                          {calc.description}
+                        </p>
                       </div>
+                      
+                      {/* Arrow */}
+                      <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
                     </div>
-                    <div className="flex-shrink-0">
-                      {getStatusBadge(calc.status)}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-start gap-2 text-sm">
-                      <Info className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <span className="text-muted-foreground font-medium">Formula: </span>
-                        <span className="text-foreground">{calc.formula}</span>
-                      </div>
-                    </div>
-                    <div className="text-sm">
-                      <span className="text-muted-foreground font-medium">Required Inputs: </span>
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {calc.inputs.map((input, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {input}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <Button 
-                    variant={isActive ? "default" : "outline"} 
-                    className="w-full h-10 sm:h-11"
-                    disabled={!isAvailable}
-                  >
-                    {!isAvailable ? "Coming Soon" : isActive ? "Close Calculator" : "Open Calculator"}
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Active Calculator */}
-        {activeCalculator === "etc" && (
-          <div className="px-2">
-            <ETcCalculatorComponent />
-          </div>
-        )}
-        
-        {activeCalculator === "discharge" && (
-          <div className="px-2">
-            <SystemDischargeCalculatorComponent />
-          </div>
-        )}
-        
-        {activeCalculator === "lai" && (
-          <div className="px-2">
-            <LAICalculatorComponent />
-          </div>
-        )}
-        
-        {activeCalculator === "nutrients" && (
-          <div className="px-2">
-            <NutrientCalculatorComponent />
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
 
-        {/* Info Section */}
-        <Card className="mt-6 sm:mt-8 border-green-200 bg-green-50 mx-2">
-          <CardHeader className="pb-3 sm:pb-4">
-            <CardTitle className="text-green-800 text-lg sm:text-xl">Scientific Precision</CardTitle>
-            <CardDescription className="text-green-700 text-sm sm:text-base">
-              Our calculators are based on internationally recognized agricultural formulas and research
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-green-800">
+        {/* Active Calculator View */}
+        {activeCalculator && (
+          <div className="px-3">
+            {/* Back Button */}
+            <Button
+              variant="ghost"
+              onClick={() => setActiveCalculator(null)}
+              className="mb-4 text-gray-600 hover:text-gray-900 p-0 h-auto"
+            >
+              <ArrowRight className="h-4 w-4 mr-2 rotate-180" />
+              Back to Calculators
+            </Button>
+            
+            {/* Calculator Content */}
+            {activeCalculator === "etc" && <ETcCalculatorComponent />}
+            {activeCalculator === "discharge" && <SystemDischargeCalculatorComponent />}
+            {activeCalculator === "lai" && <LAICalculatorComponent />}
+            {activeCalculator === "nutrients" && <NutrientCalculatorComponent />}
+          </div>
+        )}
+
+        {/* Bottom Tip - Only show when no calculator is active */}
+        {!activeCalculator && (
+          <div className="mx-3 mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
+            <div className="flex items-start gap-3">
+              <Calculator className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
               <div>
-                <h4 className="font-semibold mb-2">ETc Calculator Features:</h4>
-                <ul className="space-y-1 text-green-700">
-                  <li>• FAO Penman-Monteith equation</li>
-                  <li>• Grape-specific crop coefficients (Kc)</li>
-                  <li>• Growth stage optimization</li>
-                  <li>• Weather-based adjustments</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Data Confidence:</h4>
-                <ul className="space-y-1 text-green-700">
-                  <li>• Real-time calculation validation</li>
-                  <li>• Confidence scoring system</li>
-                  <li>• Irrigation recommendations</li>
-                  <li>• Historical data tracking</li>
-                </ul>
+                <h4 className="font-medium text-green-800 mb-1">Science-Based Results</h4>
+                <p className="text-green-700 text-sm leading-relaxed">
+                  All calculations use internationally recognized agricultural formulas for accurate, reliable results.
+                </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   );

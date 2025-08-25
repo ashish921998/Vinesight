@@ -14,7 +14,7 @@ import {
 import { SupabaseService } from '@/lib/supabase-service';
 import type { Farm } from '@/lib/supabase';
 
-interface HarvestFormProps {
+export interface HarvestFormProps {
   selectedFarm: Farm;
   onRecordAdded: () => void;
   onCancel: () => void;

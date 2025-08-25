@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoginButton } from './LoginButton';
@@ -13,12 +13,20 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
+  const [mounted, setMounted] = useState(false);
   
-  // Development mode - bypass auth for MVP testing
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  // Development mode - bypass auth for local testing ONLY
   const isDevelopment = process.env.NODE_ENV === 'development';
-  const bypassAuth = isDevelopment && process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+  const isLocalhost = mounted && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const bypassAuth = isDevelopment && isLocalhost && process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
 
-  if (loading && !bypassAuth) {
+  // Show loading until component is mounted and auth check is complete
+  if (!mounted || (loading && !bypassAuth)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-2">

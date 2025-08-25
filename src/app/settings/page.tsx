@@ -15,16 +15,21 @@ import {
   AlertCircle,
   Trash2,
   RefreshCw,
-  Smartphone
+  Smartphone,
+  LogOut,
+  User
 } from "lucide-react";
 import { DatabaseService, Farm } from "@/lib/db-utils";
 import { ExportService } from "@/lib/export-utils";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function SettingsPage() {
+  const { user, signOut } = useAuth();
   const [farms, setFarms] = useState<Farm[]>([]);
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
   const [language, setLanguage] = useState('en');
   const [exportInProgress, setExportInProgress] = useState(false);
+  const [signOutLoading, setSignOutLoading] = useState(false);
   const [dbStats, setDbStats] = useState({
     totalRecords: 0,
     lastBackup: null as Date | null
@@ -121,6 +126,18 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      setSignOutLoading(true);
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+      alert('Failed to sign out. Please try again.');
+    } finally {
+      setSignOutLoading(false);
+    }
+  };
+
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
@@ -189,6 +206,63 @@ export default function SettingsPage() {
                     {language === 'hi' ? 'Hindi' : 'Marathi'} translation is coming soon. 
                     The app will restart in English for now.
                   </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Account Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Account Settings
+            </CardTitle>
+            <CardDescription>
+              Manage your account and sign out options
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {user ? (
+                <>
+                  <div>
+                    <Label>Signed in as</Label>
+                    <div className="mt-2 space-y-2">
+                      <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">
+                            {user.user_metadata?.full_name || 'User'}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {user.email}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <Button
+                      variant="destructive"
+                      onClick={handleSignOut}
+                      disabled={signOutLoading}
+                      className="w-full flex items-center gap-2 h-12"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {signOutLoading ? 'Signing out...' : 'Sign Out'}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      You will be redirected to the login page
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-6">
+                  <User className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-500">Not signed in</p>
                 </div>
               )}
             </div>

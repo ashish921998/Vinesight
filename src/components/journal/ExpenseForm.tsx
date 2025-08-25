@@ -21,7 +21,7 @@ import {
 import { SupabaseService } from '@/lib/supabase-service';
 import type { Farm } from '@/lib/supabase';
 
-interface ExpenseFormProps {
+export interface ExpenseFormProps {
   selectedFarm: Farm;
   onRecordAdded: () => void;
   onCancel: () => void;

@@ -1,244 +1,115 @@
-# VineSight Development Todos
+# VineSight Development Todos - MVP SHIPPING TODAY
 
-## Phase 1: Core Record-Keeping & Calculators
+## 🚀 **CRITICAL FOR TODAY'S MVP SHIP**
 
-### 4.1 Farm & Operations Management
-- [ ] Add/edit/delete multiple Farms functionality
-  - [ ] Name, region, area (ha), grape variety, planting date fields
-  - [ ] Form validation
-  - [ ] Database persistence
+### **PRIORITY 1: Core Data & Database Integration**
+- [ ] **Farms Page Database Integration**
+  - [ ] Fix farms list to fetch from Supabase database
+  - [ ] Remove mock data and use SupabaseService.getAllFarms()
+  - [ ] Add proper error handling for database operations
+  - [ ] Test farm CRUD operations end-to-end
 
-### 4.2 Scientific Calculators & Data Entry
+- [ ] **Loading & UX Improvements**  
+  - [ ] Add loading animations for mobile PWA
+  - [ ] Implement skeleton screens for data loading
+  - [ ] Add loading states for all database operations
+  - [ ] Ensure smooth experience on mobile devices
 
-#### Irrigation/Water Use Module
-- [ ] Evapotranspiration (ETc) calculator: `ETc = ETo * Kc`
-- [ ] System discharge calculator (formula from notes)
-- [ ] MAD (Maximum Allowable Deficit) irrigation schedules
-- [ ] Drip irrigation planner
-  - [ ] Refill tank calculator
-  - [ ] Number of plants input
-  - [ ] System discharge calculation
-  - [ ] Irrigation hours calculation
-  - [ ] Interval planning
+- [ ] **Authentication UX**
+  - [ ] Add sign out button in navigation/header
+  - [ ] Add user profile display in header
+  - [ ] Test sign in/sign out flow completely
+  - [ ] Add loading state for authentication
 
-#### Nutrient Calculator
-- [ ] Micronutrient recommendations (Zn, B, Fe, Mn, Cu, Mo, Ca, Mg, S)
-- [ ] Per acre guidance for nutrients
-- [ ] NPK recommendations by yield target and growth stage
-- [ ] Split application schedule
-- [ ] Typical nutrient removal calculator
-- [ ] N, P, K outputs per ton yield and per 12 ton/acre
+### **PRIORITY 2: Scientific Calculators Logic**
+- [ ] **ETc Calculator Implementation**
+  - [ ] Implement Penman-Monteith equation: ETc = ETo * Kc
+  - [ ] Add ETo calculation with weather inputs
+  - [ ] Add Kc values for different grape growth stages
+  - [ ] Display results with units and explanations
 
-#### Leaf Area Index (LAI) Calculator
-- [ ] Input fields:
-  - [ ] Leaves per shoot
-  - [ ] Shoots per vine
-  - [ ] Average leaf area
-  - [ ] Vine/row spacing
-- [ ] Automatic LAI computation
-- [ ] Leaf area vs ground area display
+- [ ] **System Discharge Calculator**
+  - [ ] Implement formula from research notes
+  - [ ] Calculate irrigation system flow rates
+  - [ ] Add input validation and error handling
+  - [ ] Show step-by-step calculation breakdown
 
-#### Post-harvest Alternatives & Processing
-- [ ] Ascorbic acid methods (vitamin C) recording
-- [ ] Shaded drying guidance
-- [ ] Storage recommendations
+- [ ] **LAI Calculator Logic**
+  - [ ] Calculate Leaf Area Index from inputs
+  - [ ] Formula: LAI = Total Leaf Area / Ground Area
+  - [ ] Add visual representation of results
+  - [ ] Include recommendations based on LAI values
 
-### 4.3 Daily & Event-Based Journal
+- [ ] **Nutrient Calculator Logic**
+  - [ ] NPK recommendations by growth stage
+  - [ ] Micronutrient calculations (Zn, B, Fe, Mn, Cu, Mo)
+  - [ ] Per acre/hectare dosage recommendations
+  - [ ] Split application scheduling
 
-#### Record Operations
-- [ ] Spray management
-  - [ ] Date, dose, pest/disease, weather, operator, area/field
-- [ ] Irrigation events
-  - [ ] Date, duration, area, stage, moisture status
-- [ ] Fertigation/fertilizer events
-  - [ ] Date, fertilizer, dose, purpose
-- [ ] Vineyard training
-  - [ ] Date, type, purpose, labor
-- [ ] Harvesting log
-  - [ ] Date, quantity, grade
-- [ ] Expenses & labor with breakdown
-  - [ ] Date, type, cost, remarks
-- [ ] Soil/water/plant testing
-  - [ ] Date, parameters, result, recommendation followed
-- [ ] Pest/disease observation
-  - [ ] Date, type, severity, action
-- [ ] Post-production records
-  - [ ] Expenses, purchases, cold storage, box rate, sold date, payments
+### **PRIORITY 3: Journal Data Entry Polish**
+- [ ] **Irrigation Recording Form**
+  - [ ] Complete form with all required fields from PRD
+  - [ ] Database integration with irrigation_records table
+  - [ ] Add ETc calculation integration
+  - [ ] Input validation and error handling
 
-#### Task Management
-- [ ] Task tracking with due reminders
-- [ ] Notification list (to-do)
-- [ ] Weather alerts
-- [ ] Irrigation trigger alerts
-- [ ] Empty tank/event notifications
+- [ ] **Spray Management Form**
+  - [ ] Pest/disease selection dropdown
+  - [ ] Chemical dosage calculator
+  - [ ] Weather conditions recording
+  - [ ] Operator and area tracking
 
-### 4.4 Data & Export
-- [ ] Persistent local data storage
-- [ ] Optional cloud sync
-- [ ] Export journals/reports as CSV
-- [ ] Export journals/reports as PDF
+- [ ] **Harvest & Expense Forms**
+  - [ ] Quantity, grade, price recording
+  - [ ] Cost breakdown by category
+  - [ ] Date filtering and search
+  - [ ] Export functionality preparation
 
-### 4.5 Multi-Language
-- [ ] English UI
-- [ ] Hindi UI translation
-- [ ] Marathi UI translation
-- [ ] Language toggle functionality
+## ✅ **ALREADY COMPLETED**
+- [x] Database schema and Supabase setup
+- [x] Authentication system with Google OAuth
+- [x] Navigation and routing system
+- [x] UI components and responsive design
+- [x] Protected routes implementation
+- [x] Form component structure
+- [x] Hydration error fixes
+- [x] TypeScript error resolution
+- [x] Security fixes implementation
 
-## Technical Implementation
+## 📋 **MVP SHIPPING CHECKLIST**
 
-### Database & Backend
-- [x] Supabase project setup
-- [x] Database schema implementation
-- [ ] Row Level Security (RLS) policies
-- [ ] API routes for all operations
-- [ ] Authentication flow
+### Before Ship:
+- [ ] All database operations working
+- [ ] Loading states implemented
+- [ ] Sign out functionality added
+- [ ] Calculators returning actual results
+- [ ] Journal forms saving to database
+- [ ] Mobile PWA experience tested
+- [ ] No console errors or warnings
+- [ ] Build process successful
 
-### Frontend Components
-- [ ] Farm management UI
-- [ ] Calculator components
-- [ ] Journal/logging interface
-- [ ] Navigation system
-- [ ] Export functionality
-- [ ] Multi-language support
+### MVP Success Criteria:
+1. **Farmers can add/manage their farms**
+2. **Scientific calculators provide real calculations**
+3. **Journal entries save to database successfully**
+4. **App works smoothly on mobile devices**
+5. **Authentication flow is complete**
 
-### Testing & Quality Assurance
-- [ ] Unit tests for calculators
-- [ ] Integration tests for database operations
-- [ ] End-to-end testing with Playwright
-- [ ] Mobile responsiveness testing
-- [ ] Offline functionality testing
+## 🎯 **TODAY'S EXECUTION PLAN**
 
-## User Stories Verification
-- [ ] Enter farm and crop data once for reuse
-- [ ] Simple calculators (ETc, fertilization, LAI) with guidance
-- [ ] Enter spray and irrigation records for compliance
-- [ ] Download/print field logs and recommendations
-- [ ] Marathi/Hindi language interface support
+**Phase 1 (2-3 hours):** Database Integration & Auth UX
+**Phase 2 (2-3 hours):** Calculator Logic Implementation  
+**Phase 3 (1-2 hours):** Journal Forms Polish & Testing
+**Phase 4 (1 hour):** Final Testing & Deploy
 
-## MVP Acceptance Criteria
-- [ ] User can add/edit/delete a farm and access calculators
-- [ ] All key calculators implement formulas as per notes
-- [ ] Enter, view, and export all operations
-- [ ] Interface available in Marathi and Hindi
-- [ ] Works reliably offline and syncs/exports when online
-- [ ] Responsive on all mobiles/tablets
+## 🚫 **DEFERRED TO POST-MVP**
+- Multi-language support (Hindi/Marathi)
+- Advanced export features (CSV/PDF)
+- Task management and reminders
+- Weather API integration
+- IoT sensor integration
+- Advanced analytics dashboard
 
-## Current Status: Comprehensive Testing Completed
-*Last updated: August 24, 2025*
-
-### ✅ **COMPLETED FEATURES**
-
-#### Database & Backend Infrastructure
-- [x] **Supabase Project Setup** - Connected to project `ibczxoiaonssyzsybebu`
-- [x] **Complete Database Schema** - All 9 core tables implemented:
-  - `farms` (farm management)
-  - `irrigation_records`
-  - `spray_records` 
-  - `fertigation_records`
-  - `harvest_records`
-  - `task_reminders`
-  - `calculation_history`
-  - `expense_records`
-  - `soil_test_records`
-- [x] **Row Level Security (RLS)** - Proper policies implemented
-- [x] **Authentication System** - Google OAuth integration
-- [x] **Type Definitions** - Complete TypeScript interfaces
-
-#### Frontend Implementation
-- [x] **Navigation System** - Functional sidebar with 8 modules
-- [x] **Responsive Design** - Mobile-friendly layout
-- [x] **Component Architecture** - Well-structured React components
-
-#### **4.2 Scientific Calculators (ADVANCED)**
-- [x] **ETc Calculator** - Evapotranspiration with Penman-Monteith equation
-- [x] **System Discharge Calculator** - Irrigation system flow rates  
-- [x] **LAI Calculator** - Leaf Area Index computation
-- [x] **Nutrient Calculator** - Fertilizer requirements by growth stage
-- [x] **Professional UI** - Color-coded, status badges, formula display
-- [x] **Interactive Design** - Click to expand calculator interface
-
-#### **4.1 Farm Management**
-- [x] **Complete Farm CRUD** - Add/edit/delete farms
-- [x] **Comprehensive Form** - Name, region, area, variety, planting date, spacing
-- [x] **Data Validation** - Required fields, number validation
-- [x] **Professional UI** - Card-based layout with farm details
-
-#### **4.3 Journal System Structure** 
-- [x] **All 8 Module Pages** - Placeholder pages created
-- [x] **Navigation Working** - Links between all sections
-- [x] **Authentication Integration** - Protected routes
-
-### 🔧 **IN PROGRESS**
-
-#### Authentication vs PRD Requirement
-- **Issue**: App requires Google OAuth authentication
-- **PRD Conflict**: Section 11 states "No login/auth required for single-user mode"
-- **Status**: Need to implement optional auth mode
-
-### ❌ **MISSING FEATURES (High Priority)**
-
-#### **4.2 Calculator Components**
-- [ ] **ETc Calculator Logic** - Component exists but needs implementation
-- [ ] **LAI Calculator Logic** - Component exists but needs implementation  
-- [ ] **Nutrient Calculator Logic** - Component exists but needs implementation
-- [ ] **System Discharge Logic** - Component exists but needs implementation
-
-#### **4.3 Journal Implementation**
-- [ ] **Irrigation Recording** - Form for irrigation events
-- [ ] **Spray Management** - Pest/disease treatment logging
-- [ ] **Fertigation Records** - Fertilizer application tracking
-- [ ] **Harvest Logging** - Quantity, grade, price recording
-- [ ] **Expense Tracking** - Cost breakdown by category
-- [ ] **Task Management** - Reminders and notifications
-
-#### **4.4 Data Export**
-- [ ] **CSV Export** - Journal and calculation data
-- [ ] **PDF Reports** - Formatted farm reports
-- [ ] **Data Sync** - Cloud backup functionality
-
-#### **4.5 Multi-Language Support**
-- [ ] **Hindi Translation** - UI translation
-- [ ] **Marathi Translation** - UI translation  
-- [ ] **Language Toggle** - User preference setting
-
-### 🎯 **CRITICAL NEXT STEPS**
-
-1. **Resolve Authentication Requirement** - Make auth optional for MVP
-2. **Implement Calculator Logic** - Add actual computation functions
-3. **Build Journal Interfaces** - Create forms for all operation types
-4. **Add Export Functionality** - CSV/PDF generation
-5. **Multi-language Implementation** - i18n system
-
-### 📊 **MVP COMPLETION STATUS**
-
-**Overall Progress: 40%**
-
-- **Backend/Database**: 95% ✅
-- **UI Framework**: 85% ✅  
-- **Calculators**: 30% (UI done, logic missing)
-- **Farm Management**: 95% ✅
-- **Journal System**: 15% (structure only)
-- **Export Features**: 0%
-- **Multi-language**: 0%
-- **Authentication**: 95% ✅ (but conflicts with PRD)
-
-### 🔍 **TESTING RESULTS**
-
-#### What Works:
-- ✅ Application starts successfully (http://localhost:3002)
-- ✅ Navigation between all 8 modules
-- ✅ Professional UI design and responsiveness
-- ✅ Database connection established
-- ✅ Authentication system functional
-- ✅ Calculator selection interface
-
-#### What Needs Authentication:
-- 🔒 All feature modules require Google sign-in
-- 🔒 Database operations blocked without auth
-- 🔒 Cannot test core functionality without OAuth setup
-
-#### Architecture Quality:
-- ✅ Clean component structure
-- ✅ Proper TypeScript usage
-- ✅ Professional styling (Tailwind + shadcn/ui)
-- ✅ Good separation of concerns
+---
+*Last updated: August 25, 2025*
+*Status: MVP SHIPPING DAY - FOCUS MODE ACTIVATED*

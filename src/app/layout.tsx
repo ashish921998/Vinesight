@@ -6,6 +6,8 @@ import { AuthProvider } from "../../context/AuthContext";
 import { I18nProvider } from "@/components/providers/I18nProvider";
 import { OfflineIndicator } from "@/components/pwa/OfflineIndicator";
 import { PWAWrapper } from "@/components/pwa/PWAWrapper";
+import { AsyncErrorBoundary } from "@/components/ErrorBoundary";
+import { BottomNavigation } from "@/components/mobile/BottomNavigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,26 +56,29 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <I18nProvider>
-            <div className="min-h-screen bg-gray-50">
-              <Navigation />
-              <main className="lg:pl-72">
-                <div className="px-3 py-4 sm:px-4 sm:py-6 lg:px-8 lg:py-6">
-                  {children}
+        <AsyncErrorBoundary>
+          <AuthProvider>
+            <I18nProvider>
+              <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
+                <Navigation />
+                <main className="lg:pl-72 pt-0">
+                  <div className="px-3 py-4 sm:px-4 sm:py-6 lg:px-8 lg:py-6">
+                    {children}
+                  </div>
+                </main>
+                <BottomNavigation />
+                {/* PWA Install Prompt */}
+                <div className="fixed bottom-4 left-4 right-4 lg:left-80 z-40">
+                  <PWAWrapper />
                 </div>
-              </main>
-              {/* PWA Install Prompt */}
-              <div className="fixed bottom-4 left-4 right-4 lg:left-80 z-40">
-                <PWAWrapper />
+                {/* Offline Status Indicator */}
+                <div className="fixed top-4 right-4 z-30">
+                  <OfflineIndicator />
+                </div>
               </div>
-              {/* Offline Status Indicator */}
-              <div className="fixed top-4 right-4 z-30">
-                <OfflineIndicator />
-              </div>
-            </div>
-          </I18nProvider>
-        </AuthProvider>
+            </I18nProvider>
+          </AuthProvider>
+        </AsyncErrorBoundary>
       </body>
     </html>
   );

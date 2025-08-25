@@ -1,9 +1,32 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Validate required environment variables
+if (!supabaseUrl || !supabaseAnonKey) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Missing required Supabase environment variables in production')
+  }
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('⚠️ Supabase environment variables not configured. Some features may not work.')
+    console.warn('Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  }
+}
+
+// Only create client with valid configuration
+export const supabase = (supabaseUrl && supabaseAnonKey) 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null
+
+// Helper function to ensure supabase client is available
+export function getSupabaseClient() {
+  if (!supabase) {
+    throw new Error('Supabase client not initialized. Check environment variables.')
+  }
+  return supabase
+}
 
 // Database types based on your existing schema
 export interface Farm {

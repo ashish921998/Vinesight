@@ -5,13 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Edit, Sprout } from "lucide-react";
+import { Plus, Trash2, Edit, Sprout, Loader2 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { SupabaseService } from "@/lib/supabase-service";
 import type { Farm } from "@/lib/supabase";
 
 export default function FarmsPage() {
   const [farms, setFarms] = useState<Farm[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingFarm, setEditingFarm] = useState<Farm | null>(null);
   const [formData, setFormData] = useState({
@@ -30,10 +32,13 @@ export default function FarmsPage() {
 
   const loadFarms = async () => {
     try {
+      setLoading(true);
       const farmList = await SupabaseService.getAllFarms();
       setFarms(farmList);
     } catch (error) {
       console.error("Error loading farms:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,6 +46,7 @@ export default function FarmsPage() {
     e.preventDefault();
     
     try {
+      setSubmitLoading(true);
       if (editingFarm) {
         await SupabaseService.updateFarm(editingFarm.id!, {
           name: formData.name,
@@ -67,6 +73,8 @@ export default function FarmsPage() {
       resetForm();
     } catch (error) {
       console.error("Error saving farm:", error);
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
@@ -131,9 +139,9 @@ export default function FarmsPage() {
           </div>
           <Button 
             onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 h-11 px-4 w-full sm:w-auto"
+            className="flex items-center gap-2 h-12 px-4 w-full sm:w-auto touch-manipulation active:scale-95 transition-transform text-base font-semibold"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-5 w-5" />
             Add New Farm
           </Button>
         </div>
@@ -237,10 +245,17 @@ export default function FarmsPage() {
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <Button type="submit" className="h-11 flex-1 sm:flex-none">
-                    {editingFarm ? "Update Farm" : "Add Farm"}
+                  <Button type="submit" disabled={submitLoading} className="h-11 flex-1 sm:flex-none">
+                    {submitLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {editingFarm ? "Updating..." : "Adding..."}
+                      </>
+                    ) : (
+                      editingFarm ? "Update Farm" : "Add Farm"
+                    )}
                   </Button>
-                  <Button type="button" variant="outline" onClick={resetForm} className="h-11 flex-1 sm:flex-none">
+                  <Button type="button" variant="outline" onClick={resetForm} disabled={submitLoading} className="h-11 flex-1 sm:flex-none">
                     Cancel
                   </Button>
                 </div>
@@ -250,7 +265,37 @@ export default function FarmsPage() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {farms.map((farm) => (
+          {loading ? (
+            // Skeleton loading cards
+            Array.from({ length: 3 }).map((_, index) => (
+              <Card key={index} className="animate-pulse">
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <div className="h-9 w-9 bg-gray-200 rounded"></div>
+                      <div className="h-9 w-9 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-2 text-sm mb-4">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="flex justify-between">
+                        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="h-10 bg-gray-200 rounded w-full"></div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            farms.map((farm) => (
             <Card key={farm.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
@@ -263,7 +308,7 @@ export default function FarmsPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleEdit(farm)}
-                      className="h-9 w-9 p-0"
+                      className="h-10 w-10 p-0 touch-manipulation active:scale-95 transition-transform"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -271,7 +316,7 @@ export default function FarmsPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleDelete(farm.id!)}
-                      className="h-9 w-9 p-0"
+                      className="h-10 w-10 p-0 touch-manipulation active:scale-95 transition-transform hover:bg-red-50 hover:border-red-200"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -301,7 +346,7 @@ export default function FarmsPage() {
                 <div>
                   <Button 
                     variant="outline" 
-                    className="w-full h-10"
+                    className="w-full h-12 text-base touch-manipulation active:scale-95 transition-transform"
                     onClick={() => window.location.href = `/farms/${farm.id}`}
                   >
                     View Details
@@ -309,9 +354,10 @@ export default function FarmsPage() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+          ))
+          )}
           
-          {farms.length === 0 && !showAddForm && (
+          {!loading && farms.length === 0 && !showAddForm && (
             <Card className="col-span-full text-center py-8 sm:py-12">
               <CardContent>
                 <Sprout className="h-12 w-12 mx-auto text-muted-foreground mb-4" />

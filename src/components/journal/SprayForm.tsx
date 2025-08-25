@@ -15,7 +15,7 @@ import {
 import { SupabaseService } from '@/lib/supabase-service';
 import type { Farm } from '@/lib/supabase';
 
-interface SprayFormProps {
+export interface SprayFormProps {
   selectedFarm: Farm;
   onRecordAdded: () => void;
   onCancel: () => void;
