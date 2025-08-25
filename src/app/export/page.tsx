@@ -217,7 +217,7 @@ export default function ExportPage() {
                   >
                     {farm.name}
                     <Badge variant="secondary">
-                      {farm.area}ha • {farm.grape_variety}
+                      {farm.area}ha • {farm.grapeVariety}
                     </Badge>
                   </Button>
                 ))}

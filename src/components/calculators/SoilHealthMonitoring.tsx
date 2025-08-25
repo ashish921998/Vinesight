@@ -26,7 +26,8 @@ import {
   DollarSign,
   ArrowUp,
   ArrowDown,
-  Minus
+  Minus,
+  Sprout
 } from "lucide-react";
 import {
   SoilHealthAnalyzer,
@@ -267,7 +268,7 @@ export function SoilHealthMonitoringComponent() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Grape className="h-5 w-5" />
+                  <Sprout className="h-5 w-5" />
                   Farm Context
                 </CardTitle>
               </CardHeader>

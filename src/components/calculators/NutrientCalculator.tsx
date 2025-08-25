@@ -114,11 +114,10 @@ export function NutrientCalculatorComponent() {
       // Save calculation to history
       await SupabaseService.addCalculationHistory({
         farm_id: selectedFarm.id!,
-        calculation_type: 'Nutrient',
+        calculation_type: 'nutrients',
         date: new Date().toISOString().split('T')[0],
-        inputs: JSON.stringify(inputs),
-        results: JSON.stringify(calculationResults),
-        confidence_level: 'high'
+        inputs: inputs,
+        outputs: calculationResults
       });
     } catch (error) {
       console.error('Error calculating nutrients:', error);

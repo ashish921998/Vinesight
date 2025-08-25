@@ -7,13 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Spray, 
+  Droplets, 
   Bug, 
   AlertTriangle,
-  Shield,
-  Clock,
-  Thermometer,
-  Wind
+  Shield
 } from 'lucide-react';
 import { SupabaseService } from '@/lib/supabase-service';
 import type { Farm } from '@/lib/supabase';
@@ -73,7 +70,7 @@ export function SprayForm({ selectedFarm, onRecordAdded, onCancel }: SprayFormPr
         chemical: formData.chemical,
         dose: formData.dose,
         area: parseFloat(formData.area),
-        weather_conditions: formData.weather_conditions,
+        weather: formData.weather_conditions,
         operator: formData.operator,
         notes: formData.notes
       });
@@ -121,7 +118,7 @@ export function SprayForm({ selectedFarm, onRecordAdded, onCancel }: SprayFormPr
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Spray className="h-5 w-5" />
+            <Droplets className="h-5 w-5" />
             Spray Application Details
           </CardTitle>
           <CardDescription>Record pesticide, fungicide, or other spray treatments</CardDescription>

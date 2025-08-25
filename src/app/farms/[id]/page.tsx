@@ -49,7 +49,10 @@ export default function FarmDetailsPage() {
     try {
       setLoading(true);
       const data = await DatabaseService.getDashboardSummary(farmId);
-      setDashboardData(data);
+      setDashboardData({
+        ...data,
+        farm: data.farm || null
+      });
     } catch (error) {
       console.error("Error loading dashboard data:", error);
     } finally {

@@ -95,11 +95,10 @@ export function SystemDischargeCalculatorComponent() {
       // Save calculation to history
       await SupabaseService.addCalculationHistory({
         farm_id: selectedFarm.id!,
-        calculation_type: 'System Discharge',
+        calculation_type: 'discharge',
         date: new Date().toISOString().split('T')[0],
-        inputs: JSON.stringify(inputs),
-        results: JSON.stringify(calculationResults),
-        confidence_level: 'high'
+        inputs: inputs,
+        outputs: calculationResults
       });
     } catch (error) {
       console.error('Error calculating system discharge:', error);
@@ -518,7 +517,7 @@ export function SystemDischargeCalculatorComponent() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Pipe className="h-5 w-5" />
+                      <BarChart3 className="h-5 w-5" />
                       Pipe Network Design
                     </CardTitle>
                   </CardHeader>

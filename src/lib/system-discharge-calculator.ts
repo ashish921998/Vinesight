@@ -179,7 +179,7 @@ export class SystemDischargeCalculator {
   private static calculatePumpCapacity(
     systemFlowRate: number,
     totalHead: number
-  ): { capacity: number; head: number; powerRequired: number } {
+  ): { capacity: number; head: number; powerRequired: number; efficiency: number } {
     // Add safety factor
     const capacity = systemFlowRate * 1.1;
     
@@ -190,7 +190,8 @@ export class SystemDischargeCalculator {
     return {
       capacity,
       head: totalHead,
-      powerRequired: Math.ceil(powerRequired)
+      powerRequired: Math.ceil(powerRequired),
+      efficiency
     };
   }
 
@@ -259,30 +260,36 @@ export class SystemDischargeCalculator {
     
     // Component costs
     switch (irrigationMethod) {
-      case 'drip':
-        initialCost += designParams.totalEmitters * costs.emitter;
-        initialCost += (designParams.totalVines * 3.5) * costs.lateral; // 3.5m lateral per vine
-        initialCost += (farmArea * 200) * costs.submain; // 200m submain per ha
-        initialCost += (farmArea * 50) * costs.mainline; // 50m mainline per ha
-        initialCost += costs.filter;
-        initialCost += designParams.pumpCapacity * costs.pump;
-        initialCost += costs.fertigation;
+      case 'drip': {
+        const dripCosts = costs as typeof COMPONENT_COSTS.drip;
+        initialCost += designParams.totalEmitters * dripCosts.emitter;
+        initialCost += (designParams.totalVines * 3.5) * dripCosts.lateral; // 3.5m lateral per vine
+        initialCost += (farmArea * 200) * dripCosts.submain; // 200m submain per ha
+        initialCost += (farmArea * 50) * dripCosts.mainline; // 50m mainline per ha
+        initialCost += dripCosts.filter;
+        initialCost += designParams.pumpCapacity * dripCosts.pump;
+        initialCost += dripCosts.fertigation;
         break;
-      case 'sprinkler':
-        initialCost += designParams.totalEmitters * costs.sprinkler;
-        initialCost += (farmArea * 150) * costs.lateral;
-        initialCost += (farmArea * 100) * costs.submain;
-        initialCost += (farmArea * 50) * costs.mainline;
-        initialCost += costs.filter;
-        initialCost += designParams.pumpCapacity * costs.pump;
+      }
+      case 'sprinkler': {
+        const sprinklerCosts = costs as typeof COMPONENT_COSTS.sprinkler;
+        initialCost += designParams.totalEmitters * sprinklerCosts.sprinkler;
+        initialCost += (farmArea * 150) * sprinklerCosts.lateral;
+        initialCost += (farmArea * 100) * sprinklerCosts.submain;
+        initialCost += (farmArea * 50) * sprinklerCosts.mainline;
+        initialCost += sprinklerCosts.filter;
+        initialCost += designParams.pumpCapacity * sprinklerCosts.pump;
         break;
-      case 'surface':
-        initialCost += (farmArea * 10) * costs.gates;
-        initialCost += (farmArea * 300) * costs.channels;
-        initialCost += farmArea * costs.structures;
-        initialCost += designParams.pumpCapacity * costs.pump;
-        initialCost += farmArea * costs.leveling;
+      }
+      case 'surface': {
+        const surfaceCosts = costs as typeof COMPONENT_COSTS.surface;
+        initialCost += (farmArea * 10) * surfaceCosts.gates;
+        initialCost += (farmArea * 300) * surfaceCosts.channels;
+        initialCost += farmArea * surfaceCosts.structures;
+        initialCost += designParams.pumpCapacity * surfaceCosts.pump;
+        initialCost += farmArea * surfaceCosts.leveling;
         break;
+      }
     }
 
     // Annual operating costs (10% of initial + electricity)

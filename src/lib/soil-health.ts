@@ -354,8 +354,10 @@ export class SoilHealthAnalyzer {
     const micronutrients = ['iron', 'manganese', 'zinc', 'copper', 'boron'];
     let microScore = 0;
     micronutrients.forEach(nutrient => {
-      if (standards[nutrient] && chemical[nutrient] !== undefined) {
-        microScore += this.calculateParameterScore(chemical[nutrient], standards[nutrient].min, standards[nutrient].max, standards[nutrient].optimal);
+      const nutrientStandard = (standards as any)[nutrient];
+      const nutrientValue = (chemical as any)[nutrient];
+      if (nutrientStandard && nutrientValue !== undefined) {
+        microScore += this.calculateParameterScore(nutrientValue, nutrientStandard.min, nutrientStandard.max, nutrientStandard.optimal);
       }
     });
     score += (microScore / micronutrients.length) * 0.8;
@@ -697,7 +699,7 @@ export class SoilHealthAnalyzer {
           testData.chemical.pH > 7.5 ? 'Increased fungal disease risk due to alkaline conditions' : null,
           testData.physical.waterHoldingCapacity < 20 ? 'Root stress may increase disease susceptibility' : null,
           testData.chemical.organicMatter < 1.0 ? 'Low organic matter reduces beneficial microorganisms' : null
-        ].filter(Boolean)
+        ].filter((risk): risk is string => risk !== null)
       },
       yieldPrediction: {
         soilHealthFactor: overallScore / 100 // 0.0-1.0 multiplier for yield predictions
@@ -723,7 +725,7 @@ export class SoilHealthAnalyzer {
   }
   
   private static estimateCost(factor: string): number {
-    const costs = {
+    const costs: Record<string, number> = {
       'Soil Acidity': 12000, // Lime application cost per hectare
       'Soil Alkalinity': 8000, // Sulfur application cost
       'Soil Salinity': 15000, // Gypsum + drainage improvement

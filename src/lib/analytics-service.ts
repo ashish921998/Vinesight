@@ -86,9 +86,9 @@ export class AnalyticsService {
         // Get expenses
         const expenses = await DatabaseService.getExpenseRecords(farm.id!);
         expenses.forEach(expense => {
-          totalCosts += expense.amount;
-          const existing = costByCategory.get(expense.category) || 0;
-          costByCategory.set(expense.category, existing + expense.amount);
+          totalCosts += expense.cost;
+          const existing = costByCategory.get(expense.type) || 0;
+          costByCategory.set(expense.type, existing + expense.cost);
 
           // Monthly tracking
           const monthYear = new Date(expense.date).toLocaleDateString('en-US', { 
@@ -96,7 +96,7 @@ export class AnalyticsService {
             year: '2-digit' 
           });
           const monthData = monthlyData.get(monthYear) || { costs: 0, revenue: 0 };
-          monthData.costs += expense.amount;
+          monthData.costs += expense.cost;
           monthlyData.set(monthYear, monthData);
         });
 

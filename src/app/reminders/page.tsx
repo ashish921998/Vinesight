@@ -13,13 +13,10 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
-  Edit,
-  Trash2,
   Filter,
   Settings,
   Sparkles,
-  Target,
-  TrendingUp
+  Target
 } from "lucide-react";
 import { DatabaseService, Farm, TaskReminder } from "@/lib/db-utils";
 import { TaskTemplateSelector } from "@/components/reminders/TaskTemplateSelector";
@@ -39,7 +36,7 @@ export default function RemindersPage() {
   const [showSeasonalSuggestions, setShowSeasonalSuggestions] = useState(true);
   const [farmsLoading, setFarmsLoading] = useState(true);
   
-  const notificationServiceRef = useRef<NotificationService>();
+  const notificationServiceRef = useRef<NotificationService | null>(null);
 
   const [formData, setFormData] = useState({
     title: "",

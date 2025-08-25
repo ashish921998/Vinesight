@@ -59,7 +59,7 @@ export default function RootLayout({
             <div className="min-h-screen bg-gray-50">
               <Navigation />
               <main className="lg:pl-72">
-                <div className="px-4 py-6 sm:px-6 lg:px-8">
+                <div className="px-3 py-4 sm:px-4 sm:py-6 lg:px-8 lg:py-6">
                   {children}
                 </div>
               </main>

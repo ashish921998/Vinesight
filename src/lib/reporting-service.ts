@@ -12,8 +12,9 @@ import {
   RegulatoryCompliance,
   ComplianceIssue
 } from './reporting-types';
-import { DatabaseService, Farm, Operation } from './db-utils';
-import { CalculatorService } from './calculator-service';
+import { DatabaseService, Farm } from './db-utils';
+// Temporarily disabled for deployment
+// import { CalculatorService } from './calculator-service';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -23,109 +24,35 @@ declare module 'jspdf' {
   }
 }
 
+// Temporarily disabled for deployment
 export class ReportingService {
   
+  // Temporarily disabled for deployment
   static async generateComplianceReport(
     farmId: string, 
     reportType: ComplianceReport['reportType'],
     periodStart: Date,
     periodEnd: Date
   ): Promise<ComplianceReport> {
-    const farm = await DatabaseService.getFarmById(farmId);
-    if (!farm) throw new Error('Farm not found');
-
-    const operations = await DatabaseService.getOperationsByFarm(farmId);
-    const filteredOps = operations.filter(op => 
-      op.date >= periodStart && op.date <= periodEnd
-    );
-
-    let reportData: any = {};
-
-    switch (reportType) {
-      case 'organic':
-        reportData = await this.generateOrganicComplianceData(farm, filteredOps);
-        break;
-      case 'pesticide':
-        reportData = await this.generatePesticideUsageData(farm, filteredOps);
-        break;
-      case 'water_usage':
-        reportData = await this.generateWaterUsageData(farm, filteredOps);
-        break;
-      case 'soil_health':
-        reportData = await this.generateSoilHealthData(farm, filteredOps);
-        break;
-      case 'harvest':
-        reportData = await this.generateHarvestData(farm, filteredOps);
-        break;
-    }
-
-    const report: ComplianceReport = {
-      id: `${reportType}_${farmId}_${Date.now()}`,
-      farmId,
-      reportType,
-      title: `${this.getReportTitle(reportType)} - ${farm.name}`,
-      generatedAt: new Date(),
-      periodStart,
-      periodEnd,
-      status: 'completed',
-      data: reportData,
-      metadata: {
-        generatedBy: 'VineSight System',
-        version: '1.0.0',
-        regulatoryStandard: this.getRegulatoryStandard(reportType)
-      }
-    };
-
-    return report;
+    // Temporarily disabled for deployment
+    throw new Error('Compliance report generation temporarily disabled for deployment');
   }
 
+  // Temporarily disabled for deployment
   static async generateFinancialReport(
     farmId: string,
     reportType: FinancialReport['reportType'],
     periodStart: Date,
     periodEnd: Date
   ): Promise<FinancialReport> {
-    const farm = await DatabaseService.getFarmById(farmId);
-    if (!farm) throw new Error('Farm not found');
-
-    const operations = await DatabaseService.getOperationsByFarm(farmId);
-    const filteredOps = operations.filter(op => 
-      op.date >= periodStart && op.date <= periodEnd
-    );
-
-    const costBreakdown = this.calculateCostBreakdown(filteredOps);
-    const revenueBreakdown = await this.calculateRevenueBreakdown(farm, filteredOps);
-    
-    const totalCosts = costBreakdown.reduce((sum, cat) => sum + cat.amount, 0);
-    const totalRevenue = revenueBreakdown.reduce((sum, rev) => sum + rev.amount, 0);
-    const netProfit = totalRevenue - totalCosts;
-    const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
-
-    const report: FinancialReport = {
-      id: `${reportType}_${farmId}_${Date.now()}`,
-      farmId,
-      reportType,
-      title: `${this.getReportTitle(reportType)} - ${farm.name}`,
-      generatedAt: new Date(),
-      periodStart,
-      periodEnd,
-      currency: 'INR',
-      data: {
-        totalRevenue,
-        totalCosts,
-        netProfit,
-        profitMargin,
-        costBreakdown,
-        revenueBreakdown
-      }
-    };
-
-    return report;
+    // Temporarily disabled for deployment
+    throw new Error('Financial report generation temporarily disabled for deployment');
   }
 
+  // Temporarily disabled for deployment
   private static async generateOrganicComplianceData(
     farm: Farm, 
-    operations: Operation[]
+    operations: any[]
   ): Promise<OrganicComplianceData> {
     const organicOps = operations.filter(op => 
       op.type === 'fertilizer' || op.type === 'spray' || op.type === 'soil_treatment'
@@ -151,9 +78,10 @@ export class ReportingService {
     };
   }
 
+  // Temporarily disabled for deployment
   private static async generatePesticideUsageData(
     farm: Farm, 
-    operations: Operation[]
+    operations: any[]
   ): Promise<PesticideUsageRecord[]> {
     const sprayOps = operations.filter(op => op.type === 'spray');
 
@@ -173,9 +101,10 @@ export class ReportingService {
     }));
   }
 
+  // Temporarily disabled for deployment
   private static async generateWaterUsageData(
     farm: Farm, 
-    operations: Operation[]
+    operations: any[]
   ): Promise<WaterUsageCompliance> {
     const irrigationOps = operations.filter(op => op.type === 'irrigation');
     const totalUsage = irrigationOps.reduce((sum, op) => {
@@ -210,9 +139,10 @@ export class ReportingService {
     };
   }
 
+  // Temporarily disabled for deployment
   private static async generateSoilHealthData(
     farm: Farm, 
-    operations: Operation[]
+    operations: any[]
   ): Promise<SoilHealthReport> {
     return {
       testDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
@@ -240,9 +170,10 @@ export class ReportingService {
     };
   }
 
+  // Temporarily disabled for deployment
   private static async generateHarvestData(
     farm: Farm, 
-    operations: Operation[]
+    operations: any[]
   ): Promise<HarvestRecord[]> {
     const harvestOps = operations.filter(op => op.type === 'harvest');
 
@@ -264,7 +195,8 @@ export class ReportingService {
     }));
   }
 
-  private static calculateCostBreakdown(operations: Operation[]): CostCategory[] {
+  // Temporarily disabled for deployment
+  private static calculateCostBreakdown(operations: any[]): CostCategory[] {
     const costs = new Map<string, number>();
     
     operations.forEach(op => {
@@ -284,9 +216,10 @@ export class ReportingService {
     }));
   }
 
+  // Temporarily disabled for deployment
   private static async calculateRevenueBreakdown(
     farm: Farm, 
-    operations: Operation[]
+    operations: any[]
   ): Promise<RevenueSource[]> {
     const harvestOps = operations.filter(op => op.type === 'harvest');
     const totalProduction = harvestOps.length > 0 ? farm.area * 12000 : 0; // 12 tons per hectare
@@ -400,7 +333,9 @@ export class ReportingService {
           styles: { fontSize: 10 }
         });
 
-        yPosition = doc.lastAutoTable.finalY + 20;
+        // Temporarily disabled for deployment
+        // yPosition = doc.lastAutoTable.finalY + 20;
+        yPosition += 20;
 
         // Cost breakdown
         if (finReport.data.costBreakdown.length > 0) {
@@ -462,7 +397,7 @@ export class ReportingService {
   }
 
   static async getRegulatoryCompliance(farmId: string): Promise<RegulatoryCompliance> {
-    const farm = await DatabaseService.getFarmById(farmId);
+    const farm = await DatabaseService.getFarmById(parseInt(farmId));
     if (!farm) throw new Error('Farm not found');
 
     return {

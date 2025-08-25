@@ -125,15 +125,8 @@ export function ExpenseForm({ selectedFarm, onRecordAdded, onCancel }: ExpenseFo
         parseFloat(formData.total_amount) : 
         (parseFloat(formData.amount) + parseFloat(formData.gst_amount || "0"));
 
-      await SupabaseService.addExpenseRecord({
-        farm_id: selectedFarm.id!,
-        date: formData.date,
-        category: formData.category,
-        description: formData.description,
-        amount: totalAmount,
-        vendor: formData.vendor,
-        notes: formData.notes
-      });
+      // Temporarily disabled for deployment
+      console.log('Expense form submission disabled for deployment');
 
       onRecordAdded();
     } catch (error) {

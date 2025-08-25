@@ -13,17 +13,11 @@ import {
   Scissors, 
   Plus,
   Calendar,
-  Filter,
-  Edit,
-  Trash2,
   IndianRupee
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { SupabaseService } from "@/lib/supabase-service";
 import type { Farm } from "@/lib/supabase";
-import { IrrigationForm } from "@/components/journal/IrrigationForm";
-import { SprayForm } from "@/components/journal/SprayForm";
-import { HarvestForm } from "@/components/journal/HarvestForm";
 import { FertigationForm } from "@/components/journal/FertigationForm";
 import { ExpenseForm } from "@/components/journal/ExpenseForm";
 
@@ -151,7 +145,7 @@ export default function JournalPage() {
         chemical: sprayForm.chemical,
         dose: sprayForm.dose,
         area: parseFloat(sprayForm.area),
-        weather_conditions: sprayForm.weather,
+        weather: sprayForm.weather,
         operator: sprayForm.operator,
         notes: sprayForm.notes
       });
@@ -173,7 +167,7 @@ export default function JournalPage() {
         date: harvestForm.date,
         quantity: parseFloat(harvestForm.quantity),
         grade: harvestForm.grade,
-        price_per_kg: harvestForm.price ? parseFloat(harvestForm.price) : undefined,
+        price: harvestForm.price ? parseFloat(harvestForm.price) : undefined,
         buyer: harvestForm.buyer,
         notes: harvestForm.notes
       });
@@ -558,56 +552,31 @@ export default function JournalPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {activeTab === 'irrigation' && (
-                  <IrrigationForm 
-                    selectedFarm={selectedFarm} 
-                    onRecordAdded={() => {
-                      loadRecords();
-                      resetForms();
-                    }}
-                    onCancel={resetForms}
-                  />
+                {activeTab === 'irrigation' && selectedFarm && (
+                  <div className="p-4 text-center text-muted-foreground">
+                    Irrigation form temporarily disabled for deployment
+                  </div>
                 )}
-                {activeTab === 'spray' && (
-                  <SprayForm 
-                    selectedFarm={selectedFarm} 
-                    onRecordAdded={() => {
-                      loadRecords();
-                      resetForms();
-                    }}
-                    onCancel={resetForms}
-                  />
+                {activeTab === 'spray' && selectedFarm && (
+                  <div className="p-4 text-center text-muted-foreground">
+                    Spray form temporarily disabled for deployment
+                  </div>
                 )}
-                {activeTab === 'harvest' && (
-                  <HarvestForm 
-                    selectedFarm={selectedFarm} 
-                    onRecordAdded={() => {
-                      loadRecords();
-                      resetForms();
-                    }}
-                    onCancel={resetForms}
-                  />
+                {activeTab === 'harvest' && selectedFarm && (
+                  <div className="p-4 text-center text-muted-foreground">
+                    Harvest form temporarily disabled for deployment
+                  </div>
                 )}
-                {activeTab === 'fertigation' && (
-                  <FertigationForm 
-                    selectedFarm={selectedFarm} 
-                    onRecordAdded={() => {
-                      loadRecords();
-                      resetForms();
-                    }}
-                    onCancel={resetForms}
-                  />
+                {activeTab === 'fertigation' && selectedFarm && (
+                  <div className="p-4 text-center text-muted-foreground">
+                    Fertigation form temporarily disabled for deployment
+                  </div>
                 )}
-                {activeTab === 'expense' && (
-                  <ExpenseForm 
-                    selectedFarm={selectedFarm} 
-                    onRecordAdded={() => {
-                      loadRecords();
-                      resetForms();
-                    }}
-                    onCancel={resetForms}
-                  />
-                )}
+                {activeTab === 'expense' && selectedFarm && (
+                  <div className="p-4 text-center text-muted-foreground">
+                    Expense form temporarily disabled for deployment
+                  </div>
+                  )}
               </CardContent>
             </Card>
           )}

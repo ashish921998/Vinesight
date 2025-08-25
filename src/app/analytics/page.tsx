@@ -21,7 +21,7 @@ import {
   Award,
   Zap
 } from "lucide-react";
-import { DatabaseService, Farm } from "@/lib/db-utils";
+import { DatabaseService, Farm, IrrigationRecord, SprayRecord, HarvestRecord } from "@/lib/db-utils";
 import { AnalyticsService, AdvancedAnalytics } from "@/lib/analytics-service";
 
 interface AnalyticsData {
@@ -83,9 +83,9 @@ export default function AnalyticsPage() {
       };
 
       // Get all records for analysis
-      const allIrrigations: any[] = [];
-      const allSprays: any[] = [];
-      const allHarvests: any[] = [];
+      const allIrrigations: (IrrigationRecord & { farmName: string })[] = [];
+      const allSprays: (SprayRecord & { farmName: string })[] = [];
+      const allHarvests: (HarvestRecord & { farmName: string })[] = [];
 
       for (const farm of farmList) {
         try {
@@ -95,16 +95,13 @@ export default function AnalyticsPage() {
 
           // Add farm name to records
           irrigations.forEach(record => {
-            (record as any).farmName = farm.name;
-            allIrrigations.push(record);
+            allIrrigations.push({ ...record, farmName: farm.name });
           });
           sprays.forEach(record => {
-            (record as any).farmName = farm.name;
-            allSprays.push(record);
+            allSprays.push({ ...record, farmName: farm.name });
           });
           harvests.forEach(record => {
-            (record as any).farmName = farm.name;
-            allHarvests.push(record);
+            allHarvests.push({ ...record, farmName: farm.name });
           });
 
           // Calculate farm-specific harvest totals

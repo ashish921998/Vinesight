@@ -91,11 +91,10 @@ export function LAICalculatorComponent() {
       // Save calculation to history
       await SupabaseService.addCalculationHistory({
         farm_id: selectedFarm.id!,
-        calculation_type: 'LAI',
+        calculation_type: 'lai',
         date: new Date().toISOString().split('T')[0],
-        inputs: JSON.stringify(inputs),
-        results: JSON.stringify(calculationResults),
-        confidence_level: 'high'
+        inputs: inputs,
+        outputs: calculationResults
       });
     } catch (error) {
       console.error('Error calculating LAI:', error);

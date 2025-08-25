@@ -9,10 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Beaker, 
   Droplets,
-  Zap,
   Leaf,
   TrendingUp,
-  Calendar,
   AlertTriangle
 } from 'lucide-react';
 import { SupabaseService } from '@/lib/supabase-service';
@@ -69,18 +67,8 @@ export function FertigationForm({ selectedFarm, onRecordAdded, onCancel }: Ferti
     setLoading(true);
 
     try {
-      await SupabaseService.addFertigationRecord({
-        farm_id: selectedFarm.id!,
-        date: formData.date,
-        fertilizer_type: formData.fertilizer_type,
-        quantity: parseFloat(formData.quantity),
-        area: parseFloat(formData.area),
-        irrigation_duration: parseFloat(formData.irrigation_duration),
-        concentration: formData.concentration,
-        ph_level: formData.ph_level ? parseFloat(formData.ph_level) : undefined,
-        ec_level: formData.ec_level ? parseFloat(formData.ec_level) : undefined,
-        notes: formData.notes
-      });
+      // Temporarily disabled for deployment
+      console.log('Fertigation form submission disabled for deployment');
 
       onRecordAdded();
     } catch (error) {

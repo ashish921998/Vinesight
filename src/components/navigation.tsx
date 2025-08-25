@@ -78,7 +78,7 @@ export default function Navigation() {
                         <Link
                           href={item.href}
                           className={`
-                            group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold
+                            group flex gap-x-3 rounded-md p-3 text-sm leading-6 font-semibold
                             ${isActive 
                               ? 'bg-gray-50 text-primary' 
                               : 'text-gray-700 hover:text-primary hover:bg-gray-50'
@@ -117,21 +117,21 @@ export default function Navigation() {
       <div className={`
         fixed inset-0 z-50 lg:hidden
         ${isMobileMenuOpen ? 'flex' : 'hidden'}
-      `} style={{ display: isMobileMenuOpen ? 'flex' : 'none' }}>
-        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
+      `}>
+        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white shadow-xl">
           <div className="absolute top-0 right-0 -mr-12 pt-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="h-10 w-10 text-white hover:bg-gray-600"
+              className="h-12 w-12 text-white hover:bg-gray-600 rounded-full"
             >
               <X className="h-6 w-6" />
             </Button>
           </div>
-          <div className="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-4">
+          <div className="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-4 pt-16">
             <div className="flex h-16 shrink-0 items-center">
-              <Link href="/" className="flex items-center gap-2">
+              <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
                 <Sprout className="h-8 w-8 text-primary" />
                 <span className="text-xl font-bold text-primary">VineSight</span>
               </Link>
@@ -149,7 +149,7 @@ export default function Navigation() {
                             href={item.href}
                             onClick={() => setIsMobileMenuOpen(false)}
                             className={`
-                              group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold
+                              group flex gap-x-3 rounded-md p-3 text-sm leading-6 font-semibold
                               ${isActive 
                                 ? 'bg-gray-50 text-primary' 
                                 : 'text-gray-700 hover:text-primary hover:bg-gray-50'
@@ -191,9 +191,9 @@ export default function Navigation() {
           variant="ghost"
           size="sm"
           onClick={() => setIsMobileMenuOpen(true)}
-          className="h-10 w-10 rounded-lg hover:bg-gray-100 touch-target flex-shrink-0"
+          className="h-12 w-12 rounded-lg hover:bg-gray-100 touch-target flex-shrink-0 p-0"
         >
-          <Menu className="h-5 w-5 text-gray-700" />
+          <Menu className="h-6 w-6 text-gray-700" />
         </Button>
         <div className="flex-1 min-w-0 px-2">
           <Link href="/" className="flex items-center gap-2 justify-center">
@@ -207,7 +207,7 @@ export default function Navigation() {
           ) : user ? (
             <UserMenu />
           ) : (
-            <LoginButton className="text-xs px-2 py-1.5 whitespace-nowrap" />
+            <LoginButton className="text-xs px-3 py-2 whitespace-nowrap h-10" />
           )}
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -140,11 +140,10 @@ export function IrrigationForm({ selectedFarm, onRecordAdded, onCancel }: Irriga
 
         await SupabaseService.addCalculationHistory({
           farm_id: selectedFarm.id!,
-          calculation_type: 'ETc',
+          calculation_type: 'etc',
           date: formData.date,
-          inputs: JSON.stringify(inputs.inputs),
-          results: JSON.stringify(inputs.results),
-          confidence_level: etcResults.confidence
+          inputs: inputs.inputs,
+          outputs: inputs.results
         });
       }
 

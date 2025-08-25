@@ -63,35 +63,35 @@ export default function Home() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <header className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-primary mb-4">
+    <div className="container mx-auto">
+      <header className="text-center mb-8 sm:mb-12 px-2">
+        <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-3 sm:mb-4">
           🍇 {t('home.title')}
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
           {t('home.subtitle')}
         </p>
-        <p className="text-sm text-muted-foreground mt-2">
+        <p className="text-sm text-muted-foreground mt-2 px-2">
           {t('home.description')}
         </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-2">
         {features.map((feature) => {
           const Icon = feature.icon;
           return (
             <Card key={feature.title} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Icon className="h-6 w-6 text-primary" />
-                  <CardTitle className="text-lg">{feature.title}</CardTitle>
+              <CardHeader className="pb-3 sm:pb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
+                  <CardTitle className="text-base sm:text-lg leading-tight">{feature.title}</CardTitle>
                 </div>
-                <CardDescription>{feature.description}</CardDescription>
+                <CardDescription className="text-sm leading-relaxed">{feature.description}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full h-10 sm:h-11 text-sm sm:text-base"
                   onClick={() => window.location.href = feature.href}
                 >
                   {t('common.buttons.openModule')}
@@ -102,33 +102,33 @@ export default function Home() {
         })}
       </div>
 
-      <div className="mt-12 text-center">
+      <div className="mt-8 sm:mt-12 text-center px-2">
         <Card className="max-w-md mx-auto">
-          <CardHeader>
-            <CardTitle className="text-lg">
+          <CardHeader className="pb-3 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg">
               {user ? t('home.gettingStarted.title') : t('home.joinToday.title')}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm">
               {user 
                 ? t('home.gettingStarted.description')
                 : t('home.joinToday.description')
               }
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             {loading ? (
-              <Button disabled className="w-full">
+              <Button disabled className="w-full h-11">
                 {t('common.loading')}
               </Button>
             ) : user ? (
               <Button 
-                className="w-full"
+                className="w-full h-11"
                 onClick={() => window.location.href = "/farms"}
               >
                 {t('home.gettingStarted.button')}
               </Button>
             ) : (
-              <LoginButton className="w-full">
+              <LoginButton className="w-full h-11">
                 {t('home.joinToday.button')}
               </LoginButton>
             )}

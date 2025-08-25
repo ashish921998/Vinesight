@@ -262,7 +262,7 @@ export class ExportService {
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
     const farmDetails = [
-      ['Location', data.farm.location || 'Not specified'],
+      ['Region', data.farm.region || 'Not specified'],
       ['Area', `${data.farm.area} hectares`],
       ['Grape Variety', data.farm.grape_variety || 'Not specified'],
       ['Planting Date', data.farm.planting_date || 'Not specified'],
@@ -456,10 +456,10 @@ export class ExportService {
       yPosition += 5;
 
       Object.entries(categoryTotals)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([,a], [,b]) => (b as number) - (a as number))
         .slice(0, 5)
         .forEach(([category, amount]) => {
-          pdf.text(`• ${category}: ₹${amount.toLocaleString()}`, 25, yPosition);
+          pdf.text(`• ${category}: ₹${(amount as number).toLocaleString()}`, 25, yPosition);
           yPosition += 5;
         });
 

@@ -5,15 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { 
-  Grape, 
-  Scale,
-  Star,
-  TrendingUp,
+  Grape,
   IndianRupee,
-  Truck,
   Award,
   BarChart3
 } from 'lucide-react';
@@ -79,7 +73,7 @@ export function HarvestForm({ selectedFarm, onRecordAdded, onCancel }: HarvestFo
         date: formData.date,
         quantity: parseFloat(formData.quantity),
         grade: formData.grade,
-        price_per_kg: formData.price_per_kg ? parseFloat(formData.price_per_kg) : undefined,
+        price: formData.price_per_kg ? parseFloat(formData.price_per_kg) : undefined,
         buyer: formData.buyer,
         notes: formData.notes
       });
