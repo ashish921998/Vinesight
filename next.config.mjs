@@ -12,8 +12,7 @@ const nextConfig = {
       'lucide-react',
       '@radix-ui/react-select', 
       '@radix-ui/react-progress',
-      'jspdf',
-      'chart.js'
+      'jspdf'
     ],
   },
   
@@ -63,18 +62,20 @@ const nextConfig = {
       }
     ];
 
-    // Improved CSP policy - removed unsafe-inline and unsafe-eval
+    // Mobile-compatible CSP policy
     if (isProd) {
       securityHeaders.push({
         key: 'Content-Security-Policy',
         value: [
           "default-src 'self'",
-          "script-src 'self' https://apis.google.com",
-          "style-src 'self' https://fonts.googleapis.com",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
-          "img-src 'self' data: https:",
+          "img-src 'self' data: https: blob:",
           "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
           "frame-src 'self' https://accounts.google.com",
+          "worker-src 'self' blob:",
+          "manifest-src 'self'",
         ].join('; ')
       });
     }
@@ -116,12 +117,15 @@ const nextConfig = {
   },
 };
 
-// PWA configuration with runtime caching
+// PWA configuration with mobile-optimized caching
 const pwaConfig = withPWA({
   dest: 'public',
   disable: !isProd,
   register: true,
   skipWaiting: true,
+  fallbacks: {
+    document: '/offline.html',
+  },
   runtimeCaching: [
     {
       urlPattern: /^https?.*\.(png|jpe?g|webp|svg|gif|tiff|js|css)$/,
@@ -144,6 +148,18 @@ const pwaConfig = withPWA({
           maxAgeSeconds: 5 * 60, // 5 minutes
         },
         networkTimeoutSeconds: 10,
+      },
+    },
+    {
+      urlPattern: ({ request }) => request.mode === 'navigate',
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'pages',
+        networkTimeoutSeconds: 3,
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 24 * 60 * 60, // 24 hours
+        },
       },
     },
   ],

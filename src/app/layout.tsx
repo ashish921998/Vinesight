@@ -7,6 +7,7 @@ import { I18nProvider } from "@/components/providers/I18nProvider";
 import { OfflineIndicator } from "@/components/pwa/OfflineIndicator";
 import { PWAWrapper } from "@/components/pwa/PWAWrapper";
 import { AsyncErrorBoundary } from "@/components/ErrorBoundary";
+import { Suspense } from "react";
 import { BottomNavigation } from "@/components/mobile/BottomNavigation";
 import { GlobalAuthErrorHandler } from "@/components/auth/GlobalAuthErrorHandler";
 
@@ -58,28 +59,37 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AsyncErrorBoundary>
-          <AuthProvider>
-            <GlobalAuthErrorHandler />
-            <I18nProvider>
-              <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
-                <Navigation />
-                <main className="lg:pl-72 pt-0">
-                  <div className="px-3 py-4 sm:px-4 sm:py-6 lg:px-8 lg:py-6">
-                    {children}
-                  </div>
-                </main>
-                <BottomNavigation />
-                {/* PWA Install Prompt */}
-                <div className="fixed bottom-20 left-4 right-4 lg:left-80 lg:bottom-4 z-40">
-                  <PWAWrapper />
-                </div>
-                {/* Offline Status Indicator */}
-                <div className="fixed top-4 right-4 z-30">
-                  <OfflineIndicator />
-                </div>
+          <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading VineSight...</p>
               </div>
-            </I18nProvider>
-          </AuthProvider>
+            </div>
+          }>
+            <AuthProvider>
+              <GlobalAuthErrorHandler />
+              <I18nProvider>
+                <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
+                  <Navigation />
+                  <main className="lg:pl-72 pt-0">
+                    <div className="px-3 py-4 sm:px-4 sm:py-6 lg:px-8 lg:py-6">
+                      {children}
+                    </div>
+                  </main>
+                  <BottomNavigation />
+                  {/* PWA Install Prompt */}
+                  <div className="fixed bottom-20 left-4 right-4 lg:left-80 lg:bottom-4 z-40">
+                    <PWAWrapper />
+                  </div>
+                  {/* Offline Status Indicator */}
+                  <div className="fixed top-4 right-4 z-30">
+                    <OfflineIndicator />
+                  </div>
+                </div>
+              </I18nProvider>
+            </AuthProvider>
+          </Suspense>
         </AsyncErrorBoundary>
       </body>
     </html>

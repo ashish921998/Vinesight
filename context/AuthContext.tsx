@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
-import { getSupabaseClient } from '@/lib/supabase';
+import { getSupabaseClient, supabase } from '@/lib/supabase';
 import { isRefreshTokenError, handleRefreshTokenError } from '@/lib/auth-utils';
 
 interface AuthContextType {
@@ -30,6 +30,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           console.error('Error getting session:', error);
+          
+          // Enhanced error logging for production debugging
+          if (process.env.NODE_ENV === 'production') {
+            console.error('Session error details:', {
+              message: error.message,
+              status: error.status,
+              url: window.location.href,
+              userAgent: navigator.userAgent,
+              timestamp: new Date().toISOString()
+            });
+          }
+          
           // Handle refresh token errors
           if (isRefreshTokenError(error)) {
             await handleRefreshTokenError();
@@ -42,6 +54,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
+        
+        // Enhanced error logging for mobile debugging
+        if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined') {
+          console.error('Auth initialization details:', {
+            error: error instanceof Error ? error.message : String(error),
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString(),
+            hasSupabase: !!supabase
+          });
+        }
+        
         // Clear session on any auth error
         setSession(null);
         setUser(null);

@@ -35,6 +35,21 @@ export class ErrorBoundary extends Component<Props, State> {
     // Log error to monitoring service in production
     if (process.env.NODE_ENV === 'production') {
       console.error('Error caught by boundary:', error, errorInfo);
+      
+      // Mobile-specific error logging
+      if (typeof window !== 'undefined' && 'navigator' in window) {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isChrome = /Chrome/i.test(navigator.userAgent);
+        
+        console.error('Device info:', {
+          isMobile,
+          isChrome,
+          userAgent: navigator.userAgent,
+          url: window.location.href,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
       // Here you would send to error monitoring service like Sentry
       // Sentry.captureException(error, { contexts: { react: errorInfo } });
     } else {
