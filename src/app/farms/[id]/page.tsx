@@ -210,10 +210,11 @@ export default function FarmDetailsPage() {
     setIsSubmitting(true);
     try {
       await SupabaseService.addFertigationRecord({
-        farmId,
+        farm_id: farmId,
         date: new Date().toISOString().split('T')[0],
         fertilizer: fertigationForm.fertilizer,
-        quantity: parseFloat(fertigationForm.quantity),
+        dose: fertigationForm.quantity,
+        purpose: "", // Default value
         area: 0, // Default value
         notes: fertigationForm.notes
       });
@@ -235,12 +236,12 @@ export default function FarmDetailsPage() {
     setIsSubmitting(true);
     try {
       await SupabaseService.addExpenseRecord({
-        farmId,
+        farm_id: farmId,
         date: new Date().toISOString().split('T')[0],
-        amount: parseFloat(expenseForm.amount),
-        category: expenseForm.category,
+        type: expenseForm.category as 'labor' | 'materials' | 'equipment' | 'other',
         description: expenseForm.description,
-        notes: expenseForm.notes
+        cost: parseFloat(expenseForm.amount),
+        remarks: expenseForm.notes
       });
       
       setExpenseForm({ amount: "", category: "", description: "", notes: "" });
@@ -268,7 +269,7 @@ export default function FarmDetailsPage() {
       if (soilTestForm.organic_matter) parameters.organic_matter = parseFloat(soilTestForm.organic_matter);
       
       await SupabaseService.addSoilTestRecord({
-        farmId,
+        farm_id: farmId,
         date: new Date().toISOString().split('T')[0],
         parameters,
         recommendations: soilTestForm.recommendations,
@@ -375,7 +376,7 @@ export default function FarmDetailsPage() {
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-gray-900 mb-1">{farm.area}</div>
               <div className="text-sm text-gray-500">hectares</div>
-              <div className="text-xs text-green-600 mt-1">{farm.grapeVariety}</div>
+              <div className="text-xs text-green-600 mt-1">{farm.grape_variety}</div>
             </CardContent>
           </Card>
           <Card className="border-0 shadow-sm">
@@ -395,11 +396,11 @@ export default function FarmDetailsPage() {
           <Card className="border-0 shadow-sm">
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-gray-900 mb-1">
-                {Math.floor((Date.now() - new Date(farm.plantingDate).getTime()) / (1000 * 60 * 60 * 24 * 365))}
+                {Math.floor((Date.now() - new Date(farm.planting_date).getTime()) / (1000 * 60 * 60 * 24 * 365))}
               </div>
               <div className="text-sm text-gray-500">years old</div>
               <div className="text-xs text-green-600 mt-1">
-                since {new Date(farm.plantingDate).getFullYear()}
+                since {new Date(farm.planting_date).getFullYear()}
               </div>
             </CardContent>
           </Card>

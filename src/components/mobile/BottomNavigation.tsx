@@ -189,22 +189,22 @@ export function BottomNavigation() {
       switch (selectedLogType) {
         case 'irrigation':
           await SupabaseService.addIrrigationRecord({
-            farmId,
+            farm_id: farmId,
             date: currentDate,
             duration: parseFloat(formData.duration || '0'),
             area: 0, // Default value
-            growthStage: 'Not specified',
-            moistureStatus: 'Not specified',
-            systemDischarge: 0,
+            growth_stage: 'Not specified',
+            moisture_status: 'Not specified',
+            system_discharge: 0,
             notes: formData.notes || ''
           });
           break;
         
         case 'spray':
           await SupabaseService.addSprayRecord({
-            farmId,
+            farm_id: farmId,
             date: currentDate,
-            pestDisease: 'Not specified',
+            pest_disease: 'Not specified',
             chemical: formData.product || '',
             dose: 'Not specified',
             area: 0,
@@ -216,10 +216,11 @@ export function BottomNavigation() {
         
         case 'fertigation':
           await SupabaseService.addFertigationRecord({
-            farmId,
+            farm_id: farmId,
             date: currentDate,
             fertilizer: formData.fertilizer || '',
-            quantity: parseFloat(formData.quantity || '0'),
+            dose: formData.quantity || '0',
+            purpose: '', // Default value
             area: 0,
             notes: formData.notes || ''
           });
@@ -227,7 +228,7 @@ export function BottomNavigation() {
         
         case 'harvest':
           await SupabaseService.addHarvestRecord({
-            farmId,
+            farm_id: farmId,
             date: currentDate,
             quantity: parseFloat(formData.quantity || '0'),
             grade: 'Not specified',
@@ -239,12 +240,12 @@ export function BottomNavigation() {
         
         case 'expense':
           await SupabaseService.addExpenseRecord({
-            farmId,
+            farm_id: farmId,
             date: currentDate,
-            amount: parseFloat(formData.amount || '0'),
-            category: formData.category || '',
+            type: (formData.category || 'other') as 'labor' | 'materials' | 'equipment' | 'other',
             description: formData.description || '',
-            notes: formData.notes || ''
+            cost: parseFloat(formData.amount || '0'),
+            remarks: formData.notes || ''
           });
           break;
       }
@@ -484,7 +485,7 @@ export function BottomNavigation() {
               );
             }
             
-            return (
+            return item.href ? (
               <Link
                 key={item.href}
                 href={item.href}
@@ -516,7 +517,7 @@ export function BottomNavigation() {
                   {item.name}
                 </span>
               </Link>
-            );
+            ) : null;
           })}
         </div>
       </div>
