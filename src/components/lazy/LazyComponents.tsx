@@ -35,31 +35,6 @@ export const LazyComplianceStatus = lazy(() =>
   }))
 );
 
-// Temporarily disabled for deployment
-// export const LazyAnalyticsDashboard = lazy(() => 
-//   import('@/components/analytics/AnalyticsDashboard').then(module => ({
-//     default: module.AnalyticsDashboard
-//   }))
-// );
-
-// Temporarily disabled for deployment
-// export const LazyCostAnalysisChart = lazy(() => 
-//   import('@/components/analytics/CostAnalysisChart').then(module => ({
-//     default: module.CostAnalysisChart
-//   }))
-// );
-
-// export const LazyYieldPredictionChart = lazy(() => 
-//   import('@/components/analytics/YieldPredictionChart').then(module => ({
-//     default: module.YieldPredictionChart
-//   }))
-// );
-
-// export const LazyPerformanceInsights = lazy(() => 
-//   import('@/components/analytics/PerformanceInsights').then(module => ({
-//     default: module.PerformanceInsights
-//   }))
-// );
 
 // Wrapper components with Suspense
 export const WeatherDashboardWithSuspense = (props: any) => (
@@ -80,30 +55,6 @@ export const ComplianceStatusWithSuspense = (props: any) => (
   </Suspense>
 );
 
-// Temporarily disabled for deployment
-// export const AnalyticsDashboardWithSuspense = (props: any) => (
-//   <Suspense fallback={<LoadingSpinner text="Loading analytics dashboard..." />}>
-//     <LazyAnalyticsDashboard {...props} />
-//   </Suspense>
-// );
-
-// export const CostAnalysisChartWithSuspense = (props: any) => (
-//   <Suspense fallback={<LoadingSpinner text="Loading cost analysis..." />}>
-//     <LazyCostAnalysisChart {...props} />
-//   </Suspense>
-// );
-
-// export const YieldPredictionChartWithSuspense = (props: any) => (
-//   <Suspense fallback={<LoadingSpinner text="Loading yield predictions..." />}>
-//     <LazyYieldPredictionChart {...props} />
-//   </Suspense>
-// );
-
-// export const PerformanceInsightsWithSuspense = (props: any) => (
-//   <Suspense fallback={<LoadingSpinner text="Loading performance insights..." />}>
-//     <LazyPerformanceInsights {...props} />
-//   </Suspense>
-// );
 
 // Route-level lazy loading
 export const LazyReportsPage = lazy(() => 

@@ -23,9 +23,8 @@ import {
   Database,
   TrendingUp
 } from 'lucide-react';
-import { DatabaseService } from '@/lib/db-utils';
+import { DatabaseService, type Farm } from '@/lib/db-utils';
 import { ExportService, type ExportOptions } from '@/lib/export-service';
-import type { Farm } from '@/lib/db-utils';
 
 type ReportType = 'operations' | 'financial' | 'compliance' | 'comprehensive';
 
