@@ -1,14 +1,14 @@
-import { getSupabaseClient } from './supabase';
-import type {
-  Farm,
-  IrrigationRecord,
-  SprayRecord,
-  FertigationRecord,
-  HarvestRecord,
-  ExpenseRecord,
-  CalculationHistory,
-  TaskReminder,
-  SoilTestRecord
+import { 
+  getSupabaseClient, 
+  type Farm,
+  type IrrigationRecord,
+  type SprayRecord,
+  type FertigationRecord,
+  type HarvestRecord,
+  type ExpenseRecord,
+  type CalculationHistory,
+  type TaskReminder,
+  type SoilTestRecord
 } from './supabase';
 
 export class SupabaseService {

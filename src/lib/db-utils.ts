@@ -1,5 +1,4 @@
-import { db } from './database';
-import type { Farm, IrrigationRecord, SprayRecord, HarvestRecord, TaskReminder, ExpenseRecord, FertigationRecord } from './database';
+import { db, type Farm, type IrrigationRecord, type SprayRecord, type HarvestRecord, type TaskReminder, type ExpenseRecord, type FertigationRecord } from './database';
 
 // Export types for use in other files
 export type { Farm, IrrigationRecord, SprayRecord, HarvestRecord, TaskReminder, ExpenseRecord, FertigationRecord } from './database';

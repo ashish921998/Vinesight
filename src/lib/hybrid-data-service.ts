@@ -1,7 +1,6 @@
-import { getSupabaseClient } from './supabase';
+import { getSupabaseClient, type Farm } from './supabase';
 import { DatabaseService } from './db-utils';
-import type { Farm } from './supabase';
-import { useAuth } from '../../context/AuthContext';
+import type { Farm as LocalFarm } from './database';
 
 /**
  * Hybrid Data Service - Uses Supabase when authenticated, falls back to local IndexedDB
@@ -42,7 +41,8 @@ export class HybridDataService {
         return demoFarms;
       }
       
-      return localFarms;
+      // Convert local farms to Supabase format
+      return localFarms.map(this.convertLocalToSupabase);
       
     } catch (error) {
       console.error('Error in getAllFarms, falling back to local:', error);
@@ -53,7 +53,7 @@ export class HybridDataService {
         if (localFarms.length === 0) {
           return await this.createDemoFarms();
         }
-        return localFarms;
+        return localFarms.map(this.convertLocalToSupabase);
       } catch (localError) {
         console.error('Local farms fetch also failed:', localError);
         return await this.createDemoFarms();
@@ -78,10 +78,12 @@ export class HybridDataService {
       }
       
       // Fall back to local
-      return await DatabaseService.getFarmById(id);
+      const localFarm = await DatabaseService.getFarmById(id);
+      return localFarm ? this.convertLocalToSupabase(localFarm) : null;
     } catch (error) {
       console.error('Error getting farm by ID:', error);
-      return await DatabaseService.getFarmById(id);
+      const localFarm = await DatabaseService.getFarmById(id);
+      return localFarm ? this.convertLocalToSupabase(localFarm) : null;
     }
   }
 
@@ -100,7 +102,7 @@ export class HybridDataService {
           
         if (!error && data) {
           // Also save to local for offline access
-          await DatabaseService.addFarm(data);
+          await DatabaseService.createFarm(this.convertSupabaseToLocal(data));
           return data;
         }
         
@@ -108,15 +110,18 @@ export class HybridDataService {
       }
       
       // Fall back to local creation
-      const localFarm = await DatabaseService.addFarm({
+      const localFarmData = this.convertSupabaseToLocal({
         ...farmData,
         id: Date.now(), // Generate local ID
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        user_id: user?.id || null
+        user_id: undefined
       });
       
-      return localFarm;
+      const farmId = await DatabaseService.createFarm(localFarmData);
+      const createdFarm = await DatabaseService.getFarmById(farmId);
+      
+      return this.convertLocalToSupabase(createdFarm!);
       
     } catch (error) {
       console.error('Error creating farm:', error);
@@ -140,13 +145,16 @@ export class HybridDataService {
           
         if (!error && data) {
           // Update local copy
-          await DatabaseService.updateFarm(id, data);
+          await DatabaseService.updateFarm(id, this.convertSupabaseToLocal(data));
           return data;
         }
       }
       
       // Fall back to local update
-      return await DatabaseService.updateFarm(id, farmData);
+      const localFarmData = this.convertSupabaseToLocal(farmData);
+      await DatabaseService.updateFarm(id, localFarmData);
+      const updatedFarm = await DatabaseService.getFarmById(id);
+      return this.convertLocalToSupabase(updatedFarm!);
       
     } catch (error) {
       console.error('Error updating farm:', error);
@@ -199,9 +207,9 @@ export class HybridDataService {
       for (const farm of farms) {
         const existingLocal = localFarms.find(f => f.id === farm.id);
         if (existingLocal) {
-          await DatabaseService.updateFarm(farm.id!, farm);
+          await DatabaseService.updateFarm(farm.id!, this.convertSupabaseToLocal(farm));
         } else {
-          await DatabaseService.addFarm(farm);
+          await DatabaseService.createFarm(this.convertSupabaseToLocal(farm));
         }
       }
     } catch (error) {
@@ -223,7 +231,7 @@ export class HybridDataService {
         row_spacing: 3,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        user_id: null
+        user_id: undefined
       },
       {
         id: 2,
@@ -236,7 +244,7 @@ export class HybridDataService {
         row_spacing: 2.5,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        user_id: null
+        user_id: undefined
       },
       {
         id: 3,
@@ -249,18 +257,20 @@ export class HybridDataService {
         row_spacing: 2.8,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        user_id: null
+        user_id: undefined
       }
     ];
 
     try {
       // Add demo farms to local storage
+      const createdFarms: Farm[] = [];
       for (const farm of demoFarms) {
-        await DatabaseService.addFarm(farm);
+        await DatabaseService.createFarm(this.convertSupabaseToLocal(farm));
+        createdFarms.push(farm);
       }
       
       console.log('Created demo farms for MVP');
-      return demoFarms;
+      return createdFarms;
     } catch (error) {
       console.error('Error creating demo farms:', error);
       return demoFarms; // Return even if storage fails
@@ -303,5 +313,36 @@ export class HybridDataService {
         pendingChanges: 0
       };
     }
+  }
+
+  // Conversion methods between local and Supabase Farm formats
+  private static convertLocalToSupabase(localFarm: LocalFarm): Farm {
+    return {
+      id: localFarm.id,
+      name: localFarm.name,
+      region: localFarm.region,
+      area: localFarm.area,
+      grape_variety: localFarm.grapeVariety,
+      planting_date: localFarm.plantingDate,
+      vine_spacing: localFarm.vineSpacing,
+      row_spacing: localFarm.rowSpacing,
+      created_at: localFarm.createdAt.toISOString(),
+      updated_at: localFarm.updatedAt.toISOString(),
+      user_id: undefined,
+      latitude: undefined,
+      longitude: undefined
+    };
+  }
+
+  private static convertSupabaseToLocal(supabaseFarm: Partial<Farm>): Omit<LocalFarm, 'id' | 'createdAt' | 'updatedAt'> {
+    return {
+      name: supabaseFarm.name || '',
+      region: supabaseFarm.region || '',
+      area: supabaseFarm.area || 0,
+      grapeVariety: supabaseFarm.grape_variety || '',
+      plantingDate: supabaseFarm.planting_date || '',
+      vineSpacing: supabaseFarm.vine_spacing || 0,
+      rowSpacing: supabaseFarm.row_spacing || 0
+    };
   }
 }

@@ -38,6 +38,8 @@ export interface Farm {
   planting_date: string;
   vine_spacing: number; // in meters
   row_spacing: number; // in meters
+  latitude?: number; // coordinates
+  longitude?: number; // coordinates
   created_at?: string;
   updated_at?: string;
   user_id?: string; // For multi-user support

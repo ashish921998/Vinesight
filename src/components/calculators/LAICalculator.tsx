@@ -145,14 +145,14 @@ export function LAICalculatorComponent() {
   const seasonalSchedule = LAICalculator.getSeasonalMonitoringSchedule();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="text-center space-y-2">
+      <div className="text-center space-y-1">
         <div className="flex items-center justify-center gap-2">
-          <Leaf className="h-6 w-6 text-green-600" />
-          <h2 className="text-xl font-bold text-green-800">Leaf Coverage Calculator</h2>
+          <Leaf className="h-4 w-4 text-green-600" />
+          <h2 className="text-lg font-semibold text-green-800">Leaf Coverage Calculator</h2>
         </div>
-        <p className="text-sm text-gray-600">
+        <p className="text-xs text-gray-600">
           Measure how well your vines cover the ground for optimal canopy management
         </p>
       </div>

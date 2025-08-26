@@ -5,10 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Edit, Sprout, Loader2 } from "lucide-react";
+import { Plus, Trash2, Edit, Sprout, Loader2, MapPin, Calendar, MoreVertical, ChevronRight } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { HybridDataService } from "@/lib/hybrid-data-service";
 import type { Farm } from "@/lib/supabase";
+import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function FarmsPage() {
   const [farms, setFarms] = useState<Farm[]>([]);
@@ -37,7 +44,6 @@ export default function FarmsPage() {
       setFarms(farmList);
     } catch (error) {
       console.error("Error loading farms:", error);
-      // Show user-friendly error but don't break the app
     } finally {
       setLoading(false);
     }
@@ -127,252 +133,293 @@ export default function FarmsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="container mx-auto">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
-          <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-primary flex items-center gap-2">
-              <Sprout className="h-6 w-6 sm:h-8 sm:w-8" />
-              Farm Management
-            </h1>
-            <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-              Manage your grape farms and vineyard details
-            </p>
+      <div className="min-h-screen bg-gray-50">
+        {/* Mobile Header */}
+        <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
+          <div className="px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <Sprout className="h-6 w-6 text-green-600" />
+                  My Farms
+                </h1>
+                <p className="text-sm text-gray-500 mt-1">
+                  {farms.length} {farms.length === 1 ? 'vineyard' : 'vineyards'}
+                </p>
+              </div>
+              <Button 
+                onClick={() => setShowAddForm(true)}
+                size="sm"
+                className="h-9 px-3 text-sm font-medium bg-green-600 hover:bg-green-700"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Farm
+              </Button>
+            </div>
           </div>
-          <Button 
-            onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 h-12 px-4 w-full sm:w-auto touch-manipulation active:scale-95 transition-transform text-base font-semibold"
-          >
-            <Plus className="h-5 w-5" />
-            Add New Farm
-          </Button>
         </div>
 
-        {showAddForm && (
-          <Card className="mb-6 sm:mb-8">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg sm:text-xl">
-                {editingFarm ? "Edit Farm" : "Add New Farm"}
-              </CardTitle>
-              <CardDescription className="text-sm">
-                Enter the details of your vineyard
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="sm:col-span-2">
-                    <Label htmlFor="name" className="text-sm font-medium">Farm Name</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
-                      placeholder="e.g., Nashik Vineyard"
-                      required
-                      className="h-11 text-base"
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Label htmlFor="region" className="text-sm font-medium">Region</Label>
-                    <Input
-                      id="region"
-                      value={formData.region}
-                      onChange={(e) => handleInputChange("region", e.target.value)}
-                      placeholder="e.g., Nashik, Maharashtra"
-                      required
-                      className="h-11 text-base"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="area" className="text-sm font-medium">Area (hectares)</Label>
-                    <Input
-                      id="area"
-                      type="number"
-                      step="0.1"
-                      value={formData.area}
-                      onChange={(e) => handleInputChange("area", e.target.value)}
-                      placeholder="e.g., 2.5"
-                      required
-                      className="h-11 text-base"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="grape_variety" className="text-sm font-medium">Grape Variety</Label>
-                    <Input
-                      id="grape_variety"
-                      value={formData.grape_variety}
-                      onChange={(e) => handleInputChange("grape_variety", e.target.value)}
-                      placeholder="e.g., Thompson Seedless"
-                      required
-                      className="h-11 text-base"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="planting_date" className="text-sm font-medium">Planting Date</Label>
-                    <Input
-                      id="planting_date"
-                      type="date"
-                      value={formData.planting_date}
-                      onChange={(e) => handleInputChange("planting_date", e.target.value)}
-                      required
-                      className="h-11 text-base"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="vine_spacing" className="text-sm font-medium">Vine Spacing (meters)</Label>
-                    <Input
-                      id="vine_spacing"
-                      type="number"
-                      step="0.1"
-                      value={formData.vine_spacing}
-                      onChange={(e) => handleInputChange("vine_spacing", e.target.value)}
-                      placeholder="e.g., 3"
-                      required
-                      className="h-11 text-base"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="row_spacing" className="text-sm font-medium">Row Spacing (meters)</Label>
-                    <Input
-                      id="row_spacing"
-                      type="number"
-                      step="0.1"
-                      value={formData.row_spacing}
-                      onChange={(e) => handleInputChange("row_spacing", e.target.value)}
-                      placeholder="e.g., 9"
-                      required
-                      className="h-11 text-base"
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <Button type="submit" disabled={submitLoading} className="h-11 flex-1 sm:flex-none">
-                    {submitLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        {editingFarm ? "Updating..." : "Adding..."}
-                      </>
-                    ) : (
-                      editingFarm ? "Update Farm" : "Add Farm"
-                    )}
-                  </Button>
-                  <Button type="button" variant="outline" onClick={resetForm} disabled={submitLoading} className="h-11 flex-1 sm:flex-none">
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {loading ? (
-            // Skeleton loading cards
-            Array.from({ length: 3 }).map((_, index) => (
-              <Card key={index} className="animate-pulse">
-                <CardHeader className="pb-3">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-                    <div className="flex-1 min-w-0 space-y-2">
-                      <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                    </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      <div className="h-9 w-9 bg-gray-200 rounded"></div>
-                      <div className="h-9 w-9 bg-gray-200 rounded"></div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-2 text-sm mb-4">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className="flex justify-between">
-                        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="h-10 bg-gray-200 rounded w-full"></div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            farms.map((farm) => (
-            <Card key={farm.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-lg sm:text-xl truncate">{farm.name}</CardTitle>
-                    <CardDescription className="text-sm truncate">{farm.region}</CardDescription>
-                  </div>
-                  <div className="flex gap-2 flex-shrink-0">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEdit(farm)}
-                      className="h-10 w-10 p-0 touch-manipulation active:scale-95 transition-transform"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDelete(farm.id!)}
-                      className="h-10 w-10 p-0 touch-manipulation active:scale-95 transition-transform hover:bg-red-50 hover:border-red-200"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+        <div className="px-4 py-4">
+          {showAddForm && (
+            <Card className="mb-4 border-0 shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg">
+                  {editingFarm ? "Edit Farm" : "Add New Farm"}
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Enter your vineyard details
+                </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="space-y-2 text-sm mb-4">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Area:</span>
-                    <span className="font-medium">{farm.area} ha</span>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="name" className="text-sm font-medium text-gray-700">Farm Name</Label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => handleInputChange("name", e.target.value)}
+                        placeholder="e.g., Nashik Vineyard"
+                        required
+                        className="h-12 text-base mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="region" className="text-sm font-medium text-gray-700">Region</Label>
+                      <Input
+                        id="region"
+                        value={formData.region}
+                        onChange={(e) => handleInputChange("region", e.target.value)}
+                        placeholder="e.g., Nashik, Maharashtra"
+                        required
+                        className="h-12 text-base mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="area" className="text-sm font-medium text-gray-700">Area (ha)</Label>
+                        <Input
+                          id="area"
+                          type="number"
+                          step="0.1"
+                          value={formData.area}
+                          onChange={(e) => handleInputChange("area", e.target.value)}
+                          placeholder="2.5"
+                          required
+                          className="h-12 text-base mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="grape_variety" className="text-sm font-medium text-gray-700">Variety</Label>
+                        <Input
+                          id="grape_variety"
+                          value={formData.grape_variety}
+                          onChange={(e) => handleInputChange("grape_variety", e.target.value)}
+                          placeholder="Thompson Seedless"
+                          required
+                          className="h-12 text-base mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="planting_date" className="text-sm font-medium text-gray-700">Planting Date</Label>
+                      <Input
+                        id="planting_date"
+                        type="date"
+                        value={formData.planting_date}
+                        onChange={(e) => handleInputChange("planting_date", e.target.value)}
+                        required
+                        className="h-12 text-base mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="vine_spacing" className="text-sm font-medium text-gray-700">Vine Spacing (m)</Label>
+                        <Input
+                          id="vine_spacing"
+                          type="number"
+                          step="0.1"
+                          value={formData.vine_spacing}
+                          onChange={(e) => handleInputChange("vine_spacing", e.target.value)}
+                          placeholder="3"
+                          required
+                          className="h-12 text-base mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="row_spacing" className="text-sm font-medium text-gray-700">Row Spacing (m)</Label>
+                        <Input
+                          id="row_spacing"
+                          type="number"
+                          step="0.1"
+                          value={formData.row_spacing}
+                          onChange={(e) => handleInputChange("row_spacing", e.target.value)}
+                          placeholder="9"
+                          required
+                          className="h-12 text-base mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Variety:</span>
-                    <span className="font-medium truncate">{farm.grape_variety}</span>
+                  
+                  <div className="flex gap-3 pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={resetForm} 
+                      disabled={submitLoading} 
+                      className="flex-1 h-12 border-gray-300"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={submitLoading} 
+                      className="flex-1 h-12 bg-green-600 hover:bg-green-700"
+                    >
+                      {submitLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          {editingFarm ? "Updating..." : "Adding..."}
+                        </>
+                      ) : (
+                        editingFarm ? "Update Farm" : "Add Farm"
+                      )}
+                    </Button>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Planted:</span>
-                    <span className="font-medium">{new Date(farm.planting_date).toLocaleDateString()}</span>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="space-y-3">
+            {loading ? (
+              // Modern skeleton loading
+              Array.from({ length: 3 }).map((_, index) => (
+                <Card key={index} className="border-0 shadow-sm animate-pulse">
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      </div>
+                      <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="text-center">
+                          <div className="h-3 bg-gray-200 rounded w-8 mx-auto mb-1"></div>
+                          <div className="h-2 bg-gray-200 rounded w-12 mx-auto"></div>
+                        </div>
+                        <div className="text-center">
+                          <div className="h-3 bg-gray-200 rounded w-12 mx-auto mb-1"></div>
+                          <div className="h-2 bg-gray-200 rounded w-8 mx-auto"></div>
+                        </div>
+                        <div className="text-center">
+                          <div className="h-3 bg-gray-200 rounded w-10 mx-auto mb-1"></div>
+                          <div className="h-2 bg-gray-200 rounded w-6 mx-auto"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              farms.map((farm) => (
+                <Card key={farm.id} className="border-0 shadow-sm hover:shadow-md transition-all duration-200 active:scale-[0.98]">
+                  <CardContent className="p-0">
+                    <Link href={`/farms/${farm.id}`} className="block">
+                      <div className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3 min-w-0 flex-1 pr-2">
+                            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                              <Sprout className="h-6 w-6 text-green-600" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-semibold text-gray-900 truncate">{farm.name}</h3>
+                              <div className="flex items-center gap-1 text-sm text-gray-500 mt-0.5">
+                                <MapPin className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">{farm.region}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-1 flex-shrink-0 min-w-[60px]">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 hover:bg-gray-100 flex-shrink-0"
+                                  onClick={(e) => e.preventDefault()}
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg">
+                                <DropdownMenuItem onClick={(e) => {e.preventDefault(); handleEdit(farm);}}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit Farm
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={(e) => {e.preventDefault(); handleDelete(farm.id!);}}
+                                  className="text-red-600 focus:text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete Farm
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                            <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                          </div>
+                        </div>
+                        
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          <div className="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                              <div className="text-lg font-semibold text-gray-900">{farm.area}</div>
+                              <div className="text-xs text-gray-500">hectares</div>
+                            </div>
+                            <div>
+                              <div className="text-lg font-semibold text-gray-900">{farm.grape_variety}</div>
+                              <div className="text-xs text-gray-500">variety</div>
+                            </div>
+                            <div>
+                              <div className="text-lg font-semibold text-gray-900">
+                                {Math.floor((Date.now() - new Date(farm.planting_date).getTime()) / (1000 * 60 * 60 * 24 * 365))}
+                              </div>
+                              <div className="text-xs text-gray-500">years old</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+            
+            {!loading && farms.length === 0 && !showAddForm && (
+              <Card className="border-0 shadow-sm text-center py-12">
+                <CardContent>
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Sprout className="h-8 w-8 text-green-600" />
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Spacing:</span>
-                    <span className="font-medium">{farm.vine_spacing}m × {farm.row_spacing}m</span>
-                  </div>
-                </div>
-                
-                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No farms added yet</h3>
+                  <p className="text-gray-500 mb-6 text-sm max-w-sm mx-auto">
+                    Start by adding your first vineyard to begin tracking your farming operations
+                  </p>
                   <Button 
-                    variant="outline" 
-                    className="w-full h-12 text-base touch-manipulation active:scale-95 transition-transform"
-                    onClick={() => window.location.href = `/farms/${farm.id}`}
+                    onClick={() => setShowAddForm(true)} 
+                    className="h-12 px-6 bg-green-600 hover:bg-green-700"
                   >
-                    View Details
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Farm
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-          )}
-          
-          {!loading && farms.length === 0 && !showAddForm && (
-            <Card className="col-span-full text-center py-8 sm:py-12">
-              <CardContent>
-                <Sprout className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No farms added yet</h3>
-                <p className="text-muted-foreground mb-4 text-sm sm:text-base">
-                  Start by adding your first vineyard to begin tracking operations
-                </p>
-                <Button onClick={() => setShowAddForm(true)} className="h-11">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Farm
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </div>
     </ProtectedRoute>

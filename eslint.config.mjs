@@ -12,16 +12,40 @@ const compat = new FlatCompat({
 export default [
   ...compat.extends('next/core-web-vitals'),
   {
+    ignores: [
+      '.next/**/*',
+      'node_modules/**/*', 
+      'public/**/*',
+      '*.config.js',
+      '*.config.ts',
+      '*.config.mjs',
+      'build/**/*',
+      'dist/**/*'
+    ]
+  },
+  {
+    files: ['src/**/*.{js,jsx,ts,tsx}', 'app/**/*.{js,jsx,ts,tsx}', 'pages/**/*.{js,jsx,ts,tsx}'],
     rules: {
-      // Disable all rules for deployment
-      'no-unused-vars': 'off',
-      'react-hooks/exhaustive-deps': 'off',
-      'react/no-unescaped-entities': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
-      '@typescript-eslint/no-empty-object-type': 'off',
-      'prefer-const': 'off'
+      // Critical error prevention rules
+      'prefer-const': 'warn',
+      
+      // React/Next.js specific rules  
+      'react-hooks/exhaustive-deps': 'warn',
+      'react/no-unescaped-entities': 'warn',
+      
+      // Security and best practices
+      'no-console': 'warn',
+      'no-debugger': 'error', 
+      'no-alert': 'warn',
+      
+      // Code quality rules
+      'no-duplicate-imports': 'warn',
+      'no-unreachable': 'error',
+      'no-constant-condition': 'warn',
+      
+      // React best practices
+      'react/jsx-key': 'error',
+      'react-hooks/rules-of-hooks': 'error',
     }
   }
 ];

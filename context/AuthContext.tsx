@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { getSupabaseClient } from '@/lib/supabase';
+import { isRefreshTokenError, handleRefreshTokenError } from '@/lib/auth-utils';
 
 interface AuthContextType {
   user: User | null;
@@ -29,12 +30,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           console.error('Error getting session:', error);
+          // Handle refresh token errors
+          if (isRefreshTokenError(error)) {
+            await handleRefreshTokenError();
+            setSession(null);
+            setUser(null);
+          }
         } else {
           setSession(session);
           setUser(session?.user ?? null);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
+        // Clear session on any auth error
+        setSession(null);
+        setUser(null);
       }
       setLoading(false);
     };
@@ -47,8 +57,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
           console.log('Auth event:', event, session);
-          setSession(session);
-          setUser(session?.user ?? null);
+          
+          // Handle specific auth events
+          if (event === 'TOKEN_REFRESHED' && !session) {
+            // Token refresh failed, clear session
+            console.log('Token refresh failed, clearing session');
+            setSession(null);
+            setUser(null);
+          } else if (event === 'SIGNED_OUT' || !session) {
+            // User signed out or session is null
+            setSession(null);
+            setUser(null);
+          } else {
+            // Valid session
+            setSession(session);
+            setUser(session?.user ?? null);
+          }
           setLoading(false);
         }
       );

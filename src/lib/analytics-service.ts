@@ -75,7 +75,7 @@ export class AnalyticsService {
   private static async calculateCostAnalysis(farms: Farm[]): Promise<CostAnalysis> {
     let totalCosts = 0;
     let totalRevenue = 0;
-    let totalArea = farms.reduce((sum, farm) => sum + farm.area, 0);
+    const totalArea = farms.reduce((sum, farm) => sum + farm.area, 0);
 
     const costByCategory = new Map<string, number>();
     const monthlyData = new Map<string, { costs: number; revenue: number }>();
@@ -154,7 +154,7 @@ export class AnalyticsService {
 
   private static async calculateYieldAnalysis(farms: Farm[]): Promise<YieldAnalysis> {
     let totalYield = 0;
-    let totalArea = farms.reduce((sum, farm) => sum + farm.area, 0);
+    const totalArea = farms.reduce((sum, farm) => sum + farm.area, 0);
     
     // Industry benchmarks for grape yields (tons/hectare)
     const REGIONAL_BENCHMARK = 12; // Average for Maharashtra

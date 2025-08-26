@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseClient } from '@/lib/supabase'
-import { FarmSchema, validateAndSanitize, globalRateLimiter } from '@/lib/validation'
+import { FarmSchema, validateAndSanitize, globalRateLimiter, generateCSRFToken } from '@/lib/validation'
 
 export async function GET(request: NextRequest) {
   try {
-    // Rate limiting
+    // Enhanced rate limiting with security
     const clientIP = request.headers.get('x-forwarded-for') || 
                      request.headers.get('x-real-ip') || 
                      'anonymous'
-    if (!globalRateLimiter.checkLimit(`farms-get-${clientIP}`)) {
+    
+    const rateLimitResult = globalRateLimiter.checkLimit(`farms-get-${clientIP}`)
+    if (!rateLimitResult.allowed) {
       return NextResponse.json(
-        { error: 'Too many requests' }, 
+        { error: rateLimitResult.reason || 'Too many requests' }, 
         { status: 429 }
       )
     }
@@ -41,18 +43,50 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting
+    // Enhanced rate limiting and security
     const clientIP = request.headers.get('x-forwarded-for') || 
                      request.headers.get('x-real-ip') || 
                      'anonymous'
-    if (!globalRateLimiter.checkLimit(`farms-post-${clientIP}`)) {
+    
+    // Check authentication status for better rate limiting
+    const authHeader = request.headers.get('authorization')
+    const isAuthenticated = !!authHeader
+    
+    const rateLimitResult = globalRateLimiter.checkLimit(`farms-post-${clientIP}`, isAuthenticated)
+    if (!rateLimitResult.allowed) {
       return NextResponse.json(
-        { error: 'Too many requests' }, 
+        { error: rateLimitResult.reason || 'Too many requests' }, 
         { status: 429 }
       )
     }
 
-    const body = await request.json()
+    // Content-Type validation
+    const contentType = request.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      return NextResponse.json(
+        { error: 'Invalid content type. Expected application/json' }, 
+        { status: 400 }
+      )
+    }
+
+    let body
+    try {
+      body = await request.json()
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Invalid JSON payload' }, 
+        { status: 400 }
+      )
+    }
+
+    // Check for excessive payload size (basic protection)
+    const bodyString = JSON.stringify(body)
+    if (bodyString.length > 10000) { // 10KB limit
+      return NextResponse.json(
+        { error: 'Payload too large' }, 
+        { status: 413 }
+      )
+    }
     
     // Validate and sanitize input
     const validation = validateAndSanitize(FarmSchema, body)

@@ -1,69 +1,98 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Calculator, 
   Droplets, 
   Leaf, 
   Beaker, 
-  Target,
   ArrowRight,
-  ChevronRight
+  ArrowLeft,
+  MapPin,
+  CheckCircle
 } from "lucide-react";
-// Removed ProtectedRoute - calculators work without authentication
 import { ETcCalculatorComponent } from "@/components/calculators/ETcCalculator";
 import { LAICalculatorComponent } from "@/components/calculators/LAICalculator";
 import { NutrientCalculatorComponent } from "@/components/calculators/NutrientCalculator";
 import { SystemDischargeCalculatorComponent } from "@/components/calculators/SystemDischargeCalculator";
+import { HybridDataService } from "@/lib/hybrid-data-service";
+import type { Farm as FarmType } from "@/lib/supabase";
+import { useAuth } from "../../../context/AuthContext";
 
-const calculators = [
+const calculatorCategories = [
   {
-    id: "etc",
-    title: "Water Needs Calculator",
-    description: "Calculate how much water your grapes need daily",
+    title: "Irrigation & Water Use",
+    description: "Calculate water needs and irrigation system requirements",
     icon: Droplets,
-    color: "text-blue-600",
-    bgColor: "bg-blue-50",
-    borderColor: "border-blue-200",
-    component: ETcCalculatorComponent,
+    calculators: [
+      {
+        id: "etc",
+        title: "Water Needs Calculator",
+        description: "Calculate daily water requirements for optimal irrigation",
+        component: ETcCalculatorComponent
+      },
+      {
+        id: "system-discharge",
+        title: "System Flow Rate",
+        description: "Check if your irrigation system delivers adequate water",
+        component: SystemDischargeCalculatorComponent
+      }
+    ]
   },
   {
-    id: "system-discharge",
-    title: "System Flow Rate",
-    description: "Check if your irrigation system delivers enough water",
-    icon: Target,
-    color: "text-green-600",
-    bgColor: "bg-green-50",
-    borderColor: "border-green-200",
-    component: SystemDischargeCalculatorComponent,
-  },
-  {
-    id: "lai",
-    title: "Leaf Coverage Calculator",
-    description: "Measure how well your vines cover the ground",
+    title: "Crop & Growth Analysis",
+    description: "Monitor vine development and leaf coverage",
     icon: Leaf,
-    color: "text-emerald-600",
-    bgColor: "bg-emerald-50",
-    borderColor: "border-emerald-200",
-    component: LAICalculatorComponent,
+    calculators: [
+      {
+        id: "lai",
+        title: "Leaf Area Index",
+        description: "Calculate leaf coverage and canopy development",
+        component: LAICalculatorComponent
+      }
+    ]
   },
   {
-    id: "nutrient",
-    title: "Fertilizer Calculator",
-    description: "Find out exactly how much fertilizer to apply",
+    title: "Nutrition Management",
+    description: "Calculate fertilizer requirements and nutrient planning",
     icon: Beaker,
-    color: "text-purple-600",
-    bgColor: "bg-purple-50",
-    borderColor: "border-purple-200",
-    component: NutrientCalculatorComponent,
-  },
+    calculators: [
+      {
+        id: "nutrient",
+        title: "Fertilizer Calculator",
+        description: "NPK and micronutrient recommendations by growth stage",
+        component: NutrientCalculatorComponent
+      }
+    ]
+  }
 ];
 
 export default function CalculatorsPage() {
+  const { user } = useAuth();
   const [selectedCalculator, setSelectedCalculator] = useState<string | null>(null);
+  const [selectedFarm, setSelectedFarm] = useState<FarmType | null>(null);
+  const [farms, setFarms] = useState<FarmType[]>([]);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>("Irrigation & Water Use");
+
+  useEffect(() => {
+    loadFarms();
+  }, []);
+
+  const loadFarms = async () => {
+    try {
+      const farmList = await HybridDataService.getAllFarms();
+      setFarms(farmList);
+      if (farmList.length > 0) {
+        setSelectedFarm(farmList[0]);
+      }
+    } catch (error) {
+      console.error('Error loading farms:', error);
+    }
+  };
 
   const handleCalculatorSelect = (calculatorId: string) => {
     setSelectedCalculator(calculatorId);
@@ -73,35 +102,48 @@ export default function CalculatorsPage() {
     setSelectedCalculator(null);
   };
 
-  if (selectedCalculator) {
-    const calculator = calculators.find((calc) => calc.id === selectedCalculator);
-    if (!calculator) return null;
+  // Get selected calculator details
+  const selectedCalc = calculatorCategories
+    .flatMap(cat => cat.calculators)
+    .find(calc => calc.id === selectedCalculator);
 
-    const CalculatorComponent = calculator.component;
+  if (selectedCalculator && selectedCalc) {
+    const CalculatorComponent = selectedCalc.component;
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-6">
-          <div className="mb-6">
+        <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
+          <div className="px-4 py-3">
             <Button
               onClick={handleBackToCalculators}
               variant="ghost"
-              className="mb-4 w-full sm:w-auto h-12 sm:h-10 px-6 sm:px-4 text-base sm:text-sm bg-white hover:bg-gray-50 border border-gray-200"
+              size="sm"
+              className="mb-2 text-green-600 hover:text-green-700 hover:bg-green-50 p-2"
             >
-              <ChevronRight className="mr-2 h-5 w-5 rotate-180" />
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Calculators
             </Button>
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-3 mb-3">
-                <calculator.icon className="h-8 w-8 sm:h-6 sm:w-6 text-green-600" />
-                <h1 className="text-2xl sm:text-xl font-bold text-gray-900">
-                  {calculator.title}
-                </h1>
+            
+            {/* Selected Farm Display */}
+            {selectedFarm && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-green-600" />
+                  <span className="text-sm font-medium text-green-800">{selectedFarm.name}</span>
+                  <Badge variant="secondary" className="text-xs">{selectedFarm.area}ha</Badge>
+                </div>
+                <p className="text-xs text-green-600 mt-1">{selectedFarm.region} • {selectedFarm.grape_variety}</p>
               </div>
-              <p className="text-base sm:text-sm text-gray-600 max-w-2xl mx-auto">
-                {calculator.description}
-              </p>
+            )}
+
+            {/* Calculator Header */}
+            <div className="bg-green-600 text-white rounded-lg p-4">
+              <h1 className="text-lg font-bold mb-1">{selectedCalc.title}</h1>
+              <p className="text-green-100 text-sm">{selectedCalc.description}</p>
             </div>
           </div>
+        </div>
+
+        <div className="p-4">
           <CalculatorComponent />
         </div>
       </div>
@@ -110,67 +152,118 @@ export default function CalculatorsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="text-center mb-8 sm:mb-6">
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <Calculator className="h-10 w-10 sm:h-8 sm:w-8 text-green-600" />
-            <h1 className="text-3xl sm:text-2xl font-bold text-gray-900">
-              Farm Calculators
-            </h1>
-          </div>
-          <p className="text-lg sm:text-base text-gray-600 max-w-2xl mx-auto">
-            Get accurate calculations for your vineyard needs
-          </p>
-        </div>
-
-        {/* Calculator Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-4 mb-8">
-          {calculators.map((calculator) => (
-            <Card
-              key={calculator.id}
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 border-2 hover:border-green-300 ${calculator.bgColor} ${calculator.borderColor}`}
-              onClick={() => handleCalculatorSelect(calculator.id)}
-            >
-              <CardHeader className="p-6 sm:p-5 text-center">
-                <div className="flex justify-center mb-4">
-                  <div className={`p-4 sm:p-3 rounded-full ${calculator.bgColor} border-2 ${calculator.borderColor}`}>
-                    <calculator.icon className={`h-10 w-10 sm:h-8 sm:w-8 ${calculator.color}`} />
-                  </div>
-                </div>
-                <CardTitle className="text-xl sm:text-lg font-bold text-gray-900 mb-2">
-                  {calculator.title}
-                </CardTitle>
-                <CardDescription className="text-base sm:text-sm text-gray-600 leading-relaxed">
-                  {calculator.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 sm:p-5 pt-0">
-                <div className="flex items-center justify-center text-green-600 font-medium text-sm">
-                  <span>Get Started</span>
-                  <ArrowRight className="ml-2 h-5 w-5 sm:h-4 sm:w-4" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Info Section */}
-        <Card className="max-w-4xl mx-auto">
-          <CardContent className="p-8 sm:p-6 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="p-3 rounded-full bg-green-100 border-2 border-green-200">
-                <Calculator className="h-8 w-8 sm:h-6 sm:w-6 text-green-600" />
+      {/* Header */}
+      <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
+        <div className="px-4 py-4">
+          <div className="bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl p-4 mb-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-white/20 rounded-lg">
+                <Calculator className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">Farm Calculators</h1>
+                <p className="text-green-100 text-sm">Scientific calculations for your vineyard</p>
               </div>
             </div>
-            <h2 className="text-2xl sm:text-xl font-bold text-gray-900 mb-3">
-              Science-Based Results
-            </h2>
-            <p className="text-base sm:text-sm text-gray-600 leading-relaxed max-w-2xl mx-auto">
-              All calculations use internationally recognized agricultural formulas for accurate, reliable results.
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Farm Selection */}
+          {farms.length > 0 && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Active Farm</label>
+              <Select
+                value={selectedFarm?.id?.toString() || ""}
+                onValueChange={(value) => {
+                  const farm = farms.find(f => f.id?.toString() === value);
+                  setSelectedFarm(farm || null);
+                }}
+              >
+                <SelectTrigger className="h-12 bg-white border-green-200">
+                  <SelectValue placeholder="Select a farm">
+                    {selectedFarm && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-green-600" />
+                        <span>{selectedFarm.name}</span>
+                        <Badge variant="secondary" className="text-xs">{selectedFarm.area}ha</Badge>
+                      </div>
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  {farms.map((farm) => (
+                    <SelectItem key={farm.id} value={farm.id?.toString() || ""}>
+                      <div className="flex items-center gap-2 py-1">
+                        <MapPin className="h-4 w-4 text-green-600" />
+                        <div>
+                          <div className="font-medium">{farm.name}</div>
+                          <div className="text-xs text-gray-500">{farm.region} • {farm.area}ha</div>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Calculator Categories */}
+      <div className="p-4 space-y-4">
+        {calculatorCategories.map((category) => (
+          <Card key={category.title} className="overflow-hidden">
+            <CardHeader 
+              className="pb-3 cursor-pointer bg-green-50 border-b border-green-100"
+              onClick={() => setExpandedCategory(expandedCategory === category.title ? null : category.title)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-600 rounded-lg">
+                    <category.icon className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base font-semibold text-green-800">
+                      {category.title}
+                    </CardTitle>
+                    <CardDescription className="text-xs text-green-600 mt-1">
+                      {category.description}
+                    </CardDescription>
+                  </div>
+                </div>
+                <ArrowRight className={`h-5 w-5 text-green-600 transition-transform ${
+                  expandedCategory === category.title ? 'rotate-90' : ''
+                }`} />
+              </div>
+            </CardHeader>
+
+            {expandedCategory === category.title && (
+              <CardContent className="p-0">
+                <div className="space-y-2 p-4">
+                  {category.calculators.map((calculator) => (
+                    <div
+                      key={calculator.id}
+                      onClick={() => handleCalculatorSelect(calculator.id)}
+                      className="bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-green-300 hover:bg-green-50 transition-all active:scale-95"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900 text-sm mb-2">
+                            {calculator.title}
+                          </h3>
+                          <p className="text-xs text-gray-600 leading-relaxed">
+                            {calculator.description}
+                          </p>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-green-600 ml-3 flex-shrink-0" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        ))}
+
       </div>
     </div>
   );

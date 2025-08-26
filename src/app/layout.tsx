@@ -8,6 +8,7 @@ import { OfflineIndicator } from "@/components/pwa/OfflineIndicator";
 import { PWAWrapper } from "@/components/pwa/PWAWrapper";
 import { AsyncErrorBoundary } from "@/components/ErrorBoundary";
 import { BottomNavigation } from "@/components/mobile/BottomNavigation";
+import { GlobalAuthErrorHandler } from "@/components/auth/GlobalAuthErrorHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,6 +59,7 @@ export default function RootLayout({
       >
         <AsyncErrorBoundary>
           <AuthProvider>
+            <GlobalAuthErrorHandler />
             <I18nProvider>
               <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
                 <Navigation />
@@ -68,7 +70,7 @@ export default function RootLayout({
                 </main>
                 <BottomNavigation />
                 {/* PWA Install Prompt */}
-                <div className="fixed bottom-4 left-4 right-4 lg:left-80 z-40">
+                <div className="fixed bottom-20 left-4 right-4 lg:left-80 lg:bottom-4 z-40">
                   <PWAWrapper />
                 </div>
                 {/* Offline Status Indicator */}

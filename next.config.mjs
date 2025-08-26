@@ -1,8 +1,33 @@
-const isProd = process.env.NODE_ENV === 'production'
+import withPWA from 'next-pwa';
+
+const isProd = process.env.NODE_ENV === 'production';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  
+  // Performance optimizations from next.config.ts
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      '@radix-ui/react-select', 
+      '@radix-ui/react-progress',
+      'jspdf',
+      'chart.js'
+    ],
+  },
+  
+  // Compiler optimizations
+  compiler: {
+    removeConsole: isProd,
+  },
+  
+  // Image optimization
+  images: {
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+  },
   
   turbopack: {
     rules: {
@@ -36,30 +61,48 @@ const nextConfig = {
         key: 'Referrer-Policy',
         value: 'strict-origin-when-cross-origin'
       }
-    ]
+    ];
 
-    // Add stricter CSP in production
+    // Improved CSP policy - removed unsafe-inline and unsafe-eval
     if (isProd) {
       securityHeaders.push({
         key: 'Content-Security-Policy',
         value: [
           "default-src 'self'",
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com",
-          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          "script-src 'self' https://apis.google.com",
+          "style-src 'self' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
           "img-src 'self' data: https:",
           "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
           "frame-src 'self' https://accounts.google.com",
         ].join('; ')
-      })
+      });
     }
 
     return [
       {
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/manifest+json',
+          },
+        ],
+      },
+      {
+        source: '/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
         source: '/(.*)',
         headers: securityHeaders
       }
-    ]
+    ];
   },
 
   // PWA configuration
@@ -69,14 +112,14 @@ const nextConfig = {
         source: '/sw.js',
         destination: '/_next/static/sw.js',
       },
-    ]
+    ];
   },
-}
+};
 
-// PWA configuration
-const withPWA = require('next-pwa')({
+// PWA configuration with runtime caching
+const pwaConfig = withPWA({
   dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
+  disable: !isProd,
   register: true,
   skipWaiting: true,
   runtimeCaching: [
@@ -104,6 +147,6 @@ const withPWA = require('next-pwa')({
       },
     },
   ],
-})
+});
 
-module.exports = withPWA(nextConfig)
+export default pwaConfig(nextConfig);

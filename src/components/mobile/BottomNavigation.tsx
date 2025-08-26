@@ -49,16 +49,10 @@ const quickAddItems = [
     color: "bg-green-100 text-green-700"
   },
   {
-    name: "Add Journal Entry",
+    name: "Add Farm Logs",
     href: "/journal",
     icon: FileText,
     color: "bg-blue-100 text-blue-700"
-  },
-  {
-    name: "Log Irrigation",
-    href: "/journal?tab=irrigation",
-    icon: Droplets,
-    color: "bg-cyan-100 text-cyan-700"
   }
 ];
 
