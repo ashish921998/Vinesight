@@ -23,28 +23,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    
+    // Set up auth state listener first to catch any immediate changes
+    const supabase = getSupabaseClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth event:', event, session?.user?.id);
+        
+        if (!mounted) return; // Prevent state updates if component unmounted
+        
+        // Handle specific auth events
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          // Token refresh failed, clear session
+          console.log('Token refresh failed, clearing session');
+          setSession(null);
+          setUser(null);
+        } else if (event === 'SIGNED_OUT' || !session) {
+          // User signed out or session is null
+          setSession(null);
+          setUser(null);
+        } else if (session) {
+          // Valid session - this handles both SIGNED_IN and TOKEN_REFRESHED with valid session
+          setSession(session);
+          setUser(session.user);
+        }
+        
+        if (event === 'INITIAL_SESSION') {
+          // Only set loading to false after we've processed the initial session
+          setLoading(false);
+        }
+      }
+    );
+
     // Get initial session
     const getSession = async () => {
       try {
-        const supabase = getSupabaseClient();
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return; // Prevent state updates if component unmounted
+        
         if (error) {
           console.error('Error getting session:', error);
-          
-          // Enhanced error logging for production debugging
-          if (process.env.NODE_ENV === 'production') {
-            console.error('Session error details:', {
-              message: error.message,
-              status: error.status,
-              url: window.location.href,
-              userAgent: navigator.userAgent,
-              timestamp: new Date().toISOString()
-            });
-          }
           
           // Handle refresh token errors
           if (isRefreshTokenError(error)) {
             await handleRefreshTokenError();
+            setSession(null);
+            setUser(null);
+          } else {
+            // For other errors, still clear the session
             setSession(null);
             setUser(null);
           }
@@ -55,74 +83,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('Auth initialization error:', error);
         
-        // Enhanced error logging for mobile debugging
-        if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined') {
-          console.error('Auth initialization details:', {
-            error: error instanceof Error ? error.message : String(error),
-            url: window.location.href,
-            userAgent: navigator.userAgent,
-            timestamp: new Date().toISOString(),
-            hasSupabase: !!supabase
-          });
+        if (mounted) {
+          setSession(null);
+          setUser(null);
         }
-        
-        // Clear session on any auth error
-        setSession(null);
-        setUser(null);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
     };
 
     getSession();
 
-    // Listen for auth changes
-    try {
-      const supabase = getSupabaseClient();
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          console.log('Auth event:', event, session);
-          
-          // Handle specific auth events
-          if (event === 'TOKEN_REFRESHED' && !session) {
-            // Token refresh failed, clear session
-            console.log('Token refresh failed, clearing session');
-            setSession(null);
-            setUser(null);
-          } else if (event === 'SIGNED_OUT' || !session) {
-            // User signed out or session is null
-            setSession(null);
-            setUser(null);
-          } else {
-            // Valid session
-            setSession(session);
-            setUser(session?.user ?? null);
-          }
-          setLoading(false);
-        }
-      );
-
-      return () => {
-        try {
-          subscription.unsubscribe();
-        } catch (error) {
-          console.error('Error unsubscribing from auth changes:', error);
-        }
-      };
-    } catch (error) {
-      console.error('Error setting up auth listener:', error);
-      return () => {};
-    }
+    return () => {
+      mounted = false;
+      try {
+        subscription.unsubscribe();
+      } catch (error) {
+        console.error('Error unsubscribing from auth changes:', error);
+      }
+    };
   }, []);
 
   const signInWithGoogle = async () => {
     try {
       const supabase = getSupabaseClient();
+      console.log('Initiating Google OAuth with redirect to:', `${window.location.origin}/auth/callback`);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
+      
+      if (error) {
+        console.error('OAuth initiation error:', error);
+      } else {
+        console.log('OAuth initiation successful:', data);
+      }
+      
       return { data, error };
     } catch (error) {
       console.error('Google sign-in error:', error);

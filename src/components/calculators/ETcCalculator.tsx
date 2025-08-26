@@ -2,17 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { 
-  Calculator
-} from 'lucide-react';
-import { 
-  ETcCalculator,
-  type ETcCalculationInputs,
-  type ETcResults,
-  type GrapeGrowthStage,
-  type WeatherData
-} from '@/lib/etc-calculator';
-import { HybridDataService } from '@/lib/hybrid-data-service';
+import { Calculator, ArrowLeft, ArrowRight } from 'lucide-react';
+import { SupabaseService } from '@/lib/supabase-service';
 import type { Farm } from '@/lib/supabase';
 import { useAuth } from '../../../context/AuthContext';
 import { WeatherDataForm } from './ETc/WeatherDataForm';
@@ -20,39 +11,27 @@ import { DataSourceSelector } from './ETc/DataSourceSelector';
 import { CropInformationForm } from './ETc/CropInformationForm';
 import { LocationForm } from './ETc/LocationForm';
 import { ResultsDisplay } from './ETc/ResultsDisplay';
+import { useETcCalculator } from '@/hooks/useETcCalculator';
+import { Progress } from '@/components/ui/progress';
+
+const steps = ['weather', 'crop', 'location'];
 
 export function ETcCalculatorComponent() {
   const { user } = useAuth();
   const [farms, setFarms] = useState<Farm[]>([]);
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
   const [useCustomData, setUseCustomData] = useState(!user);
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<ETcResults | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<'weather' | 'crop' | 'location'>('weather');
+  const [currentStep, setCurrentStep] = useState(0);
 
-  const [formData, setFormData] = useState({
-    // Weather Data
-    date: new Date().toISOString().split('T')[0],
-    temperatureMax: '',
-    temperatureMin: '',
-    humidity: '',
-    windSpeed: '',
-    rainfall: '',
-    
-    // Growth Stage
-    growthStage: 'fruit_set' as GrapeGrowthStage,
-    
-    // Location (optional)
-    latitude: '',
-    longitude: '',
-    elevation: '',
-    
-    // Farm Details
-    irrigationMethod: 'drip' as 'drip' | 'sprinkler' | 'surface',
-    soilType: 'loamy' as 'sandy' | 'loamy' | 'clay'
-  });
-
+  const {
+    formData,
+    results,
+    error,
+    loading,
+    handleInputChange,
+    handleCalculate,
+    resetForm,
+  } = useETcCalculator();
 
   useEffect(() => {
     if (user && !useCustomData) {
@@ -62,7 +41,7 @@ export function ETcCalculatorComponent() {
 
   const loadFarms = async () => {
     try {
-      const farmList = await HybridDataService.getAllFarms();
+      const farmList = await SupabaseService.getAllFarms();
       setFarms(farmList);
       if (farmList.length > 0) {
         setSelectedFarm(farmList[0]);
@@ -72,111 +51,40 @@ export function ETcCalculatorComponent() {
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleCalculate = () => {
-    setError(null);
-    
-    if (!useCustomData && !selectedFarm) {
-      setError('Please select a farm first or switch to custom data mode');
-      return;
-    }
-
-    // Validate required fields
-    if (!formData.temperatureMax || !formData.temperatureMin || !formData.humidity || !formData.windSpeed) {
-      setError('Please fill in all required weather data fields');
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      const weatherData: WeatherData = {
-        date: formData.date,
-        temperatureMax: parseFloat(formData.temperatureMax),
-        temperatureMin: parseFloat(formData.temperatureMin),
-        humidity: parseFloat(formData.humidity),
-        windSpeed: parseFloat(formData.windSpeed),
-        rainfall: formData.rainfall ? parseFloat(formData.rainfall) : undefined,
-      };
-
-      const inputs: ETcCalculationInputs = {
-        farmId: selectedFarm?.id || 0,
-        weatherData: weatherData,
-        growthStage: formData.growthStage,
-        plantingDate: selectedFarm?.planting_date || '2024-01-01',
-        location: {
-          latitude: formData.latitude ? parseFloat(formData.latitude) : (selectedFarm?.latitude || 19.0760),
-          longitude: formData.longitude ? parseFloat(formData.longitude) : (selectedFarm?.longitude || 72.8777),
-          elevation: formData.elevation ? parseFloat(formData.elevation) : 500
-        },
-        irrigationMethod: formData.irrigationMethod,
-        soilType: formData.soilType
-      };
-
-      const calculationResults = ETcCalculator.calculateETc(inputs);
-      setResults(calculationResults);
-      
-      // Scroll to results on mobile
-      if (window.innerWidth < 768) {
-        setTimeout(() => {
-          document.getElementById('results-section')?.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-          });
-        }, 100);
-      }
-
-    } catch (error) {
-      console.error('Calculation error:', error);
-      setError('Error performing calculation. Please check your inputs.');
-    } finally {
-      setLoading(false);
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      temperatureMax: '',
-      temperatureMin: '',
-      humidity: '',
-      windSpeed: '',
-      rainfall: '',
-      growthStage: 'fruit_set',
-      latitude: '',
-      longitude: '',
-      elevation: '',
-      irrigationMethod: 'drip',
-      soilType: 'loamy'
-    });
-    setResults(null);
-    setError(null);
-    setActiveSection('weather');
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
   };
 
+  const onCalculate = () => {
+    handleCalculate(selectedFarm, useCustomData);
+  };
+  
+  const onReset = () => {
+    resetForm();
+    setCurrentStep(0);
+  }
+
+  if (results) {
+    return (
+      <div className="space-y-4">
+        <ResultsDisplay results={results} date={formData.date} />
+        <Button onClick={onReset} variant="outline" className="w-full">
+          Start Over
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-3 pb-16">
-      {/* Header */}
-      <div className="text-center space-y-1 px-4">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="p-1.5 bg-green-100 rounded-lg">
-            <Calculator className="h-4 w-4 text-green-600" />
-          </div>
-          <h2 className="text-lg font-semibold text-gray-900">ETc Calculator</h2>
-        </div>
-        <p className="text-gray-600 text-xs leading-relaxed max-w-xl mx-auto">
-          Calculate crop evapotranspiration and irrigation requirements for your vineyard
-        </p>
-      </div>
-
-      {/* Data Source Toggle */}
+    <div className="space-y-6 pb-16">
       <DataSourceSelector
         user={user}
         farms={farms}
@@ -185,47 +93,35 @@ export function ETcCalculatorComponent() {
         onFarmSelect={setSelectedFarm}
         onDataSourceChange={setUseCustomData}
       />
-
-      {/* Mobile-Optimized Input Sections */}
-      <div className="mx-4 space-y-3">
-        <WeatherDataForm
-          formData={{
-            date: formData.date,
-            temperatureMax: formData.temperatureMax,
-            temperatureMin: formData.temperatureMin,
-            humidity: formData.humidity,
-            windSpeed: formData.windSpeed,
-            rainfall: formData.rainfall
-          }}
-          activeSection={activeSection}
-          onInputChange={handleInputChange}
-          onSectionToggle={setActiveSection}
-        />
-        
-        <CropInformationForm
-          formData={{
-            growthStage: formData.growthStage,
-            irrigationMethod: formData.irrigationMethod,
-            soilType: formData.soilType
-          }}
-          activeSection={activeSection}
-          onInputChange={handleInputChange}
-          onSectionToggle={setActiveSection}
-        />
-        
-        <LocationForm
-          formData={{
-            latitude: formData.latitude,
-            longitude: formData.longitude,
-            elevation: formData.elevation
-          }}
-          activeSection={activeSection}
-          onInputChange={handleInputChange}
-          onSectionToggle={setActiveSection}
-        />
+      
+      <div className="px-4">
+        <Progress value={(currentStep + 1) / steps.length * 100} className="w-full h-2" />
+        <p className="text-center text-sm text-gray-500 mt-2">
+          Step {currentStep + 1} of {steps.length}
+        </p>
       </div>
 
-      {/* Error Display */}
+      <div className="mx-4">
+        {steps[currentStep] === 'weather' && (
+          <WeatherDataForm
+            formData={formData}
+            onInputChange={handleInputChange}
+          />
+        )}
+        {steps[currentStep] === 'crop' && (
+          <CropInformationForm
+            formData={formData}
+            onInputChange={handleInputChange}
+          />
+        )}
+        {steps[currentStep] === 'location' && (
+          <LocationForm
+            formData={formData}
+            onInputChange={handleInputChange}
+          />
+        )}
+      </div>
+
       {error && (
         <div className="mx-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -234,42 +130,31 @@ export function ETcCalculatorComponent() {
         </div>
       )}
 
-      {/* Calculate Button */}
       <div className="px-4">
         <div className="flex gap-2">
-          <Button 
-            onClick={handleCalculate}
-            disabled={loading}
-            className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-white font-medium"
-          >
-            {loading ? (
-              <>
-                <Calculator className="mr-2 h-4 w-4 animate-pulse" />
-                Calculating...
-              </>
-            ) : (
-              <>
-                <Calculator className="mr-2 h-4 w-4" />
-                Calculate ETc
-              </>
-            )}
-          </Button>
-          {results && (
+          {currentStep > 0 && (
+            <Button variant="outline" onClick={handleBack} className="h-12">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+          )}
+          {currentStep < steps.length - 1 ? (
+            <Button onClick={handleNext} className="flex-1 h-12">
+              Next
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          ) : (
             <Button
-              variant="outline"
-              onClick={resetForm}
-              className="px-6 h-12"
+              onClick={onCalculate}
+              disabled={loading}
+              className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-white"
             >
-              Reset
+              {loading ? 'Calculating...' : 'Calculate ETc'}
+              <Calculator className="ml-2 h-4 w-4" />
             </Button>
           )}
         </div>
       </div>
-
-      {/* Results Section */}
-      {results && (
-        <ResultsDisplay results={results} date={formData.date} />
-      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   ArrowLeft, 
   Droplets, 
@@ -22,9 +23,13 @@ import {
   MoreHorizontal,
   Clock,
   Target,
-  Activity
+  Activity,
+  Beaker,
+  DollarSign,
+  TestTube
 } from "lucide-react";
-import { DatabaseService, Farm } from "@/lib/db-utils";
+import { SupabaseService } from "@/lib/supabase-service";
+import { type Farm } from "@/lib/supabase";
 
 interface DashboardData {
   farm: Farm | null;
@@ -51,6 +56,9 @@ export default function FarmDetailsPage() {
   const [showIrrigationModal, setShowIrrigationModal] = useState(false);
   const [showSprayModal, setShowSprayModal] = useState(false);
   const [showHarvestModal, setShowHarvestModal] = useState(false);
+  const [showFertigationModal, setShowFertigationModal] = useState(false);
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [showSoilTestModal, setShowSoilTestModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Form data states
@@ -69,6 +77,30 @@ export default function FarmDetailsPage() {
     notes: ""
   });
 
+  const [fertigationForm, setFertigationForm] = useState({
+    fertilizer: "",
+    quantity: "",
+    notes: ""
+  });
+
+  const [expenseForm, setExpenseForm] = useState({
+    amount: "",
+    category: "",
+    description: "",
+    notes: ""
+  });
+
+  const [soilTestForm, setSoilTestForm] = useState({
+    testType: "",
+    ph: "",
+    nitrogen: "",
+    phosphorus: "",
+    potassium: "",
+    organic_matter: "",
+    recommendations: "",
+    notes: ""
+  });
+
   useEffect(() => {
     if (farmId) {
       loadDashboardData();
@@ -78,7 +110,7 @@ export default function FarmDetailsPage() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const data = await DatabaseService.getDashboardSummary(farmId);
+      const data = await SupabaseService.getDashboardSummary(farmId);
       setDashboardData({
         ...data,
         farm: data.farm || null
@@ -92,7 +124,7 @@ export default function FarmDetailsPage() {
 
   const completeTask = async (taskId: number) => {
     try {
-      await DatabaseService.completeTask(taskId);
+      await SupabaseService.completeTask(taskId);
       await loadDashboardData(); // Refresh data
     } catch (error) {
       console.error("Error completing task:", error);
@@ -166,6 +198,91 @@ export default function FarmDetailsPage() {
       await loadDashboardData();
     } catch (error) {
       console.error("Error logging harvest:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFertigationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fertigationForm.fertilizer || !fertigationForm.quantity) return;
+    
+    setIsSubmitting(true);
+    try {
+      await SupabaseService.addFertigationRecord({
+        farmId,
+        date: new Date().toISOString().split('T')[0],
+        fertilizer: fertigationForm.fertilizer,
+        quantity: parseFloat(fertigationForm.quantity),
+        area: 0, // Default value
+        notes: fertigationForm.notes
+      });
+      
+      setFertigationForm({ fertilizer: "", quantity: "", notes: "" });
+      setShowFertigationModal(false);
+      await loadDashboardData();
+    } catch (error) {
+      console.error("Error logging fertigation:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleExpenseSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!expenseForm.amount || !expenseForm.category || !expenseForm.description) return;
+    
+    setIsSubmitting(true);
+    try {
+      await SupabaseService.addExpenseRecord({
+        farmId,
+        date: new Date().toISOString().split('T')[0],
+        amount: parseFloat(expenseForm.amount),
+        category: expenseForm.category,
+        description: expenseForm.description,
+        notes: expenseForm.notes
+      });
+      
+      setExpenseForm({ amount: "", category: "", description: "", notes: "" });
+      setShowExpenseModal(false);
+      await loadDashboardData();
+    } catch (error) {
+      console.error("Error logging expense:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSoilTestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!soilTestForm.testType) return;
+    
+    setIsSubmitting(true);
+    try {
+      // Build parameters object from form data
+      const parameters: Record<string, number> = {};
+      if (soilTestForm.ph) parameters.pH = parseFloat(soilTestForm.ph);
+      if (soilTestForm.nitrogen) parameters.N = parseFloat(soilTestForm.nitrogen);
+      if (soilTestForm.phosphorus) parameters.P = parseFloat(soilTestForm.phosphorus);
+      if (soilTestForm.potassium) parameters.K = parseFloat(soilTestForm.potassium);
+      if (soilTestForm.organic_matter) parameters.organic_matter = parseFloat(soilTestForm.organic_matter);
+      
+      await SupabaseService.addSoilTestRecord({
+        farmId,
+        date: new Date().toISOString().split('T')[0],
+        parameters,
+        recommendations: soilTestForm.recommendations,
+        notes: `Test Type: ${soilTestForm.testType}${soilTestForm.notes ? ` | ${soilTestForm.notes}` : ''}`
+      });
+      
+      setSoilTestForm({ 
+        testType: "", ph: "", nitrogen: "", phosphorus: "", potassium: "", 
+        organic_matter: "", recommendations: "", notes: "" 
+      });
+      setShowSoilTestModal(false);
+      await loadDashboardData();
+    } catch (error) {
+      console.error("Error logging soil test:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -319,10 +436,23 @@ export default function FarmDetailsPage() {
                 onClick={() => setShowSprayModal(true)}
               >
                 <CardContent className="p-4 text-center">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-                    <SprayCan className="h-5 w-5 text-green-600" />
+                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <SprayCan className="h-5 w-5 text-orange-600" />
                   </div>
-                  <div className="text-sm font-medium text-gray-900">Record Spray</div>
+                  <div className="text-sm font-medium text-gray-900">Pest & Disease Control</div>
+                  <div className="text-xs text-gray-500 mt-1">Foliar spray application</div>
+                </CardContent>
+              </Card>
+              <Card 
+                className="border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer active:scale-95 transform"
+                onClick={() => setShowFertigationModal(true)}
+              >
+                <CardContent className="p-4 text-center">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <Beaker className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div className="text-sm font-medium text-gray-900">Fertilizer Application</div>
+                  <div className="text-xs text-gray-500 mt-1">Through irrigation system</div>
                 </CardContent>
               </Card>
               <Card 
@@ -336,12 +466,28 @@ export default function FarmDetailsPage() {
                   <div className="text-sm font-medium text-gray-900">Add Harvest</div>
                 </CardContent>
               </Card>
-              <Card className="border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer active:scale-95 transform">
+              <Card 
+                className="border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer active:scale-95 transform"
+                onClick={() => setShowExpenseModal(true)}
+              >
                 <CardContent className="p-4 text-center">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
+                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <DollarSign className="h-5 w-5 text-red-600" />
                   </div>
-                  <div className="text-sm font-medium text-gray-900">View Analytics</div>
+                  <div className="text-sm font-medium text-gray-900">Track Expenses</div>
+                  <div className="text-xs text-gray-500 mt-1">Labor & material costs</div>
+                </CardContent>
+              </Card>
+              <Card 
+                className="border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer active:scale-95 transform"
+                onClick={() => setShowSoilTestModal(true)}
+              >
+                <CardContent className="p-4 text-center">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <TestTube className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="text-sm font-medium text-gray-900">Soil Testing</div>
+                  <div className="text-xs text-gray-500 mt-1">Lab results & analysis</div>
                 </CardContent>
               </Card>
             </div>
@@ -527,14 +673,14 @@ export default function FarmDetailsPage() {
       <Dialog open={showSprayModal} onOpenChange={setShowSprayModal}>
         <DialogContent className="sm:max-w-md rounded-xl">
           <DialogHeader className="text-center pb-2">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <SprayCan className="h-8 w-8 text-green-600" />
+            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <SprayCan className="h-8 w-8 text-orange-600" />
             </div>
             <DialogTitle className="text-xl font-semibold text-gray-900">
-              Record Spray
+              Pest & Disease Control
             </DialogTitle>
             <DialogDescription className="text-gray-600 mt-2">
-              Log spray/pesticide application for {dashboardData.farm?.name}
+              Log foliar spray/pesticide application for {dashboardData.farm?.name}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSpraySubmit} className="space-y-6 pt-2">
@@ -574,7 +720,7 @@ export default function FarmDetailsPage() {
                 className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-sm transition-colors"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Saving..." : "Log Spray"}
+                {isSubmitting ? "Saving..." : "Log Application"}
               </Button>
             </div>
           </form>
@@ -636,6 +782,315 @@ export default function FarmDetailsPage() {
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Saving..." : "Log Harvest"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Fertigation Modal */}
+      <Dialog open={showFertigationModal} onOpenChange={setShowFertigationModal}>
+        <DialogContent className="sm:max-w-md rounded-xl">
+          <DialogHeader className="text-center pb-2">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Beaker className="h-8 w-8 text-purple-600" />
+            </div>
+            <DialogTitle className="text-xl font-semibold text-gray-900">
+              Fertilizer Application
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2">
+              Log fertigation/fertilizer through irrigation system for {dashboardData.farm?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleFertigationSubmit} className="space-y-6 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="fertilizer" className="text-sm font-medium text-gray-700">Fertilizer/Chemical</Label>
+              <Input
+                id="fertilizer"
+                value={fertigationForm.fertilizer}
+                onChange={(e) => setFertigationForm(prev => ({ ...prev, fertilizer: e.target.value }))}
+                placeholder="e.g., NPK 19:19:19, Urea, DAP"
+                required
+                className="mt-1 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-12 text-lg"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="quantity" className="text-sm font-medium text-gray-700">Quantity (kg)</Label>
+              <Input
+                id="quantity"
+                type="number"
+                step="0.1"
+                min="0"
+                value={fertigationForm.quantity}
+                onChange={(e) => setFertigationForm(prev => ({ ...prev, quantity: e.target.value }))}
+                placeholder="10"
+                required
+                className="mt-1 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-12 text-lg"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fertigation-notes" className="text-sm font-medium text-gray-700">Notes (optional)</Label>
+              <Textarea
+                id="fertigation-notes"
+                value={fertigationForm.notes}
+                onChange={(e) => setFertigationForm(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="e.g., Growth stage, concentration, application method"
+                className="mt-1 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-20 resize-none"
+              />
+            </div>
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowFertigationModal(false)}
+                className="flex-1 h-12 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-sm transition-colors"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Saving..." : "Log Application"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Expense Modal */}
+      <Dialog open={showExpenseModal} onOpenChange={setShowExpenseModal}>
+        <DialogContent className="sm:max-w-md rounded-xl">
+          <DialogHeader className="text-center pb-2">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <DollarSign className="h-8 w-8 text-red-600" />
+            </div>
+            <DialogTitle className="text-xl font-semibold text-gray-900">
+              Track Expenses
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2">
+              Log farm expenses and costs for {dashboardData.farm?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleExpenseSubmit} className="space-y-6 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="amount" className="text-sm font-medium text-gray-700">Amount (₹)</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                min="0"
+                value={expenseForm.amount}
+                onChange={(e) => setExpenseForm(prev => ({ ...prev, amount: e.target.value }))}
+                placeholder="1000"
+                required
+                className="mt-1 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-12 text-lg"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Category</Label>
+              <Select
+                value={expenseForm.category}
+                onValueChange={(value) => setExpenseForm(prev => ({ ...prev, category: value }))}
+              >
+                <SelectTrigger className="border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-12">
+                  <SelectValue placeholder="Select expense category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="labor">Labor & Workers</SelectItem>
+                  <SelectItem value="materials">Materials & Inputs</SelectItem>
+                  <SelectItem value="fuel">Fuel & Transport</SelectItem>
+                  <SelectItem value="equipment">Equipment & Tools</SelectItem>
+                  <SelectItem value="services">Services & Consultation</SelectItem>
+                  <SelectItem value="infrastructure">Infrastructure & Repairs</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium text-gray-700">Description</Label>
+              <Input
+                id="description"
+                value={expenseForm.description}
+                onChange={(e) => setExpenseForm(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="e.g., Pruning labor, Fertilizer purchase"
+                required
+                className="mt-1 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-12 text-lg"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="expense-notes" className="text-sm font-medium text-gray-700">Notes (optional)</Label>
+              <Textarea
+                id="expense-notes"
+                value={expenseForm.notes}
+                onChange={(e) => setExpenseForm(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="e.g., 5 workers for 8 hours, receipt number, vendor details"
+                className="mt-1 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-20 resize-none"
+              />
+            </div>
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowExpenseModal(false)}
+                className="flex-1 h-12 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-sm transition-colors"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Saving..." : "Log Expense"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Soil Test Modal */}
+      <Dialog open={showSoilTestModal} onOpenChange={setShowSoilTestModal}>
+        <DialogContent className="sm:max-w-md rounded-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="text-center pb-2">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <TestTube className="h-8 w-8 text-blue-600" />
+            </div>
+            <DialogTitle className="text-xl font-semibold text-gray-900">
+              Soil/Water/Plant Testing
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2">
+              Log laboratory test results for {dashboardData.farm?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSoilTestSubmit} className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Test Type</Label>
+              <Select
+                value={soilTestForm.testType}
+                onValueChange={(value) => setSoilTestForm(prev => ({ ...prev, testType: value }))}
+              >
+                <SelectTrigger className="border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-12">
+                  <SelectValue placeholder="Select test type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="soil">Soil Analysis</SelectItem>
+                  <SelectItem value="water">Water Quality</SelectItem>
+                  <SelectItem value="plant">Plant Tissue</SelectItem>
+                  <SelectItem value="compost">Compost Analysis</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ph" className="text-sm font-medium text-gray-700">pH Level (optional)</Label>
+              <Input
+                id="ph"
+                type="number"
+                step="0.1"
+                min="0"
+                max="14"
+                value={soilTestForm.ph}
+                onChange={(e) => setSoilTestForm(prev => ({ ...prev, ph: e.target.value }))}
+                placeholder="6.5"
+                className="border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-12"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="nitrogen" className="text-sm font-medium text-gray-700">Nitrogen (ppm)</Label>
+                <Input
+                  id="nitrogen"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={soilTestForm.nitrogen}
+                  onChange={(e) => setSoilTestForm(prev => ({ ...prev, nitrogen: e.target.value }))}
+                  placeholder="20"
+                  className="border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phosphorus" className="text-sm font-medium text-gray-700">Phosphorus (ppm)</Label>
+                <Input
+                  id="phosphorus"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={soilTestForm.phosphorus}
+                  onChange={(e) => setSoilTestForm(prev => ({ ...prev, phosphorus: e.target.value }))}
+                  placeholder="15"
+                  className="border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-11"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="potassium" className="text-sm font-medium text-gray-700">Potassium (ppm)</Label>
+                <Input
+                  id="potassium"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={soilTestForm.potassium}
+                  onChange={(e) => setSoilTestForm(prev => ({ ...prev, potassium: e.target.value }))}
+                  placeholder="200"
+                  className="border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="organic_matter" className="text-sm font-medium text-gray-700">Organic Matter (%)</Label>
+                <Input
+                  id="organic_matter"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="100"
+                  value={soilTestForm.organic_matter}
+                  onChange={(e) => setSoilTestForm(prev => ({ ...prev, organic_matter: e.target.value }))}
+                  placeholder="3.5"
+                  className="border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-11"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="recommendations" className="text-sm font-medium text-gray-700">Lab Recommendations (optional)</Label>
+              <Textarea
+                id="recommendations"
+                value={soilTestForm.recommendations}
+                onChange={(e) => setSoilTestForm(prev => ({ ...prev, recommendations: e.target.value }))}
+                placeholder="e.g., Add lime to increase pH, apply phosphorus fertilizer"
+                className="border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-20 resize-none"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="soil-notes" className="text-sm font-medium text-gray-700">Notes (optional)</Label>
+              <Textarea
+                id="soil-notes"
+                value={soilTestForm.notes}
+                onChange={(e) => setSoilTestForm(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="e.g., Lab name, sample location, additional observations"
+                className="border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-16 resize-none"
+              />
+            </div>
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowSoilTestModal(false)}
+                className="flex-1 h-12 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-sm transition-colors"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Saving..." : "Log Test Results"}
               </Button>
             </div>
           </form>

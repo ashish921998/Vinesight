@@ -10,22 +10,17 @@ interface LocationFormProps {
     longitude: string;
     elevation: string;
   };
-  activeSection: 'weather' | 'crop' | 'location';
   onInputChange: (field: string, value: string) => void;
-  onSectionToggle: (section: 'weather' | 'crop' | 'location') => void;
 }
 
 export function LocationForm({
   formData,
-  activeSection,
   onInputChange,
-  onSectionToggle
 }: LocationFormProps) {
   return (
     <Card>
-      <CardHeader 
-        className="pb-3 cursor-pointer"
-        onClick={() => onSectionToggle('location')}
+      <CardHeader
+        className="pb-3"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -39,44 +34,42 @@ export function LocationForm({
         </CardDescription>
       </CardHeader>
       
-      {activeSection === 'location' && (
-        <CardContent className="pt-0 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-sm font-medium text-gray-700">Latitude</Label>
-              <Input
-                type="number"
-                placeholder="19.0760"
-                step="0.0001"
-                value={formData.latitude}
-                onChange={(e) => onInputChange('latitude', e.target.value)}
-                className="h-11 text-base mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-sm font-medium text-gray-700">Longitude</Label>
-              <Input
-                type="number"
-                placeholder="72.8777"
-                step="0.0001"
-                value={formData.longitude}
-                onChange={(e) => onInputChange('longitude', e.target.value)}
-                className="h-11 text-base mt-1"
-              />
-            </div>
-          </div>
+      <CardContent className="pt-0 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <Label className="text-sm font-medium text-gray-700">Elevation (m)</Label>
+            <Label className="text-sm font-medium text-gray-700">Latitude</Label>
             <Input
               type="number"
-              placeholder="500"
-              value={formData.elevation}
-              onChange={(e) => onInputChange('elevation', e.target.value)}
+              placeholder="19.0760"
+              step="0.0001"
+              value={formData.latitude}
+              onChange={(e) => onInputChange('latitude', e.target.value)}
               className="h-11 text-base mt-1"
             />
           </div>
-        </CardContent>
-      )}
+          <div>
+            <Label className="text-sm font-medium text-gray-700">Longitude</Label>
+            <Input
+              type="number"
+              placeholder="72.8777"
+              step="0.0001"
+              value={formData.longitude}
+              onChange={(e) => onInputChange('longitude', e.target.value)}
+              className="h-11 text-base mt-1"
+            />
+          </div>
+        </div>
+        <div>
+          <Label className="text-sm font-medium text-gray-700">Elevation (m)</Label>
+          <Input
+            type="number"
+            placeholder="500"
+            value={formData.elevation}
+            onChange={(e) => onInputChange('elevation', e.target.value)}
+            className="h-11 text-base mt-1"
+          />
+        </div>
+      </CardContent>
     </Card>
   );
 }

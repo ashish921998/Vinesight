@@ -2,9 +2,56 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { useSearchParams } from 'next/navigation';
+import { useAuth } from '../../../../context/AuthContext';
+import { useEffect } from 'react';
 
 export default function AuthCodeError() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get('error');
+  const { user, loading } = useAuth();
+
+  // If user is actually authenticated, redirect to home
+  useEffect(() => {
+    if (user && !loading) {
+      window.location.href = '/';
+    }
+  }, [user, loading]);
+
+  const getErrorMessage = (errorCode: string | null) => {
+    switch (errorCode) {
+      case 'exchange_failed':
+        return 'Failed to exchange authorization code. This might be a temporary issue.';
+      case 'no_code':
+        return 'No authorization code received from the authentication provider.';
+      case 'access_denied':
+        return 'You denied access to the application. Please try again if you want to sign in.';
+      case 'unexpected':
+        return 'An unexpected error occurred during authentication.';
+      default:
+        return 'There was an error during the authentication process. This is often resolved by trying again.';
+    }
+  };
+
+  const handleRetry = () => {
+    // Clear any stored auth state and redirect to home
+    localStorage.removeItem('supabase.auth.token');
+    window.location.href = '/';
+  };
+
+  const handleRefresh = () => {
+    window.location.reload();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div>Checking authentication status...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
@@ -16,14 +63,29 @@ export default function AuthCodeError() {
         </CardHeader>
         <CardContent className="text-center space-y-4">
           <p className="text-muted-foreground">
-            There was an error during the authentication process. Please try again.
+            {getErrorMessage(error)}
           </p>
-          <Button 
-            onClick={() => window.location.href = '/'}
-            className="w-full"
-          >
-            Return to Home
-          </Button>
+          {error && (
+            <p className="text-xs text-gray-500">
+              Error code: {error}
+            </p>
+          )}
+          <div className="space-y-2">
+            <Button 
+              onClick={handleRefresh}
+              variant="outline"
+              className="w-full"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh Page
+            </Button>
+            <Button 
+              onClick={handleRetry}
+              className="w-full"
+            >
+              Try Again
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

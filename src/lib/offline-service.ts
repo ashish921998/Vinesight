@@ -83,23 +83,11 @@ export class OfflineService {
   // Preload critical data for offline access
   private static async preloadCriticalData() {
     try {
-      // Preload farms data
-      const farms = await DatabaseService.getAllFarms();
-      console.log(`Preloaded ${farms.length} farms for offline access`);
-
-      // Preload recent records for each farm
-      for (const farm of farms.slice(0, 5)) { // Limit to 5 most recent farms
-        try {
-          await DatabaseService.getIrrigationRecords(farm.id!);
-          await DatabaseService.getSprayRecords(farm.id!);
-          await DatabaseService.getHarvestRecords(farm.id!);
-          await DatabaseService.getFertigationRecords(farm.id!);
-        } catch (error) {
-          console.warn(`Failed to preload data for farm ${farm.name}:`, error);
-        }
-      }
+      // Since we're now using authentication with Supabase, we don't preload demo data
+      // Authenticated users will see their own farms through SupabaseService
+      console.log('Offline service ready - user data will be loaded on demand');
     } catch (error) {
-      console.error('Failed to preload critical data:', error);
+      console.error('Failed to initialize offline service:', error);
     }
   }
 

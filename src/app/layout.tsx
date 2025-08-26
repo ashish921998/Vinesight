@@ -82,8 +82,8 @@ export default function RootLayout({
                   <div className="fixed bottom-20 left-4 right-4 lg:left-80 lg:bottom-4 z-40">
                     <PWAWrapper />
                   </div>
-                  {/* Offline Status Indicator */}
-                  <div className="fixed top-4 right-4 z-30">
+                  {/* Offline Status Indicator - hidden on mobile */}
+                  <div className="hidden lg:block fixed top-4 right-4 z-30">
                     <OfflineIndicator />
                   </div>
                 </div>

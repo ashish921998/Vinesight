@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { 
-  Settings, 
   Languages, 
   LogOut,
   User,
@@ -61,45 +59,38 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-green-800 mb-2 flex items-center justify-center gap-2">
-          <Settings className="h-8 w-8" />
-          Settings
-        </h1>
-        <p className="text-gray-600">
-          Manage your preferences and account
-        </p>
-      </header>
+      <div className="sticky top-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 z-10">
+        <div className="p-4">
+          <div>
+            <h1 className="text-lg font-bold text-gray-900">Settings</h1>
+          </div>
+        </div>
+      </div>
 
-      {/* Settings Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      {/* Settings */}
+      <div className="p-4 space-y-3">
         
         {/* Account Settings */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <User className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <User className="h-4 w-4" />
               Account
             </CardTitle>
-            <CardDescription>
-              Your profile and authentication settings
-            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             {user ? (
               <>
-                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-100 rounded-full">
-                      <User className="h-4 w-4 text-green-600" />
-                    </div>
+                <div className="p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-green-600" />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-green-900">
+                      <p className="font-medium text-green-900 text-sm">
                         {user.user_metadata?.full_name || 'User'}
                       </p>
-                      <p className="text-sm text-green-600 truncate">
+                      <p className="text-xs text-green-600 truncate">
                         {user.email}
                       </p>
                     </div>
@@ -110,17 +101,18 @@ export default function SettingsPage() {
                   variant="outline"
                   onClick={handleSignOut}
                   disabled={signOutLoading}
-                  className="w-full flex items-center gap-2"
+                  className="w-full flex items-center gap-2 h-9"
+                  size="sm"
                 >
                   <LogOut className="h-4 w-4" />
                   {signOutLoading ? 'Signing out...' : 'Sign Out'}
                 </Button>
               </>
             ) : (
-              <div className="text-center py-8">
-                <User className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                <p className="text-gray-500 mb-4">Not signed in</p>
-                <Button onClick={() => window.location.href = '/auth'}>
+              <div className="text-center py-6">
+                <User className="h-8 w-8 mx-auto text-gray-300 mb-3" />
+                <p className="text-gray-500 mb-3 text-sm">Not signed in</p>
+                <Button onClick={() => window.location.href = '/auth'} size="sm">
                   Sign In
                 </Button>
               </div>
@@ -130,60 +122,47 @@ export default function SettingsPage() {
 
         {/* Language Settings */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <Languages className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Languages className="h-4 w-4" />
               Language
             </CardTitle>
-            <CardDescription>
-              Choose your preferred language
-            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-600 mb-3">Current Language</p>
-              <Badge variant="outline" className="text-sm">
-                {languages.find(l => l.code === language)?.flag} {languages.find(l => l.code === language)?.name}
-              </Badge>
-            </div>
-            
-            <div className="space-y-2">
-              {languages.map((lang) => (
-                <Button
-                  key={lang.code}
-                  variant={language === lang.code ? "default" : "outline"}
-                  onClick={() => handleLanguageChange(lang.code)}
-                  className="w-full justify-start"
-                >
-                  <span className="mr-2">{lang.flag}</span>
-                  {lang.name}
-                </Button>
-              ))}
-            </div>
+          <CardContent className="space-y-2">
+            {languages.map((lang) => (
+              <Button
+                key={lang.code}
+                variant={language === lang.code ? "default" : "outline"}
+                onClick={() => handleLanguageChange(lang.code)}
+                className="w-full justify-start h-9"
+                size="sm"
+              >
+                <span className="mr-2">{lang.flag}</span>
+                {lang.name}
+              </Button>
+            ))}
           </CardContent>
         </Card>
 
         {/* Notifications */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <Bell className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Bell className="h-4 w-4" />
               Notifications
             </CardTitle>
-            <CardDescription>
-              Manage your notification preferences
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Push Notifications</p>
-                <p className="text-sm text-gray-600">Get notified about important updates</p>
+                <p className="font-medium text-sm">Push Notifications</p>
+                <p className="text-xs text-gray-600">Important updates</p>
               </div>
               <Button
                 variant={notifications ? "default" : "outline"}
                 onClick={handleNotificationToggle}
                 size="sm"
+                className="h-8 px-3"
               >
                 {notifications ? 'On' : 'Off'}
               </Button>
@@ -193,81 +172,54 @@ export default function SettingsPage() {
 
         {/* Theme */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <Palette className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Palette className="h-4 w-4" />
               Appearance
             </CardTitle>
-            <CardDescription>
-              Customize the app appearance
-            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <Button variant="outline" className="w-full justify-start" disabled>
-                <Palette className="h-4 w-4 mr-2" />
-                Light Theme (Default)
-              </Button>
-              <p className="text-xs text-gray-500">Dark theme coming soon</p>
-            </div>
+            <Button variant="outline" className="w-full justify-start h-9" size="sm" disabled>
+              <Palette className="h-4 w-4 mr-2" />
+              Light Theme
+            </Button>
+            <p className="text-xs text-gray-500 mt-2">Dark theme coming soon</p>
           </CardContent>
         </Card>
 
         {/* Privacy & Security */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <Shield className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Shield className="h-4 w-4" />
               Privacy & Security
             </CardTitle>
-            <CardDescription>
-              Your data protection settings
-            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-2 text-blue-800 mb-2">
-                  <Shield className="h-4 w-4" />
-                  <span className="font-medium text-sm">Your Data is Safe</span>
-                </div>
-                <p className="text-sm text-blue-700">
-                  All farm data is stored locally on your device and encrypted.
-                </p>
+          <CardContent className="space-y-3">
+            <div className="p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-2 text-blue-800 mb-1">
+                <Shield className="h-4 w-4" />
+                <span className="font-medium text-sm">Data is Safe</span>
               </div>
-              <Button variant="outline" className="w-full" disabled>
-                <Shield className="h-4 w-4 mr-2" />
-                Data Export (Coming Soon)
-              </Button>
+              <p className="text-xs text-blue-700">
+                All data stored locally and encrypted
+              </p>
             </div>
           </CardContent>
         </Card>
 
         {/* Help & Support */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <HelpCircle className="h-5 w-5" />
-              Help & Support
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <HelpCircle className="h-4 w-4" />
+              About
             </CardTitle>
-            <CardDescription>
-              Get help and contact support
-            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <Button variant="outline" className="w-full justify-start" disabled>
-                <HelpCircle className="h-4 w-4 mr-2" />
-                User Guide (Coming Soon)
-              </Button>
-              <div className="pt-3 border-t">
-                <p className="text-sm text-gray-600 text-center">
-                  VineSight v1.0.0 MVP
-                </p>
-                <p className="text-xs text-gray-500 text-center mt-1">
-                  Built for Indian grape farmers
-                </p>
-              </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">VineSight v1.0.0</p>
+              <p className="text-xs text-gray-500 mt-1">Built for grape farmers</p>
             </div>
           </CardContent>
         </Card>

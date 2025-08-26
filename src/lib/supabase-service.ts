@@ -41,13 +41,30 @@ export class SupabaseService {
 
   static async createFarm(farm: Omit<Farm, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<Farm> {
     const supabase = getSupabaseClient();
+    
+    // Get the current authenticated user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) throw new Error('User must be authenticated to create a farm');
+    
+    // Include the user_id in the farm data
+    const farmWithUser = {
+      ...farm,
+      user_id: user.id
+    };
+    
+    console.log('Creating farm with data:', farmWithUser);
+    
     const { data, error } = await supabase
       .from('farms')
-      .insert([farm])
+      .insert([farmWithUser])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Farm creation error:', error);
+      throw error;
+    }
     return data;
   }
 

@@ -209,3 +209,12 @@
     }
   }
 }
+
+@media (max-width: 768px) {
+  .lg\:flex .h-16 {
+    height: 3rem;
+  }
+  .lg\:flex .text-xl {
+    font-size: 1.2rem;
+  }
+}

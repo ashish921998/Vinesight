@@ -3,13 +3,16 @@
 ## 🚀 **CRITICAL FOR TODAY'S MVP SHIP**
 
 ### **PRIORITY 1: Core Data & Database Integration**
+
 - [ ] **Farms Page Database Integration**
+
   - [ ] Fix farms list to fetch from Supabase database
   - [ ] Remove mock data and use SupabaseService.getAllFarms()
   - [ ] Add proper error handling for database operations
   - [ ] Test farm CRUD operations end-to-end
 
-- [ ] **Loading & UX Improvements**  
+- [ ] **Loading & UX Improvements**
+
   - [ ] Add loading animations for mobile PWA
   - [ ] Implement skeleton screens for data loading
   - [ ] Add loading states for all database operations
@@ -22,19 +25,23 @@
   - [ ] Add loading state for authentication
 
 ### **PRIORITY 2: Scientific Calculators Logic**
+
 - [ ] **ETc Calculator Implementation**
-  - [ ] Implement Penman-Monteith equation: ETc = ETo * Kc
+
+  - [ ] Implement Penman-Monteith equation: ETc = ETo \* Kc
   - [ ] Add ETo calculation with weather inputs
   - [ ] Add Kc values for different grape growth stages
   - [ ] Display results with units and explanations
 
 - [ ] **System Discharge Calculator**
+
   - [ ] Implement formula from research notes
   - [ ] Calculate irrigation system flow rates
   - [ ] Add input validation and error handling
   - [ ] Show step-by-step calculation breakdown
 
 - [ ] **LAI Calculator Logic**
+
   - [ ] Calculate Leaf Area Index from inputs
   - [ ] Formula: LAI = Total Leaf Area / Ground Area
   - [ ] Add visual representation of results
@@ -47,13 +54,16 @@
   - [ ] Split application scheduling
 
 ### **PRIORITY 3: Journal Data Entry Polish**
+
 - [ ] **Irrigation Recording Form**
+
   - [ ] Complete form with all required fields from PRD
   - [ ] Database integration with irrigation_records table
   - [ ] Add ETc calculation integration
   - [ ] Input validation and error handling
 
 - [ ] **Spray Management Form**
+
   - [ ] Pest/disease selection dropdown
   - [ ] Chemical dosage calculator
   - [ ] Weather conditions recording
@@ -66,6 +76,7 @@
   - [ ] Export functionality preparation
 
 ## ✅ **ALREADY COMPLETED**
+
 - [x] Database schema and Supabase setup
 - [x] Authentication system with Google OAuth
 - [x] Navigation and routing system
@@ -79,6 +90,7 @@
 ## 📋 **MVP SHIPPING CHECKLIST**
 
 ### Before Ship:
+
 - [ ] All database operations working
 - [ ] Loading states implemented
 - [ ] Sign out functionality added
@@ -89,6 +101,7 @@
 - [ ] Build process successful
 
 ### MVP Success Criteria:
+
 1. **Farmers can add/manage their farms**
 2. **Scientific calculators provide real calculations**
 3. **Journal entries save to database successfully**
@@ -103,6 +116,7 @@
 **Phase 4 (1 hour):** Final Testing & Deploy
 
 ## 🚫 **DEFERRED TO POST-MVP**
+
 - Multi-language support (Hindi/Marathi)
 - Advanced export features (CSV/PDF)
 - Task management and reminders
@@ -111,5 +125,6 @@
 - Advanced analytics dashboard
 
 ---
-*Last updated: August 25, 2025*
-*Status: MVP SHIPPING DAY - FOCUS MODE ACTIVATED*
+
+_Last updated: August 25, 2025_
+_Status: MVP SHIPPING DAY - FOCUS MODE ACTIVATED_

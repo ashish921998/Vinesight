@@ -185,6 +185,23 @@ export class DatabaseService {
       completedAt: new Date()
     });
   }
+  
+  // Soil test operations
+  static async getSoilTestRecords(farmId: number): Promise<SoilTestRecord[]> {
+    const records = await db.soilTestRecords
+      .where('farmId')
+      .equals(farmId)
+      .reverse()
+      .sortBy('createdAt');
+    return records;
+  }
+  
+  static async addSoilTestRecord(record: Omit<SoilTestRecord, 'id' | 'createdAt'>): Promise<number> {
+    return await db.soilTestRecords.add({
+      ...record,
+      createdAt: new Date()
+    });
+  }
 
   // Export data functions
   static async exportFarmData(farmId: number) {

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Edit, Sprout, Loader2, MapPin, Calendar, MoreVertical, ChevronRight } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { HybridDataService } from "@/lib/hybrid-data-service";
+import { SupabaseService } from "@/lib/supabase-service";
 import type { Farm } from "@/lib/supabase";
 import Link from "next/link";
 import {
@@ -40,7 +40,7 @@ export default function FarmsPage() {
   const loadFarms = async () => {
     try {
       setLoading(true);
-      const farmList = await HybridDataService.getAllFarms();
+      const farmList = await SupabaseService.getAllFarms();
       setFarms(farmList);
     } catch (error) {
       console.error("Error loading farms:", error);
@@ -55,7 +55,7 @@ export default function FarmsPage() {
     try {
       setSubmitLoading(true);
       if (editingFarm) {
-        await HybridDataService.updateFarm(editingFarm.id!, {
+        await SupabaseService.updateFarm(editingFarm.id!, {
           name: formData.name,
           region: formData.region,
           area: parseFloat(formData.area),
@@ -65,7 +65,7 @@ export default function FarmsPage() {
           row_spacing: parseFloat(formData.row_spacing)
         });
       } else {
-        await HybridDataService.createFarm({
+        await SupabaseService.createFarm({
           name: formData.name,
           region: formData.region,
           area: parseFloat(formData.area),
@@ -102,7 +102,7 @@ export default function FarmsPage() {
   const handleDelete = async (id: number) => {
     if (confirm("Are you sure you want to delete this farm? This will also delete all associated records.")) {
       try {
-        await HybridDataService.deleteFarm(id);
+        await SupabaseService.deleteFarm(id);
         await loadFarms();
       } catch (error) {
         console.error("Error deleting farm:", error);
@@ -159,7 +159,7 @@ export default function FarmsPage() {
           </div>
         </div>
 
-        <div className="px-4 py-4">
+        <div className="px-4 py-4 max-w-md mx-auto">
           {showAddForm && (
             <Card className="mb-4 border-0 shadow-sm">
               <CardHeader className="pb-4">
@@ -292,7 +292,7 @@ export default function FarmsPage() {
             </Card>
           )}
 
-          <div className="space-y-3">
+          <div className="space-y-3 max-w-md mx-auto">
             {loading ? (
               // Modern skeleton loading
               Array.from({ length: 3 }).map((_, index) => (

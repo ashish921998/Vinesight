@@ -11,9 +11,7 @@ interface CropInformationFormProps {
     irrigationMethod: 'drip' | 'sprinkler' | 'surface';
     soilType: 'sandy' | 'loamy' | 'clay';
   };
-  activeSection: 'weather' | 'crop' | 'location';
   onInputChange: (field: string, value: string) => void;
-  onSectionToggle: (section: 'weather' | 'crop' | 'location') => void;
 }
 
 const growthStages = [
@@ -28,17 +26,14 @@ const growthStages = [
 
 export function CropInformationForm({
   formData,
-  activeSection,
-  onInputChange,
-  onSectionToggle
+  onInputChange
 }: CropInformationFormProps) {
   const selectedGrowthStage = growthStages.find(stage => stage.value === formData.growthStage);
 
   return (
     <Card>
-      <CardHeader 
-        className="pb-3 cursor-pointer"
-        onClick={() => onSectionToggle('crop')}
+      <CardHeader
+        className="pb-3"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -52,70 +47,68 @@ export function CropInformationForm({
         </CardDescription>
       </CardHeader>
       
-      {activeSection === 'crop' && (
-        <CardContent className="pt-0 space-y-4">
-          <div>
-            <Label className="text-sm font-medium text-gray-700">Growth Stage</Label>
-            <Select
-              value={formData.growthStage}
-              onValueChange={(value) => onInputChange('growthStage', value)}
-            >
-              <SelectTrigger className="h-11 text-base mt-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {growthStages.map((stage) => (
-                  <SelectItem key={stage.value} value={stage.value}>
-                    <div className="flex flex-col">
-                      <span>{stage.label}</span>
-                      <span className="text-xs text-gray-500">{stage.period}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedGrowthStage && (
-              <p className="text-xs text-green-600 mt-1">
-                {selectedGrowthStage.label} ({selectedGrowthStage.period})
-              </p>
-            )}
-          </div>
+      <CardContent className="pt-0 space-y-4">
+        <div>
+          <Label className="text-sm font-medium text-gray-700">Growth Stage</Label>
+          <Select
+            value={formData.growthStage}
+            onValueChange={(value) => onInputChange('growthStage', value)}
+          >
+            <SelectTrigger className="h-11 text-base mt-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {growthStages.map((stage) => (
+                <SelectItem key={stage.value} value={stage.value}>
+                  <div className="flex flex-col">
+                    <span>{stage.label}</span>
+                    <span className="text-xs text-gray-500">{stage.period}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedGrowthStage && (
+            <p className="text-xs text-green-600 mt-1">
+              {selectedGrowthStage.label} ({selectedGrowthStage.period})
+            </p>
+          )}
+        </div>
 
-          <div>
-            <Label className="text-sm font-medium text-gray-700">Irrigation Method</Label>
-            <Select
-              value={formData.irrigationMethod}
-              onValueChange={(value: 'drip' | 'sprinkler' | 'surface') => onInputChange('irrigationMethod', value)}
-            >
-              <SelectTrigger className="h-11 text-base mt-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="drip">Drip Irrigation</SelectItem>
-                <SelectItem value="sprinkler">Sprinkler</SelectItem>
-                <SelectItem value="surface">Surface Irrigation</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div>
+          <Label className="text-sm font-medium text-gray-700">Irrigation Method</Label>
+          <Select
+            value={formData.irrigationMethod}
+            onValueChange={(value: 'drip' | 'sprinkler' | 'surface') => onInputChange('irrigationMethod', value)}
+          >
+            <SelectTrigger className="h-11 text-base mt-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="drip">Drip Irrigation</SelectItem>
+              <SelectItem value="sprinkler">Sprinkler</SelectItem>
+              <SelectItem value="surface">Surface Irrigation</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-          <div>
-            <Label className="text-sm font-medium text-gray-700">Soil Type</Label>
-            <Select
-              value={formData.soilType}
-              onValueChange={(value: 'sandy' | 'loamy' | 'clay') => onInputChange('soilType', value)}
-            >
-              <SelectTrigger className="h-11 text-base mt-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sandy">Sandy Soil</SelectItem>
-                <SelectItem value="loamy">Loamy Soil</SelectItem>
-                <SelectItem value="clay">Clay Soil</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      )}
+        <div>
+          <Label className="text-sm font-medium text-gray-700">Soil Type</Label>
+          <Select
+            value={formData.soilType}
+            onValueChange={(value: 'sandy' | 'loamy' | 'clay') => onInputChange('soilType', value)}
+          >
+            <SelectTrigger className="h-11 text-base mt-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="sandy">Sandy Soil</SelectItem>
+              <SelectItem value="loamy">Loamy Soil</SelectItem>
+              <SelectItem value="clay">Clay Soil</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardContent>
     </Card>
   );
 }

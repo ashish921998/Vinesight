@@ -13,22 +13,17 @@ interface WeatherDataFormProps {
     windSpeed: string;
     rainfall: string;
   };
-  activeSection: 'weather' | 'crop' | 'location';
   onInputChange: (field: string, value: string) => void;
-  onSectionToggle: (section: 'weather' | 'crop' | 'location') => void;
 }
 
 export function WeatherDataForm({
   formData,
-  activeSection,
   onInputChange,
-  onSectionToggle
 }: WeatherDataFormProps) {
   return (
     <Card>
-      <CardHeader 
-        className="pb-3 cursor-pointer"
-        onClick={() => onSectionToggle('weather')}
+      <CardHeader
+        className="pb-3"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -42,83 +37,81 @@ export function WeatherDataForm({
         </CardDescription>
       </CardHeader>
       
-      {activeSection === 'weather' && (
-        <CardContent className="pt-0 space-y-4">
-          <div className="grid grid-cols-1 gap-3">
-            
+      <CardContent className="pt-0 space-y-4">
+        <div className="grid grid-cols-1 gap-3">
+          
+          <div>
+            <Label className="text-sm font-medium text-gray-700">Date</Label>
+            <Input
+              type="date"
+              value={formData.date}
+              onChange={(e) => onInputChange('date', e.target.value)}
+              className="h-11 text-base mt-1"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label className="text-sm font-medium text-gray-700">Date</Label>
+              <Label className="text-sm font-medium text-gray-700">Max Temp (°C)</Label>
               <Input
-                type="date"
-                value={formData.date}
-                onChange={(e) => onInputChange('date', e.target.value)}
+                type="number"
+                placeholder="35"
+                value={formData.temperatureMax}
+                onChange={(e) => onInputChange('temperatureMax', e.target.value)}
                 className="h-11 text-base mt-1"
               />
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Max Temp (°C)</Label>
-                <Input
-                  type="number"
-                  placeholder="35"
-                  value={formData.temperatureMax}
-                  onChange={(e) => onInputChange('temperatureMax', e.target.value)}
-                  className="h-11 text-base mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Min Temp (°C)</Label>
-                <Input
-                  type="number"
-                  placeholder="22"
-                  value={formData.temperatureMin}
-                  onChange={(e) => onInputChange('temperatureMin', e.target.value)}
-                  className="h-11 text-base mt-1"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Humidity (%)</Label>
-                <Input
-                  type="number"
-                  placeholder="65"
-                  min="0"
-                  max="100"
-                  value={formData.humidity}
-                  onChange={(e) => onInputChange('humidity', e.target.value)}
-                  className="h-11 text-base mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Wind (m/s)</Label>
-                <Input
-                  type="number"
-                  placeholder="2.5"
-                  step="0.1"
-                  value={formData.windSpeed}
-                  onChange={(e) => onInputChange('windSpeed', e.target.value)}
-                  className="h-11 text-base mt-1"
-                />
-              </div>
-            </div>
-
             <div>
-              <Label className="text-sm font-medium text-gray-700">Rainfall (mm) - Optional</Label>
+              <Label className="text-sm font-medium text-gray-700">Min Temp (°C)</Label>
               <Input
                 type="number"
-                placeholder="0"
-                step="0.1"
-                value={formData.rainfall}
-                onChange={(e) => onInputChange('rainfall', e.target.value)}
+                placeholder="22"
+                value={formData.temperatureMin}
+                onChange={(e) => onInputChange('temperatureMin', e.target.value)}
                 className="h-11 text-base mt-1"
               />
             </div>
           </div>
-        </CardContent>
-      )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Humidity (%)</Label>
+              <Input
+                type="number"
+                placeholder="65"
+                min="0"
+                max="100"
+                value={formData.humidity}
+                onChange={(e) => onInputChange('humidity', e.target.value)}
+                className="h-11 text-base mt-1"
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Wind (m/s)</Label>
+              <Input
+                type="number"
+                placeholder="2.5"
+                step="0.1"
+                value={formData.windSpeed}
+                onChange={(e) => onInputChange('windSpeed', e.target.value)}
+                className="h-11 text-base mt-1"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-gray-700">Rainfall (mm) - Optional</Label>
+            <Input
+              type="number"
+              placeholder="0"
+              step="0.1"
+              value={formData.rainfall}
+              onChange={(e) => onInputChange('rainfall', e.target.value)}
+              className="h-11 text-base mt-1"
+            />
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 }
