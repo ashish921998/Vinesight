@@ -257,11 +257,13 @@ export default function FarmDetailsPage() {
       });
       
       // Upload photos if any
-      for (const photo of irrigationForm.photos) {
-        try {
-          await PhotoService.uploadPhoto(photo, 'irrigation', record.id);
-        } catch (photoError) {
-          console.error("Error uploading photo:", photoError);
+      if (record.id) {
+        for (const photo of irrigationForm.photos) {
+          try {
+            await PhotoService.uploadPhoto(photo, 'irrigation', record.id);
+          } catch (photoError) {
+            console.error("Error uploading photo:", photoError);
+          }
         }
       }
       
@@ -294,11 +296,13 @@ export default function FarmDetailsPage() {
       });
       
       // Upload photos if any
-      for (const photo of sprayForm.photos) {
-        try {
-          await PhotoService.uploadPhoto(photo, 'spray', record.id);
-        } catch (photoError) {
-          console.error("Error uploading photo:", photoError);
+      if (record.id) {
+        for (const photo of sprayForm.photos) {
+          try {
+            await PhotoService.uploadPhoto(photo, 'spray', record.id);
+          } catch (photoError) {
+            console.error("Error uploading photo:", photoError);
+          }
         }
       }
       
@@ -323,17 +327,19 @@ export default function FarmDetailsPage() {
         date: new Date().toISOString().split('T')[0],
         quantity: parseFloat(harvestForm.quantity),
         grade: "A", // Default grade
-        price: null, // Optional
-        buyer: null, // Optional
+        price: undefined, // Optional
+        buyer: undefined, // Optional
         notes: harvestForm.notes
       });
       
       // Upload photos if any
-      for (const photo of harvestForm.photos) {
-        try {
-          await PhotoService.uploadPhoto(photo, 'harvest', record.id);
-        } catch (photoError) {
-          console.error("Error uploading photo:", photoError);
+      if (record.id) {
+        for (const photo of harvestForm.photos) {
+          try {
+            await PhotoService.uploadPhoto(photo, 'harvest', record.id);
+          } catch (photoError) {
+            console.error("Error uploading photo:", photoError);
+          }
         }
       }
       
@@ -364,11 +370,13 @@ export default function FarmDetailsPage() {
       });
       
       // Upload photos if any
-      for (const photo of fertigationForm.photos) {
-        try {
-          await PhotoService.uploadPhoto(photo, 'fertigation', record.id);
-        } catch (photoError) {
-          console.error("Error uploading photo:", photoError);
+      if (record.id) {
+        for (const photo of fertigationForm.photos) {
+          try {
+            await PhotoService.uploadPhoto(photo, 'fertigation', record.id);
+          } catch (photoError) {
+            console.error("Error uploading photo:", photoError);
+          }
         }
       }
       
@@ -1484,7 +1492,7 @@ export default function FarmDetailsPage() {
                               type="number"
                               step="0.5"
                               value={editForm.duration || ''}
-                              onChange={(e) => setEditForm(prev => ({ ...prev, duration: parseFloat(e.target.value) || 0 }))}
+                              onChange={(e) => setEditForm((prev: any) => ({ ...prev, duration: parseFloat(e.target.value) || 0 }))}
                               className="mt-1"
                             />
                           ) : (
@@ -1498,7 +1506,7 @@ export default function FarmDetailsPage() {
                               type="number"
                               step="0.1"
                               value={editForm.area || ''}
-                              onChange={(e) => setEditForm(prev => ({ ...prev, area: parseFloat(e.target.value) || 0 }))}
+                              onChange={(e) => setEditForm((prev: any) => ({ ...prev, area: parseFloat(e.target.value) || 0 }))}
                               className="mt-1"
                             />
                           ) : (
@@ -1512,7 +1520,7 @@ export default function FarmDetailsPage() {
                           {isEditing ? (
                             <Input
                               value={editForm.growth_stage || ''}
-                              onChange={(e) => setEditForm(prev => ({ ...prev, growth_stage: e.target.value }))}
+                              onChange={(e) => setEditForm((prev: any) => ({ ...prev, growth_stage: e.target.value }))}
                               className="mt-1"
                             />
                           ) : (
@@ -1524,7 +1532,7 @@ export default function FarmDetailsPage() {
                           {isEditing ? (
                             <Input
                               value={editForm.moisture_status || ''}
-                              onChange={(e) => setEditForm(prev => ({ ...prev, moisture_status: e.target.value }))}
+                              onChange={(e) => setEditForm((prev: any) => ({ ...prev, moisture_status: e.target.value }))}
                               className="mt-1"
                             />
                           ) : (
@@ -1539,7 +1547,7 @@ export default function FarmDetailsPage() {
                             type="number"
                             step="1"
                             value={editForm.system_discharge || ''}
-                            onChange={(e) => setEditForm(prev => ({ ...prev, system_discharge: parseFloat(e.target.value) || 0 }))}
+                            onChange={(e) => setEditForm((prev: any) => ({ ...prev, system_discharge: parseFloat(e.target.value) || 0 }))}
                             className="mt-1"
                           />
                         ) : (
@@ -1641,7 +1649,7 @@ export default function FarmDetailsPage() {
                     {isEditing ? (
                       <Textarea
                         value={editForm.notes || ''}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
+                        onChange={(e) => setEditForm((prev: any) => ({ ...prev, notes: e.target.value }))}
                         className="mt-1"
                         rows={3}
                       />
