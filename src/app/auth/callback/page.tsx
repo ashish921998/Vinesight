@@ -19,12 +19,12 @@ export default function AuthCallback() {
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
 
-        console.log('Client callback processing:', { 
-          hasAccessToken: !!accessToken, 
-          hasRefreshToken: !!refreshToken, 
-          error: error,
-          fragment: hashFragment 
-        });
+        // console.log('Client callback processing:', { 
+        //   hasAccessToken: !!accessToken, 
+        //   hasRefreshToken: !!refreshToken, 
+        //   error: error,
+        //   fragment: hashFragment 
+        // });
 
         // Handle errors
         if (error) {
@@ -57,27 +57,13 @@ export default function AuthCallback() {
           }
         }
 
-        // If no tokens in fragment, check for authorization code in query params
+        // If no tokens in fragment, let the server handle it (authorization code flow)
+        // Convert current URL to let server-side handler process it
         const currentUrl = new URL(window.location.href);
-        const code = currentUrl.searchParams.get('code');
-        
-        if (code) {
-          console.log('Found authorization code, exchanging for session');
-          const supabase = getSupabaseClient();
-          
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-          
-          if (error) {
-            console.error('Error exchanging code for session:', error);
-            router.push(`/auth/auth-code-error?error=code_exchange_failed`);
-            return;
-          }
-          
-          if (data?.session) {
-            console.log('Successfully authenticated user via code exchange:', data.session.user.email);
-            router.push('/');
-            return;
-          }
+        if (currentUrl.search) {
+          // There are query parameters, let server handle it
+          window.location.href = `/auth/callback${currentUrl.search}`;
+          return;
         }
 
         // No tokens found anywhere
