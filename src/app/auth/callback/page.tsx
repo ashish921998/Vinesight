@@ -57,21 +57,30 @@ export default function AuthCallback() {
           }
         }
 
-        // If no tokens in fragment, let the server handle it (authorization code flow)
-        // Convert current URL to let server-side handler process it
+        // If no tokens in fragment, check for authorization code in query params
         const currentUrl = new URL(window.location.href);
-        if (currentUrl.search) {
-          // There are query parameters, let server handle it
-          window.location.href = `/auth/callback${currentUrl.search}`;
-          return;
+        const code = currentUrl.searchParams.get('code');
+        
+        if (code) {
+          const supabase = getSupabaseClient();
+          
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          
+          if (error) {
+            router.push(`/auth/auth-code-error?error=code_exchange_failed`);
+            return;
+          }
+          
+          if (data?.session) {
+            router.push('/');
+            return;
+          }
         }
 
         // No tokens found anywhere
-        console.error('No authentication tokens found in callback');
         router.push(`/auth/auth-code-error?error=no_tokens`);
         
       } catch (error) {
-        console.error('Unexpected error in auth callback:', error);
         router.push(`/auth/auth-code-error?error=unexpected`);
       }
     };

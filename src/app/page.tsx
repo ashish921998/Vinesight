@@ -175,25 +175,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Welcome Back Section - Only show for authenticated users on mobile */}
-      {user && (
-        <div className="px-3 mt-8 lg:hidden">
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="p-6 text-center">
-              <h3 className="font-semibold text-green-800 mb-2">Welcome back!</h3>
-              <p className="text-green-700 text-sm mb-4">
-                Ready to manage your vineyard?
-              </p>
-              <Button 
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={() => window.location.href = "/farms"}
-              >
-                Go to My Farms
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {/* Quick Feature Access for Mobile - Unauthenticated */}
       {!user && (
