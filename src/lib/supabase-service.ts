@@ -341,27 +341,44 @@ export class SupabaseService {
 
   // Dashboard summary
   static async getDashboardSummary(farmId: number) {
-    const supabase = getSupabaseClient();
-    const [farm, pendingTasks, recentIrrigations, harvestRecords] = await Promise.all([
+    const [farm, pendingTasks, irrigationRecords, sprayRecords, fertigationRecords, harvestRecords, expenseRecords, soilTestRecords] = await Promise.all([
       this.getFarmById(farmId),
       this.getPendingTasks(farmId),
-      supabase
-        .from('irrigation_records')
-        .select('*')
-        .eq('farm_id', farmId)
-        .order('date', { ascending: false })
-        .limit(5),
-      this.getHarvestRecords(farmId)
+      this.getIrrigationRecords(farmId),
+      this.getSprayRecords(farmId),
+      this.getFertigationRecords(farmId),
+      this.getHarvestRecords(farmId),
+      this.getExpenseRecords(farmId),
+      this.getSoilTestRecords(farmId)
     ]);
 
     const totalHarvest = harvestRecords.reduce((sum, record) => sum + record.quantity, 0);
+    
+    // Combine all activities for recent activities display
+    const allActivities = [
+      ...irrigationRecords.slice(0, 3).map(record => ({ ...record, type: 'irrigation' })),
+      ...sprayRecords.slice(0, 3).map(record => ({ ...record, type: 'spray' })),
+      ...fertigationRecords.slice(0, 3).map(record => ({ ...record, type: 'fertigation' })),
+      ...harvestRecords.slice(0, 3).map(record => ({ ...record, type: 'harvest' })),
+      ...expenseRecords.slice(0, 3).map(record => ({ ...record, type: 'expense' })),
+      ...soilTestRecords.slice(0, 3).map(record => ({ ...record, type: 'soil_test' }))
+    ].sort((a, b) => new Date(b.date || b.created_at || '').getTime() - new Date(a.date || a.created_at || '').getTime()).slice(0, 10);
 
     return {
       farm,
       pendingTasksCount: pendingTasks.length,
-      recentIrrigations: recentIrrigations.data || [],
+      recentIrrigations: irrigationRecords.slice(0, 5), // Keep for backward compatibility
+      recentActivities: allActivities, // New comprehensive activities list
       totalHarvest,
-      pendingTasks: pendingTasks.slice(0, 3) // Show top 3 pending tasks
+      pendingTasks: pendingTasks.slice(0, 3), // Show top 3 pending tasks
+      recordCounts: {
+        irrigation: irrigationRecords.length,
+        spray: sprayRecords.length,
+        fertigation: fertigationRecords.length,
+        harvest: harvestRecords.length,
+        expense: expenseRecords.length,
+        soilTest: soilTestRecords.length
+      }
     };
   }
 

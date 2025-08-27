@@ -35,8 +35,17 @@ interface DashboardData {
   farm: Farm | null;
   pendingTasksCount: number;
   recentIrrigations: any[];
+  recentActivities: any[];
   totalHarvest: number;
   pendingTasks: any[];
+  recordCounts: {
+    irrigation: number;
+    spray: number;
+    fertigation: number;
+    harvest: number;
+    expense: number;
+    soilTest: number;
+  };
 }
 
 export default function FarmDetailsPage() {
@@ -47,8 +56,17 @@ export default function FarmDetailsPage() {
     farm: null,
     pendingTasksCount: 0,
     recentIrrigations: [],
+    recentActivities: [],
     totalHarvest: 0,
-    pendingTasks: []
+    pendingTasks: [],
+    recordCounts: {
+      irrigation: 0,
+      spray: 0,
+      fertigation: 0,
+      harvest: 0,
+      expense: 0,
+      soilTest: 0
+    }
   });
   const [loading, setLoading] = useState(true);
   
@@ -138,18 +156,20 @@ export default function FarmDetailsPage() {
     
     setIsSubmitting(true);
     try {
-      // Here you would call your API to save irrigation data
-      console.log("Irrigation logged:", {
-        farmId,
+      await SupabaseService.addIrrigationRecord({
+        farm_id: farmId,
+        date: new Date().toISOString().split('T')[0],
         duration: parseFloat(irrigationForm.duration),
-        notes: irrigationForm.notes,
-        date: new Date().toISOString()
+        area: dashboardData.farm?.area || 0,
+        growth_stage: "Active", // Default value
+        moisture_status: "Good", // Default value
+        system_discharge: 100, // Default value (L/hr)
+        notes: irrigationForm.notes
       });
       
-      // Reset form and close modal
       setIrrigationForm({ duration: "", notes: "" });
       setShowIrrigationModal(false);
-      await loadDashboardData(); // Refresh data
+      await loadDashboardData();
     } catch (error) {
       console.error("Error logging irrigation:", error);
     } finally {
@@ -163,11 +183,16 @@ export default function FarmDetailsPage() {
     
     setIsSubmitting(true);
     try {
-      console.log("Spray logged:", {
-        farmId,
-        product: sprayForm.product,
-        notes: sprayForm.notes,
-        date: new Date().toISOString()
+      await SupabaseService.addSprayRecord({
+        farm_id: farmId,
+        date: new Date().toISOString().split('T')[0],
+        pest_disease: "General", // Default value
+        chemical: sprayForm.product,
+        dose: "As per label", // Default value
+        area: dashboardData.farm?.area || 0,
+        weather: "Clear", // Default value
+        operator: "Farm Owner", // Default value
+        notes: sprayForm.notes
       });
       
       setSprayForm({ product: "", notes: "" });
@@ -186,11 +211,14 @@ export default function FarmDetailsPage() {
     
     setIsSubmitting(true);
     try {
-      console.log("Harvest logged:", {
-        farmId,
+      await SupabaseService.addHarvestRecord({
+        farm_id: farmId,
+        date: new Date().toISOString().split('T')[0],
         quantity: parseFloat(harvestForm.quantity),
-        notes: harvestForm.notes,
-        date: new Date().toISOString()
+        grade: "A", // Default grade
+        price: null, // Optional
+        buyer: null, // Optional
+        notes: harvestForm.notes
       });
       
       setHarvestForm({ quantity: "", notes: "" });
@@ -335,7 +363,7 @@ export default function FarmDetailsPage() {
     );
   }
 
-  const { farm, pendingTasksCount, recentIrrigations, totalHarvest, pendingTasks } = dashboardData;
+  const { farm, pendingTasksCount, recentIrrigations, recentActivities, totalHarvest, pendingTasks, recordCounts } = dashboardData;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -570,31 +598,88 @@ export default function FarmDetailsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            {recentIrrigations.length > 0 ? (
+            {recentActivities && recentActivities.length > 0 ? (
               <div className="space-y-3">
-                {recentIrrigations.slice(0, 3).map((irrigation, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Droplets className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-sm text-gray-900">Irrigation</h4>
-                        <span className="text-xs text-gray-500">
-                          {new Date(irrigation.date).toLocaleDateString()}
-                        </span>
+                {recentActivities.slice(0, 5).map((activity, index) => {
+                  const getActivityIcon = (type: string) => {
+                    switch (type) {
+                      case 'irrigation': return <Droplets className="h-5 w-5 text-blue-600" />;
+                      case 'spray': return <SprayCan className="h-5 w-5 text-orange-600" />;
+                      case 'fertigation': return <Beaker className="h-5 w-5 text-purple-600" />;
+                      case 'harvest': return <Scissors className="h-5 w-5 text-green-600" />;
+                      case 'expense': return <DollarSign className="h-5 w-5 text-red-600" />;
+                      case 'soil_test': return <TestTube className="h-5 w-5 text-blue-600" />;
+                      default: return <Activity className="h-5 w-5 text-gray-600" />;
+                    }
+                  };
+                  
+                  const getActivityColor = (type: string) => {
+                    switch (type) {
+                      case 'irrigation': return 'bg-blue-100';
+                      case 'spray': return 'bg-orange-100';
+                      case 'fertigation': return 'bg-purple-100';
+                      case 'harvest': return 'bg-green-100';
+                      case 'expense': return 'bg-red-100';
+                      case 'soil_test': return 'bg-blue-100';
+                      default: return 'bg-gray-100';
+                    }
+                  };
+                  
+                  const getActivityTitle = (type: string) => {
+                    switch (type) {
+                      case 'irrigation': return 'Irrigation';
+                      case 'spray': return 'Spray Application';
+                      case 'fertigation': return 'Fertigation';
+                      case 'harvest': return 'Harvest';
+                      case 'expense': return 'Expense';
+                      case 'soil_test': return 'Soil Test';
+                      default: return 'Activity';
+                    }
+                  };
+                  
+                  const getActivityDetails = (activity: any) => {
+                    switch (activity.type) {
+                      case 'irrigation':
+                        return `${activity.duration}h • ${activity.area}ha • ${activity.growth_stage}`;
+                      case 'spray':
+                        return `${activity.chemical} • ${activity.area}ha • ${activity.weather}`;
+                      case 'fertigation':
+                        return `${activity.fertilizer} • ${activity.dose} • ${activity.area}ha`;
+                      case 'harvest':
+                        return `${activity.quantity}kg • Grade ${activity.grade}`;
+                      case 'expense':
+                        return `₹${activity.cost} • ${activity.type} • ${activity.description}`;
+                      case 'soil_test':
+                        return `pH ${activity.parameters?.pH || 'N/A'} • ${Object.keys(activity.parameters || {}).length} parameters`;
+                      default:
+                        return 'Farm activity';
+                    }
+                  };
+                  
+                  return (
+                    <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <div className={`w-10 h-10 ${getActivityColor(activity.type)} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                        {getActivityIcon(activity.type)}
                       </div>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {irrigation.growthStage} • {irrigation.duration}h • {irrigation.area}ha
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-sm text-gray-900">{getActivityTitle(activity.type)}</h4>
+                          <span className="text-xs text-gray-500">
+                            {new Date(activity.date || activity.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5 truncate">
+                          {getActivityDetails(activity)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-                {recentIrrigations.length > 3 && (
-                  <Button variant="ghost" className="w-full mt-3 text-sm">
-                    View all activities
-                  </Button>
-                )}
+                  );
+                })}
+                <div className="text-center pt-2">
+                  <p className="text-xs text-gray-500">
+                    Total records: {(recordCounts?.irrigation || 0) + (recordCounts?.spray || 0) + (recordCounts?.fertigation || 0) + (recordCounts?.harvest || 0) + (recordCounts?.expense || 0) + (recordCounts?.soilTest || 0)}
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="text-center py-8">
