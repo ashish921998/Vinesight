@@ -38,6 +38,9 @@ export function MADCalculatorComponent() {
   const [dbd, setDbd] = useState(''); // Distance Between Dripper
   const [dischargePerHour2, setDischargePerHour2] = useState('');
   
+  // Number of lines (common for both system discharge calculators)
+  const [numberOfLines, setNumberOfLines] = useState('');
+  
   const [finalResult, setFinalResult] = useState<number | null>(null);
 
   const calculateMAD = () => {
@@ -62,28 +65,30 @@ export function MADCalculatorComponent() {
   };
 
   const calculateSystemDischarge1 = () => {
-    if (madResult && dbp && drippersPerPlant && dischargePerHour1) {
+    if (madResult && dbp && drippersPerPlant && dischargePerHour1 && numberOfLines) {
       const dbpNum = parseFloat(dbp);
       const drippersNum = parseFloat(drippersPerPlant);
       const dischargeNum = parseFloat(dischargePerHour1);
+      const linesNum = parseFloat(numberOfLines);
       
       // Step 1: Calculate Plants per Hectare (P/H)
       const pH = 10000 / (madResult.dbl * dbpNum);
       setPlantsPerHectare(pH);
       
-      // Step 2: Final calculation
-      const result = (pH * drippersNum * dischargeNum) / 10000;
+      // Step 2: Final calculation multiplied by number of lines
+      const result = (pH * drippersNum * dischargeNum * linesNum) / 10000;
       setFinalResult(result);
     }
   };
 
   const calculateSystemDischarge2 = () => {
-    if (madResult && dbd && dischargePerHour2) {
+    if (madResult && dbd && dischargePerHour2 && numberOfLines) {
       const dbdNum = parseFloat(dbd);
       const dischargeNum = parseFloat(dischargePerHour2);
+      const linesNum = parseFloat(numberOfLines);
       
-      // Formula: ((100 / DBL) * (100/ DBD) * discharge per hour) / 10000
-      const result = ((100 / madResult.dbl) * (100 / dbdNum) * dischargeNum) / 10000;
+      // Formula: ((100 / DBL) * (100/ DBD) * discharge per hour * number of lines) / 10000
+      const result = ((100 / madResult.dbl) * (100 / dbdNum) * dischargeNum * linesNum) / 10000;
       setFinalResult(result);
     }
   };
@@ -103,6 +108,7 @@ export function MADCalculatorComponent() {
     setPlantsPerHectare(null);
     setDbd('');
     setDischargePerHour2('');
+    setNumberOfLines('');
     setFinalResult(null);
   };
 
@@ -271,7 +277,7 @@ export function MADCalculatorComponent() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="dbp">Distance Between Plant (DBP) - Row Spacing (m)</Label>
                 <Input
@@ -304,11 +310,21 @@ export function MADCalculatorComponent() {
                   placeholder="e.g., 2.0"
                 />
               </div>
+              <div>
+                <Label htmlFor="numberOfLines1">Number of Lines</Label>
+                <Input
+                  id="numberOfLines1"
+                  type="number"
+                  value={numberOfLines}
+                  onChange={(e) => setNumberOfLines(e.target.value)}
+                  placeholder="e.g., 10"
+                />
+              </div>
             </div>
             
             <Button 
               onClick={calculateSystemDischarge1}
-              disabled={!dbp || !drippersPerPlant || !dischargePerHour1}
+              disabled={!dbp || !drippersPerPlant || !dischargePerHour1 || !numberOfLines}
               className="w-full"
             >
               Calculate System Discharge 1
@@ -331,7 +347,7 @@ export function MADCalculatorComponent() {
                   System Discharge Result: <span className="text-lg">{finalResult.toFixed(6)}</span>
                 </p>
                 <p className="text-xs text-green-600 mt-1">
-                  Formula: (P/H × Drippers per plant × Discharge per hour) ÷ 10000
+                  Formula: (P/H × Drippers per plant × Discharge per hour × Number of lines) ÷ 10000
                 </p>
               </div>
             )}
@@ -349,7 +365,7 @@ export function MADCalculatorComponent() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="dbd">Distance Between Dripper (DBD) (m)</Label>
                 <Input
@@ -372,11 +388,21 @@ export function MADCalculatorComponent() {
                   placeholder="e.g., 2.0"
                 />
               </div>
+              <div>
+                <Label htmlFor="numberOfLines2">Number of Lines</Label>
+                <Input
+                  id="numberOfLines2"
+                  type="number"
+                  value={numberOfLines}
+                  onChange={(e) => setNumberOfLines(e.target.value)}
+                  placeholder="e.g., 10"
+                />
+              </div>
             </div>
             
             <Button 
               onClick={calculateSystemDischarge2}
-              disabled={!dbd || !dischargePerHour2}
+              disabled={!dbd || !dischargePerHour2 || !numberOfLines}
               className="w-full"
             >
               Calculate System Discharge 2
@@ -388,7 +414,7 @@ export function MADCalculatorComponent() {
                   System Discharge Result: <span className="text-lg">{finalResult.toFixed(6)}</span>
                 </p>
                 <p className="text-xs text-green-600 mt-1">
-                  Formula: ((100 ÷ DBL) × (100 ÷ DBD) × Discharge per hour) ÷ 10000
+                  Formula: ((100 ÷ DBL) × (100 ÷ DBD) × Discharge per hour × Number of lines) ÷ 10000
                 </p>
               </div>
             )}
