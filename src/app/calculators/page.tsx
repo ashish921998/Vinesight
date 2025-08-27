@@ -16,6 +16,7 @@ import { ETcCalculatorComponent } from "@/components/calculators/ETcCalculator";
 import { LAICalculatorComponent } from "@/components/calculators/LAICalculator";
 import { NutrientCalculatorComponent } from "@/components/calculators/NutrientCalculator";
 import { SystemDischargeCalculatorComponent } from "@/components/calculators/SystemDischargeCalculator";
+import { MADCalculatorComponent } from "@/components/calculators/MADCalculator";
 
 const calculatorCategories = [
   {
@@ -28,6 +29,12 @@ const calculatorCategories = [
         title: "Water Needs Calculator",
         description: "Calculate daily water requirements for optimal irrigation",
         component: ETcCalculatorComponent
+      },
+      {
+        id: "mad",
+        title: "MAD (Maximum Allowable Deficit)",
+        description: "Complete irrigation planning: MAD → Refill Tank → System Discharge",
+        component: MADCalculatorComponent
       },
       {
         id: "system-discharge",

@@ -43,9 +43,21 @@ A progressive web and mobile app designed to digitize grape farming operations f
 
 - **Irrigation/Water Use Module:**
   - Evapotranspiration (ETc) calculator: `ETc = ETo * Kc`
-  - System discharge calculator (formula from notes)
-  - MAD (Maximum Allowable Deficit) irrigation schedules
-  - Drip irrigation planner: Refill tank, number of plants, system discharge, irrigation hours, interval.
+  - **MAD (Maximum Allowable Deficit) Calculator:**
+    - Inputs: Distance Between Lines (DBL/vine spacing), Root Depth, Root Width, Water Retention
+    - Formula: `(100/(DBL) * Root Depth * Root Width * Water Retention * 100) / 10000`
+  - **Refill Tank Calculator:**
+    - Uses MAD calculation result
+    - Refill Span options: Heavy Growth Period 50% (0.2), Growth Period 40% (0.3), Controlled Stress 30% (0.4)
+    - Formula: `MAD Result * Refill Span`
+  - **System Discharge Calculators:**
+    - **System Discharge 1:**
+      - Plants per Hectare (P/H): `(DBL * DBP) / 1000`
+      - Final: `(P/H * Drippers per plant * Discharge per hour) / 10000`
+    - **System Discharge 2:**
+      - Formula: `((100 / DBL) * (100/ DBD) * Discharge per hour) / 10000`
+      - Inputs: Distance Between Dripper (DBD), Discharge per hour
+  - Drip irrigation planner: Complete irrigation scheduling with hours and intervals
 - **Nutrient Calculator:**
   - Micronutrient and secondary nutrient recommendations (Zn, B, Fe, Mn, Cu, Mo, Ca, Mg, S) with per acre guidance.
   - NPK recommendations according to yield target and growth stage, with split application schedule.

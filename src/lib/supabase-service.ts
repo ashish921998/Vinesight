@@ -116,6 +116,29 @@ export class SupabaseService {
     return data;
   }
 
+  static async updateIrrigationRecord(id: number, updates: Partial<IrrigationRecord>): Promise<IrrigationRecord> {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('irrigation_records')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async deleteIrrigationRecord(id: number): Promise<void> {
+    const supabase = getSupabaseClient();
+    const { error } = await supabase
+      .from('irrigation_records')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  }
+
   // Spray operations
   static async getSprayRecords(farmId: number): Promise<SprayRecord[]> {
     const supabase = getSupabaseClient();
@@ -139,6 +162,29 @@ export class SupabaseService {
 
     if (error) throw error;
     return data;
+  }
+
+  static async updateSprayRecord(id: number, updates: Partial<SprayRecord>): Promise<SprayRecord> {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('spray_records')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async deleteSprayRecord(id: number): Promise<void> {
+    const supabase = getSupabaseClient();
+    const { error } = await supabase
+      .from('spray_records')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
   }
 
   // Fertigation operations
@@ -189,6 +235,29 @@ export class SupabaseService {
 
     if (error) throw error;
     return data;
+  }
+
+  static async updateHarvestRecord(id: number, updates: Partial<HarvestRecord>): Promise<HarvestRecord> {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('harvest_records')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async deleteHarvestRecord(id: number): Promise<void> {
+    const supabase = getSupabaseClient();
+    const { error } = await supabase
+      .from('harvest_records')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
   }
 
   // Expense operations

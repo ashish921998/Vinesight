@@ -26,9 +26,12 @@ import {
   Activity,
   Beaker,
   DollarSign,
-  TestTube
+  TestTube,
+  Upload,
+  X
 } from "lucide-react";
 import { SupabaseService } from "@/lib/supabase-service";
+import { PhotoService } from "@/lib/photo-service";
 import { type Farm } from "@/lib/supabase";
 
 interface DashboardData {
@@ -46,6 +49,80 @@ interface DashboardData {
     expense: number;
     soilTest: number;
   };
+}
+
+// Photo upload component
+function PhotoUpload({ photos, onChange, disabled = false, id = 'photo-upload' }: {
+  photos: File[];
+  onChange: (photos: File[]) => void;
+  disabled?: boolean;
+  id?: string;
+}) {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    onChange([...photos, ...files]);
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    const newPhotos = photos.filter((_, i) => i !== index);
+    onChange(newPhotos);
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm font-medium text-gray-700">Photos (optional)</Label>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileSelect}
+            disabled={disabled}
+            className="hidden"
+            id={id}
+          />
+          <label
+            htmlFor={id}
+            className={`flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${
+              disabled ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            <Upload className="h-4 w-4" />
+            <span className="text-sm">Add Photos</span>
+          </label>
+          {photos.length > 0 && (
+            <span className="text-sm text-gray-500">{photos.length} photo(s)</span>
+          )}
+        </div>
+        
+        {photos.length > 0 && (
+          <div className="grid grid-cols-2 gap-2">
+            {photos.map((photo, index) => (
+              <div key={index} className="relative group">
+                <div className="w-full h-20 bg-gray-100 rounded-lg flex items-center justify-center relative overflow-hidden">
+                  <img
+                    src={URL.createObjectURL(photo)}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePhoto(index)}
+                    disabled={disabled}
+                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1 truncate">{photo.name}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function FarmDetailsPage() {
@@ -77,28 +154,40 @@ export default function FarmDetailsPage() {
   const [showFertigationModal, setShowFertigationModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showSoilTestModal, setShowSoilTestModal] = useState(false);
+  const [showRecordDetailModal, setShowRecordDetailModal] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [editForm, setEditForm] = useState<any>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
+  const [bulkMode, setBulkMode] = useState(false);
+  const [recordPhotos, setRecordPhotos] = useState<string[]>([]);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   
   // Form data states
   const [irrigationForm, setIrrigationForm] = useState({
     duration: "",
-    notes: ""
+    notes: "",
+    photos: [] as File[]
   });
   
   const [sprayForm, setSprayForm] = useState({
     product: "",
-    notes: ""
+    notes: "",
+    photos: [] as File[]
   });
   
   const [harvestForm, setHarvestForm] = useState({
     quantity: "",
-    notes: ""
+    notes: "",
+    photos: [] as File[]
   });
 
   const [fertigationForm, setFertigationForm] = useState({
     fertilizer: "",
     quantity: "",
-    notes: ""
+    notes: "",
+    photos: [] as File[]
   });
 
   const [expenseForm, setExpenseForm] = useState({
@@ -156,7 +245,7 @@ export default function FarmDetailsPage() {
     
     setIsSubmitting(true);
     try {
-      await SupabaseService.addIrrigationRecord({
+      const record = await SupabaseService.addIrrigationRecord({
         farm_id: farmId,
         date: new Date().toISOString().split('T')[0],
         duration: parseFloat(irrigationForm.duration),
@@ -167,7 +256,16 @@ export default function FarmDetailsPage() {
         notes: irrigationForm.notes
       });
       
-      setIrrigationForm({ duration: "", notes: "" });
+      // Upload photos if any
+      for (const photo of irrigationForm.photos) {
+        try {
+          await PhotoService.uploadPhoto(photo, 'irrigation', record.id);
+        } catch (photoError) {
+          console.error("Error uploading photo:", photoError);
+        }
+      }
+      
+      setIrrigationForm({ duration: "", notes: "", photos: [] });
       setShowIrrigationModal(false);
       await loadDashboardData();
     } catch (error) {
@@ -183,7 +281,7 @@ export default function FarmDetailsPage() {
     
     setIsSubmitting(true);
     try {
-      await SupabaseService.addSprayRecord({
+      const record = await SupabaseService.addSprayRecord({
         farm_id: farmId,
         date: new Date().toISOString().split('T')[0],
         pest_disease: "General", // Default value
@@ -195,7 +293,16 @@ export default function FarmDetailsPage() {
         notes: sprayForm.notes
       });
       
-      setSprayForm({ product: "", notes: "" });
+      // Upload photos if any
+      for (const photo of sprayForm.photos) {
+        try {
+          await PhotoService.uploadPhoto(photo, 'spray', record.id);
+        } catch (photoError) {
+          console.error("Error uploading photo:", photoError);
+        }
+      }
+      
+      setSprayForm({ product: "", notes: "", photos: [] });
       setShowSprayModal(false);
       await loadDashboardData();
     } catch (error) {
@@ -211,7 +318,7 @@ export default function FarmDetailsPage() {
     
     setIsSubmitting(true);
     try {
-      await SupabaseService.addHarvestRecord({
+      const record = await SupabaseService.addHarvestRecord({
         farm_id: farmId,
         date: new Date().toISOString().split('T')[0],
         quantity: parseFloat(harvestForm.quantity),
@@ -221,7 +328,16 @@ export default function FarmDetailsPage() {
         notes: harvestForm.notes
       });
       
-      setHarvestForm({ quantity: "", notes: "" });
+      // Upload photos if any
+      for (const photo of harvestForm.photos) {
+        try {
+          await PhotoService.uploadPhoto(photo, 'harvest', record.id);
+        } catch (photoError) {
+          console.error("Error uploading photo:", photoError);
+        }
+      }
+      
+      setHarvestForm({ quantity: "", notes: "", photos: [] });
       setShowHarvestModal(false);
       await loadDashboardData();
     } catch (error) {
@@ -237,7 +353,7 @@ export default function FarmDetailsPage() {
     
     setIsSubmitting(true);
     try {
-      await SupabaseService.addFertigationRecord({
+      const record = await SupabaseService.addFertigationRecord({
         farm_id: farmId,
         date: new Date().toISOString().split('T')[0],
         fertilizer: fertigationForm.fertilizer,
@@ -247,7 +363,16 @@ export default function FarmDetailsPage() {
         notes: fertigationForm.notes
       });
       
-      setFertigationForm({ fertilizer: "", quantity: "", notes: "" });
+      // Upload photos if any
+      for (const photo of fertigationForm.photos) {
+        try {
+          await PhotoService.uploadPhoto(photo, 'fertigation', record.id);
+        } catch (photoError) {
+          console.error("Error uploading photo:", photoError);
+        }
+      }
+      
+      setFertigationForm({ fertilizer: "", quantity: "", notes: "", photos: [] });
       setShowFertigationModal(false);
       await loadDashboardData();
     } catch (error) {
@@ -590,11 +715,57 @@ export default function FarmDetailsPage() {
         {/* Recent Activities */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                <Activity className="h-4 w-4 text-green-600" />
+            <CardTitle className="flex items-center justify-between text-lg">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Activity className="h-4 w-4 text-green-600" />
+                </div>
+                Recent Activities
               </div>
-              Recent Activities
+              <div className="flex items-center gap-2">
+                {bulkMode && selectedRecords.size > 0 && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={async () => {
+                      // Bulk delete functionality
+                      try {
+                        for (const recordKey of selectedRecords) {
+                          const [type, id] = recordKey.split('_');
+                          switch (type) {
+                            case 'irrigation':
+                              await SupabaseService.deleteIrrigationRecord(parseInt(id));
+                              break;
+                            case 'spray':
+                              await SupabaseService.deleteSprayRecord(parseInt(id));
+                              break;
+                            case 'harvest':
+                              await SupabaseService.deleteHarvestRecord(parseInt(id));
+                              break;
+                          }
+                        }
+                        setSelectedRecords(new Set());
+                        setBulkMode(false);
+                        await loadDashboardData();
+                      } catch (error) {
+                        console.error('Error deleting records:', error);
+                      }
+                    }}
+                  >
+                    Delete ({selectedRecords.size})
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant={bulkMode ? "default" : "outline"}
+                  onClick={() => {
+                    setBulkMode(!bulkMode);
+                    setSelectedRecords(new Set());
+                  }}
+                >
+                  {bulkMode ? 'Done' : 'Select'}
+                </Button>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
@@ -657,7 +828,44 @@ export default function FarmDetailsPage() {
                   };
                   
                   return (
-                    <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div 
+                      key={index} 
+                      className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                        bulkMode && selectedRecords.has(`${activity.type}_${activity.id}`)
+                          ? 'bg-blue-100 border-2 border-blue-500'
+                          : 'bg-gray-50 hover:bg-gray-100'
+                      }`}
+                      onClick={() => {
+                        if (bulkMode) {
+                          const recordKey = `${activity.type}_${activity.id}`;
+                          const newSelected = new Set(selectedRecords);
+                          if (newSelected.has(recordKey)) {
+                            newSelected.delete(recordKey);
+                          } else {
+                            newSelected.add(recordKey);
+                          }
+                          setSelectedRecords(newSelected);
+                        } else {
+                          setSelectedRecord(activity);
+                          setEditForm({...activity});
+                          setShowRecordDetailModal(true);
+                          // Load photos for this record
+                          PhotoService.getPhotosForRecord(activity.type, activity.id)
+                            .then(setRecordPhotos)
+                            .catch(console.error);
+                        }
+                      }}
+                    >
+                      {bulkMode && (
+                        <div className="flex-shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={selectedRecords.has(`${activity.type}_${activity.id}`)}
+                            onChange={() => {}}
+                            className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                          />
+                        </div>
+                      )}
                       <div className={`w-10 h-10 ${getActivityColor(activity.type)} rounded-lg flex items-center justify-center flex-shrink-0`}>
                         {getActivityIcon(activity.type)}
                       </div>
@@ -733,6 +941,12 @@ export default function FarmDetailsPage() {
                 className="mt-1 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-20 resize-none"
               />
             </div>
+            <PhotoUpload
+              photos={irrigationForm.photos}
+              onChange={(photos) => setIrrigationForm(prev => ({ ...prev, photos }))}
+              disabled={isSubmitting}
+              id="irrigation-photo-upload"
+            />
             <div className="flex gap-3 pt-4">
               <Button
                 type="button"
@@ -791,6 +1005,12 @@ export default function FarmDetailsPage() {
                 className="mt-1 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-20 resize-none"
               />
             </div>
+            <PhotoUpload
+              photos={sprayForm.photos}
+              onChange={(photos) => setSprayForm(prev => ({ ...prev, photos }))}
+              disabled={isSubmitting}
+              id="spray-photo-upload"
+            />
             <div className="flex gap-3 pt-4">
               <Button
                 type="button"
@@ -852,6 +1072,12 @@ export default function FarmDetailsPage() {
                 className="mt-1 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-20 resize-none"
               />
             </div>
+            <PhotoUpload
+              photos={harvestForm.photos}
+              onChange={(photos) => setHarvestForm(prev => ({ ...prev, photos }))}
+              disabled={isSubmitting}
+              id="harvest-photo-upload"
+            />
             <div className="flex gap-3 pt-4">
               <Button
                 type="button"
@@ -924,6 +1150,12 @@ export default function FarmDetailsPage() {
                 className="mt-1 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-20 resize-none"
               />
             </div>
+            <PhotoUpload
+              photos={fertigationForm.photos}
+              onChange={(photos) => setFertigationForm(prev => ({ ...prev, photos }))}
+              disabled={isSubmitting}
+              id="fertigation-photo-upload"
+            />
             <div className="flex gap-3 pt-4">
               <Button
                 type="button"
@@ -1180,6 +1412,429 @@ export default function FarmDetailsPage() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Record Detail Modal */}
+      <Dialog open={showRecordDetailModal} onOpenChange={(open) => {
+        setShowRecordDetailModal(open);
+        if (!open) {
+          setSelectedRecord(null);
+          setEditForm({});
+          setIsEditing(false);
+          setRecordPhotos([]);
+          setUploadingPhoto(false);
+        }
+      }}>
+        <DialogContent className="sm:max-w-lg rounded-xl max-h-[90vh] overflow-y-auto">
+          {selectedRecord && (
+            <>
+              <DialogHeader className="text-center pb-4">
+                <div className={`w-16 h-16 ${(() => {
+                  switch (selectedRecord.type) {
+                    case 'irrigation': return 'bg-blue-100';
+                    case 'spray': return 'bg-orange-100';
+                    case 'fertigation': return 'bg-purple-100';
+                    case 'harvest': return 'bg-green-100';
+                    case 'expense': return 'bg-red-100';
+                    case 'soil_test': return 'bg-blue-100';
+                    default: return 'bg-gray-100';
+                  }
+                })()} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                  {(() => {
+                    switch (selectedRecord.type) {
+                      case 'irrigation': return <Droplets className="h-8 w-8 text-blue-600" />;
+                      case 'spray': return <SprayCan className="h-8 w-8 text-orange-600" />;
+                      case 'fertigation': return <Beaker className="h-8 w-8 text-purple-600" />;
+                      case 'harvest': return <Scissors className="h-8 w-8 text-green-600" />;
+                      case 'expense': return <DollarSign className="h-8 w-8 text-red-600" />;
+                      case 'soil_test': return <TestTube className="h-8 w-8 text-blue-600" />;
+                      default: return <Activity className="h-8 w-8 text-gray-600" />;
+                    }
+                  })()}
+                </div>
+                <DialogTitle className="text-xl font-semibold text-gray-900">
+                  {(() => {
+                    switch (selectedRecord.type) {
+                      case 'irrigation': return 'Irrigation Record';
+                      case 'spray': return 'Spray Application';
+                      case 'fertigation': return 'Fertigation Record';
+                      case 'harvest': return 'Harvest Record';
+                      case 'expense': return 'Expense Record';
+                      case 'soil_test': return 'Soil Test Record';
+                      default: return 'Farm Record';
+                    }
+                  })()}
+                </DialogTitle>
+                <DialogDescription className="text-gray-600 mt-2">
+                  Recorded on {new Date(selectedRecord.date || selectedRecord.created_at).toLocaleDateString()}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                {/* Record Details */}
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  {selectedRecord.type === 'irrigation' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Duration</Label>
+                          {isEditing ? (
+                            <Input
+                              type="number"
+                              step="0.5"
+                              value={editForm.duration || ''}
+                              onChange={(e) => setEditForm(prev => ({ ...prev, duration: parseFloat(e.target.value) || 0 }))}
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="text-lg font-semibold text-gray-900">{selectedRecord.duration} hours</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Area</Label>
+                          {isEditing ? (
+                            <Input
+                              type="number"
+                              step="0.1"
+                              value={editForm.area || ''}
+                              onChange={(e) => setEditForm(prev => ({ ...prev, area: parseFloat(e.target.value) || 0 }))}
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="text-lg font-semibold text-gray-900">{selectedRecord.area} ha</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Growth Stage</Label>
+                          {isEditing ? (
+                            <Input
+                              value={editForm.growth_stage || ''}
+                              onChange={(e) => setEditForm(prev => ({ ...prev, growth_stage: e.target.value }))}
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="text-gray-900">{selectedRecord.growth_stage}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Moisture Status</Label>
+                          {isEditing ? (
+                            <Input
+                              value={editForm.moisture_status || ''}
+                              onChange={(e) => setEditForm(prev => ({ ...prev, moisture_status: e.target.value }))}
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="text-gray-900">{selectedRecord.moisture_status}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-600">System Discharge</Label>
+                        {isEditing ? (
+                          <Input
+                            type="number"
+                            step="1"
+                            value={editForm.system_discharge || ''}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, system_discharge: parseFloat(e.target.value) || 0 }))}
+                            className="mt-1"
+                          />
+                        ) : (
+                          <p className="text-gray-900">{selectedRecord.system_discharge} L/hr</p>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {selectedRecord.type === 'spray' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Chemical</Label>
+                          <p className="text-lg font-semibold text-gray-900">{selectedRecord.chemical}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Area</Label>
+                          <p className="text-lg font-semibold text-gray-900">{selectedRecord.area} ha</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Pest/Disease</Label>
+                          <p className="text-gray-900">{selectedRecord.pest_disease}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Dose</Label>
+                          <p className="text-gray-900">{selectedRecord.dose}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Weather</Label>
+                          <p className="text-gray-900">{selectedRecord.weather}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Operator</Label>
+                          <p className="text-gray-900">{selectedRecord.operator}</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {selectedRecord.type === 'harvest' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Quantity</Label>
+                          <p className="text-lg font-semibold text-gray-900">{selectedRecord.quantity} kg</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Grade</Label>
+                          <p className="text-lg font-semibold text-gray-900">Grade {selectedRecord.grade}</p>
+                        </div>
+                      </div>
+                      {selectedRecord.price && (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-sm font-medium text-gray-600">Price per kg</Label>
+                            <p className="text-gray-900">₹{selectedRecord.price}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-600">Total Value</Label>
+                            <p className="text-green-600 font-semibold">₹{(selectedRecord.quantity * selectedRecord.price).toLocaleString()}</p>
+                          </div>
+                        </div>
+                      )}
+                      {selectedRecord.buyer && (
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Buyer</Label>
+                          <p className="text-gray-900">{selectedRecord.buyer}</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {selectedRecord.type === 'expense' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Amount</Label>
+                          <p className="text-lg font-semibold text-red-600">₹{selectedRecord.cost?.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Category</Label>
+                          <p className="text-lg font-semibold text-gray-900 capitalize">{selectedRecord.type}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-600">Description</Label>
+                        <p className="text-gray-900">{selectedRecord.description}</p>
+                      </div>
+                    </>
+                  )}
+
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Notes</Label>
+                    {isEditing ? (
+                      <Textarea
+                        value={editForm.notes || ''}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
+                        className="mt-1"
+                        rows={3}
+                      />
+                    ) : (
+                      <p className="text-gray-900 bg-white p-3 rounded border">{selectedRecord.notes || 'No notes'}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Photos Section */}
+                {recordPhotos.length > 0 && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <Label className="text-sm font-medium text-gray-600 mb-2 block">Photos</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {recordPhotos.map((photoUrl, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={photoUrl}
+                            alt={`Record photo ${index + 1}`}
+                            className="w-full h-24 object-cover rounded border"
+                          />
+                          <button
+                            onClick={async () => {
+                              try {
+                                await PhotoService.deletePhoto(photoUrl);
+                                const updatedPhotos = await PhotoService.getPhotosForRecord(selectedRecord.type, selectedRecord.id);
+                                setRecordPhotos(updatedPhotos);
+                              } catch (error) {
+                                console.error('Error deleting photo:', error);
+                              }
+                            }}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  {/* Primary Actions */}
+                  <div className="flex gap-3">
+                    {isEditing ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setIsEditing(false);
+                            setEditForm({...selectedRecord});
+                          }}
+                          className="flex-1 h-12 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={async () => {
+                            try {
+                              setIsSubmitting(true);
+                              // Save the edited record
+                              switch (selectedRecord.type) {
+                                case 'irrigation':
+                                  await SupabaseService.updateIrrigationRecord(selectedRecord.id, editForm);
+                                  break;
+                                case 'spray':
+                                  await SupabaseService.updateSprayRecord(selectedRecord.id, editForm);
+                                  break;
+                                case 'harvest':
+                                  await SupabaseService.updateHarvestRecord(selectedRecord.id, editForm);
+                                  break;
+                              }
+                              
+                              setIsEditing(false);
+                              setSelectedRecord({...editForm});
+                              await loadDashboardData();
+                            } catch (error) {
+                              console.error('Error updating record:', error);
+                            } finally {
+                              setIsSubmitting(false);
+                            }
+                          }}
+                          disabled={isSubmitting}
+                          className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium"
+                        >
+                          {isSubmitting ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowRecordDetailModal(false)}
+                          className="flex-1 h-12 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+                        >
+                          Close
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsEditing(true)}
+                          className="h-12 px-6 border-green-300 text-green-700 hover:bg-green-50 rounded-lg font-medium"
+                        >
+                          Edit
+                        </Button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Secondary Actions */}
+                  {!isEditing && (
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          // Export functionality
+                          const dataStr = JSON.stringify(selectedRecord, null, 2);
+                          const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                          const exportFileDefaultName = `${selectedRecord.type}_record_${selectedRecord.id}.json`;
+                          const linkElement = document.createElement('a');
+                          linkElement.setAttribute('href', dataUri);
+                          linkElement.setAttribute('download', exportFileDefaultName);
+                          linkElement.click();
+                        }}
+                        className="text-xs"
+                      >
+                        Export
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.onchange = async (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (file) {
+                              try {
+                                setUploadingPhoto(true);
+                                await PhotoService.uploadPhoto(file, selectedRecord.type, selectedRecord.id);
+                                const updatedPhotos = await PhotoService.getPhotosForRecord(selectedRecord.type, selectedRecord.id);
+                                setRecordPhotos(updatedPhotos);
+                              } catch (error) {
+                                console.error('Error uploading photo:', error);
+                              } finally {
+                                setUploadingPhoto(false);
+                              }
+                            }
+                          };
+                          input.click();
+                        }}
+                        disabled={uploadingPhoto}
+                        className="text-xs"
+                      >
+                        {uploadingPhoto ? 'Uploading...' : 'Add Photo'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={async () => {
+                          if (confirm('Are you sure you want to delete this record?')) {
+                            try {
+                              switch (selectedRecord.type) {
+                                case 'irrigation':
+                                  await SupabaseService.deleteIrrigationRecord(selectedRecord.id);
+                                  break;
+                                case 'spray':
+                                  await SupabaseService.deleteSprayRecord(selectedRecord.id);
+                                  break;
+                                case 'harvest':
+                                  await SupabaseService.deleteHarvestRecord(selectedRecord.id);
+                                  break;
+                              }
+                              
+                              setShowRecordDetailModal(false);
+                              await loadDashboardData();
+                            } catch (error) {
+                              console.error('Error deleting record:', error);
+                            }
+                          }
+                        }}
+                        className="text-xs"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
