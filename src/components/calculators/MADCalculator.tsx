@@ -65,18 +65,17 @@ export function MADCalculatorComponent() {
   };
 
   const calculateSystemDischarge1 = () => {
-    if (madResult && dbp && drippersPerPlant && dischargePerHour1 && numberOfLines) {
+    if (madResult && dbp && drippersPerPlant && dischargePerHour1) {
       const dbpNum = parseFloat(dbp);
       const drippersNum = parseFloat(drippersPerPlant);
       const dischargeNum = parseFloat(dischargePerHour1);
-      const linesNum = parseFloat(numberOfLines);
       
       // Step 1: Calculate Plants per Hectare (P/H)
       const pH = 10000 / (madResult.dbl * dbpNum);
       setPlantsPerHectare(pH);
       
-      // Step 2: Final calculation multiplied by number of lines
-      const result = (pH * drippersNum * dischargeNum * linesNum) / 10000;
+      // Step 2: Final calculation
+      const result = (pH * drippersNum * dischargeNum) / 10000;
       setFinalResult(result);
     }
   };
@@ -277,7 +276,7 @@ export function MADCalculatorComponent() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="dbp">Distance Between Plant (DBP) - Row Spacing (m)</Label>
                 <Input
@@ -310,21 +309,11 @@ export function MADCalculatorComponent() {
                   placeholder="e.g., 2.0"
                 />
               </div>
-              <div>
-                <Label htmlFor="numberOfLines1">Number of Lines</Label>
-                <Input
-                  id="numberOfLines1"
-                  type="number"
-                  value={numberOfLines}
-                  onChange={(e) => setNumberOfLines(e.target.value)}
-                  placeholder="e.g., 10"
-                />
-              </div>
             </div>
             
             <Button 
               onClick={calculateSystemDischarge1}
-              disabled={!dbp || !drippersPerPlant || !dischargePerHour1 || !numberOfLines}
+              disabled={!dbp || !drippersPerPlant || !dischargePerHour1}
               className="w-full"
             >
               Calculate System Discharge 1
@@ -342,13 +331,23 @@ export function MADCalculatorComponent() {
             )}
             
             {finalResult && (
-              <div className="bg-green-50 p-4 rounded-lg">
-                <p className="text-sm font-medium text-green-800">
-                  System Discharge Result: <span className="text-lg">{finalResult.toFixed(6)}</span>
-                </p>
-                <p className="text-xs text-green-600 mt-1">
-                  Formula: (P/H × Drippers per plant × Discharge per hour × Number of lines) ÷ 10000
-                </p>
+              <div className="bg-green-50 p-4 rounded-lg space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-green-800">
+                    System Discharge Result: <span className="text-lg">{finalResult.toFixed(6)}</span>
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    Formula: (P/H × Drippers per plant × Discharge per hour) ÷ 10000
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-green-800">
+                    Irrigation Hours: <span className="text-lg">{(refillTankResult! / finalResult).toFixed(2)}</span> hours
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    Formula: Refill Tank Result ({refillTankResult?.toFixed(4)}) ÷ System Discharge ({finalResult.toFixed(6)})
+                  </p>
+                </div>
               </div>
             )}
           </CardContent>
@@ -409,13 +408,23 @@ export function MADCalculatorComponent() {
             </Button>
             
             {finalResult && (
-              <div className="bg-green-50 p-4 rounded-lg">
-                <p className="text-sm font-medium text-green-800">
-                  System Discharge Result: <span className="text-lg">{finalResult.toFixed(6)}</span>
-                </p>
-                <p className="text-xs text-green-600 mt-1">
-                  Formula: ((100 ÷ DBL) × (100 ÷ DBD) × Discharge per hour × Number of lines) ÷ 10000
-                </p>
+              <div className="bg-green-50 p-4 rounded-lg space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-green-800">
+                    System Discharge Result: <span className="text-lg">{finalResult.toFixed(6)}</span>
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    Formula: ((100 ÷ DBL) × (100 ÷ DBD) × Discharge per hour × Number of lines) ÷ 10000
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-green-800">
+                    Irrigation Hours: <span className="text-lg">{(refillTankResult! / finalResult).toFixed(2)}</span> hours
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    Formula: Refill Tank Result ({refillTankResult?.toFixed(4)}) ÷ System Discharge ({finalResult.toFixed(6)})
+                  </p>
+                </div>
               </div>
             )}
           </CardContent>
