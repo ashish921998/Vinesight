@@ -2,26 +2,41 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
+    /* Agriculture-optimized light theme for outdoor visibility */
+    --background: 248 250 252; /* slate-50 - reduces eye strain */
+    --foreground: 15 23 42; /* slate-800 - high contrast */
+    
+    --card: 255 255 255; /* white - clear visibility */
+    --card-foreground: 15 23 42; /* slate-800 */
+    
+    --popover: 255 255 255;
+    --popover-foreground: 15 23 42;
+    
+    /* Primary green for agricultural theme */
+    --primary: 22 163 74; /* green-600 - nature-focused */
+    --primary-foreground: 255 255 255;
+    
+    --secondary: 236 253 245; /* green-50 - subtle green tint */
+    --secondary-foreground: 20 83 45; /* green-800 */
+    
+    --muted: 241 245 249; /* slate-100 */
+    --muted-foreground: 100 116 139; /* slate-500 */
+    
+    --accent: 220 252 231; /* green-100 - light accent */
+    --accent-foreground: 20 83 45; /* green-800 */
+    
+    --destructive: 220 38 38; /* red-600 */
+    --destructive-foreground: 255 255 255;
+    
+    --border: 209 213 219; /* gray-300 - better visibility */
+    --input: 229 231 235; /* gray-200 */
+    --ring: 22 163 74; /* green-600 */
+    
+    /* Additional agricultural colors */
+    --success: 5 150 105; /* emerald-600 */
+    --warning: 217 119 6; /* amber-600 */
+    
+    --radius: 0.75rem; /* Larger radius for modern mobile feel */
   }
 
   .dark {
@@ -64,10 +79,16 @@
 
 /* Mobile-specific optimizations */
 @layer utilities {
-  /* Better touch targets for mobile */
+  /* Better touch targets for mobile - glove-friendly */
   .touch-target {
-    min-height: 44px;
-    min-width: 44px;
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* Large touch targets for critical actions */
+  .touch-target-large {
+    min-height: 56px;
+    min-width: 56px;
   }
   
   /* Smooth scrolling on mobile */

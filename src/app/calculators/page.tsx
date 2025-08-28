@@ -93,28 +93,28 @@ export default function CalculatorsPage() {
     const CalculatorComponent = selectedCalc.component;
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
-          <div className="px-4 py-3">
+        <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-300 z-10 shadow-sm">
+          <div className="px-6 py-4">
             <Button
               onClick={handleBackToCalculators}
               variant="ghost"
-              size="sm"
-              className="mb-2 text-green-600 hover:text-green-700 hover:bg-green-50 p-2"
+              size="lg"
+              className="mb-4 text-green-600 hover:text-green-700 hover:bg-green-50 p-3 touch-target-large rounded-xl font-medium"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <ArrowLeft className="mr-3 h-5 w-5" />
               Back to Calculators
             </Button>
             
 
             {/* Calculator Header */}
-            <div className="bg-green-600 text-white rounded-lg p-4">
-              <h1 className="text-lg font-bold mb-1">{selectedCalc.title}</h1>
-              <p className="text-green-100 text-sm">{selectedCalc.description}</p>
+            <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl p-6 shadow-lg">
+              <h1 className="text-xl font-bold mb-2">{selectedCalc.title}</h1>
+              <p className="text-green-100 text-sm leading-relaxed">{selectedCalc.description}</p>
             </div>
           </div>
         </div>
 
-        <div className="p-4">
+        <div className="p-6">
           <CalculatorComponent />
         </div>
       </div>
@@ -124,37 +124,43 @@ export default function CalculatorsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="sticky top-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 z-10">
-        <div className="p-4">
-          <div>
-            <h1 className="text-lg font-bold text-gray-900">Calculators</h1>
+      <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-300 z-10 shadow-sm">
+        <div className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-600 rounded-xl">
+              <Calculator className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Farm Calculators</h1>
+              <p className="text-sm text-gray-600 mt-1">Scientific tools for vineyard management</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Calculator Categories */}
-      <div className="p-4 space-y-3">
+      <div className="p-6 space-y-4">
         {calculatorCategories.map((category) => (
-          <Card key={category.title} className="overflow-hidden">
+          <Card key={category.title} className="overflow-hidden border-gray-200">
             <CardHeader 
-              className="pb-3 cursor-pointer bg-green-50 border-b border-green-100"
+              className="pb-4 cursor-pointer bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200 touch-target-large"
               onClick={() => setExpandedCategory(expandedCategory === category.title ? null : category.title)}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-600 rounded-lg">
-                    <category.icon className="h-5 w-5 text-white" />
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-green-600 rounded-xl shadow-sm">
+                    <category.icon className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-base font-semibold text-green-800">
+                    <CardTitle className="text-lg font-bold text-green-800">
                       {category.title}
                     </CardTitle>
-                    <CardDescription className="text-xs text-green-600 mt-1">
+                    <CardDescription className="text-sm text-green-700 mt-1 font-medium">
                       {category.description}
                     </CardDescription>
                   </div>
                 </div>
-                <ArrowRight className={`h-5 w-5 text-green-600 transition-transform ${
+                <ArrowRight className={`h-6 w-6 text-green-600 transition-transform duration-200 ${
                   expandedCategory === category.title ? 'rotate-90' : ''
                 }`} />
               </div>
@@ -162,23 +168,25 @@ export default function CalculatorsPage() {
 
             {expandedCategory === category.title && (
               <CardContent className="p-0">
-                <div className="space-y-2 p-4">
+                <div className="space-y-3 p-6">
                   {category.calculators.map((calculator) => (
                     <div
                       key={calculator.id}
                       onClick={() => handleCalculatorSelect(calculator.id)}
-                      className="bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-green-300 hover:bg-green-50 transition-all active:scale-95"
+                      className="bg-white border-2 border-gray-200 rounded-xl p-5 cursor-pointer hover:border-green-400 hover:bg-green-50 transition-all active:scale-98 touch-target-large shadow-sm"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <h3 className="font-medium text-gray-900 text-sm mb-2">
+                          <h3 className="font-bold text-gray-900 text-base mb-2">
                             {calculator.title}
                           </h3>
-                          <p className="text-xs text-gray-600 leading-relaxed">
+                          <p className="text-sm text-gray-600 leading-relaxed">
                             {calculator.description}
                           </p>
                         </div>
-                        <ArrowRight className="h-4 w-4 text-green-600 ml-3 flex-shrink-0" />
+                        <div className="p-2 bg-green-100 rounded-lg ml-4 flex-shrink-0">
+                          <ArrowRight className="h-5 w-5 text-green-600" />
+                        </div>
                       </div>
                     </div>
                   ))}
