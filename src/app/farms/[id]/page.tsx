@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { SupabaseService } from "@/lib/supabase-service";
 import { PhotoService } from "@/lib/photo-service";
@@ -49,16 +49,10 @@ export default function FarmDetailsPage() {
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showSoilTestModal, setShowSoilTestModal] = useState(false);
 
-  useEffect(() => {
-    if (farmId) {
-      loadDashboardData();
-    }
-  }, [farmId]);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await SupabaseService.getDashboardSummary(farmId);
+      const data = await SupabaseService.getDashboardSummary(parseInt(farmId));
       setDashboardData({
         ...data,
         farm: data.farm || null
@@ -68,7 +62,13 @@ export default function FarmDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [farmId]);
+
+  useEffect(() => {
+    if (farmId) {
+      loadDashboardData();
+    }
+  }, [farmId, loadDashboardData]);
 
   const completeTask = async (taskId: number) => {
     try {
@@ -87,7 +87,7 @@ export default function FarmDetailsPage() {
     setIsSubmitting(true);
     try {
       const record = await SupabaseService.addIrrigationRecord({
-        farm_id: farmId,
+        farm_id: parseInt(farmId),
         date: new Date().toISOString().split('T')[0],
         duration: parseFloat(data.duration),
         area: dashboardData?.farm?.area || 0,
@@ -125,7 +125,7 @@ export default function FarmDetailsPage() {
     setIsSubmitting(true);
     try {
       const record = await SupabaseService.addSprayRecord({
-        farm_id: farmId,
+        farm_id: parseInt(farmId),
         date: new Date().toISOString().split('T')[0],
         pest_disease: "General",
         chemical: data.product,
@@ -167,10 +167,10 @@ export default function FarmDetailsPage() {
     setIsSubmitting(true);
     try {
       const record = await SupabaseService.addHarvestRecord({
-        farm_id: farmId,
+        farm_id: parseInt(farmId),
         date: new Date().toISOString().split('T')[0],
         quantity: parseFloat(data.quantity),
-        quality: data.quality,
+        grade: data.quality,
         price: data.price ? parseFloat(data.price) : undefined,
         buyer: data.buyer || undefined,
         notes: data.notes

@@ -56,25 +56,23 @@ export function FarmHeader({ farm, loading, onBack }: FarmHeaderProps) {
             <div className="flex flex-wrap gap-3 mb-3">
               <div className="flex items-center gap-1 text-sm text-gray-600">
                 <MapPin className="h-4 w-4" />
-                <span>{farm.location}</span>
+                <span>{farm.region}</span>
               </div>
               
               <div className="flex items-center gap-1 text-sm text-gray-600">
                 <Calendar className="h-4 w-4" />
-                <span>{farm.area} acres</span>
+                <span>Since {new Date(farm.planting_date).getFullYear()}</span>
               </div>
             </div>
             
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary" className="bg-green-100 text-green-800">
-                {farm.crop_variety || 'Grape Vineyard'}
+                {farm.grape_variety || 'Grape Vineyard'}
               </Badge>
               
-              {farm.irrigation_type && (
-                <Badge variant="outline" className="border-blue-200 text-blue-700">
-                  {farm.irrigation_type}
-                </Badge>
-              )}
+              <Badge variant="outline" className="border-gray-300 text-gray-700">
+                {farm.area} hectares
+              </Badge>
             </div>
           </div>
         </div>
