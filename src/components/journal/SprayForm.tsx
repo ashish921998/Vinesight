@@ -180,7 +180,7 @@ export function SprayForm({ selectedFarm, onRecordAdded, onCancel }: SprayFormPr
       </Card>
 
       {/* Chemical Information */}
-      <Card className="border-orange-200">
+      <Card className="border-gray-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-orange-600" />
@@ -252,10 +252,10 @@ export function SprayForm({ selectedFarm, onRecordAdded, onCancel }: SprayFormPr
       </Card>
 
       {/* Safety and Environmental Conditions */}
-      <Card className="border-yellow-200">
+      <Card className="border-gray-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-yellow-600" />
+            <AlertTriangle className="h-5 w-5 text-orange-600" />
             Safety & Environmental Conditions
           </CardTitle>
           <CardDescription>Weather conditions and safety information</CardDescription>

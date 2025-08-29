@@ -47,10 +47,10 @@ export default function Home() {
     <div className="container mx-auto">
       {/* Header */}
       <header className="text-center mb-8 px-3">
-        <h1 className="text-3xl font-bold text-green-800 mb-2">
+        <h1 className="text-3xl font-bold text-primary mb-2">
           🍇 VineSight
         </h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Your digital grape farming companion
         </p>
       </header>
@@ -58,8 +58,8 @@ export default function Home() {
       {/* User Status */}
       {user && (
         <div className="px-3 mb-6">
-          <div className="max-w-md mx-auto p-3 bg-green-50 rounded-lg border border-green-200">
-            <div className="flex items-center gap-2 text-green-700">
+          <div className="max-w-md mx-auto p-3 bg-secondary rounded-lg border border-border">
+            <div className="flex items-center gap-2 text-secondary-foreground">
               <CheckCircle className="h-4 w-4" />
               <span className="text-sm font-medium">
                 Signed in as {user.user_metadata?.full_name || user.email}
@@ -84,28 +84,28 @@ export default function Home() {
           
           return (
             <Card key={feature.title} className={`hover:shadow-md transition-shadow ${
-              isLocked ? 'border-gray-200 bg-gray-50' : 'border-green-100'
+              isLocked ? 'border-border bg-muted' : 'border-secondary'
             }`}>
               <CardHeader>
                 <div className="flex items-center gap-3 mb-2">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    isLocked ? 'bg-gray-100' : 'bg-green-100'
+                    isLocked ? 'bg-muted' : 'bg-secondary'
                   }`}>
                     {isLocked ? (
-                      <Lock className="h-4 w-4 text-gray-400" />
+                      <Lock className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <Icon className={`h-5 w-5 ${isLocked ? 'text-gray-400' : 'text-green-600'}`} />
+                      <Icon className={`h-5 w-5 ${isLocked ? 'text-muted-foreground' : 'text-primary'}`} />
                     )}
                   </div>
-                  <CardTitle className={`text-lg ${isLocked ? 'text-gray-500' : 'text-gray-900'}`}>
+                  <CardTitle className={`text-lg ${isLocked ? 'text-muted-foreground' : 'text-foreground'}`}>
                     {feature.title}
                   </CardTitle>
                 </div>
-                <CardDescription className={isLocked ? 'text-gray-400' : 'text-gray-600'}>
+                <CardDescription className={isLocked ? 'text-muted-foreground' : 'text-muted-foreground'}>
                   {feature.description}
                 </CardDescription>
                 {isLocked && (
-                  <div className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                  <div className="flex items-center gap-1 text-xs text-destructive bg-secondary px-2 py-1 rounded">
                     <Lock className="h-3 w-3" />
                     Sign in required
                   </div>
@@ -115,8 +115,8 @@ export default function Home() {
                 <Button 
                   className={`w-full ${
                     isLocked 
-                      ? 'bg-gray-300 hover:bg-gray-400 text-gray-600' 
-                      : 'bg-green-600 hover:bg-green-700 text-white'
+                      ? 'bg-muted hover:bg-muted text-muted-foreground' 
+                      : 'bg-primary hover:bg-primary text-primary-foreground'
                   }`}
                   onClick={() => handleFeatureClick(feature)}
                 >
@@ -131,15 +131,15 @@ export default function Home() {
       {/* Get Started Section - Only show for unauthenticated users */}
       {!user && (
         <div className="px-3 mt-8">
-          <Card className="max-w-md mx-auto border-green-200 bg-green-50">
+          <Card className="max-w-md mx-auto border-secondary bg-secondary">
             <CardHeader className="text-center">
-              <CardTitle className="text-green-800">Start Your Journey</CardTitle>
-              <CardDescription className="text-green-700">
+              <CardTitle className="text-secondary-foreground">Start Your Journey</CardTitle>
+              <CardDescription className="text-secondary-foreground">
                 Sign in to access all farming features
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="text-sm text-green-700">
+              <div className="text-sm text-secondary-foreground">
                 <div className="font-medium mb-2">What you can do:</div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
@@ -153,7 +153,7 @@ export default function Home() {
                 </div>
               </div>
               {loading ? (
-                <Button disabled className="w-full h-12 bg-green-600">
+                <Button disabled className="w-full h-12 bg-primary">
                   Loading...
                 </Button>
               ) : (

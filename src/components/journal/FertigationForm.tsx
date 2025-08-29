@@ -408,13 +408,13 @@ export function FertigationForm({ selectedFarm, onRecordAdded, onCancel }: Ferti
       </div>
 
       {/* Recommendations */}
-      <Card className="border-yellow-200 bg-yellow-50">
+      <Card className="border-gray-200 bg-orange-50">
         <CardContent className="pt-6">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+            <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5" />
             <div className="space-y-2 text-sm">
-              <h4 className="font-semibold text-yellow-900">Fertigation Best Practices:</h4>
-              <ul className="space-y-1 text-yellow-800">
+              <h4 className="font-semibold text-orange-900">Fertigation Best Practices:</h4>
+              <ul className="space-y-1 text-orange-800">
                 <li>• Check system pressure and flow rates before application</li>
                 <li>• Monitor EC and pH levels throughout the process</li>
                 <li>• Flush system with clean water after fertigation</li>

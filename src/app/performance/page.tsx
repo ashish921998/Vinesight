@@ -177,7 +177,7 @@ export default function FarmEfficiencyPage() {
       case 'good':
         return <CheckCircle className="h-4 w-4 text-blue-600" />;
       case 'needs-improvement':
-        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
+        return <AlertTriangle className="h-4 w-4 text-orange-600" />;
       case 'poor':
         return <AlertTriangle className="h-4 w-4 text-red-600" />;
       default:
@@ -192,7 +192,7 @@ export default function FarmEfficiencyPage() {
       case 'good':
         return 'text-blue-600';
       case 'needs-improvement':
-        return 'text-yellow-600';
+        return 'text-orange-600';
       case 'poor':
         return 'text-red-600';
       default:
@@ -406,11 +406,11 @@ export default function FarmEfficiencyPage() {
                   <div className="mt-2 flex items-center gap-2">
                     <div className={`h-2 flex-1 rounded-full ${
                       metric.status === 'good' ? 'bg-green-200' :
-                      metric.status === 'needs-improvement' ? 'bg-yellow-200' : 'bg-red-200'
+                      metric.status === 'needs-improvement' ? 'bg-orange-200' : 'bg-red-200'
                     }`}>
                       <div className={`h-2 rounded-full ${
                         metric.status === 'good' ? 'bg-green-500' :
-                        metric.status === 'needs-improvement' ? 'bg-yellow-500' : 'bg-red-500'
+                        metric.status === 'needs-improvement' ? 'bg-orange-500' : 'bg-red-500'
                       }`} style={{ width: `${Math.min((metric.value / metric.benchmark) * 100, 100)}%` }} />
                     </div>
                     <span className="text-xs text-muted-foreground">
@@ -496,7 +496,7 @@ export default function FarmEfficiencyPage() {
                         className={`h-2 rounded-full ${
                           metric.status === 'excellent' ? 'bg-green-500' :
                           metric.status === 'good' ? 'bg-blue-500' :
-                          metric.status === 'needs-improvement' ? 'bg-yellow-500' : 'bg-red-500'
+                          metric.status === 'needs-improvement' ? 'bg-orange-500' : 'bg-red-500'
                         }`} 
                         style={{ width: `${Math.min((metric.value / metric.benchmark) * 100, 100)}%` }} 
                       />
@@ -546,7 +546,7 @@ export default function FarmEfficiencyPage() {
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-orange-50 border border-orange-200">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-orange-50 border border-gray-200">
                 <Target className="h-5 w-5 text-orange-600" />
                 <div>
                   <span className="font-medium text-orange-800">Precision Fertilization</span>

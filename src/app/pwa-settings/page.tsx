@@ -337,12 +337,12 @@ export default function PWASettingsPage() {
                 </p>
               </div>
               
-              <div className="bg-yellow-50 p-4 rounded-lg">
-                <div className="flex items-center gap-2 text-yellow-800">
+              <div className="bg-orange-50 p-4 rounded-lg">
+                <div className="flex items-center gap-2 text-orange-800">
                   <Sync className="h-4 w-4" />
                   <span className="font-medium">Pending Sync</span>
                 </div>
-                <p className="text-2xl font-bold text-yellow-900 mt-1">
+                <p className="text-2xl font-bold text-orange-900 mt-1">
                   {offlineStats.pendingActions}
                 </p>
               </div>

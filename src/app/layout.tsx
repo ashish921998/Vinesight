@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Montserrat, Merriweather, Source_Code_Pro } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/navigation";
 import { AuthProvider } from "../../context/AuthContext";
@@ -18,6 +18,22 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
+  subsets: ["latin"],
+});
+
+const merriweather = Merriweather({
+  variable: "--font-merriweather",
+  subsets: ["latin"],
+  weight: ["300", "400", "700", "900"],
+});
+
+const sourceCodePro = Source_Code_Pro({
+  variable: "--font-source-code-pro",
   subsets: ["latin"],
 });
 
@@ -41,7 +57,7 @@ export const metadata: Metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#059669',
+  themeColor: '#37a765',
 };
 
 export default function RootLayout({
@@ -53,7 +69,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#059669" />
+        <meta name="theme-color" content="#37a765" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -61,21 +77,21 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="VineSight" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${merriweather.variable} ${sourceCodePro.variable} antialiased`}
       >
         <AsyncErrorBoundary>
           <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-background">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading VineSight...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading VineSight...</p>
               </div>
             </div>
           }>
             <AuthProvider>
               <GlobalAuthErrorHandler />
               <I18nProvider>
-                <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
+                <div className="min-h-screen bg-background pb-16 lg:pb-0">
                   <Navigation />
                   <main className="lg:pl-72 pt-0">
                     <div className="px-3 py-4 sm:px-4 sm:py-6 lg:px-8 lg:py-6">

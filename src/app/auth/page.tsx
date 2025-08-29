@@ -66,7 +66,6 @@ function AuthPageContent() {
       }
     } catch (error) {
       setError('An unexpected error occurred');
-      console.error('Auth error:', error);
     } finally {
       setLoading(false);
     }
@@ -82,7 +81,6 @@ function AuthPageContent() {
       }
     } catch (error) {
       setError('Google authentication failed');
-      console.error('Google auth error:', error);
     } finally {
       setGoogleLoading(false);
     }
@@ -252,7 +250,7 @@ function AuthPageContent() {
             <p className="text-sm text-gray-600">
               {mode === 'signin' ? (
                 <>
-                  Don't have an account?{' '}
+                  Don&apos;t have an account?{' '}
                   <button
                     onClick={() => {
                       setMode('signup');

@@ -135,14 +135,14 @@ export function SoilHealthMonitoringComponent() {
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600 bg-green-50';
     if (score >= 65) return 'text-blue-600 bg-blue-50';
-    if (score >= 45) return 'text-yellow-600 bg-yellow-50';
+    if (score >= 45) return 'text-orange-600 bg-orange-50';
     return 'text-red-600 bg-red-50';
   };
 
   const getScoreColorBar = (score: number) => {
     if (score >= 80) return 'bg-green-500';
     if (score >= 65) return 'bg-blue-500';
-    if (score >= 45) return 'bg-yellow-500';
+    if (score >= 45) return 'bg-orange-500';
     return 'bg-red-500';
   };
 
@@ -150,7 +150,7 @@ export function SoilHealthMonitoringComponent() {
     const variants = {
       excellent: 'bg-green-600 text-white',
       good: 'bg-blue-600 text-white',
-      fair: 'bg-yellow-600 text-white',
+      fair: 'bg-orange-600 text-white',
       poor: 'bg-red-600 text-white'
     };
     return variants[category as keyof typeof variants] || variants.fair;
@@ -159,8 +159,8 @@ export function SoilHealthMonitoringComponent() {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'severe': return 'text-red-700 bg-red-50 border-red-200';
-      case 'high': return 'text-orange-700 bg-orange-50 border-orange-200';
-      case 'moderate': return 'text-yellow-700 bg-yellow-50 border-yellow-200';
+      case 'high': return 'text-orange-700 bg-orange-50 border-gray-200';
+      case 'moderate': return 'text-orange-700 bg-orange-50 border-gray-200';
       default: return 'text-blue-700 bg-blue-50 border-blue-200';
     }
   };
@@ -949,7 +949,7 @@ export function SoilHealthMonitoringComponent() {
 
               {/* Alerts */}
               {results.alerts.length > 0 && (
-                <Card className="border-orange-200 bg-orange-50">
+                <Card className="border-gray-200 bg-orange-50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-orange-800">
                       <AlertTriangle className="h-5 w-5" />
@@ -958,7 +958,7 @@ export function SoilHealthMonitoringComponent() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {results.alerts.map((alert, index) => (
-                      <Alert key={index} className={alert.type === 'critical' ? 'border-red-400 bg-red-50' : 'border-orange-400 bg-orange-50'}>
+                      <Alert key={index} className={alert.type === 'critical' ? 'border-red-400 bg-red-50' : 'border-gray-400 bg-orange-50'}>
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription>
                           <div className="flex items-center justify-between">
@@ -1115,7 +1115,7 @@ export function SoilHealthMonitoringComponent() {
                       <div className={`w-2 h-2 rounded-full mt-2 ${
                         action.priority === 'urgent' ? 'bg-red-600' :
                         action.priority === 'high' ? 'bg-orange-500' :
-                        action.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                        action.priority === 'medium' ? 'bg-orange-500' : 'bg-green-500'
                       }`}></div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">

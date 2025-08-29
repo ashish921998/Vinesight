@@ -13,7 +13,8 @@ import {
   Download,
   CloudSun,
   BarChart3,
-  TrendingUp
+  TrendingUp,
+  Brain
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { LoginButton } from "./auth/LoginButton";
@@ -26,6 +27,7 @@ export const getNavigation = (t: any) => [
   { name: t('navigation.farmManagement'), href: '/farms', icon: Sprout },
   { name: t('navigation.calculators'), href: '/calculators', icon: Calculator },
   { name: t('navigation.journal'), href: '/journal', icon: FileText },
+  { name: t('navigation.aiAssistant'), href: '/ai-assistant', icon: Brain },
   { name: t('navigation.export'), href: '/export', icon: Download },
   { name: t('navigation.analytics'), href: '/analytics', icon: Activity },
   { name: t('navigation.weather'), href: '/weather', icon: CloudSun },
@@ -46,7 +48,7 @@ export default function Navigation() {
     <>
       {/* Desktop Sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 pb-4">
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-border bg-card px-6 pb-4">
           <div className="flex h-16 shrink-0 items-center">
             <Link href="/" className="flex items-center gap-2">
               <Sprout className="h-8 w-8 text-primary" />
@@ -67,13 +69,13 @@ export default function Navigation() {
                           className={`
                             group flex gap-x-3 rounded-md p-3 text-sm leading-6 font-semibold
                             ${isActive 
-                              ? 'bg-gray-50 text-primary' 
-                              : 'text-gray-700 hover:text-primary hover:bg-gray-50'
+                              ? 'bg-secondary text-primary' 
+                              : 'text-foreground hover:text-primary hover:bg-secondary'
                             }
                           `}
                         >
                           <Icon
-                            className={`h-6 w-6 shrink-0 ${isActive ? 'text-primary' : 'text-gray-400 group-hover:text-primary'}`}
+                            className={`h-6 w-6 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'}`}
                             aria-hidden="true"
                           />
                           {item.name}
@@ -85,7 +87,7 @@ export default function Navigation() {
               </li>
             </ul>
           </nav>
-          <div className="border-t border-gray-200 pt-4 space-y-3">
+          <div className="border-t border-border pt-4 space-y-3">
             <div className="px-2">
               <LanguageSwitcher />
             </div>

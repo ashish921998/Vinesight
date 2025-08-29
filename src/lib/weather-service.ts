@@ -92,7 +92,6 @@ export class WeatherService {
   static async getCurrentWeather(latitude?: number, longitude?: number): Promise<WeatherData> {
     // Check if API key is available
     if (!this.API_KEY || this.API_KEY === 'your_weatherapi_key_here') {
-      console.warn('Weather API key not configured. Using mock data for development.');
       return this.getMockWeatherData();
     }
 
@@ -107,9 +106,7 @@ export class WeatherService {
       const response = await fetch(url);
       if (!response.ok) {
         if (response.status === 401) {
-          console.warn('Weather API authentication failed. Check your API key. Using mock data.');
         } else {
-          console.warn(`Weather API error: ${response.status}. Using mock data.`);
         }
         return this.getMockWeatherData();
       }
@@ -117,7 +114,6 @@ export class WeatherService {
       const data = await response.json();
       return this.parseWeatherData(data);
     } catch (error) {
-      console.warn('Weather API unavailable. Using mock data for development.', error);
       return this.getMockWeatherData();
     }
   }
@@ -181,7 +177,8 @@ export class WeatherService {
 
   private static convertTo24Hour(time12h: string): string {
     const [time, modifier] = time12h.split(' ');
-    let [hours, minutes] = time.split(':');
+    const [hoursPart, minutes] = time.split(':');
+    let hours = hoursPart;
     if (hours === '12') {
       hours = '00';
     }

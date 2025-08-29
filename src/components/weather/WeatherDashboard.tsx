@@ -81,14 +81,14 @@ export function WeatherDashboard({
     } else if (lower.includes('cloud')) {
       return <Cloud className="h-6 w-6 text-gray-500" />;
     } else if (lower.includes('sun') || lower.includes('clear')) {
-      return <Sun className="h-6 w-6 text-yellow-500" />;
+      return <Sun className="h-6 w-6 text-orange-500" />;
     }
-    return isDay ? <Sun className="h-6 w-6 text-yellow-500" /> : <Cloud className="h-6 w-6 text-gray-500" />;
+    return isDay ? <Sun className="h-6 w-6 text-orange-500" /> : <Cloud className="h-6 w-6 text-gray-500" />;
   };
 
   const getAlertIcon = (type: 'warning' | 'info' | 'success') => {
     switch (type) {
-      case 'warning': return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
+      case 'warning': return <AlertTriangle className="h-4 w-4 text-orange-600" />;
       case 'success': return <CheckCircle className="h-4 w-4 text-green-600" />;
       default: return <Info className="h-4 w-4 text-blue-600" />;
     }
@@ -97,7 +97,7 @@ export function WeatherDashboard({
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'medium': return 'bg-orange-100 text-orange-800 border-gray-200';
       case 'low': return 'bg-green-100 text-green-800 border-green-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -340,7 +340,7 @@ export function WeatherDashboard({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              <AlertTriangle className="h-5 w-5 text-orange-600" />
               Pest & Disease Risk
             </CardTitle>
           </CardHeader>
@@ -349,7 +349,7 @@ export function WeatherDashboard({
               <Badge 
                 variant="outline" 
                 className={`${alerts.pest.riskLevel === 'high' ? 'bg-red-100 text-red-800' : 
-                              alerts.pest.riskLevel === 'medium' ? 'bg-yellow-100 text-yellow-800' : 
+                              alerts.pest.riskLevel === 'medium' ? 'bg-orange-100 text-orange-800' : 
                               'bg-green-100 text-green-800'}`}
               >
                 {alerts.pest.riskLevel} risk
@@ -380,7 +380,7 @@ export function WeatherDashboard({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className={`flex items-center gap-2 ${alerts.harvest.isOptimal ? 'text-green-600' : 'text-yellow-600'}`}>
+              <div className={`flex items-center gap-2 ${alerts.harvest.isOptimal ? 'text-green-600' : 'text-orange-600'}`}>
                 {alerts.harvest.isOptimal ? 
                   <CheckCircle className="h-4 w-4" /> : 
                   <AlertTriangle className="h-4 w-4" />

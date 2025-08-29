@@ -396,7 +396,7 @@ export function IrrigationForm({ selectedFarm, onRecordAdded, onCancel }: Irriga
                 {etcResults.irrigationRecommendation.shouldIrrigate ? (
                   <CheckCircle className="h-5 w-5 text-green-600" />
                 ) : (
-                  <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                  <AlertTriangle className="h-5 w-5 text-orange-600" />
                 )}
                 <span className="font-semibold">
                   {etcResults.irrigationRecommendation.shouldIrrigate ? 'Irrigation Recommended' : 'No Irrigation Needed'}

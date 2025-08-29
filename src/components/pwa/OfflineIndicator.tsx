@@ -134,7 +134,7 @@ export function OfflineIndicator({ showDetails = false, className = "" }: Offlin
   if (showOfflineMessage) {
     return (
       <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
-        <Card className="border-orange-200 bg-orange-50 shadow-lg">
+        <Card className="border-gray-200 bg-orange-50 shadow-lg">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <WifiOff className="h-5 w-5 text-orange-600" />

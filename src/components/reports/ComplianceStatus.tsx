@@ -29,7 +29,7 @@ export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
       case 'non_compliant':
         return { icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' };
       case 'pending':
-        return { icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50' };
+        return { icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' };
       case 'not_applicable':
         return { icon: AlertTriangle, color: 'text-gray-600', bg: 'bg-gray-50' };
       default:
@@ -42,9 +42,9 @@ export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
       case 'critical':
         return 'text-red-700 bg-red-100 border-red-300';
       case 'high':
-        return 'text-orange-700 bg-orange-100 border-orange-300';
+        return 'text-orange-700 bg-orange-100 border-gray-300';
       case 'medium':
-        return 'text-yellow-700 bg-yellow-100 border-yellow-300';
+        return 'text-orange-700 bg-orange-100 border-gray-300';
       case 'low':
         return 'text-blue-700 bg-blue-100 border-blue-300';
       default:
@@ -54,7 +54,7 @@ export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
 
   const getComplianceScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-600';
-    if (score >= 70) return 'text-yellow-600';
+    if (score >= 70) return 'text-orange-600';
     return 'text-red-600';
   };
 
@@ -254,7 +254,7 @@ export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
                 <Card key={issue.id} className={`border-l-4 ${
                   issue.severity === 'critical' ? 'border-l-red-500' :
                   issue.severity === 'high' ? 'border-l-orange-500' :
-                  issue.severity === 'medium' ? 'border-l-yellow-500' :
+                  issue.severity === 'medium' ? 'border-l-gray-500' :
                   'border-l-blue-500'
                 }`}>
                   <CardContent className="p-4">

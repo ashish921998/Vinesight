@@ -225,7 +225,7 @@ export function InstallPrompt({ onDismiss, showManualInstructions = true }: Inst
             <div>
               <CardTitle className="text-blue-800 flex items-center gap-2">
                 Install VineSight App
-                <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                <Badge variant="outline" className="bg-orange-100 text-orange-800 border-gray-300">
                   <Star className="h-3 w-3 mr-1" />
                   Recommended
                 </Badge>

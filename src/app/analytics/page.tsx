@@ -402,7 +402,7 @@ export default function AnalyticsPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Cost Efficiency</CardTitle>
-                  <Zap className="h-4 w-4 text-yellow-500" />
+                  <Zap className="h-4 w-4 text-orange-500" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-blue-600">
@@ -517,7 +517,7 @@ export default function AnalyticsPage() {
                   <Target className="h-4 w-4 text-blue-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${advancedAnalytics.yieldAnalysis.yieldEfficiency > 80 ? 'text-green-600' : advancedAnalytics.yieldAnalysis.yieldEfficiency > 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  <div className={`text-2xl font-bold ${advancedAnalytics.yieldAnalysis.yieldEfficiency > 80 ? 'text-green-600' : advancedAnalytics.yieldAnalysis.yieldEfficiency > 60 ? 'text-orange-600' : 'text-red-600'}`}>
                     {advancedAnalytics.yieldAnalysis.yieldEfficiency.toFixed(1)}%
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -590,7 +590,7 @@ export default function AnalyticsPage() {
                         <span className="font-bold">{advancedAnalytics.yieldAnalysis.benchmarkComparison.regional.toFixed(1)} t/ha</span>
                         <div className="w-32 bg-gray-200 rounded-full h-2">
                           <div 
-                            className="bg-yellow-600 h-2 rounded-full"
+                            className="bg-orange-600 h-2 rounded-full"
                             style={{ 
                               width: `${(advancedAnalytics.yieldAnalysis.benchmarkComparison.regional / advancedAnalytics.yieldAnalysis.benchmarkComparison.optimal) * 100}%` 
                             }}
@@ -670,7 +670,7 @@ export default function AnalyticsPage() {
               <CardContent>
                 <div className="flex items-center gap-6">
                   <div className="text-center">
-                    <div className={`text-4xl font-bold ${advancedAnalytics.performanceMetrics.overallScore > 85 ? 'text-green-600' : advancedAnalytics.performanceMetrics.overallScore > 70 ? 'text-yellow-600' : 'text-red-600'}`}>
+                    <div className={`text-4xl font-bold ${advancedAnalytics.performanceMetrics.overallScore > 85 ? 'text-green-600' : advancedAnalytics.performanceMetrics.overallScore > 70 ? 'text-orange-600' : 'text-red-600'}`}>
                       {advancedAnalytics.performanceMetrics.overallScore.toFixed(0)}
                     </div>
                     <div className="text-sm text-muted-foreground">out of 100</div>
@@ -678,7 +678,7 @@ export default function AnalyticsPage() {
                   <div className="flex-1">
                     <div className="w-full bg-gray-200 rounded-full h-4">
                       <div 
-                        className={`h-4 rounded-full ${advancedAnalytics.performanceMetrics.overallScore > 85 ? 'bg-green-600' : advancedAnalytics.performanceMetrics.overallScore > 70 ? 'bg-yellow-600' : 'bg-red-600'}`}
+                        className={`h-4 rounded-full ${advancedAnalytics.performanceMetrics.overallScore > 85 ? 'bg-green-600' : advancedAnalytics.performanceMetrics.overallScore > 70 ? 'bg-orange-600' : 'bg-red-600'}`}
                         style={{ width: `${advancedAnalytics.performanceMetrics.overallScore}%` }}
                       />
                     </div>
@@ -700,7 +700,7 @@ export default function AnalyticsPage() {
                   <Droplets className="h-4 w-4 text-blue-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${advancedAnalytics.performanceMetrics.categories.irrigation.score > 75 ? 'text-green-600' : advancedAnalytics.performanceMetrics.categories.irrigation.score > 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  <div className={`text-2xl font-bold ${advancedAnalytics.performanceMetrics.categories.irrigation.score > 75 ? 'text-green-600' : advancedAnalytics.performanceMetrics.categories.irrigation.score > 60 ? 'text-orange-600' : 'text-red-600'}`}>
                     {advancedAnalytics.performanceMetrics.categories.irrigation.score.toFixed(0)}
                   </div>
                   <div className="flex items-center gap-1 text-xs">
@@ -719,10 +719,10 @@ export default function AnalyticsPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Nutrition</CardTitle>
-                  <Zap className="h-4 w-4 text-yellow-500" />
+                  <Zap className="h-4 w-4 text-orange-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${advancedAnalytics.performanceMetrics.categories.nutrition.score > 75 ? 'text-green-600' : advancedAnalytics.performanceMetrics.categories.nutrition.score > 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  <div className={`text-2xl font-bold ${advancedAnalytics.performanceMetrics.categories.nutrition.score > 75 ? 'text-green-600' : advancedAnalytics.performanceMetrics.categories.nutrition.score > 60 ? 'text-orange-600' : 'text-red-600'}`}>
                     {advancedAnalytics.performanceMetrics.categories.nutrition.score.toFixed(0)}
                   </div>
                   <div className="flex items-center gap-1 text-xs">
@@ -744,7 +744,7 @@ export default function AnalyticsPage() {
                   <SprayCan className="h-4 w-4 text-green-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${advancedAnalytics.performanceMetrics.categories.pestManagement.score > 75 ? 'text-green-600' : advancedAnalytics.performanceMetrics.categories.pestManagement.score > 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  <div className={`text-2xl font-bold ${advancedAnalytics.performanceMetrics.categories.pestManagement.score > 75 ? 'text-green-600' : advancedAnalytics.performanceMetrics.categories.pestManagement.score > 60 ? 'text-orange-600' : 'text-red-600'}`}>
                     {advancedAnalytics.performanceMetrics.categories.pestManagement.score.toFixed(0)}
                   </div>
                   <div className="flex items-center gap-1 text-xs">
@@ -766,7 +766,7 @@ export default function AnalyticsPage() {
                   <Award className="h-4 w-4 text-purple-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${advancedAnalytics.performanceMetrics.categories.yieldQuality.score > 75 ? 'text-green-600' : advancedAnalytics.performanceMetrics.categories.yieldQuality.score > 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  <div className={`text-2xl font-bold ${advancedAnalytics.performanceMetrics.categories.yieldQuality.score > 75 ? 'text-green-600' : advancedAnalytics.performanceMetrics.categories.yieldQuality.score > 60 ? 'text-orange-600' : 'text-red-600'}`}>
                     {advancedAnalytics.performanceMetrics.categories.yieldQuality.score.toFixed(0)}
                   </div>
                   <div className="flex items-center gap-1 text-xs">
@@ -823,11 +823,11 @@ export default function AnalyticsPage() {
                     <div className="space-y-3">
                       {advancedAnalytics.performanceMetrics.alerts.map((alert, index) => (
                         <div key={index} className={`flex items-start gap-3 p-3 rounded-lg ${
-                          alert.type === 'warning' ? 'bg-yellow-50' : 
+                          alert.type === 'warning' ? 'bg-orange-50' : 
                           alert.type === 'success' ? 'bg-green-50' : 'bg-blue-50'
                         }`}>
                           {alert.type === 'warning' ? 
-                            <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5" /> :
+                            <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5" /> :
                             alert.type === 'success' ? 
                             <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" /> :
                             <Activity className="h-4 w-4 text-blue-600 mt-0.5" />

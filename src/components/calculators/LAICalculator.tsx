@@ -132,10 +132,10 @@ export function LAICalculatorComponent() {
     switch (rating) {
       case 'excellent': return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'good': return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'adequate': return <Info className="h-4 w-4 text-yellow-600" />;
+      case 'adequate': return <Info className="h-4 w-4 text-orange-600" />;
       case 'poor': return <AlertTriangle className="h-4 w-4 text-red-600" />;
       case 'high': return <AlertTriangle className="h-4 w-4 text-red-600" />;
-      case 'moderate': return <Info className="h-4 w-4 text-yellow-600" />;
+      case 'moderate': return <Info className="h-4 w-4 text-orange-600" />;
       case 'low': return <CheckCircle className="h-4 w-4 text-green-600" />;
       default: return <Info className="h-4 w-4 text-gray-600" />;
     }

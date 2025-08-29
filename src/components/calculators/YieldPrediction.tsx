@@ -285,7 +285,7 @@ export function YieldPredictionComponent() {
     switch (quality) {
       case 'excellent': return 'text-green-600';
       case 'good': return 'text-blue-600';
-      case 'average': return 'text-yellow-600';
+      case 'average': return 'text-orange-600';
       default: return 'text-red-600';
     }
   };
@@ -293,7 +293,7 @@ export function YieldPredictionComponent() {
   const getRiskColor = (impact: string) => {
     switch (impact) {
       case 'high': return 'text-red-600';
-      case 'medium': return 'text-yellow-600';
+      case 'medium': return 'text-orange-600';
       default: return 'text-green-600';
     }
   };
@@ -956,7 +956,7 @@ export function YieldPredictionComponent() {
 
               {/* Risk Factors */}
               {results.riskFactors.length > 0 && (
-                <Card className="border-orange-200 bg-orange-50">
+                <Card className="border-gray-200 bg-orange-50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-orange-800">
                       <AlertTriangle className="h-5 w-5" />

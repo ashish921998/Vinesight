@@ -52,7 +52,10 @@ export default function JournalPage() {
         setSelectedFarm(farmList[0]);
       }
     } catch (error) {
-      console.error("Error loading farms:", error);
+      // Error loading farms - handle silently in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Error loading farms:", error);
+      }
     }
   };
 
@@ -80,7 +83,10 @@ export default function JournalPage() {
       }
       setRecords(recordList);
     } catch (error) {
-      console.error("Error loading records:", error);
+      // Error loading records - handle silently in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Error loading records:", error);
+      }
     }
   };
 

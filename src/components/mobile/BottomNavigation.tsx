@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
   Home, 
   Sprout, 
   Calculator, 
-  Settings,
-  Plus,
+  User,
+  Brain,
   X,
   FileText,
   Droplets,
@@ -31,48 +31,34 @@ const navigationItems = [
     name: "Dashboard", 
     href: "/", 
     icon: Home,
-    color: "text-green-600"
+    color: "text-primary"
   },
   { 
     name: "Farms", 
     href: "/farms", 
     icon: Sprout,
-    color: "text-green-600" 
+    color: "text-primary" 
   },
   { 
-    name: "Add", 
-    action: "quickAdd",
-    icon: Plus,
-    color: "text-green-600"
+    name: "AI", 
+    href: "/ai-assistant",
+    icon: Brain,
+    color: "text-primary"
   },
   { 
     name: "Calculator", 
     href: "/calculators", 
     icon: Calculator,
-    color: "text-green-600"
+    color: "text-primary"
   },
   { 
-    name: "Settings", 
+    name: "Profile", 
     href: "/settings", 
-    icon: Settings,
+    icon: User,
     color: "text-gray-600"
   },
 ];
 
-const quickAddItems = [
-  {
-    name: "Add Farm",
-    href: "/farms",
-    icon: Sprout,
-    color: "bg-green-100 text-green-700"
-  },
-  {
-    name: "Add Farm Logs",
-    action: "showFarmLogsModal",
-    icon: FileText,
-    color: "bg-blue-100 text-blue-700"
-  }
-];
 
 const logTypes = [
   {
@@ -110,7 +96,7 @@ const logTypes = [
     id: "harvest",
     name: "Harvest",
     icon: Scissors,
-    color: "text-green-600",
+    color: "text-primary",
     fields: [
       { name: "quantity", label: "Quantity (kg)", type: "number", step: "0.1", min: "0", placeholder: "100", required: true },
       { name: "notes", label: "Notes (optional)", type: "textarea", placeholder: "e.g., Quality grade, market destination, storage location" }
@@ -132,16 +118,17 @@ const logTypes = [
 
 export function BottomNavigation() {
   const pathname = usePathname();
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [showFarmLogsModal, setShowFarmLogsModal] = useState(false);
   const [farms, setFarms] = useState<Farm[]>([]);
   const [selectedFarm, setSelectedFarm] = useState<string>("");
   const [selectedLogType, setSelectedLogType] = useState<string>("");
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     loadFarms();
+    setMounted(true);
   }, []);
 
   const loadFarms = async () => {
@@ -149,19 +136,9 @@ export function BottomNavigation() {
       const farmsList = await SupabaseService.getAllFarms();
       setFarms(farmsList);
     } catch (error) {
-      console.error('Error loading farms:', error);
     }
   };
 
-  const handleQuickAddClick = (item: typeof quickAddItems[0]) => {
-    if (item.action === "showFarmLogsModal") {
-      setShowQuickAdd(false);
-      setShowFarmLogsModal(true);
-    } else if (item.href) {
-      // Handle navigation items
-      setShowQuickAdd(false);
-    }
-  };
 
   const handleFormDataChange = (fieldName: string, value: string) => {
     setFormData(prev => ({
@@ -252,7 +229,6 @@ export function BottomNavigation() {
 
       resetModal();
     } catch (error) {
-      console.error('Error saving farm log:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -263,57 +239,6 @@ export function BottomNavigation() {
 
   return (
     <>
-      {/* Quick Add Overlay */}
-      {showQuickAdd && (
-        <div 
-          className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50"
-          onClick={() => setShowQuickAdd(false)}
-        >
-          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
-            <div className="bg-white rounded-2xl shadow-xl p-4 min-w-72">
-              <h3 className="text-lg font-semibold text-center mb-4">Quick Add</h3>
-              <div className="space-y-3">
-                {quickAddItems.map((item) => {
-                  const Icon = item.icon;
-                  
-                  if (item.href) {
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setShowQuickAdd(false)}
-                        className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors touch-manipulation active:scale-95"
-                      >
-                        <div className={`p-2 rounded-full ${item.color}`}>
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <span className="text-sm font-medium text-gray-900">
-                          {item.name}
-                        </span>
-                      </Link>
-                    );
-                  }
-                  
-                  return (
-                    <button
-                      key={item.name}
-                      onClick={() => handleQuickAddClick(item)}
-                      className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors touch-manipulation active:scale-95 w-full text-left"
-                    >
-                      <div className={`p-2 rounded-full ${item.color}`}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-900">
-                        {item.name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Farm Logs Modal */}
       <Dialog open={showFarmLogsModal} onOpenChange={setShowFarmLogsModal}>
@@ -442,50 +367,10 @@ export function BottomNavigation() {
         <div className="flex justify-around items-center px-2 py-1">
           {navigationItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
-            const isAddButton = item.action === 'quickAdd';
+            const isActive = mounted ? pathname === item.href : false;
+            const isAIButton = item.name === 'AI';
             
-            if (isAddButton) {
-              return (
-                <button
-                  key={item.name}
-                  onClick={() => setShowQuickAdd(!showQuickAdd)}
-                  className={`
-                    flex flex-col items-center justify-center
-                    px-2 py-2 min-w-0 flex-1
-                    transition-all duration-200
-                    touch-manipulation
-                    active:scale-95
-                    ${showQuickAdd 
-                      ? 'text-green-600' 
-                      : 'text-white hover:text-white'
-                    }
-                  `}
-                >
-                  <div className={`
-                    p-2 rounded-full transition-all duration-200
-                    ${showQuickAdd 
-                      ? 'bg-green-100 text-green-600' 
-                      : 'bg-green-500 text-white shadow-md'
-                    }
-                  `}>
-                    {showQuickAdd ? (
-                      <X className="h-5 w-5" />
-                    ) : (
-                      <Plus className="h-5 w-5" />
-                    )}
-                  </div>
-                  <span className={`
-                    text-xs font-medium mt-1 truncate
-                    ${showQuickAdd ? 'text-green-600' : 'text-gray-400'}
-                  `}>
-                    {showQuickAdd ? 'Close' : item.name}
-                  </span>
-                </button>
-              );
-            }
-            
-            return item.href ? (
+            return (
               <Link
                 key={item.href}
                 href={item.href}
@@ -504,7 +389,7 @@ export function BottomNavigation() {
                 <div className={`
                   p-2 rounded-xl transition-all duration-200
                   ${isActive 
-                    ? 'bg-green-100 text-green-600' 
+                    ? 'bg-green-100 text-green-600'
                     : 'text-gray-400'
                   }
                 `}>
@@ -512,12 +397,15 @@ export function BottomNavigation() {
                 </div>
                 <span className={`
                   text-xs font-medium mt-1 truncate
-                  ${isActive ? 'text-green-600' : 'text-gray-400'}
+                  ${isActive 
+                    ? 'text-green-600'
+                    : 'text-gray-400'
+                  }
                 `}>
                   {item.name}
                 </span>
               </Link>
-            ) : null;
+            );
           })}
         </div>
       </div>

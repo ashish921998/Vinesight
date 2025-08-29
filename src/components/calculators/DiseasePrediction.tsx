@@ -118,7 +118,7 @@ export function DiseasePredictionComponent() {
     switch (risk) {
       case 'critical': return 'bg-red-600';
       case 'high': return 'bg-orange-500';
-      case 'moderate': return 'bg-yellow-500';
+      case 'moderate': return 'bg-orange-500';
       default: return 'bg-green-500';
     }
   };
@@ -548,7 +548,7 @@ export function DiseasePredictionComponent() {
 
               {/* Alerts */}
               {results.alerts.length > 0 && (
-                <Card className="border-orange-200 bg-orange-50">
+                <Card className="border-gray-200 bg-orange-50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-orange-800">
                       <AlertTriangle className="h-5 w-5" />
@@ -557,7 +557,7 @@ export function DiseasePredictionComponent() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {results.alerts.map((alert, index) => (
-                      <Alert key={index} className={alert.severity === 'critical' ? 'border-red-400 bg-red-50' : 'border-orange-400 bg-orange-50'}>
+                      <Alert key={index} className={alert.severity === 'critical' ? 'border-red-400 bg-red-50' : 'border-gray-400 bg-orange-50'}>
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription className="flex items-center justify-between">
                           <span><strong>{alert.disease}:</strong> {alert.message}</span>

@@ -90,7 +90,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         };
       default:
         return { 
-          color: 'text-yellow-600', 
+          color: 'text-orange-600', 
           icon: <Bell className="h-4 w-4" />, 
           text: 'Permission Required' 
         };

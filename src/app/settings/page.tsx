@@ -6,11 +6,7 @@ import { Button } from "@/components/ui/button";
 import { 
   Languages, 
   LogOut,
-  User,
-  Palette,
-  Bell,
-  Shield,
-  HelpCircle
+  User
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -18,16 +14,11 @@ export default function SettingsPage() {
   const { user, signOut } = useAuth();
   const [language, setLanguage] = useState('en');
   const [signOutLoading, setSignOutLoading] = useState(false);
-  const [notifications, setNotifications] = useState(true);
 
   useEffect(() => {
     // Load saved language preference
     const savedLang = localStorage.getItem('vinesight-language') || 'en';
     setLanguage(savedLang);
-    
-    // Load notification preference
-    const savedNotifications = localStorage.getItem('vinesight-notifications');
-    setNotifications(savedNotifications !== 'false');
   }, []);
 
   const handleLanguageChange = (newLang: string) => {
@@ -35,18 +26,12 @@ export default function SettingsPage() {
     localStorage.setItem('vinesight-language', newLang);
   };
 
-  const handleNotificationToggle = () => {
-    const newValue = !notifications;
-    setNotifications(newValue);
-    localStorage.setItem('vinesight-notifications', newValue.toString());
-  };
 
   const handleSignOut = async () => {
     try {
       setSignOutLoading(true);
       await signOut();
     } catch (error) {
-      console.error('Error signing out:', error);
       alert('Failed to sign out. Please try again.');
     } finally {
       setSignOutLoading(false);
@@ -64,7 +49,7 @@ export default function SettingsPage() {
       <div className="sticky top-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 z-10">
         <div className="p-4">
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Settings</h1>
+            <h1 className="text-lg font-bold text-gray-900">Profile</h1>
           </div>
         </div>
       </div>
@@ -141,86 +126,6 @@ export default function SettingsPage() {
                 {lang.name}
               </Button>
             ))}
-          </CardContent>
-        </Card>
-
-        {/* Notifications */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Bell className="h-4 w-4" />
-              Notifications
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm">Push Notifications</p>
-                <p className="text-xs text-gray-600">Important updates</p>
-              </div>
-              <Button
-                variant={notifications ? "default" : "outline"}
-                onClick={handleNotificationToggle}
-                size="sm"
-                className="h-8 px-3"
-              >
-                {notifications ? 'On' : 'Off'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Theme */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Palette className="h-4 w-4" />
-              Appearance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full justify-start h-9" size="sm" disabled>
-              <Palette className="h-4 w-4 mr-2" />
-              Light Theme
-            </Button>
-            <p className="text-xs text-gray-500 mt-2">Dark theme coming soon</p>
-          </CardContent>
-        </Card>
-
-        {/* Privacy & Security */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Shield className="h-4 w-4" />
-              Privacy & Security
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <div className="flex items-center gap-2 text-blue-800 mb-1">
-                <Shield className="h-4 w-4" />
-                <span className="font-medium text-sm">Data is Safe</span>
-              </div>
-              <p className="text-xs text-blue-700">
-                All data stored locally and encrypted
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Help & Support */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <HelpCircle className="h-4 w-4" />
-              About
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <p className="text-sm text-gray-600">VineSight v1.0.0</p>
-              <p className="text-xs text-gray-500 mt-1">Built for grape farmers</p>
-            </div>
           </CardContent>
         </Card>
       </div>
