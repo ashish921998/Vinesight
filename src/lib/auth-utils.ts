@@ -38,7 +38,7 @@ export async function clearAuthStorage(): Promise<void> {
       sessionStorage.removeItem(key);
     });
 
-    console.log('Auth storage cleared successfully');
+    // Auth storage cleared successfully
   } catch (error) {
     console.error('Error clearing auth storage:', error);
   }
@@ -63,7 +63,7 @@ export function isRefreshTokenError(error: any): boolean {
  * Handle refresh token errors by clearing storage and redirecting
  */
 export async function handleRefreshTokenError(): Promise<void> {
-  console.log('Handling refresh token error - clearing auth state');
+  // Handling refresh token error - clearing auth state
   await clearAuthStorage();
   
   // Redirect to auth page if not already there
@@ -109,9 +109,7 @@ export async function validateUserSession(request: Request): Promise<{ user: any
     const { data: { session }, error } = await supabase.auth.getSession();
     
     if (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Session validation error:', error);
-      }
+      console.error('Session validation error:', error);
       return { user: null, error: 'Authentication failed' };
     }
     
@@ -121,9 +119,7 @@ export async function validateUserSession(request: Request): Promise<{ user: any
     
     return { user: session.user };
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Auth middleware error:', error);
-    }
+    console.error('Auth middleware error:', error);
     return { user: null, error: 'Authentication service unavailable' };
   }
 }

@@ -10,6 +10,7 @@ import { AsyncErrorBoundary } from "@/components/ErrorBoundary";
 import { Suspense } from "react";
 import { BottomNavigation } from "@/components/mobile/BottomNavigation";
 import { GlobalAuthErrorHandler } from "@/components/auth/GlobalAuthErrorHandler";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -107,6 +108,7 @@ export default function RootLayout({
                   <div className="hidden lg:block fixed top-4 right-4 z-30">
                     <OfflineIndicator />
                   </div>
+                  <Toaster />
                 </div>
               </I18nProvider>
             </AuthProvider>

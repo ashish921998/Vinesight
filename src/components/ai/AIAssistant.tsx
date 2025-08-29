@@ -5,9 +5,11 @@ import { MessageCircle, Send, Mic, MicOff, Bot, User, Loader2, X } from 'lucide-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ImageAnalysisResult } from '@/types/ai';
+import { ImageAnalysisResult } from '@/lib/ai-service';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { getQuotaStatus } from '@/lib/quota-service';
 
 interface Message {
   id: string;
@@ -43,6 +45,7 @@ export function AIAssistant({
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [quotaStatus, setQuotaStatus] = useState(() => getQuotaStatus());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -251,6 +254,15 @@ export function AIAssistant({
             throw new Error('AUTHENTICATION_REQUIRED');
           }
         }
+        
+        if (response.status === 429) {
+          // Handle quota exceeded error
+          const errorData = await response.json().catch(() => ({}));
+          if (errorData.code === 'QUOTA_EXCEEDED') {
+            throw new Error('QUOTA_EXCEEDED');
+          }
+        }
+        
         throw new Error(`Failed to get AI response: ${response.status}`);
       }
 
@@ -290,6 +302,20 @@ export function AIAssistant({
         errorContent = i18n.language === 'hi' ? 'कृपया AI सहायक का उपयोग करने के लिए साइन इन करें।' :
                        i18n.language === 'mr' ? 'कृपया AI सहाय्यक वापरण्यासाठी साइन इन करा.' :
                        'Please sign in to use the AI Assistant.';
+      } else if (error instanceof Error && error.message === 'QUOTA_EXCEEDED') {
+        // Show toast notification for quota exceeded
+        const toastMessage = i18n.language === 'hi' ? 'दैनिक प्रश्न सीमा (5) पूर्ण हो गई। कल फिर कोशिश करें।' :
+                             i18n.language === 'mr' ? 'दैनिक प्रश्न मर्यादा (5) संपली. उद्या पुन्हा प्रयत्न करा.' :
+                             'Daily question limit (5) reached. Try again tomorrow.';
+        
+        toast.error(toastMessage, {
+          duration: 5000,
+          position: 'top-center'
+        });
+        
+        errorContent = i18n.language === 'hi' ? 'दैनिक प्रश्न सीमा पूर्ण हो गई (5/5)। कल वापस आएं।' :
+                       i18n.language === 'mr' ? 'दैनिक प्रश्न मर्यादा संपली (5/5). उद्या परत या.' :
+                       'Daily question limit reached (5/5). Come back tomorrow.';
       } else {
         errorContent = i18n.language === 'hi' ? 'क्षमा करें, कुछ गलत हुआ। कृपया फिर से कोशिश करें।' :
                        i18n.language === 'mr' ? 'माफ करा, काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.' :
@@ -309,6 +335,8 @@ export function AIAssistant({
       ));
     } finally {
       setIsLoading(false);
+      // Update quota status after message attempt
+      setQuotaStatus(getQuotaStatus());
     }
   }, [inputValue, isLoading, messages, i18n.language, buildConversationContext]);
 
@@ -385,11 +413,24 @@ export function AIAssistant({
               {t('ai_assistant', 'AI Assistant')}
             </span>
           </div>
-          {isMobile && onToggle && (
-            <Button variant="ghost" size="sm" onClick={onToggle}>
-              <X className="w-4 h-4" />
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {/* Quota indicator */}
+            <div className={cn(
+              "text-xs px-2 py-1 rounded-full",
+              quotaStatus.isExceeded 
+                ? "bg-red-100 text-red-600" 
+                : quotaStatus.remaining <= 1 
+                  ? "bg-yellow-100 text-yellow-600"
+                  : "bg-green-100 text-green-600"
+            )}>
+              {quotaStatus.remaining}/{quotaStatus.limit}
+            </div>
+            {isMobile && onToggle && (
+              <Button variant="ghost" size="sm" onClick={onToggle}>
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </CardTitle>
       </CardHeader>
 
@@ -488,11 +529,15 @@ export function AIAssistant({
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                 placeholder={
-                  i18n.language === 'hi' ? 'अपना प्रश्न पूछें...' :
-                  i18n.language === 'mr' ? 'तुमचा प्रश्न विचारा...' :
-                  'Ask your question...'
+                  quotaStatus.isExceeded ? 
+                    (i18n.language === 'hi' ? 'दैनिक सीमा समाप्त - कल वापस आएं' :
+                     i18n.language === 'mr' ? 'दैनिक मर्यादा संपली - उद्या परत या' :
+                     'Daily limit reached - come back tomorrow') :
+                    (i18n.language === 'hi' ? 'अपना प्रश्न पूछें...' :
+                     i18n.language === 'mr' ? 'तुमचा प्रश्न विचारा...' :
+                     'Ask your question...')
                 }
-                disabled={isLoading}
+                disabled={isLoading || quotaStatus.isExceeded}
                 className="pr-10 border-gray-300 focus-visible:border-blue-500 hover:border-gray-400 focus:border-blue-500"
               />
               {recognitionRef.current && (
@@ -516,7 +561,7 @@ export function AIAssistant({
             </div>
             <Button
               onClick={() => handleSendMessage()}
-              disabled={!inputValue.trim() || isLoading}
+              disabled={!inputValue.trim() || isLoading || quotaStatus.isExceeded}
               size="sm"
               className="flex-shrink-0"
             >

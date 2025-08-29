@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { generateText, streamText } from 'ai';
 import { validateUserSession } from '@/lib/auth-utils';
+import { hasServerExceededQuota, incrementServerQuestionCount, getServerQuotaStatus } from '@/lib/server-quota-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,6 +18,19 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Check daily quota limit
+    if (hasServerExceededQuota(user.id)) {
+      const quotaStatus = getServerQuotaStatus(user.id);
+      return new Response(JSON.stringify({ 
+        error: 'Daily question limit exceeded',
+        code: 'QUOTA_EXCEEDED',
+        quotaStatus
+      }), { 
+        status: 429, // Too Many Requests
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const { message, context = {}, stream = false } = await request.json();
     
     if (!message) {
@@ -25,6 +39,9 @@ export async function POST(request: NextRequest) {
         headers: { 'Content-Type': 'application/json' }
       });
     }
+
+    // Increment question count for this user
+    const updatedQuota = incrementServerQuestionCount(user.id);
     
     const systemPrompt = buildSystemPrompt(context);
     const messages = [
