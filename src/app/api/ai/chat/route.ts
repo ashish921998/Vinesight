@@ -1,8 +1,22 @@
 import { NextRequest } from 'next/server';
 import { generateText, streamText } from 'ai';
+import { validateUserSession } from '@/lib/auth-utils';
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate user authentication first
+    const { user, error: authError } = await validateUserSession(request);
+    
+    if (authError || !user) {
+      return new Response(JSON.stringify({ 
+        error: 'Authentication required',
+        code: 'UNAUTHORIZED' 
+      }), { 
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const { message, context = {}, stream = false } = await request.json();
     
     if (!message) {
@@ -22,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Use streaming for better UX
     if (stream) {
       const result = streamText({
-        model : 'google/gemini-2.0-pro',
+        model : 'google/gemini-2.0-flash-lite',
         messages,
         temperature: 0.7,
       });
@@ -41,7 +55,23 @@ export async function POST(request: NextRequest) {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    console.error('AI Provider error:', error);
+    // Check if the error is due to authentication issues
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    if (errorMsg.includes('Authentication') || errorMsg.includes('Unauthorized')) {
+      return new Response(JSON.stringify({ 
+        error: 'Authentication required',
+        code: 'UNAUTHORIZED' 
+      }), { 
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Log error for debugging (remove in production)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('AI Provider error:', error);
+    }
+    
     const { message: errorMessage = '', context: errorContext = {} } = await request.json().catch(() => ({}));
     
     return new Response(JSON.stringify({ 

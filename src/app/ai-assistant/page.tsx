@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiseaseDetection } from '@/components/ai/DiseaseDetection';
 import { AIAssistant } from '@/components/ai/AIAssistant';
 import { AIAnalyticsDashboard } from '@/components/ai/AIAnalyticsDashboard';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { ImageAnalysisResult } from '@/lib/ai-service';
 import { cn } from '@/lib/utils';
 
@@ -98,7 +99,8 @@ export default function AIAssistantPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className={cn(
         "bg-white shadow-sm border-b",
@@ -323,6 +325,7 @@ export default function AIAssistantPage() {
           />
         </div>
       )}
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

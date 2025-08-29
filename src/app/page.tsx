@@ -158,7 +158,7 @@ export default function Home() {
                 </Button>
               ) : (
                 <div className="space-y-2">
-                  <LoginButton className="w-full h-12 bg-green-600 hover:bg-green-700 text-white">
+                  <LoginButton className="w-full h-12 hover:bg-green-700">
                     Sign In to Get Started
                   </LoginButton>
                   <Button 

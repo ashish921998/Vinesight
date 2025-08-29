@@ -5,8 +5,7 @@ import { MessageCircle, Send, Mic, MicOff, Bot, User, Loader2, X } from 'lucide-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { AIService, AIRecommendation, ImageAnalysisResult } from '@/lib/ai-service';
+import { ImageAnalysisResult } from '@/types/ai';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 
@@ -231,33 +230,75 @@ export function AIAssistant({
       // Build enhanced context for AI response with updated messages
       const conversationContext = buildConversationContext(updatedMessages);
       
-      // Get AI response with streaming support
-      const response = await AIService.getChatResponse(
-        messageText, 
-        conversationContext,
-        (chunk: string) => {
+      // Call the AI chat API directly
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: messageText,
+          context: conversationContext,
+          stream: true
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Handle authentication error
+          const errorData = await response.json().catch(() => ({}));
+          if (errorData.code === 'UNAUTHORIZED') {
+            throw new Error('AUTHENTICATION_REQUIRED');
+          }
+        }
+        throw new Error(`Failed to get AI response: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body');
+      }
+
+      const decoder = new TextDecoder();
+      let done = false;
+      let fullResponse = '';
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        
+        if (value) {
+          const chunk = decoder.decode(value);
+          fullResponse += chunk;
+          
           // Update the streaming message in real-time
           setMessages(prev => prev.map(msg => 
             msg.id === assistantMessageId 
-              ? { ...msg, content: msg.content + chunk }
+              ? { ...msg, content: fullResponse }
               : msg
           ));
         }
-      );
+      }
 
-      // Final update to ensure complete response
-      setMessages(prev => prev.map(msg => 
-        msg.id === assistantMessageId 
-          ? { ...msg, content: response }
-          : msg
-      ));
     } catch (error) {
-      console.error('Chat error:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Chat error:', error);
+      }
+      
+      let errorContent = '';
+      if (error instanceof Error && error.message === 'AUTHENTICATION_REQUIRED') {
+        errorContent = i18n.language === 'hi' ? 'कृपया AI सहायक का उपयोग करने के लिए साइन इन करें।' :
+                       i18n.language === 'mr' ? 'कृपया AI सहाय्यक वापरण्यासाठी साइन इन करा.' :
+                       'Please sign in to use the AI Assistant.';
+      } else {
+        errorContent = i18n.language === 'hi' ? 'क्षमा करें, कुछ गलत हुआ। कृपया फिर से कोशिश करें।' :
+                       i18n.language === 'mr' ? 'माफ करा, काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.' :
+                       'Sorry, something went wrong. Please try again.';
+      }
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: i18n.language === 'hi' ? 'क्षमा करें, कुछ गलत हुआ। कृपया फिर से कोशिश करें।' :
-                 i18n.language === 'mr' ? 'माफ करा, काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.' :
-                 'Sorry, something went wrong. Please try again.',
+        content: errorContent,
         role: 'assistant',
         timestamp: new Date()
       };
@@ -328,6 +369,7 @@ export function AIAssistant({
       </Button>
     );
   }
+
 
   return (
     <Card className={cn(
