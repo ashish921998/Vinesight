@@ -33,17 +33,6 @@ export function FarmHeader({ farm, loading, onBack }: FarmHeaderProps) {
   return (
     <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-300 z-10 shadow-sm">
       <div className="p-6">
-        {/* Back Button */}
-        <Button
-          onClick={onBack}
-          variant="ghost"
-          size="sm"
-          className="mb-4 text-green-600 hover:text-green-700 hover:bg-green-50 p-2 rounded-xl"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Farms
-        </Button>
-        
         {/* Farm Header */}
         <div className="flex items-start gap-4">
           <div className="p-3 bg-green-100 rounded-2xl">

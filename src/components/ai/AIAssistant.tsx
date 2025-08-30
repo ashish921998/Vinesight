@@ -250,6 +250,7 @@ export function AIAssistant({
         }),
       });
 
+      console.log(response, "response")
       if (!response.ok) {
         if (response.status === 401) {
           // Handle authentication error

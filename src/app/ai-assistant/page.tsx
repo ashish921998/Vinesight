@@ -97,7 +97,7 @@ export default function AIAssistantPage() {
       <div className="min-h-screen bg-gray-50">
         <div className={cn(
           "h-[600px]",
-          isMobile && "h-[calc(100vh-240px)]"
+          isMobile && "h-[calc(100vh-140px)]"
         )}>
           <AIAssistant 
             recentAnalysis={recentAnalysis}
