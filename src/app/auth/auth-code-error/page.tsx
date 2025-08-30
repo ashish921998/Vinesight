@@ -4,13 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { useSearchParams } from 'next/navigation';
-import { useAuth } from '../../../../context/AuthContext';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useEffect } from 'react';
 
 export default function AuthCodeError() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
-  const { user, loading } = useAuth();
+  const { user, loading } = useSupabaseAuth();
 
   // If user is actually authenticated, redirect to home
   useEffect(() => {

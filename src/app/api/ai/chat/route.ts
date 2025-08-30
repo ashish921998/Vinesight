@@ -1,22 +1,30 @@
 import { NextRequest } from 'next/server';
 import { generateText, streamText } from 'ai';
-import { validateUserSession } from '@/lib/auth-utils';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 import { hasServerExceededQuota, incrementServerQuestionCount, getServerQuotaStatus } from '@/lib/server-quota-service';
 
 export async function POST(request: NextRequest) {
   try {
-    // Validate user authentication first
-    const { user, error: authError } = await validateUserSession(request);
+    // Handle Next.js 15 async cookies properly
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ 
+      cookies: () => Promise.resolve(cookieStore)
+    });
     
-    if (authError || !user) {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session?.user) {
       return new Response(JSON.stringify({ 
         error: 'Authentication required',
-        code: 'UNAUTHORIZED' 
+        code: 'UNAUTHORIZED'
       }), { 
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       });
     }
+
+    const user = session.user;
 
     // Check daily quota limit
     if (hasServerExceededQuota(user.id)) {
@@ -72,9 +80,9 @@ export async function POST(request: NextRequest) {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    // Check if the error is due to authentication issues
+    // Handle authentication errors
     const errorMsg = error instanceof Error ? error.message : String(error);
-    if (errorMsg.includes('Authentication') || errorMsg.includes('Unauthorized')) {
+    if (errorMsg.includes('Authentication') || errorMsg.includes('Unauthorized') || errorMsg.includes('session')) {
       return new Response(JSON.stringify({ 
         error: 'Authentication required',
         code: 'UNAUTHORIZED' 
@@ -84,7 +92,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Log error for debugging (remove in production)
+    // Log error for debugging in development only
     if (process.env.NODE_ENV === 'development') {
       console.error('AI Provider error:', error);
     }

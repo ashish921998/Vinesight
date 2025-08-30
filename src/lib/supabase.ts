@@ -1,32 +1,16 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { Database } from '@/types/database'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// Client-side Supabase client for React components
+export const createClient = () => createClientComponentClient<Database>()
 
-// Validate required environment variables
-if (!supabaseUrl || !supabaseAnonKey) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('Missing required Supabase environment variables in production')
-  }
-  
-  if (process.env.NODE_ENV === 'development') {
-    console.warn('⚠️ Supabase environment variables not configured. Some features may not work.')
-    console.warn('Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY')
-  }
-}
-
-// Only create client with valid configuration
-export const supabase = (supabaseUrl && supabaseAnonKey) 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null
-
-// Helper function to ensure supabase client is available
+// Helper function for backward compatibility
 export function getSupabaseClient() {
-  if (!supabase) {
-    throw new Error('Supabase client not initialized. Check environment variables.')
-  }
-  return supabase
+  return createClient()
 }
+
+// For backward compatibility
+export const supabase = getSupabaseClient()
 
 // Database types based on your existing schema
 export interface Farm {

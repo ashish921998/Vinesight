@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { User, LogOut, Settings } from 'lucide-react';
+import { User as UserIcon, LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,10 +12,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '../../../context/AuthContext';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
 export function UserMenu() {
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useSupabaseAuth();
   const [loading, setLoading] = useState(false);
 
   const handleSignOut = async () => {

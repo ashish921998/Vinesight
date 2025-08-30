@@ -3,12 +3,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sprout, Calculator, FileText, Lock, CheckCircle } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
 import { LoginButton } from "@/components/auth/LoginButton";
 import { QuickActions } from "@/components/mobile/QuickActions";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { user, loading } = useSupabaseAuth();
   
   const features = [
     {

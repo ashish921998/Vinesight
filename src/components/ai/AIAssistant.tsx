@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, Send, Mic, MicOff, Bot, User, Loader2, X } from 'lucide-react';
+import { MessageCircle, Send, Mic, MicOff, Bot, User, Loader2, X, Paperclip, History, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,9 +46,13 @@ export function AIAssistant({
   const [isListening, setIsListening] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [quotaStatus, setQuotaStatus] = useState(() => getQuotaStatus());
+  const [showHistory, setShowHistory] = useState(false);
+  const [conversations, setConversations] = useState<{id: string; title: string; messages: Message[]}[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Check if device is mobile
   useEffect(() => {
@@ -337,6 +341,8 @@ export function AIAssistant({
       setIsLoading(false);
       // Update quota status after message attempt
       setQuotaStatus(getQuotaStatus());
+      // Save conversation after each message
+      setTimeout(() => saveCurrentConversation(), 500);
     }
   }, [inputValue, isLoading, messages, i18n.language, buildConversationContext]);
 
@@ -357,6 +363,53 @@ export function AIAssistant({
   const stopListening = () => {
     if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
+    }
+  };
+
+  // Simple attachment handlers
+  const handleAttachClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      // Simple: just add to input as text for now
+      setInputValue(prev => `${prev} [Image: ${file.name}]`.trim());
+      toast.success(`Image attached: ${file.name}`);
+    }
+  };
+
+  // Simple conversation management
+  const startNewConversation = () => {
+    setMessages([]);
+    setCurrentConversationId(null);
+    setShowHistory(false);
+  };
+
+  const saveCurrentConversation = () => {
+    if (messages.length > 1) { // More than just welcome message
+      const title = messages[1]?.content.slice(0, 50) + '...' || 'New Conversation';
+      const conversationId = currentConversationId || Date.now().toString();
+      
+      setConversations(prev => {
+        const existing = prev.find(c => c.id === conversationId);
+        if (existing) {
+          return prev.map(c => c.id === conversationId ? {...c, messages} : c);
+        }
+        return [...prev, { id: conversationId, title, messages }];
+      });
+      
+      setCurrentConversationId(conversationId);
+    }
+  };
+
+  const loadConversation = (conversationId: string) => {
+    const conversation = conversations.find(c => c.id === conversationId);
+    if (conversation) {
+      setMessages(conversation.messages);
+      setCurrentConversationId(conversationId);
+      setShowHistory(false);
     }
   };
 
@@ -414,6 +467,26 @@ export function AIAssistant({
             </span>
           </div>
           <div className="flex items-center gap-2">
+            {/* History button */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowHistory(!showHistory)}
+              className="h-8"
+            >
+              <History className="w-4 h-4" />
+            </Button>
+            
+            {/* New conversation button */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={startNewConversation}
+              className="h-8"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+            
             {/* Quota indicator */}
             <div className={cn(
               "text-xs px-2 py-1 rounded-full",
@@ -438,6 +511,31 @@ export function AIAssistant({
         "flex-1 flex flex-col min-h-0 p-0 bg-white",
         isMobile && isOpen && "pb-20"
       )}>
+        {/* Conversation History Sidebar */}
+        {showHistory && (
+          <div className="flex-shrink-0 border-b bg-gray-50 p-4 max-h-48 overflow-y-auto">
+            <h3 className="text-sm font-medium mb-2">Conversation History</h3>
+            {conversations.length === 0 ? (
+              <p className="text-xs text-gray-500">No saved conversations</p>
+            ) : (
+              <div className="space-y-2">
+                {conversations.map((conv) => (
+                  <div 
+                    key={conv.id}
+                    onClick={() => loadConversation(conv.id)}
+                    className={cn(
+                      "p-2 rounded cursor-pointer text-xs hover:bg-gray-200",
+                      currentConversationId === conv.id && "bg-blue-100"
+                    )}
+                  >
+                    {conv.title}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        
         {/* Messages */}
         <div className={cn(
           "flex-1 overflow-y-auto p-4 space-y-4 bg-white",
@@ -521,6 +619,15 @@ export function AIAssistant({
           "flex-shrink-0 p-4 border-t bg-white/95 backdrop-blur-sm",
           isMobile && isOpen && "fixed bottom-20 left-0 right-0 z-[60] bg-white border-t-2 shadow-lg"
         )}>
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          
           <div className="flex gap-2 items-center">
             <div className="flex-1 relative border-transparent">
               <Input
@@ -559,6 +666,18 @@ export function AIAssistant({
                 </Button>
               )}
             </div>
+            
+            {/* Attach button */}
+            <Button
+              onClick={handleAttachClick}
+              disabled={isLoading || quotaStatus.isExceeded}
+              variant="outline"
+              size="sm"
+              className="flex-shrink-0"
+            >
+              <Paperclip className="w-4 h-4" />
+            </Button>
+            
             <Button
               onClick={() => handleSendMessage()}
               disabled={!inputValue.trim() || isLoading || quotaStatus.isExceeded}

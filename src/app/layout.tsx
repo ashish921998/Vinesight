@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Montserrat, Merriweather, Source_Code_Pro } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/navigation";
-import { AuthProvider } from "../../context/AuthContext";
 import { I18nProvider } from "@/components/providers/I18nProvider";
 import { OfflineIndicator } from "@/components/pwa/OfflineIndicator";
 import { PWAWrapper } from "@/components/pwa/PWAWrapper";
@@ -89,7 +88,6 @@ export default function RootLayout({
               </div>
             </div>
           }>
-            <AuthProvider>
               <GlobalAuthErrorHandler />
               <I18nProvider>
                 <div className="min-h-screen bg-background pb-16 lg:pb-0">
@@ -111,7 +109,6 @@ export default function RootLayout({
                   <Toaster />
                 </div>
               </I18nProvider>
-            </AuthProvider>
           </Suspense>
         </AsyncErrorBoundary>
       </body>

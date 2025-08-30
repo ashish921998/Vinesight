@@ -16,11 +16,11 @@ import {
   TrendingUp,
   Brain
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
 import { LoginButton } from "./auth/LoginButton";
 import { UserMenu } from "./auth/UserMenu";
 import { LanguageSwitcher } from "./ui/language-switcher";
 import { useTranslation } from "react-i18next";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 export const getNavigation = (t: any) => [
   { name: t('navigation.dashboard'), href: '/', icon: Home },
@@ -39,8 +39,8 @@ export const getNavigation = (t: any) => [
 
 export default function Navigation() {
   const pathname = usePathname();
-  const { user, loading } = useAuth();
   const { t } = useTranslation();
+  const { user, loading } = useSupabaseAuth();
   
   const navigation = getNavigation(t);
 

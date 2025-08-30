@@ -99,7 +99,6 @@ export default function AIAssistantPage() {
   ];
 
   return (
-    <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className={cn(
@@ -326,6 +325,5 @@ export default function AIAssistantPage() {
         </div>
       )}
       </div>
-    </ProtectedRoute>
   );
 }

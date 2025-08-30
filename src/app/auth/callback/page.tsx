@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSupabaseClient } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase';
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -35,7 +35,7 @@ export default function AuthCallback() {
 
         // If we have tokens in fragment, set the session directly
         if (accessToken && refreshToken) {
-          const supabase = getSupabaseClient();
+          const supabase = createClient();
           
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -62,7 +62,7 @@ export default function AuthCallback() {
         const code = currentUrl.searchParams.get('code');
         
         if (code) {
-          const supabase = getSupabaseClient();
+          const supabase = createClient();
           
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
           

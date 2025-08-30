@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '../../../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoginButton } from './LoginButton';
 import { Loader2, Lock } from 'lucide-react';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,9 +12,9 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, loading } = useSupabaseAuth();
   const [mounted, setMounted] = useState(false);
-  
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -53,7 +53,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <p className="text-muted-foreground">
-              You need to sign in to access this page. Please sign in with your Google account to continue.
+              You need to sign in to access this page. Please use Google to continue.
             </p>
             <LoginButton className="w-full">
               Sign in to continue

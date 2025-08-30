@@ -8,10 +8,10 @@ import {
   LogOut,
   User
 } from "lucide-react";
-import { useAuth } from "../../../context/AuthContext";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 export default function SettingsPage() {
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useSupabaseAuth();
   const [language, setLanguage] = useState('en');
   const [signOutLoading, setSignOutLoading] = useState(false);
 

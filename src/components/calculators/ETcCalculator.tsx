@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calculator, ArrowLeft, ArrowRight } from 'lucide-react';
 import { SupabaseService } from '@/lib/supabase-service';
 import type { Farm } from '@/lib/supabase';
-import { useAuth } from '../../../context/AuthContext';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { WeatherDataForm } from './ETc/WeatherDataForm';
 import { DataSourceSelector } from './ETc/DataSourceSelector';
 import { CropInformationForm } from './ETc/CropInformationForm';
@@ -17,7 +17,7 @@ import { Progress } from '@/components/ui/progress';
 const steps = ['weather', 'crop', 'location'];
 
 export function ETcCalculatorComponent() {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const [farms, setFarms] = useState<Farm[]>([]);
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
   const [useCustomData, setUseCustomData] = useState(!user);
