@@ -4,7 +4,6 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { MessageCircle, Send, Mic, MicOff, Bot, User, Loader2, X, Paperclip, History, Plus, Copy, Check } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageAnalysisResult } from '@/lib/ai-service';
 import { cn } from '@/lib/utils';
@@ -560,7 +559,7 @@ export function AIAssistant({
       isMobile 
         ? "h-screen" 
         : "h-[calc(100vh)]",
-      isMobile && isOpen && "fixed inset-0 z-50 rounded-none bg-white",
+      isMobile && isOpen && "fixed inset-0 z-50 rounded-none pb-16",
       className
     )}>
       <CardHeader className="flex-shrink-0 pb-3 border-b">
@@ -752,7 +751,7 @@ export function AIAssistant({
           </div>
 
           {/* Quick Questions - Above input */}
-          {messages.length <= 1 && !isLoading && (
+          {messages.length <= 1 && !isLoading && !isMobile && (
             <div className="flex-shrink-0 p-4 border-t border-b">
               <p className="text-xs text-gray-500 mb-2">
                 {t('quick_questions', 'Quick questions:')}
@@ -820,6 +819,8 @@ export function AIAssistant({
             <div className="flex gap-2 items-center">
               <div className="flex-1 relative">
                 <Textarea
+                  style={{ resize: "none" }}
+                  rows={isMobile ? 3 : 5}
                   ref={inputRef}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}

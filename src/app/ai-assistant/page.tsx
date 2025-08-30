@@ -23,14 +23,10 @@ export default function AIAssistantPage() {
 
   return (
     <ProtectedRoute>
-        <div className={cn(
-          isMobile && "h-[calc(100vh-100px)]"
-        )}>
           <AIAssistant 
             recentAnalysis={recentAnalysis}
             isOpen={true}
           />
-        </div>
     </ProtectedRoute>
   );
 }
