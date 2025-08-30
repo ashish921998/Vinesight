@@ -38,6 +38,7 @@ interface AIAssistantProps {
   isOpen?: boolean;
   onToggle?: () => void;
   className?: string;
+  isMobile?: boolean;
 }
 
 export function AIAssistant({ 
@@ -45,14 +46,15 @@ export function AIAssistant({
   recentAnalysis, 
   isOpen = false, 
   onToggle, 
-  className 
+  className,
+  isMobile: propIsMobile
 }: AIAssistantProps) {
   const { t, i18n } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(propIsMobile || false);
   const [quotaStatus, setQuotaStatus] = useState(() => getQuotaStatus());
   const [showHistory, setShowHistory] = useState(false);
   const [conversations, setConversations] = useState<{id: string; title: string; messages: Message[]}[]>([]);
@@ -64,15 +66,19 @@ export function AIAssistant({
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check if device is mobile
+  // Check if device is mobile (only if not provided as prop)
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+    if (propIsMobile === undefined) {
+      const checkMobile = () => {
+        setIsMobile(window.innerWidth <= 768);
+      };
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+      return () => window.removeEventListener('resize', checkMobile);
+    } else {
+      setIsMobile(propIsMobile);
+    }
+  }, [propIsMobile]);
 
   // Initialize speech recognition (once on mount)
   useEffect(() => {
@@ -549,7 +555,10 @@ export function AIAssistant({
 
   return (
     <Card className={cn(
-      "flex flex-col h-full rounded-none",
+      "flex flex-col rounded-none",
+      isMobile 
+        ? "h-screen" 
+        : "h-[calc(100vh)]",
       isMobile && isOpen && "fixed inset-0 z-50 rounded-none bg-white",
       className
     )}>

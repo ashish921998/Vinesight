@@ -22,15 +22,13 @@ export default function AIAssistantPage() {
 
   return (
     // <ProtectedRoute>
-        <div className={cn(
-          "h-[calc(100vh-120px)]",
-          isMobile && "h-[calc(100vh-100px)]"
-        )}>
-          <AIAssistant 
-            recentAnalysis={recentAnalysis}
-            isOpen={true}
-          />
-        </div>
+      <div className="min-h-screen bg-gray-50">
+        <AIAssistant 
+          recentAnalysis={recentAnalysis}
+          isOpen={true}
+          isMobile={isMobile}
+        />
+      </div>
     // </ProtectedRoute>
   );
 }
