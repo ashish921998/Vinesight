@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, Send, Mic, MicOff, Bot, User, Loader2, X, Paperclip, History, Plus } from 'lucide-react';
+import { MessageCircle, Send, Mic, MicOff, Bot, User, Loader2, X, Paperclip, History, Plus, Image, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { getQuotaStatus } from '@/lib/quota-service';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
   id: string;
@@ -17,6 +19,12 @@ interface Message {
   role: 'user' | 'assistant';
   timestamp: Date;
   language?: string;
+  attachments?: Array<{
+    type: 'image';
+    name: string;
+    url: string;
+    size?: number;
+  }>;
   context?: {
     queryType?: string;
     confidence?: number;
@@ -49,6 +57,8 @@ export function AIAssistant({
   const [showHistory, setShowHistory] = useState(false);
   const [conversations, setConversations] = useState<{id: string; title: string; messages: Message[]}[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [pendingAttachments, setPendingAttachments] = useState<Array<{type: 'image'; name: string; url: string; size?: number}>>([]);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -198,23 +208,25 @@ export function AIAssistant({
 
   const handleSendMessage = useCallback(async (text?: string) => {
     const messageText = text || inputValue.trim();
-    if (!messageText || isLoading) return;
+    if ((!messageText && pendingAttachments.length === 0) || isLoading) return;
 
     // Analyze the query
     const queryAnalysis = analyzeQuery(messageText);
 
-    // Add user message with context
+    // Add user message with context and attachments
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: messageText,
+      content: messageText || 'Shared an image',
       role: 'user',
       timestamp: new Date(),
+      attachments: pendingAttachments.length > 0 ? [...pendingAttachments] : undefined,
       context: queryAnalysis
     };
 
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setInputValue('');
+    setPendingAttachments([]); // Clear pending attachments
     setIsLoading(true);
 
     // Create streaming assistant message
@@ -345,7 +357,7 @@ export function AIAssistant({
       // Save conversation after each message
       setTimeout(() => saveCurrentConversation(), 500);
     }
-  }, [inputValue, isLoading, messages, i18n.language, buildConversationContext]);
+  }, [inputValue, isLoading, messages, i18n.language, buildConversationContext, pendingAttachments]);
 
   // Store current handleSendMessage in window for speech recognition
   useEffect(() => {
@@ -375,10 +387,53 @@ export function AIAssistant({
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
-      // Simple: just add to input as text for now
-      setInputValue(prev => `${prev} [Image: ${file.name}]`.trim());
-      toast.success(`Image attached: ${file.name}`);
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size must be less than 5MB');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageUrl = e.target?.result as string;
+        const attachment = {
+          type: 'image' as const,
+          name: file.name,
+          url: imageUrl,
+          size: file.size
+        };
+        
+        setPendingAttachments(prev => [...prev, attachment]);
+        toast.success(`Image attached: ${file.name}`);
+      };
+      reader.readAsDataURL(file);
+    } else if (file) {
+      toast.error('Only image files are supported');
     }
+    
+    // Reset the input
+    if (event.target) {
+      event.target.value = '';
+    }
+  };
+
+  // Copy message to clipboard
+  const copyToClipboard = async (text: string, messageId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedMessageId(messageId);
+      toast.success('Message copied to clipboard');
+      
+      // Reset the copied state after 2 seconds
+      setTimeout(() => setCopiedMessageId(null), 2000);
+    } catch (err) {
+      toast.error('Failed to copy message');
+    }
+  };
+
+  // Remove attachment from pending list
+  const removeAttachment = (index: number) => {
+    setPendingAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   // Simple conversation management
@@ -386,6 +441,7 @@ export function AIAssistant({
     setMessages([]);
     setCurrentConversationId(null);
     setShowHistory(false);
+    setPendingAttachments([]); // Clear any pending attachments
   };
 
   const saveCurrentConversation = () => {
@@ -414,13 +470,51 @@ export function AIAssistant({
     }
   };
 
-  const formatMessage = (content: string) => {
-    // Simple formatting for better readability
-    return content.split('\n').map((line, index) => (
-      <p key={index} className="mb-2 last:mb-0">
-        {line}
-      </p>
-    ));
+  const formatMessage = (content: string, isAssistant: boolean = false) => {
+    if (isAssistant) {
+      // Use markdown for AI responses
+      return (
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            // Customize rendering for chat bubbles
+            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+            ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+            ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+            li: ({ children }) => <li className="ml-0">{children}</li>,
+            code: ({ children, ...props }) => {
+              const isInline = !props.className?.includes('language-');
+              return isInline ? (
+                <code className="bg-gray-200 px-1 py-0.5 rounded text-xs font-mono">{children}</code>
+              ) : (
+                <pre className="bg-gray-100 p-2 rounded text-xs font-mono overflow-x-auto mb-2">
+                  <code>{children}</code>
+                </pre>
+              );
+            },
+            strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+            em: ({ children }) => <em className="italic">{children}</em>,
+            h1: ({ children }) => <h1 className="text-base font-bold mb-2">{children}</h1>,
+            h2: ({ children }) => <h2 className="text-sm font-semibold mb-2">{children}</h2>,
+            h3: ({ children }) => <h3 className="text-sm font-medium mb-1">{children}</h3>,
+            blockquote: ({ children }) => (
+              <blockquote className="border-l-2 border-gray-300 pl-3 ml-2 my-2 text-gray-700">
+                {children}
+              </blockquote>
+            ),
+          }}
+        >
+          {content}
+        </ReactMarkdown>
+      );
+    } else {
+      // Simple formatting for user messages
+      return content.split('\n').map((line, index) => (
+        <p key={index} className="mb-2 last:mb-0">
+          {line}
+        </p>
+      ));
+    }
   };
 
   const quickQuestions = [
@@ -455,11 +549,11 @@ export function AIAssistant({
 
   return (
     <Card className={cn(
-      "flex flex-col h-full bg-white",
-      isMobile && isOpen && "fixed inset-0 z-50 rounded-none bg-white pb-safe",
+      "flex flex-col h-full rounded-none",
+      isMobile && isOpen && "fixed inset-0 z-50 rounded-none bg-white",
       className
     )}>
-      <CardHeader className="flex-shrink-0 pb-3">
+      <CardHeader className="flex-shrink-0 pb-3 border-b">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Bot className="w-5 h-5" />
@@ -469,7 +563,7 @@ export function AIAssistant({
           </div>
           <div className="flex items-center gap-2">
             {/* History button */}
-            <Button 
+            <Button
               variant="ghost" 
               size="sm" 
               onClick={() => setShowHistory(!showHistory)}
@@ -508,10 +602,7 @@ export function AIAssistant({
         </CardTitle>
       </CardHeader>
 
-      <CardContent className={cn(
-        "flex-1 flex flex-col min-h-0 p-0 bg-white",
-        isMobile && isOpen && "pb-20"
-      )}>
+      <CardContent className="flex-1 flex flex-col min-h-0 p-0">
         {/* Conversation History Sidebar */}
         {showHistory && (
           <div className="flex-shrink-0 border-b bg-gray-50 p-4 max-h-48 overflow-y-auto">
@@ -537,170 +628,254 @@ export function AIAssistant({
           </div>
         )}
         
-        {/* Messages */}
-        <div className={cn(
-          "flex-1 overflow-y-auto p-4 space-y-4 bg-white",
-          isMobile && isOpen && "pb-32"
-        )}>
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={cn(
-                "flex gap-3 max-w-full",
-                message.role === 'user' && "flex-row-reverse"
-              )}
-            >
-              <div className={cn(
-                "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-                message.role === 'user' 
-                  ? "bg-blue-500 text-white" 
-                  : "bg-green-500 text-white"
-              )}>
-                {message.role === 'user' ? (
-                  <User className="w-4 h-4" />
-                ) : (
+        {/* Messages Container with proper flex layout */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={cn(
+                  "flex gap-3",
+                  message.role === 'user' && "flex-row-reverse"
+                )}
+              >
+                <div className={cn(
+                  "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
+                  message.role === 'user' 
+                    ? "bg-blue-500 text-white" 
+                    : "bg-green-500 text-white"
+                )}>
+                  {message.role === 'user' ? (
+                    <User className="w-4 h-4" />
+                  ) : (
+                    <Bot className="w-4 h-4" />
+                  )}
+                </div>
+                
+                <div className={cn(
+                  "flex-1 max-w-[85%] space-y-2",
+                  message.role === 'user' && "flex-col items-end"
+                )}>
+                  {/* Message content */}
+                  <div className={cn(
+                    "relative group p-3 rounded-2xl text-sm break-words",
+                    message.role === 'user'
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-100 text-gray-900"
+                  )}>
+                    {formatMessage(message.content, message.role === 'assistant')}
+                    
+                    {/* Copy button for assistant messages */}
+                    {message.role === 'assistant' && (
+                      <Button
+                        onClick={() => copyToClipboard(message.content, message.id)}
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          "absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity",
+                          "bg-white/80 hover:bg-white text-gray-600 hover:text-gray-900"
+                        )}
+                      >
+                        {copiedMessageId === message.id ? (
+                          <Check className="w-3 h-3" />
+                        ) : (
+                          <Copy className="w-3 h-3" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Attachments */}
+                  {message.attachments && message.attachments.length > 0 && (
+                    <div className="space-y-2">
+                      {message.attachments.map((attachment, index) => (
+                        <div
+                          key={index}
+                          className={cn(
+                            "max-w-xs rounded-lg overflow-hidden border",
+                            message.role === 'user' ? "border-blue-200" : "border-gray-200"
+                          )}
+                        >
+                          {attachment.type === 'image' && (
+                            <img
+                              src={attachment.url}
+                              alt={attachment.name}
+                              className="w-full h-auto object-cover max-h-64"
+                              loading="lazy"
+                            />
+                          )}
+                          <div className="p-2 bg-gray-50 text-xs text-gray-600 flex items-center justify-between">
+                            <span className="truncate">{attachment.name}</span>
+                            {attachment.size && (
+                              <span className="text-gray-400 ml-2">
+                                {(attachment.size / 1024 / 1024).toFixed(1)}MB
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {isLoading && (
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center">
                   <Bot className="w-4 h-4" />
+                </div>
+                <div className="flex-1 max-w-[85%] p-3 rounded-2xl bg-gray-100">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm text-gray-500">
+                      {isMobile ? 'Thinking...' : 'AI is thinking...'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Questions - Above input */}
+          {messages.length <= 1 && !isLoading && (
+            <div className="flex-shrink-0 p-4 border-t border-b">
+              <p className="text-xs text-gray-500 mb-2">
+                {t('quick_questions', 'Quick questions:')}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {quickQuestions.map((question, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSendMessage(question[i18n.language as keyof typeof question])}
+                    className="text-xs h-8"
+                  >
+                    {question[i18n.language as keyof typeof question]}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Pending Attachments Preview */}
+          {pendingAttachments.length > 0 && (
+            <div className="flex-shrink-0 p-4 border-t bg-gray-50/50">
+              <div className="flex flex-wrap gap-2">
+                {pendingAttachments.map((attachment, index) => (
+                  <div
+                    key={index}
+                    className="relative max-w-24 rounded-lg overflow-hidden border border-gray-200 bg-white"
+                  >
+                    <img
+                      src={attachment.url}
+                      alt={attachment.name}
+                      className="w-full h-16 object-cover"
+                    />
+                    <Button
+                      onClick={() => removeAttachment(index)}
+                      variant="destructive"
+                      size="sm"
+                      className="absolute -top-1 -right-1 h-5 w-5 p-0 rounded-full text-xs"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                    <div className="p-1 text-xs text-gray-600 truncate">
+                      {attachment.name}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Input Area - Fixed at bottom */}
+          <div className="flex-shrink-0 p-4 border-t bg-gray-50">
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            
+            <div className="flex gap-2 items-center">
+              <div className="flex-1 relative">
+                <Input
+                  ref={inputRef}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder={
+                    quotaStatus.isExceeded ? 
+                      (i18n.language === 'hi' ? 'दैनिक सीमा समाप्त - कल वापस आएं' :
+                       i18n.language === 'mr' ? 'दैनिक मर्यादा संपली - उद्या परत या' :
+                       'Daily limit reached - come back tomorrow') :
+                      (i18n.language === 'hi' ? 'अपना प्रश्न पूछें...' :
+                       i18n.language === 'mr' ? 'तुमचा प्रश्न विचारा...' :
+                       'Ask your question...')
+                  }
+                  disabled={isLoading || quotaStatus.isExceeded}
+                  className="pr-10 bg-white"
+                />
+                {recognitionRef.current && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={isListening ? stopListening : startListening}
+                    className={cn(
+                      "absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0",
+                      isListening && "text-red-500"
+                    )}
+                  >
+                    {isListening ? (
+                      <MicOff className="w-4 h-4" />
+                    ) : (
+                      <Mic className="w-4 h-4" />
+                    )}
+                  </Button>
                 )}
               </div>
               
-              <div className={cn(
-                "flex-1 min-w-0 p-3 rounded-2xl text-sm",
-                message.role === 'user'
-                  ? "bg-blue-500 text-white ml-12"
-                  : "bg-gray-100 text-gray-900 mr-12"
-              )}>
-                {formatMessage(message.content)}
-              </div>
-            </div>
-          ))}
-
-          {isLoading && (
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center">
-                <Bot className="w-4 h-4" />
-              </div>
-              <div className="flex-1 p-3 rounded-2xl bg-gray-100 mr-12">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm text-gray-500">
-                    {isMobile ? 'Thinking...' : 'AI is thinking...'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Quick Questions */}
-        {messages.length <= 1 && !isLoading && (
-          <div className="p-4 border-t">
-            <p className="text-xs text-gray-500 mb-2">
-              {t('quick_questions', 'Quick questions:')}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {quickQuestions.map((question, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSendMessage(question[i18n.language as keyof typeof question])}
-                  className="text-xs h-8"
-                >
-                  {question[i18n.language as keyof typeof question]}
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Input Area */}
-        <div className={cn(
-          "flex-shrink-0 p-4 border-t bg-white/95 backdrop-blur-sm",
-          isMobile && isOpen && "fixed bottom-20 left-0 right-0 z-[60] bg-white border-t-2 shadow-lg"
-        )}>
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          
-          <div className="flex gap-2 items-center">
-            <div className="flex-1 relative border-transparent">
-              <Input
-                ref={inputRef}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder={
-                  quotaStatus.isExceeded ? 
-                    (i18n.language === 'hi' ? 'दैनिक सीमा समाप्त - कल वापस आएं' :
-                     i18n.language === 'mr' ? 'दैनिक मर्यादा संपली - उद्या परत या' :
-                     'Daily limit reached - come back tomorrow') :
-                    (i18n.language === 'hi' ? 'अपना प्रश्न पूछें...' :
-                     i18n.language === 'mr' ? 'तुमचा प्रश्न विचारा...' :
-                     'Ask your question...')
-                }
+              {/* Attach button */}
+              <Button
+                onClick={handleAttachClick}
                 disabled={isLoading || quotaStatus.isExceeded}
-                className="pr-10 border-gray-300 focus-visible:border-blue-500 hover:border-gray-400 focus:border-blue-500"
-              />
-              {recognitionRef.current && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={isListening ? stopListening : startListening}
-                  className={cn(
-                    "absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0",
-                    isListening && "text-red-500"
-                  )}
-                >
-                  {isListening ? (
-                    <MicOff className="w-4 h-4" />
-                  ) : (
-                    <Mic className="w-4 h-4" />
-                  )}
-                </Button>
-              )}
+                variant="outline"
+                size="sm"
+                className="flex-shrink-0"
+              >
+                <Paperclip className="w-4 h-4" />
+              </Button>
+              
+              <Button
+                onClick={() => handleSendMessage()}
+                disabled={(!inputValue.trim() && pendingAttachments.length === 0) || isLoading || quotaStatus.isExceeded}
+                size="sm"
+                className="flex-shrink-0"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
             </div>
             
-            {/* Attach button */}
-            <Button
-              onClick={handleAttachClick}
-              disabled={isLoading || quotaStatus.isExceeded}
-              variant="outline"
-              size="sm"
-              className="flex-shrink-0"
-            >
-              <Paperclip className="w-4 h-4" />
-            </Button>
-            
-            <Button
-              onClick={() => handleSendMessage()}
-              disabled={!inputValue.trim() || isLoading || quotaStatus.isExceeded}
-              size="sm"
-              className="flex-shrink-0"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
-          
-          {isListening && (
-            <div className="flex items-center gap-2 mt-2">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse delay-75"></div>
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse delay-150"></div>
+            {isListening && (
+              <div className="flex items-center gap-2 mt-2">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse delay-75"></div>
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse delay-150"></div>
+                </div>
+                <span className="text-xs text-red-500">
+                  {t('listening', 'Listening...')}
+                </span>
               </div>
-              <span className="text-xs text-red-500">
-                {t('listening', 'Listening...')}
-              </span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
