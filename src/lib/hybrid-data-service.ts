@@ -94,9 +94,9 @@ export class HybridDataService {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('farms')
-          .insert([farmData])
+          .insert(farmData)
           .select()
           .single();
           
@@ -136,7 +136,7 @@ export class HybridDataService {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('farms')
           .update(farmData)
           .eq('id', id)

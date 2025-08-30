@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     // user is already available from above
 
     // Check daily quota limit
-    if (hasServerExceededQuota(user.id)) {
+    if (hasServerExceededQuota(user.id) && process.env.NODE_ENV === "development") {
       const quotaStatus = getServerQuotaStatus(user.id);
       return new Response(JSON.stringify({ 
         error: 'Daily question limit exceeded',

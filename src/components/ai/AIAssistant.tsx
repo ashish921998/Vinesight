@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, Send, Mic, MicOff, Bot, User, Loader2, X, Paperclip, History, Plus, Image, Copy, Check } from 'lucide-react';
+import { MessageCircle, Send, Mic, MicOff, Bot, User, Loader2, X, Paperclip, History, Plus, Copy, Check } from 'lucide-react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -705,9 +706,11 @@ export function AIAssistant({
                           )}
                         >
                           {attachment.type === 'image' && (
-                            <img
+                            <Image
                               src={attachment.url}
                               alt={attachment.name}
+                              width={400}
+                              height={256}
                               className="w-full h-auto object-cover max-h-64"
                               loading="lazy"
                             />
@@ -778,9 +781,11 @@ export function AIAssistant({
                     key={index}
                     className="relative max-w-24 rounded-lg overflow-hidden border border-gray-200 bg-white"
                   >
-                    <img
+                    <Image
                       src={attachment.url}
                       alt={attachment.name}
+                      width={96}
+                      height={64}
                       className="w-full h-16 object-cover"
                     />
                     <Button

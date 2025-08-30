@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from('farms')
-      .insert([validation.data])
+      .insert(validation.data as any)
       .select()
       .single()
 
