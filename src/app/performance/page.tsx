@@ -22,7 +22,7 @@ import {
   Leaf,
   Sun
 } from 'lucide-react';
-import { DatabaseService, Farm } from '@/lib/db-utils';
+import { CloudDataService, Farm } from '@/lib/cloud-data-service';
 
 interface FarmEfficiencyMetric {
   name: string;
@@ -52,7 +52,7 @@ export default function FarmEfficiencyPage() {
 
   const loadFarms = async () => {
     try {
-      const farmList = await DatabaseService.getAllFarms();
+      const farmList = await CloudDataService.getAllFarms();
       setFarms(farmList);
       if (farmList.length > 0) {
         setSelectedFarm(farmList[0]);
@@ -69,9 +69,9 @@ export default function FarmEfficiencyPage() {
     
     try {
       // Load actual farm data
-      const irrigationRecords = await DatabaseService.getIrrigationRecords(selectedFarm.id!);
-      const harvestRecords = await DatabaseService.getHarvestRecords(selectedFarm.id!);
-      const sprayRecords = await DatabaseService.getSprayRecords(selectedFarm.id!);
+      const irrigationRecords = await CloudDataService.getIrrigationRecords(selectedFarm.id!);
+      const harvestRecords = await CloudDataService.getHarvestRecords(selectedFarm.id!);
+      const sprayRecords = await CloudDataService.getSprayRecords(selectedFarm.id!);
       
       // Calculate efficiency metrics based on real data
       const totalHarvest = harvestRecords.reduce((sum, record) => sum + record.quantity, 0);

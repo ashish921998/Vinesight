@@ -75,11 +75,6 @@ export const LazyWeatherPage = lazy(() =>
   }))
 );
 
-export const LazyPWASettingsPage = lazy(() => 
-  import('@/app/pwa-settings/page').then(module => ({
-    default: module.default
-  }))
-);
 
 // Page-level wrappers with Suspense
 export const ReportsPageWithSuspense = () => (
@@ -100,8 +95,3 @@ export const WeatherPageWithSuspense = () => (
   </Suspense>
 );
 
-export const PWASettingsPageWithSuspense = () => (
-  <Suspense fallback={<LoadingSpinner text="Loading PWA settings..." />}>
-    <LazyPWASettingsPage />
-  </Suspense>
-);

@@ -12,7 +12,8 @@ import {
   RegulatoryCompliance,
   ComplianceIssue
 } from './reporting-types';
-import { DatabaseService, Farm } from './db-utils';
+import { CloudDataService } from './cloud-data-service';
+import type { Farm } from './supabase';
 // Temporarily disabled for deployment
 // import { CalculatorService } from './calculator-service';
 import jsPDF from 'jspdf';
@@ -397,7 +398,7 @@ export class ReportingService {
   }
 
   static async getRegulatoryCompliance(farmId: string): Promise<RegulatoryCompliance> {
-    const farm = await DatabaseService.getFarmById(parseInt(farmId));
+    const farm = await CloudDataService.getFarmById(parseInt(farmId));
     if (!farm) throw new Error('Farm not found');
 
     return {

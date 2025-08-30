@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { WeatherDashboard } from "@/components/weather/WeatherDashboard";
-import { DatabaseService, Farm } from "@/lib/db-utils";
+import { CloudDataService, Farm } from "@/lib/cloud-data-service";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,7 +21,7 @@ export default function WeatherPage() {
 
   const loadFarms = async () => {
     try {
-      const farmList = await DatabaseService.getAllFarms();
+      const farmList = await CloudDataService.getAllFarms();
       setFarms(farmList);
       if (farmList.length > 0) {
         setSelectedFarm(farmList[0]);

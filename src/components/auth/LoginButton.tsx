@@ -22,7 +22,7 @@ export function LoginButton({ className, children }: LoginButtonProps) {
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
-            access_type: 'offline',
+            access_type: 'online',
             prompt: 'consent',
           }
         }

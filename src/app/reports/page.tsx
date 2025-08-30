@@ -23,7 +23,7 @@ import {
   Eye,
   Settings
 } from "lucide-react";
-import { DatabaseService, Farm } from "@/lib/db-utils";
+import { CloudDataService, Farm } from "@/lib/cloud-data-service";
 import { ReportingService } from "@/lib/reporting-service";
 import { ComplianceReport, FinancialReport, RegulatoryCompliance } from "@/lib/reporting-types";
 import { FinancialChart } from "@/components/reports/FinancialChart";
@@ -63,7 +63,7 @@ export default function ReportsPage() {
 
   const loadFarms = async () => {
     try {
-      const farmList = await DatabaseService.getAllFarms();
+      const farmList = await CloudDataService.getAllFarms();
       setFarms(farmList);
       if (farmList.length > 0 && !selectedFarm) {
         setSelectedFarm(farmList[0]);

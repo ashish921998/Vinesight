@@ -21,7 +21,7 @@ import {
   Award,
   Zap
 } from "lucide-react";
-import { DatabaseService, Farm, IrrigationRecord, SprayRecord, HarvestRecord } from "@/lib/db-utils";
+import { CloudDataService, Farm, IrrigationRecord, SprayRecord, HarvestRecord } from "@/lib/cloud-data-service";
 import { AnalyticsService, AdvancedAnalytics } from "@/lib/analytics-service";
 
 interface AnalyticsData {
@@ -56,7 +56,7 @@ export default function AnalyticsPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const farmList = await DatabaseService.getAllFarms();
+      const farmList = await CloudDataService.getAllFarms();
       setFarms(farmList);
       
       if (!selectedFarm && farmList.length > 0) {
@@ -89,9 +89,9 @@ export default function AnalyticsPage() {
 
       for (const farm of farmList) {
         try {
-          const irrigations = await DatabaseService.getIrrigationRecords(farm.id!);
-          const sprays = await DatabaseService.getSprayRecords(farm.id!);
-          const harvests = await DatabaseService.getHarvestRecords(farm.id!);
+          const irrigations = await CloudDataService.getIrrigationRecords(farm.id!);
+          const sprays = await CloudDataService.getSprayRecords(farm.id!);
+          const harvests = await CloudDataService.getHarvestRecords(farm.id!);
 
           // Add farm name to records
           irrigations.forEach(record => {

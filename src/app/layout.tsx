@@ -3,7 +3,6 @@ import { Geist, Geist_Mono, Montserrat, Merriweather, Source_Code_Pro } from "ne
 import "./globals.css";
 import Navigation from "@/components/navigation";
 import { I18nProvider } from "@/components/providers/I18nProvider";
-import { OfflineIndicator } from "@/components/pwa/OfflineIndicator";
 import { PWAWrapper } from "@/components/pwa/PWAWrapper";
 import { AsyncErrorBoundary } from "@/components/ErrorBoundary";
 import { Suspense } from "react";
@@ -102,10 +101,6 @@ export default function RootLayout({
                   {/* PWA Install Prompt */}
                   <div className="fixed bottom-20 left-4 right-4 lg:left-80 lg:bottom-4 z-40">
                     <PWAWrapper />
-                  </div>
-                  {/* Offline Status Indicator - hidden on mobile */}
-                  <div className="hidden lg:block fixed top-4 right-4 z-30">
-                    <OfflineIndicator />
                   </div>
                   <Toaster />
                 </div>

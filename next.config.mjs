@@ -109,63 +109,22 @@ const nextConfig = {
     ];
   },
 
-  // PWA configuration
-  async rewrites() {
-    return [
-      {
-        source: '/sw.js',
-        destination: '/_next/static/sw.js',
-      },
-    ];
-  },
 };
 
-// PWA configuration with mobile-optimized caching
+// PWA configuration - online-only (no offline caching)
 const pwaConfig = withPWA({
   dest: 'public',
-  disable: !isProd,
   register: true,
   skipWaiting: true,
-  fallbacks: {
-    document: '/offline.html',
-  },
-  runtimeCaching: [
-    {
-      urlPattern: /^https?.*\.(png|jpe?g|webp|svg|gif|tiff|js|css)$/,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'static-resources',
-        expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-        },
-      },
-    },
-    {
-      urlPattern: /^https?.*\/api\/.*/,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'api-cache',
-        expiration: {
-          maxEntries: 50,
-          maxAgeSeconds: 5 * 60, // 5 minutes
-        },
-        networkTimeoutSeconds: 10,
-      },
-    },
-    {
-      urlPattern: ({ request }) => request.mode === 'navigate',
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'pages',
-        networkTimeoutSeconds: 3,
-        expiration: {
-          maxEntries: 50,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
-        },
-      },
-    },
-  ],
+  disable: !isProd, // Disable PWA in development
+  // Custom service worker that doesn't cache anything for offline use
+  sw: 'sw.js',
+  // Disable workbox completely to prevent offline caching
+  disableDevLogs: true,
+  // No precaching of static assets
+  publicExcludes: ['!**/*'],
+  // No runtime caching strategies
+  runtimeCaching: []
 });
 
 export default pwaConfig(nextConfig);

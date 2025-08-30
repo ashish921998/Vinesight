@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { getQuotaStatus } from '@/lib/quota-service';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Textarea } from '../ui/textarea';
 
 interface Message {
   id: string;
@@ -64,7 +65,7 @@ export function AIAssistant({
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Check if device is mobile (only if not provided as prop)
@@ -818,7 +819,7 @@ export function AIAssistant({
             
             <div className="flex gap-2 items-center">
               <div className="flex-1 relative">
-                <Input
+                <Textarea
                   ref={inputRef}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}

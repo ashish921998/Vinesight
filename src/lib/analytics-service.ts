@@ -1,4 +1,5 @@
-import { DatabaseService, Farm } from './db-utils';
+import { CloudDataService } from './cloud-data-service';
+import type { Farm } from './supabase';
 
 export interface CostAnalysis {
   totalCosts: number;
@@ -84,7 +85,7 @@ export class AnalyticsService {
     for (const farm of farms) {
       try {
         // Get expenses
-        const expenses = await DatabaseService.getExpenseRecords(farm.id!);
+        const expenses = await CloudDataService.getExpenseRecords(farm.id!);
         expenses.forEach(expense => {
           totalCosts += expense.cost;
           const existing = costByCategory.get(expense.type) || 0;
@@ -101,7 +102,7 @@ export class AnalyticsService {
         });
 
         // Get harvest revenue
-        const harvests = await DatabaseService.getHarvestRecords(farm.id!);
+        const harvests = await CloudDataService.getHarvestRecords(farm.id!);
         harvests.forEach(harvest => {
           const revenue = harvest.quantity * (harvest.price || 0);
           totalRevenue += revenue;
@@ -165,7 +166,7 @@ export class AnalyticsService {
     // Collect harvest data for yield calculation
     for (const farm of farms) {
       try {
-        const harvests = await DatabaseService.getHarvestRecords(farm.id!);
+        const harvests = await CloudDataService.getHarvestRecords(farm.id!);
         const farmYield = harvests.reduce((sum, h) => sum + h.quantity, 0) / 1000; // Convert kg to tons
         totalYield += farmYield;
 
@@ -267,7 +268,7 @@ export class AnalyticsService {
     for (const farm of farms) {
       try {
         // Irrigation efficiency analysis
-        const irrigations = await DatabaseService.getIrrigationRecords(farm.id!);
+        const irrigations = await CloudDataService.getIrrigationRecords(farm.id!);
         const avgDuration = irrigations.reduce((sum, i) => sum + i.duration, 0) / irrigations.length;
         const irrigationFreq = irrigations.length / 30; // Per month approximation
 
@@ -277,17 +278,17 @@ export class AnalyticsService {
         }
 
         // Nutrition management
-        const fertigations = await DatabaseService.getFertigationRecords(farm.id!);
+        const fertigations = await CloudDataService.getFertigationRecords(farm.id!);
         if (fertigations.length > 0) {
           nutritionScore += this.scoreFertigationPractice(fertigations);
         }
 
         // Pest management
-        const sprays = await DatabaseService.getSprayRecords(farm.id!);
+        const sprays = await CloudDataService.getSprayRecords(farm.id!);
         pestScore += this.scorePestManagement(sprays);
 
         // Yield quality
-        const harvests = await DatabaseService.getHarvestRecords(farm.id!);
+        const harvests = await CloudDataService.getHarvestRecords(farm.id!);
         if (harvests.length > 0) {
           yieldScore += this.scoreYieldQuality(harvests, farm.area);
         }

@@ -18,7 +18,7 @@ import {
   Sparkles,
   Target
 } from "lucide-react";
-import { DatabaseService, Farm, TaskReminder } from "@/lib/db-utils";
+import { CloudDataService, Farm, TaskReminder } from "@/lib/cloud-data-service";
 import { TaskTemplateSelector } from "@/components/reminders/TaskTemplateSelector";
 import { NotificationSettings } from "@/components/reminders/NotificationSettings";
 import { NotificationService } from "@/lib/notification-service";
@@ -71,8 +71,8 @@ export default function RemindersPage() {
 
   const loadFarms = async () => {
     try {
-      console.log('Reminders: Loading farms from DatabaseService...');
-      const farmList = await DatabaseService.getAllFarms();
+      console.log('Reminders: Loading farms from CloudDataService...');
+      const farmList = await CloudDataService.getAllFarms();
       console.log('Reminders: Loaded farms:', farmList.length, farmList);
       setFarms(farmList);
       if (farmList.length > 0 && !selectedFarm) {
@@ -89,7 +89,7 @@ export default function RemindersPage() {
     if (!selectedFarm) return;
     
     try {
-      const taskList = await DatabaseService.getTaskReminders(selectedFarm.id!);
+      const taskList = await CloudDataService.getTaskReminders(selectedFarm.id!);
       setTasks(taskList);
     } catch (error) {
       console.error("Error loading tasks:", error);
@@ -102,10 +102,10 @@ export default function RemindersPage() {
 
     try {
       if (editingTask) {
-        // For editing, we'd need an update method in DatabaseService
+        // For editing, we'd need an update method in CloudDataService
         console.log("Editing not implemented yet");
       } else {
-        await DatabaseService.addTaskReminder({
+        await CloudDataService.addTaskReminder({
           farmId: selectedFarm.id!,
           title: formData.title,
           description: formData.description,
@@ -125,7 +125,7 @@ export default function RemindersPage() {
 
   const handleComplete = async (taskId: number) => {
     try {
-      await DatabaseService.completeTask(taskId);
+      await CloudDataService.completeTask(taskId);
       const completedTask = tasks.find(t => t.id === taskId);
       if (completedTask && notificationServiceRef.current) {
         notificationServiceRef.current.sendTaskCompletionCelebration(completedTask);
@@ -140,7 +140,7 @@ export default function RemindersPage() {
     if (!selectedFarm) return;
 
     try {
-      await DatabaseService.addTaskReminder({
+      await CloudDataService.addTaskReminder({
         farmId: selectedFarm.id!,
         title: templateData.title,
         description: templateData.description,

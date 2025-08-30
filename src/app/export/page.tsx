@@ -23,7 +23,8 @@ import {
   Database,
   TrendingUp
 } from 'lucide-react';
-import { DatabaseService, type Farm } from '@/lib/db-utils';
+import { CloudDataService } from '@/lib/cloud-data-service';
+import type { Farm } from '@/lib/supabase';
 import { ExportService, type ExportOptions } from '@/lib/export-service';
 
 type ReportType = 'operations' | 'financial' | 'compliance' | 'comprehensive';
@@ -59,7 +60,7 @@ export default function ExportPage() {
   const loadFarms = async () => {
     try {
       console.log('Export: Loading farms from DatabaseService...');
-      const farmList = await DatabaseService.getAllFarms();
+      const farmList = await CloudDataService.getAllFarms();
       console.log('Export: Loaded farms:', farmList.length, farmList);
       setFarms(farmList);
       if (farmList.length > 0) {

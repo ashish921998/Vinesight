@@ -84,7 +84,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 
 #### **4.4 Data & Export**
 
-- Persistent local data storage with optional cloud sync
+- Cloud-based data storage with real-time sync
 - Export journals/reports as CSV or PDF
 
 #### **4.5 Multi-Language**
@@ -175,9 +175,9 @@ A progressive web and mobile app designed to digitize grape farming operations f
 ## 6. Architecture & Tech (Guidance)
 
 ### **Core Architecture**
-- **Frontend:** PWA/mobile friendly, offline-first, clear UI (cards, tables, reminders)
-- **Backend:** Optional – only for cloud backup, multi-device sync, and analytics
-- **Storage:** Local-first (IndexedDB/webSQL/SQLite as relevant)
+- **Frontend:** PWA/mobile friendly, cloud-connected, clear UI (cards, tables, reminders)
+- **Backend:** Cloud-based with real-time sync and analytics
+- **Storage:** Cloud-first with Supabase integration
 - **Export:** CSV/PDF generation
 - **i18n:** Language files, easy toggling, right font support
 
@@ -188,8 +188,8 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **Voice Processing:** Web Speech API (SpeechRecognition, SpeechSynthesis)
 - **Image Processing:** Canvas API for plant health analysis and preprocessing
 - **Multi-language AI:** Context-aware translations and localized AI responses
-- **Real-time Processing:** Client-side AI for instant feedback and offline capability
-- **Progressive Enhancement:** AI features work offline with local models, enhanced online
+- **Real-time Processing:** Client-side AI for instant feedback with cloud integration
+- **Progressive Enhancement:** AI features enhanced with cloud-based models and analytics
 
 ---
 
@@ -285,7 +285,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - [x] All key calculators implement formulas exactly as per notes
 - [x] Farmer can enter, view, and export all operations (spray, irrigation, fertigation, harvest)
 - [x] Interface available in Marathi and Hindi (as well as English)
-- [x] Works reliably offline and syncs/exports when online
+- [x] Works reliably with cloud sync and real-time updates
 - [x] Responsive and works on all mobiles/tablets
 
 ### **Phase 2: AI Features** ✅ **COMPLETED**
@@ -297,7 +297,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - [x] Market intelligence provides price forecasts and selling recommendations
 - [x] IoT sensors integrate with the system for real-time monitoring
 - [x] All AI features optimized for mobile devices and touch interfaces
-- [x] AI features work offline with local processing and enhance online
+- [x] AI features work with cloud processing and real-time analytics
 - [x] Voice commands allow hands-free operation for accessibility
 
 ---
