@@ -58,8 +58,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { message, context = {}, stream = false } = await request.json();
-    
+    const { message, attachments, context = {}, stream = false } = await request.json();
     if (!message) {
       return new Response(JSON.stringify({ error: 'Message is required' }), { 
         status: 400,
@@ -71,10 +70,26 @@ export async function POST(request: NextRequest) {
     incrementServerQuestionCount(user.id);
     
     const systemPrompt = buildSystemPrompt(context);
+    const userContent: ({ type: 'text'; text: string } | { type: 'image'; image: URL })[] = [
+      { type: 'text', text: message },
+    ];
+
+    if (Array.isArray(attachments)) {
+      attachments.forEach(attachment => {
+        if (attachment && attachment.url) {
+          try {
+            userContent.push({ type: 'image', image: new URL(attachment.url) });
+          } catch (error) {
+            console.error('Invalid attachment URL:', attachment.url);
+          }
+        }
+      });
+    }
+
     const messages = [
       { role: 'system' as const, content: systemPrompt },
       ...(context.conversationHistory?.slice(-5) || []),
-      { role: 'user' as const, content: message }
+      { role: 'user' as const, content: userContent },
     ];
 
     // Use streaming for better UX

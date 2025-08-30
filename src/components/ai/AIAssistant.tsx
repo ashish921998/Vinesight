@@ -265,6 +265,7 @@ export function AIAssistant({
         body: JSON.stringify({
           message: messageText,
           context: conversationContext,
+          attachments: pendingAttachments,
           stream: true
         }),
       });
