@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, Send, Mic, MicOff, Bot, User, Loader2, X, Paperclip, History, Plus, Copy, Check } from 'lucide-react';
+import { MessageCircle, Send, Mic, MicOff, Bot, User, Loader2, X, Paperclip, History, Plus, Copy, Check, Search, Globe, Hash, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -411,7 +411,6 @@ export function AIAssistant({
         };
         
         setPendingAttachments(prev => [...prev, attachment]);
-        toast.success(`Image attached: ${file.name}`);
       };
       reader.readAsDataURL(file);
     } else if (file) {
@@ -806,8 +805,11 @@ export function AIAssistant({
             </div>
           )}
 
-          {/* Input Area - Fixed at bottom */}
-          <div className="flex-shrink-0 p-4 border-t bg-gray-50">
+          {/* Input Area - Fixed at bottom - Perplexity.ai style */}
+          <div className={cn(
+            "flex-shrink-0 p-4 bg-white border-t",
+            // Extra bottom padding for mobile to avoid bottom navigation
+          )}>
             {/* Hidden file input */}
             <input
               ref={fileInputRef}
@@ -817,80 +819,227 @@ export function AIAssistant({
               className="hidden"
             />
             
-            <div className="flex gap-2 items-center">
-              <div className="flex-1 relative">
-                <Textarea
-                  style={{ resize: "none" }}
-                  rows={isMobile ? 3 : 5}
-                  ref={inputRef}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder={
-                    quotaStatus.isExceeded ? 
-                      (i18n.language === 'hi' ? 'दैनिक सीमा समाप्त - कल वापस आएं' :
-                       i18n.language === 'mr' ? 'दैनिक मर्यादा संपली - उद्या परत या' :
-                       'Daily limit reached - come back tomorrow') :
-                      (i18n.language === 'hi' ? 'अपना प्रश्न पूछें...' :
-                       i18n.language === 'mr' ? 'तुमचा प्रश्न विचारा...' :
-                       'Ask your question...')
-                  }
-                  disabled={isLoading || quotaStatus.isExceeded}
-                  className="pr-10 bg-white"
-                />
-                {recognitionRef.current && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={isListening ? stopListening : startListening}
-                    className={cn(
-                      "absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0",
-                      isListening && "text-red-500"
-                    )}
-                  >
-                    {isListening ? (
-                      <MicOff className="w-4 h-4" />
-                    ) : (
-                      <Mic className="w-4 h-4" />
-                    )}
-                  </Button>
-                )}
-              </div>
-              
-              {/* Attach button */}
-              <Button
-                onClick={handleAttachClick}
-                disabled={isLoading || quotaStatus.isExceeded}
-                variant="outline"
-                size="sm"
-                className="flex-shrink-0"
-              >
-                <Paperclip className="w-4 h-4" />
-              </Button>
-              
-              <Button
-                onClick={() => handleSendMessage()}
-                disabled={(!inputValue.trim() && pendingAttachments.length === 0) || isLoading || quotaStatus.isExceeded}
-                size="sm"
-                className="flex-shrink-0"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-            
-            {isListening && (
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse delay-75"></div>
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse delay-150"></div>
+            {/* Main input container with responsive design */}
+            <div className="relative w-full max-w-4xl mx-auto">
+              {isMobile ? (
+                /* Mobile layout - matches the image */
+                <div className="space-y-3">
+                  {/* Main textarea container */}
+                  <div className="relative bg-white border border-gray-300 rounded-xl px-4 py-3 shadow-sm">
+                    <Textarea
+                      style={{ 
+                        resize: "none",
+                        minHeight: "28px",
+                        maxHeight: "120px"
+                      }}
+                      rows={1}
+                      ref={inputRef}
+                      value={inputValue}
+                      onChange={(e) => {
+                        setInputValue(e.target.value);
+                        const textarea = e.target;
+                        textarea.style.height = 'auto';
+                        textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage();
+                        }
+                      }}
+                      placeholder={
+                        quotaStatus.isExceeded ? 
+                          (i18n.language === 'hi' ? 'दैनिक सीमा समाप्त - कल वापस आएं' :
+                           i18n.language === 'mr' ? 'दैनिक मर्यादा संपली - उद्या परत या' :
+                           'Daily limit reached - come back tomorrow') :
+                          (i18n.language === 'hi' ? 'कुछ भी पूछें...' :
+                           i18n.language === 'mr' ? 'काहीही विचारा...' :
+                           'Ask anything')
+                      }
+                      disabled={isLoading || quotaStatus.isExceeded}
+                      className={cn(
+                        "w-full bg-transparent border-0 resize-none text-base leading-7 p-0",
+                        "focus:outline-none placeholder-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0",
+                        "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300",
+                      )}
+                    />
+                    
+                    {/* Buttons row below textarea */}
+                    <div className="flex items-center justify-between">
+                      {/* Attach button - left side */}
+                      <Button
+                        onClick={handleAttachClick}
+                        disabled={isLoading || quotaStatus.isExceeded}
+                        variant="ghost"
+                        size="sm"
+                        className="p-0 h-5 w-6 hover:bg-gray-100 text-gray-500 flex-shrink-0"
+                      >
+                        <Paperclip className="w-6 h-5" />
+                      </Button>
+                      
+                      {/* Right side buttons */}
+                      <div className="flex items-center gap-4 flex-shrink-0">
+                        {/* Mic button */}
+                        {recognitionRef.current && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={isListening ? stopListening : startListening}
+                            className={cn(
+                              "p-0 h-5 w-6",
+                              isListening 
+                                ? "bg-red-50 text-red-500 hover:bg-red-100" 
+                                : "hover:bg-gray-100 text-gray-500"
+                            )}
+                          >
+                            {isListening ? (
+                              <MicOff className="w-6 h-5" />
+                            ) : (
+                              <Mic className="w-6 h-5" />
+                            )}
+                          </Button>
+                        )}
+                        
+                        {/* Send button - teal circular button */}
+                      <Button
+                        onClick={() => handleSendMessage()}
+                        disabled={(!inputValue.trim() && pendingAttachments.length === 0) || isLoading || quotaStatus.isExceeded}
+                        size="sm"
+                        className={cn(
+                          "p-0 h-5 w-8 rounded-lg flex items-center justify-center",
+                          (!inputValue.trim() && pendingAttachments.length === 0) || isLoading || quotaStatus.isExceeded
+                            ? "bg-gray-300 text-gray-400 cursor-not-allowed"
+                              : "bg-primary hover:bg-teal-700 text-white"
+                        )}
+                      >
+                        {isLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <ArrowRight className="w-4 h-4" />
+                        )}
+                      </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <span className="text-xs text-red-500">
-                  {t('listening', 'Listening...')}
-                </span>
-              </div>
-            )}
+              ) : (
+                /* Desktop layout - similar to screenshot */
+                <div className="relative bg-white border border-gray-300 rounded-xl px-4 py-3 shadow-sm max-w-4xl mx-auto">
+                  {/* Textarea */}
+                  <Textarea
+                    style={{ 
+                      resize: "none",
+                      minHeight: "28px",
+                      maxHeight: "120px"
+                    }}
+                    rows={1}
+                    ref={inputRef}
+                    value={inputValue}
+                    onChange={(e) => {
+                      setInputValue(e.target.value);
+                      // Auto-resize textarea
+                      const textarea = e.target;
+                      textarea.style.height = 'auto';
+                      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    placeholder={
+                      quotaStatus.isExceeded ? 
+                        (i18n.language === 'hi' ? 'दैनिक सीमा समाप्त - कल वापस आएं' :
+                         i18n.language === 'mr' ? 'दैनिक मर्यादा संपली - उद्या परत या' :
+                         'Daily limit reached - come back tomorrow') :
+                        (i18n.language === 'hi' ? 'कुछ भी पूछें...' :
+                         i18n.language === 'mr' ? 'काहीही विचारा...' :
+                         'Ask anything')
+                    }
+                    disabled={isLoading || quotaStatus.isExceeded}
+                    className={cn(
+                      "w-full bg-transparent border-0 resize-none text-base leading-7 p-0",
+                      "focus:outline-none focus:ring-0 placeholder-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0",
+                      "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300"
+                    )}
+                  />
+                  
+                  {/* Buttons row below textarea */}
+                  <div className="flex items-center justify-between pt-3">
+                    {/* Left side - empty for desktop, or could add attach */}
+                    <Button
+                      onClick={handleAttachClick}
+                      disabled={isLoading || quotaStatus.isExceeded}
+                      variant="ghost"
+                      size="sm"
+                      className="p-0 h-7 w-7 hover:bg-gray-100 text-gray-500 flex-shrink-0"
+                    >
+                      <Paperclip className="w-5 h-5" />
+                    </Button>
+                    
+                    {/* Right side buttons */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      {/* Mic button */}
+                      {recognitionRef.current && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={isListening ? stopListening : startListening}
+                          className={cn(
+                            "p-0 h-7 w-7 hover:bg-gray-100",
+                            isListening 
+                              ? "bg-red-50 text-red-500 hover:bg-red-100" 
+                              : "text-gray-500"
+                          )}
+                        >
+                          {isListening ? (
+                            <MicOff className="w-5 h-5" />
+                          ) : (
+                            <Mic className="w-5 h-5" />
+                          )}
+                        </Button>
+                      )}
+                      
+                      {/* Send button */}
+                      <Button
+                        onClick={() => handleSendMessage()}
+                        disabled={(!inputValue.trim() && pendingAttachments.length === 0) || isLoading || quotaStatus.isExceeded}
+                        size="sm"
+                        className={cn(
+                          "p-0 h-8 w-8 rounded-lg flex items-center justify-center",
+                          (!inputValue.trim() && pendingAttachments.length === 0) || isLoading || quotaStatus.isExceeded
+                             ? "bg-gray-300 text-gray-400 cursor-not-allowed"
+                              : "bg-primary hover:bg-teal-700 text-white"
+                        )}
+                      >
+                        {isLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <ArrowRight className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Listening indicator */}
+              {isListening && (
+                <div className="absolute -top-8 left-3 flex items-center gap-2 px-2 py-1 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex space-x-1">
+                    <div className="w-1 h-1 bg-red-500 rounded-full animate-pulse"></div>
+                    <div className="w-1 h-1 bg-red-500 rounded-full animate-pulse delay-75"></div>
+                    <div className="w-1 h-1 bg-red-500 rounded-full animate-pulse delay-150"></div>
+                  </div>
+                  <span className="text-xs text-red-600 font-medium">
+                    {t('listening', 'Listening...')}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
