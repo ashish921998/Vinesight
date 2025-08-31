@@ -22,6 +22,9 @@ export function useETcCalculator() {
     humidity: '',
     windSpeed: '',
     rainfall: '',
+    solarRadiation: '',
+    solarRadiationLux: '',
+    sunshineHours: '',
     growthStage: 'fruit_set' as GrapeGrowthStage,
     latitude: '',
     longitude: '',
@@ -45,8 +48,15 @@ export function useETcCalculator() {
       return;
     }
 
-    if (!formData.temperatureMax || !formData.temperatureMin || !formData.humidity || !formData.windSpeed) {
-      setError('Please fill in all required weather data fields');
+    if (!formData.temperatureMax || !formData.temperatureMin || !formData.humidity || !formData.windSpeed || formData.rainfall === '') {
+      setError('Please fill in all required weather data fields (temperature, humidity, wind speed, rainfall)');
+      return;
+    }
+
+    // Check if at least one solar radiation input is provided
+    const hasSolarData = formData.solarRadiation || formData.solarRadiationLux || formData.sunshineHours;
+    if (!hasSolarData) {
+      setError('Please provide at least one form of solar radiation data (solar radiation, lux, or sunshine hours)');
       return;
     }
 
@@ -59,7 +69,10 @@ export function useETcCalculator() {
         temperatureMin: parseFloat(formData.temperatureMin),
         humidity: parseFloat(formData.humidity),
         windSpeed: parseFloat(formData.windSpeed),
-        rainfall: formData.rainfall ? parseFloat(formData.rainfall) : undefined,
+        rainfall: parseFloat(formData.rainfall), // Now required
+        solarRadiation: formData.solarRadiation ? parseFloat(formData.solarRadiation) : undefined,
+        solarRadiationLux: formData.solarRadiationLux ? parseFloat(formData.solarRadiationLux) : undefined,
+        sunshineHours: formData.sunshineHours ? parseFloat(formData.sunshineHours) : undefined,
       };
 
       const inputs: ETcCalculationInputs = {
@@ -95,6 +108,9 @@ export function useETcCalculator() {
       humidity: '',
       windSpeed: '',
       rainfall: '',
+      solarRadiation: '',
+      solarRadiationLux: '',
+      sunshineHours: '',
       growthStage: 'fruit_set',
       latitude: '',
       longitude: '',
