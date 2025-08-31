@@ -10,6 +10,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { SupabaseService } from "@/lib/supabase-service";
 import type { Farm } from "@/lib/supabase";
 import Link from "next/link";
+import { LocationForm } from "@/components/calculators/ETc/LocationForm";
+import type { LocationResult } from "@/lib/open-meteo-geocoding";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +33,12 @@ export default function FarmsPage() {
     planting_date: "",
     vine_spacing: "",
     row_spacing: ""
+  });
+  const [locationData, setLocationData] = useState({
+    latitude: "",
+    longitude: "",
+    elevation: "",
+    locationName: ""
   });
 
   useEffect(() => {
@@ -54,26 +62,28 @@ export default function FarmsPage() {
     
     try {
       setSubmitLoading(true);
+      
+      const farmData = {
+        name: formData.name,
+        region: formData.region,
+        area: parseFloat(formData.area),
+        grape_variety: formData.grape_variety,
+        planting_date: formData.planting_date,
+        vine_spacing: parseFloat(formData.vine_spacing),
+        row_spacing: parseFloat(formData.row_spacing),
+        // Include location data if available
+        latitude: locationData.latitude ? parseFloat(locationData.latitude) : undefined,
+        longitude: locationData.longitude ? parseFloat(locationData.longitude) : undefined,
+        elevation: locationData.elevation ? parseInt(locationData.elevation) : undefined,
+        location_name: locationData.locationName || undefined,
+        location_source: (locationData.latitude && locationData.longitude) ? 'search' as const : undefined,
+        location_updated_at: (locationData.latitude && locationData.longitude) ? new Date().toISOString() : undefined
+      };
+      
       if (editingFarm) {
-        await SupabaseService.updateFarm(editingFarm.id!, {
-          name: formData.name,
-          region: formData.region,
-          area: parseFloat(formData.area),
-          grape_variety: formData.grape_variety,
-          planting_date: formData.planting_date,
-          vine_spacing: parseFloat(formData.vine_spacing),
-          row_spacing: parseFloat(formData.row_spacing)
-        });
+        await SupabaseService.updateFarm(editingFarm.id!, farmData);
       } else {
-        await SupabaseService.createFarm({
-          name: formData.name,
-          region: formData.region,
-          area: parseFloat(formData.area),
-          grape_variety: formData.grape_variety,
-          planting_date: formData.planting_date,
-          vine_spacing: parseFloat(formData.vine_spacing),
-          row_spacing: parseFloat(formData.row_spacing)
-        });
+        await SupabaseService.createFarm(farmData);
       }
       
       await loadFarms();
@@ -95,6 +105,12 @@ export default function FarmsPage() {
       planting_date: farm.planting_date,
       vine_spacing: farm.vine_spacing.toString(),
       row_spacing: farm.row_spacing.toString()
+    });
+    setLocationData({
+      latitude: farm.latitude?.toString() || "",
+      longitude: farm.longitude?.toString() || "",
+      elevation: farm.elevation?.toString() || "",
+      locationName: farm.location_name || ""
     });
     setShowAddForm(true);
   };
@@ -120,6 +136,12 @@ export default function FarmsPage() {
       vine_spacing: "",
       row_spacing: ""
     });
+    setLocationData({
+      latitude: "",
+      longitude: "",
+      elevation: "",
+      locationName: ""
+    });
     setShowAddForm(false);
     setEditingFarm(null);
   };
@@ -129,6 +151,28 @@ export default function FarmsPage() {
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleLocationChange = (field: string, value: string) => {
+    setLocationData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleLocationSelect = (location: LocationResult) => {
+    setLocationData({
+      latitude: location.latitude.toString(),
+      longitude: location.longitude.toString(),
+      elevation: location.elevation.toString(),
+      locationName: `${location.name}, ${location.admin1 || ''} ${location.country}`.trim()
+    });
+    
+    // Also update the region if it's empty
+    if (!formData.region) {
+      const regionName = location.admin1 ? `${location.name}, ${location.admin1}` : location.name;
+      handleInputChange('region', regionName);
+    }
   };
 
   return (
@@ -260,6 +304,15 @@ export default function FarmsPage() {
                         />
                       </div>
                     </div>
+                    
+                    {/* Location Section */}
+                    <div className="pt-4 border-t border-gray-100">
+                      <LocationForm
+                        formData={locationData}
+                        onInputChange={handleLocationChange}
+                        onLocationSelect={handleLocationSelect}
+                      />
+                    </div>
                   </div>
                   
                   <div className="flex gap-3 pt-4">
@@ -340,7 +393,14 @@ export default function FarmsPage() {
                               <h3 className="font-semibold text-gray-900 truncate">{farm.name}</h3>
                               <div className="flex items-center gap-1 text-sm text-gray-500 mt-0.5">
                                 <MapPin className="h-3 w-3 flex-shrink-0" />
-                                <span className="truncate">{farm.region}</span>
+                                <span className="truncate">
+                                  {farm.location_name || farm.region}
+                                  {farm.latitude && farm.longitude && (
+                                    <span className="text-xs ml-1">
+                                      ({farm.latitude.toFixed(3)}, {farm.longitude.toFixed(3)})
+                                    </span>
+                                  )}
+                                </span>
                               </div>
                             </div>
                           </div>

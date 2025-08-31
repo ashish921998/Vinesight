@@ -13,6 +13,8 @@ import { LocationForm } from './ETc/LocationForm';
 import { ResultsDisplay } from './ETc/ResultsDisplay';
 import { useETcCalculator } from '@/hooks/useETcCalculator';
 import { Progress } from '@/components/ui/progress';
+import type { OpenMeteoWeatherData } from '@/lib/open-meteo-weather';
+import type { LocationResult } from '@/lib/open-meteo-geocoding';
 
 const steps = ['weather', 'crop', 'location'];
 
@@ -22,6 +24,13 @@ export function ETcCalculatorComponent() {
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
   const [useCustomData, setUseCustomData] = useState(!user);
   const [currentStep, setCurrentStep] = useState(0);
+  const [locationData, setLocationData] = useState({
+    latitude: '',
+    longitude: '',
+    elevation: '',
+    locationName: ''
+  });
+  const [openMeteoValidationData, setOpenMeteoValidationData] = useState<OpenMeteoWeatherData | null>(null);
 
   const {
     formData,
@@ -39,6 +48,18 @@ export function ETcCalculatorComponent() {
     }
   }, [user, useCustomData]);
 
+  // Update location data when farm is selected
+  useEffect(() => {
+    if (selectedFarm && !useCustomData) {
+      setLocationData({
+        latitude: selectedFarm.latitude?.toString() || '',
+        longitude: selectedFarm.longitude?.toString() || '',
+        elevation: selectedFarm.elevation?.toString() || '',
+        locationName: selectedFarm.location_name || ''
+      });
+    }
+  }, [selectedFarm, useCustomData]);
+
   const loadFarms = async () => {
     try {
       const farmList = await SupabaseService.getAllFarms();
@@ -47,7 +68,9 @@ export function ETcCalculatorComponent() {
         setSelectedFarm(farmList[0]);
       }
     } catch (error) {
-      console.error('Error loading farms:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error loading farms:', error);
+      }
     }
   };
 
@@ -70,12 +93,43 @@ export function ETcCalculatorComponent() {
   const onReset = () => {
     resetForm();
     setCurrentStep(0);
-  }
+    setLocationData({
+      latitude: '',
+      longitude: '',
+      elevation: '',
+      locationName: ''
+    });
+    setOpenMeteoValidationData(null);
+  };
+
+  const handleLocationChange = (field: string, value: string) => {
+    setLocationData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleLocationSelect = (location: LocationResult) => {
+    setLocationData({
+      latitude: location.latitude.toString(),
+      longitude: location.longitude.toString(),
+      elevation: location.elevation.toString(),
+      locationName: `${location.name}, ${location.admin1 || ''} ${location.country}`.trim()
+    });
+  };
+
+  const handleOpenMeteoDataLoad = (data: OpenMeteoWeatherData) => {
+    setOpenMeteoValidationData(data);
+  };
 
   if (results) {
     return (
       <div className="space-y-4">
-        <ResultsDisplay results={results} date={formData.date} />
+        <ResultsDisplay 
+          results={results} 
+          date={formData.date} 
+          openMeteoValidationData={openMeteoValidationData}
+        />
         <Button onClick={onReset} variant="outline" className="w-full">
           Start Over
         </Button>
@@ -105,7 +159,9 @@ export function ETcCalculatorComponent() {
         {steps[currentStep] === 'weather' && (
           <WeatherDataForm
             formData={formData}
+            locationData={locationData}
             onInputChange={handleInputChange}
+            onOpenMeteoDataLoad={handleOpenMeteoDataLoad}
           />
         )}
         {steps[currentStep] === 'crop' && (
@@ -116,8 +172,9 @@ export function ETcCalculatorComponent() {
         )}
         {steps[currentStep] === 'location' && (
           <LocationForm
-            formData={formData}
-            onInputChange={handleInputChange}
+            formData={locationData}
+            onInputChange={handleLocationChange}
+            onLocationSelect={handleLocationSelect}
           />
         )}
       </div>

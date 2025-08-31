@@ -2,15 +2,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Droplets } from 'lucide-react';
+import { CheckCircle, Droplets, CloudSun } from 'lucide-react';
 import type { ETcResults } from '@/lib/etc-calculator';
+import { OpenMeteoWeatherService, type OpenMeteoWeatherData } from '@/lib/open-meteo-weather';
 
 interface ResultsDisplayProps {
   results: ETcResults;
   date: string;
+  openMeteoValidationData?: OpenMeteoWeatherData | null;
 }
 
-export function ResultsDisplay({ results, date }: ResultsDisplayProps) {
+export function ResultsDisplay({ results, date, openMeteoValidationData }: ResultsDisplayProps) {
+  // Calculate validation against Open-Meteo if available
+  const validation = openMeteoValidationData 
+    ? OpenMeteoWeatherService.validateEToDifference(results.eto, openMeteoValidationData.et0FaoEvapotranspiration)
+    : null;
   return (
     <div id="results-section" className="mx-4">
       <Card>
@@ -90,6 +96,53 @@ export function ResultsDisplay({ results, date }: ResultsDisplayProps) {
                     <li key={index}>{note}</li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* Open-Meteo Validation */}
+            {validation && (
+              <div className="pt-4 border-t border-gray-100">
+                <div className="flex items-center gap-2 mb-3">
+                  <CloudSun className="h-4 w-4 text-blue-500" />
+                  <h4 className="font-semibold text-sm">Open-Meteo Validation</h4>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-2 bg-gray-50 rounded">
+                    <Label className="text-gray-500">Our ETo</Label>
+                    <p className="font-semibold">{results.eto.toFixed(2)} mm/day</p>
+                  </div>
+                  <div className="p-2 bg-gray-50 rounded">
+                    <Label className="text-gray-500">Open-Meteo ETo</Label>
+                    <p className="font-semibold">{openMeteoValidationData!.et0FaoEvapotranspiration.toFixed(2)} mm/day</p>
+                  </div>
+                </div>
+                
+                <div className="mt-3 p-3 rounded-lg" style={{
+                  backgroundColor: validation.isAccurate ? '#f0f9f0' : '#fef3f2',
+                  border: `1px solid ${validation.isAccurate ? '#d1f2d1' : '#feddc7'}`
+                }}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Badge variant={validation.isAccurate ? 'default' : 'destructive'} className="text-xs">
+                        {validation.isAccurate ? 'ACCURATE' : 'DEVIATION'}
+                      </Badge>
+                      <p className="text-xs mt-1" style={{
+                        color: validation.isAccurate ? '#22c55e' : '#ef4444'
+                      }}>
+                        Difference: {validation.difference > 0 ? '+' : ''}{validation.difference} mm/day
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold" style={{
+                        color: validation.isAccurate ? '#22c55e' : '#ef4444'
+                      }}>
+                        {validation.percentageError > 0 ? '+' : ''}{validation.percentageError}%
+                      </p>
+                      <p className="text-xs text-gray-500">error</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

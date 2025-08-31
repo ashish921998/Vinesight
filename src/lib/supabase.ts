@@ -25,8 +25,13 @@ export interface Farm {
   planting_date: string;
   vine_spacing: number; // in meters
   row_spacing: number; // in meters
-  latitude?: number; // coordinates
-  longitude?: number; // coordinates
+  latitude?: number; // coordinates (decimal degrees)
+  longitude?: number; // coordinates (decimal degrees)
+  elevation?: number; // meters above sea level
+  location_name?: string; // human readable location name
+  timezone?: string; // timezone identifier
+  location_source?: 'manual' | 'search' | 'current'; // how location was set
+  location_updated_at?: string; // when location was last updated
   created_at?: string;
   updated_at?: string;
   user_id?: string; // For multi-user support

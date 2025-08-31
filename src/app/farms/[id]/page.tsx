@@ -11,6 +11,7 @@ import { FarmHeader } from "@/components/farm-details/FarmHeader";
 import { FarmOverview } from "@/components/farm-details/FarmOverview";
 import { QuickActions } from "@/components/farm-details/QuickActions";
 import { ActivityFeed } from "@/components/farm-details/ActivityFeed";
+import { WeatherCard } from "@/components/farm-details/WeatherCard";
 import { IrrigationForm } from "@/components/farm-details/forms/IrrigationForm";
 import { SprayForm } from "@/components/farm-details/forms/SprayForm";
 import { HarvestForm } from "@/components/farm-details/forms/HarvestForm";
@@ -214,6 +215,13 @@ export default function FarmDetailsPage() {
         dashboardData={dashboardData}
         loading={loading}
       />
+
+      {/* Weather Card */}
+      {dashboardData?.farm && (
+        <div className="px-4 mb-4">
+          <WeatherCard farm={dashboardData.farm} />
+        </div>
+      )}
 
       {/* Quick Actions */}
       <QuickActions

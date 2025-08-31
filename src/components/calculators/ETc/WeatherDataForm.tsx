@@ -2,9 +2,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ThermometerSun } from 'lucide-react';
-import { useState } from 'react';
+import { ThermometerSun, CloudSun, Download, Loader2 } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { OpenMeteoWeatherService, type OpenMeteoWeatherData } from '@/lib/open-meteo-weather';
 
 interface WeatherDataFormProps {
   formData: {
@@ -18,29 +20,112 @@ interface WeatherDataFormProps {
     solarRadiationLux: string;
     sunshineHours: string;
   };
+  locationData?: {
+    latitude: string;
+    longitude: string;
+    locationName?: string;
+  };
   onInputChange: (field: string, value: string) => void;
+  onOpenMeteoDataLoad?: (data: OpenMeteoWeatherData) => void;
 }
 
 export function WeatherDataForm({
   formData,
+  locationData,
   onInputChange,
+  onOpenMeteoDataLoad,
 }: WeatherDataFormProps) {
   const [solarRadiationType, setSolarRadiationType] = useState<'MJ' | 'lux'>('MJ');
+  const [isLoadingWeatherData, setIsLoadingWeatherData] = useState(false);
+  const [lastFetchedDate, setLastFetchedDate] = useState<string | null>(null);
+
+  const fetchOpenMeteoWeather = useCallback(async () => {
+    if (!locationData?.latitude || !locationData?.longitude || !formData.date) {
+      return;
+    }
+
+    setIsLoadingWeatherData(true);
+    try {
+      const lat = parseFloat(locationData.latitude);
+      const lon = parseFloat(locationData.longitude);
+      
+      const weatherData = await OpenMeteoWeatherService.getWeatherData(lat, lon, formData.date, formData.date);
+      
+      if (weatherData.length > 0) {
+        const dayData = weatherData[0];
+        const convertedData = OpenMeteoWeatherService.convertToETcWeatherData(dayData);
+        
+        // Update form with Open-Meteo data
+        onInputChange('temperatureMax', convertedData.temperatureMax.toString());
+        onInputChange('temperatureMin', convertedData.temperatureMin.toString());
+        onInputChange('humidity', convertedData.humidity.toString());
+        onInputChange('windSpeed', convertedData.windSpeed.toString());
+        onInputChange('rainfall', convertedData.rainfall.toString());
+        onInputChange('solarRadiation', convertedData.solarRadiation.toString());
+        onInputChange('sunshineHours', convertedData.sunshineHours.toString());
+        
+        setLastFetchedDate(formData.date);
+        
+        // Notify parent component about Open-Meteo data for validation
+        if (onOpenMeteoDataLoad) {
+          onOpenMeteoDataLoad(dayData);
+        }
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching Open-Meteo weather data:', error);
+      }
+    } finally {
+      setIsLoadingWeatherData(false);
+    }
+  }, [locationData, formData.date, onInputChange, onOpenMeteoDataLoad]);
+
+  const hasLocationAndDate = locationData?.latitude && locationData?.longitude && formData.date;
+  const hasDataChanged = lastFetchedDate !== formData.date;
   return (
     <Card>
-      <CardHeader
-        className="pb-3"
-      >
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ThermometerSun className="h-4 w-4 text-orange-500" />
             <CardTitle className="text-base">Weather Data</CardTitle>
           </div>
-          <Badge variant="secondary" className="text-xs">Required</Badge>
+          <div className="flex items-center gap-2">
+            {hasLocationAndDate && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={fetchOpenMeteoWeather}
+                disabled={isLoadingWeatherData || (!hasDataChanged && Boolean(lastFetchedDate))}
+                className="h-8 px-3 text-xs"
+              >
+                {isLoadingWeatherData ? (
+                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                ) : (
+                  <CloudSun className="w-3 h-3 mr-1" />
+                )}
+                Auto-fetch
+              </Button>
+            )}
+            <Badge variant="secondary" className="text-xs">Required</Badge>
+          </div>
         </div>
         <CardDescription className="text-xs">
-          Current weather conditions for your location
+          {hasLocationAndDate 
+            ? `Weather conditions for ${locationData?.locationName || 'selected location'} on ${formData.date || 'selected date'}`
+            : 'Enter location and date to auto-fetch weather data, or input manually'
+          }
         </CardDescription>
+        
+        {lastFetchedDate && (
+          <div className="mt-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-md">
+            <div className="flex items-center gap-2 text-xs text-blue-800">
+              <Download className="w-3 h-3" />
+              <span>Data loaded from Open-Meteo for {lastFetchedDate}</span>
+            </div>
+          </div>
+        )}
       </CardHeader>
       
       <CardContent className="pt-0 space-y-4">
