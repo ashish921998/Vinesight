@@ -95,17 +95,6 @@ export default function CalculatorsPage() {
       <div className="min-h-screen bg-gray-50">
         <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-300 z-10 shadow-sm">
           <div className="px-6 py-4">
-            <Button
-              onClick={handleBackToCalculators}
-              variant="ghost"
-              size="lg"
-              className="mb-4 text-green-600 hover:text-green-700 hover:bg-green-50 p-3 touch-target-large rounded-xl font-medium"
-            >
-              <ArrowLeft className="mr-3 h-5 w-5" />
-              Back to Calculators
-            </Button>
-            
-
             {/* Calculator Header */}
             <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl p-6 shadow-lg">
               <h1 className="text-xl font-bold mb-2">{selectedCalc.title}</h1>
