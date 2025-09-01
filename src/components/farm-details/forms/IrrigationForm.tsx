@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Droplets, Upload, X } from "lucide-react";
+import { Droplets, Upload, X, Loader2 } from "lucide-react";
 
 interface IrrigationFormProps {
   isOpen: boolean;
@@ -151,7 +151,14 @@ export function IrrigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Irri
               disabled={!formData.duration || isSubmitting}
               className="flex-1 bg-blue-600 hover:bg-blue-700"
             >
-              {isSubmitting ? "Saving..." : "Save Irrigation"}
+{isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Irrigation"
+              )}
             </Button>
           </div>
         </form>

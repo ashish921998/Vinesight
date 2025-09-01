@@ -92,13 +92,19 @@ export class SupabaseService {
   }
 
   // Irrigation operations
-  static async getIrrigationRecords(farmId: number): Promise<IrrigationRecord[]> {
+  static async getIrrigationRecords(farmId: number, limit?: number): Promise<IrrigationRecord[]> {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase
+    let query = supabase
       .from('irrigation_records')
       .select('*')
       .eq('farm_id', farmId)
       .order('date', { ascending: false });
+
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return data || [];

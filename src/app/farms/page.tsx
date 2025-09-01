@@ -3,15 +3,12 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Edit, Sprout, Loader2, MapPin, Calendar, MoreVertical, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Edit, Sprout, MapPin, MoreVertical, ChevronRight } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { SupabaseService } from "@/lib/supabase-service";
 import type { Farm } from "@/lib/supabase";
 import Link from "next/link";
-import { LocationForm } from "@/components/calculators/ETc/LocationForm";
-import type { LocationResult } from "@/lib/open-meteo-geocoding";
+import { FarmModal } from "@/components/farm-details/forms/FarmModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,23 +20,8 @@ export default function FarmsPage() {
   const [farms, setFarms] = useState<Farm[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [editingFarm, setEditingFarm] = useState<Farm | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    region: "",
-    area: "",
-    grape_variety: "",
-    planting_date: "",
-    vine_spacing: "",
-    row_spacing: ""
-  });
-  const [locationData, setLocationData] = useState({
-    latitude: "",
-    longitude: "",
-    elevation: "",
-    locationName: ""
-  });
 
   useEffect(() => {
     loadFarms();
@@ -57,28 +39,9 @@ export default function FarmsPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = async (farmData: any) => {
     try {
       setSubmitLoading(true);
-      
-      const farmData = {
-        name: formData.name,
-        region: formData.region,
-        area: parseFloat(formData.area),
-        grape_variety: formData.grape_variety,
-        planting_date: formData.planting_date,
-        vine_spacing: parseFloat(formData.vine_spacing),
-        row_spacing: parseFloat(formData.row_spacing),
-        // Include location data if available
-        latitude: locationData.latitude ? parseFloat(locationData.latitude) : undefined,
-        longitude: locationData.longitude ? parseFloat(locationData.longitude) : undefined,
-        elevation: locationData.elevation ? parseInt(locationData.elevation) : undefined,
-        location_name: locationData.locationName || undefined,
-        location_source: (locationData.latitude && locationData.longitude) ? 'search' as const : undefined,
-        location_updated_at: (locationData.latitude && locationData.longitude) ? new Date().toISOString() : undefined
-      };
       
       if (editingFarm) {
         await SupabaseService.updateFarm(editingFarm.id!, farmData);
@@ -87,9 +50,10 @@ export default function FarmsPage() {
       }
       
       await loadFarms();
-      resetForm();
+      closeModal();
     } catch (error) {
       console.error("Error saving farm:", error);
+      throw error; // Re-throw to let modal handle the error
     } finally {
       setSubmitLoading(false);
     }
@@ -97,22 +61,12 @@ export default function FarmsPage() {
 
   const handleEdit = (farm: Farm) => {
     setEditingFarm(farm);
-    setFormData({
-      name: farm.name,
-      region: farm.region,
-      area: farm.area.toString(),
-      grape_variety: farm.grape_variety,
-      planting_date: farm.planting_date,
-      vine_spacing: farm.vine_spacing.toString(),
-      row_spacing: farm.row_spacing.toString()
-    });
-    setLocationData({
-      latitude: farm.latitude?.toString() || "",
-      longitude: farm.longitude?.toString() || "",
-      elevation: farm.elevation?.toString() || "",
-      locationName: farm.location_name || ""
-    });
-    setShowAddForm(true);
+    setShowModal(true);
+  };
+
+  const handleAdd = () => {
+    setEditingFarm(null);
+    setShowModal(true);
   };
 
   const handleDelete = async (id: number) => {
@@ -126,53 +80,9 @@ export default function FarmsPage() {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      region: "",
-      area: "",
-      grape_variety: "",
-      planting_date: "",
-      vine_spacing: "",
-      row_spacing: ""
-    });
-    setLocationData({
-      latitude: "",
-      longitude: "",
-      elevation: "",
-      locationName: ""
-    });
-    setShowAddForm(false);
+  const closeModal = () => {
+    setShowModal(false);
     setEditingFarm(null);
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleLocationChange = (field: string, value: string) => {
-    setLocationData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleLocationSelect = (location: LocationResult) => {
-    setLocationData({
-      latitude: location.latitude.toString(),
-      longitude: location.longitude.toString(),
-      elevation: location.elevation.toString(),
-      locationName: `${location.name}, ${location.admin1 || ''} ${location.country}`.trim()
-    });
-    
-    // Also update the region if it's empty
-    if (!formData.region) {
-      const regionName = location.admin1 ? `${location.name}, ${location.admin1}` : location.name;
-      handleInputChange('region', regionName);
-    }
   };
 
   return (
@@ -192,7 +102,7 @@ export default function FarmsPage() {
                 </p>
               </div>
               <Button 
-                onClick={() => setShowAddForm(true)}
+                onClick={handleAdd}
                 size="sm"
                 className="h-9 px-3 text-sm font-medium bg-green-600 hover:bg-green-700"
               >
@@ -204,147 +114,6 @@ export default function FarmsPage() {
         </div>
 
         <div className="px-4 py-4 max-w-md mx-auto">
-          {showAddForm && (
-            <Card className="mb-4 border-0 shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg">
-                  {editingFarm ? "Edit Farm" : "Add New Farm"}
-                </CardTitle>
-                <CardDescription className="text-sm">
-                  Enter your vineyard details
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="name" className="text-sm font-medium text-gray-700">Farm Name</Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => handleInputChange("name", e.target.value)}
-                        placeholder="e.g., Nashik Vineyard"
-                        required
-                        className="h-12 text-base mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="region" className="text-sm font-medium text-gray-700">Region</Label>
-                      <Input
-                        id="region"
-                        value={formData.region}
-                        onChange={(e) => handleInputChange("region", e.target.value)}
-                        placeholder="e.g., Nashik, Maharashtra"
-                        required
-                        className="h-12 text-base mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor="area" className="text-sm font-medium text-gray-700">Area (ha)</Label>
-                        <Input
-                          id="area"
-                          type="number"
-                          step="0.1"
-                          value={formData.area}
-                          onChange={(e) => handleInputChange("area", e.target.value)}
-                          placeholder="2.5"
-                          required
-                          className="h-12 text-base mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="grape_variety" className="text-sm font-medium text-gray-700">Variety</Label>
-                        <Input
-                          id="grape_variety"
-                          value={formData.grape_variety}
-                          onChange={(e) => handleInputChange("grape_variety", e.target.value)}
-                          placeholder="Thompson Seedless"
-                          required
-                          className="h-12 text-base mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="planting_date" className="text-sm font-medium text-gray-700">Planting Date</Label>
-                      <Input
-                        id="planting_date"
-                        type="date"
-                        value={formData.planting_date}
-                        onChange={(e) => handleInputChange("planting_date", e.target.value)}
-                        required
-                        className="h-12 text-base mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor="vine_spacing" className="text-sm font-medium text-gray-700">Vine Spacing (m)</Label>
-                        <Input
-                          id="vine_spacing"
-                          type="number"
-                          step="0.1"
-                          value={formData.vine_spacing}
-                          onChange={(e) => handleInputChange("vine_spacing", e.target.value)}
-                          placeholder="3"
-                          required
-                          className="h-12 text-base mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="row_spacing" className="text-sm font-medium text-gray-700">Row Spacing (m)</Label>
-                        <Input
-                          id="row_spacing"
-                          type="number"
-                          step="0.1"
-                          value={formData.row_spacing}
-                          onChange={(e) => handleInputChange("row_spacing", e.target.value)}
-                          placeholder="9"
-                          required
-                          className="h-12 text-base mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Location Section */}
-                    <div className="pt-4 border-t border-gray-100">
-                      <LocationForm
-                        formData={locationData}
-                        onInputChange={handleLocationChange}
-                        onLocationSelect={handleLocationSelect}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3 pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={resetForm} 
-                      disabled={submitLoading} 
-                      className="flex-1 h-12 border-gray-300"
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      disabled={submitLoading} 
-                      className="flex-1 h-12 bg-green-600 hover:bg-green-700"
-                    >
-                      {submitLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          {editingFarm ? "Updating..." : "Adding..."}
-                        </>
-                      ) : (
-                        editingFarm ? "Update Farm" : "Add Farm"
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
           <div className="space-y-3 max-w-md mx-auto">
             {loading ? (
               // Modern skeleton loading
@@ -459,7 +228,7 @@ export default function FarmsPage() {
               ))
             )}
             
-            {!loading && farms.length === 0 && !showAddForm && (
+            {!loading && farms.length === 0 && (
               <Card className="border-0 shadow-sm text-center py-12">
                 <CardContent>
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -470,7 +239,7 @@ export default function FarmsPage() {
                     Start by adding your first vineyard to begin tracking your farming operations
                   </p>
                   <Button 
-                    onClick={() => setShowAddForm(true)} 
+                    onClick={handleAdd} 
                     className="h-12 px-6 bg-green-600 hover:bg-green-700"
                   >
                     <Plus className="h-4 w-4 mr-2" />
@@ -481,6 +250,15 @@ export default function FarmsPage() {
             )}
           </div>
         </div>
+
+        {/* Farm Modal */}
+        <FarmModal
+          isOpen={showModal}
+          onClose={closeModal}
+          onSubmit={handleSubmit}
+          editingFarm={editingFarm}
+          isSubmitting={submitLoading}
+        />
       </div>
     </ProtectedRoute>
   );

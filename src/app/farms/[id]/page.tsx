@@ -12,9 +12,11 @@ import { FarmOverview } from "@/components/farm-details/FarmOverview";
 import { QuickActions } from "@/components/farm-details/QuickActions";
 import { ActivityFeed } from "@/components/farm-details/ActivityFeed";
 import { WeatherCard } from "@/components/farm-details/WeatherCard";
+import { RemainingWaterCard } from "@/components/farm-details/RemainingWaterCard";
 import { IrrigationForm } from "@/components/farm-details/forms/IrrigationForm";
 import { SprayForm } from "@/components/farm-details/forms/SprayForm";
 import { HarvestForm } from "@/components/farm-details/forms/HarvestForm";
+import { WaterCalculationModal } from "@/components/farm-details/WaterCalculationModal";
 
 interface DashboardData {
   farm: Farm | null;
@@ -49,6 +51,7 @@ export default function FarmDetailsPage() {
   const [showFertigationModal, setShowFertigationModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showSoilTestModal, setShowSoilTestModal] = useState(false);
+  const [showWaterCalculationModal, setShowWaterCalculationModal] = useState(false);
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -216,10 +219,14 @@ export default function FarmDetailsPage() {
         loading={loading}
       />
 
-      {/* Weather Card */}
+      {/* Weather and Water Cards */}
       {dashboardData?.farm && (
-        <div className="px-4 mb-4">
+        <div className="px-4 mb-4 space-y-4">
           <WeatherCard farm={dashboardData.farm} />
+          <RemainingWaterCard 
+            farm={dashboardData.farm} 
+            onCalculateClick={() => setShowWaterCalculationModal(true)}
+          />
         </div>
       )}
 
@@ -262,6 +269,16 @@ export default function FarmDetailsPage() {
         onSubmit={handleHarvestSubmit}
         isSubmitting={isSubmitting}
       />
+
+      {/* Water Calculation Modal */}
+      {dashboardData?.farm && (
+        <WaterCalculationModal
+          isOpen={showWaterCalculationModal}
+          onClose={() => setShowWaterCalculationModal(false)}
+          farm={dashboardData.farm}
+          onCalculationComplete={loadDashboardData}
+        />
+      )}
 
       {/* TODO: Add remaining form modals */}
       {/* FertigationForm, ExpenseForm, SoilTestForm */}
