@@ -12,7 +12,7 @@ interface ServerQuotaData {
 // In-memory storage (in production, use Redis/database)
 const userQuotas = new Map<string, ServerQuotaData>();
 
-const DAILY_LIMIT = 5;
+const DAILY_LIMIT = 50;
 const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
 
 /**

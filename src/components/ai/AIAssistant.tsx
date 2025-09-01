@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, Send, Mic, MicOff, Bot, User, Loader2, X, Paperclip, History, Plus, Copy, Check, Search, Globe, Hash, ArrowRight } from 'lucide-react';
+import { MessageCircle, Mic, MicOff, Bot, User, Loader2, X, Paperclip, History, Plus, Copy, Check, ArrowRight, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,29 +9,14 @@ import { ImageAnalysisResult } from '@/lib/ai-service';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { getQuotaStatus } from '@/lib/quota-service';
+import { getQuotaStatus, incrementQuestionCount } from '@/lib/quota-service';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Textarea } from '../ui/textarea';
+import { supabaseConversationStorage, type Message, type Conversation } from '@/lib/supabase-conversation-storage';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
-interface Message {
-  id: string;
-  content: string;
-  role: 'user' | 'assistant';
-  timestamp: Date;
-  language?: string;
-  attachments?: Array<{
-    type: 'image';
-    name: string;
-    url: string;
-    size?: number;
-  }>;
-  context?: {
-    queryType?: string;
-    confidence?: number;
-    relatedTopics?: string[];
-  };
-}
+// Message and Conversation interfaces now imported from conversation-storage
 
 interface AIAssistantProps {
   farmData?: any;
@@ -51,6 +36,7 @@ export function AIAssistant({
   isMobile: propIsMobile
 }: AIAssistantProps) {
   const { t, i18n } = useTranslation();
+  const { user, loading: authLoading } = useSupabaseAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -58,14 +44,46 @@ export function AIAssistant({
   const [isMobile, setIsMobile] = useState(propIsMobile || false);
   const [quotaStatus, setQuotaStatus] = useState(() => getQuotaStatus());
   const [showHistory, setShowHistory] = useState(false);
-  const [conversations, setConversations] = useState<{id: string; title: string; messages: Message[]}[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const currentConversationIdRef = useRef<string | null>(null); // Synchronous reference to prevent race conditions
+  const savingInProgressRef = useRef<boolean>(false); // Prevent concurrent saves
   const [pendingAttachments, setPendingAttachments] = useState<Array<{type: 'image'; name: string; url: string; size?: number}>>([]);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load conversations from storage on mount
+  useEffect(() => {
+    const loadConversations = async () => {
+      if (authLoading) return; // Wait for auth to load
+      
+      const stored = await supabaseConversationStorage.loadConversations(user?.id, farmData?.id);
+      setConversations(stored);
+
+      // Auto-migrate localStorage data if user is authenticated and no conversations exist
+      if (user && stored.length === 0) {
+        try {
+          await supabaseConversationStorage.migrateFromLocalStorage(user.id);
+          // Reload conversations after migration
+          const migratedConversations = await supabaseConversationStorage.loadConversations(user?.id, farmData?.id);
+          setConversations(migratedConversations);
+        } catch (error) {
+          console.error('Migration error:', error);
+        }
+      }
+    };
+    loadConversations();
+  }, [user, authLoading, farmData?.id]);
+
+  // Update quota status when user authentication changes
+  useEffect(() => {
+    if (!authLoading) {
+      setQuotaStatus(getQuotaStatus(user?.id));
+    }
+  }, [user?.id, authLoading]);
 
   // Check if device is mobile (only if not provided as prop)
   useEffect(() => {
@@ -158,7 +176,7 @@ export function AIAssistant({
       };
       setMessages([updatedWelcomeMessage]);
     }
-  }, [i18n.language, getWelcomeMessage]); // Remove messages to prevent loops
+  }, [messages, i18n.language, getWelcomeMessage]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -213,6 +231,63 @@ export function AIAssistant({
     };
   }, [messages, farmData, recentAnalysis, i18n.language]);
 
+
+  // Immediately save individual messages to prevent data loss
+  const saveMessageImmediately = useCallback(async (allMessages: Message[]) => {
+    if (allMessages.length <= 1) return; // Don't save if only welcome message + new message
+    if (savingInProgressRef.current) return; // Prevent concurrent saves
+
+    // Use ref to get the most current conversation ID to prevent race conditions
+    let conversationId = currentConversationIdRef.current || currentConversationId;
+    if (!conversationId) {
+      conversationId = Date.now().toString();
+      currentConversationIdRef.current = conversationId;
+      setCurrentConversationId(conversationId);
+    }
+
+    const title = supabaseConversationStorage.generateTitle(allMessages);
+    
+    const conversation: Conversation = {
+      id: conversationId,
+      title,
+      messages: allMessages,
+      createdAt: currentConversationId ? 
+        (conversations.find(c => c.id === conversationId)?.createdAt || new Date()) : 
+        new Date(),
+      updatedAt: new Date(),
+      farmId: farmData?.id,
+      userId: user?.id,
+      lastMessageAt: new Date(),
+      messageCount: allMessages.length
+    };
+    
+    try {
+      savingInProgressRef.current = true; // Mark saving in progress
+      const savedConversation = await supabaseConversationStorage.saveConversation(conversation, user?.id);
+      
+      if (savedConversation) {
+        // Update local state with saved conversation
+        setConversations(prev => {
+          const existing = prev.find(c => c.id === conversationId);
+          if (existing) {
+            return prev.map(c => c.id === conversationId ? savedConversation : c);
+          }
+          return [savedConversation, ...prev];
+        });
+        
+        // Update conversation ID if it changed (timestamp -> database ID)
+        if (savedConversation.id !== conversationId) {
+          currentConversationIdRef.current = savedConversation.id; // Update ref immediately
+          setCurrentConversationId(savedConversation.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving message immediately:', error);
+    } finally {
+      savingInProgressRef.current = false; // Always reset saving flag
+    }
+  }, [currentConversationId, conversations, user?.id, farmData?.id]);
+
   const handleSendMessage = useCallback(async (text?: string) => {
     const messageText = text || inputValue.trim();
     if ((!messageText && pendingAttachments.length === 0) || isLoading) return;
@@ -235,6 +310,12 @@ export function AIAssistant({
     setInputValue('');
     setPendingAttachments([]); // Clear pending attachments
     setIsLoading(true);
+
+    // Increment quota count since user is sending a question
+    incrementQuestionCount(user?.id);
+
+    // Immediately save the user message to ensure no data loss
+    await saveMessageImmediately(updatedMessages);
 
     // Create streaming assistant message
     const assistantMessageId = (Date.now() + 1).toString();
@@ -316,6 +397,15 @@ export function AIAssistant({
         }
       }
 
+      // Immediately save the completed AI response
+      const completedAssistantMessage: Message = { 
+        ...streamingMessage, 
+        content: fullResponse
+      };
+      const completedMessages = [...updatedMessages, completedAssistantMessage];
+      
+      await saveMessageImmediately(completedMessages);
+
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Chat error:', error);
@@ -357,14 +447,16 @@ export function AIAssistant({
       setMessages(prev => prev.map(msg => 
         msg.id === assistantMessageId ? errorMessage : msg
       ));
+
+      // Immediately save the error message
+      const errorMessages = [...updatedMessages, errorMessage];
+      await saveMessageImmediately(errorMessages);
     } finally {
       setIsLoading(false);
       // Update quota status after message attempt
-      setQuotaStatus(getQuotaStatus());
-      // Save conversation after each message
-      setTimeout(() => saveCurrentConversation(), 500);
+      setQuotaStatus(getQuotaStatus(user?.id));
     }
-  }, [inputValue, isLoading, messages, i18n.language, buildConversationContext, pendingAttachments]);
+  }, [inputValue, isLoading, messages, i18n.language, buildConversationContext, pendingAttachments, saveMessageImmediately, user?.id]);
 
   // Store current handleSendMessage in window for speech recognition
   useEffect(() => {
@@ -442,29 +534,13 @@ export function AIAssistant({
     setPendingAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Simple conversation management
+  // Conversation management with persistent storage
   const startNewConversation = () => {
     setMessages([]);
     setCurrentConversationId(null);
+    currentConversationIdRef.current = null; // Sync ref
     setShowHistory(false);
     setPendingAttachments([]); // Clear any pending attachments
-  };
-
-  const saveCurrentConversation = () => {
-    if (messages.length > 1) { // More than just welcome message
-      const title = messages[1]?.content.slice(0, 50) + '...' || 'New Conversation';
-      const conversationId = currentConversationId || Date.now().toString();
-      
-      setConversations(prev => {
-        const existing = prev.find(c => c.id === conversationId);
-        if (existing) {
-          return prev.map(c => c.id === conversationId ? {...c, messages} : c);
-        }
-        return [...prev, { id: conversationId, title, messages }];
-      });
-      
-      setCurrentConversationId(conversationId);
-    }
   };
 
   const loadConversation = (conversationId: string) => {
@@ -472,7 +548,21 @@ export function AIAssistant({
     if (conversation) {
       setMessages(conversation.messages);
       setCurrentConversationId(conversationId);
+      currentConversationIdRef.current = conversationId; // Sync ref
       setShowHistory(false);
+    }
+  };
+
+  const deleteConversation = async (conversationId: string) => {
+    // Delete from persistent storage
+    await supabaseConversationStorage.deleteConversation(conversationId, user?.id);
+    
+    // Update local state
+    setConversations(prev => prev.filter(c => c.id !== conversationId));
+    
+    // If we're deleting the current conversation, start a new one
+    if (currentConversationId === conversationId) {
+      startNewConversation();
     }
   };
 
@@ -614,24 +704,56 @@ export function AIAssistant({
       <CardContent className="flex-1 flex flex-col min-h-0 p-0">
         {/* Conversation History Sidebar */}
         {showHistory && (
-          <div className="flex-shrink-0 border-b bg-gray-50 p-4 max-h-48 overflow-y-auto">
-            <h3 className="text-sm font-medium mb-2">Conversation History</h3>
+          <div className="flex-shrink-0 border-b bg-gray-50 p-4 max-h-60 overflow-y-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium">Conversation History</h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowHistory(false)}
+                className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
             {conversations.length === 0 ? (
-              <p className="text-xs text-gray-500">No saved conversations</p>
+              <p className="text-xs text-gray-500">No saved conversations yet</p>
             ) : (
               <div className="space-y-2">
-                {conversations.map((conv) => (
-                  <div 
-                    key={conv.id}
-                    onClick={() => loadConversation(conv.id)}
-                    className={cn(
-                      "p-2 rounded cursor-pointer text-xs hover:bg-gray-200",
-                      currentConversationId === conv.id && "bg-blue-100"
-                    )}
-                  >
-                    {conv.title}
-                  </div>
-                ))}
+                {conversations
+                  .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+                  .map((conv) => (
+                    <div 
+                      key={conv.id}
+                      className={cn(
+                        "group flex items-center justify-between p-2 rounded cursor-pointer text-xs hover:bg-gray-200",
+                        currentConversationId === conv.id && "bg-blue-100"
+                      )}
+                    >
+                      <div 
+                        onClick={() => loadConversation(conv.id)}
+                        className="flex-1 min-w-0"
+                      >
+                        <div className="font-medium text-gray-900 truncate">
+                          {conv.title}
+                        </div>
+                        <div className="text-gray-500 text-xs">
+                          {conv.updatedAt.toLocaleDateString()} • {conv.messages.length - 1} messages
+                        </div>
+                      </div>
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteConversation(conv.id);
+                        }}
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-red-400 hover:text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
               </div>
             )}
           </div>

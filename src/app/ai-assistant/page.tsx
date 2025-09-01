@@ -9,11 +9,11 @@ export default function AIAssistantPage() {
   const [recentAnalysis] = useState<ImageAnalysisResult[]>([]);
 
   return (
-    <ProtectedRoute>
+    // <ProtectedRoute>
           <AIAssistant 
             recentAnalysis={recentAnalysis}
             isOpen={true}
           />
-    </ProtectedRoute>
+    // </ProtectedRoute>
   );
 }
