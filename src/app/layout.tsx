@@ -9,6 +9,7 @@ import { Suspense } from "react";
 import { BottomNavigation } from "@/components/mobile/BottomNavigation";
 import { GlobalAuthErrorHandler } from "@/components/auth/GlobalAuthErrorHandler";
 import { Toaster } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/next"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -107,6 +108,7 @@ export default function RootLayout({
               </I18nProvider>
           </Suspense>
         </AsyncErrorBoundary>
+        <Analytics />
       </body>
     </html>
   );
