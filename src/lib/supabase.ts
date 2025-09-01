@@ -20,7 +20,7 @@ export interface Farm {
   id?: number;
   name: string;
   region: string;
-  area: number; // in hectares
+  area: number; // in acres
   grape_variety: string;
   planting_date: string;
   vine_spacing: number; // in meters
@@ -45,7 +45,7 @@ export interface IrrigationRecord {
   farm_id: number;
   date: string;
   duration: number; // in hours
-  area: number; // area irrigated in hectares
+  area: number; // area irrigated in acres
   growth_stage: string;
   moisture_status: string;
   system_discharge: number; // in liters per hour
@@ -60,7 +60,7 @@ export interface SprayRecord {
   pest_disease: string;
   chemical: string;
   dose: string;
-  area: number; // in hectares
+  area: number; // in acres
   weather: string;
   operator: string;
   notes?: string;
@@ -74,7 +74,7 @@ export interface FertigationRecord {
   fertilizer: string;
   dose: string;
   purpose: string;
-  area: number; // in hectares
+  area: number; // in acres
   notes?: string;
   created_at?: string;
 }

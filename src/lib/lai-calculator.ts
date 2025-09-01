@@ -21,8 +21,8 @@ export interface LAICalculationInputs {
 export interface LAIResults {
   lai: number; // Leaf Area Index
   leafAreaPerVine: number; // m²
-  leafAreaPerHectare: number; // m²/ha
-  plantDensity: number; // vines per hectare
+  leafAreaPerAcre: number; // m²/ha
+  plantDensity: number; // vines per acre
   canopyDensity: 'sparse' | 'optimal' | 'dense' | 'overcrowded';
   lightInterception: number; // percentage
   recommendations: {
@@ -70,7 +70,7 @@ export class LAICalculator {
   }
 
   /**
-   * Calculate plant density (vines per hectare)
+   * Calculate plant density (vines per acre)
    */
   private static calculatePlantDensity(vineSpacing: number, rowSpacing: number): number {
     return 10000 / (vineSpacing * rowSpacing);
@@ -231,8 +231,8 @@ export class LAICalculator {
     const plantDensity = this.calculatePlantDensity(vineSpacing, rowSpacing);
 
     // Calculate LAI (Leaf Area per unit ground area)
-    const leafAreaPerHectare = adjustedLeafAreaPerVine * plantDensity;
-    const lai = leafAreaPerHectare / 10000; // Convert to LAI units
+    const leafAreaPerAcre = adjustedLeafAreaPerVine * plantDensity;
+    const lai = leafAreaPerAcre / 10000; // Convert to LAI units
 
     // Calculate light interception
     const lightInterception = this.calculateLightInterception(lai);
@@ -254,7 +254,7 @@ export class LAICalculator {
     return {
       lai: Math.round(lai * 100) / 100,
       leafAreaPerVine: Math.round(adjustedLeafAreaPerVine * 100) / 100,
-      leafAreaPerHectare: Math.round(leafAreaPerHectare),
+      leafAreaPerAcre: Math.round(leafAreaPerAcre),
       plantDensity: Math.round(plantDensity),
       canopyDensity,
       lightInterception: Math.round(lightInterception * 10) / 10,

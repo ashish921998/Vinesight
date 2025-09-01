@@ -56,7 +56,7 @@ export const FarmSchema = z.object({
     .transform(sanitizeString),
   area: z.number()
     .min(0.01, "Area must be greater than 0")
-    .max(10000, "Area must be less than 10,000 hectares")
+    .max(25000, "Area must be less than 25,000 acres")
     .finite("Area must be a valid number"),
   grape_variety: z.string()
     .min(1, "Grape variety is required")
@@ -90,7 +90,7 @@ export const IrrigationSchema = z.object({
     .max(24, "Duration cannot exceed 24 hours"),
   area: z.number()
     .min(0.01, "Area must be greater than 0")
-    .max(10000, "Area too large"),
+    .max(25000, "Area too large"),
   growth_stage: z.enum(['dormant', 'budbreak', 'flowering', 'fruit_set', 'veraison', 'harvest', 'post_harvest']),
   moisture_status: z.string().min(1, "Moisture status is required").max(50),
   system_discharge: z.number()
@@ -114,7 +114,7 @@ export const SpraySchema = z.object({
     .max(50, "Dose description too long"),
   area: z.number()
     .min(0.01, "Area must be greater than 0")
-    .max(10000, "Area too large"),
+    .max(25000, "Area too large"),
   weather: z.string()
     .min(1, "Weather conditions required")
     .max(100, "Weather description too long"),

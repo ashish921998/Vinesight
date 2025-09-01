@@ -32,7 +32,7 @@ export function MADCalculatorComponent() {
   const [dbp, setDbp] = useState(''); // Distance Between Plant (row spacing)
   const [drippersPerPlant, setDrippersPerPlant] = useState('');
   const [dischargePerHour1, setDischargePerHour1] = useState('');
-  const [plantsPerHectare, setPlantsPerHectare] = useState<number | null>(null);
+  const [plantsPerAcre, setPlantsPerHectare] = useState<number | null>(null);
   
   // System Discharge 2 inputs
   const [dbd, setDbd] = useState(''); // Distance Between Dripper
@@ -248,7 +248,7 @@ export function MADCalculatorComponent() {
               >
                 <div>
                   <p className="font-medium">System Discharge 1</p>
-                  <p className="text-sm text-gray-600">Using plants per hectare and drippers</p>
+                  <p className="text-sm text-gray-600">Using plants per acre and drippers</p>
                 </div>
               </Button>
               <Button
@@ -319,13 +319,13 @@ export function MADCalculatorComponent() {
               Calculate System Discharge 1
             </Button>
             
-            {plantsPerHectare && (
+            {plantsPerAcre && (
               <div className="bg-purple-50 p-4 rounded-lg">
                 <p className="text-sm font-medium text-purple-800 mb-2">
-                  Plants per Hectare (P/H): <span className="text-lg">{plantsPerHectare.toFixed(2)}</span>
+                  Plants per Hectare (P/H): <span className="text-lg">{plantsPerAcre.toFixed(2)}</span>
                 </p>
                 <p className="text-xs text-purple-600">
-                  Formula: 10000 ÷ (DBL ({madResult?.dbl}) × DBP ({dbp})) = {plantsPerHectare.toFixed(2)}
+                  Formula: 10000 ÷ (DBL ({madResult?.dbl}) × DBP ({dbp})) = {plantsPerAcre.toFixed(2)}
                 </p>
               </div>
             )}

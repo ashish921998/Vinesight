@@ -60,7 +60,7 @@ export function FarmHeader({ farm, loading, onBack }: FarmHeaderProps) {
               </Badge>
               
               <Badge variant="outline" className="border-gray-300 text-gray-700">
-                {farm.area} hectares
+                {farm.area} acres
               </Badge>
             </div>
           </div>

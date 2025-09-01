@@ -97,13 +97,13 @@ export function HarvestForm({ selectedFarm, onRecordAdded, onCancel }: HarvestFo
     const quantity = parseFloat(formData.quantity) || 0;
     const price = parseFloat(formData.price_per_kg) || 0;
     const totalValue = quantity * price;
-    const yieldPerHectare = quantity / selectedFarm.area;
-    const revenuePerHectare = totalValue / selectedFarm.area;
+    const yieldPerAcre = quantity / selectedFarm.area;
+    const revenuePerAcre = totalValue / selectedFarm.area;
 
     return {
       totalValue,
-      yieldPerHectare,
-      revenuePerHectare
+      yieldPerAcre,
+      revenuePerAcre
     };
   };
 
@@ -374,15 +374,15 @@ export function HarvestForm({ selectedFarm, onRecordAdded, onCancel }: HarvestFo
               </div>
               <div className="text-center p-4 bg-white rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">
-                  {metrics.yieldPerHectare.toFixed(0)} kg
+                  {metrics.yieldPerAcre.toFixed(0)} kg
                 </div>
-                <div className="text-sm text-blue-700">Yield per Hectare</div>
+                <div className="text-sm text-blue-700">Yield per Acre</div>
               </div>
               <div className="text-center p-4 bg-white rounded-lg">
                 <div className="text-2xl font-bold text-purple-600">
-                  ₹{metrics.revenuePerHectare.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  ₹{metrics.revenuePerAcre.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </div>
-                <div className="text-sm text-purple-700">Revenue per Hectare</div>
+                <div className="text-sm text-purple-700">Revenue per Acre</div>
               </div>
             </div>
           </CardContent>

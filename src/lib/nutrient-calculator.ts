@@ -22,13 +22,13 @@ export interface SoilTestResults {
 
 export interface NutrientCalculationInputs {
   farmId: number;
-  targetYield: number; // tons per hectare
+  targetYield: number; // tons per acre
   currentGrowthStage: GrapeGrowthStage;
   soilTest: SoilTestResults;
   grapeVariety: 'table' | 'wine' | 'raisin';
   irrigationMethod: 'drip' | 'sprinkler' | 'surface';
   previousApplications: PreviousApplication[];
-  farmArea: number; // hectares
+  farmArea: number; // acres
 }
 
 export interface PreviousApplication {

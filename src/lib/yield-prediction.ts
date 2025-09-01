@@ -1,6 +1,6 @@
 export interface HistoricalYieldData {
   year: number;
-  yieldPerHectare: number; // kg/ha
+  yieldPerAcre: number; // kg/ha
   averageClusterWeight: number; // grams
   clustersPerVine: number;
   berrySize: 'small' | 'medium' | 'large';
@@ -48,7 +48,7 @@ export interface YieldPredictionInputs {
   currentSeasonData: {
     vineAge: number; // years
     grapeVariety: 'cabernet_sauvignon' | 'chardonnay' | 'pinot_noir' | 'merlot' | 'sauvignon_blanc' | 'riesling';
-    plantingDensity: number; // vines per hectare
+    plantingDensity: number; // vines per acre
     targetQuality: 'premium' | 'standard' | 'bulk';
     currentWeather: HistoricalYieldData['weatherConditions'];
     plannedManagement: HistoricalYieldData['managementPractices'];
@@ -59,7 +59,7 @@ export interface YieldPredictionInputs {
   };
   economicFactors: {
     targetPrice: number; // per kg
-    productionCost: number; // per hectare
+    productionCost: number; // per acre
     laborCost: number; // per hour
     inputCosts: {
       fertilizer: number;
@@ -266,7 +266,7 @@ export class YieldPredictionEngine {
     data.forEach(yearData => {
       const yearsAgo = currentYear - yearData.year;
       const weight = Math.max(0.1, 1 - (yearsAgo * 0.1)); // Decay weight by 10% per year
-      weightedSum += yearData.yieldPerHectare * weight;
+      weightedSum += yearData.yieldPerAcre * weight;
       totalWeight += weight;
     });
     
@@ -585,7 +585,7 @@ export class YieldPredictionEngine {
       total: totalCosts,
       perKg: totalCosts / scenarios.realistic.yield,
       breakdown: {
-        labor: economicFactors.laborCost * 40, // Estimated 40 hours per hectare
+        labor: economicFactors.laborCost * 40, // Estimated 40 hours per acre
         materials: economicFactors.inputCosts.fertilizer + economicFactors.inputCosts.pesticides,
         equipment: economicFactors.productionCost * 0.3, // 30% for equipment
         overhead: economicFactors.productionCost * 0.2 // 20% overhead
@@ -736,7 +736,7 @@ export class YieldPredictionEngine {
     
     historicalData.forEach(data => {
       const fields = [
-        'yieldPerHectare', 'averageClusterWeight', 'clustersPerVine',
+        'yieldPerAcre', 'averageClusterWeight', 'clustersPerVine',
         'sugarContent', 'acidity', 'pH'
       ];
       

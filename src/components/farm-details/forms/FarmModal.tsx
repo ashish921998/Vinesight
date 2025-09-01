@@ -209,7 +209,7 @@ export function FarmModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="area" className="text-sm font-medium text-gray-700">
-                  Area (hectares) *
+                  Area (acres) *
                 </Label>
                 <Input
                   id="area"
@@ -218,7 +218,7 @@ export function FarmModal({
                   min="0"
                   value={formData.area}
                   onChange={(e) => handleInputChange("area", e.target.value)}
-                  placeholder="2.5"
+                  placeholder="6.2"
                   required
                   className="mt-1 h-11"
                 />

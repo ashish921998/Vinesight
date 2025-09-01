@@ -643,7 +643,7 @@ export function NutrientCalculatorComponent() {
                         ${results.totalCost.toFixed(2)}
                       </div>
                       <div className="text-sm sm:text-xs text-green-700 mt-1">
-                        Total cost per hectare
+                        Total cost per acre
                       </div>
                     </div>
                   </div>

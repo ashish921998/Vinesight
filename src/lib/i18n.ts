@@ -111,7 +111,7 @@ const resources = {
         editFarm: "Edit Farm",
         farmName: "Farm Name",
         location: "Location",
-        area: "Area (hectares)",
+        area: "Area (acres)",
         grapeVariety: "Grape Variety",
         plantingDate: "Planting Date",
         vineSpacing: "Vine Spacing (m)",
@@ -279,7 +279,7 @@ const resources = {
       },
       // Units
       units: {
-        hectares: "hectares",
+        acres: "acres",
         meters: "meters",
         celsius: "°C",
         percentage: "%",
@@ -571,7 +571,7 @@ const resources = {
       },
       // Units - Hindi
       units: {
-        hectares: "हेक्टेयर",
+        acres: "हेक्टेयर",
         meters: "मीटर",
         celsius: "°C",
         percentage: "%",
@@ -863,7 +863,7 @@ const resources = {
       },
       // Units - Marathi
       units: {
-        hectares: "हेक्टर",
+        acres: "हेक्टर",
         meters: "मीटर",
         celsius: "°C",
         percentage: "%",

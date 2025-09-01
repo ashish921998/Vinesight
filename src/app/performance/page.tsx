@@ -303,7 +303,7 @@ export default function FarmEfficiencyPage() {
                       <div>
                         <div className="font-medium">{farm.name}</div>
                         <div className="text-sm text-muted-foreground">
-                          {farm.area} hectares • {farm.region} • {farm.grapeVariety}
+                          {farm.area} acres • {farm.region} • {farm.grapeVariety}
                         </div>
                       </div>
                     </SelectItem>

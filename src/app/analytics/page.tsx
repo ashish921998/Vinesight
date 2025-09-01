@@ -300,7 +300,7 @@ export default function AnalyticsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{analytics.totalFarms}</div>
             <p className="text-xs text-muted-foreground">
-              {analytics.totalArea.toFixed(1)} hectares total
+              {analytics.totalArea.toFixed(1)} acres total
             </p>
           </CardContent>
         </Card>
@@ -313,7 +313,7 @@ export default function AnalyticsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{analytics.totalIrrigationHours.toFixed(1)}</div>
             <p className="text-xs text-muted-foreground">
-              {(analytics.totalIrrigationHours / analytics.totalArea).toFixed(1)} hrs/hectare avg
+              {(analytics.totalIrrigationHours / analytics.totalArea).toFixed(1)} hrs/acre avg
             </p>
           </CardContent>
         </Card>
@@ -337,7 +337,7 @@ export default function AnalyticsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(analytics.totalHarvestValue)}</div>
             <p className="text-xs text-muted-foreground">
-              {formatCurrency(analytics.totalHarvestValue / analytics.totalArea)}/hectare
+              {formatCurrency(analytics.totalHarvestValue / analytics.totalArea)}/acre
             </p>
           </CardContent>
         </Card>
@@ -364,7 +364,7 @@ export default function AnalyticsPage() {
                     {formatCurrency(advancedAnalytics.costAnalysis.totalCosts)}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {formatCurrency(advancedAnalytics.costAnalysis.costPerHectare)}/hectare
+                    {formatCurrency(advancedAnalytics.costAnalysis.costPerHectare)}/acre
                   </p>
                 </CardContent>
               </Card>
@@ -506,7 +506,7 @@ export default function AnalyticsPage() {
                     {advancedAnalytics.yieldAnalysis.currentYield.toFixed(1)}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    tons/hectare
+                    tons/acre
                   </p>
                 </CardContent>
               </Card>
@@ -536,7 +536,7 @@ export default function AnalyticsPage() {
                     {advancedAnalytics.yieldAnalysis.projectedYield.toFixed(1)}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    tons/hectare (next season)
+                    tons/acre (next season)
                   </p>
                 </CardContent>
               </Card>
@@ -552,7 +552,7 @@ export default function AnalyticsPage() {
                     {(advancedAnalytics.yieldAnalysis.benchmarkComparison.your - advancedAnalytics.yieldAnalysis.benchmarkComparison.regional).toFixed(1)}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    tons/hectare difference
+                    tons/acre difference
                   </p>
                 </CardContent>
               </Card>

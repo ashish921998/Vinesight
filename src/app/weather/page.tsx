@@ -106,7 +106,7 @@ export default function WeatherPage() {
                       <div>
                         <div className="font-medium">{farm.name}</div>
                         <div className="text-sm text-muted-foreground">
-                          {farm.area} hectares • {farm.region}
+                          {farm.area} acres • {farm.region}
                         </div>
                       </div>
                     </SelectItem>

@@ -5,7 +5,7 @@
 
 export interface SystemDesignInputs {
   farmId: number;
-  farmArea: number; // hectares
+  farmArea: number; // acres
   vineSpacing: number; // meters
   rowSpacing: number; // meters
   irrigationMethod: 'drip' | 'sprinkler' | 'surface';
@@ -119,9 +119,9 @@ const COMPONENT_COSTS = {
   surface: {
     gates: 200, // per gate
     channels: 50, // per meter
-    structures: 5000, // per hectare
+    structures: 5000, // per acre
     pump: 20000, // per HP
-    leveling: 15000 // per hectare
+    leveling: 15000 // per acre
   }
 };
 

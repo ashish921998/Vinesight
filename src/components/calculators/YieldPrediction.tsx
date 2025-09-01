@@ -92,7 +92,7 @@ export function YieldPredictionComponent() {
 
   const [historicalInput, setHistoricalInput] = useState<Partial<HistoricalYieldData>>({
     year: 2023,
-    yieldPerHectare: 12000,
+    yieldPerAcre: 12000,
     averageClusterWeight: 150,
     clustersPerVine: 32,
     berrySize: 'medium',
@@ -144,7 +144,7 @@ export function YieldPredictionComponent() {
     const sampleData: HistoricalYieldData[] = [
       {
         year: 2023,
-        yieldPerHectare: 11800,
+        yieldPerAcre: 11800,
         averageClusterWeight: 148,
         clustersPerVine: 31,
         berrySize: 'medium',
@@ -175,7 +175,7 @@ export function YieldPredictionComponent() {
       },
       {
         year: 2022,
-        yieldPerHectare: 10950,
+        yieldPerAcre: 10950,
         averageClusterWeight: 142,
         clustersPerVine: 29,
         berrySize: 'medium',
@@ -206,7 +206,7 @@ export function YieldPredictionComponent() {
       },
       {
         year: 2021,
-        yieldPerHectare: 12400,
+        yieldPerAcre: 12400,
         averageClusterWeight: 155,
         clustersPerVine: 34,
         berrySize: 'large',
@@ -241,7 +241,7 @@ export function YieldPredictionComponent() {
   }, []);
 
   const addHistoricalData = () => {
-    if (historicalInput.year && historicalInput.yieldPerHectare) {
+    if (historicalInput.year && historicalInput.yieldPerAcre) {
       const newData: HistoricalYieldData = historicalInput as HistoricalYieldData;
       setInputs(prev => ({
         ...prev,
@@ -251,7 +251,7 @@ export function YieldPredictionComponent() {
       // Reset form
       setHistoricalInput({
         year: new Date().getFullYear(),
-        yieldPerHectare: 12000,
+        yieldPerAcre: 12000,
         averageClusterWeight: 150,
         clustersPerVine: 32,
         berrySize: 'medium',
@@ -566,8 +566,8 @@ export function YieldPredictionComponent() {
                     <Label>Yield (kg/ha)</Label>
                     <Input
                       type="number"
-                      value={historicalInput.yieldPerHectare || ''}
-                      onChange={(e) => setHistoricalInput(prev => ({ ...prev, yieldPerHectare: parseFloat(e.target.value) }))}
+                      value={historicalInput.yieldPerAcre || ''}
+                      onChange={(e) => setHistoricalInput(prev => ({ ...prev, yieldPerAcre: parseFloat(e.target.value) }))}
                     />
                   </div>
                 </div>
@@ -627,7 +627,7 @@ export function YieldPredictionComponent() {
                       <div>
                         <span className="font-medium text-sm">{data.year}</span>
                         <div className="text-xs text-muted-foreground">
-                          {data.yieldPerHectare.toLocaleString()} kg/ha
+                          {data.yieldPerAcre.toLocaleString()} kg/ha
                         </div>
                       </div>
                       <div className="text-right">
@@ -1064,7 +1064,7 @@ export function YieldPredictionComponent() {
                         {formatCurrency(revenue)}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        per hectare
+                        per acre
                       </div>
                     </CardContent>
                   </Card>
@@ -1134,7 +1134,7 @@ export function YieldPredictionComponent() {
                         {profit.margin.toFixed(1)}% margin
                       </div>
                       <div className="text-xs">
-                        per hectare
+                        per acre
                       </div>
                     </CardContent>
                   </Card>

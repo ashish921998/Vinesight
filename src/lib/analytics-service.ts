@@ -3,7 +3,7 @@ import type { Farm } from './supabase';
 
 export interface CostAnalysis {
   totalCosts: number;
-  costPerHectare: number;
+  costPerAcre: number;
   profitMargin: number;
   costBreakdown: {
     category: string;
@@ -145,7 +145,7 @@ export class AnalyticsService {
 
     return {
       totalCosts,
-      costPerHectare: totalArea > 0 ? totalCosts / totalArea : 0,
+      costPerAcre: totalArea > 0 ? totalCosts / totalArea : 0,
       profitMargin,
       costBreakdown,
       monthlyTrends,
@@ -157,7 +157,7 @@ export class AnalyticsService {
     let totalYield = 0;
     const totalArea = farms.reduce((sum, farm) => sum + farm.area, 0);
     
-    // Industry benchmarks for grape yields (tons/hectare)
+    // Industry benchmarks for grape yields (tons/acre)
     const REGIONAL_BENCHMARK = 12; // Average for Maharashtra
     const OPTIMAL_BENCHMARK = 18;  // Best practices yield
 
@@ -411,7 +411,7 @@ export class AnalyticsService {
     const totalYield = harvests.reduce((sum, h) => sum + h.quantity, 0) / 1000; // Convert to tons
     const yieldPerHa = totalYield / area;
 
-    // Yield scoring (based on tons/hectare)
+    // Yield scoring (based on tons/acre)
     if (yieldPerHa >= 15) score += 25; // Excellent yield
     else if (yieldPerHa >= 12) score += 15; // Good yield
     else if (yieldPerHa >= 8) score += 5; // Average yield

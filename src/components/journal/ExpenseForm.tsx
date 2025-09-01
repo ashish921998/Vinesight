@@ -109,7 +109,7 @@ export function ExpenseForm({ selectedFarm, onRecordAdded, onCancel }: ExpenseFo
   ];
 
   const units = [
-    "kg", "tons", "liters", "packets", "bags", "bottles", "pieces", "hours", "days", "acres", "hectares", "units"
+    "kg", "tons", "liters", "packets", "bags", "bottles", "pieces", "hours", "days", "acres", "acres", "units"
   ];
 
   const growthStages = [
@@ -170,7 +170,7 @@ export function ExpenseForm({ selectedFarm, onRecordAdded, onCancel }: ExpenseFo
     return category ? category.subcategories : [];
   };
 
-  const calculateCostPerHectare = () => {
+  const calculateCostPerAcre = () => {
     const amount = parseFloat(formData.total_amount || formData.amount) || 0;
     const area = parseFloat(formData.area_applicable) || 1;
     return amount / area;
@@ -472,9 +472,9 @@ export function ExpenseForm({ selectedFarm, onRecordAdded, onCancel }: ExpenseFo
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="text-center p-4 bg-white rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  ₹{calculateCostPerHectare().toFixed(0)}
+                  ₹{calculateCostPerAcre().toFixed(0)}
                 </div>
-                <div className="text-sm text-green-700">Cost per Hectare</div>
+                <div className="text-sm text-green-700">Cost per Acre</div>
               </div>
               {formData.category && (
                 <div className="text-center p-4 bg-white rounded-lg">
