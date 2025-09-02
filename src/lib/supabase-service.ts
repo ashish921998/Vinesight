@@ -429,6 +429,12 @@ export class SupabaseService {
 
     const totalHarvest = harvestRecords.reduce((sum, record) => sum + record.quantity, 0);
     
+    // Calculate total historical water usage (duration × system_discharge)
+    const totalWaterUsage = irrigationRecords.reduce((sum, record) => {
+      const waterUsed = (record.duration || 0) * (record.system_discharge || 0);
+      return sum + waterUsed;
+    }, 0);
+    
     // Combine all activities for recent activities display
     const allActivities = [
       ...irrigationRecords.slice(0, 3).map(record => ({ ...record, type: 'irrigation' })),
@@ -445,6 +451,7 @@ export class SupabaseService {
       recentIrrigations: irrigationRecords.slice(0, 5), // Keep for backward compatibility
       recentActivities: allActivities, // New comprehensive activities list
       totalHarvest,
+      totalWaterUsage, // Total historical water usage in liters
       pendingTasks: pendingTasks.slice(0, 3), // Show top 3 pending tasks
       recordCounts: {
         irrigation: irrigationRecords.length,

@@ -27,6 +27,7 @@ interface FormData {
   vine_spacing: string;
   row_spacing: string;
   total_tank_capacity: string;
+  system_discharge: string;
 }
 
 interface LocationData {
@@ -51,7 +52,8 @@ export function FarmModal({
     planting_date: editingFarm?.planting_date || "",
     vine_spacing: editingFarm?.vine_spacing?.toString() || "",
     row_spacing: editingFarm?.row_spacing?.toString() || "",
-    total_tank_capacity: editingFarm?.total_tank_capacity?.toString() || ""
+    total_tank_capacity: editingFarm?.total_tank_capacity?.toString() || "",
+    system_discharge: editingFarm?.system_discharge?.toString() || ""
   }));
 
   const [locationData, setLocationData] = useState<LocationData>(() => ({
@@ -72,7 +74,8 @@ export function FarmModal({
         planting_date: editingFarm.planting_date || "",
         vine_spacing: editingFarm.vine_spacing?.toString() || "",
         row_spacing: editingFarm.row_spacing?.toString() || "",
-        total_tank_capacity: editingFarm.total_tank_capacity?.toString() || ""
+        total_tank_capacity: editingFarm.total_tank_capacity?.toString() || "",
+        system_discharge: editingFarm.system_discharge?.toString() || ""
       });
       
       setLocationData({
@@ -91,7 +94,8 @@ export function FarmModal({
         planting_date: "",
         vine_spacing: "",
         row_spacing: "",
-        total_tank_capacity: ""
+        total_tank_capacity: "",
+        system_discharge: ""
       });
       
       setLocationData({
@@ -144,6 +148,7 @@ export function FarmModal({
       vine_spacing: parseFloat(formData.vine_spacing),
       row_spacing: parseFloat(formData.row_spacing),
       total_tank_capacity: formData.total_tank_capacity ? parseFloat(formData.total_tank_capacity) : undefined,
+      system_discharge: formData.system_discharge ? parseFloat(formData.system_discharge) : undefined,
       // Include location data if available
       latitude: locationData.latitude ? parseFloat(locationData.latitude) : undefined,
       longitude: locationData.longitude ? parseFloat(locationData.longitude) : undefined,
@@ -306,6 +311,26 @@ export function FarmModal({
               />
               <p className="text-xs text-gray-500 mt-1">
                 Optional: Enter tank capacity for water calculations
+              </p>
+            </div>
+
+            {/* System Discharge */}
+            <div>
+              <Label htmlFor="system_discharge" className="text-sm font-medium text-gray-700">
+                System Discharge (liters/hour)
+              </Label>
+              <Input
+                id="system_discharge"
+                type="number"
+                step="1"
+                min="0"
+                value={formData.system_discharge}
+                onChange={(e) => handleInputChange("system_discharge", e.target.value)}
+                placeholder="100"
+                className="mt-1 h-11"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Optional: Default irrigation system discharge rate
               </p>
             </div>
 

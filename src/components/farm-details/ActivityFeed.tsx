@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { 
   Droplets, 
   SprayCan, 
@@ -11,7 +12,8 @@ import {
   Beaker,
   Calendar,
   Clock,
-  CheckCircle
+  CheckCircle,
+  Edit
 } from "lucide-react";
 
 interface ActivityFeedProps {
@@ -19,13 +21,15 @@ interface ActivityFeedProps {
   pendingTasks: any[];
   loading: boolean;
   onCompleteTask: (taskId: number) => void;
+  onEditRecord: (record: any, recordType: string) => void;
 }
 
 export function ActivityFeed({ 
   recentActivities, 
   pendingTasks, 
   loading,
-  onCompleteTask 
+  onCompleteTask,
+  onEditRecord
 }: ActivityFeedProps) {
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -169,13 +173,27 @@ export function ActivityFeed({
                         </Badge>
                       </div>
                       
-                      <div className="flex items-center gap-2 text-xs text-gray-600">
-                        <span>{new Date(activity.date || activity.created_at).toLocaleDateString()}</span>
-                        {activity.notes && (
-                          <>
-                            <span>•</span>
-                            <span className="truncate">{activity.notes}</span>
-                          </>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                          <span>{new Date(activity.date || activity.created_at).toLocaleDateString()}</span>
+                          {activity.notes && (
+                            <>
+                              <span>•</span>
+                              <span className="truncate">{activity.notes}</span>
+                            </>
+                          )}
+                        </div>
+                        
+                        {(activity.type === 'irrigation' || activity.type === 'spray' || activity.type === 'harvest') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEditRecord(activity, activity.type)}
+                            className="h-6 px-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
                         )}
                       </div>
                     </div>

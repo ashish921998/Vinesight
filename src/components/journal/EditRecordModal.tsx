@@ -1,0 +1,387 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Droplets, SprayCan, Scissors, Loader2 } from "lucide-react";
+import { SupabaseService } from "@/lib/supabase-service";
+import type { IrrigationRecord, SprayRecord, HarvestRecord } from "@/lib/supabase";
+
+interface EditRecordModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: () => void;
+  record: IrrigationRecord | SprayRecord | HarvestRecord | null;
+  recordType: 'irrigation' | 'spray' | 'harvest';
+}
+
+export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }: EditRecordModalProps) {
+  const [formData, setFormData] = useState<any>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (record) {
+      // Initialize form data based on record type
+      if (recordType === 'irrigation') {
+        const irrigationRecord = record as IrrigationRecord;
+        setFormData({
+          date: irrigationRecord.date,
+          duration: irrigationRecord.duration?.toString() || "",
+          area: irrigationRecord.area?.toString() || "",
+          growth_stage: irrigationRecord.growth_stage || "",
+          moisture_status: irrigationRecord.moisture_status || "",
+          system_discharge: irrigationRecord.system_discharge?.toString() || "",
+          notes: irrigationRecord.notes || ""
+        });
+      } else if (recordType === 'spray') {
+        const sprayRecord = record as SprayRecord;
+        setFormData({
+          date: sprayRecord.date,
+          pest_disease: sprayRecord.pest_disease || "",
+          chemical: sprayRecord.chemical || "",
+          dose: sprayRecord.dose || "",
+          area: sprayRecord.area?.toString() || "",
+          weather: sprayRecord.weather || "",
+          operator: sprayRecord.operator || "",
+          notes: sprayRecord.notes || ""
+        });
+      } else if (recordType === 'harvest') {
+        const harvestRecord = record as HarvestRecord;
+        setFormData({
+          date: harvestRecord.date,
+          quantity: harvestRecord.quantity?.toString() || "",
+          grade: harvestRecord.grade || "",
+          price: harvestRecord.price?.toString() || "",
+          buyer: harvestRecord.buyer || "",
+          notes: harvestRecord.notes || ""
+        });
+      }
+    }
+  }, [record, recordType]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!record) return;
+
+    setIsSubmitting(true);
+    try {
+      if (recordType === 'irrigation') {
+        await SupabaseService.updateIrrigationRecord(record.id!, {
+          date: formData.date,
+          duration: parseFloat(formData.duration),
+          area: parseFloat(formData.area),
+          growth_stage: formData.growth_stage,
+          moisture_status: formData.moisture_status,
+          system_discharge: parseFloat(formData.system_discharge),
+          notes: formData.notes
+        });
+      } else if (recordType === 'spray') {
+        await SupabaseService.updateSprayRecord(record.id!, {
+          date: formData.date,
+          pest_disease: formData.pest_disease,
+          chemical: formData.chemical,
+          dose: formData.dose,
+          area: parseFloat(formData.area),
+          weather: formData.weather,
+          operator: formData.operator,
+          notes: formData.notes
+        });
+      } else if (recordType === 'harvest') {
+        await SupabaseService.updateHarvestRecord(record.id!, {
+          date: formData.date,
+          quantity: parseFloat(formData.quantity),
+          grade: formData.grade,
+          price: formData.price ? parseFloat(formData.price) : undefined,
+          buyer: formData.buyer || undefined,
+          notes: formData.notes
+        });
+      }
+
+      onSave();
+      onClose();
+    } catch (error) {
+      console.error("Error updating record:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getIcon = () => {
+    switch (recordType) {
+      case 'irrigation': return <Droplets className="h-5 w-5" />;
+      case 'spray': return <SprayCan className="h-5 w-5" />;
+      case 'harvest': return <Scissors className="h-5 w-5" />;
+      default: return <Droplets className="h-5 w-5" />;
+    }
+  };
+
+  const getTitle = () => {
+    switch (recordType) {
+      case 'irrigation': return 'Edit Irrigation Record';
+      case 'spray': return 'Edit Spray Record';
+      case 'harvest': return 'Edit Harvest Record';
+      default: return 'Edit Record';
+    }
+  };
+
+  const getColor = () => {
+    switch (recordType) {
+      case 'irrigation': return 'text-blue-700 bg-blue-100';
+      case 'spray': return 'text-green-700 bg-green-100';
+      case 'harvest': return 'text-purple-700 bg-purple-100';
+      default: return 'text-blue-700 bg-blue-100';
+    }
+  };
+
+  if (!record) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md mx-auto">
+        <DialogHeader>
+          <DialogTitle className={`flex items-center gap-3 ${getColor().split(' ')[0]}`}>
+            <div className={`p-2 rounded-xl ${getColor()}`}>
+              {getIcon()}
+            </div>
+            {getTitle()}
+          </DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Date Input */}
+          <div>
+            <Label htmlFor="date" className="text-sm font-medium text-gray-700">
+              Date *
+            </Label>
+            <Input
+              id="date"
+              type="date"
+              value={formData.date || ""}
+              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              max={new Date().toISOString().split('T')[0]}
+              className="mt-1"
+              required
+            />
+          </div>
+
+          {/* Record type specific fields */}
+          {recordType === 'irrigation' && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="duration" className="text-sm font-medium text-gray-700">
+                    Duration (hours) *
+                  </Label>
+                  <Input
+                    id="duration"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={formData.duration || ""}
+                    onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+                    className="mt-1"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="area" className="text-sm font-medium text-gray-700">
+                    Area (acres)
+                  </Label>
+                  <Input
+                    id="area"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={formData.area || ""}
+                    onChange={(e) => setFormData(prev => ({ ...prev, area: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="growth_stage" className="text-sm font-medium text-gray-700">
+                    Growth Stage
+                  </Label>
+                  <Input
+                    id="growth_stage"
+                    value={formData.growth_stage || ""}
+                    onChange={(e) => setFormData(prev => ({ ...prev, growth_stage: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="system_discharge" className="text-sm font-medium text-gray-700">
+                    System Discharge (L/hr)
+                  </Label>
+                  <Input
+                    id="system_discharge"
+                    type="number"
+                    min="0"
+                    value={formData.system_discharge || ""}
+                    onChange={(e) => setFormData(prev => ({ ...prev, system_discharge: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {recordType === 'spray' && (
+            <>
+              <div>
+                <Label htmlFor="chemical" className="text-sm font-medium text-gray-700">
+                  Chemical/Product *
+                </Label>
+                <Input
+                  id="chemical"
+                  value={formData.chemical || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, chemical: e.target.value }))}
+                  className="mt-1"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="pest_disease" className="text-sm font-medium text-gray-700">
+                    Target Pest/Disease
+                  </Label>
+                  <Input
+                    id="pest_disease"
+                    value={formData.pest_disease || ""}
+                    onChange={(e) => setFormData(prev => ({ ...prev, pest_disease: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="dose" className="text-sm font-medium text-gray-700">
+                    Dose
+                  </Label>
+                  <Input
+                    id="dose"
+                    value={formData.dose || ""}
+                    onChange={(e) => setFormData(prev => ({ ...prev, dose: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {recordType === 'harvest' && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+                    Quantity (kg) *
+                  </Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={formData.quantity || ""}
+                    onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
+                    className="mt-1"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="grade" className="text-sm font-medium text-gray-700">
+                    Grade *
+                  </Label>
+                  <Select
+                    value={formData.grade || ""}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, grade: value }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select grade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Premium">Premium</SelectItem>
+                      <SelectItem value="Grade A">Grade A</SelectItem>
+                      <SelectItem value="Grade B">Grade B</SelectItem>
+                      <SelectItem value="Grade C">Grade C</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="price" className="text-sm font-medium text-gray-700">
+                    Price per kg (₹)
+                  </Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.price || ""}
+                    onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="buyer" className="text-sm font-medium text-gray-700">
+                    Buyer
+                  </Label>
+                  <Input
+                    id="buyer"
+                    value={formData.buyer || ""}
+                    onChange={(e) => setFormData(prev => ({ ...prev, buyer: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Notes */}
+          <div>
+            <Label htmlFor="notes" className="text-sm font-medium text-gray-700">
+              Notes
+            </Label>
+            <Textarea
+              id="notes"
+              value={formData.notes || ""}
+              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              placeholder="Any additional notes..."
+              className="mt-1 resize-none"
+              rows={3}
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

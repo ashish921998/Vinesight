@@ -4,7 +4,6 @@
  */
 
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { SupabaseService } from './supabase-service';
 import type { Farm } from './supabase';
 
@@ -39,6 +38,22 @@ export interface ExportData {
 }
 
 export class ExportService {
+  /**
+   * Helper function to ensure autoTable is available on PDF instance
+   */
+  private static async ensureAutoTable(pdf: jsPDF): Promise<void> {
+    if (!(pdf as any).autoTable) {
+      try {
+        const autoTable = (await import('jspdf-autotable')).default;
+        (pdf as any).autoTable = autoTable;
+        console.log('AutoTable attached successfully:', typeof (pdf as any).autoTable);
+      } catch (error) {
+        console.error('Failed to load autoTable:', error);
+        throw error;
+      }
+    }
+  }
+
   /**
    * Main export function - routes to CSV or PDF based on format
    */
@@ -270,7 +285,8 @@ export class ExportService {
       ['Row Spacing', data.farm.row_spacing ? `${data.farm.row_spacing}m` : 'Not specified']
     ];
 
-    pdf.autoTable({
+    await this.ensureAutoTable(pdf);
+    (pdf as any).autoTable({
       startY: yPosition,
       head: [['Property', 'Value']],
       body: farmDetails,
@@ -326,7 +342,8 @@ export class ExportService {
         `${record.system_discharge}L/h`
       ]);
 
-      pdf.autoTable({
+      await this.ensureAutoTable(pdf);
+      (pdf as any).autoTable({
         startY: yPosition,
         head: [['Date', 'Duration', 'Area', 'Growth Stage', 'Moisture', 'Discharge']],
         body: irrigationData,
@@ -357,7 +374,8 @@ export class ExportService {
         record.operator
       ]);
 
-      pdf.autoTable({
+      await this.ensureAutoTable(pdf);
+      (pdf as any).autoTable({
         startY: yPosition,
         head: [['Date', 'Pest/Disease', 'Chemical', 'Dose', 'Area', 'Operator']],
         body: sprayData,
@@ -387,7 +405,8 @@ export class ExportService {
         record.price_per_kg ? `₹${(record.quantity * record.price_per_kg).toLocaleString()}` : 'N/A'
       ]);
 
-      pdf.autoTable({
+      await this.ensureAutoTable(pdf);
+      (pdf as any).autoTable({
         startY: yPosition,
         head: [['Date', 'Quantity', 'Grade', 'Price/kg', 'Total Value']],
         body: harvestData,
@@ -425,7 +444,8 @@ export class ExportService {
         record.vendor || 'N/A'
       ]);
 
-      pdf.autoTable({
+      await this.ensureAutoTable(pdf);
+      (pdf as any).autoTable({
         startY: yPosition,
         head: [['Date', 'Category', 'Description', 'Amount', 'Vendor']],
         body: expenseData,
@@ -493,7 +513,8 @@ export class ExportService {
         record.potassium + ' ppm' || 'N/A'
       ]);
 
-      pdf.autoTable({
+      await this.ensureAutoTable(pdf);
+      (pdf as any).autoTable({
         startY: yPosition,
         head: [['Date', 'pH', 'Organic Matter', 'Nitrogen', 'Phosphorus', 'Potassium']],
         body: soilData,
@@ -549,7 +570,8 @@ export class ExportService {
       stats.push(['Net Profit/Loss', `₹${(totalRevenue - totalExpenses).toLocaleString()}`]);
     }
 
-    pdf.autoTable({
+    await this.ensureAutoTable(pdf);
+    (pdf as any).autoTable({
       startY: yPosition,
       head: [['Metric', 'Value']],
       body: stats,

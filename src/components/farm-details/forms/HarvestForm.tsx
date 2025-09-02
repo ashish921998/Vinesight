@@ -13,6 +13,7 @@ interface HarvestFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: {
+    date: string;
     quantity: string;
     quality: string;
     price?: string;
@@ -25,6 +26,7 @@ interface HarvestFormProps {
 
 export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: HarvestFormProps) {
   const [formData, setFormData] = useState({
+    date: new Date().toISOString().split('T')[0],
     quantity: "",
     quality: "",
     price: "",
@@ -56,6 +58,7 @@ export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: Harvest
 
   const resetForm = () => {
     setFormData({ 
+      date: new Date().toISOString().split('T')[0],
       quantity: "", 
       quality: "", 
       price: "", 
@@ -83,6 +86,22 @@ export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: Harvest
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Date Input */}
+          <div>
+            <Label htmlFor="date" className="text-sm font-medium text-gray-700">
+              Date *
+            </Label>
+            <Input
+              id="date"
+              type="date"
+              value={formData.date}
+              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              max={new Date().toISOString().split('T')[0]}
+              className="mt-1"
+              required
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="quantity" className="text-sm font-medium text-gray-700">

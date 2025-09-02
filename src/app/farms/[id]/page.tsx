@@ -17,6 +17,7 @@ import { IrrigationForm } from "@/components/farm-details/forms/IrrigationForm";
 import { SprayForm } from "@/components/farm-details/forms/SprayForm";
 import { HarvestForm } from "@/components/farm-details/forms/HarvestForm";
 import { WaterCalculationModal } from "@/components/farm-details/WaterCalculationModal";
+import { EditRecordModal } from "@/components/journal/EditRecordModal";
 
 interface DashboardData {
   farm: Farm | null;
@@ -24,6 +25,7 @@ interface DashboardData {
   recentIrrigations: any[];
   recentActivities: any[];
   totalHarvest: number;
+  totalWaterUsage: number;
   pendingTasks: any[];
   recordCounts: {
     irrigation: number;
@@ -52,6 +54,8 @@ export default function FarmDetailsPage() {
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showSoilTestModal, setShowSoilTestModal] = useState(false);
   const [showWaterCalculationModal, setShowWaterCalculationModal] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<any>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -84,6 +88,7 @@ export default function FarmDetailsPage() {
   };
 
   const handleIrrigationSubmit = async (data: {
+    date: string;
     duration: string;
     notes: string;
     photos: File[];
@@ -92,12 +97,12 @@ export default function FarmDetailsPage() {
     try {
       const record = await SupabaseService.addIrrigationRecord({
         farm_id: parseInt(farmId),
-        date: new Date().toISOString().split('T')[0],
+        date: data.date,
         duration: parseFloat(data.duration),
         area: dashboardData?.farm?.area || 0,
         growth_stage: "Active",
         moisture_status: "Good",
-        system_discharge: 100,
+        system_discharge: dashboardData?.farm?.system_discharge || 100,
         notes: data.notes
       });
       
@@ -122,6 +127,7 @@ export default function FarmDetailsPage() {
   };
 
   const handleSpraySubmit = async (data: {
+    date: string;
     product: string;
     notes: string;
     photos: File[];
@@ -130,7 +136,7 @@ export default function FarmDetailsPage() {
     try {
       const record = await SupabaseService.addSprayRecord({
         farm_id: parseInt(farmId),
-        date: new Date().toISOString().split('T')[0],
+        date: data.date,
         pest_disease: "General",
         chemical: data.product,
         dose: "As per label",
@@ -161,6 +167,7 @@ export default function FarmDetailsPage() {
   };
 
   const handleHarvestSubmit = async (data: {
+    date: string;
     quantity: string;
     quality: string;
     price?: string;
@@ -172,7 +179,7 @@ export default function FarmDetailsPage() {
     try {
       const record = await SupabaseService.addHarvestRecord({
         farm_id: parseInt(farmId),
-        date: new Date().toISOString().split('T')[0],
+        date: data.date,
         quantity: parseFloat(data.quantity),
         grade: data.quality,
         price: data.price ? parseFloat(data.price) : undefined,
@@ -202,6 +209,17 @@ export default function FarmDetailsPage() {
 
   const handleBack = () => {
     router.push('/farms');
+  };
+
+  const handleEditRecord = (record: any, recordType: string) => {
+    setEditingRecord(record);
+    setShowEditModal(true);
+  };
+
+  const handleSaveRecord = () => {
+    setShowEditModal(false);
+    setEditingRecord(null);
+    loadDashboardData();
   };
 
   return (
@@ -246,6 +264,7 @@ export default function FarmDetailsPage() {
         pendingTasks={dashboardData?.pendingTasks || []}
         loading={loading}
         onCompleteTask={completeTask}
+        onEditRecord={handleEditRecord}
       />
 
       {/* Data Entry Forms */}
@@ -277,6 +296,20 @@ export default function FarmDetailsPage() {
           onClose={() => setShowWaterCalculationModal(false)}
           farm={dashboardData.farm}
           onCalculationComplete={loadDashboardData}
+        />
+      )}
+
+      {/* Edit Record Modal */}
+      {editingRecord && (
+        <EditRecordModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingRecord(null);
+          }}
+          onSave={handleSaveRecord}
+          record={editingRecord}
+          recordType={editingRecord.type as 'irrigation' | 'spray' | 'harvest'}
         />
       )}
 

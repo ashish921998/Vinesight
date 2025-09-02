@@ -9,8 +9,10 @@ import {
   DollarSign,
   TestTube,
   Beaker,
-  Plus
+  Plus,
+  BarChart3
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface QuickActionsProps {
   onIrrigationClick: () => void;
@@ -29,6 +31,7 @@ export function QuickActions({
   onFertigationClick,
   onSoilTestClick
 }: QuickActionsProps) {
+  const router = useRouter();
   const quickActions = [
     {
       title: "Log Irrigation",
@@ -71,6 +74,13 @@ export function QuickActions({
       icon: TestTube,
       color: "bg-orange-100 text-orange-600 hover:bg-orange-200",
       onClick: onSoilTestClick
+    },
+    {
+      title: "View Reports",
+      description: "Generate & export reports",
+      icon: BarChart3,
+      color: "bg-indigo-100 text-indigo-600 hover:bg-indigo-200",
+      onClick: () => router.push('/reports')
     }
   ];
 

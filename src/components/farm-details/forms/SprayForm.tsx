@@ -12,6 +12,7 @@ interface SprayFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: {
+    date: string;
     product: string;
     notes: string;
     photos: File[];
@@ -21,6 +22,7 @@ interface SprayFormProps {
 
 export function SprayForm({ isOpen, onClose, onSubmit, isSubmitting }: SprayFormProps) {
   const [formData, setFormData] = useState({
+    date: new Date().toISOString().split('T')[0],
     product: "",
     notes: "",
     photos: [] as File[]
@@ -48,7 +50,12 @@ export function SprayForm({ isOpen, onClose, onSubmit, isSubmitting }: SprayForm
   };
 
   const resetForm = () => {
-    setFormData({ product: "", notes: "", photos: [] });
+    setFormData({ 
+      date: new Date().toISOString().split('T')[0],
+      product: "", 
+      notes: "", 
+      photos: [] 
+    });
   };
 
   const handleClose = () => {
@@ -69,6 +76,22 @@ export function SprayForm({ isOpen, onClose, onSubmit, isSubmitting }: SprayForm
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Date Input */}
+          <div>
+            <Label htmlFor="date" className="text-sm font-medium text-gray-700">
+              Date *
+            </Label>
+            <Input
+              id="date"
+              type="date"
+              value={formData.date}
+              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              max={new Date().toISOString().split('T')[0]}
+              className="mt-1"
+              required
+            />
+          </div>
+
           <div>
             <Label htmlFor="product" className="text-sm font-medium text-gray-700">
               Product/Chemical *

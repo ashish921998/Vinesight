@@ -12,6 +12,7 @@ interface IrrigationFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: {
+    date: string;
     duration: string;
     notes: string;
     photos: File[];
@@ -21,6 +22,7 @@ interface IrrigationFormProps {
 
 export function IrrigationForm({ isOpen, onClose, onSubmit, isSubmitting }: IrrigationFormProps) {
   const [formData, setFormData] = useState({
+    date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
     duration: "",
     notes: "",
     photos: [] as File[]
@@ -48,7 +50,12 @@ export function IrrigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Irri
   };
 
   const resetForm = () => {
-    setFormData({ duration: "", notes: "", photos: [] });
+    setFormData({ 
+      date: new Date().toISOString().split('T')[0],
+      duration: "", 
+      notes: "", 
+      photos: [] 
+    });
   };
 
   const handleClose = () => {
@@ -69,6 +76,22 @@ export function IrrigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Irri
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Date Input */}
+          <div>
+            <Label htmlFor="date" className="text-sm font-medium text-gray-700">
+              Date *
+            </Label>
+            <Input
+              id="date"
+              type="date"
+              value={formData.date}
+              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              max={new Date().toISOString().split('T')[0]} // Prevent future dates
+              className="mt-1"
+              required
+            />
+          </div>
+
           <div>
             <Label htmlFor="duration" className="text-sm font-medium text-gray-700">
               Duration (hours) *

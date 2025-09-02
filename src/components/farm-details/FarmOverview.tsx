@@ -16,6 +16,7 @@ interface FarmOverviewProps {
   dashboardData: {
     pendingTasksCount: number;
     totalHarvest: number;
+    totalWaterUsage: number;
     recordCounts: {
       irrigation: number;
       spray: number;
@@ -62,16 +63,16 @@ export function FarmOverview({ dashboardData, loading }: FarmOverviewProps) {
     {
       title: "Irrigations",
       value: dashboardData.recordCounts.irrigation,
-      icon: Droplets,
+      icon: Activity,
       color: "bg-blue-100 text-blue-600",
       suffix: "logs"
     },
     {
-      title: "Spray Records",
-      value: dashboardData.recordCounts.spray,
-      icon: SprayCan,
-      color: "bg-green-100 text-green-600",
-      suffix: "logs"
+      title: "Water Usage",
+      value: Math.round(dashboardData.totalWaterUsage / 1000), // Convert to thousands of liters
+      icon: Droplets,
+      color: "bg-cyan-100 text-cyan-600",
+      suffix: "k liters"
     },
     {
       title: "Total Harvest",

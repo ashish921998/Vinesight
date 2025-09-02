@@ -1,4 +1,4 @@
-import { getSupabaseClient, type Farm } from './supabase';
+import { getSupabaseClient, type Farm, type IrrigationRecord, type SprayRecord, type HarvestRecord, type ExpenseRecord } from './supabase';
 
 /**
  * Cloud Data Service - Pure Supabase integration for online-only app
@@ -114,5 +114,111 @@ export class CloudDataService {
     }
 
     return data;
+  }
+
+  // Record operations
+  static async getIrrigationRecords(farmId: number): Promise<IrrigationRecord[]> {
+    const supabase = getSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('Authentication required');
+    }
+
+    const { data, error } = await supabase
+      .from('irrigation_records')
+      .select('*')
+      .eq('farm_id', farmId)
+      .order('date', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch irrigation records: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
+  static async getSprayRecords(farmId: number): Promise<SprayRecord[]> {
+    const supabase = getSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('Authentication required');
+    }
+
+    const { data, error } = await supabase
+      .from('spray_records')
+      .select('*')
+      .eq('farm_id', farmId)
+      .order('date', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch spray records: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
+  static async getHarvestRecords(farmId: number): Promise<HarvestRecord[]> {
+    const supabase = getSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('Authentication required');
+    }
+
+    const { data, error } = await supabase
+      .from('harvest_records')
+      .select('*')
+      .eq('farm_id', farmId)
+      .order('date', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch harvest records: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
+  static async getExpenseRecords(farmId: number): Promise<ExpenseRecord[]> {
+    const supabase = getSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('Authentication required');
+    }
+
+    const { data, error } = await supabase
+      .from('expense_records')
+      .select('*')
+      .eq('farm_id', farmId)
+      .order('date', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch expense records: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
+  static async getFertigationRecords(farmId: number): Promise<any[]> {
+    const supabase = getSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('Authentication required');
+    }
+
+    const { data, error } = await supabase
+      .from('fertigation_records')
+      .select('*')
+      .eq('farm_id', farmId)
+      .order('date', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch fertigation records: ${error.message}`);
+    }
+
+    return data || [];
   }
 }

@@ -26,6 +26,7 @@ export interface Farm {
   vine_spacing: number; // in meters
   row_spacing: number; // in meters
   total_tank_capacity?: number; // in liters
+  system_discharge?: number; // in liters per hour (farm-level default)
   remaining_water?: number; // in mm (calculated value)
   water_calculation_updated_at?: string; // when water calculation was last done
   latitude?: number; // coordinates (decimal degrees)

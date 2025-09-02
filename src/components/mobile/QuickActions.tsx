@@ -17,7 +17,7 @@ const quickActions = [
   {
     title: "Add Record",
     subtitle: "Log farm activity",
-    href: "/journal",
+    href: "/farms",
     icon: Plus,
     color: "bg-green-100 text-green-700",
     bgGradient: "from-green-50 to-green-100"
@@ -33,7 +33,7 @@ const quickActions = [
   {
     title: "Irrigation",
     subtitle: "Water schedule",
-    href: "/journal?tab=irrigation",
+    href: "/farms",
     icon: Droplets,
     color: "bg-green-100 text-green-700",
     bgGradient: "from-green-50 to-green-100"
@@ -41,7 +41,7 @@ const quickActions = [
   {
     title: "Spray Log",
     subtitle: "Pest & disease",
-    href: "/journal?tab=spray",
+    href: "/farms",
     icon: SprayCan,
     color: "bg-green-100 text-green-700",
     bgGradient: "from-green-50 to-green-100"
@@ -49,7 +49,7 @@ const quickActions = [
   {
     title: "Harvest",
     subtitle: "Record yield",
-    href: "/journal?tab=harvest",
+    href: "/farms",
     icon: Grape,
     color: "bg-green-100 text-green-700",
     bgGradient: "from-green-50 to-green-100"
@@ -57,7 +57,7 @@ const quickActions = [
   {
     title: "Expenses",
     subtitle: "Track costs",
-    href: "/journal?tab=expense",
+    href: "/farms",
     icon: IndianRupee,
     color: "bg-green-100 text-green-700",
     bgGradient: "from-green-50 to-green-100"

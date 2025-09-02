@@ -36,6 +36,7 @@ export function WaterCalculationModal({
       return;
     }
 
+    // Extract numeric value from brackets for refill tank (e.g., "0.2" from "Heavy Growth Period 50% (0.2)")
     const refillTankValue = parseFloat(formData.refillTank);
     const cropCoefficientValue = parseFloat(formData.cropCoefficient);
     const evapotranspirationValue = parseFloat(formData.evapotranspiration);
@@ -93,24 +94,23 @@ export function WaterCalculationModal({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Refill Tank Input */}
+          {/* Refill Tank Select */}
           <div>
             <Label htmlFor="refillTank" className="text-sm font-medium text-gray-700">
-              Refill Tank (liters) *
+              Refill Tank (Growth Period) *
             </Label>
-            <Input
-              id="refillTank"
-              type="number"
-              step="1"
-              min="0"
-              value={formData.refillTank}
-              onChange={(e) => setFormData(prev => ({ ...prev, refillTank: e.target.value }))}
-              placeholder="500"
-              className="mt-1 h-11"
-              required
-            />
+            <Select value={formData.refillTank} onValueChange={(value) => setFormData(prev => ({ ...prev, refillTank: value }))}>
+              <SelectTrigger className="mt-1 h-11">
+                <SelectValue placeholder="Select growth period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0.2">Heavy Growth Period 50% (0.2)</SelectItem>
+                <SelectItem value="0.3">Growth Period 40% (0.3)</SelectItem>
+                <SelectItem value="0.4">Controlled Stress 30% (0.4)</SelectItem>
+              </SelectContent>
+            </Select>
             <p className="text-xs text-gray-500 mt-1">
-              Enter the current amount of water in your tank
+              Select the growth period matching your current crop stage
             </p>
           </div>
 
@@ -188,7 +188,7 @@ export function WaterCalculationModal({
                 <div className="text-xs text-blue-700 bg-blue-100 p-2 rounded border">
                   <div className="font-medium mb-1">Calculation:</div>
                   <div>
-                    {formData.refillTank}L ÷ ({formData.cropCoefficient} × {formData.evapotranspiration}) = {calculationResult.toFixed(1)} mm
+                    {parseFloat(formData.refillTank).toFixed(1)}L ÷ ({formData.cropCoefficient} × {formData.evapotranspiration}) = {calculationResult.toFixed(1)} mm
                   </div>
                 </div>
               </div>
