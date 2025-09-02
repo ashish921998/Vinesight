@@ -117,7 +117,7 @@ export function MADCalculatorComponent() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calculator className="h-5 w-5 text-blue-600" />
+            <Calculator className="h-5 w-5 text-green-600" />
             Step 1: MAD (Maximum Allowable Deficit) Calculator
           </CardTitle>
         </CardHeader>
@@ -178,8 +178,8 @@ export function MADCalculatorComponent() {
           </Button>
           
           {madResult && (
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-sm font-medium text-blue-800">
+            <div className="bg-green-50 p-4 rounded-lg">
+              <p className="text-sm font-medium text-green-800">
                 MAD Result: <span className="text-lg">{madResult.mad.toFixed(4)}</span>
               </p>
             </div>
@@ -271,7 +271,7 @@ export function MADCalculatorComponent() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ArrowRight className="h-5 w-5 text-purple-600" />
+              <ArrowRight className="h-5 w-5 text-green-700" />
               System Discharge 1
             </CardTitle>
           </CardHeader>
@@ -320,11 +320,11 @@ export function MADCalculatorComponent() {
             </Button>
             
             {plantsPerAcre && (
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <p className="text-sm font-medium text-purple-800 mb-2">
+              <div className="bg-green-200 p-4 rounded-lg">
+                <p className="text-sm font-medium text-green-800 mb-2">
                   Plants per Hectare (P/H): <span className="text-lg">{plantsPerAcre.toFixed(2)}</span>
                 </p>
-                <p className="text-xs text-purple-600">
+                <p className="text-xs text-green-700">
                   Formula: 10000 ÷ (DBL ({madResult?.dbl}) × DBP ({dbp})) = {plantsPerAcre.toFixed(2)}
                 </p>
               </div>
@@ -359,7 +359,7 @@ export function MADCalculatorComponent() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ArrowRight className="h-5 w-5 text-orange-600" />
+              <ArrowRight className="h-5 w-5 text-green-500" />
               System Discharge 2
             </CardTitle>
           </CardHeader>

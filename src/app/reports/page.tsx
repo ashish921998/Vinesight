@@ -478,10 +478,10 @@ export default function UnifiedReportsPage() {
 
   const getTabColor = (tab: keyof RecordData) => {
     switch (tab) {
-      case 'irrigation': return 'text-blue-600 bg-blue-100';
-      case 'spray': return 'text-green-600 bg-green-100';
-      case 'harvest': return 'text-purple-600 bg-purple-100';
-      case 'expense': return 'text-orange-600 bg-orange-100';
+      case 'irrigation': return 'text-green-600 bg-green-100';
+      case 'spray': return 'text-green-700 bg-green-200';
+      case 'harvest': return 'text-green-800 bg-green-300';
+      case 'expense': return 'text-green-900 bg-green-400';
     }
   };
 

@@ -77,27 +77,27 @@ export function WeatherDashboard({
   const getWeatherIcon = (condition: string, isDay: boolean = true) => {
     const lower = condition.toLowerCase();
     if (lower.includes('rain') || lower.includes('drizzle')) {
-      return <CloudRain className="h-6 w-6 text-blue-500" />;
+      return <CloudRain className="h-6 w-6 text-green-500" />;
     } else if (lower.includes('cloud')) {
       return <Cloud className="h-6 w-6 text-gray-500" />;
     } else if (lower.includes('sun') || lower.includes('clear')) {
-      return <Sun className="h-6 w-6 text-orange-500" />;
+      return <Sun className="h-6 w-6 text-green-400" />;
     }
-    return isDay ? <Sun className="h-6 w-6 text-orange-500" /> : <Cloud className="h-6 w-6 text-gray-500" />;
+    return isDay ? <Sun className="h-6 w-6 text-green-400" /> : <Cloud className="h-6 w-6 text-gray-500" />;
   };
 
   const getAlertIcon = (type: 'warning' | 'info' | 'success') => {
     switch (type) {
-      case 'warning': return <AlertTriangle className="h-4 w-4 text-orange-600" />;
+      case 'warning': return <AlertTriangle className="h-4 w-4 text-green-600" />;
       case 'success': return <CheckCircle className="h-4 w-4 text-green-600" />;
-      default: return <Info className="h-4 w-4 text-blue-600" />;
+      default: return <Info className="h-4 w-4 text-green-700" />;
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-orange-100 text-orange-800 border-gray-200';
+      case 'medium': return 'bg-green-200 text-green-800 border-green-300';
       case 'low': return 'bg-green-100 text-green-800 border-green-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -187,7 +187,7 @@ export function WeatherDashboard({
                   {weather.current.humidity > 70 ? 'High' : weather.current.humidity > 40 ? 'Moderate' : 'Low'}
                 </p>
               </div>
-              <Droplets className="h-6 w-6 text-blue-500" />
+              <Droplets className="h-6 w-6 text-green-500" />
             </div>
           </CardContent>
         </Card>
@@ -215,7 +215,7 @@ export function WeatherDashboard({
                 <p className="text-2xl font-bold">{weather.current.precipitation}</p>
                 <p className="text-xs text-muted-foreground">mm today</p>
               </div>
-              <CloudRain className="h-6 w-6 text-blue-600" />
+              <CloudRain className="h-6 w-6 text-green-600" />
             </div>
           </CardContent>
         </Card>
@@ -226,7 +226,7 @@ export function WeatherDashboard({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-blue-600" />
+              <Zap className="h-5 w-5 text-green-600" />
               Evapotranspiration (ETc)
             </CardTitle>
             <CardDescription>Water demand for {growthStage} stage</CardDescription>
@@ -236,11 +236,11 @@ export function WeatherDashboard({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Daily ETc</p>
-                  <p className="text-xl font-bold text-blue-600">{etc.dailyETc} mm/day</p>
+                  <p className="text-xl font-bold text-green-600">{etc.dailyETc} mm/day</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Weekly ETc</p>
-                  <p className="text-xl font-bold text-blue-600">{etc.weeklyETc} mm/week</p>
+                  <p className="text-xl font-bold text-green-600">{etc.weeklyETc} mm/week</p>
                 </div>
               </div>
               <div className="border-t pt-4">
@@ -279,11 +279,11 @@ export function WeatherDashboard({
           <CardContent>
             <div className="space-y-4">
               <div className={`p-4 rounded-lg border ${
-                alerts.irrigation.shouldIrrigate ? 'bg-blue-50 border-blue-200' : 'bg-green-50 border-green-200'
+                alerts.irrigation.shouldIrrigate ? 'bg-green-100 border-green-300' : 'bg-green-50 border-green-200'
               }`}>
                 <div className="flex items-center gap-2 mb-2">
                   {alerts.irrigation.shouldIrrigate ? 
-                    <Droplets className="h-4 w-4 text-blue-600" /> :
+                    <Droplets className="h-4 w-4 text-green-600" /> :
                     <CheckCircle className="h-4 w-4 text-green-600" />
                   }
                   <span className="font-medium">
@@ -340,7 +340,7 @@ export function WeatherDashboard({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-orange-600" />
+              <AlertTriangle className="h-5 w-5 text-green-700" />
               Pest & Disease Risk
             </CardTitle>
           </CardHeader>
@@ -349,7 +349,7 @@ export function WeatherDashboard({
               <Badge 
                 variant="outline" 
                 className={`${alerts.pest.riskLevel === 'high' ? 'bg-red-100 text-red-800' : 
-                              alerts.pest.riskLevel === 'medium' ? 'bg-orange-100 text-orange-800' : 
+                              alerts.pest.riskLevel === 'medium' ? 'bg-green-200 text-green-800' : 
                               'bg-green-100 text-green-800'}`}
               >
                 {alerts.pest.riskLevel} risk
@@ -374,13 +374,13 @@ export function WeatherDashboard({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-purple-600" />
+              <Calendar className="h-5 w-5 text-green-600" />
               Harvest Timing
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className={`flex items-center gap-2 ${alerts.harvest.isOptimal ? 'text-green-600' : 'text-orange-600'}`}>
+              <div className={`flex items-center gap-2 ${alerts.harvest.isOptimal ? 'text-green-600' : 'text-green-700'}`}>
                 {alerts.harvest.isOptimal ? 
                   <CheckCircle className="h-4 w-4" /> : 
                   <AlertTriangle className="h-4 w-4" />
@@ -453,7 +453,7 @@ export function WeatherDashboard({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <TrendingUp className="h-5 w-5 text-green-600" />
             7-Day Forecast
           </CardTitle>
           <CardDescription>Weather outlook for the next week</CardDescription>

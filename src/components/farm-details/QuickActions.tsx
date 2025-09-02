@@ -37,7 +37,7 @@ export function QuickActions({
       title: "Log Irrigation",
       description: "Record watering details",
       icon: Droplets,
-      color: "bg-blue-100 text-blue-600 hover:bg-blue-200",
+      color: "bg-green-100 text-green-600 hover:bg-green-200",
       onClick: onIrrigationClick
     },
     {
@@ -51,35 +51,35 @@ export function QuickActions({
       title: "Record Harvest",
       description: "Log harvest quantities",
       icon: Scissors,
-      color: "bg-purple-100 text-purple-600 hover:bg-purple-200",
+      color: "bg-green-100 text-green-600 hover:bg-green-200",
       onClick: onHarvestClick
     },
     {
       title: "Add Expense",
       description: "Track farm expenses",
       icon: DollarSign,
-      color: "bg-amber-100 text-amber-600 hover:bg-amber-200",
+      color: "bg-green-100 text-green-600 hover:bg-green-200",
       onClick: onExpenseClick
     },
     {
       title: "Fertigation",
       description: "Log nutrient application",
       icon: Beaker,
-      color: "bg-emerald-100 text-emerald-600 hover:bg-emerald-200",
+      color: "bg-green-100 text-green-600 hover:bg-green-200",
       onClick: onFertigationClick
     },
     {
       title: "Soil Test",
       description: "Record soil analysis",
       icon: TestTube,
-      color: "bg-orange-100 text-orange-600 hover:bg-orange-200",
+      color: "bg-green-100 text-green-600 hover:bg-green-200",
       onClick: onSoilTestClick
     },
     {
       title: "View Reports",
       description: "Generate & export reports",
       icon: BarChart3,
-      color: "bg-indigo-100 text-indigo-600 hover:bg-indigo-200",
+      color: "bg-green-100 text-green-600 hover:bg-green-200",
       onClick: () => router.push('/reports')
     }
   ];

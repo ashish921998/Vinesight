@@ -20,7 +20,7 @@ interface ActivityFeedProps {
   recentActivities: any[];
   pendingTasks: any[];
   loading: boolean;
-  onCompleteTask: (taskId: number) => void;
+  onCompleteTask: (taskId: number) => Promise<void>;
   onEditRecord: (record: any, recordType: string) => void;
 }
 
@@ -45,12 +45,12 @@ export function ActivityFeed({
 
   const getActivityColor = (type: string) => {
     switch (type) {
-      case 'irrigation': return 'bg-blue-100 text-blue-600';
+      case 'irrigation': return 'bg-green-100 text-green-600';
       case 'spray': return 'bg-green-100 text-green-600';
-      case 'harvest': return 'bg-purple-100 text-purple-600';
-      case 'expense': return 'bg-amber-100 text-amber-600';
+      case 'harvest': return 'bg-green-200 text-green-700';
+      case 'expense': return 'bg-green-300 text-green-800';
       case 'fertigation': return 'bg-emerald-100 text-emerald-600';
-      case 'soil_test': return 'bg-orange-100 text-orange-600';
+      case 'soil_test': return 'bg-green-400 text-green-900';
       default: return 'bg-gray-100 text-gray-600';
     }
   };
@@ -105,9 +105,9 @@ export function ActivityFeed({
     <div className="p-6 space-y-6">
       {/* Pending Tasks */}
       {pendingTasks && pendingTasks.length > 0 && (
-        <Card className="border-amber-200 bg-amber-50">
+        <Card className="border-green-200 bg-green-50">
           <CardHeader>
-            <CardTitle className="text-amber-800 flex items-center gap-2">
+            <CardTitle className="text-green-800 flex items-center gap-2">
               <Clock className="h-5 w-5" />
               Pending Tasks ({pendingTasks.length})
             </CardTitle>
@@ -115,9 +115,9 @@ export function ActivityFeed({
           <CardContent>
             <div className="space-y-3">
               {pendingTasks.slice(0, 3).map((task, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-amber-200">
-                  <div className="p-2 bg-amber-100 rounded-lg">
-                    <CheckCircle className="h-4 w-4 text-amber-600" />
+                <div key={index} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-green-200">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
                   </div>
                   
                   <div className="flex-1 min-w-0">
@@ -189,7 +189,7 @@ export function ActivityFeed({
                             variant="ghost"
                             size="sm"
                             onClick={() => onEditRecord(activity, activity.type)}
-                            className="h-6 px-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                            className="h-6 px-2 text-xs text-green-600 hover:text-green-800 hover:bg-green-50"
                           >
                             <Edit className="h-3 w-3 mr-1" />
                             Edit

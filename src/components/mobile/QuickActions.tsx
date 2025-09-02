@@ -19,48 +19,48 @@ const quickActions = [
     subtitle: "Log farm activity",
     href: "/farms",
     icon: Plus,
-    color: "bg-green-100 text-green-700",
-    bgGradient: "from-green-50 to-green-100"
+    color: "bg-secondary text-secondary-foreground",
+    bgGradient: "from-secondary/50 to-secondary"
   },
   {
     title: "Calculator",
     subtitle: "Water & nutrients",
     href: "/calculators", 
     icon: Calculator,
-    color: "bg-green-100 text-green-700",
-    bgGradient: "from-green-50 to-green-100"
+    color: "bg-secondary text-secondary-foreground",
+    bgGradient: "from-secondary/50 to-secondary"
   },
   {
     title: "Irrigation",
     subtitle: "Water schedule",
     href: "/farms",
     icon: Droplets,
-    color: "bg-green-100 text-green-700",
-    bgGradient: "from-green-50 to-green-100"
+    color: "bg-secondary text-secondary-foreground",
+    bgGradient: "from-secondary/50 to-secondary"
   },
   {
     title: "Spray Log",
     subtitle: "Pest & disease",
     href: "/farms",
     icon: SprayCan,
-    color: "bg-green-100 text-green-700",
-    bgGradient: "from-green-50 to-green-100"
+    color: "bg-secondary text-secondary-foreground",
+    bgGradient: "from-secondary/50 to-secondary"
   },
   {
     title: "Harvest",
     subtitle: "Record yield",
     href: "/farms",
     icon: Grape,
-    color: "bg-green-100 text-green-700",
-    bgGradient: "from-green-50 to-green-100"
+    color: "bg-secondary text-secondary-foreground",
+    bgGradient: "from-secondary/50 to-secondary"
   },
   {
     title: "Expenses",
     subtitle: "Track costs",
     href: "/farms",
     icon: IndianRupee,
-    color: "bg-green-100 text-green-700",
-    bgGradient: "from-green-50 to-green-100"
+    color: "bg-secondary text-secondary-foreground",
+    bgGradient: "from-secondary/50 to-secondary"
   }
 ];
 

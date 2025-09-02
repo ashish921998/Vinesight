@@ -275,7 +275,7 @@ export function YieldPredictionComponent() {
   const getScenarioColor = (scenario: string) => {
     switch (scenario) {
       case 'optimistic': return 'text-green-600';
-      case 'realistic': return 'text-blue-600';
+      case 'realistic': return 'text-green-600';
       case 'pessimistic': return 'text-orange-600';
       default: return 'text-gray-600';
     }
@@ -284,7 +284,7 @@ export function YieldPredictionComponent() {
   const getQualityColor = (quality: string) => {
     switch (quality) {
       case 'excellent': return 'text-green-600';
-      case 'good': return 'text-blue-600';
+      case 'good': return 'text-green-600';
       case 'average': return 'text-orange-600';
       default: return 'text-red-600';
     }
@@ -308,13 +308,13 @@ export function YieldPredictionComponent() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-blue-200 bg-blue-50">
+      <Card className="border-green-200 bg-green-50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-800">
+          <CardTitle className="flex items-center gap-2 text-green-800">
             <TrendingUp className="h-6 w-6" />
             Yield Prediction System
           </CardTitle>
-          <CardDescription className="text-blue-700">
+          <CardDescription className="text-green-700">
             AI-powered yield forecasting using historical data, weather patterns, and vineyard conditions
           </CardDescription>
         </CardHeader>
@@ -838,7 +838,7 @@ export function YieldPredictionComponent() {
             <Button 
               onClick={predictYield}
               disabled={isCalculating || inputs.historicalData.length === 0}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
             >
               {isCalculating ? 'Predicting Yield...' : 'Generate Yield Prediction'}
             </Button>
@@ -848,7 +848,7 @@ export function YieldPredictionComponent() {
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
                   <span>Analyzing historical patterns and current conditions...</span>
                 </div>
               </CardContent>

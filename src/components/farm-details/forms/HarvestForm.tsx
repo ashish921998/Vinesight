@@ -77,8 +77,8 @@ export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: Harvest
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md mx-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-purple-700">
-            <div className="p-2 bg-purple-100 rounded-xl">
+          <DialogTitle className="flex items-center gap-3 text-green-700">
+            <div className="p-2 bg-green-100 rounded-xl">
               <Scissors className="h-5 w-5" />
             </div>
             Record Harvest
@@ -190,7 +190,7 @@ export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: Harvest
           <div>
             <Label className="text-sm font-medium text-gray-700">Photos</Label>
             <div className="mt-2">
-              <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-colors">
+              <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-green-400 hover:bg-green-50 transition-colors">
                 <Upload className="h-5 w-5 text-gray-400 mr-2" />
                 <span className="text-sm text-gray-600">Add photos</span>
                 <input
@@ -235,7 +235,7 @@ export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: Harvest
             <Button
               type="submit"
               disabled={!formData.quantity || !formData.quality || isSubmitting}
-              className="flex-1 bg-purple-600 hover:bg-purple-700"
+              className="flex-1 bg-green-600 hover:bg-green-700"
             >
               {isSubmitting ? "Saving..." : "Save Harvest"}
             </Button>

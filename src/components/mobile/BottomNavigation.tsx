@@ -65,7 +65,7 @@ const logTypes = [
     id: "irrigation",
     name: "Irrigation",
     icon: Droplets,
-    color: "text-blue-600",
+    color: "text-primary",
     fields: [
       { name: "duration", label: "Duration (hours)", type: "number", step: "0.5", min: "0.5", placeholder: "2.5", required: true },
       { name: "notes", label: "Notes (optional)", type: "textarea", placeholder: "e.g., Drip irrigation, fruit development stage" }
@@ -75,7 +75,7 @@ const logTypes = [
     id: "spray",
     name: "Spray/Pesticide",
     icon: SprayCan,
-    color: "text-orange-600",
+    color: "text-primary",
     fields: [
       { name: "product", label: "Product/Chemical", type: "text", placeholder: "e.g., Fungicide, Insecticide name", required: true },
       { name: "notes", label: "Notes (optional)", type: "textarea", placeholder: "e.g., Concentration, weather conditions, target pest/disease" }
@@ -85,7 +85,7 @@ const logTypes = [
     id: "fertigation",
     name: "Fertigation",
     icon: Beaker,
-    color: "text-purple-600",
+    color: "text-primary",
     fields: [
       { name: "fertilizer", label: "Fertilizer", type: "text", placeholder: "e.g., NPK 19:19:19", required: true },
       { name: "quantity", label: "Quantity (kg)", type: "number", step: "0.1", min: "0", placeholder: "10", required: true },
@@ -244,8 +244,8 @@ export function BottomNavigation() {
       <Dialog open={showFarmLogsModal} onOpenChange={setShowFarmLogsModal}>
         <DialogContent className="sm:max-w-md rounded-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="text-center pb-2">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileText className="h-8 w-8 text-blue-600" />
+            <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+              <FileText className="h-8 w-8 text-primary" />
             </div>
             <DialogTitle className="text-xl font-semibold text-gray-900">
               Add Farm Log
@@ -260,14 +260,14 @@ export function BottomNavigation() {
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-700">Select Farm</Label>
               <Select value={selectedFarm} onValueChange={setSelectedFarm}>
-                <SelectTrigger className="border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-12">
+                <SelectTrigger className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12">
                   <SelectValue placeholder="Choose a farm" />
                 </SelectTrigger>
                 <SelectContent>
                   {farms.map((farm) => (
                     <SelectItem key={farm.id} value={farm.id?.toString() || ""}>
                       <div className="flex items-center gap-2">
-                        <Sprout className="h-4 w-4 text-green-600" />
+                        <Sprout className="h-4 w-4 text-primary" />
                         <div>
                           <div className="font-medium">{farm.name}</div>
                           <div className="text-xs text-gray-500">{farm.region}</div>
@@ -284,7 +284,7 @@ export function BottomNavigation() {
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700">Select Log Type</Label>
                 <Select value={selectedLogType} onValueChange={setSelectedLogType}>
-                  <SelectTrigger className="border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-12">
+                  <SelectTrigger className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12">
                     <SelectValue placeholder="Choose log type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -317,7 +317,7 @@ export function BottomNavigation() {
                         value={formData[field.name] || ''}
                         onChange={(e) => handleFormDataChange(field.name, e.target.value)}
                         placeholder={field.placeholder}
-                        className="border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-20 resize-none"
+                        className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-20 resize-none"
                         required={field.required}
                       />
                     ) : (
@@ -328,7 +328,7 @@ export function BottomNavigation() {
                         value={formData[field.name] || ''}
                         onChange={(e) => handleFormDataChange(field.name, e.target.value)}
                         placeholder={field.placeholder}
-                        className="border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg h-12"
+                        className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12"
                         required={field.required}
                       />
                     )}
@@ -351,7 +351,7 @@ export function BottomNavigation() {
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-sm transition-colors"
+                  className="flex-1 h-12 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium shadow-sm transition-colors"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Saving..." : `Log ${selectedLogTypeObj?.name}`}
@@ -389,7 +389,7 @@ export function BottomNavigation() {
                 <div className={`
                   p-2 rounded-xl transition-all duration-200
                   ${isActive 
-                    ? 'bg-green-100 text-green-600'
+                    ? 'bg-secondary text-primary'
                     : 'text-gray-400'
                   }
                 `}>
@@ -398,7 +398,7 @@ export function BottomNavigation() {
                 <span className={`
                   text-xs font-medium mt-1 truncate
                   ${isActive 
-                    ? 'text-green-600'
+                    ? 'text-primary'
                     : 'text-gray-400'
                   }
                 `}>

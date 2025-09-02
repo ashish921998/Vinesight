@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sprout, Calculator, FileText, Lock, CheckCircle } from "lucide-react";
 import { LoginButton } from "@/components/auth/LoginButton";
 import { QuickActions } from "@/components/mobile/QuickActions";
+import { FarmerDashboard } from "@/components/dashboard/FarmerDashboard";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 export default function Home() {
@@ -43,6 +44,11 @@ export default function Home() {
     }
   };
 
+  // If user is authenticated, show the comprehensive dashboard
+  if (user) {
+    return <FarmerDashboard />;
+  }
+
   return (
     <div className="container mx-auto">
       {/* Header */}
@@ -54,27 +60,6 @@ export default function Home() {
           Your digital grape farming companion
         </p>
       </header>
-
-      {/* User Status */}
-      {user && (
-        <div className="px-3 mb-6">
-          <div className="max-w-md mx-auto p-3 bg-secondary rounded-lg border border-border">
-            <div className="flex items-center gap-2 text-secondary-foreground">
-              <CheckCircle className="h-4 w-4" />
-              <span className="text-sm font-medium">
-                Signed in as {user.user_metadata?.full_name || user.email}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Quick Actions - Only show for authenticated users */}
-      {user && (
-        <div className="lg:hidden px-3 mb-6">
-          <QuickActions />
-        </div>
-      )}
 
       {/* Main Features - Only show on desktop */}
       <div className="hidden lg:grid lg:grid-cols-3 gap-6 px-3 mb-8">

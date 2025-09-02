@@ -16,6 +16,9 @@ import { RemainingWaterCard } from "@/components/farm-details/RemainingWaterCard
 import { IrrigationForm } from "@/components/farm-details/forms/IrrigationForm";
 import { SprayForm } from "@/components/farm-details/forms/SprayForm";
 import { HarvestForm } from "@/components/farm-details/forms/HarvestForm";
+import { FertigationForm } from "@/components/farm-details/forms/FertigationForm";
+import { ExpenseForm } from "@/components/farm-details/forms/ExpenseForm";
+import { SoilTestForm } from "@/components/farm-details/forms/SoilTestForm";
 import { WaterCalculationModal } from "@/components/farm-details/WaterCalculationModal";
 import { EditRecordModal } from "@/components/journal/EditRecordModal";
 
@@ -313,8 +316,41 @@ export default function FarmDetailsPage() {
         />
       )}
 
-      {/* TODO: Add remaining form modals */}
-      {/* FertigationForm, ExpenseForm, SoilTestForm */}
+      {/* Fertigation Form */}
+      <FertigationForm
+        isOpen={showFertigationModal}
+        onClose={() => setShowFertigationModal(false)}
+        onSubmit={async (data) => {
+          // TODO: Implement fertigation submission
+          setShowFertigationModal(false);
+          await loadDashboardData();
+        }}
+        isSubmitting={isSubmitting}
+      />
+
+      {/* Expense Form */}
+      <ExpenseForm
+        isOpen={showExpenseModal}
+        onClose={() => setShowExpenseModal(false)}
+        onSubmit={async (data) => {
+          // TODO: Implement expense submission
+          setShowExpenseModal(false);
+          await loadDashboardData();
+        }}
+        isSubmitting={isSubmitting}
+      />
+
+      {/* Soil Test Form */}
+      <SoilTestForm
+        isOpen={showSoilTestModal}
+        onClose={() => setShowSoilTestModal(false)}
+        onSubmit={async (data) => {
+          // TODO: Implement soil test submission
+          setShowSoilTestModal(false);
+          await loadDashboardData();
+        }}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 }

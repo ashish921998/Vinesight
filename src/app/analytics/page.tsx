@@ -439,7 +439,7 @@ export default function AnalyticsPage() {
                             <span className="font-bold">{formatCurrency(item.amount)}</span>
                             <div className="w-24 bg-gray-200 rounded-full h-2 mt-1">
                               <div 
-                                className="bg-blue-600 h-2 rounded-full"
+                                className="bg-green-600 h-2 rounded-full"
                                 style={{ width: `${item.percentage}%` }}
                               />
                             </div>
@@ -576,7 +576,7 @@ export default function AnalyticsPage() {
                         <span className="font-bold">{advancedAnalytics.yieldAnalysis.benchmarkComparison.your.toFixed(1)} t/ha</span>
                         <div className="w-32 bg-gray-200 rounded-full h-2">
                           <div 
-                            className="bg-blue-600 h-2 rounded-full"
+                            className="bg-green-600 h-2 rounded-full"
                             style={{ 
                               width: `${(advancedAnalytics.yieldAnalysis.benchmarkComparison.your / advancedAnalytics.yieldAnalysis.benchmarkComparison.optimal) * 100}%` 
                             }}
@@ -590,7 +590,7 @@ export default function AnalyticsPage() {
                         <span className="font-bold">{advancedAnalytics.yieldAnalysis.benchmarkComparison.regional.toFixed(1)} t/ha</span>
                         <div className="w-32 bg-gray-200 rounded-full h-2">
                           <div 
-                            className="bg-orange-600 h-2 rounded-full"
+                            className="bg-green-400 h-2 rounded-full"
                             style={{ 
                               width: `${(advancedAnalytics.yieldAnalysis.benchmarkComparison.regional / advancedAnalytics.yieldAnalysis.benchmarkComparison.optimal) * 100}%` 
                             }}
@@ -633,7 +633,7 @@ export default function AnalyticsPage() {
                             <span className="font-bold">{trend.yield.toFixed(1)} t/ha</span>
                             <div className="w-24 bg-gray-200 rounded-full h-2">
                               <div 
-                                className="bg-orange-600 h-2 rounded-full"
+                                className="bg-green-400 h-2 rounded-full"
                                 style={{ 
                                   width: `${(trend.yield / Math.max(...advancedAnalytics.yieldAnalysis.yieldTrends.map(t => t.yield))) * 100}%` 
                                 }}
@@ -678,7 +678,7 @@ export default function AnalyticsPage() {
                   <div className="flex-1">
                     <div className="w-full bg-gray-200 rounded-full h-4">
                       <div 
-                        className={`h-4 rounded-full ${advancedAnalytics.performanceMetrics.overallScore > 85 ? 'bg-green-600' : advancedAnalytics.performanceMetrics.overallScore > 70 ? 'bg-orange-600' : 'bg-red-600'}`}
+                        className={`h-4 rounded-full ${advancedAnalytics.performanceMetrics.overallScore > 85 ? 'bg-green-600' : advancedAnalytics.performanceMetrics.overallScore > 70 ? 'bg-green-400' : 'bg-red-600'}`}
                         style={{ width: `${advancedAnalytics.performanceMetrics.overallScore}%` }}
                       />
                     </div>
@@ -797,7 +797,7 @@ export default function AnalyticsPage() {
                   {advancedAnalytics.performanceMetrics.recommendations.length > 0 ? (
                     <div className="space-y-3">
                       {advancedAnalytics.performanceMetrics.recommendations.map((rec, index) => (
-                        <div key={index} className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+                        <div key={index} className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
                           <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
                           <span className="text-sm">{rec}</span>
                         </div>
@@ -823,8 +823,8 @@ export default function AnalyticsPage() {
                     <div className="space-y-3">
                       {advancedAnalytics.performanceMetrics.alerts.map((alert, index) => (
                         <div key={index} className={`flex items-start gap-3 p-3 rounded-lg ${
-                          alert.type === 'warning' ? 'bg-orange-50' : 
-                          alert.type === 'success' ? 'bg-green-50' : 'bg-blue-50'
+                          alert.type === 'warning' ? 'bg-green-100' : 
+                          alert.type === 'success' ? 'bg-green-50' : 'bg-green-200'
                         }`}>
                           {alert.type === 'warning' ? 
                             <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5" /> :
@@ -874,7 +874,7 @@ export default function AnalyticsPage() {
                       <div className="font-bold">{data.hours.toFixed(1)}h</div>
                       <div className="w-32 bg-gray-200 rounded-full h-2">
                         <div 
-                          className="bg-blue-600 h-2 rounded-full"
+                          className="bg-green-600 h-2 rounded-full"
                           style={{ 
                             width: `${(data.hours / Math.max(...analytics.irrigationsByMonth.map(d => d.hours))) * 100}%` 
                           }}
