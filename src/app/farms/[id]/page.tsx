@@ -321,9 +321,37 @@ export default function FarmDetailsPage() {
         isOpen={showFertigationModal}
         onClose={() => setShowFertigationModal(false)}
         onSubmit={async (data) => {
-          // TODO: Implement fertigation submission
-          setShowFertigationModal(false);
-          await loadDashboardData();
+          setIsSubmitting(true);
+          try {
+            const record = await SupabaseService.addFertigationRecord({
+              farm_id: parseInt(farmId),
+              date: data.date,
+              fertilizer: data.fertilizer,
+              dose: data.dose,
+              purpose: "Nutrient Application",
+              area: dashboardData?.farm?.area || 0,
+              notes: data.notes || undefined
+            });
+            
+            // Upload photos if any
+            if (record.id) {
+              for (const photo of data.photos) {
+                try {
+                  await PhotoService.uploadPhoto(photo, 'fertigation', record.id);
+                } catch (photoError) {
+                  console.error("Error uploading photo:", photoError);
+                }
+              }
+            }
+            
+            setShowFertigationModal(false);
+            await loadDashboardData();
+          } catch (error) {
+            console.error("Error logging fertigation:", error);
+            alert("Failed to save fertigation record. Please try again.");
+          } finally {
+            setIsSubmitting(false);
+          }
         }}
         isSubmitting={isSubmitting}
       />
@@ -333,9 +361,36 @@ export default function FarmDetailsPage() {
         isOpen={showExpenseModal}
         onClose={() => setShowExpenseModal(false)}
         onSubmit={async (data) => {
-          // TODO: Implement expense submission
-          setShowExpenseModal(false);
-          await loadDashboardData();
+          setIsSubmitting(true);
+          try {
+            const record = await SupabaseService.addExpenseRecord({
+              farm_id: parseInt(farmId),
+              date: data.date,
+              type: data.category.toLowerCase().replace(/\s+/g, '_') as 'labor' | 'materials' | 'equipment' | 'other',
+              description: data.description,
+              cost: parseFloat(data.amount),
+              remarks: data.notes || undefined
+            });
+            
+            // Upload photos if any
+            if (record.id) {
+              for (const photo of data.photos) {
+                try {
+                  await PhotoService.uploadPhoto(photo, 'expense', record.id);
+                } catch (photoError) {
+                  console.error("Error uploading photo:", photoError);
+                }
+              }
+            }
+            
+            setShowExpenseModal(false);
+            await loadDashboardData();
+          } catch (error) {
+            console.error("Error logging expense:", error);
+            alert("Failed to save expense record. Please try again.");
+          } finally {
+            setIsSubmitting(false);
+          }
         }}
         isSubmitting={isSubmitting}
       />
@@ -345,9 +400,43 @@ export default function FarmDetailsPage() {
         isOpen={showSoilTestModal}
         onClose={() => setShowSoilTestModal(false)}
         onSubmit={async (data) => {
-          // TODO: Implement soil test submission
-          setShowSoilTestModal(false);
-          await loadDashboardData();
+          setIsSubmitting(true);
+          try {
+            // Build parameters object from form data
+            const parameters: Record<string, number> = {};
+            if (data.ph) parameters.pH = parseFloat(data.ph);
+            if (data.nitrogen) parameters.nitrogen = parseFloat(data.nitrogen);
+            if (data.phosphorus) parameters.phosphorus = parseFloat(data.phosphorus);
+            if (data.potassium) parameters.potassium = parseFloat(data.potassium);
+            if (data.organicMatter) parameters.organicMatter = parseFloat(data.organicMatter);
+            
+            const record = await SupabaseService.addSoilTestRecord({
+              farm_id: parseInt(farmId),
+              date: data.date,
+              parameters: parameters,
+              recommendations: data.laboratory ? `Tested by: ${data.laboratory}` : undefined,
+              notes: data.notes || undefined
+            });
+            
+            // Upload photos if any
+            if (record.id) {
+              for (const photo of data.photos) {
+                try {
+                  await PhotoService.uploadPhoto(photo, 'soil_test', record.id);
+                } catch (photoError) {
+                  console.error("Error uploading photo:", photoError);
+                }
+              }
+            }
+            
+            setShowSoilTestModal(false);
+            await loadDashboardData();
+          } catch (error) {
+            console.error("Error logging soil test:", error);
+            alert("Failed to save soil test record. Please try again.");
+          } finally {
+            setIsSubmitting(false);
+          }
         }}
         isSubmitting={isSubmitting}
       />

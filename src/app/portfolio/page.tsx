@@ -6,6 +6,7 @@ import { FarmerDashboard } from "@/components/dashboard/FarmerDashboard";
 import { FarmSelector, FarmTabs } from "@/components/dashboard/FarmSelector";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings } from "lucide-react";
+import Link from "next/link";
 
 // Mock farms data matching the PortfolioDashboard
 const farms = [
@@ -160,7 +161,7 @@ export default function PortfolioPage() {
       {/* Mobile Bottom Navigation (reuse existing) */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 safe-area-bottom">
         <div className="flex items-center">
-          <a 
+          <Link 
             href="/"
             className={`
               flex flex-col items-center justify-center
@@ -175,9 +176,9 @@ export default function PortfolioPage() {
               <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
             </svg>
             <span className="text-xs">Portfolio</span>
-          </a>
+          </Link>
           
-          <a 
+          <Link 
             href="/farms"
             className="
               flex flex-col items-center justify-center
@@ -192,7 +193,7 @@ export default function PortfolioPage() {
               <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
             </svg>
             <span className="text-xs">Farms</span>
-          </a>
+          </Link>
           
           <a 
             href="/ai-assistant"
