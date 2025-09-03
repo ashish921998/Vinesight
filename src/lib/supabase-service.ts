@@ -1,5 +1,5 @@
 import { 
-  getUntypedSupabaseClient, 
+  getTypedSupabaseClient, 
   type Farm,
   type IrrigationRecord,
   type SprayRecord,
@@ -10,22 +10,50 @@ import {
   type TaskReminder,
   type SoilTestRecord
 } from './supabase';
+import {
+  toApplicationFarm,
+  toDatabaseFarmInsert,
+  toDatabaseFarmUpdate,
+  toApplicationIrrigationRecord,
+  toDatabaseIrrigationInsert,
+  toDatabaseIrrigationUpdate,
+  toApplicationSprayRecord,
+  toDatabaseSprayInsert,
+  toDatabaseSprayUpdate,
+  toApplicationFertigationRecord,
+  toDatabaseFertigationInsert,
+  toDatabaseFertigationUpdate,
+  toApplicationHarvestRecord,
+  toDatabaseHarvestInsert,
+  toDatabaseHarvestUpdate,
+  toApplicationExpenseRecord,
+  toDatabaseExpenseInsert,
+  toDatabaseExpenseUpdate,
+  toApplicationCalculationHistory,
+  toDatabaseCalculationHistoryInsert,
+  toApplicationTaskReminder,
+  toDatabaseTaskReminderInsert,
+  toDatabaseTaskReminderUpdate,
+  toApplicationSoilTestRecord,
+  toDatabaseSoilTestInsert,
+  toDatabaseSoilTestUpdate
+} from './supabase-types';
 
 export class SupabaseService {
   // Farm operations
   static async getAllFarms(): Promise<Farm[]> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { data, error } = await supabase
       .from('farms')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(toApplicationFarm);
   }
 
   static async getFarmById(id: number): Promise<Farm | null> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { data, error } = await supabase
       .from('farms')
       .select('*')
@@ -36,53 +64,49 @@ export class SupabaseService {
       if (error.code === 'PGRST116') return null; // Not found
       throw error;
     }
-    return data;
+    return data ? toApplicationFarm(data) : null;
   }
 
   static async createFarm(farm: Omit<Farm, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<Farm> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     
     // Get the current authenticated user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
     if (!user) throw new Error('User must be authenticated to create a farm');
     
-    // Include the user_id in the farm data
-    const farmWithUser = {
-      ...farm,
-      user_id: user.id
-    };
+    // Include the user_id in the farm data and convert to database format
+    const farmWithUser = { ...farm, user_id: user.id };
+    const dbFarmData = toDatabaseFarmInsert(farmWithUser);
     
-    console.log('Creating farm with data:', farmWithUser);
     
     const { data, error } = await supabase
       .from('farms')
-      .insert([farmWithUser])
+      .insert(dbFarmData)
       .select()
       .single();
 
-    if (error) {
-      console.error('Farm creation error:', error);
-      throw error;
-    }
-    return data;
+    if (error) throw error;
+    return toApplicationFarm(data);
   }
 
   static async updateFarm(id: number, updates: Partial<Farm>): Promise<Farm> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbUpdates = toDatabaseFarmUpdate(updates);
+    
     const { data, error } = await supabase
       .from('farms')
-      .update(updates)
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationFarm(data);
   }
 
   static async deleteFarm(id: number): Promise<void> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { error } = await supabase
       .from('farms')
       .delete()
@@ -93,7 +117,7 @@ export class SupabaseService {
 
   // Irrigation operations
   static async getIrrigationRecords(farmId: number, limit?: number): Promise<IrrigationRecord[]> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     let query = supabase
       .from('irrigation_records')
       .select('*')
@@ -107,36 +131,40 @@ export class SupabaseService {
     const { data, error } = await query;
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(toApplicationIrrigationRecord);
   }
 
   static async addIrrigationRecord(record: Omit<IrrigationRecord, 'id' | 'created_at'>): Promise<IrrigationRecord> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbRecord = toDatabaseIrrigationInsert(record);
+    
     const { data, error } = await supabase
       .from('irrigation_records')
-      .insert([record])
+      .insert(dbRecord)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationIrrigationRecord(data);
   }
 
   static async updateIrrigationRecord(id: number, updates: Partial<IrrigationRecord>): Promise<IrrigationRecord> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbUpdates = toDatabaseIrrigationUpdate(updates);
+    
     const { data, error } = await supabase
       .from('irrigation_records')
-      .update(updates)
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationIrrigationRecord(data);
   }
 
   static async deleteIrrigationRecord(id: number): Promise<void> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { error } = await supabase
       .from('irrigation_records')
       .delete()
@@ -147,7 +175,7 @@ export class SupabaseService {
 
   // Spray operations
   static async getSprayRecords(farmId: number): Promise<SprayRecord[]> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { data, error } = await supabase
       .from('spray_records')
       .select('*')
@@ -155,36 +183,40 @@ export class SupabaseService {
       .order('date', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(toApplicationSprayRecord);
   }
 
   static async addSprayRecord(record: Omit<SprayRecord, 'id' | 'created_at'>): Promise<SprayRecord> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbRecord = toDatabaseSprayInsert(record);
+    
     const { data, error } = await supabase
       .from('spray_records')
-      .insert([record])
+      .insert(dbRecord)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationSprayRecord(data);
   }
 
   static async updateSprayRecord(id: number, updates: Partial<SprayRecord>): Promise<SprayRecord> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbUpdates = toDatabaseSprayUpdate(updates);
+    
     const { data, error } = await supabase
       .from('spray_records')
-      .update(updates)
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationSprayRecord(data);
   }
 
   static async deleteSprayRecord(id: number): Promise<void> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { error } = await supabase
       .from('spray_records')
       .delete()
@@ -195,7 +227,7 @@ export class SupabaseService {
 
   // Fertigation operations
   static async getFertigationRecords(farmId: number): Promise<FertigationRecord[]> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { data, error } = await supabase
       .from('fertigation_records')
       .select('*')
@@ -203,37 +235,41 @@ export class SupabaseService {
       .order('date', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(toApplicationFertigationRecord);
   }
 
   static async addFertigationRecord(record: Omit<FertigationRecord, 'id' | 'created_at'>): Promise<FertigationRecord> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbRecord = toDatabaseFertigationInsert(record);
+    
     const { data, error } = await supabase
       .from('fertigation_records')
-      .insert([record])
+      .insert(dbRecord)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationFertigationRecord(data);
   }
 
   static async updateFertigationRecord(id: number, updates: Partial<FertigationRecord>): Promise<FertigationRecord> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbUpdates = toDatabaseFertigationUpdate(updates);
+    
     const { data, error } = await supabase
       .from('fertigation_records')
-      .update(updates)
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationFertigationRecord(data);
   }
 
   // Harvest operations
   static async getHarvestRecords(farmId: number): Promise<HarvestRecord[]> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { data, error } = await supabase
       .from('harvest_records')
       .select('*')
@@ -241,36 +277,40 @@ export class SupabaseService {
       .order('date', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(toApplicationHarvestRecord);
   }
 
   static async addHarvestRecord(record: Omit<HarvestRecord, 'id' | 'created_at'>): Promise<HarvestRecord> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbRecord = toDatabaseHarvestInsert(record);
+    
     const { data, error } = await supabase
       .from('harvest_records')
-      .insert([record])
+      .insert(dbRecord)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationHarvestRecord(data);
   }
 
   static async updateHarvestRecord(id: number, updates: Partial<HarvestRecord>): Promise<HarvestRecord> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbUpdates = toDatabaseHarvestUpdate(updates);
+    
     const { data, error } = await supabase
       .from('harvest_records')
-      .update(updates)
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationHarvestRecord(data);
   }
 
   static async deleteHarvestRecord(id: number): Promise<void> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { error } = await supabase
       .from('harvest_records')
       .delete()
@@ -281,7 +321,7 @@ export class SupabaseService {
 
   // Expense operations
   static async getExpenseRecords(farmId: number): Promise<ExpenseRecord[]> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { data, error } = await supabase
       .from('expense_records')
       .select('*')
@@ -289,37 +329,41 @@ export class SupabaseService {
       .order('date', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(toApplicationExpenseRecord);
   }
 
   static async addExpenseRecord(record: Omit<ExpenseRecord, 'id' | 'created_at'>): Promise<ExpenseRecord> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbRecord = toDatabaseExpenseInsert(record);
+    
     const { data, error } = await supabase
       .from('expense_records')
-      .insert([record])
+      .insert(dbRecord)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationExpenseRecord(data);
   }
 
   static async updateExpenseRecord(id: number, updates: Partial<ExpenseRecord>): Promise<ExpenseRecord> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbUpdates = toDatabaseExpenseUpdate(updates);
+    
     const { data, error } = await supabase
       .from('expense_records')
-      .update(updates)
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationExpenseRecord(data);
   }
 
   // Calculation history operations
   static async getCalculationHistory(farmId: number): Promise<CalculationHistory[]> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { data, error } = await supabase
       .from('calculation_history')
       .select('*')
@@ -327,24 +371,26 @@ export class SupabaseService {
       .order('date', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(toApplicationCalculationHistory);
   }
 
   static async addCalculationHistory(record: Omit<CalculationHistory, 'id' | 'created_at'>): Promise<CalculationHistory> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbRecord = toDatabaseCalculationHistoryInsert(record);
+    
     const { data, error } = await supabase
       .from('calculation_history')
-      .insert([record])
+      .insert(dbRecord)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationCalculationHistory(data);
   }
 
   // Task and reminder operations
   static async getTaskReminders(farmId: number): Promise<TaskReminder[]> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { data, error } = await supabase
       .from('task_reminders')
       .select('*')
@@ -352,11 +398,11 @@ export class SupabaseService {
       .order('due_date', { ascending: true });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(toApplicationTaskReminder);
   }
 
   static async getPendingTasks(farmId: number): Promise<TaskReminder[]> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { data, error } = await supabase
       .from('task_reminders')
       .select('*')
@@ -365,40 +411,44 @@ export class SupabaseService {
       .order('due_date', { ascending: true });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(toApplicationTaskReminder);
   }
 
   static async addTaskReminder(task: Omit<TaskReminder, 'id' | 'created_at'>): Promise<TaskReminder> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbTask = toDatabaseTaskReminderInsert(task);
+    
     const { data, error } = await supabase
       .from('task_reminders')
-      .insert([task])
+      .insert(dbTask)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationTaskReminder(data);
   }
 
   static async completeTask(id: number): Promise<TaskReminder> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbUpdates = toDatabaseTaskReminderUpdate({
+      completed: true,
+      completed_at: new Date().toISOString()
+    });
+    
     const { data, error } = await supabase
       .from('task_reminders')
-      .update({
-        completed: true,
-        completed_at: new Date().toISOString()
-      })
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationTaskReminder(data);
   }
 
   // Soil test operations
   static async getSoilTestRecords(farmId: number): Promise<SoilTestRecord[]> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { data, error } = await supabase
       .from('soil_test_records')
       .select('*')
@@ -406,32 +456,36 @@ export class SupabaseService {
       .order('date', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(toApplicationSoilTestRecord);
   }
 
   static async addSoilTestRecord(record: Omit<SoilTestRecord, 'id' | 'created_at'>): Promise<SoilTestRecord> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbRecord = toDatabaseSoilTestInsert(record);
+    
     const { data, error } = await supabase
       .from('soil_test_records')
-      .insert([record])
+      .insert(dbRecord)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationSoilTestRecord(data);
   }
 
   static async updateSoilTestRecord(id: number, updates: Partial<SoilTestRecord>): Promise<SoilTestRecord> {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
+    const dbUpdates = toDatabaseSoilTestUpdate(updates);
+    
     const { data, error } = await supabase
       .from('soil_test_records')
-      .update(updates)
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return toApplicationSoilTestRecord(data);
   }
 
   // Export data functions
@@ -505,14 +559,14 @@ export class SupabaseService {
 
   // Authentication helper functions
   static async getCurrentUser() {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error) throw error;
     return user;
   }
 
   static async signUp(email: string, password: string) {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -522,7 +576,7 @@ export class SupabaseService {
   }
 
   static async signIn(email: string, password: string) {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -532,14 +586,14 @@ export class SupabaseService {
   }
 
   static async signOut() {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   }
 
   // Real-time subscriptions
   static subscribeToFarmChanges(farmId: number, callback: (payload: any) => void) {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     return supabase
       .channel(`farm-${farmId}`)
       .on(
@@ -556,7 +610,7 @@ export class SupabaseService {
   }
 
   static subscribeToTaskChanges(farmId: number, callback: (payload: any) => void) {
-    const supabase = getUntypedSupabaseClient();
+    const supabase = getTypedSupabaseClient();
     return supabase
       .channel(`tasks-${farmId}`)
       .on(

@@ -41,8 +41,9 @@ export function WaterCalculationModal({
     const cropCoefficientValue = parseFloat(formData.cropCoefficient);
     const evapotranspirationValue = parseFloat(formData.evapotranspiration);
 
-    // Formula: refill_tank / (crop_coefficient * evapotranspiration)
-    const result = refillTankValue / (cropCoefficientValue * evapotranspirationValue);
+    // Formula: total tank capacity * refill_tank / (crop_coefficient * evapotranspiration)
+    const totalTankCapacity = farm.total_tank_capacity || 0;
+    const result = (totalTankCapacity * refillTankValue) / (cropCoefficientValue * evapotranspirationValue);
     setCalculationResult(result);
   };
 
@@ -90,6 +91,11 @@ export function WaterCalculationModal({
           </DialogTitle>
           <DialogDescription className="text-sm text-gray-600">
             Enter current values to calculate remaining water in soil
+            {(!farm.total_tank_capacity || farm.total_tank_capacity === 0) && (
+              <div className="text-amber-600 text-xs mt-1 font-medium">
+                ⚠️ Total tank capacity not set. Please update farm settings for accurate calculations.
+              </div>
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -188,7 +194,7 @@ export function WaterCalculationModal({
                 <div className="text-xs text-green-700 bg-green-100 p-2 rounded border">
                   <div className="font-medium mb-1">Calculation:</div>
                   <div>
-                    {parseFloat(formData.refillTank).toFixed(1)}L ÷ ({formData.cropCoefficient} × {formData.evapotranspiration}) = {calculationResult.toFixed(1)} mm
+                    ({farm.total_tank_capacity || 0}L × {parseFloat(formData.refillTank).toFixed(1)}) ÷ ({formData.cropCoefficient} × {formData.evapotranspiration}) = {calculationResult.toFixed(1)} mm
                   </div>
                 </div>
               </div>

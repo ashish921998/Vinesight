@@ -276,11 +276,12 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                 </div>
                 <div>
                   <Label htmlFor="system_discharge" className="text-sm font-medium text-gray-700">
-                    System Discharge (L/hr)
+                    System Discharge
                   </Label>
                   <Input
                     id="system_discharge"
                     type="number"
+                    step="0.1"
                     min="0"
                     value={formData.system_discharge || ""}
                     onChange={(e) => setFormData(prev => ({ ...prev, system_discharge: e.target.value }))}

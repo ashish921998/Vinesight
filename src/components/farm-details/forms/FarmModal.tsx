@@ -317,16 +317,16 @@ export function FarmModal({
             {/* System Discharge */}
             <div>
               <Label htmlFor="system_discharge" className="text-sm font-medium text-gray-700">
-                System Discharge (liters/hour)
+                System Discharge
               </Label>
               <Input
                 id="system_discharge"
                 type="number"
-                step="1"
+                step="0.1"
                 min="0"
                 value={formData.system_discharge}
                 onChange={(e) => handleInputChange("system_discharge", e.target.value)}
-                placeholder="100"
+                placeholder="100.5"
                 className="mt-1 h-11"
               />
               <p className="text-xs text-gray-500 mt-1">

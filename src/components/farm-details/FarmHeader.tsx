@@ -32,7 +32,7 @@ export function FarmHeader({ farm, loading, onBack }: FarmHeaderProps) {
 
   return (
     <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-300 z-10 shadow-sm">
-      <div className="p-6">
+      <div className="p-4">
         {/* Farm Header */}
         <div className="flex items-start gap-4">
           <div className="p-3 bg-green-100 rounded-2xl">

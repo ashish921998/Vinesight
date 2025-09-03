@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { WeatherDashboard } from "@/components/weather/WeatherDashboard";
-import { CloudDataService, Farm } from "@/lib/cloud-data-service";
+import { SupabaseService } from "@/lib/supabase-service";
+import type { Farm } from "@/lib/supabase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,7 +22,7 @@ export default function WeatherPage() {
 
   const loadFarms = async () => {
     try {
-      const farmList = await CloudDataService.getAllFarms();
+      const farmList = await SupabaseService.getAllFarms();
       setFarms(farmList);
       if (farmList.length > 0) {
         setSelectedFarm(farmList[0]);
@@ -199,9 +200,9 @@ export default function WeatherPage() {
       {selectedFarm && (
         <WeatherDashboard
           farmLocation={{
-            latitude: 19.0825, // Default to Nashik coordinates
-            longitude: 73.1963,
-            name: selectedFarm.region
+            latitude: selectedFarm.latitude || 19.0825, // Use farm coordinates or default to Nashik
+            longitude: selectedFarm.longitude || 73.1963,
+            name: selectedFarm.location_name || selectedFarm.region
           }}
           growthStage={selectedGrowthStage}
           soilType={selectedSoilType}

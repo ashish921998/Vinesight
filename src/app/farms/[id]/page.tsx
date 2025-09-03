@@ -11,7 +11,7 @@ import { FarmHeader } from "@/components/farm-details/FarmHeader";
 import { FarmOverview } from "@/components/farm-details/FarmOverview";
 import { QuickActions } from "@/components/farm-details/QuickActions";
 import { ActivityFeed } from "@/components/farm-details/ActivityFeed";
-import { WeatherCard } from "@/components/farm-details/WeatherCard";
+import { SimpleWeatherCard } from "@/components/dashboard/SimpleWeatherCard";
 import { RemainingWaterCard } from "@/components/farm-details/RemainingWaterCard";
 import { IrrigationForm } from "@/components/farm-details/forms/IrrigationForm";
 import { SprayForm } from "@/components/farm-details/forms/SprayForm";
@@ -21,6 +21,11 @@ import { ExpenseForm } from "@/components/farm-details/forms/ExpenseForm";
 import { SoilTestForm } from "@/components/farm-details/forms/SoilTestForm";
 import { WaterCalculationModal } from "@/components/farm-details/WaterCalculationModal";
 import { EditRecordModal } from "@/components/journal/EditRecordModal";
+
+// Phase 3A: AI-Powered Components
+import { AIInsightsCarousel } from "@/components/ai/AIInsightsCarousel";
+import { PestPredictionService } from "@/lib/pest-prediction-service";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 interface DashboardData {
   farm: Farm | null;
@@ -44,6 +49,9 @@ export default function FarmDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const farmId = params.id as string;
+  
+  // Authentication
+  const { user } = useSupabaseAuth();
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,6 +67,9 @@ export default function FarmDetailsPage() {
   const [showWaterCalculationModal, setShowWaterCalculationModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+
+  // AI Features state
+  const [aiPredictionsGenerated, setAiPredictionsGenerated] = useState(false);
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -80,6 +91,25 @@ export default function FarmDetailsPage() {
       loadDashboardData();
     }
   }, [farmId, loadDashboardData]);
+
+  // Generate AI predictions when farm data is loaded
+  useEffect(() => {
+    const generateAIPredictions = async () => {
+      if (dashboardData?.farm && user && !aiPredictionsGenerated) {
+        try {
+          await PestPredictionService.generatePredictions(
+            parseInt(farmId),
+            dashboardData.farm
+          );
+          setAiPredictionsGenerated(true);
+        } catch (error) {
+          console.error("Error generating AI predictions:", error);
+        }
+      }
+    };
+
+    generateAIPredictions();
+  }, [dashboardData, farmId, user, aiPredictionsGenerated]);
 
   const completeTask = async (taskId: number) => {
     try {
@@ -240,10 +270,28 @@ export default function FarmDetailsPage() {
         loading={loading}
       />
 
-      {/* Weather and Water Cards */}
+      {/* Weather Card */}
       {dashboardData?.farm && (
-        <div className="px-4 mb-4 space-y-4">
-          <WeatherCard farm={dashboardData.farm} />
+        <div className="px-4 mt-6 mb-4">
+          <SimpleWeatherCard farm={dashboardData.farm} />
+        </div>
+      )}
+
+      {/* Phase 3A: AI-Powered Features */}
+      {(dashboardData?.farm || process.env.NEXT_PUBLIC_BYPASS_AUTH) && (
+        <div className="px-4 mb-6">
+          {/* Comprehensive AI Insights */}
+          <AIInsightsCarousel 
+            farmId={parseInt(farmId)} 
+            userId={user?.id || 'demo-user'}
+            className="w-full"
+          />
+        </div>
+      )}
+
+      {/* Water Level Card */}
+      {dashboardData?.farm && (
+        <div className="px-4 mb-4">
           <RemainingWaterCard 
             farm={dashboardData.farm} 
             onCalculateClick={() => setShowWaterCalculationModal(true)}

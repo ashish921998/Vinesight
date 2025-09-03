@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* Hide scrollbars for horizontal scroll components */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
 /* Global Theme Variables - Green Agricultural Theme */
 :root {
   --background: oklch(0.9711 0.0074 80.7211);
