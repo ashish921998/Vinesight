@@ -12,6 +12,14 @@ export function getSupabaseClient() {
   return createClient()
 }
 
+// Untyped client for service operations to avoid type conflicts
+export function getUntypedSupabaseClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  ) as any
+}
+
 // For backward compatibility
 export const supabase = getSupabaseClient()
 

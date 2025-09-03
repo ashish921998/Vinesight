@@ -13,8 +13,10 @@ import {
   Calendar,
   Clock,
   CheckCircle,
-  Edit
+  Edit,
+  ArrowRight
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface ActivityFeedProps {
   recentActivities: any[];
@@ -22,6 +24,7 @@ interface ActivityFeedProps {
   loading: boolean;
   onCompleteTask: (taskId: number) => Promise<void>;
   onEditRecord: (record: any, recordType: string) => void;
+  farmId?: string;
 }
 
 export function ActivityFeed({ 
@@ -29,8 +32,10 @@ export function ActivityFeed({
   pendingTasks, 
   loading,
   onCompleteTask,
-  onEditRecord
+  onEditRecord,
+  farmId
 }: ActivityFeedProps) {
+  const router = useRouter();
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'irrigation': return Droplets;
@@ -102,7 +107,7 @@ export function ActivityFeed({
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="px-4 space-y-3">
       {/* Pending Tasks */}
       {pendingTasks && pendingTasks.length > 0 && (
         <Card className="border-green-200 bg-green-50">
@@ -144,70 +149,88 @@ export function ActivityFeed({
 
       {/* Recent Activities */}
       <Card className="border-gray-200">
-        <CardHeader>
-          <CardTitle className="text-gray-900 flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+        <CardHeader className="pb-2 px-3 pt-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
             Recent Activities
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0 px-3 pb-3 space-y-2">
           {recentActivities && recentActivities.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {recentActivities.slice(0, 5).map((activity, index) => {
                 const Icon = getActivityIcon(activity.type);
-                const colorClass = getActivityColor(activity.type);
                 
                 return (
-                  <div key={index} className="flex items-center gap-3 p-3 border-l-4 border-green-200 bg-gray-50 rounded-r-xl">
-                    <div className={`p-2 rounded-lg ${colorClass}`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium text-gray-900 text-sm">
-                          {activity.title || `${activity.type} activity`}
-                        </p>
-                        <Badge variant="outline" className="text-xs">
-                          {activity.type}
-                        </Badge>
+                  <div key={index} className="flex items-start justify-between gap-2 p-2 bg-gray-50 rounded-lg h-14">
+                    <div className="flex items-start gap-2 flex-1 min-w-0">
+                      <div className="p-1 bg-green-100 rounded-md flex-shrink-0 mt-0.5">
+                        <Icon className="h-3 w-3 text-green-600" />
                       </div>
                       
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs text-gray-600">
-                          <span>{new Date(activity.date || activity.created_at).toLocaleDateString()}</span>
-                          {activity.notes && (
-                            <>
-                              <span>•</span>
-                              <span className="truncate">{activity.notes}</span>
-                            </>
-                          )}
+                      <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium text-gray-900 text-sm capitalize truncate">
+                            {activity.type.replace('_', ' ')}
+                          </p>
+                          <span className="text-xs text-gray-500">
+                            {new Date(activity.date || activity.created_at).toLocaleDateString()}
+                          </span>
                         </div>
                         
-                        {(activity.type === 'irrigation' || activity.type === 'spray' || activity.type === 'harvest') && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onEditRecord(activity, activity.type)}
-                            className="h-6 px-2 text-xs text-green-600 hover:text-green-800 hover:bg-green-50"
-                          >
-                            <Edit className="h-3 w-3 mr-1" />
-                            Edit
-                          </Button>
-                        )}
+                        <div className="h-4">
+                          {activity.notes ? (
+                            <p className="text-xs text-gray-600 break-words line-clamp-1">
+                              {activity.notes.length > 60 
+                                ? `${activity.notes.substring(0, 60)}...` 
+                                : activity.notes
+                              }
+                            </p>
+                          ) : (
+                            <p className="text-xs text-gray-400 italic">
+                              No notes added
+                            </p>
+                          )}
+                        </div>
                       </div>
+                    </div>
+                    
+                    <div className="flex items-center h-full">
+                      {(activity.type === 'irrigation' || activity.type === 'spray' || activity.type === 'harvest' || activity.type === 'fertigation' || activity.type === 'expense' || activity.type === 'soil_test') && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onEditRecord(activity, activity.type)}
+                          className="h-6 w-6 p-0 text-green-600 hover:text-green-800 hover:bg-green-100 flex-shrink-0"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+            <div className="text-center py-6 text-gray-500">
+              <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-300" />
               <p className="text-sm">No recent activities</p>
               <p className="text-xs text-gray-400 mt-1">
                 Start logging activities to see them here
               </p>
+            </div>
+          )}
+          
+          {recentActivities && recentActivities.length > 0 && (
+            <div className="pt-2 border-t border-gray-100 mt-2">
+              <Button
+                variant="outline"
+                onClick={() => router.push(`/farms/${farmId}/logs`)}
+                className="w-full h-8 text-sm text-green-700 hover:text-green-800 hover:bg-green-50 border-green-200"
+              >
+                <ArrowRight className="h-4 w-4 mr-2" />
+                See all logs
+              </Button>
             </div>
           )}
         </CardContent>

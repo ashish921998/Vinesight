@@ -3,7 +3,6 @@ import { Geist, Geist_Mono, Montserrat, Merriweather, Source_Code_Pro } from "ne
 import "./globals.css";
 import Navigation from "@/components/navigation";
 import { I18nProvider } from "@/components/providers/I18nProvider";
-import { PWAWrapper } from "@/components/pwa/PWAWrapper";
 import { AsyncErrorBoundary } from "@/components/ErrorBoundary";
 import { Suspense } from "react";
 import { BottomNavigation } from "@/components/mobile/BottomNavigation";
@@ -169,10 +168,6 @@ export default function RootLayout({
                     </div>
                   </main>
                   <BottomNavigation />
-                  {/* PWA Install Prompt */}
-                  <div className="fixed bottom-20 left-4 right-4 lg:left-80 lg:bottom-4 z-40">
-                    <PWAWrapper />
-                  </div>
                   <Toaster />
                 </div>
               </I18nProvider>

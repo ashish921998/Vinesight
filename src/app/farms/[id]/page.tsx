@@ -268,6 +268,7 @@ export default function FarmDetailsPage() {
         loading={loading}
         onCompleteTask={completeTask}
         onEditRecord={handleEditRecord}
+        farmId={farmId}
       />
 
       {/* Data Entry Forms */}
@@ -312,7 +313,7 @@ export default function FarmDetailsPage() {
           }}
           onSave={handleSaveRecord}
           record={editingRecord}
-          recordType={editingRecord.type as 'irrigation' | 'spray' | 'harvest'}
+          recordType={editingRecord.type as 'irrigation' | 'spray' | 'harvest' | 'fertigation' | 'expense' | 'soil_test'}
         />
       )}
 

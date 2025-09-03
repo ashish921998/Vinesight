@@ -7,16 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Droplets, SprayCan, Scissors, Loader2 } from "lucide-react";
+import { Droplets, SprayCan, Scissors, Loader2, DollarSign, Beaker, TestTube } from "lucide-react";
 import { SupabaseService } from "@/lib/supabase-service";
-import type { IrrigationRecord, SprayRecord, HarvestRecord } from "@/lib/supabase";
+import type { IrrigationRecord, SprayRecord, HarvestRecord, FertigationRecord, ExpenseRecord, SoilTestRecord } from "@/lib/supabase";
 
 interface EditRecordModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
-  record: IrrigationRecord | SprayRecord | HarvestRecord | null;
-  recordType: 'irrigation' | 'spray' | 'harvest';
+  record: IrrigationRecord | SprayRecord | HarvestRecord | FertigationRecord | ExpenseRecord | SoilTestRecord | null;
+  recordType: 'irrigation' | 'spray' | 'harvest' | 'fertigation' | 'expense' | 'soil_test';
 }
 
 export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }: EditRecordModalProps) {
@@ -59,6 +59,33 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
           buyer: harvestRecord.buyer || "",
           notes: harvestRecord.notes || ""
         });
+      } else if (recordType === 'fertigation') {
+        const fertigationRecord = record as FertigationRecord;
+        setFormData({
+          date: fertigationRecord.date,
+          fertilizer: fertigationRecord.fertilizer || "",
+          dose: fertigationRecord.dose || "",
+          purpose: fertigationRecord.purpose || "",
+          area: fertigationRecord.area?.toString() || "",
+          notes: fertigationRecord.notes || ""
+        });
+      } else if (recordType === 'expense') {
+        const expenseRecord = record as ExpenseRecord;
+        setFormData({
+          date: expenseRecord.date,
+          type: expenseRecord.type || "",
+          description: expenseRecord.description || "",
+          cost: expenseRecord.cost?.toString() || "",
+          remarks: expenseRecord.remarks || ""
+        });
+      } else if (recordType === 'soil_test') {
+        const soilTestRecord = record as SoilTestRecord;
+        setFormData({
+          date: soilTestRecord.date,
+          parameters: soilTestRecord.parameters || {},
+          recommendations: soilTestRecord.recommendations || "",
+          notes: soilTestRecord.notes || ""
+        });
       }
     }
   }, [record, recordType]);
@@ -99,6 +126,30 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
           buyer: formData.buyer || undefined,
           notes: formData.notes
         });
+      } else if (recordType === 'fertigation') {
+        await SupabaseService.updateFertigationRecord(record.id!, {
+          date: formData.date,
+          fertilizer: formData.fertilizer,
+          dose: formData.dose,
+          purpose: formData.purpose,
+          area: parseFloat(formData.area),
+          notes: formData.notes
+        });
+      } else if (recordType === 'expense') {
+        await SupabaseService.updateExpenseRecord(record.id!, {
+          date: formData.date,
+          type: formData.type,
+          description: formData.description,
+          cost: parseFloat(formData.cost),
+          remarks: formData.remarks
+        });
+      } else if (recordType === 'soil_test') {
+        await SupabaseService.updateSoilTestRecord(record.id!, {
+          date: formData.date,
+          parameters: formData.parameters,
+          recommendations: formData.recommendations,
+          notes: formData.notes
+        });
       }
 
       onSave();
@@ -115,6 +166,9 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
       case 'irrigation': return <Droplets className="h-5 w-5" />;
       case 'spray': return <SprayCan className="h-5 w-5" />;
       case 'harvest': return <Scissors className="h-5 w-5" />;
+      case 'fertigation': return <Beaker className="h-5 w-5" />;
+      case 'expense': return <DollarSign className="h-5 w-5" />;
+      case 'soil_test': return <TestTube className="h-5 w-5" />;
       default: return <Droplets className="h-5 w-5" />;
     }
   };
@@ -124,6 +178,9 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
       case 'irrigation': return 'Edit Irrigation Record';
       case 'spray': return 'Edit Spray Record';
       case 'harvest': return 'Edit Harvest Record';
+      case 'fertigation': return 'Edit Fertigation Record';
+      case 'expense': return 'Edit Expense Record';
+      case 'soil_test': return 'Edit Soil Test Record';
       default: return 'Edit Record';
     }
   };
@@ -133,6 +190,9 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
       case 'irrigation': return 'text-blue-700 bg-blue-100';
       case 'spray': return 'text-green-700 bg-green-100';
       case 'harvest': return 'text-purple-700 bg-purple-100';
+      case 'fertigation': return 'text-emerald-700 bg-emerald-100';
+      case 'expense': return 'text-orange-700 bg-orange-100';
+      case 'soil_test': return 'text-teal-700 bg-teal-100';
       default: return 'text-blue-700 bg-blue-100';
     }
   };
@@ -340,15 +400,215 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
             </>
           )}
 
-          {/* Notes */}
+          {recordType === 'fertigation' && (
+            <>
+              <div>
+                <Label htmlFor="fertilizer" className="text-sm font-medium text-gray-700">
+                  Fertilizer *
+                </Label>
+                <Input
+                  id="fertilizer"
+                  value={formData.fertilizer || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, fertilizer: e.target.value }))}
+                  className="mt-1"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="dose" className="text-sm font-medium text-gray-700">
+                    Dose *
+                  </Label>
+                  <Input
+                    id="dose"
+                    value={formData.dose || ""}
+                    onChange={(e) => setFormData(prev => ({ ...prev, dose: e.target.value }))}
+                    className="mt-1"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="area" className="text-sm font-medium text-gray-700">
+                    Area (acres)
+                  </Label>
+                  <Input
+                    id="area"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={formData.area || ""}
+                    onChange={(e) => setFormData(prev => ({ ...prev, area: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="purpose" className="text-sm font-medium text-gray-700">
+                  Purpose
+                </Label>
+                <Input
+                  id="purpose"
+                  value={formData.purpose || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, purpose: e.target.value }))}
+                  className="mt-1"
+                />
+              </div>
+            </>
+          )}
+
+          {recordType === 'expense' && (
+            <>
+              <div>
+                <Label htmlFor="type" className="text-sm font-medium text-gray-700">
+                  Category *
+                </Label>
+                <Select
+                  value={formData.type || ""}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="labor">Labor</SelectItem>
+                    <SelectItem value="materials">Materials</SelectItem>
+                    <SelectItem value="equipment">Equipment</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="description" className="text-sm font-medium text-gray-700">
+                  Description *
+                </Label>
+                <Input
+                  id="description"
+                  value={formData.description || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  className="mt-1"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="cost" className="text-sm font-medium text-gray-700">
+                  Cost (₹) *
+                </Label>
+                <Input
+                  id="cost"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.cost || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, cost: e.target.value }))}
+                  className="mt-1"
+                  required
+                />
+              </div>
+            </>
+          )}
+
+          {recordType === 'soil_test' && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="ph" className="text-sm font-medium text-gray-700">
+                    pH Level
+                  </Label>
+                  <Input
+                    id="ph"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="14"
+                    value={formData.parameters?.pH || ""}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      parameters: { ...prev.parameters, pH: parseFloat(e.target.value) || 0 }
+                    }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="nitrogen" className="text-sm font-medium text-gray-700">
+                    Nitrogen (ppm)
+                  </Label>
+                  <Input
+                    id="nitrogen"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={formData.parameters?.nitrogen || ""}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      parameters: { ...prev.parameters, nitrogen: parseFloat(e.target.value) || 0 }
+                    }))}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="phosphorus" className="text-sm font-medium text-gray-700">
+                    Phosphorus (ppm)
+                  </Label>
+                  <Input
+                    id="phosphorus"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={formData.parameters?.phosphorus || ""}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      parameters: { ...prev.parameters, phosphorus: parseFloat(e.target.value) || 0 }
+                    }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="potassium" className="text-sm font-medium text-gray-700">
+                    Potassium (ppm)
+                  </Label>
+                  <Input
+                    id="potassium"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={formData.parameters?.potassium || ""}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      parameters: { ...prev.parameters, potassium: parseFloat(e.target.value) || 0 }
+                    }))}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="recommendations" className="text-sm font-medium text-gray-700">
+                  Recommendations
+                </Label>
+                <Textarea
+                  id="recommendations"
+                  value={formData.recommendations || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, recommendations: e.target.value }))}
+                  className="mt-1 resize-none"
+                  rows={3}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Notes/Remarks */}
           <div>
             <Label htmlFor="notes" className="text-sm font-medium text-gray-700">
-              Notes
+              {recordType === 'expense' ? 'Remarks' : 'Notes'}
             </Label>
             <Textarea
               id="notes"
-              value={formData.notes || ""}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              value={recordType === 'expense' ? (formData.remarks || "") : (formData.notes || "")}
+              onChange={(e) => setFormData(prev => ({ 
+                ...prev, 
+                [recordType === 'expense' ? 'remarks' : 'notes']: e.target.value 
+              }))}
               placeholder="Any additional notes..."
               className="mt-1 resize-none"
               rows={3}
