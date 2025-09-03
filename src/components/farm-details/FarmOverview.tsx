@@ -1,11 +1,9 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { 
-  Droplets, 
-  SprayCan, 
-  Scissors, 
-  CheckSquare, 
+  Droplets,
+  Scissors,
   TrendingUp, 
   DollarSign,
   Activity,
@@ -61,13 +59,6 @@ export function FarmOverview({ dashboardData, loading }: FarmOverviewProps) {
       suffix: "tasks"
     },
     {
-      title: "Irrigations",
-      value: dashboardData.recordCounts.irrigation,
-      icon: Activity,
-      color: "bg-blue-100 text-blue-600",
-      suffix: "logs"
-    },
-    {
       title: "Water Usage",
       value: Math.round(dashboardData.totalWaterUsage / 1000), // Convert to thousands of liters
       icon: Droplets,
@@ -87,7 +78,7 @@ export function FarmOverview({ dashboardData, loading }: FarmOverviewProps) {
     <div className="p-6">
       <h2 className="text-lg font-bold text-gray-900 mb-4">Farm Overview</h2>
       
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {overviewCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -118,7 +109,7 @@ export function FarmOverview({ dashboardData, loading }: FarmOverviewProps) {
       </div>
 
       {/* Additional Stats Row */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* <div className="grid grid-cols-3 gap-4">
         <Card className="border-gray-200">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
@@ -154,7 +145,7 @@ export function FarmOverview({ dashboardData, loading }: FarmOverviewProps) {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
     </div>
   );
 }

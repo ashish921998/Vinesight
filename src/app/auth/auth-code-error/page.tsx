@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { useSearchParams } from 'next/navigation';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
+import { createClient } from '@/lib/supabase';
 
-export default function AuthCodeError() {
+function AuthCodeErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
   const { user, loading } = useSupabaseAuth();
@@ -34,9 +35,16 @@ export default function AuthCodeError() {
     }
   };
 
-  const handleRetry = () => {
-    // Clear any stored auth state and redirect to home
-    localStorage.removeItem('supabase.auth.token');
+  const handleRetry = async () => {
+    // Clear any stored auth state using Supabase's proper signOut method
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Fallback: clear all possible auth keys
+      localStorage.clear();
+    }
     window.location.href = '/';
   };
 
@@ -89,5 +97,17 @@ export default function AuthCodeError() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function AuthCodeError() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div>Loading...</div>
+      </div>
+    }>
+      <AuthCodeErrorContent />
+    </Suspense>
   );
 }

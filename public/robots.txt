@@ -1,0 +1,57 @@
+# FarmAI - Smart Farm Management System
+# Robots.txt for optimal SEO crawling
+
+User-agent: *
+Allow: /
+
+# Priority pages for farming keywords
+Allow: /
+Allow: /dashboard
+Allow: /calculators
+Allow: /ai-assistant
+Allow: /farm-operations
+Allow: /weather
+Allow: /analytics
+
+# SEO content pages
+Allow: /grape-farming-guide
+Allow: /vineyard-management
+Allow: /precision-agriculture
+Allow: /smart-farming-technology
+Allow: /ai-crop-monitoring
+Allow: /farming-software-solutions
+Allow: /agricultural-automation
+Allow: /crop-yield-prediction
+
+# Marketing pages
+Allow: /features
+Allow: /pricing
+Allow: /about
+Allow: /contact
+
+# Disallow admin/auth pages
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /auth/
+Disallow: /settings/
+Disallow: /profile/
+
+# Disallow search result pages to avoid duplicate content
+Disallow: /search?
+Disallow: /*?q=*
+Disallow: /*?search=*
+
+# Allow images for SEO
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.gif
+Allow: /*.svg
+Allow: /*.webp
+
+# Sitemap location
+Sitemap: https://farmai.vercel.app/sitemap.xml
+
+# Crawl delay to be respectful
+Crawl-delay: 1

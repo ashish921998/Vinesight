@@ -346,7 +346,7 @@ export function WeatherCard({ farm }: WeatherCardProps) {
           </div>
 
           {/* Hourly Solar Radiation (in Lux) */}
-          {solarLuxData && (
+          {/* {solarLuxData && (
             <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Sun className="h-4 w-4 text-amber-600" />
@@ -367,7 +367,7 @@ export function WeatherCard({ farm }: WeatherCardProps) {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Sunshine Duration */}
           <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">

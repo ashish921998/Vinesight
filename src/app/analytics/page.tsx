@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { SEOSchema } from "@/components/SEOSchema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -253,7 +254,15 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <SEOSchema 
+        type="dashboard"
+        title="Farm Analytics - Data Insights & Performance Metrics | FarmAI"
+        description="Comprehensive farm analytics dashboard with AI-powered insights, cost analysis, yield predictions, and performance metrics for modern agriculture operations."
+        url="/analytics"
+        image="https://farmai.vercel.app/og-image.png"
+      />
+      <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
@@ -997,6 +1006,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

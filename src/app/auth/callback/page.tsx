@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 
-export default function AuthCallback() {
+function AuthCallbackContent() {
   const router = useRouter();
 
   useEffect(() => {
@@ -28,7 +28,6 @@ export default function AuthCallback() {
 
         // Handle errors
         if (error) {
-          console.error('OAuth error in fragment:', error, errorDescription);
           router.push(`/auth/auth-code-error?error=${error}`);
           return;
         }
@@ -43,13 +42,11 @@ export default function AuthCallback() {
           });
 
           if (error) {
-            console.error('Error setting session from tokens:', error);
             router.push(`/auth/auth-code-error?error=session_failed`);
             return;
           }
 
           if (data?.session) {
-            console.log('Successfully authenticated user:', data.session.user.email);
             // Clear the fragment from URL and redirect to home
             window.history.replaceState({}, document.title, window.location.pathname);
             router.push('/');
@@ -95,5 +92,20 @@ export default function AuthCallback() {
         <p className="text-muted-foreground">Completing authentication...</p>
       </div>
     </div>
+  );
+}
+
+export default function AuthCallback() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
   );
 }

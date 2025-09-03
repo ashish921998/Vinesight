@@ -7,6 +7,7 @@ import { LoginButton } from "@/components/auth/LoginButton";
 import { QuickActions } from "@/components/mobile/QuickActions";
 import { FarmerDashboard } from "@/components/dashboard/FarmerDashboard";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { SEOSchema } from "@/components/SEOSchema";
 
 export default function Home() {
   const { user, loading } = useSupabaseAuth();
@@ -50,16 +51,27 @@ export default function Home() {
   }
 
   return (
-    <div className="container mx-auto">
-      {/* Header */}
-      <header className="text-center mb-8 px-3">
-        <h1 className="text-3xl font-bold text-primary mb-2">
-          🍇 VineSight
-        </h1>
-        <p className="text-muted-foreground">
-          Your digital grape farming companion
-        </p>
-      </header>
+    <>
+      <SEOSchema 
+        type="homepage"
+        title="FarmAI - AI-Powered Smart Farm Management System"
+        description="Transform your farming operations with AI-driven crop monitoring, yield prediction, disease detection, and automation for modern agriculture."
+        url="/"
+        image="https://farmai.vercel.app/og-image.png"
+      />
+      <div className="container mx-auto">
+        {/* Header */}
+        <header className="text-center mb-8 px-3">
+          <h1 className="text-3xl font-bold text-primary mb-2">
+            🧠 FarmAI
+          </h1>
+          <p className="text-muted-foreground">
+            AI-Powered Smart Farm Management System
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Precision Agriculture • Crop Monitoring • Yield Prediction • Disease Detection
+          </p>
+        </header>
 
       {/* Main Features - Only show on desktop */}
       <div className="hidden lg:grid lg:grid-cols-3 gap-6 px-3 mb-8">
@@ -189,6 +201,7 @@ export default function Home() {
           </Button>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

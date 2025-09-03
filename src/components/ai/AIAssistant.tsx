@@ -54,6 +54,7 @@ export function AIAssistant({
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const handleSendMessageRef = useRef<((message?: string) => Promise<void>) | null>(null);
 
   // Load conversations from storage on mount
   useEffect(() => {
@@ -116,13 +117,10 @@ export function AIAssistant({
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         setInputValue(transcript);
-        // Use a timeout to avoid stale closure issues
-        setTimeout(() => {
-          const currentHandleSendMessage = (window as any).currentHandleSendMessage;
-          if (currentHandleSendMessage) {
-            currentHandleSendMessage(transcript);
-          }
-        }, 0);
+        // Use ref to avoid memory leaks and get current handler
+        if (handleSendMessageRef.current) {
+          handleSendMessageRef.current(transcript);
+        }
       };
       
       recognitionRef.current = recognition;
@@ -232,18 +230,24 @@ export function AIAssistant({
   }, [messages, farmData, recentAnalysis, i18n.language]);
 
 
-  // Immediately save individual messages to prevent data loss
-  const saveMessageImmediately = useCallback(async (allMessages: Message[]) => {
-    if (allMessages.length <= 1) return; // Don't save if only welcome message + new message
-    if (savingInProgressRef.current) return; // Prevent concurrent saves
-
-    // Use ref to get the most current conversation ID to prevent race conditions
-    let conversationId = currentConversationIdRef.current || currentConversationId;
+  // Atomic function to get or create conversation ID
+  const getOrCreateConversationId = useCallback(() => {
+    let conversationId = currentConversationIdRef.current;
     if (!conversationId) {
       conversationId = Date.now().toString();
       currentConversationIdRef.current = conversationId;
       setCurrentConversationId(conversationId);
     }
+    return conversationId;
+  }, []);
+
+  // Immediately save individual messages to prevent data loss
+  const saveMessageImmediately = useCallback(async (allMessages: Message[]) => {
+    if (allMessages.length <= 1) return; // Don't save if only welcome message + new message
+    if (savingInProgressRef.current) return; // Prevent concurrent saves
+
+    // Use atomic function to prevent race conditions
+    const conversationId = getOrCreateConversationId();
 
     const title = supabaseConversationStorage.generateTitle(allMessages);
     
@@ -286,7 +290,7 @@ export function AIAssistant({
     } finally {
       savingInProgressRef.current = false; // Always reset saving flag
     }
-  }, [currentConversationId, conversations, user?.id, farmData?.id]);
+  }, [getOrCreateConversationId, conversations, user?.id, farmData?.id]);
 
   const handleSendMessage = useCallback(async (text?: string) => {
     const messageText = text || inputValue.trim();
@@ -315,7 +319,12 @@ export function AIAssistant({
     incrementQuestionCount(user?.id);
 
     // Immediately save the user message to ensure no data loss
-    await saveMessageImmediately(updatedMessages);
+    try {
+      await saveMessageImmediately(updatedMessages);
+    } catch (error) {
+      console.error('Failed to save user message:', error);
+      toast.error('Failed to save your message. Please try again.');
+    }
 
     // Create streaming assistant message
     const assistantMessageId = (Date.now() + 1).toString();
@@ -404,7 +413,12 @@ export function AIAssistant({
       };
       const completedMessages = [...updatedMessages, completedAssistantMessage];
       
-      await saveMessageImmediately(completedMessages);
+      try {
+        await saveMessageImmediately(completedMessages);
+      } catch (error) {
+        console.error('Failed to save assistant message:', error);
+        toast.error('Failed to save conversation. Your message was sent but may not be saved.');
+      }
 
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
@@ -450,7 +464,12 @@ export function AIAssistant({
 
       // Immediately save the error message
       const errorMessages = [...updatedMessages, errorMessage];
-      await saveMessageImmediately(errorMessages);
+      try {
+        await saveMessageImmediately(errorMessages);
+      } catch (saveError) {
+        console.error('Failed to save error message:', saveError);
+        // Don't show another toast here as user already sees the error response
+      }
     } finally {
       setIsLoading(false);
       // Update quota status after message attempt
@@ -458,12 +477,9 @@ export function AIAssistant({
     }
   }, [inputValue, isLoading, messages, i18n.language, buildConversationContext, pendingAttachments, saveMessageImmediately, user?.id]);
 
-  // Store current handleSendMessage in window for speech recognition
+  // Store current handleSendMessage in ref for speech recognition
   useEffect(() => {
-    (window as any).currentHandleSendMessage = handleSendMessage;
-    return () => {
-      delete (window as any).currentHandleSendMessage;
-    };
+    handleSendMessageRef.current = handleSendMessage;
   }, [handleSendMessage]);
 
   const startListening = () => {
