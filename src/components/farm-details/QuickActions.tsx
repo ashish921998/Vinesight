@@ -15,71 +15,27 @@ import {
 import { useRouter } from "next/navigation";
 
 interface QuickActionsProps {
-  onIrrigationClick: () => void;
-  onSprayClick: () => void;
-  onHarvestClick: () => void;
-  onExpenseClick: () => void;
-  onFertigationClick: () => void;
-  onSoilTestClick: () => void;
+  onDataLogsClick: () => void;
 }
 
 export function QuickActions({
-  onIrrigationClick,
-  onSprayClick,
-  onHarvestClick,
-  onExpenseClick,
-  onFertigationClick,
-  onSoilTestClick
+  onDataLogsClick
 }: QuickActionsProps) {
   const router = useRouter();
   const quickActions = [
     {
-      title: "Log Irrigation",
-      description: "Record watering details",
-      icon: Droplets,
+      title: "Add Data Logs",
+      description: "Record all farm activities",
+      icon: Plus,
       color: "bg-green-100 text-green-600 hover:bg-green-200",
-      onClick: onIrrigationClick
-    },
-    {
-      title: "Spray Record", 
-      description: "Log pest/disease treatment",
-      icon: SprayCan,
-      color: "bg-green-100 text-green-600 hover:bg-green-200",
-      onClick: onSprayClick
-    },
-    {
-      title: "Record Harvest",
-      description: "Log harvest quantities",
-      icon: Scissors,
-      color: "bg-green-100 text-green-600 hover:bg-green-200",
-      onClick: onHarvestClick
-    },
-    {
-      title: "Add Expense",
-      description: "Track farm expenses",
-      icon: DollarSign,
-      color: "bg-green-100 text-green-600 hover:bg-green-200",
-      onClick: onExpenseClick
-    },
-    {
-      title: "Fertigation",
-      description: "Log nutrient application",
-      icon: Beaker,
-      color: "bg-green-100 text-green-600 hover:bg-green-200",
-      onClick: onFertigationClick
-    },
-    {
-      title: "Soil Test",
-      description: "Record soil analysis",
-      icon: TestTube,
-      color: "bg-green-100 text-green-600 hover:bg-green-200",
-      onClick: onSoilTestClick
+      onClick: onDataLogsClick,
+      featured: true
     },
     {
       title: "View Reports",
       description: "Generate & export reports",
       icon: BarChart3,
-      color: "bg-green-100 text-green-600 hover:bg-green-200",
+      color: "bg-blue-100 text-blue-600 hover:bg-blue-200",
       onClick: () => router.push('/reports')
     }
   ];
@@ -91,7 +47,7 @@ export function QuickActions({
         <Plus className="h-5 w-5 text-gray-400" />
       </div>
       
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {quickActions.map((action) => {
           const Icon = action.icon;
           

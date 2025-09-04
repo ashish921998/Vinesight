@@ -486,14 +486,16 @@ export default function UnifiedReportsPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
-          <BarChart3 className="h-8 w-8" />
-          Farm Reports & Analytics
+    <div className="container mx-auto px-4 py-4 md:py-8">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-xl md:text-3xl font-bold text-primary flex items-center gap-2">
+          <BarChart3 className="h-6 w-6 md:h-8 md:w-8" />
+          <span className="hidden sm:inline">Farm Reports & Analytics</span>
+          <span className="sm:hidden">Reports</span>
         </h1>
-        <p className="text-muted-foreground mt-2">
-          View detailed farm data, generate insights, and export comprehensive reports
+        <p className="text-muted-foreground mt-2 text-sm md:text-base">
+          <span className="hidden md:inline">View detailed farm data, generate insights, and export comprehensive reports</span>
+          <span className="md:hidden">Generate and export farm reports</span>
         </p>
       </div>
 
@@ -557,34 +559,37 @@ export default function UnifiedReportsPage() {
             </div>
           </div>
 
-          <div className="mt-4 flex gap-2">
-            <Button onClick={generatePreview} disabled={loading} className="gap-2">
+          <div className="mt-4 flex flex-col sm:flex-row gap-2">
+            <Button onClick={generatePreview} disabled={loading} className="gap-2 flex-1 sm:flex-initial">
               {loading ? (
                 <RefreshCw className="h-4 w-4 animate-spin" />
               ) : (
                 <Eye className="h-4 w-4" />
               )}
-              Generate Preview
+              <span className="hidden sm:inline">Generate Preview</span>
+              <span className="sm:hidden">Preview</span>
             </Button>
             
             <Button 
               onClick={() => handleExport('pdf')} 
               disabled={!reportData || loading}
               variant="outline"
-              className="gap-2"
+              className="gap-2 flex-1 sm:flex-initial"
             >
               <FileText className="h-4 w-4" />
-              Export PDF
+              <span className="hidden sm:inline">Export PDF</span>
+              <span className="sm:hidden">PDF</span>
             </Button>
             
             <Button 
               onClick={() => handleExport('csv')} 
               disabled={!reportData || loading}
               variant="outline"
-              className="gap-2"
+              className="gap-2 flex-1 sm:flex-initial"
             >
               <FileSpreadsheet className="h-4 w-4" />
-              Export CSV
+              <span className="sm:hidden">CSV</span>
+              <span className="hidden sm:inline">Export CSV</span>
             </Button>
           </div>
         </CardContent>

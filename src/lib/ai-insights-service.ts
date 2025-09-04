@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import { PestPredictionService } from './pest-prediction-service';
 import { SmartTaskGenerator } from './smart-task-generator';
 import { WeatherService } from './weather-service';
+import { GeminiAIService } from './gemini-ai-service';
 
 export interface AIInsight {
   id: string;
@@ -85,13 +86,43 @@ export class AIInsightsService {
         });
       });
 
-      // 3. Weather-Based Insights
+      // 3. AI-Powered Weather-Based Insights
       try {
         const weatherData = await WeatherService.getCurrentWeather(farm.region);
-        const weatherInsights = this.generateWeatherInsights(weatherData, farm);
-        insights.push(...weatherInsights);
+        const activities = await this.getRecentActivities(farmId);
+        const aiWeatherInsights = await GeminiAIService.generateWeatherInsights(
+          weatherData, 
+          farm, 
+          activities
+        );
+        
+        // Convert AI insights to our format
+        aiWeatherInsights.forEach((aiInsight, index) => {
+          insights.push({
+            id: `ai_weather_${index}`,
+            type: 'weather_advisory',
+            priority: aiInsight.priority,
+            title: aiInsight.title,
+            subtitle: aiInsight.subtitle,
+            icon: 'CloudRain',
+            actionLabel: aiInsight.actionLabel,
+            actionType: 'navigate',
+            actionData: { route: `/farms/${farmId}/weather` },
+            confidence: aiInsight.confidence,
+            timeRelevant: aiInsight.timeRelevant,
+            tags: ['weather', 'ai', 'advisory']
+          });
+        });
       } catch (error) {
-        console.warn('Weather insights unavailable:', error);
+        console.warn('AI weather insights unavailable, falling back:', error);
+        // Fallback to basic weather insights
+        try {
+          const weatherData = await WeatherService.getCurrentWeather(farm.region);
+          const basicWeatherInsights = this.generateWeatherInsights(weatherData, farm);
+          insights.push(...basicWeatherInsights);
+        } catch (fallbackError) {
+          console.warn('Weather insights completely unavailable:', fallbackError);
+        }
       }
 
       // 4. Financial Insights (Mock for now - can be enhanced with real data)
@@ -171,77 +202,245 @@ export class AIInsightsService {
   }
 
   /**
-   * Get financial insights (enhanced with real data analysis)
+   * Get AI-powered financial insights with dynamic baselines
    */
   private static async getFinancialInsights(farmId: number): Promise<AIInsight[]> {
     try {
-      // Get expense data from the last 30 days
+      // Get recent expense data
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      const { data: expenses } = await supabase
+      const { data: recentExpenses } = await supabase
         .from('expenses')
         .select('*')
         .eq('farm_id', farmId)
         .gte('date', thirtyDaysAgo.toISOString().split('T')[0]);
 
-      if (!expenses || expenses.length === 0) return [];
+      if (!recentExpenses || recentExpenses.length === 0) return [];
 
-      const totalSpent = expenses.reduce((sum, exp) => sum + exp.cost, 0);
-      const avgMonthlySpend = 15000; // This could be calculated from historical data
+      // Get historical data for AI analysis
+      const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
+      const { data: historicalExpenses } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('farm_id', farmId)
+        .gte('date', sixMonthsAgo.toISOString().split('T')[0])
+        .lt('date', thirtyDaysAgo.toISOString().split('T')[0]);
+
+      // Use AI to analyze financial patterns
+      const aiAnalysis = await GeminiAIService.analyzeFinancialData(
+        recentExpenses,
+        historicalExpenses || []
+      );
 
       const insights: AIInsight[] = [];
+      const totalSpent = recentExpenses.reduce((sum, exp) => sum + exp.cost, 0);
 
-      if (totalSpent > avgMonthlySpend * 1.2) {
+      // Create insights based on AI analysis
+      if (aiAnalysis.confidence > 0.7) {
+        const priority = Math.abs(aiAnalysis.varianceFromAverage) > 25 ? 'high' : 'medium';
+        
         insights.push({
-          id: 'financial_overspend',
+          id: 'ai_financial_analysis',
           type: 'financial_insight',
-          priority: 'medium',
-          title: `Overspend Alert: ₹${(totalSpent - avgMonthlySpend).toLocaleString()}`,
-          subtitle: `20% higher than usual monthly average`,
-          icon: 'DollarSign',
-          actionLabel: 'View Breakdown',
+          priority,
+          title: this.getFinancialInsightTitle(aiAnalysis.trend, aiAnalysis.varianceFromAverage),
+          subtitle: aiAnalysis.recommendation.substring(0, 60) + '...',
+          icon: aiAnalysis.trend === 'increasing' ? 'TrendingUp' : 
+                aiAnalysis.trend === 'decreasing' ? 'TrendingDown' : 'DollarSign',
+          actionLabel: 'View Analysis',
           actionType: 'navigate',
-          actionData: { route: `/farms/${farmId}/reports` },
-          confidence: 0.8,
+          actionData: { 
+            route: `/farms/${farmId}/reports`,
+            analysis: aiAnalysis
+          },
+          confidence: aiAnalysis.confidence,
           timeRelevant: true,
-          tags: ['finance', 'expense', 'budget']
+          tags: ['finance', 'ai', aiAnalysis.trend, 'analysis'],
+          data: aiAnalysis
+        });
+      }
+
+      // Add risk factors as separate insights if significant
+      if (aiAnalysis.riskFactors.length > 0 && aiAnalysis.confidence > 0.8) {
+        aiAnalysis.riskFactors.slice(0, 2).forEach((risk, index) => {
+          insights.push({
+            id: `financial_risk_${index}`,
+            type: 'financial_insight',
+            priority: 'medium',
+            title: 'Financial Risk Detected',
+            subtitle: risk.substring(0, 60) + '...',
+            icon: 'AlertTriangle',
+            actionLabel: 'Review Risk',
+            actionType: 'navigate',
+            actionData: { route: `/farms/${farmId}/reports` },
+            confidence: aiAnalysis.confidence,
+            timeRelevant: true,
+            tags: ['finance', 'risk', 'ai']
+          });
         });
       }
 
       return insights;
     } catch (error) {
-      console.error('Error getting financial insights:', error);
-      return [];
+      console.warn('AI financial analysis failed, using fallback:', error);
+      
+      // Fallback to basic analysis
+      try {
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const { data: expenses } = await supabase
+          .from('expenses')
+          .select('*')
+          .eq('farm_id', farmId)
+          .gte('date', thirtyDaysAgo.toISOString().split('T')[0]);
+
+        if (!expenses || expenses.length === 0) return [];
+
+        const totalSpent = expenses.reduce((sum, exp) => sum + exp.cost, 0);
+        const avgMonthlySpend = 15000; // Basic fallback baseline
+
+        const insights: AIInsight[] = [];
+
+        if (totalSpent > avgMonthlySpend * 1.2) {
+          insights.push({
+            id: 'financial_overspend_fallback',
+            type: 'financial_insight',
+            priority: 'medium',
+            title: `Spending Above Average: ₹${totalSpent.toLocaleString()}`,
+            subtitle: 'Basic analysis - consider detailed review',
+            icon: 'DollarSign',
+            actionLabel: 'View Breakdown',
+            actionType: 'navigate',
+            actionData: { route: `/farms/${farmId}/reports` },
+            confidence: 0.6,
+            timeRelevant: true,
+            tags: ['finance', 'expense', 'fallback']
+          });
+        }
+
+        return insights;
+      } catch (fallbackError) {
+        console.error('Financial insights completely failed:', fallbackError);
+        return [];
+      }
     }
   }
 
   /**
-   * Get growth stage optimization insights
+   * Generate financial insight title based on AI analysis
+   */
+  private static getFinancialInsightTitle(trend: string, variance: number): string {
+    const absVariance = Math.abs(variance);
+    
+    if (trend === 'increasing') {
+      return absVariance > 30 ? 'High Spending Increase Detected' : 
+             absVariance > 15 ? 'Moderate Spending Increase' : 'Spending Trending Up';
+    } else if (trend === 'decreasing') {
+      return absVariance > 30 ? 'Significant Cost Reduction' : 
+             absVariance > 15 ? 'Spending Optimization Detected' : 'Costs Trending Down';
+    } else {
+      return 'Stable Spending Pattern';
+    }
+  }
+
+  /**
+   * Get AI-powered growth stage optimization insights
    */
   private static async getGrowthOptimizationInsights(farmId: number, farm: any): Promise<AIInsight[]> {
     const insights: AIInsight[] = [];
 
-    // Mock growth stage analysis - in production, this would analyze actual data
-    const currentMonth = new Date().getMonth();
-    
-    // Grape growth stages by month in India
-    if (currentMonth >= 2 && currentMonth <= 4) { // March-May: Flowering/Fruit Set
-      insights.push({
-        id: 'growth_flowering',
-        type: 'growth_optimization',
-        priority: 'high',
-        title: 'Critical Flowering Stage',
-        subtitle: 'Optimize pollination & prevent flower drop',
-        icon: 'Sprout',
-        actionLabel: 'View Care Plan',
-        actionType: 'navigate',
-        actionData: { route: `/farms/${farmId}/growth-guide` },
-        confidence: 0.9,
-        timeRelevant: true,
-        tags: ['growth', 'flowering', 'optimization']
-      });
+    try {
+      // Get recent activities for context
+      const activities = await this.getRecentActivities(farmId);
+      const weatherData = await WeatherService.getCurrentWeather(farm.region);
+      
+      // AI-powered growth stage analysis
+      const growthAnalysis = await GeminiAIService.analyzeGrowthStage(
+        farm,
+        activities,
+        weatherData
+      );
+
+      if (growthAnalysis.confidence > 0.6) {
+        insights.push({
+          id: 'ai_growth_stage',
+          type: 'growth_optimization',
+          priority: growthAnalysis.timeRelevant ? 'high' : 'medium',
+          title: this.getGrowthStageTitle(growthAnalysis.stage),
+          subtitle: growthAnalysis.description,
+          icon: 'Sprout',
+          actionLabel: 'View Recommendations',
+          actionType: 'navigate',
+          actionData: { 
+            route: `/farms/${farmId}/growth-guide`,
+            recommendations: growthAnalysis.recommendations
+          },
+          confidence: growthAnalysis.confidence,
+          timeRelevant: growthAnalysis.timeRelevant,
+          tags: ['growth', 'ai', growthAnalysis.stage, 'optimization'],
+          data: growthAnalysis
+        });
+      }
+    } catch (error) {
+      console.warn('AI growth stage analysis failed, using fallback:', error);
+      
+      // Fallback to basic month-based analysis
+      const currentMonth = new Date().getMonth();
+      if (currentMonth >= 2 && currentMonth <= 4) { // March-May: Flowering/Fruit Set
+        insights.push({
+          id: 'growth_flowering_fallback',
+          type: 'growth_optimization',
+          priority: 'high',
+          title: 'Critical Flowering Stage',
+          subtitle: 'Traditional seasonal analysis - optimize pollination',
+          icon: 'Sprout',
+          actionLabel: 'View Care Plan',
+          actionType: 'navigate',
+          actionData: { route: `/farms/${farmId}/growth-guide` },
+          confidence: 0.6,
+          timeRelevant: true,
+          tags: ['growth', 'flowering', 'fallback']
+        });
+      }
     }
 
     return insights;
+  }
+
+  /**
+   * Get human-readable growth stage title
+   */
+  private static getGrowthStageTitle(stage: string): string {
+    const titles: Record<string, string> = {
+      bud_break: 'Bud Break Stage',
+      leaf_development: 'Leaf Development Phase',
+      flowering: 'Critical Flowering Stage',
+      fruit_set: 'Fruit Set Period',
+      veraison: 'Veraison Stage',
+      harvest: 'Harvest Time',
+      dormancy: 'Dormancy Period'
+    };
+    
+    return titles[stage] || `${stage.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} Stage`;
+  }
+
+  /**
+   * Get recent activities for context
+   */
+  private static async getRecentActivities(farmId: number): Promise<any[]> {
+    try {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const { data: activities } = await supabase
+        .from('activities')
+        .select('*')
+        .eq('farm_id', farmId)
+        .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
+        .order('date', { ascending: false })
+        .limit(10);
+
+      return activities || [];
+    } catch (error) {
+      console.warn('Could not fetch recent activities:', error);
+      return [];
+    }
   }
 
   /**

@@ -24,31 +24,49 @@ import {
   Target
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { AIInsightsService, type AIInsight } from '@/lib/ai-insights-service';
+import { type AIInsight } from '@/lib/ai-insights-service';
 import { motion } from 'framer-motion';
 
 interface AIInsightsCarouselProps {
   farmId: number;
-  userId: string;
   className?: string;
 }
 
-export function AIInsightsCarousel({ farmId, userId, className }: AIInsightsCarouselProps) {
+export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProps) {
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     loadInsights();
-  }, [farmId, userId]);
+  }, [farmId]);
 
   const loadInsights = async () => {
     try {
       setLoading(true);
-      const aiInsights = await AIInsightsService.getInsightsForFarm(farmId, userId, 8);
-      setInsights(aiInsights);
+      
+      // Call the API route instead of direct service
+      const response = await fetch('/api/ai/insights', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          farmId,
+          limit: 8
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch AI insights');
+      }
+
+      const data = await response.json();
+      setInsights(data.insights || []);
     } catch (error) {
       console.error('Error loading AI insights:', error);
+      // Set empty insights array on error
+      setInsights([]);
     } finally {
       setLoading(false);
     }
