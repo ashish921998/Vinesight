@@ -599,31 +599,37 @@ export default function UnifiedReportsPage() {
       {reportData && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
               <TrendingUp className="h-5 w-5" />
               Report Summary
             </CardTitle>
-            <CardDescription>{reportData.summary.dateRange}</CardDescription>
+            <CardDescription className="text-sm">{reportData.summary.dateRange}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{reportData.summary.totalRecords}</div>
-                <div className="text-sm text-muted-foreground">Total Records</div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+              <div className="text-center p-2 rounded-lg bg-blue-50">
+                <div className="text-xl md:text-2xl font-bold text-blue-600">{reportData.summary.totalRecords}</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Total Records</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-cyan-600">{(reportData.summary.totalWaterUsage || 0).toLocaleString()} L</div>
-                <div className="text-sm text-muted-foreground">Water Usage</div>
+              <div className="text-center p-2 rounded-lg bg-cyan-50">
+                <div className="text-xl md:text-2xl font-bold text-cyan-600">
+                  {(reportData.summary.totalWaterUsage || 0).toLocaleString()}
+                  <span className="text-sm md:text-base"> L</span>
+                </div>
+                <div className="text-xs md:text-sm text-muted-foreground">Water Usage</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">{reportData.summary.totalHarvest} kg</div>
-                <div className="text-sm text-muted-foreground">Total Harvest</div>
+              <div className="text-center p-2 rounded-lg bg-purple-50">
+                <div className="text-xl md:text-2xl font-bold text-purple-600">
+                  {reportData.summary.totalHarvest}
+                  <span className="text-sm md:text-base"> kg</span>
+                </div>
+                <div className="text-xs md:text-sm text-muted-foreground">Total Harvest</div>
               </div>
-              <div className="text-center">
-                <div className={`text-2xl font-bold ${reportData.summary.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className="text-center p-2 rounded-lg bg-green-50">
+                <div className={`text-xl md:text-2xl font-bold ${reportData.summary.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   ₹{(reportData.summary.netProfit || 0).toLocaleString()}
                 </div>
-                <div className="text-sm text-muted-foreground">Net Profit</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Net Profit</div>
               </div>
             </div>
           </CardContent>
@@ -644,18 +650,68 @@ export default function UnifiedReportsPage() {
               setActiveTab(value as keyof RecordData);
               setCurrentPage(0);
             }}>
-              <TabsList className="grid w-full grid-cols-4">
-                {Object.keys(reportData.data).map((tab) => {
-                  const Icon = getTabIcon(tab as keyof RecordData);
-                  const count = reportData.data[tab as keyof RecordData].length;
-                  return (
-                    <TabsTrigger key={tab} value={tab} className="gap-2">
-                      <Icon className="h-4 w-4" />
-                      {tab} ({count})
-                    </TabsTrigger>
-                  );
-                })}
-              </TabsList>
+              {/* Mobile Select Dropdown */}
+              <div className="block md:hidden mb-4">
+                <Select value={activeTab} onValueChange={(value) => {
+                  setActiveTab(value as keyof RecordData);
+                  setCurrentPage(0);
+                }}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const Icon = getTabIcon(activeTab);
+                          const count = reportData.data[activeTab].length;
+                          return (
+                            <>
+                              <Icon className="h-4 w-4" />
+                              <span className="capitalize">{activeTab}</span>
+                              <span className="text-xs text-muted-foreground">({count})</span>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(reportData.data).map((tab) => {
+                      const Icon = getTabIcon(tab as keyof RecordData);
+                      const count = reportData.data[tab as keyof RecordData].length;
+                      return (
+                        <SelectItem key={tab} value={tab}>
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4" />
+                            <span className="capitalize">{tab}</span>
+                            <span className="text-xs text-muted-foreground">({count})</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Desktop Tabs */}
+              <div className="hidden md:block">
+                <TabsList className="grid w-full grid-cols-4">
+                  {Object.keys(reportData.data).map((tab) => {
+                    const Icon = getTabIcon(tab as keyof RecordData);
+                    const count = reportData.data[tab as keyof RecordData].length;
+                    
+                    return (
+                      <TabsTrigger 
+                        key={tab} 
+                        value={tab} 
+                        className="flex items-center gap-2 px-3 py-2"
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span className="capitalize">{tab}</span>
+                        <span className="text-xs text-muted-foreground">({count})</span>
+                      </TabsTrigger>
+                    );
+                  })}
+                </TabsList>
+              </div>
 
               {Object.keys(reportData.data).map((tab) => (
                 <TabsContent key={tab} value={tab} className="mt-6">
@@ -676,37 +732,81 @@ export default function UnifiedReportsPage() {
                               </div>
                             </div>
                             
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
                               {tab === 'irrigation' && (
                                 <>
-                                  <div><span className="text-muted-foreground">Duration:</span> {record.duration}h</div>
-                                  <div><span className="text-muted-foreground">Area:</span> {record.area} acres</div>
-                                  <div><span className="text-muted-foreground">Discharge:</span> {record.system_discharge}L/h</div>
-                                  <div><span className="text-muted-foreground">Moisture:</span> {record.moisture_status}</div>
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <span className="text-muted-foreground block text-xs">Duration</span>
+                                    <span className="font-medium">{record.duration}h</span>
+                                  </div>
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <span className="text-muted-foreground block text-xs">Area</span>
+                                    <span className="font-medium">{record.area} acres</span>
+                                  </div>
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <span className="text-muted-foreground block text-xs">Discharge</span>
+                                    <span className="font-medium">{record.system_discharge}L/h</span>
+                                  </div>
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <span className="text-muted-foreground block text-xs">Moisture</span>
+                                    <span className="font-medium">{record.moisture_status}</span>
+                                  </div>
                                 </>
                               )}
                               {tab === 'spray' && (
                                 <>
-                                  <div><span className="text-muted-foreground">Chemical:</span> {record.chemical}</div>
-                                  <div><span className="text-muted-foreground">Dose:</span> {record.dose}</div>
-                                  <div><span className="text-muted-foreground">Area:</span> {record.area} acres</div>
-                                  <div><span className="text-muted-foreground">Weather:</span> {record.weather}</div>
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <span className="text-muted-foreground block text-xs">Chemical</span>
+                                    <span className="font-medium">{record.chemical}</span>
+                                  </div>
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <span className="text-muted-foreground block text-xs">Dose</span>
+                                    <span className="font-medium">{record.dose}</span>
+                                  </div>
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <span className="text-muted-foreground block text-xs">Area</span>
+                                    <span className="font-medium">{record.area} acres</span>
+                                  </div>
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <span className="text-muted-foreground block text-xs">Weather</span>
+                                    <span className="font-medium">{record.weather}</span>
+                                  </div>
                                 </>
                               )}
                               {tab === 'harvest' && (
                                 <>
-                                  <div><span className="text-muted-foreground">Quantity:</span> {record.quantity}kg</div>
-                                  <div><span className="text-muted-foreground">Price:</span> ₹{record.price || 'N/A'}</div>
-                                  <div><span className="text-muted-foreground">Buyer:</span> {record.buyer || 'N/A'}</div>
-                                  <div><span className="text-muted-foreground">Value:</span> ₹{record.price ? ((record.quantity || 0) * (record.price || 0)).toLocaleString() : 'N/A'}</div>
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <span className="text-muted-foreground block text-xs">Quantity</span>
+                                    <span className="font-medium">{record.quantity}kg</span>
+                                  </div>
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <span className="text-muted-foreground block text-xs">Price</span>
+                                    <span className="font-medium">₹{record.price || 'N/A'}</span>
+                                  </div>
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <span className="text-muted-foreground block text-xs">Buyer</span>
+                                    <span className="font-medium">{record.buyer || 'N/A'}</span>
+                                  </div>
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <span className="text-muted-foreground block text-xs">Value</span>
+                                    <span className="font-medium">₹{record.price ? ((record.quantity || 0) * (record.price || 0)).toLocaleString() : 'N/A'}</span>
+                                  </div>
                                 </>
                               )}
                               {tab === 'expense' && (
                                 <>
-                                  <div><span className="text-muted-foreground">Type:</span> {record.type}</div>
-                                  <div><span className="text-muted-foreground">Amount:</span> ₹{(record.cost || 0).toLocaleString()}</div>
-                                  <div><span className="text-muted-foreground">Description:</span> {record.description}</div>
-                                  <div><span className="text-muted-foreground">Remarks:</span> {record.remarks || 'N/A'}</div>
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <span className="text-muted-foreground block text-xs">Type</span>
+                                    <span className="font-medium">{record.type}</span>
+                                  </div>
+                                  <div className="bg-gray-50 p-2 rounded">
+                                    <span className="text-muted-foreground block text-xs">Amount</span>
+                                    <span className="font-medium">₹{(record.cost || 0).toLocaleString()}</span>
+                                  </div>
+                                  <div className="bg-gray-50 p-2 rounded col-span-1 sm:col-span-2">
+                                    <span className="text-muted-foreground block text-xs">Description</span>
+                                    <span className="font-medium">{record.description}</span>
+                                  </div>
                                 </>
                               )}
                             </div>
@@ -722,28 +822,32 @@ export default function UnifiedReportsPage() {
 
                         {/* Pagination */}
                         {getTotalPages() > 1 && (
-                          <div className="flex items-center justify-between pt-4">
-                            <p className="text-sm text-muted-foreground">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4">
+                            <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
                               Page {currentPage + 1} of {getTotalPages()} 
-                              ({getActiveRecords().length} total records)
+                              <span className="hidden sm:inline"> ({getActiveRecords().length} total records)</span>
                             </p>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 justify-center sm:justify-end">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
                                 disabled={currentPage === 0}
+                                className="flex-1 sm:flex-initial"
                               >
                                 <ChevronLeft className="h-4 w-4" />
-                                Previous
+                                <span className="hidden sm:inline">Previous</span>
+                                <span className="sm:hidden">Prev</span>
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setCurrentPage(prev => Math.min(getTotalPages() - 1, prev + 1))}
                                 disabled={currentPage >= getTotalPages() - 1}
+                                className="flex-1 sm:flex-initial"
                               >
-                                Next
+                                <span className="hidden sm:inline">Next</span>
+                                <span className="sm:hidden">Next</span>
                                 <ChevronRight className="h-4 w-4" />
                               </Button>
                             </div>

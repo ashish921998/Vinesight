@@ -264,87 +264,95 @@ export default function AnalyticsPage() {
       />
       <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
-            <BarChart3 className="h-8 w-8" />
-            Data Analytics
+          <h1 className="text-xl md:text-3xl font-bold text-primary flex items-center gap-2">
+            <BarChart3 className="h-6 w-6 md:h-8 md:w-8" />
+            <span className="hidden sm:inline">Data Analytics</span>
+            <span className="sm:hidden">Analytics</span>
           </h1>
-          <p className="text-muted-foreground mt-2">
-            Insights and trends from your farming operations
+          <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
+            <span className="hidden md:inline">Insights and trends from your farming operations</span>
+            <span className="md:hidden">Farm insights and trends</span>
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-2 lg:pb-0">
           <Button 
             variant={timeRange === '30d' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => setTimeRange('30d')}
+            className="whitespace-nowrap"
           >
-            30 Days
+            <span className="hidden sm:inline">30 Days</span>
+            <span className="sm:hidden">30d</span>
           </Button>
           <Button 
             variant={timeRange === '90d' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => setTimeRange('90d')}
+            className="whitespace-nowrap"
           >
-            90 Days
+            <span className="hidden sm:inline">90 Days</span>
+            <span className="sm:hidden">90d</span>
           </Button>
           <Button 
             variant={timeRange === '1y' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => setTimeRange('1y')}
+            className="whitespace-nowrap"
           >
-            1 Year
+            <span className="hidden sm:inline">1 Year</span>
+            <span className="sm:hidden">1y</span>
           </Button>
         </div>
       </div>
 
       {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+        <Card className="bg-blue-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Farms</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+            <Target className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalFarms}</div>
+            <div className="text-xl md:text-2xl font-bold text-blue-600">{analytics.totalFarms}</div>
             <p className="text-xs text-muted-foreground">
               {analytics.totalArea.toFixed(1)} acres total
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-cyan-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Irrigation Hours</CardTitle>
-            <Droplets className="h-4 w-4 text-muted-foreground" />
+            <Droplets className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalIrrigationHours.toFixed(1)}</div>
+            <div className="text-xl md:text-2xl font-bold text-cyan-600">{analytics.totalIrrigationHours.toFixed(1)}</div>
             <p className="text-xs text-muted-foreground">
               {(analytics.totalIrrigationHours / analytics.totalArea).toFixed(1)} hrs/acre avg
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-purple-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Harvest</CardTitle>
-            <Scissors className="h-4 w-4 text-muted-foreground" />
+            <Scissors className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalHarvestQuantity.toLocaleString()}</div>
+            <div className="text-xl md:text-2xl font-bold text-purple-600">{analytics.totalHarvestQuantity.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">kg harvested</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-green-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Harvest Value</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(analytics.totalHarvestValue)}</div>
+            <div className="text-xl md:text-2xl font-bold text-green-600">{formatCurrency(analytics.totalHarvestValue)}</div>
             <p className="text-xs text-muted-foreground">
               {formatCurrency(analytics.totalHarvestValue / analytics.totalArea)}/acre
             </p>
@@ -356,13 +364,14 @@ export default function AnalyticsPage() {
       {advancedAnalytics && (
         <>
           {/* Cost Analysis Section */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <DollarSign className="h-6 w-6 text-green-600" />
-              Cost Analysis & Profitability
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-lg md:text-2xl font-bold mb-4 md:mb-6 flex items-center gap-2">
+              <DollarSign className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
+              <span className="hidden sm:inline">Cost Analysis & Profitability</span>
+              <span className="sm:hidden">Cost Analysis</span>
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-4 md:mb-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Costs</CardTitle>
@@ -425,28 +434,28 @@ export default function AnalyticsPage() {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
               {/* Cost Breakdown */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <PieChart className="h-5 w-5" />
+                  <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                    <PieChart className="h-4 w-4 md:h-5 md:w-5" />
                     Cost Breakdown
                   </CardTitle>
-                  <CardDescription>Expenses by category</CardDescription>
+                  <CardDescription className="text-sm">Expenses by category</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {advancedAnalytics.costAnalysis.costBreakdown.length > 0 ? (
                     <div className="space-y-3">
                       {advancedAnalytics.costAnalysis.costBreakdown.slice(0, 5).map((item, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <div>
+                        <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="min-w-0">
                             <span className="font-medium text-sm">{item.category}</span>
                             <div className="text-xs text-muted-foreground">{item.percentage.toFixed(1)}%</div>
                           </div>
-                          <div className="text-right">
+                          <div className="text-left sm:text-right">
                             <span className="font-bold">{formatCurrency(item.amount)}</span>
-                            <div className="w-24 bg-gray-200 rounded-full h-2 mt-1">
+                            <div className="w-full sm:w-24 bg-gray-200 rounded-full h-2 mt-1">
                               <div 
                                 className="bg-green-600 h-2 rounded-full"
                                 style={{ width: `${item.percentage}%` }}
@@ -498,13 +507,14 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Yield Analysis Section */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Scissors className="h-6 w-6 text-orange-600" />
-              Yield Analysis & Predictions
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-lg md:text-2xl font-bold mb-4 md:mb-6 flex items-center gap-2">
+              <Scissors className="h-5 w-5 md:h-6 md:w-6 text-orange-600" />
+              <span className="hidden sm:inline">Yield Analysis & Predictions</span>
+              <span className="sm:hidden">Yield Analysis</span>
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-4 md:mb-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Current Yield</CardTitle>
@@ -661,10 +671,11 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Performance Metrics Section */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Activity className="h-6 w-6 text-purple-600" />
-              Performance Insights
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-lg md:text-2xl font-bold mb-4 md:mb-6 flex items-center gap-2">
+              <Activity className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
+              <span className="hidden sm:inline">Performance Insights</span>
+              <span className="sm:hidden">Performance</span>
             </h2>
             
             {/* Overall Score */}
@@ -701,7 +712,7 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-4 md:mb-6">
               {/* Performance Categories */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -792,22 +803,22 @@ export default function AnalyticsPage() {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Recommendations */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5" />
+                  <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                    <CheckCircle className="h-4 w-4 md:h-5 md:w-5" />
                     Recommendations
                   </CardTitle>
-                  <CardDescription>AI-generated suggestions to improve performance</CardDescription>
+                  <CardDescription className="text-sm">AI-generated suggestions to improve performance</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {advancedAnalytics.performanceMetrics.recommendations.length > 0 ? (
                     <div className="space-y-3">
                       {advancedAnalytics.performanceMetrics.recommendations.map((rec, index) => (
-                        <div key={index} className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
-                          <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
+                        <div key={index} className="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-green-50 rounded-lg">
+                          <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                           <span className="text-sm">{rec}</span>
                         </div>
                       ))}
@@ -860,28 +871,28 @@ export default function AnalyticsPage() {
         </>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
         {/* Irrigation Trends */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />
               Irrigation Trends
             </CardTitle>
-            <CardDescription>Monthly irrigation hours and frequency</CardDescription>
+            <CardDescription className="text-sm">Monthly irrigation hours and frequency</CardDescription>
           </CardHeader>
           <CardContent>
             {analytics.irrigationsByMonth.length > 0 ? (
               <div className="space-y-4">
                 {analytics.irrigationsByMonth.map((data, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{data.month}</div>
-                      <div className="text-sm text-muted-foreground">{data.count} sessions</div>
+                  <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-medium text-sm">{data.month}</div>
+                      <div className="text-xs text-muted-foreground">{data.count} sessions</div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold">{data.hours.toFixed(1)}h</div>
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
+                    <div className="text-left sm:text-right">
+                      <div className="font-bold text-sm">{data.hours.toFixed(1)}h</div>
+                      <div className="w-full sm:w-32 bg-gray-200 rounded-full h-2">
                         <div 
                           className="bg-green-600 h-2 rounded-full"
                           style={{ 
@@ -939,11 +950,11 @@ export default function AnalyticsPage() {
         {/* Harvest Performance */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Scissors className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <Scissors className="h-4 w-4 md:h-5 md:w-5" />
               Harvest Performance
             </CardTitle>
-            <CardDescription>Yield and value by farm</CardDescription>
+            <CardDescription className="text-sm">Yield and value by farm</CardDescription>
           </CardHeader>
           <CardContent>
             {analytics.harvestsByFarm.length > 0 ? (
@@ -951,14 +962,14 @@ export default function AnalyticsPage() {
                 {analytics.harvestsByFarm.map((data, index) => (
                   <div key={index} className="border rounded-lg p-3">
                     <div className="font-medium text-sm mb-2">{data.farmName}</div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Quantity:</span>
-                        <span className="ml-2 font-medium">{data.quantity.toLocaleString()} kg</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4 text-sm">
+                      <div className="bg-gray-50 p-2 rounded">
+                        <span className="text-muted-foreground block text-xs">Quantity</span>
+                        <span className="font-medium">{data.quantity.toLocaleString()} kg</span>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">Value:</span>
-                        <span className="ml-2 font-medium">{formatCurrency(data.value)}</span>
+                      <div className="bg-gray-50 p-2 rounded">
+                        <span className="text-muted-foreground block text-xs">Value</span>
+                        <span className="font-medium">{formatCurrency(data.value)}</span>
                       </div>
                     </div>
                   </div>
@@ -973,27 +984,27 @@ export default function AnalyticsPage() {
         {/* Recent Activity */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <Calendar className="h-4 w-4 md:h-5 md:w-5" />
               Recent Activity
             </CardTitle>
-            <CardDescription>Latest farm operations</CardDescription>
+            <CardDescription className="text-sm">Latest farm operations</CardDescription>
           </CardHeader>
           <CardContent>
             {analytics.recentActivity.length > 0 ? (
               <div className="space-y-3">
                 {analytics.recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start gap-3 pb-3 border-b last:border-b-0">
+                  <div key={index} className="flex items-start gap-2 md:gap-3 pb-3 border-b last:border-b-0">
                     {getActivityIcon(activity.type)}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                         <span className="text-sm font-medium">{activity.farmName}</span>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs w-fit">
                           {activity.type}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">{activity.details}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{activity.details}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
                         {new Date(activity.date).toLocaleDateString()}
                       </p>
                     </div>
