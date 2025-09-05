@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PestPredictionService } from '@/lib/pest-prediction-service';
-import type { PestDiseasePrediction } from '@/lib/types/ai-types';
+import type { PestDiseasePrediction } from '@/types/ai';
 
 interface PestAlertsHorizontalProps {
   farmId: number;
@@ -31,28 +31,36 @@ export function PestAlertsHorizontal({ farmId, className }: PestAlertsHorizontal
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    loadPredictions();
-  }, [farmId]);
-
-  const loadPredictions = async () => {
+  const loadPredictions = useCallback(async () => {
     try {
       setLoading(true);
       const activePredictions = await PestPredictionService.getActivePredictions(farmId);
       setPredictions(activePredictions);
     } catch (error) {
-      console.error('Error loading pest predictions:', error);
+      // Log error for debugging in development only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Error loading pest predictions:', error);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [farmId]);
+
+  useEffect(() => {
+    loadPredictions();
+  }, [loadPredictions]);
 
   const handleActionTaken = async (predictionId: string, action: string) => {
     try {
       await PestPredictionService.updatePredictionOutcome(predictionId, action, 'action_taken');
       await loadPredictions(); // Refresh the list
     } catch (error) {
-      console.error('Error updating prediction:', error);
+      // Log error for debugging in development only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Error updating prediction:', error);
+      }
     }
   };
 

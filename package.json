@@ -11,7 +11,8 @@
     "lint": "eslint",
     "perf": "npm run build && npm run start",
     "perf:dev": "npm run dev -- --port 3002",
-    "size": "npm run build && du -sh .next/static"
+    "size": "npm run build && du -sh .next/static",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.11",

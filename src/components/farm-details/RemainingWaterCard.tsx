@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Droplets, Calculator, Clock } from "lucide-react";
-import type { Farm } from "@/lib/supabase";
+import type { Farm } from "@/types/types";
 
 interface RemainingWaterCardProps {
   farm: Farm;
@@ -29,12 +29,12 @@ export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCar
   };
 
   // Don't show the card if farm doesn't have tank capacity configured
-  if (!farm.total_tank_capacity) {
+  if (!farm.totalTankCapacity) {
     return null;
   }
 
-  const hasWaterData = farm.remaining_water !== null && farm.remaining_water !== undefined;
-  const status = hasWaterData ? getWaterStatus(farm.remaining_water!) : null;
+  const hasWaterData = farm.remainingWater !== null && farm.remainingWater !== undefined;
+  const status = hasWaterData ? getWaterStatus(farm.remainingWater!) : null;
 
   return (
     <Card className={`border-0 shadow-sm ${status?.color || 'border-gray-200'}`}>
@@ -51,11 +51,11 @@ export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCar
           )}
         </div>
         <CardDescription className="text-xs">
-          Tank Capacity: {farm.total_tank_capacity} L
-          {farm.water_calculation_updated_at && (
+          Tank Capacity: {farm.totalTankCapacity} L
+          {farm.waterCalculationUpdatedAt && (
             <span className="ml-2 flex items-center gap-1 mt-1">
               <Clock className="h-3 w-3" />
-              Last calculated: {formatDate(farm.water_calculation_updated_at)}
+              Last calculated: {formatDate(farm.waterCalculationUpdatedAt)}
             </span>
           )}
         </CardDescription>
@@ -67,7 +67,7 @@ export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCar
             {/* Main water level display */}
             <div className="text-center">
               <div className="text-3xl font-bold mb-1">
-                {farm.remaining_water!.toFixed(1)}
+                {farm.remainingWater!.toFixed(1)}
               </div>
               <div className="text-sm text-gray-600">
                 mm available water
@@ -76,17 +76,17 @@ export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCar
 
             {/* Status message */}
             <div className="text-center">
-              {farm.remaining_water! < 10 && (
+              {farm.remainingWater! < 10 && (
                 <div className="text-sm text-red-600 font-medium">
                   ⚠️ Low water level - consider irrigation
                 </div>
               )}
-              {farm.remaining_water! >= 10 && farm.remaining_water! < 25 && (
+              {farm.remainingWater! >= 10 && farm.remainingWater! < 25 && (
                 <div className="text-sm text-orange-600 font-medium">
                   💧 Medium water level - monitor closely
                 </div>
               )}
-              {farm.remaining_water! >= 25 && (
+              {farm.remainingWater! >= 25 && (
                 <div className="text-sm text-green-600 font-medium">
                   ✅ Good water level
                 </div>

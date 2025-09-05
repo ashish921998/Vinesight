@@ -26,13 +26,21 @@ export async function GET(request: NextRequest) {
       .order('date', { ascending: false })
 
     if (error) {
-      console.error('Database error:', error)
+      // Log error for debugging in development only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Database error:', error)
+      }
       return NextResponse.json({ error: 'Failed to fetch irrigation records' }, { status: 500 })
     }
 
     return NextResponse.json({ records: data || [] })
   } catch (error) {
-    console.error('API error:', error)
+    // Log error for debugging in development only
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.error('API error:', error)
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -64,13 +72,21 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error('Database error:', error)
+      // Log error for debugging in development only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Database error:', error)
+      }
       return NextResponse.json({ error: 'Failed to create irrigation record' }, { status: 500 })
     }
 
     return NextResponse.json({ record: data }, { status: 201 })
   } catch (error) {
-    console.error('API error:', error)
+    // Log error for debugging in development only
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.error('API error:', error)
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -24,30 +24,6 @@ export function getTypedSupabaseClient() {
 export const supabase = getSupabaseClient()
 
 // Database types based on your existing schema
-export interface Farm {
-  id?: number;
-  name: string;
-  region: string;
-  area: number; // in acres
-  grape_variety: string;
-  planting_date: string;
-  vine_spacing: number; // in meters
-  row_spacing: number; // in meters
-  total_tank_capacity?: number; // in liters
-  system_discharge?: number; // in liters per hour (farm-level default)
-  remaining_water?: number; // in mm (calculated value)
-  water_calculation_updated_at?: string; // when water calculation was last done
-  latitude?: number; // coordinates (decimal degrees)
-  longitude?: number; // coordinates (decimal degrees)
-  elevation?: number; // meters above sea level
-  location_name?: string; // human readable location name
-  timezone?: string; // timezone identifier
-  location_source?: 'manual' | 'search' | 'current'; // how location was set
-  location_updated_at?: string; // when location was last updated
-  created_at?: string;
-  updated_at?: string;
-  user_id?: string; // For multi-user support
-}
 
 export interface IrrigationRecord {
   id?: number;

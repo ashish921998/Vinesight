@@ -1,11 +1,15 @@
-// Enhanced Farmer AI Profile
+// AI & Machine Learning Types for FarmAI
+// Consolidated from ai-intelligence.ts and lib/types/ai-types.ts
+// This is the single source of truth for all AI-related type definitions
+
+// ===== FARMER AI PROFILE =====
 export interface FarmerAIProfile {
   id: string;
   userId: string;
   farmId: number;
   riskTolerance: number; // 0-1 scale
   decisionPatterns: {
-    preferredTiming: string; // early_morning, afternoon, evening
+    preferredTiming: 'early_morning' | 'afternoon' | 'evening';
     riskAversion: number;
     adoptionSpeed: 'conservative' | 'moderate' | 'early_adopter';
     communicationStyle: 'direct' | 'detailed' | 'visual';
@@ -26,7 +30,7 @@ export interface FarmerAIProfile {
   updatedAt: Date;
 }
 
-// Smart Task Recommendation
+// ===== TASK RECOMMENDATIONS =====
 export interface AITaskRecommendation {
   id: string;
   farmId: number;
@@ -50,10 +54,10 @@ export interface AITaskRecommendation {
   };
   
   createdAt: Date;
-  expiresAt: Date;
+  expiresAt?: Date;
 }
 
-// Pest & Disease Prediction
+// ===== PEST & DISEASE PREDICTION =====
 export interface PestDiseasePrediction {
   id: string;
   farmId: number;
@@ -94,11 +98,13 @@ export interface PestDiseasePrediction {
   status: 'active' | 'resolved' | 'false_alarm';
   farmerActionTaken?: string;
   outcome?: string;
+  alertPriority?: 'low' | 'medium' | 'high' | 'critical';
   createdAt: Date;
+  updatedAt?: Date;
   resolvedAt?: Date;
 }
 
-// Profitability Analysis
+// ===== PROFITABILITY ANALYSIS =====
 export interface ProfitabilityAnalysis {
   id: string;
   farmId: number;
@@ -149,7 +155,7 @@ export interface ProfitabilityAnalysis {
   createdAt: Date;
 }
 
-// Market Intelligence
+// ===== MARKET INTELLIGENCE =====
 export interface MarketIntelligence {
   id: string;
   region: string;
@@ -187,10 +193,10 @@ export interface MarketIntelligence {
   confidenceInterval: { lower: number; upper: number };
   dataSources: string[];
   createdAt: Date;
-  expiresAt: Date;
+  expiresAt?: Date;
 }
 
-// Community Insights
+// ===== COMMUNITY INSIGHTS =====
 export interface CommunityInsight {
   id: string;
   insightType: 'practice' | 'outcome' | 'lesson' | 'alert';
@@ -222,7 +228,7 @@ export interface CommunityInsight {
   validatedAt?: Date;
 }
 
-// Enhanced AI Conversation Context
+// ===== AI CONVERSATION CONTEXT =====
 export interface AIConversationContext {
   id: string;
   conversationId: string;
@@ -234,7 +240,82 @@ export interface AIConversationContext {
   lastReferenced: Date;
 }
 
-// Weather data interface for AI processing
+// ===== AI INSIGHTS =====
+export interface AIInsight {
+  id: string;
+  type: 'pest_prediction' | 'task_recommendation' | 'profitability_insight' | 'weather_alert' | 'general_advice';
+  title: string;
+  subtitle: string;
+  description?: string;
+  icon: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  confidence: number;
+  timeRelevant: boolean;
+  actionType: 'navigate' | 'execute';
+  actionData?: Record<string, any>;
+  actionLabel: string;
+  tags?: string[];
+  
+  // Specific to pest predictions
+  pestDetails?: {
+    pestType: string;
+    riskLevel: 'low' | 'medium' | 'high' | 'critical';
+    predictedDate: string;
+    preventionWindow: { start: string; end: string };
+    treatments: Array<{ 
+      name: string; 
+      cost: number; 
+      effectiveness: number;
+      type: 'chemical' | 'organic' | 'cultural';
+    }>;
+  };
+  
+  // Specific to task recommendations
+  taskDetails?: {
+    taskType: string;
+    recommendedDate: string;
+    duration?: number;
+    resources?: string[];
+    weatherDependent: boolean;
+  };
+  
+  // Specific to profitability insights
+  profitabilityDetails?: {
+    category: string;
+    currentCost: number;
+    potentialSavings: number;
+    roiImprovement: number;
+    implementationEffort: 'low' | 'medium' | 'high';
+  };
+}
+
+// ===== CRITICAL ALERTS =====
+export interface CriticalAlert {
+  id: string;
+  type: 'pest_prediction' | 'weather_warning' | 'equipment_failure' | 'market_crash';
+  severity: 'high' | 'critical';
+  title: string;
+  message: string;
+  icon: string;
+  actionRequired: boolean;
+  timeWindow: {
+    start: Date;
+    end: Date;
+    urgency: string; // "Act within 24 hours", "Immediate action required"
+  };
+  actions: Array<{
+    label: string;
+    type: 'primary' | 'secondary';
+    action: 'navigate' | 'execute' | 'dismiss';
+    actionData?: Record<string, any>;
+  }>;
+  farmId: number;
+  createdAt: Date;
+  acknowledgedAt?: Date;
+  resolvedAt?: Date;
+}
+
+// ===== WEATHER DATA =====
 export interface WeatherData {
   date: string;
   temperature: {
@@ -249,11 +330,11 @@ export interface WeatherData {
   };
   precipitation: number;
   windSpeed: number;
-  pressure: number;
-  cloudCover: number;
+  pressure?: number;
+  cloudCover?: number;
 }
 
-// Risk assessment result
+// ===== RISK ASSESSMENT =====
 export interface RiskAssessment {
   overall: number; // 0-1 overall risk score
   categories: {
@@ -272,7 +353,45 @@ export interface RiskAssessment {
   }>;
 }
 
-// AI recommendation request
+// ===== PEST RISK FACTORS =====
+export interface PestRiskFactors {
+  [pestType: string]: {
+    temperature: { 
+      optimal: [number, number]; 
+      weight: number; 
+    };
+    humidity: { 
+      threshold: number; 
+      weight: number; 
+    };
+    rainfall?: { 
+      days: number; 
+      threshold: number; 
+      weight: number; 
+    };
+    drySpell?: { 
+      days: number; 
+      weight: number; 
+    };
+    windSpeed?: {
+      threshold: number;
+      weight: number;
+    };
+    historicalMultiplier: number;
+    seasonalFactor: Record<string, number>;
+  };
+}
+
+// ===== AI SERVICE TYPES =====
+export interface AIServiceResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  confidence?: number;
+  message?: string;
+  metadata?: Record<string, any>;
+}
+
 export interface RecommendationRequest {
   farmId: number;
   userId: string;
@@ -290,7 +409,6 @@ export interface RecommendationRequest {
   };
 }
 
-// AI recommendation response
 export interface RecommendationResponse {
   taskRecommendations: AITaskRecommendation[];
   riskAssessments: RiskAssessment;
@@ -304,20 +422,7 @@ export interface RecommendationResponse {
   personalizedNotes: string[];
 }
 
-// Pest risk factors for calculation
-export interface PestRiskFactors {
-  [pestType: string]: {
-    temperature: { optimal: [number, number]; weight: number };
-    humidity: { threshold: number; weight: number };
-    rainfall?: { days: number; threshold: number; weight: number };
-    drySpell?: { days: number; weight: number };
-    windSpeed?: { threshold: number; weight: number };
-    historicalMultiplier: number;
-    seasonalFactor: Record<string, number>;
-  };
-}
-
-// Task generation context
+// ===== UTILITY TYPES =====
 export interface TaskGenerationContext {
   farm: any; // Farm data
   weather: WeatherData[];
@@ -327,7 +432,6 @@ export interface TaskGenerationContext {
   riskAssessment: RiskAssessment;
 }
 
-// Expense categorization result
 export interface ExpenseCategory {
   category: string;
   subcategory?: string;
@@ -337,7 +441,6 @@ export interface ExpenseCategory {
   optimizationPotential: number; // 0-1 score
 }
 
-// Benchmark data for comparison
 export interface BenchmarkData {
   region: string;
   farmSize: 'small' | 'medium' | 'large';
@@ -354,12 +457,4 @@ export interface BenchmarkData {
     impactOnYield: number;
     impactOnCost: number;
   }>;
-}
-
-export interface AIServiceResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  confidence?: number;
-  metadata?: Record<string, any>;
 }

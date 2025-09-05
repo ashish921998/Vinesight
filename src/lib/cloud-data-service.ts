@@ -1,4 +1,20 @@
-import { getSupabaseClient, type Farm, type IrrigationRecord, type SprayRecord, type HarvestRecord, type ExpenseRecord } from './supabase';
+import { getSupabaseClient } from './supabase';
+import type { Farm } from '@/types/types';
+import { 
+  type IrrigationRecord, 
+  type SprayRecord, 
+  type HarvestRecord, 
+  type ExpenseRecord, 
+  type TaskReminder,
+  toApplicationFarm, 
+  toApplicationIrrigationRecord, 
+  toApplicationSprayRecord, 
+  toApplicationHarvestRecord, 
+  toApplicationExpenseRecord 
+} from './supabase-types';
+
+// Re-export types for easier importing
+export type { IrrigationRecord, SprayRecord, HarvestRecord, ExpenseRecord, TaskReminder };
 
 /**
  * Cloud Data Service - Pure Supabase integration for online-only app
@@ -25,7 +41,7 @@ export class CloudDataService {
       throw new Error(`Failed to fetch farms: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []).map(toApplicationFarm);
   }
 
   static async createFarm(farmData: Omit<Farm, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<Farm> {
@@ -46,7 +62,7 @@ export class CloudDataService {
       throw new Error(`Failed to create farm: ${error.message}`);
     }
 
-    return data;
+    return toApplicationFarm(data);
   }
 
   static async updateFarm(id: number, farmData: Partial<Farm>): Promise<Farm> {
@@ -69,7 +85,7 @@ export class CloudDataService {
       throw new Error(`Failed to update farm: ${error.message}`);
     }
 
-    return data;
+    return toApplicationFarm(data);
   }
 
   static async deleteFarm(id: number): Promise<void> {
@@ -113,7 +129,7 @@ export class CloudDataService {
       throw new Error(`Failed to fetch farm: ${error.message}`);
     }
 
-    return data;
+    return data ? toApplicationFarm(data) : null;
   }
 
   // Record operations
@@ -135,7 +151,7 @@ export class CloudDataService {
       throw new Error(`Failed to fetch irrigation records: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []).map(toApplicationIrrigationRecord);
   }
 
   static async getSprayRecords(farmId: number): Promise<SprayRecord[]> {
@@ -156,7 +172,7 @@ export class CloudDataService {
       throw new Error(`Failed to fetch spray records: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []).map(toApplicationSprayRecord);
   }
 
   static async getHarvestRecords(farmId: number): Promise<HarvestRecord[]> {
@@ -177,7 +193,7 @@ export class CloudDataService {
       throw new Error(`Failed to fetch harvest records: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []).map(toApplicationHarvestRecord);
   }
 
   static async getExpenseRecords(farmId: number): Promise<ExpenseRecord[]> {
@@ -198,7 +214,7 @@ export class CloudDataService {
       throw new Error(`Failed to fetch expense records: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []).map(toApplicationExpenseRecord);
   }
 
   static async getFertigationRecords(farmId: number): Promise<any[]> {
@@ -221,4 +237,6 @@ export class CloudDataService {
 
     return data || [];
   }
+
+  // Note: For task reminders, use SupabaseService.getTaskReminders, addTaskReminder, completeTask instead
 }

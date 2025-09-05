@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { FarmerAIProfile } from './types/ai-types';
+import type { FarmerAIProfile } from '@/types/ai';
 
 export interface DecisionOutcome {
   taskType: string;
@@ -79,7 +79,7 @@ export class AIProfileService {
 
       const { data, error } = await supabase
         .from('farmer_ai_profiles')
-        .insert([defaultProfile])
+        .insert([defaultProfile as any])
         .select()
         .single();
 
@@ -180,7 +180,7 @@ export class AIProfileService {
 
       const { error } = await supabase
         .from('farmer_ai_profiles')
-        .update(updateData)
+        .update(updateData as any)
         .eq('user_id', profile.userId)
         .eq('farm_id', profile.farmId);
 

@@ -1,15 +1,14 @@
 import { 
-  getTypedSupabaseClient, 
-  type Farm,
+  getTypedSupabaseClient,
   type IrrigationRecord,
   type SprayRecord,
   type FertigationRecord,
   type HarvestRecord,
   type ExpenseRecord,
   type CalculationHistory,
-  type TaskReminder,
   type SoilTestRecord
 } from './supabase';
+import { type Farm, type TaskReminder } from '@/types/types';
 import {
   toApplicationFarm,
   toDatabaseFarmInsert,
@@ -82,7 +81,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('farms')
-      .insert(dbFarmData)
+      .insert(dbFarmData as any)
       .select()
       .single();
 
@@ -96,7 +95,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('farms')
-      .update(dbUpdates)
+      .update(dbUpdates as any)
       .eq('id', id)
       .select()
       .single();
@@ -140,7 +139,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('irrigation_records')
-      .insert(dbRecord)
+      .insert(dbRecord as any)
       .select()
       .single();
 
@@ -154,7 +153,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('irrigation_records')
-      .update(dbUpdates)
+      .update(dbUpdates as any)
       .eq('id', id)
       .select()
       .single();
@@ -192,7 +191,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('spray_records')
-      .insert(dbRecord)
+      .insert(dbRecord as any)
       .select()
       .single();
 
@@ -206,7 +205,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('spray_records')
-      .update(dbUpdates)
+      .update(dbUpdates as any)
       .eq('id', id)
       .select()
       .single();
@@ -244,7 +243,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('fertigation_records')
-      .insert(dbRecord)
+      .insert(dbRecord as any)
       .select()
       .single();
 
@@ -258,7 +257,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('fertigation_records')
-      .update(dbUpdates)
+      .update(dbUpdates as any)
       .eq('id', id)
       .select()
       .single();
@@ -286,7 +285,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('harvest_records')
-      .insert(dbRecord)
+      .insert(dbRecord as any)
       .select()
       .single();
 
@@ -300,7 +299,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('harvest_records')
-      .update(dbUpdates)
+      .update(dbUpdates as any)
       .eq('id', id)
       .select()
       .single();
@@ -338,7 +337,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('expense_records')
-      .insert(dbRecord)
+      .insert(dbRecord as any)
       .select()
       .single();
 
@@ -352,7 +351,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('expense_records')
-      .update(dbUpdates)
+      .update(dbUpdates as any)
       .eq('id', id)
       .select()
       .single();
@@ -380,7 +379,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('calculation_history')
-      .insert(dbRecord)
+      .insert(dbRecord as any)
       .select()
       .single();
 
@@ -414,13 +413,13 @@ export class SupabaseService {
     return (data || []).map(toApplicationTaskReminder);
   }
 
-  static async addTaskReminder(task: Omit<TaskReminder, 'id' | 'created_at'>): Promise<TaskReminder> {
+  static async addTaskReminder(task: Omit<TaskReminder, 'id' | 'createdAt'>): Promise<TaskReminder> {
     const supabase = getTypedSupabaseClient();
     const dbTask = toDatabaseTaskReminderInsert(task);
     
     const { data, error } = await supabase
       .from('task_reminders')
-      .insert(dbTask)
+      .insert(dbTask as any)
       .select()
       .single();
 
@@ -432,12 +431,12 @@ export class SupabaseService {
     const supabase = getTypedSupabaseClient();
     const dbUpdates = toDatabaseTaskReminderUpdate({
       completed: true,
-      completed_at: new Date().toISOString()
+      completedAt: new Date().toISOString()
     });
     
     const { data, error } = await supabase
       .from('task_reminders')
-      .update(dbUpdates)
+      .update(dbUpdates as any)
       .eq('id', id)
       .select()
       .single();
@@ -465,7 +464,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('soil_test_records')
-      .insert(dbRecord)
+      .insert(dbRecord as any)
       .select()
       .single();
 
@@ -479,7 +478,7 @@ export class SupabaseService {
     
     const { data, error } = await supabase
       .from('soil_test_records')
-      .update(dbUpdates)
+      .update(dbUpdates as any)
       .eq('id', id)
       .select()
       .single();

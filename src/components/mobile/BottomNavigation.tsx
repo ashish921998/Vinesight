@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SupabaseService } from "@/lib/supabase-service";
-import { type Farm } from "@/lib/supabase";
+import { type Farm } from "@/types/types";
 
 const navigationItems = [
   { 

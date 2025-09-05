@@ -221,7 +221,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
               id="date"
               type="date"
               value={formData.date || ""}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              onChange={(e) => setFormData((prev: any) => ({ ...prev, date: e.target.value }))}
               max={new Date().toISOString().split('T')[0]}
               className="mt-1"
               required
@@ -242,7 +242,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     step="0.1"
                     min="0"
                     value={formData.duration || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, duration: e.target.value }))}
                     className="mt-1"
                     required
                   />
@@ -257,7 +257,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     step="0.1"
                     min="0"
                     value={formData.area || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, area: e.target.value }))}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, area: e.target.value }))}
                     className="mt-1"
                   />
                 </div>
@@ -270,7 +270,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   <Input
                     id="growth_stage"
                     value={formData.growth_stage || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, growth_stage: e.target.value }))}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, growth_stage: e.target.value }))}
                     className="mt-1"
                   />
                 </div>
@@ -284,7 +284,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     step="0.1"
                     min="0"
                     value={formData.system_discharge || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, system_discharge: e.target.value }))}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, system_discharge: e.target.value }))}
                     className="mt-1"
                   />
                 </div>
@@ -301,7 +301,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                 <Input
                   id="chemical"
                   value={formData.chemical || ""}
-                  onChange={(e) => setFormData(prev => ({ ...prev, chemical: e.target.value }))}
+                  onChange={(e) => setFormData((prev: any) => ({ ...prev, chemical: e.target.value }))}
                   className="mt-1"
                   required
                 />
@@ -314,7 +314,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   <Input
                     id="pest_disease"
                     value={formData.pest_disease || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, pest_disease: e.target.value }))}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, pest_disease: e.target.value }))}
                     className="mt-1"
                   />
                 </div>
@@ -325,7 +325,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   <Input
                     id="dose"
                     value={formData.dose || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, dose: e.target.value }))}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, dose: e.target.value }))}
                     className="mt-1"
                   />
                 </div>
@@ -346,7 +346,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     step="0.1"
                     min="0"
                     value={formData.quantity || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, quantity: e.target.value }))}
                     className="mt-1"
                     required
                   />
@@ -357,7 +357,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   </Label>
                   <Select
                     value={formData.grade || ""}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, grade: value }))}
+                    onValueChange={(value) => setFormData((prev: any) => ({ ...prev, grade: value }))}
                   >
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Select grade" />
@@ -382,7 +382,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     step="0.01"
                     min="0"
                     value={formData.price || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, price: e.target.value }))}
                     className="mt-1"
                   />
                 </div>
@@ -393,7 +393,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   <Input
                     id="buyer"
                     value={formData.buyer || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, buyer: e.target.value }))}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, buyer: e.target.value }))}
                     className="mt-1"
                   />
                 </div>
@@ -410,7 +410,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                 <Input
                   id="fertilizer"
                   value={formData.fertilizer || ""}
-                  onChange={(e) => setFormData(prev => ({ ...prev, fertilizer: e.target.value }))}
+                  onChange={(e) => setFormData((prev: any) => ({ ...prev, fertilizer: e.target.value }))}
                   className="mt-1"
                   required
                 />
@@ -423,7 +423,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   <Input
                     id="dose"
                     value={formData.dose || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, dose: e.target.value }))}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, dose: e.target.value }))}
                     className="mt-1"
                     required
                   />
@@ -438,7 +438,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     step="0.1"
                     min="0"
                     value={formData.area || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, area: e.target.value }))}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, area: e.target.value }))}
                     className="mt-1"
                   />
                 </div>
@@ -450,7 +450,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                 <Input
                   id="purpose"
                   value={formData.purpose || ""}
-                  onChange={(e) => setFormData(prev => ({ ...prev, purpose: e.target.value }))}
+                  onChange={(e) => setFormData((prev: any) => ({ ...prev, purpose: e.target.value }))}
                   className="mt-1"
                 />
               </div>
@@ -465,7 +465,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                 </Label>
                 <Select
                   value={formData.type || ""}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
+                  onValueChange={(value) => setFormData((prev: any) => ({ ...prev, type: value }))}
                 >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select category" />
@@ -485,7 +485,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                 <Input
                   id="description"
                   value={formData.description || ""}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) => setFormData((prev: any) => ({ ...prev, description: e.target.value }))}
                   className="mt-1"
                   required
                 />
@@ -500,7 +500,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   step="0.01"
                   min="0"
                   value={formData.cost || ""}
-                  onChange={(e) => setFormData(prev => ({ ...prev, cost: e.target.value }))}
+                  onChange={(e) => setFormData((prev: any) => ({ ...prev, cost: e.target.value }))}
                   className="mt-1"
                   required
                 />
@@ -522,7 +522,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     min="0"
                     max="14"
                     value={formData.parameters?.pH || ""}
-                    onChange={(e) => setFormData(prev => ({ 
+                    onChange={(e) => setFormData((prev: any) => ({ 
                       ...prev, 
                       parameters: { ...prev.parameters, pH: parseFloat(e.target.value) || 0 }
                     }))}
@@ -539,7 +539,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     step="0.1"
                     min="0"
                     value={formData.parameters?.nitrogen || ""}
-                    onChange={(e) => setFormData(prev => ({ 
+                    onChange={(e) => setFormData((prev: any) => ({ 
                       ...prev, 
                       parameters: { ...prev.parameters, nitrogen: parseFloat(e.target.value) || 0 }
                     }))}
@@ -558,7 +558,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     step="0.1"
                     min="0"
                     value={formData.parameters?.phosphorus || ""}
-                    onChange={(e) => setFormData(prev => ({ 
+                    onChange={(e) => setFormData((prev: any) => ({ 
                       ...prev, 
                       parameters: { ...prev.parameters, phosphorus: parseFloat(e.target.value) || 0 }
                     }))}
@@ -575,7 +575,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     step="0.1"
                     min="0"
                     value={formData.parameters?.potassium || ""}
-                    onChange={(e) => setFormData(prev => ({ 
+                    onChange={(e) => setFormData((prev: any) => ({ 
                       ...prev, 
                       parameters: { ...prev.parameters, potassium: parseFloat(e.target.value) || 0 }
                     }))}
@@ -590,7 +590,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                 <Textarea
                   id="recommendations"
                   value={formData.recommendations || ""}
-                  onChange={(e) => setFormData(prev => ({ ...prev, recommendations: e.target.value }))}
+                  onChange={(e) => setFormData((prev: any) => ({ ...prev, recommendations: e.target.value }))}
                   className="mt-1 resize-none"
                   rows={3}
                 />
@@ -606,7 +606,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
             <Textarea
               id="notes"
               value={recordType === 'expense' ? (formData.remarks || "") : (formData.notes || "")}
-              onChange={(e) => setFormData(prev => ({ 
+              onChange={(e) => setFormData((prev: any) => ({ 
                 ...prev, 
                 [recordType === 'expense' ? 'remarks' : 'notes']: e.target.value 
               }))}

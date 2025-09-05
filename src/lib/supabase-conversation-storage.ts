@@ -300,7 +300,11 @@ class SupabaseConversationStorage {
     
     if (localConversations.length === 0) return;
 
-    console.log(`Migrating ${localConversations.length} conversations from localStorage to Supabase...`);
+    // Log migration info in development only
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log(`Migrating ${localConversations.length} conversations from localStorage to Supabase...`);
+    }
 
     for (const conversation of localConversations) {
       try {
@@ -312,7 +316,12 @@ class SupabaseConversationStorage {
 
     // Clear localStorage after successful migration
     localStorage.removeItem('ai_conversations');
-    console.log('Migration completed successfully');
+    
+    // Log migration success in development only
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('Migration completed successfully');
+    }
   }
 
   // Private helper methods

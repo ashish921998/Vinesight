@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { 
   Droplets, 
   SprayCan, 
@@ -10,9 +11,10 @@ import {
   TestTube,
   Beaker,
   Plus,
-  BarChart3
+  BarChart3,
+  Brain
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 interface QuickActionsProps {
   onDataLogsClick: () => void;
@@ -22,6 +24,9 @@ export function QuickActions({
   onDataLogsClick
 }: QuickActionsProps) {
   const router = useRouter();
+  const params = useParams();
+  const farmId = params.id as string;
+  
   const quickActions = [
     {
       title: "Add Data Logs",
@@ -30,6 +35,14 @@ export function QuickActions({
       color: "bg-green-100 text-green-600 hover:bg-green-200",
       onClick: onDataLogsClick,
       featured: true
+    },
+    {
+      title: "AI Intelligence",
+      description: "Pest predictions & smart insights",
+      icon: Brain,
+      color: "bg-purple-100 text-purple-600 hover:bg-purple-200",
+      onClick: () => router.push(`/farms/${farmId}/ai-insights`),
+      badge: "NEW"
     },
     {
       title: "View Reports",
@@ -47,16 +60,24 @@ export function QuickActions({
         <Plus className="h-5 w-5 text-gray-400" />
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {quickActions.map((action) => {
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {quickActions.map((action: any) => {
           const Icon = action.icon;
           
           return (
             <Card 
               key={action.title}
-              className="border-gray-200 cursor-pointer hover:border-gray-300 transition-all active:scale-98"
+              className="border-gray-200 cursor-pointer hover:border-gray-300 transition-all active:scale-98 relative"
               onClick={action.onClick}
             >
+              {action.badge && (
+                <Badge 
+                  variant="secondary" 
+                  className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs px-2 py-0.5 z-10"
+                >
+                  {action.badge}
+                </Badge>
+              )}
               <CardContent className="p-4">
                 <div className="flex flex-col items-center text-center gap-3">
                   <div className={`p-3 rounded-2xl ${action.color} transition-colors`}>

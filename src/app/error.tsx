@@ -10,18 +10,16 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   }, [error])
 
   return (
-    <html>
-      <body className="min-h-screen flex items-center justify-center p-6">
-        <div className="max-w-md w-full text-center space-y-4">
-          <h2 className="text-2xl font-semibold">Something went wrong</h2>
-          <p className="text-muted-foreground">An unexpected error occurred. You can try again.</p>
-          <div className="flex items-center justify-center gap-3">
-            <Button onClick={() => reset()}>Try again</Button>
-            <Link className="underline" href="/">Go home</Link>
-          </div>
+    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+      <div className="max-w-md w-full text-center space-y-4">
+        <h2 className="text-2xl font-semibold text-foreground">Something went wrong</h2>
+        <p className="text-muted-foreground">An unexpected error occurred. You can try again.</p>
+        <div className="flex items-center justify-center gap-3">
+          <Button onClick={() => reset()}>Try again</Button>
+          <Link className="underline text-primary hover:text-primary/80" href="/">Go home</Link>
         </div>
-      </body>
-    </html>
+      </div>
+    </div>
   )
 }
 

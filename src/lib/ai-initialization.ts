@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 import { PestPredictionService } from './pest-prediction-service';
 import { SmartTaskGenerator } from './smart-task-generator';
 import { AIProfileService } from './ai-profile-service';
-import type { RecommendationRequest } from './types/ai-types';
+import type { RecommendationRequest } from '@/types/ai';
 
 export class AIInitializationService {
   /**
@@ -115,7 +115,7 @@ export class AIInitializationService {
       results.database = {
         connected: !error,
         farmFound: !!farmData,
-        farmName: farmData?.name
+        farmName: (farmData as any)?.name
       };
 
       console.log('✅ AI Services Test Results:', results);
@@ -147,7 +147,7 @@ export class AIInitializationService {
       'market_intelligence',
       'community_insights',
       'ai_conversation_context'
-    ];
+    ] as const;
 
     const tablesFound: string[] = [];
     const missing: string[] = [];
@@ -155,7 +155,7 @@ export class AIInitializationService {
     for (const table of requiredTables) {
       try {
         const { error } = await supabase
-          .from(table)
+          .from(table as any)
           .select('id')
           .limit(1);
 
@@ -219,7 +219,7 @@ export class AIInitializationService {
         status: 'active'
       };
 
-      await supabase.from('pest_disease_predictions').insert([demoPrediction]);
+      await supabase.from('pest_disease_predictions').insert([demoPrediction as any]);
 
       // Create demo task recommendation
       const demoTask = {
@@ -240,7 +240,7 @@ export class AIInitializationService {
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       };
 
-      await supabase.from('ai_task_recommendations').insert([demoTask]);
+      await supabase.from('ai_task_recommendations').insert([demoTask as any]);
 
       return { success: true, message: 'Demo data seeded successfully' };
 

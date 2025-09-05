@@ -29,7 +29,7 @@ import {
   type LAIResults
 } from '@/lib/lai-calculator';
 import { SupabaseService } from '@/lib/supabase-service';
-import type { Farm } from '@/lib/supabase';
+import type { Farm } from '@/types/types';
 
 export function LAICalculatorComponent() {
   const [farms, setFarms] = useState<Farm[]>([]);
@@ -74,8 +74,8 @@ export function LAICalculatorComponent() {
     try {
       const inputs: LAICalculationInputs = {
         farmId: selectedFarm.id!,
-        vineSpacing: selectedFarm.vine_spacing,
-        rowSpacing: selectedFarm.row_spacing,
+        vineSpacing: selectedFarm.vineSpacing || 3, // default 3 meters
+        rowSpacing: selectedFarm.rowSpacing || 2, // default 2 meters
         leavesPerShoot: parseInt(formData.leavesPerShoot),
         shootsPerVine: parseInt(formData.shootsPerVine),
         avgLeafLength: parseFloat(formData.avgLeafLength),
@@ -192,7 +192,7 @@ export function LAICalculatorComponent() {
                   <div className="flex justify-between items-center">
                     <div>
                       <h4 className="font-medium text-gray-900 text-sm">{farm.name}</h4>
-                      <p className="text-xs text-gray-500">{farm.area}ha • {farm.vine_spacing}×{farm.row_spacing}m</p>
+                      <p className="text-xs text-gray-500">{farm.area}ha • {farm.vineSpacing}×{farm.rowSpacing}m</p>
                     </div>
                     {selectedFarm?.id === farm.id && (
                       <CheckCircle className="h-4 w-4 text-green-500" />

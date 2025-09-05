@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, Info } from 'lucide-react';
-import type { Farm } from '@/lib/supabase';
+import type { Farm } from '@/types/types';
 
 interface DataSourceSelectorProps {
   user: any;

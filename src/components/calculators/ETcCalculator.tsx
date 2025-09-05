@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calculator, ArrowLeft, ArrowRight } from 'lucide-react';
 import { SupabaseService } from '@/lib/supabase-service';
-import type { Farm } from '@/lib/supabase';
+import type { Farm } from '@/types/types';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { WeatherDataForm } from './ETc/WeatherDataForm';
 import { DataSourceSelector } from './ETc/DataSourceSelector';
@@ -55,7 +55,7 @@ export function ETcCalculatorComponent() {
         latitude: selectedFarm.latitude?.toString() || '',
         longitude: selectedFarm.longitude?.toString() || '',
         elevation: selectedFarm.elevation?.toString() || '',
-        locationName: selectedFarm.location_name || ''
+        locationName: selectedFarm.locationName || ''
       });
     }
   }, [selectedFarm, useCustomData]);

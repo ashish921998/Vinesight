@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { AIInsightsService } from '@/lib/ai-insights-service';
 import { 
   AlertTriangle, 
   TrendingUp,
@@ -21,10 +22,21 @@ import {
   MessageCircle,
   Scissors,
   Calendar,
-  Target
+  Target,
+  Bug,
+  Leaf,
+  TreePine,
+  Flame,
+  Activity,
+  BarChart3,
+  TrendingDown,
+  Eye,
+  AlertCircle,
+  Users,
+  Lightbulb
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { type AIInsight } from '@/lib/ai-insights-service';
+import { type AIInsight } from '@/types/ai';
 import { motion } from 'framer-motion';
 
 interface AIInsightsCarouselProps {
@@ -37,11 +49,7 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    loadInsights();
-  }, [farmId]);
-
-  const loadInsights = async () => {
+  const loadInsights = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -64,13 +72,23 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
       const data = await response.json();
       setInsights(data.insights || []);
     } catch (error) {
-      console.error('Error loading AI insights:', error);
+      // Log error for debugging in development only
+      if (process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.error('Error loading AI insights:', error);
+        }
+      }
       // Set empty insights array on error
       setInsights([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [farmId]);
+
+  useEffect(() => {
+    loadInsights();
+  }, [loadInsights]);
 
   const handleInsightAction = async (insight: AIInsight) => {
     try {
@@ -79,14 +97,25 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
       } else if (insight.actionType === 'execute') {
         const result = await AIInsightsService.executeInsightAction(insight);
         if (result.success) {
-          // Show success feedback
-          console.log(result.message);
+          // Show success feedback - can be removed in production as it's debug logging
+          if (process.env.NODE_ENV === 'development') {
+            if (process.env.NODE_ENV === 'development') {
+              // eslint-disable-next-line no-console
+              console.log(result.message);
+            }
+          }
           // Refresh insights after execution
           await loadInsights();
         }
       }
     } catch (error) {
-      console.error('Error handling insight action:', error);
+      // Log error for debugging in development only
+      if (process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.error('Error handling insight action:', error);
+        }
+      }
     }
   };
 
@@ -110,7 +139,23 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
       Wind: Wind,
       Scissors: Scissors,
       Calendar: Calendar,
-      Target: Target
+      Target: Target,
+      Bug: Bug,
+      Leaf: Leaf,
+      TreePine: TreePine,
+      Flame: Flame,
+      Activity: Activity,
+      BarChart3: BarChart3,
+      TrendingDown: TrendingDown,
+      Eye: Eye,
+      AlertCircle: AlertCircle,
+      Users: Users,
+      Lightbulb: Lightbulb,
+      // Pest-specific icons
+      fungus: Leaf,
+      pest: Bug,
+      mildew: Sprout,
+      disease: AlertCircle
     };
     const IconComponent = iconMap[iconName as keyof typeof iconMap] || Target;
     return <IconComponent className="h-5 w-5" />;
@@ -123,6 +168,22 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
     if (priority === 'high') {
       return 'bg-orange-100 text-orange-900 border-orange-300';
     }
+    
+    // Phase 3A specific insight types
+    if (type === 'pest_prediction') {
+      return 'bg-yellow-100 text-yellow-900 border-yellow-300';
+    }
+    if (type === 'task_recommendation') {
+      return 'bg-indigo-100 text-indigo-900 border-indigo-300';
+    }
+    if (type === 'profitability_insight') {
+      return 'bg-emerald-100 text-emerald-900 border-emerald-300';
+    }
+    if (type === 'weather_alert') {
+      return 'bg-sky-100 text-sky-900 border-sky-300';
+    }
+    
+    // Legacy types
     if (type === 'financial_insight') {
       return 'bg-emerald-100 text-emerald-900 border-emerald-300';
     }
@@ -263,6 +324,98 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
                     </div>
                   )}
 
+                  {/* Pest Prediction Specific Details */}
+                  {insight.type === 'pest_prediction' && insight.pestDetails && (
+                    <div className="bg-white/60 rounded-lg p-2 text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">Risk Level:</span>
+                        <Badge 
+                          variant={insight.pestDetails.riskLevel === 'critical' ? 'destructive' : 
+                                  insight.pestDetails.riskLevel === 'high' ? 'secondary' : 'outline'}
+                          className="text-xs px-2 py-0.5"
+                        >
+                          {insight.pestDetails.riskLevel.toUpperCase()}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Prevention Window:</span>
+                        <span className="font-medium">
+                          {insight.pestDetails.preventionWindow.start} - {insight.pestDetails.preventionWindow.end}
+                        </span>
+                      </div>
+                      {insight.pestDetails.treatments && insight.pestDetails.treatments.length > 0 && (
+                        <div className="flex justify-between">
+                          <span>Best Treatment:</span>
+                          <span className="font-medium">
+                            {insight.pestDetails.treatments[0].name}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Task Recommendation Specific Details */}
+                  {insight.type === 'task_recommendation' && insight.taskDetails && (
+                    <div className="bg-white/60 rounded-lg p-2 text-xs space-y-1">
+                      <div className="flex justify-between">
+                        <span>Task Type:</span>
+                        <span className="font-medium capitalize">
+                          {insight.taskDetails.taskType.replace('_', ' ')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Recommended Date:</span>
+                        <span className="font-medium">{insight.taskDetails.recommendedDate}</span>
+                      </div>
+                      {insight.taskDetails.duration && (
+                        <div className="flex justify-between">
+                          <span>Duration:</span>
+                          <span className="font-medium">{insight.taskDetails.duration} min</span>
+                        </div>
+                      )}
+                      {insight.taskDetails.weatherDependent && (
+                        <div className="flex items-center gap-1 text-orange-600">
+                          <CloudRain className="h-3 w-3" />
+                          <span>Weather dependent</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Profitability Insight Specific Details */}
+                  {insight.type === 'profitability_insight' && insight.profitabilityDetails && (
+                    <div className="bg-white/60 rounded-lg p-2 text-xs space-y-1">
+                      <div className="flex justify-between">
+                        <span>Category:</span>
+                        <span className="font-medium capitalize">
+                          {insight.profitabilityDetails.category}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Potential Savings:</span>
+                        <span className="font-medium text-green-700">
+                          ₹{insight.profitabilityDetails.potentialSavings.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>ROI Improvement:</span>
+                        <span className="font-medium text-green-700">
+                          +{insight.profitabilityDetails.roiImprovement}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Implementation:</span>
+                        <Badge 
+                          variant={insight.profitabilityDetails.implementationEffort === 'low' ? 'default' : 
+                                  insight.profitabilityDetails.implementationEffort === 'medium' ? 'secondary' : 'outline'}
+                          className="text-xs px-2 py-0.5"
+                        >
+                          {insight.profitabilityDetails.implementationEffort}
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Confidence & Time Info */}
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
@@ -303,8 +456,13 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
                         variant="ghost" 
                         className="h-8 w-8 p-0 rounded-full"
                         onClick={() => {
-                          // Mark as acknowledged
-                          console.log('Insight acknowledged');
+                          // Mark as acknowledged - TODO: implement actual acknowledgment logic
+                          if (process.env.NODE_ENV === 'development') {
+                            if (process.env.NODE_ENV === 'development') {
+                              // eslint-disable-next-line no-console
+                              console.log('Insight acknowledged');
+                            }
+                          }
                         }}
                       >
                         <CheckCircle className="h-4 w-4" />

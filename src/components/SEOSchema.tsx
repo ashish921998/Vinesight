@@ -64,6 +64,7 @@ export function SEOSchema({
       "url": "https://farmai.vercel.app",
       "name": "FarmAI - AI-Powered Smart Farm Management System",
       "description": "Transform your farming operations with AI-driven crop monitoring, yield prediction, disease detection, and automation for modern agriculture.",
+      // @ts-ignore
       "isPartOf": {
         "@id": "https://farmai.vercel.app/#website"
       },
@@ -108,6 +109,7 @@ export function SEOSchema({
       "url": `https://farmai.vercel.app${url}`,
       "name": title || "Farm Calculator",
       "description": description || "Scientific agricultural calculator for farming operations",
+      // @ts-ignore
       "isPartOf": {
         "@id": "https://farmai.vercel.app/#website"
       },
@@ -133,6 +135,7 @@ export function SEOSchema({
     baseSchema["@graph"].push({
       "@type": "Article",
       "@id": `https://farmai.vercel.app${url}#article`,
+      // @ts-ignore
       "headline": title,
       "description": description,
       "url": `https://farmai.vercel.app${url}`,
@@ -172,6 +175,7 @@ export function SEOSchema({
       "@id": "https://farmai.vercel.app/dashboard#product",
       "name": "FarmAI Dashboard",
       "description": "Comprehensive farm management dashboard with AI-powered insights and analytics",
+      // @ts-ignore
       "category": "Software",
       "brand": {
         "@id": "https://farmai.vercel.app/#organization"

@@ -11,7 +11,7 @@ import {
   Droplets
 } from 'lucide-react';
 import { OpenMeteoWeatherService, type OpenMeteoWeatherData } from '@/lib/open-meteo-weather';
-import type { Farm } from '@/lib/supabase';
+import type { Farm } from '@/types/types';
 
 interface SimpleWeatherCardProps {
   farm: Farm;

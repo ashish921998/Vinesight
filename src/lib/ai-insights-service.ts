@@ -2,18 +2,17 @@ import { supabase } from './supabase';
 import { PestPredictionService } from './pest-prediction-service';
 import { SmartTaskGenerator } from './smart-task-generator';
 import { WeatherService } from './weather-service';
-import { GeminiAIService } from './gemini-ai-service';
 
 export interface AIInsight {
   id: string;
-  type: 'pest_alert' | 'task_recommendation' | 'weather_advisory' | 'financial_insight' | 'growth_optimization' | 'market_intelligence';
+  type: 'pest_prediction' | 'task_recommendation' | 'profitability_insight' | 'weather_alert' | 'general_advice';
   priority: 'critical' | 'high' | 'medium' | 'low';
   title: string;
   subtitle: string;
   description?: string;
   icon: string;
   actionLabel: string;
-  actionType: 'navigate' | 'execute' | 'view';
+  actionType: 'navigate' | 'execute';
   actionData?: any;
   confidence: number;
   timeRelevant: boolean;
@@ -47,7 +46,7 @@ export class AIInsightsService {
         const daysUntil = Math.ceil((pest.predictedOnsetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
         insights.push({
           id: `pest_${pest.id}`,
-          type: 'pest_alert',
+          type: 'pest_prediction',
           priority: pest.riskLevel === 'critical' ? 'critical' : 'high',
           title: `${pest.pestDiseaseType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} Risk`,
           subtitle: daysUntil > 0 ? `Prevention window: ${daysUntil} days` : 'Immediate action needed',
@@ -88,19 +87,28 @@ export class AIInsightsService {
 
       // 3. AI-Powered Weather-Based Insights
       try {
-        const weatherData = await WeatherService.getCurrentWeather(farm.region);
+        const weatherData = await WeatherService.getCurrentWeather(farmId);
         const activities = await this.getRecentActivities(farmId);
-        const aiWeatherInsights = await GeminiAIService.generateWeatherInsights(
-          weatherData, 
-          farm, 
-          activities
-        );
+        
+        // Call weather insights API
+        const response = await fetch('/api/ai/weather-insights', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            weatherData,
+            farmData: farm,
+            history: activities
+          })
+        });
+        
+        const { success, data: aiWeatherInsights } = await response.json();
+        if (!success || !aiWeatherInsights) throw new Error('API call failed');
         
         // Convert AI insights to our format
-        aiWeatherInsights.forEach((aiInsight, index) => {
+        aiWeatherInsights.forEach((aiInsight: any, index: number) => {
           insights.push({
             id: `ai_weather_${index}`,
-            type: 'weather_advisory',
+            type: 'weather_alert',
             priority: aiInsight.priority,
             title: aiInsight.title,
             subtitle: aiInsight.subtitle,
@@ -117,7 +125,7 @@ export class AIInsightsService {
         console.warn('AI weather insights unavailable, falling back:', error);
         // Fallback to basic weather insights
         try {
-          const weatherData = await WeatherService.getCurrentWeather(farm.region);
+          const weatherData = await WeatherService.getCurrentWeather(farmId);
           const basicWeatherInsights = this.generateWeatherInsights(weatherData, farm);
           insights.push(...basicWeatherInsights);
         } catch (fallbackError) {
@@ -167,7 +175,7 @@ export class AIInsightsService {
     if (weatherData.humidity > 80 && weatherData.temperature > 20) {
       insights.push({
         id: 'weather_fungal_risk',
-        type: 'weather_advisory',
+        type: 'weather_alert',
         priority: 'high',
         title: 'High Fungal Disease Risk',
         subtitle: `${weatherData.humidity}% humidity, ${weatherData.temperature}°C`,
@@ -184,7 +192,7 @@ export class AIInsightsService {
     if (weatherData.wind_speed > 15) {
       insights.push({
         id: 'weather_spray_warning',
-        type: 'weather_advisory',
+        type: 'weather_alert',
         priority: 'medium',
         title: 'High Wind - Avoid Spraying',
         subtitle: `Wind speed: ${weatherData.wind_speed} km/h`,
@@ -209,7 +217,7 @@ export class AIInsightsService {
       // Get recent expense data
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       const { data: recentExpenses } = await supabase
-        .from('expenses')
+        .from('expense_records')
         .select('*')
         .eq('farm_id', farmId)
         .gte('date', thirtyDaysAgo.toISOString().split('T')[0]);
@@ -219,17 +227,24 @@ export class AIInsightsService {
       // Get historical data for AI analysis
       const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
       const { data: historicalExpenses } = await supabase
-        .from('expenses')
+        .from('expense_records')
         .select('*')
         .eq('farm_id', farmId)
         .gte('date', sixMonthsAgo.toISOString().split('T')[0])
         .lt('date', thirtyDaysAgo.toISOString().split('T')[0]);
 
       // Use AI to analyze financial patterns
-      const aiAnalysis = await GeminiAIService.analyzeFinancialData(
-        recentExpenses,
-        historicalExpenses || []
-      );
+      const response = await fetch('/api/ai/financial-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          expenses: recentExpenses,
+          historicalData: historicalExpenses || []
+        })
+      });
+      
+      const { success, data: aiAnalysis } = await response.json();
+      if (!success || !aiAnalysis) throw new Error('Financial analysis API failed');
 
       const insights: AIInsight[] = [];
       const totalSpent = recentExpenses.reduce((sum, exp) => sum + exp.cost, 0);
@@ -240,7 +255,7 @@ export class AIInsightsService {
         
         insights.push({
           id: 'ai_financial_analysis',
-          type: 'financial_insight',
+          type: 'profitability_insight',
           priority,
           title: this.getFinancialInsightTitle(aiAnalysis.trend, aiAnalysis.varianceFromAverage),
           subtitle: aiAnalysis.recommendation.substring(0, 60) + '...',
@@ -261,10 +276,10 @@ export class AIInsightsService {
 
       // Add risk factors as separate insights if significant
       if (aiAnalysis.riskFactors.length > 0 && aiAnalysis.confidence > 0.8) {
-        aiAnalysis.riskFactors.slice(0, 2).forEach((risk, index) => {
+        aiAnalysis.riskFactors.slice(0, 2).forEach((risk: any, index: number) => {
           insights.push({
             id: `financial_risk_${index}`,
-            type: 'financial_insight',
+            type: 'profitability_insight',
             priority: 'medium',
             title: 'Financial Risk Detected',
             subtitle: risk.substring(0, 60) + '...',
@@ -287,7 +302,7 @@ export class AIInsightsService {
       try {
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const { data: expenses } = await supabase
-          .from('expenses')
+          .from('expense_records')
           .select('*')
           .eq('farm_id', farmId)
           .gte('date', thirtyDaysAgo.toISOString().split('T')[0]);
@@ -302,7 +317,7 @@ export class AIInsightsService {
         if (totalSpent > avgMonthlySpend * 1.2) {
           insights.push({
             id: 'financial_overspend_fallback',
-            type: 'financial_insight',
+            type: 'profitability_insight',
             priority: 'medium',
             title: `Spending Above Average: ₹${totalSpent.toLocaleString()}`,
             subtitle: 'Basic analysis - consider detailed review',
@@ -353,16 +368,23 @@ export class AIInsightsService {
       const weatherData = await WeatherService.getCurrentWeather(farm.region);
       
       // AI-powered growth stage analysis
-      const growthAnalysis = await GeminiAIService.analyzeGrowthStage(
-        farm,
-        activities,
-        weatherData
-      );
+      const response = await fetch('/api/ai/growth-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          farmData: farm,
+          activities,
+          weather: weatherData
+        })
+      });
+      
+      const { success, data: growthAnalysis } = await response.json();
+      if (!success || !growthAnalysis) throw new Error('Growth analysis API failed');
 
       if (growthAnalysis.confidence > 0.6) {
         insights.push({
           id: 'ai_growth_stage',
-          type: 'growth_optimization',
+          type: 'general_advice',
           priority: growthAnalysis.timeRelevant ? 'high' : 'medium',
           title: this.getGrowthStageTitle(growthAnalysis.stage),
           subtitle: growthAnalysis.description,
@@ -387,7 +409,7 @@ export class AIInsightsService {
       if (currentMonth >= 2 && currentMonth <= 4) { // March-May: Flowering/Fruit Set
         insights.push({
           id: 'growth_flowering_fallback',
-          type: 'growth_optimization',
+          type: 'general_advice',
           priority: 'high',
           title: 'Critical Flowering Stage',
           subtitle: 'Traditional seasonal analysis - optimize pollination',
@@ -428,15 +450,59 @@ export class AIInsightsService {
   private static async getRecentActivities(farmId: number): Promise<any[]> {
     try {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      const { data: activities } = await supabase
-        .from('activities')
-        .select('*')
-        .eq('farm_id', farmId)
-        .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
-        .order('date', { ascending: false })
-        .limit(10);
+      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+      
+      // Get recent activities from different tables (matching actual database schema)
+      const [irrigations, sprays, fertigations] = await Promise.all([
+        supabase.from('irrigation_records').select('*').eq('farm_id', farmId).gte('date', thirtyDaysAgoStr).limit(5),
+        supabase.from('spray_records').select('*').eq('farm_id', farmId).gte('date', thirtyDaysAgoStr).limit(5),
+        supabase.from('fertigation_records').select('*').eq('farm_id', farmId).gte('date', thirtyDaysAgoStr).limit(5)
+      ]);
 
-      return activities || [];
+      // Combine activities with standardized format
+      const activities: any[] = [];
+      
+      if (irrigations.data) {
+        irrigations.data.forEach(record => {
+          activities.push({
+            id: record.id,
+            activity_type: 'irrigation',
+            date: record.date,
+            notes: record.notes || `${record.duration}h irrigation, ${record.area} area`,
+            created_at: record.created_at
+          });
+        });
+      }
+      
+      if (sprays.data) {
+        sprays.data.forEach(record => {
+          activities.push({
+            id: record.id,
+            activity_type: 'spray',
+            date: record.date,
+            notes: record.notes || `${record.chemical} for ${record.pest_disease}`,
+            created_at: record.created_at
+          });
+        });
+      }
+      
+      if (fertigations.data) {
+        fertigations.data.forEach(record => {
+          activities.push({
+            id: record.id,
+            activity_type: 'fertigation',
+            date: record.date,
+            notes: record.notes || `${record.fertilizer} application`,
+            created_at: record.created_at
+          });
+        });
+      }
+
+      // Sort by date and return recent activities
+      return activities
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 10);
+        
     } catch (error) {
       console.warn('Could not fetch recent activities:', error);
       return [];
@@ -469,8 +535,8 @@ export class AIInsightsService {
   /**
    * Get insights by category for the detailed page
    */
-  static async getInsightsByCategory(farmId: number, userId: string): Promise<Record<string, AIInsight[]>> {
-    const allInsights = await this.getInsightsForFarm(farmId, userId, 50);
+  static async getInsightsByCategory(farmId: number, userId: string | null): Promise<Record<string, AIInsight[]>> {
+    const allInsights = await this.getInsightsForFarm(farmId, userId || 'anonymous', 50);
     
     return allInsights.reduce((categories, insight) => {
       if (!categories[insight.type]) {
@@ -499,9 +565,9 @@ export class AIInsightsService {
           // Navigation is handled by the UI component
           return { success: true, message: 'Navigating to details' };
         
-        case 'view':
-          // View action for detailed information
-          return { success: true, message: 'Opening detailed view' };
+        case 'execute':
+          // Execute action for detailed information
+          return { success: true, message: 'Executing action' };
         
         default:
           return { success: false, message: 'Unknown action type' };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +23,7 @@ import {
   CloudRain
 } from 'lucide-react';
 import { SmartTaskGenerator } from '@/lib/smart-task-generator';
-import type { AITaskRecommendation, RecommendationRequest } from '@/lib/types/ai-types';
+import type { AITaskRecommendation, RecommendationRequest } from '@/types/ai';
 
 interface SmartTasksDashboardProps {
   farmId: number;
@@ -36,21 +36,25 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
   const [loading, setLoading] = useState(true);
   const [generatingNew, setGeneratingNew] = useState(false);
 
-  useEffect(() => {
-    loadRecommendations();
-  }, [farmId]);
-
-  const loadRecommendations = async () => {
+  const loadRecommendations = useCallback(async () => {
     try {
       setLoading(true);
       const activeRecommendations = await SmartTaskGenerator.getActiveRecommendations(farmId);
       setRecommendations(activeRecommendations);
     } catch (error) {
-      console.error('Error loading recommendations:', error);
+      // Log error for debugging in development only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Error loading recommendations:', error);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [farmId]);
+
+  useEffect(() => {
+    loadRecommendations();
+  }, [loadRecommendations]);
 
   const generateNewRecommendations = async () => {
     try {
@@ -75,7 +79,13 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
         await loadRecommendations();
       }
     } catch (error) {
-      console.error('Error generating new recommendations:', error);
+      // Log error for debugging in development only
+      if (process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.error('Error generating new recommendations:', error);
+        }
+      }
     } finally {
       setGeneratingNew(false);
     }
@@ -86,7 +96,13 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
       await SmartTaskGenerator.updateTaskStatus(taskId, action, feedback);
       await loadRecommendations(); // Refresh the list
     } catch (error) {
-      console.error('Error updating task:', error);
+      // Log error for debugging in development only
+      if (process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.error('Error updating task:', error);
+        }
+      }
     }
   };
 
@@ -501,7 +517,7 @@ function TaskCard({ task, onAction, isToday }: TaskCardProps) {
             <span>{Math.round(task.confidenceScore * 100)}% confidence</span>
           </div>
           <div>
-            Expires: {task.expiresAt.toLocaleDateString()}
+            Expires: {task.expiresAt?.toLocaleDateString() || 'No expiry'}
           </div>
         </div>
       </CardContent>

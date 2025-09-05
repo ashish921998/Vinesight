@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Edit, Sprout, MapPin, MoreVertical, ChevronRight } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { SupabaseService } from "@/lib/supabase-service";
-import type { Farm } from "@/lib/supabase";
+import type { Farm } from "@/types/types";
 import Link from "next/link";
 import { FarmModal } from "@/components/farm-details/forms/FarmModal";
 import {
@@ -163,7 +163,7 @@ export default function FarmsPage() {
                               <div className="flex items-center gap-1 text-sm text-gray-500 mt-0.5">
                                 <MapPin className="h-3 w-3 flex-shrink-0" />
                                 <span className="truncate">
-                                  {farm.location_name || farm.region}
+                                  {farm.locationName || farm.region}
                                   {farm.latitude && farm.longitude && (
                                     <span className="text-xs ml-1">
                                       ({farm.latitude.toFixed(3)}, {farm.longitude.toFixed(3)})
@@ -210,12 +210,12 @@ export default function FarmsPage() {
                               <div className="text-xs text-gray-500">acres</div>
                             </div>
                             <div>
-                              <div className="text-lg font-semibold text-gray-900">{farm.grape_variety}</div>
+                              <div className="text-lg font-semibold text-gray-900">{farm.grapeVariety}</div>
                               <div className="text-xs text-gray-500">variety</div>
                             </div>
                             <div>
                               <div className="text-lg font-semibold text-gray-900">
-                                {Math.floor((Date.now() - new Date(farm.planting_date).getTime()) / (1000 * 60 * 60 * 24 * 365))}
+                                {Math.floor((Date.now() - new Date(farm.plantingDate).getTime()) / (1000 * 60 * 60 * 24 * 365))}
                               </div>
                               <div className="text-xs text-gray-500">years old</div>
                             </div>

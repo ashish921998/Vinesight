@@ -1,6 +1,30 @@
 // Type adapters to bridge application types with Supabase database types
 import { Database } from '@/types/database'
 
+// Import application types from both sources
+import type { 
+  IrrigationRecord, 
+  SprayRecord, 
+  FertigationRecord, 
+  HarvestRecord, 
+  ExpenseRecord,
+  CalculationHistory,
+  SoilTestRecord
+} from './supabase';
+import type { TaskReminder, Farm } from '@/types/types';
+
+// Re-export application types
+export type { 
+  TaskReminder,
+  IrrigationRecord, 
+  SprayRecord, 
+  FertigationRecord, 
+  HarvestRecord, 
+  ExpenseRecord,
+  CalculationHistory,
+  SoilTestRecord
+};
+
 // Extract database table types
 export type DatabaseFarm = Database['public']['Tables']['farms']['Row']
 export type DatabaseFarmInsert = Database['public']['Tables']['farms']['Insert']
@@ -39,79 +63,79 @@ export type DatabaseSoilTestRecordInsert = Database['public']['Tables']['soil_te
 export type DatabaseSoilTestRecordUpdate = Database['public']['Tables']['soil_test_records']['Update']
 
 // Type conversion utilities
-export function toApplicationFarm(dbFarm: DatabaseFarm): import('./supabase').Farm {
+export function toApplicationFarm(dbFarm: DatabaseFarm): Farm {
   return {
     id: dbFarm.id,
     name: dbFarm.name,
     region: dbFarm.region,
     area: dbFarm.area,
-    grape_variety: dbFarm.grape_variety,
-    planting_date: dbFarm.planting_date,
-    vine_spacing: dbFarm.vine_spacing,
-    row_spacing: dbFarm.row_spacing,
-    total_tank_capacity: dbFarm.total_tank_capacity || undefined,
-    system_discharge: dbFarm.system_discharge || undefined,
-    remaining_water: dbFarm.remaining_water || undefined,
-    water_calculation_updated_at: dbFarm.water_calculation_updated_at || undefined,
+    grapeVariety: dbFarm.grape_variety,
+    plantingDate: dbFarm.planting_date,
+    vineSpacing: dbFarm.vine_spacing || undefined,
+    rowSpacing: dbFarm.row_spacing || undefined,
+    totalTankCapacity: dbFarm.total_tank_capacity || undefined,
+    systemDischarge: dbFarm.system_discharge || undefined,
+    remainingWater: dbFarm.remaining_water || undefined,
+    waterCalculationUpdatedAt: dbFarm.water_calculation_updated_at || undefined,
     latitude: dbFarm.latitude || undefined,
     longitude: dbFarm.longitude || undefined,
     elevation: dbFarm.elevation || undefined,
-    location_name: dbFarm.location_name || undefined,
+    locationName: dbFarm.location_name || undefined,
     timezone: dbFarm.timezone || undefined,
-    location_source: (dbFarm.location_source as 'manual' | 'search' | 'current') || undefined,
-    location_updated_at: dbFarm.location_updated_at || undefined,
-    created_at: dbFarm.created_at || undefined,
-    updated_at: dbFarm.updated_at || undefined,
-    user_id: dbFarm.user_id || undefined
+    locationSource: (dbFarm.location_source as 'manual' | 'search' | 'current') || undefined,
+    locationUpdatedAt: dbFarm.location_updated_at || undefined,
+    createdAt: dbFarm.created_at || undefined,
+    updatedAt: dbFarm.updated_at || undefined,
+    userId: dbFarm.user_id || undefined
   }
 }
 
-export function toDatabaseFarmInsert(appFarm: Omit<import('./supabase').Farm, 'id' | 'created_at' | 'updated_at'>): DatabaseFarmInsert {
+export function toDatabaseFarmInsert(appFarm: Omit<import('@/types/types').Farm, 'id' | 'createdAt' | 'updatedAt'> & { user_id: string }): DatabaseFarmInsert {
   return {
     name: appFarm.name,
     region: appFarm.region,
     area: appFarm.area,
-    grape_variety: appFarm.grape_variety,
-    planting_date: appFarm.planting_date,
-    vine_spacing: appFarm.vine_spacing,
-    row_spacing: appFarm.row_spacing,
-    total_tank_capacity: appFarm.total_tank_capacity || null,
-    system_discharge: appFarm.system_discharge || null,
-    remaining_water: appFarm.remaining_water || null,
-    water_calculation_updated_at: appFarm.water_calculation_updated_at || null,
+    grape_variety: appFarm.grapeVariety,
+    planting_date: appFarm.plantingDate,
+    vine_spacing: appFarm.vineSpacing || 0,
+    row_spacing: appFarm.rowSpacing || 0,
+    total_tank_capacity: appFarm.totalTankCapacity || null,
+    system_discharge: appFarm.systemDischarge || null,
+    remaining_water: appFarm.remainingWater || null,
+    water_calculation_updated_at: appFarm.waterCalculationUpdatedAt || null,
     latitude: appFarm.latitude || null,
     longitude: appFarm.longitude || null,
     elevation: appFarm.elevation || null,
-    location_name: appFarm.location_name || null,
+    location_name: appFarm.locationName || null,
     timezone: appFarm.timezone || null,
-    location_source: appFarm.location_source || null,
-    location_updated_at: appFarm.location_updated_at || null,
+    location_source: appFarm.locationSource || null,
+    location_updated_at: appFarm.locationUpdatedAt || null,
     user_id: appFarm.user_id || null
   }
 }
 
-export function toDatabaseFarmUpdate(appFarmUpdates: Partial<import('./supabase').Farm>): DatabaseFarmUpdate {
+export function toDatabaseFarmUpdate(appFarmUpdates: Partial<Farm>): DatabaseFarmUpdate {
   const update: DatabaseFarmUpdate = {}
   
   if (appFarmUpdates.name !== undefined) update.name = appFarmUpdates.name
   if (appFarmUpdates.region !== undefined) update.region = appFarmUpdates.region
   if (appFarmUpdates.area !== undefined) update.area = appFarmUpdates.area
-  if (appFarmUpdates.grape_variety !== undefined) update.grape_variety = appFarmUpdates.grape_variety
-  if (appFarmUpdates.planting_date !== undefined) update.planting_date = appFarmUpdates.planting_date
-  if (appFarmUpdates.vine_spacing !== undefined) update.vine_spacing = appFarmUpdates.vine_spacing
-  if (appFarmUpdates.row_spacing !== undefined) update.row_spacing = appFarmUpdates.row_spacing
-  if (appFarmUpdates.total_tank_capacity !== undefined) update.total_tank_capacity = appFarmUpdates.total_tank_capacity || null
-  if (appFarmUpdates.system_discharge !== undefined) update.system_discharge = appFarmUpdates.system_discharge || null
-  if (appFarmUpdates.remaining_water !== undefined) update.remaining_water = appFarmUpdates.remaining_water || null
-  if (appFarmUpdates.water_calculation_updated_at !== undefined) update.water_calculation_updated_at = appFarmUpdates.water_calculation_updated_at || null
+  if (appFarmUpdates.grapeVariety !== undefined) update.grape_variety = appFarmUpdates.grapeVariety
+  if (appFarmUpdates.plantingDate !== undefined) update.planting_date = appFarmUpdates.plantingDate
+  if (appFarmUpdates.vineSpacing !== undefined) update.vine_spacing = appFarmUpdates.vineSpacing
+  if (appFarmUpdates.rowSpacing !== undefined) update.row_spacing = appFarmUpdates.rowSpacing
+  if (appFarmUpdates.totalTankCapacity !== undefined) update.total_tank_capacity = appFarmUpdates.totalTankCapacity || null
+  if (appFarmUpdates.systemDischarge !== undefined) update.system_discharge = appFarmUpdates.systemDischarge || null
+  if (appFarmUpdates.remainingWater !== undefined) update.remaining_water = appFarmUpdates.remainingWater || null
+  if (appFarmUpdates.waterCalculationUpdatedAt !== undefined) update.water_calculation_updated_at = appFarmUpdates.waterCalculationUpdatedAt || null
   if (appFarmUpdates.latitude !== undefined) update.latitude = appFarmUpdates.latitude || null
   if (appFarmUpdates.longitude !== undefined) update.longitude = appFarmUpdates.longitude || null
   if (appFarmUpdates.elevation !== undefined) update.elevation = appFarmUpdates.elevation || null
-  if (appFarmUpdates.location_name !== undefined) update.location_name = appFarmUpdates.location_name || null
+  if (appFarmUpdates.locationName !== undefined) update.location_name = appFarmUpdates.locationName || null
   if (appFarmUpdates.timezone !== undefined) update.timezone = appFarmUpdates.timezone || null
-  if (appFarmUpdates.location_source !== undefined) update.location_source = appFarmUpdates.location_source || null
-  if (appFarmUpdates.location_updated_at !== undefined) update.location_updated_at = appFarmUpdates.location_updated_at || null
-  if (appFarmUpdates.user_id !== undefined) update.user_id = appFarmUpdates.user_id || null
+  if (appFarmUpdates.locationSource !== undefined) update.location_source = appFarmUpdates.locationSource || null
+  if (appFarmUpdates.locationUpdatedAt !== undefined) update.location_updated_at = appFarmUpdates.locationUpdatedAt || null
+  if (appFarmUpdates.userId !== undefined) update.user_id = appFarmUpdates.userId || null
 
   return update
 }
@@ -120,7 +144,7 @@ export function toDatabaseFarmUpdate(appFarmUpdates: Partial<import('./supabase'
 export function toApplicationIrrigationRecord(dbRecord: DatabaseIrrigationRecord): import('./supabase').IrrigationRecord {
   return {
     id: dbRecord.id,
-    farm_id: dbRecord.farm_id,
+    farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
     duration: dbRecord.duration,
     area: dbRecord.area,
@@ -164,7 +188,7 @@ export function toDatabaseIrrigationUpdate(appUpdates: Partial<import('./supabas
 export function toApplicationSprayRecord(dbRecord: DatabaseSprayRecord): import('./supabase').SprayRecord {
   return {
     id: dbRecord.id,
-    farm_id: dbRecord.farm_id,
+    farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
     pest_disease: dbRecord.pest_disease,
     chemical: dbRecord.chemical,
@@ -211,7 +235,7 @@ export function toDatabaseSprayUpdate(appUpdates: Partial<import('./supabase').S
 export function toApplicationFertigationRecord(dbRecord: DatabaseFertigationRecord): import('./supabase').FertigationRecord {
   return {
     id: dbRecord.id,
-    farm_id: dbRecord.farm_id,
+    farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
     fertilizer: dbRecord.fertilizer,
     dose: dbRecord.dose,
@@ -252,7 +276,7 @@ export function toDatabaseFertigationUpdate(appUpdates: Partial<import('./supaba
 export function toApplicationHarvestRecord(dbRecord: DatabaseHarvestRecord): import('./supabase').HarvestRecord {
   return {
     id: dbRecord.id,
-    farm_id: dbRecord.farm_id,
+    farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
     quantity: dbRecord.quantity,
     grade: dbRecord.grade,
@@ -293,9 +317,9 @@ export function toDatabaseHarvestUpdate(appUpdates: Partial<import('./supabase')
 export function toApplicationExpenseRecord(dbRecord: DatabaseExpenseRecord): import('./supabase').ExpenseRecord {
   return {
     id: dbRecord.id,
-    farm_id: dbRecord.farm_id,
+    farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
-    type: dbRecord.type,
+    type: dbRecord.type as "labor" | "materials" | "equipment" | "other",
     description: dbRecord.description,
     cost: dbRecord.cost,
     remarks: dbRecord.remarks || undefined,
@@ -331,10 +355,10 @@ export function toDatabaseExpenseUpdate(appUpdates: Partial<import('./supabase')
 export function toApplicationCalculationHistory(dbRecord: DatabaseCalculationHistory): import('./supabase').CalculationHistory {
   return {
     id: dbRecord.id,
-    farm_id: dbRecord.farm_id,
-    calculation_type: dbRecord.calculation_type,
-    inputs: dbRecord.inputs,
-    outputs: dbRecord.outputs,
+    farm_id: dbRecord.farm_id!,
+    calculation_type: dbRecord.calculation_type as "etc" | "nutrients" | "lai" | "discharge",
+    inputs: (dbRecord.inputs as Record<string, any>) || {},
+    outputs: (dbRecord.outputs as Record<string, any>) || {},
     date: dbRecord.date,
     created_at: dbRecord.created_at || undefined
   }
@@ -351,45 +375,45 @@ export function toDatabaseCalculationHistoryInsert(appRecord: Omit<import('./sup
 }
 
 // Task Reminder conversion functions
-export function toApplicationTaskReminder(dbRecord: DatabaseTaskReminder): import('./supabase').TaskReminder {
+export function toApplicationTaskReminder(dbRecord: DatabaseTaskReminder): TaskReminder {
   return {
     id: dbRecord.id,
-    farm_id: dbRecord.farm_id,
+    farmId: dbRecord.farm_id,
     title: dbRecord.title,
-    description: dbRecord.description || undefined,
-    due_date: dbRecord.due_date,
+    description: dbRecord.description || null,
+    dueDate: dbRecord.due_date,
     type: dbRecord.type,
-    completed: dbRecord.completed,
-    priority: dbRecord.priority,
-    created_at: dbRecord.created_at || undefined,
-    completed_at: dbRecord.completed_at || undefined
+    completed: dbRecord.completed || false,
+    priority: dbRecord.priority || null,
+    createdAt: dbRecord.created_at || null,
+    completedAt: dbRecord.completed_at || null
   }
 }
 
-export function toDatabaseTaskReminderInsert(appRecord: Omit<import('./supabase').TaskReminder, 'id' | 'created_at'>): DatabaseTaskReminderInsert {
+export function toDatabaseTaskReminderInsert(appRecord: Omit<TaskReminder, 'id' | 'createdAt'>): DatabaseTaskReminderInsert {
   return {
-    farm_id: appRecord.farm_id,
+    farm_id: appRecord.farmId,
     title: appRecord.title,
-    description: appRecord.description || null,
-    due_date: appRecord.due_date,
+    description: appRecord.description,
+    due_date: appRecord.dueDate,
     type: appRecord.type,
-    completed: appRecord.completed || false,
+    completed: appRecord.completed,
     priority: appRecord.priority,
-    completed_at: appRecord.completed_at || null
+    completed_at: appRecord.completedAt
   }
 }
 
-export function toDatabaseTaskReminderUpdate(appUpdates: Partial<import('./supabase').TaskReminder>): DatabaseTaskReminderUpdate {
+export function toDatabaseTaskReminderUpdate(appUpdates: Partial<TaskReminder>): DatabaseTaskReminderUpdate {
   const update: DatabaseTaskReminderUpdate = {}
   
-  if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
+  if (appUpdates.farmId !== undefined) update.farm_id = appUpdates.farmId
   if (appUpdates.title !== undefined) update.title = appUpdates.title
-  if (appUpdates.description !== undefined) update.description = appUpdates.description || null
-  if (appUpdates.due_date !== undefined) update.due_date = appUpdates.due_date
+  if (appUpdates.description !== undefined) update.description = appUpdates.description
+  if (appUpdates.dueDate !== undefined) update.due_date = appUpdates.dueDate
   if (appUpdates.type !== undefined) update.type = appUpdates.type
   if (appUpdates.completed !== undefined) update.completed = appUpdates.completed
   if (appUpdates.priority !== undefined) update.priority = appUpdates.priority
-  if (appUpdates.completed_at !== undefined) update.completed_at = appUpdates.completed_at || null
+  if (appUpdates.completedAt !== undefined) update.completed_at = appUpdates.completedAt
 
   return update
 }
@@ -398,9 +422,9 @@ export function toDatabaseTaskReminderUpdate(appUpdates: Partial<import('./supab
 export function toApplicationSoilTestRecord(dbRecord: DatabaseSoilTestRecord): import('./supabase').SoilTestRecord {
   return {
     id: dbRecord.id,
-    farm_id: dbRecord.farm_id,
+    farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
-    parameters: dbRecord.parameters,
+    parameters: (dbRecord.parameters as Record<string, number>) || {},
     recommendations: dbRecord.recommendations || undefined,
     notes: dbRecord.notes || undefined,
     created_at: dbRecord.created_at || undefined

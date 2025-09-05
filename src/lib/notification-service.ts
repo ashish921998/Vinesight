@@ -1,6 +1,6 @@
 "use client";
 
-import { TaskReminder } from './db-utils';
+import { TaskReminder } from '../types/types';
 
 export interface NotificationSettings {
   enabled: boolean;

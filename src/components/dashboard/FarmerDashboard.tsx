@@ -11,7 +11,7 @@ import { MapPin, AlertTriangle, Plus } from "lucide-react";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { SupabaseService } from "@/lib/supabase-service";
 import { WeatherService, type WeatherData } from "@/lib/weather-service";
-import { type Farm } from "@/lib/supabase";
+import { type Farm } from "@/types/types";
 
 // Helper function to calculate farm health status based on real data
 const calculateFarmStatus = (farm: Farm, tasks?: any[], alerts?: any[]): 'healthy' | 'attention' | 'critical' => {
@@ -51,8 +51,8 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   const farmInfo = selectedFarm ? {
     id: selectedFarm.id?.toString() || '',
     name: selectedFarm.name,
-    location: selectedFarm.location_name || selectedFarm.region,
-    cropType: selectedFarm.grape_variety,
+    location: selectedFarm.locationName || selectedFarm.region,
+    cropType: selectedFarm.grapeVariety,
     totalAcres: selectedFarm.area,
     status: calculateFarmStatus(selectedFarm, dashboardData?.pendingTasks, dashboardData?.alerts) as 'healthy' | 'attention' | 'critical'
   } : null;
@@ -311,7 +311,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                 )}
               </div>
               <div className="text-xs text-muted-foreground">
-                {weatherData.location?.name || selectedFarm?.location_name || selectedFarm?.region}
+                {weatherData.location?.name || selectedFarm?.locationName || selectedFarm?.region}
               </div>
             </div>
           </div>
@@ -343,15 +343,15 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
               precipitation: weatherData.current.precipitation,
               windSpeed: weatherData.current.windSpeed,
               condition: weatherData.current.condition
-            } : null}
-            soil={null} // Real-time soil data would come from sensors
+            } : undefined}
+            soil={undefined} // Real-time soil data would come from sensors
             water={selectedFarm ? {
-              currentLevel: Math.round(((selectedFarm.remaining_water || 0) / (selectedFarm.total_tank_capacity || 1000)) * 100),
+              currentLevel: Math.round(((selectedFarm.remainingWater || 0) / (selectedFarm.totalTankCapacity || 1000)) * 100),
               dailyUsage: 0, // Calculate from recent irrigation records
-              weeklyTarget: selectedFarm.total_tank_capacity || 0,
+              weeklyTarget: selectedFarm.totalTankCapacity || 0,
               weeklyUsed: dashboardData?.totalWaterUsage || 0,
               efficiency: 85 // Could be calculated from system efficiency
-            } : null}
+            } : undefined}
             growth={{
               stage: "Growing Season", // Could be calculated based on planting date
               progress: 60,
@@ -359,7 +359,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
               expectedHarvest: new Date(new Date().getTime() + 90 * 24 * 60 * 60 * 1000),
               daysToHarvest: 90
             }}
-            financial={null} // Would be calculated from harvest and expense records
+            financial={undefined} // Would be calculated from harvest and expense records
             loading={!dashboardData}
             farmName={farmInfo?.name}
           />

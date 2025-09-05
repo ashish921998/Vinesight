@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { LocationForm } from "@/components/calculators/ETc/LocationForm";
 import type { LocationResult } from "@/lib/open-meteo-geocoding";
-import type { Farm } from "@/lib/supabase";
+import type { Farm } from "@/types/types";
 
 interface FarmModalProps {
   isOpen: boolean;
@@ -22,12 +22,12 @@ interface FormData {
   name: string;
   region: string;
   area: string;
-  grape_variety: string;
-  planting_date: string;
-  vine_spacing: string;
-  row_spacing: string;
-  total_tank_capacity: string;
-  system_discharge: string;
+  grapeVariety: string;
+  plantingDate: string;
+  vineSpacing: string;
+  rowSpacing: string;
+  totalTankCapacity: string;
+  systemDischarge: string;
 }
 
 interface LocationData {
@@ -48,19 +48,19 @@ export function FarmModal({
     name: editingFarm?.name || "",
     region: editingFarm?.region || "",
     area: editingFarm?.area?.toString() || "",
-    grape_variety: editingFarm?.grape_variety || "",
-    planting_date: editingFarm?.planting_date || "",
-    vine_spacing: editingFarm?.vine_spacing?.toString() || "",
-    row_spacing: editingFarm?.row_spacing?.toString() || "",
-    total_tank_capacity: editingFarm?.total_tank_capacity?.toString() || "",
-    system_discharge: editingFarm?.system_discharge?.toString() || ""
+    grapeVariety: editingFarm?.grapeVariety || "",
+    plantingDate: editingFarm?.plantingDate || "",
+    vineSpacing: editingFarm?.vineSpacing?.toString() || "",
+    rowSpacing: editingFarm?.rowSpacing?.toString() || "",
+    totalTankCapacity: editingFarm?.totalTankCapacity?.toString() || "",
+    systemDischarge: editingFarm?.systemDischarge?.toString() || ""
   }));
 
   const [locationData, setLocationData] = useState<LocationData>(() => ({
     latitude: editingFarm?.latitude?.toString() || "",
     longitude: editingFarm?.longitude?.toString() || "",
     elevation: editingFarm?.elevation?.toString() || "",
-    locationName: editingFarm?.location_name || ""
+    locationName: editingFarm?.locationName || ""
   }));
 
   // Update form data when editingFarm prop changes
@@ -70,19 +70,19 @@ export function FarmModal({
         name: editingFarm.name || "",
         region: editingFarm.region || "",
         area: editingFarm.area?.toString() || "",
-        grape_variety: editingFarm.grape_variety || "",
-        planting_date: editingFarm.planting_date || "",
-        vine_spacing: editingFarm.vine_spacing?.toString() || "",
-        row_spacing: editingFarm.row_spacing?.toString() || "",
-        total_tank_capacity: editingFarm.total_tank_capacity?.toString() || "",
-        system_discharge: editingFarm.system_discharge?.toString() || ""
+        grapeVariety: editingFarm.grapeVariety || "",
+        plantingDate: editingFarm.plantingDate || "",
+        vineSpacing: editingFarm.vineSpacing?.toString() || "",
+        rowSpacing: editingFarm.rowSpacing?.toString() || "",
+        totalTankCapacity: editingFarm.totalTankCapacity?.toString() || "",
+        systemDischarge: editingFarm.systemDischarge?.toString() || ""
       });
       
       setLocationData({
         latitude: editingFarm.latitude?.toString() || "",
         longitude: editingFarm.longitude?.toString() || "",
         elevation: editingFarm.elevation?.toString() || "",
-        locationName: editingFarm.location_name || ""
+        locationName: editingFarm.locationName || ""
       });
     } else {
       // Reset form when not editing (adding new farm)
@@ -90,12 +90,12 @@ export function FarmModal({
         name: "",
         region: "",
         area: "",
-        grape_variety: "",
-        planting_date: "",
-        vine_spacing: "",
-        row_spacing: "",
-        total_tank_capacity: "",
-        system_discharge: ""
+        grapeVariety: "",
+        plantingDate: "",
+        vineSpacing: "",
+        rowSpacing: "",
+        totalTankCapacity: "",
+        systemDischarge: ""
       });
       
       setLocationData({
@@ -143,12 +143,12 @@ export function FarmModal({
       name: formData.name,
       region: formData.region,
       area: parseFloat(formData.area),
-      grape_variety: formData.grape_variety,
-      planting_date: formData.planting_date,
-      vine_spacing: parseFloat(formData.vine_spacing),
-      row_spacing: parseFloat(formData.row_spacing),
-      total_tank_capacity: formData.total_tank_capacity ? parseFloat(formData.total_tank_capacity) : undefined,
-      system_discharge: formData.system_discharge ? parseFloat(formData.system_discharge) : undefined,
+      grapeVariety: formData.grapeVariety,
+      plantingDate: formData.plantingDate,
+      vineSpacing: parseFloat(formData.vineSpacing),
+      rowSpacing: parseFloat(formData.rowSpacing),
+      totalTankCapacity: formData.totalTankCapacity ? parseFloat(formData.totalTankCapacity) : undefined,
+      systemDischarge: formData.systemDischarge ? parseFloat(formData.systemDischarge) : undefined,
       // Include location data if available
       latitude: locationData.latitude ? parseFloat(locationData.latitude) : undefined,
       longitude: locationData.longitude ? parseFloat(locationData.longitude) : undefined,
@@ -229,13 +229,13 @@ export function FarmModal({
                 />
               </div>
               <div>
-                <Label htmlFor="grape_variety" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="grapeVariety" className="text-sm font-medium text-gray-700">
                   Grape Variety *
                 </Label>
                 <Input
-                  id="grape_variety"
-                  value={formData.grape_variety}
-                  onChange={(e) => handleInputChange("grape_variety", e.target.value)}
+                  id="grapeVariety"
+                  value={formData.grapeVariety}
+                  onChange={(e) => handleInputChange("grapeVariety", e.target.value)}
                   placeholder="Thompson Seedless"
                   required
                   className="mt-1 h-11"
@@ -245,14 +245,14 @@ export function FarmModal({
 
             {/* Planting Date */}
             <div>
-              <Label htmlFor="planting_date" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="plantingDate" className="text-sm font-medium text-gray-700">
                 Planting Date *
               </Label>
               <Input
-                id="planting_date"
+                id="plantingDate"
                 type="date"
-                value={formData.planting_date}
-                onChange={(e) => handleInputChange("planting_date", e.target.value)}
+                value={formData.plantingDate}
+                onChange={(e) => handleInputChange("plantingDate", e.target.value)}
                 required
                 className="mt-1 h-11"
               />
@@ -261,32 +261,32 @@ export function FarmModal({
             {/* Vine and Row Spacing */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="vine_spacing" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="vineSpacing" className="text-sm font-medium text-gray-700">
                   Vine Spacing (m) *
                 </Label>
                 <Input
-                  id="vine_spacing"
+                  id="vineSpacing"
                   type="number"
                   step="0.1"
                   min="0"
-                  value={formData.vine_spacing}
-                  onChange={(e) => handleInputChange("vine_spacing", e.target.value)}
+                  value={formData.vineSpacing}
+                  onChange={(e) => handleInputChange("vineSpacing", e.target.value)}
                   placeholder="3.0"
                   required
                   className="mt-1 h-11"
                 />
               </div>
               <div>
-                <Label htmlFor="row_spacing" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="rowSpacing" className="text-sm font-medium text-gray-700">
                   Row Spacing (m) *
                 </Label>
                 <Input
-                  id="row_spacing"
+                  id="rowSpacing"
                   type="number"
                   step="0.1"
                   min="0"
-                  value={formData.row_spacing}
-                  onChange={(e) => handleInputChange("row_spacing", e.target.value)}
+                  value={formData.rowSpacing}
+                  onChange={(e) => handleInputChange("rowSpacing", e.target.value)}
                   placeholder="9.0"
                   required
                   className="mt-1 h-11"
@@ -296,16 +296,16 @@ export function FarmModal({
 
             {/* Total Tank Capacity */}
             <div>
-              <Label htmlFor="total_tank_capacity" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="totalTankCapacity" className="text-sm font-medium text-gray-700">
                 Total Tank Capacity (liters)
               </Label>
               <Input
-                id="total_tank_capacity"
+                id="totalTankCapacity"
                 type="number"
                 step="1"
                 min="0"
-                value={formData.total_tank_capacity}
-                onChange={(e) => handleInputChange("total_tank_capacity", e.target.value)}
+                value={formData.totalTankCapacity}
+                onChange={(e) => handleInputChange("totalTankCapacity", e.target.value)}
                 placeholder="1000"
                 className="mt-1 h-11"
               />
@@ -316,16 +316,16 @@ export function FarmModal({
 
             {/* System Discharge */}
             <div>
-              <Label htmlFor="system_discharge" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="systemDischarge" className="text-sm font-medium text-gray-700">
                 System Discharge
               </Label>
               <Input
-                id="system_discharge"
+                id="systemDischarge"
                 type="number"
                 step="0.1"
                 min="0"
-                value={formData.system_discharge}
-                onChange={(e) => handleInputChange("system_discharge", e.target.value)}
+                value={formData.systemDischarge}
+                onChange={(e) => handleInputChange("systemDischarge", e.target.value)}
                 placeholder="100.5"
                 className="mt-1 h-11"
               />

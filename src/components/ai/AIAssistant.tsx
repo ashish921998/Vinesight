@@ -72,7 +72,11 @@ export function AIAssistant({
           const migratedConversations = await supabaseConversationStorage.loadConversations(user?.id, farmData?.id);
           setConversations(migratedConversations);
         } catch (error) {
-          console.error('Migration error:', error);
+          // Log error for debugging in development only
+          if (process.env.NODE_ENV === 'development') {
+            // eslint-disable-next-line no-console
+            console.error('Migration error:', error);
+          }
         }
       }
     };
@@ -286,7 +290,11 @@ export function AIAssistant({
         }
       }
     } catch (error) {
-      console.error('Error saving message immediately:', error);
+      // Log error for debugging in development only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Error saving message immediately:', error);
+      }
     } finally {
       savingInProgressRef.current = false; // Always reset saving flag
     }
@@ -322,7 +330,11 @@ export function AIAssistant({
     try {
       await saveMessageImmediately(updatedMessages);
     } catch (error) {
-      console.error('Failed to save user message:', error);
+      // Log error for debugging in development only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Failed to save user message:', error);
+      }
       toast.error('Failed to save your message. Please try again.');
     }
 
@@ -416,12 +428,17 @@ export function AIAssistant({
       try {
         await saveMessageImmediately(completedMessages);
       } catch (error) {
-        console.error('Failed to save assistant message:', error);
+        // Log error for debugging in development only
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.error('Failed to save assistant message:', error);
+        }
         toast.error('Failed to save conversation. Your message was sent but may not be saved.');
       }
 
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
         console.error('Chat error:', error);
       }
       
@@ -467,7 +484,11 @@ export function AIAssistant({
       try {
         await saveMessageImmediately(errorMessages);
       } catch (saveError) {
-        console.error('Failed to save error message:', saveError);
+        // Log error for debugging in development only
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.error('Failed to save error message:', saveError);
+        }
         // Don't show another toast here as user already sees the error response
       }
     } finally {

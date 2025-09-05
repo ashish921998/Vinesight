@@ -18,7 +18,7 @@ import {
   MapPin
 } from 'lucide-react';
 import { OpenMeteoWeatherService, type OpenMeteoWeatherData } from '@/lib/open-meteo-weather';
-import type { Farm } from '@/lib/supabase';
+import type { Farm } from '@/types/types';
 
 interface WeatherCardProps {
   farm: Farm;
@@ -71,13 +71,21 @@ export function WeatherCard({ farm }: WeatherCardProps) {
           );
           setSolarLuxData(luxData);
         } catch (luxError) {
-          console.error('Error fetching solar radiation data:', luxError);
+          // Log error for debugging in development only
+          if (process.env.NODE_ENV === 'development') {
+            // eslint-disable-next-line no-console
+            console.error('Error fetching solar radiation data:', luxError);
+          }
         }
       } else {
         setError("No weather data available for this location");
       }
     } catch (err) {
-      console.error('Error fetching weather data:', err);
+      // Log error for debugging in development only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Error fetching weather data:', err);
+      }
       setError("Failed to fetch weather data");
     } finally {
       setIsLoading(false);
@@ -118,7 +126,11 @@ export function WeatherCard({ farm }: WeatherCardProps) {
       );
       setSolarLuxData(luxData);
     } catch (error) {
-      console.error('Error fetching hourly solar radiation:', error);
+      // Log error for debugging in development only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Error fetching hourly solar radiation:', error);
+      }
     }
   };
 
@@ -248,7 +260,7 @@ export function WeatherCard({ farm }: WeatherCardProps) {
         </div>
         <CardDescription className="text-xs flex items-center gap-1 mt-1">
           <Calendar className="h-3 w-3" />
-          {weatherData.date} • {farm.location_name || `${farm.latitude?.toFixed(3)}, ${farm.longitude?.toFixed(3)}`}
+          {weatherData.date} • {farm.locationName || `${farm.latitude?.toFixed(3)}, ${farm.longitude?.toFixed(3)}`}
         </CardDescription>
       </CardHeader>
       

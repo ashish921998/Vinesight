@@ -31,7 +31,7 @@ import {
   type SoilTestResults
 } from '@/lib/nutrient-calculator';
 import { SupabaseService } from '@/lib/supabase-service';
-import type { Farm } from '@/lib/supabase';
+import type { Farm } from '@/types/types';
 
 export function NutrientCalculatorComponent() {
   const [farms, setFarms] = useState<Farm[]>([]);
@@ -216,7 +216,7 @@ export function NutrientCalculatorComponent() {
                   <div className="flex justify-between items-center">
                     <div>
                       <h4 className="font-medium text-gray-900 text-sm">{farm.name}</h4>
-                      <p className="text-xs text-gray-500">{farm.area}ha • {farm.grape_variety}</p>
+                      <p className="text-xs text-gray-500">{farm.area}ha • {farm.grapeVariety}</p>
                     </div>
                     {selectedFarm?.id === farm.id && (
                       <CheckCircle className="h-4 w-4 text-green-500" />

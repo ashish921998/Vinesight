@@ -1,8 +1,32 @@
-# FarmAI - Phase 3: Advanced AI Intelligence Implementation Guide
+# VineSight - Grape Farming Digital Companion
 
-## 🧠 Phase 3: Advanced AI Intelligence - IN DEVELOPMENT
+## Product Vision
+A progressive web and mobile app designed to digitize grape farming operations for Indian farmers, based on deep scientific research and practical experience from real-world labs and vineyards.
 
-This document provides the complete technical implementation roadmap for Phase 3 Advanced AI features for the FarmAI application.
+## Target Users
+- Indian grape farmers (small to large acreages)
+- Agricultural consultants/cooperatives  
+- Farm supervisors and workers
+
+## Development Phases Overview
+
+### **Phase 1: Core Record-Keeping & Calculators** ✅ **COMPLETED**
+- Farm & Operations Management
+- Scientific Calculators (ETc, MAD, Nutrient, LAI, System Discharge)
+- Daily & Event-Based Journal
+- Data Export & Multi-language Support
+
+### **Phase 2: AI Integration & Smart Farming** ✅ **COMPLETED**
+- AI-Powered Disease Detection with Computer Vision
+- AI Chatbot Assistant with Multi-language Support
+- AI Analytics Dashboard with Predictive Analytics
+- Market Intelligence System
+- IoT Sensor Integration
+- Voice Interface & Accessibility
+- Advanced Image Processing
+
+### **Phase 3: Advanced AI Intelligence** 🧠 **IN DEVELOPMENT**
+This section provides the complete technical implementation roadmap for Phase 3 Advanced AI features.
 
 ### 🎯 Phase 3 Objectives
 - Transform VineSight from reactive tool to proactive AI advisor

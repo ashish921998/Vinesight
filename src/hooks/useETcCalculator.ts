@@ -8,7 +8,7 @@ import {
   type GrapeGrowthStage,
   type WeatherData
 } from '@/lib/etc-calculator';
-import type { Farm } from '@/lib/supabase';
+import type { Farm } from '@/types/types';
 
 export function useETcCalculator() {
   const [results, setResults] = useState<ETcResults | null>(null);
@@ -79,7 +79,7 @@ export function useETcCalculator() {
         farmId: selectedFarm?.id || 0,
         weatherData: weatherData,
         growthStage: formData.growthStage,
-        plantingDate: selectedFarm?.planting_date || '2024-01-01',
+        plantingDate: selectedFarm?.plantingDate || '2024-01-01',
         location: {
           latitude: formData.latitude ? parseFloat(formData.latitude) : (selectedFarm?.latitude || 19.0760),
           longitude: formData.longitude ? parseFloat(formData.longitude) : (selectedFarm?.longitude || 72.8777),
@@ -93,7 +93,11 @@ export function useETcCalculator() {
       setResults(calculationResults);
       
     } catch (error) {
-      console.error('Calculation error:', error);
+      // Log error in development only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Calculation error:', error);
+      }
       setError('Error performing calculation. Please check your inputs.');
     } finally {
       setLoading(false);

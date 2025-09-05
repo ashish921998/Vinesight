@@ -5,7 +5,7 @@
 
 import jsPDF from 'jspdf';
 import { SupabaseService } from './supabase-service';
-import type { Farm } from './supabase';
+import type { Farm } from '@/types/types';
 
 // Extend jsPDF type to include autoTable
 declare module 'jspdf' {
@@ -279,10 +279,10 @@ export class ExportService {
     const farmDetails = [
       ['Region', data.farm.region || 'Not specified'],
       ['Area', `${data.farm.area} hectares`],
-      ['Grape Variety', data.farm.grape_variety || 'Not specified'],
-      ['Planting Date', data.farm.planting_date || 'Not specified'],
-      ['Vine Spacing', data.farm.vine_spacing ? `${data.farm.vine_spacing}m` : 'Not specified'],
-      ['Row Spacing', data.farm.row_spacing ? `${data.farm.row_spacing}m` : 'Not specified']
+      ['Grape Variety', data.farm.grapeVariety || 'Not specified'],
+      ['Planting Date', data.farm.plantingDate || 'Not specified'],
+      ['Vine Spacing', data.farm.vineSpacing ? `${data.farm.vineSpacing}m` : 'Not specified'],
+      ['Row Spacing', data.farm.rowSpacing ? `${data.farm.rowSpacing}m` : 'Not specified']
     ];
 
     await this.ensureAutoTable(pdf);

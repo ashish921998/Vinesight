@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { CloudDataService } from "@/lib/cloud-data-service";
 import { ExportService, type ExportOptions } from "@/lib/export-service";
-import type { Farm } from "@/lib/supabase";
+import type { Farm } from "@/types/types";
 
 interface RecordData {
   irrigation: any[];
@@ -74,197 +74,161 @@ export default function UnifiedReportsPage() {
     reportType: 'comprehensive'
   });
 
-  useEffect(() => {
-    loadFarms();
-  }, []);
-
-  useEffect(() => {
-    if (selectedFarm) {
-      generatePreview();
-    }
-  }, [selectedFarm, exportOptions.dateRange]);
-
-  const loadFarms = async () => {
+  const loadFarms = useCallback(async () => {
     try {
-      // Check if auth bypass is enabled for testing
-      const isDevelopment = process.env.NODE_ENV === 'development';
-      const bypassAuth = isDevelopment && process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
-      
-      if (bypassAuth) {
-        // Sample data for testing
-        const sampleFarms = [
-          {
-            id: 1,
-            name: "Demo Vineyard",
-            area: 25.5,
-            grapeVariety: "Cabernet Sauvignon",
-            location: "Napa Valley",
-            soilType: "Clay loam",
-            plantingDate: "2018-03-15",
-            created_at: "2023-01-01",
-            updated_at: "2024-01-01",
-            user_id: "demo-user",
-            system_discharge: "2.5"
-          },
-          {
-            id: 2,
-            name: "Test Farm",
-            area: 12.3,
-            grapeVariety: "Chardonnay",
-            location: "Sonoma County",
-            soilType: "Sandy loam", 
-            plantingDate: "2020-04-10",
-            created_at: "2023-06-01",
-            updated_at: "2024-06-01",
-            user_id: "demo-user",
-            system_discharge: "1.8"
-          }
-        ];
-        setFarms(sampleFarms);
-        setSelectedFarm(sampleFarms[0]);
-        return;
-      }
-      
       const farmList = await CloudDataService.getAllFarms();
       setFarms(farmList);
       if (farmList.length > 0) {
         setSelectedFarm(farmList[0]);
       }
     } catch (error) {
-      console.error("Error loading farms:", error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error("Error loading farms:", error);
+      }
     }
-  };
+  }, []);
 
-  const generatePreview = async () => {
+  const generatePreview = useCallback(async () => {
     if (!selectedFarm) return;
 
     setLoading(true);
     try {
-      // Check if auth bypass is enabled for testing
-      const isDevelopment = process.env.NODE_ENV === 'development';
-      const bypassAuth = isDevelopment && process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
-      
-      let irrigation, spray, harvest, expense;
-      
-      if (bypassAuth) {
-        // Sample data for testing
-        irrigation = [
-          {
-            id: 1,
-            farm_id: selectedFarm.id,
-            date: "2025-08-15",
-            duration: 120,
-            water_amount: 250.5,
-            system_discharge: 2.5,
-            notes: "Morning irrigation cycle",
-            created_at: "2025-08-15T06:00:00Z"
-          },
-          {
-            id: 2,
-            farm_id: selectedFarm.id,
-            date: "2025-08-20",
-            duration: 90,
-            water_amount: 180.0,
-            system_discharge: 2.5,
-            notes: "Light watering after rain",
-            created_at: "2025-08-20T18:00:00Z"
-          }
-        ];
-        
-        spray = [
-          {
-            id: 1,
-            farm_id: selectedFarm.id,
-            date: "2025-08-10",
-            product_name: "Copper Sulfate",
-            dosage: "2.5 kg/ha",
-            target: "Powdery mildew prevention",
-            weather_conditions: "Calm, 22°C",
-            notes: "Preventive treatment",
-            created_at: "2025-08-10T08:00:00Z"
-          }
-        ];
-        
-        harvest = [
-          {
-            id: 1,
-            farm_id: selectedFarm.id,
-            date: "2025-08-25",
-            variety: selectedFarm.grapeVariety,
-            quantity: 1250.0,
-            unit: "kg",
-            quality_grade: "Premium",
-            brix_level: 22.5,
-            price: 4.50, // price per kg
-            notes: "Excellent quality harvest",
-            created_at: "2025-08-25T10:00:00Z"
-          }
-        ];
-        
-        expense = [
-          {
-            id: 1,
-            farm_id: selectedFarm.id,
-            date: "2025-08-12",
-            category: "Chemicals",
-            description: "Copper Sulfate Purchase",
-            amount: 125.50,
-            cost: 125.50, // Add cost property for calculations
-            currency: "USD",
-            vendor: "Farm Supply Co",
-            notes: "Fungicide for preventive treatment",
-            created_at: "2025-08-12T14:00:00Z"
-          }
-        ];
-      } else {
-        [irrigation, spray, harvest, expense] = await Promise.all([
-          CloudDataService.getIrrigationRecords(selectedFarm.id!),
-          CloudDataService.getSprayRecords(selectedFarm.id!),
-          CloudDataService.getHarvestRecords(selectedFarm.id!),
-          CloudDataService.getExpenseRecords(selectedFarm.id!)
-        ]);
-      }
-
-      // Filter by date range
-      const { from, to } = exportOptions.dateRange!;
-      const filterByDate = (records: any[]) => 
-        records.filter(record => {
-          const recordDate = new Date(record.date);
-          return recordDate >= new Date(from) && recordDate <= new Date(to);
-        });
-
-      const filteredData = {
-        irrigation: filterByDate(irrigation),
-        spray: filterByDate(spray),
-        harvest: filterByDate(harvest),
-        expense: filterByDate(expense)
-      };
-
-      // Calculate summary
-      const totalIrrigationHours = filteredData.irrigation.reduce((sum, r) => sum + (r.duration || 0), 0);
-      const totalWaterUsage = filteredData.irrigation.reduce((sum, r) => sum + ((r.duration || 0) * (r.system_discharge || 0)), 0);
-      const totalHarvest = filteredData.harvest.reduce((sum, r) => sum + (r.quantity || 0), 0);
-      const totalRevenue = filteredData.harvest.reduce((sum, r) => sum + ((r.quantity || 0) * (r.price || 0)), 0);
-      const totalExpenses = filteredData.expense.reduce((sum, r) => sum + (r.cost || 0), 0);
-
-      const summary = {
-        totalRecords: Object.values(filteredData).reduce((sum, arr) => sum + arr.length, 0),
-        dateRange: `${from} to ${to}`,
-        totalIrrigationHours: Math.round(totalIrrigationHours * 10) / 10,
-        totalWaterUsage: Math.round(totalWaterUsage),
-        totalHarvest: Math.round(totalHarvest * 10) / 10,
-        totalRevenue: Math.round(totalRevenue),
-        totalExpenses: Math.round(totalExpenses),
-        netProfit: Math.round(totalRevenue - totalExpenses)
-      };
-
-      setReportData({ data: filteredData, summary });
-      setCurrentPage(0); // Reset to first page
+      const data = await loadReportData(selectedFarm);
+      setReportData(data);
     } catch (error) {
-      console.error("Error generating preview:", error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error("Error generating preview:", error);
+      }
     } finally {
       setLoading(false);
     }
+  }, [selectedFarm, exportOptions.dateRange]);
+
+  useEffect(() => {
+    loadFarms();
+  }, [loadFarms]);
+
+  useEffect(() => {
+    if (selectedFarm) {
+      generatePreview();
+    }
+  }, [selectedFarm, generatePreview]);
+
+  // Duplicate loadFarms function removed - using the useCallback version above
+
+  // Load report data function
+  const loadReportData = async (farm: Farm) => {
+    // Check if auth bypass is enabled for testing
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const bypassAuth = isDevelopment && process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+    
+    let irrigation, spray, harvest, expense;
+    
+    if (bypassAuth) {
+      // Sample data for testing
+      irrigation = [
+        {
+          id: 1,
+          farm_id: farm.id,
+          date: "2025-08-15",
+          duration: 120,
+          water_amount: 250.5,
+          system_discharge: 2.5,
+          notes: "Morning irrigation cycle",
+          created_at: "2025-08-15T06:00:00Z"
+        }
+      ];
+      
+      spray = [
+        {
+          id: 1,
+          farm_id: farm.id,
+          date: "2025-08-10",
+          product_name: "Copper Sulfate",
+          dosage: "2.5 kg/ha",
+          target: "Powdery mildew prevention",
+          weather_conditions: "Calm, 22°C",
+          notes: "Preventive treatment",
+          created_at: "2025-08-10T08:00:00Z"
+        }
+      ];
+      
+      harvest = [
+        {
+          id: 1,
+          farm_id: farm.id,
+          date: "2025-08-25",
+          variety: farm.grapeVariety,
+          quantity: 1250.0,
+          unit: "kg",
+          quality_grade: "Premium",
+          brix_level: 22.5,
+          price: 4.50,
+          notes: "Excellent quality harvest",
+          created_at: "2025-08-25T10:00:00Z"
+        }
+      ];
+      
+      expense = [
+        {
+          id: 1,
+          farm_id: farm.id,
+          date: "2025-08-12",
+          category: "Chemicals",
+          description: "Copper Sulfate Purchase",
+          amount: 125.50,
+          cost: 125.50,
+          currency: "USD",
+          vendor: "Farm Supply Co",
+          notes: "Fungicide for preventive treatment",
+          created_at: "2025-08-12T14:00:00Z"
+        }
+      ];
+    } else {
+      [irrigation, spray, harvest, expense] = await Promise.all([
+        CloudDataService.getIrrigationRecords(farm.id!),
+        CloudDataService.getSprayRecords(farm.id!),
+        CloudDataService.getHarvestRecords(farm.id!),
+        CloudDataService.getExpenseRecords(farm.id!)
+      ]);
+    }
+
+    // Filter by date range
+    const { from, to } = exportOptions.dateRange!;
+    const filterByDate = (records: any[]) => 
+      records.filter(record => {
+        const recordDate = new Date(record.date);
+        return recordDate >= new Date(from) && recordDate <= new Date(to);
+      });
+
+    const filteredData = {
+      irrigation: filterByDate(irrigation),
+      spray: filterByDate(spray),
+      harvest: filterByDate(harvest),
+      expense: filterByDate(expense)
+    };
+
+    // Calculate summary
+    const totalIrrigationHours = filteredData.irrigation.reduce((sum, r) => sum + (r.duration || 0), 0);
+    const totalWaterUsage = filteredData.irrigation.reduce((sum, r) => sum + ((r.duration || 0) * (r.system_discharge || 0)), 0);
+    const totalHarvest = filteredData.harvest.reduce((sum, r) => sum + (r.quantity || 0), 0);
+    const totalRevenue = filteredData.harvest.reduce((sum, r) => sum + ((r.quantity || 0) * (r.price || 0)), 0);
+    const totalExpenses = filteredData.expense.reduce((sum, r) => sum + (r.cost || 0), 0);
+
+    const summary = {
+      totalRecords: Object.values(filteredData).reduce((sum, arr) => sum + arr.length, 0),
+      dateRange: `${from} to ${to}`,
+      totalIrrigationHours: Math.round(totalIrrigationHours * 10) / 10,
+      totalWaterUsage: Math.round(totalWaterUsage),
+      totalHarvest: Math.round(totalHarvest * 10) / 10,
+      totalRevenue: Math.round(totalRevenue),
+      totalExpenses: Math.round(totalExpenses),
+      netProfit: Math.round(totalRevenue - totalExpenses)
+    };
+
+    return { data: filteredData, summary };
   };
 
   const exportToCSV = async (data: any, farm: any) => {
@@ -276,16 +240,17 @@ export default function UnifiedReportsPage() {
     csvRows.push('');
     
     // Export each data type
-    Object.entries(data.data).forEach(([type, records]: [string, any[]]) => {
-      if (records.length > 0) {
+    Object.entries(data.data).forEach(([type, records]) => {
+      const recordsArray = records as any[];
+      if (recordsArray.length > 0) {
         csvRows.push(`${type.toUpperCase()} RECORDS`);
         
         // Get headers from first record
-        const headers = Object.keys(records[0]).filter(key => key !== 'id' && key !== 'farm_id');
+        const headers = Object.keys(recordsArray[0]).filter(key => key !== 'id' && key !== 'farm_id');
         csvRows.push(headers.join(','));
         
         // Add data rows
-        records.forEach(record => {
+        recordsArray.forEach(record => {
           const row = headers.map(header => {
             const value = record[header];
             return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
@@ -311,21 +276,35 @@ export default function UnifiedReportsPage() {
 
   const exportToPDF = async (data: any, farm: any) => {
     try {
-      console.log('Starting PDF export...');
-      console.log('Farm data:', farm);
-      console.log('Report data:', data);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('Starting PDF export...');
+        // eslint-disable-next-line no-console
+        console.log('Farm data:', farm);
+        // eslint-disable-next-line no-console
+        console.log('Report data:', data);
+      }
       
       // Simple PDF generation without autoTable to avoid compatibility issues
       const jsPDF = (await import('jspdf')).default;
-      console.log('jsPDF imported successfully');
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('jsPDF imported successfully');
+      }
       
       const pdf = new jsPDF();
-      console.log('PDF instance created');
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('PDF instance created');
+      }
       
       // Add title
       pdf.setFontSize(16);
       pdf.text(`Farm Report - ${farm.name}`, 20, 20);
-      console.log('Title added');
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('Title added');
+      }
       
       pdf.setFontSize(12);
       pdf.text(`Date Range: ${data.summary.dateRange}`, 20, 35);
@@ -342,8 +321,9 @@ export default function UnifiedReportsPage() {
       let yPosition = 95;
       
       // Add simple text-based data sections
-      Object.entries(data.data).forEach(([type, records]: [string, any[]]) => {
-        if (records.length > 0) {
+      Object.entries(data.data).forEach(([type, records]) => {
+        const recordsArray = records as any[];
+        if (recordsArray.length > 0) {
           // Check if we need a new page
           if (yPosition > 250) {
             pdf.addPage();
@@ -352,11 +332,11 @@ export default function UnifiedReportsPage() {
           
           // Add section title
           pdf.setFontSize(12);
-          pdf.text(`${type.toUpperCase()} RECORDS (${records.length})`, 20, yPosition);
+          pdf.text(`${type.toUpperCase()} RECORDS (${recordsArray.length})`, 20, yPosition);
           yPosition += 10;
           
           // Add records as simple text
-          records.slice(0, 5).forEach((record: any, index: number) => {
+          recordsArray.slice(0, 5).forEach((record: any, index: number) => {
             if (yPosition > 270) {
               pdf.addPage();
               yPosition = 20;
@@ -375,8 +355,8 @@ export default function UnifiedReportsPage() {
             yPosition += 7;
           });
           
-          if (records.length > 5) {
-            pdf.text(`... and ${records.length - 5} more records`, 25, yPosition);
+          if (recordsArray.length > 5) {
+            pdf.text(`... and ${recordsArray.length - 5} more records`, 25, yPosition);
             yPosition += 7;
           }
           
@@ -394,12 +374,24 @@ export default function UnifiedReportsPage() {
       }
       
       // Save PDF
-      console.log('Saving PDF...');
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('Saving PDF...');
+      }
       pdf.save(`${farm.name}_report_${new Date().toISOString().split('T')[0]}.pdf`);
-      console.log('PDF saved successfully!');
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('PDF saved successfully!');
+      }
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      console.error('Error details:', error.message, error.stack);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Error generating PDF:', error);
+        if (error instanceof Error) {
+          // eslint-disable-next-line no-console
+          console.error('Error details:', error.message, error.stack);
+        }
+      }
       throw error;
     }
   };
@@ -413,17 +405,29 @@ export default function UnifiedReportsPage() {
       const isDevelopment = process.env.NODE_ENV === 'development';
       const bypassAuth = isDevelopment && process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
       
-      console.log('Export handleExport debug:');
-      console.log('- isDevelopment:', isDevelopment);
-      console.log('- NEXT_PUBLIC_BYPASS_AUTH:', process.env.NEXT_PUBLIC_BYPASS_AUTH);
-      console.log('- bypassAuth:', bypassAuth);
-      console.log('- format:', format);
-      console.log('- selectedFarm:', selectedFarm);
-      console.log('- reportData:', reportData);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('Export handleExport debug:');
+        // eslint-disable-next-line no-console
+        console.log('- isDevelopment:', isDevelopment);
+        // eslint-disable-next-line no-console
+        console.log('- NEXT_PUBLIC_BYPASS_AUTH:', process.env.NEXT_PUBLIC_BYPASS_AUTH);
+        // eslint-disable-next-line no-console
+        console.log('- bypassAuth:', bypassAuth);
+        // eslint-disable-next-line no-console
+        console.log('- format:', format);
+        // eslint-disable-next-line no-console
+        console.log('- selectedFarm:', selectedFarm);
+        // eslint-disable-next-line no-console
+        console.log('- reportData:', reportData);
+      }
       
       // Temporarily force bypass until we fix the env variable issue
       if (true || bypassAuth) {
-        console.log('Using FORCED bypass export path');
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.log('Using FORCED bypass export path');
+        }
         // Use already-loaded sample data for export
         if (format === 'csv') {
           await exportToCSV(reportData, selectedFarm);
@@ -431,10 +435,13 @@ export default function UnifiedReportsPage() {
           await exportToPDF(reportData, selectedFarm);
         }
       } else {
-        console.log('Using ExportService path');
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.log('Using ExportService path');
+        }
         // Use ExportService for real data
         const options: ExportOptions = {
-          farmId: selectedFarm.id!,
+          farmId: selectedFarm?.id!,
           dateRange: exportOptions.dateRange!,
           includeTypes: exportOptions.includeTypes!,
           format,
@@ -444,7 +451,10 @@ export default function UnifiedReportsPage() {
         await ExportService.exportData(options);
       }
     } catch (error) {
-      console.error(`Error exporting ${format.toUpperCase()}:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error(`Error exporting ${format.toUpperCase()}:`, error);
+      }
       alert(`Failed to export ${format.toUpperCase()}: ${error}`);
     } finally {
       setLoading(false);

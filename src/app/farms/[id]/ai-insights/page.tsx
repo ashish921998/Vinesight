@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,11 +19,25 @@ import {
   Calendar,
   Target,
   Filter,
-  Zap
+  Zap,
+  Bug,
+  Brain,
+  Shield,
+  Eye,
+  BarChart3,
+  RefreshCw,
+  Download,
+  Settings,
+  Users,
+  Activity
 } from "lucide-react";
 import { AIInsightsService, type AIInsight } from "@/lib/ai-insights-service";
 import { SupabaseService } from "@/lib/supabase-service";
-import { type Farm } from "@/lib/supabase";
+import { PestPredictionService } from "@/lib/pest-prediction-service";
+import { farmerLearningService } from "@/lib/farmer-learning-service";
+import { CriticalAlertsBanner } from "@/components/farm/CriticalAlertsBanner";
+import { type Farm } from "@/types/types";
+import { type CriticalAlert, type PestDiseasePrediction, type FarmerAIProfile } from "@/types/ai";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 
 export default function AIInsightsPage() {
@@ -34,14 +48,108 @@ export default function AIInsightsPage() {
   
   const [farm, setFarm] = useState<Farm | null>(null);
   const [insightsByCategory, setInsightsByCategory] = useState<Record<string, AIInsight[]>>({});
+  const [criticalAlerts, setCriticalAlerts] = useState<CriticalAlert[]>([]);
+  const [pestPredictions, setPestPredictions] = useState<PestDiseasePrediction[]>([]);
+  const [farmerProfile, setFarmerProfile] = useState<FarmerAIProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  useEffect(() => {
-    loadData();
+  const loadInsights = useCallback(async () => {
+    try {
+      const insights = await AIInsightsService.getInsightsByCategory(
+        parseInt(farmId), 
+        user?.id || null
+      );
+      setInsightsByCategory(insights);
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error("Error loading AI insights:", error);
+      }
+      // Initialize with empty categories instead of mock data
+      setInsightsByCategory({});
+    }
+  }, [farmId, user?.id]);
+
+  const loadCriticalAlerts = useCallback(async () => {
+    try {
+      // Generate critical alerts from pest predictions
+      const predictions = await PestPredictionService.getActivePredictions(parseInt(farmId));
+      const criticalPredictions = predictions.filter(p => 
+        p.riskLevel === 'critical' || p.riskLevel === 'high'
+      );
+
+      const alerts: CriticalAlert[] = criticalPredictions.map(prediction => ({
+        id: `pest_${prediction.id}`,
+        type: 'pest_prediction' as const,
+        severity: prediction.riskLevel === 'critical' ? 'critical' as const : 'high' as const,
+        title: `${prediction.pestDiseaseType.replace('_', ' ').toUpperCase()} Risk Alert`,
+        message: `${Math.round(prediction.probabilityScore * 100)}% probability of outbreak. ${prediction.preventionWindow.optimalTiming}`,
+        icon: prediction.pestDiseaseType.includes('mildew') ? 'fungus' : 'pest',
+        actionRequired: true,
+        timeWindow: {
+          start: prediction.preventionWindow.startDate,
+          end: prediction.preventionWindow.endDate,
+          urgency: prediction.preventionWindow.optimalTiming
+        },
+        actions: [
+          {
+            label: 'View Treatment Plan',
+            type: 'primary' as const,
+            action: 'navigate' as const,
+            actionData: { 
+              route: `/farms/${farmId}/pest-management/${prediction.pestDiseaseType}`,
+              predictionId: prediction.id
+            }
+          },
+          {
+            label: 'Acknowledge Alert',
+            type: 'secondary' as const,
+            action: 'execute' as const,
+            actionData: { action: 'acknowledge', predictionId: prediction.id }
+          }
+        ],
+        farmId: parseInt(farmId),
+        createdAt: prediction.createdAt
+      }));
+
+      setCriticalAlerts(alerts);
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error("Error loading critical alerts:", error);
+      }
+    }
   }, [farmId]);
 
-  const loadData = async () => {
+  const loadPestPredictions = useCallback(async () => {
+    try {
+      const predictions = await PestPredictionService.getActivePredictions(parseInt(farmId));
+      setPestPredictions(predictions);
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error("Error loading pest predictions:", error);
+      }
+    }
+  }, [farmId]);
+
+  const loadFarmerProfile = useCallback(async () => {
+    try {
+      const profile = await farmerLearningService.getFarmerProfile(
+        user?.id || null, 
+        parseInt(farmId)
+      );
+      setFarmerProfile(profile);
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error("Error loading farmer profile:", error);
+      }
+    }
+  }, [farmId, user?.id]);
+
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -49,19 +157,29 @@ export default function AIInsightsPage() {
       const farmData = await SupabaseService.getDashboardSummary(parseInt(farmId));
       setFarm(farmData.farm);
 
-      // Load insights by category
-      const insights = await AIInsightsService.getInsightsByCategory(
-        parseInt(farmId), 
-        user?.id || 'demo-user'
-      );
-      setInsightsByCategory(insights);
+      // Load Phase 3A AI Intelligence data
+      await Promise.all([
+        loadInsights(),
+        loadCriticalAlerts(),
+        loadPestPredictions(),
+        loadFarmerProfile()
+      ]);
 
     } catch (error) {
-      console.error("Error loading AI insights:", error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error("Error loading AI insights:", error);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [farmId, loadInsights, loadCriticalAlerts, loadPestPredictions, loadFarmerProfile]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // These functions are now defined as useCallback above
 
   const handleBack = () => {
     router.push(`/farms/${farmId}`);
@@ -74,21 +192,77 @@ export default function AIInsightsPage() {
       } else {
         const result = await AIInsightsService.executeInsightAction(insight);
         if (result.success) {
-          console.log(result.message);
+          if (process.env.NODE_ENV === 'development') {
+            // eslint-disable-next-line no-console
+            console.log(result.message);
+          }
           // Refresh insights after execution
           await loadData();
         }
       }
+
+      // Track farmer action for learning
+      if (user?.id) {
+        await farmerLearningService.trackFarmerAction(
+          user.id,
+          parseInt(farmId),
+          'accept_recommendation',
+          {
+            originalSuggestion: insight,
+            reasoning: 'User clicked on insight action'
+          }
+        );
+      }
     } catch (error) {
-      console.error('Error handling insight action:', error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Error handling insight action:', error);
+      }
+    }
+  };
+
+  const handleAlertAction = async (alertId: string, action: string, actionData?: Record<string, any>) => {
+    try {
+      if (action === 'navigate' && actionData?.route) {
+        router.push(actionData.route);
+      } else if (action === 'execute' && actionData?.action === 'acknowledge') {
+        // Mark alert as acknowledged
+        const predictionId = actionData.predictionId;
+        if (predictionId) {
+          await PestPredictionService.updatePredictionOutcome(
+            predictionId,
+            'acknowledged',
+            'farmer_acknowledged'
+          );
+          
+          // Remove from critical alerts
+          setCriticalAlerts(prev => prev.filter(alert => alert.id !== alertId));
+        }
+      }
+
+      // Track farmer action
+      if (user?.id) {
+        await farmerLearningService.trackFarmerAction(
+          user.id,
+          parseInt(farmId),
+          action === 'acknowledge' ? 'accept_recommendation' : 'reject_recommendation',
+          actionData || {}
+        );
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Error handling alert action:', error);
+      }
     }
   };
 
   const getCategoryInfo = (categoryKey: string) => {
     const categories = {
-      pest_alert: {
-        name: 'Pest & Disease',
-        icon: AlertTriangle,
+      // Phase 3A Categories
+      pest_prediction: {
+        name: 'Pest Predictions',
+        icon: Bug,
         color: 'text-red-600',
         bgColor: 'bg-red-50',
         borderColor: 'border-red-200'
@@ -99,6 +273,28 @@ export default function AIInsightsPage() {
         color: 'text-blue-600',
         bgColor: 'bg-blue-50',
         borderColor: 'border-blue-200'
+      },
+      profitability_insight: {
+        name: 'Profitability',
+        icon: BarChart3,
+        color: 'text-emerald-600',
+        bgColor: 'bg-emerald-50',
+        borderColor: 'border-emerald-200'
+      },
+      weather_alert: {
+        name: 'Weather Alerts',
+        icon: CloudRain,
+        color: 'text-sky-600',
+        bgColor: 'bg-sky-50',
+        borderColor: 'border-sky-200'
+      },
+      // Legacy Categories
+      pest_alert: {
+        name: 'Pest & Disease',
+        icon: AlertTriangle,
+        color: 'text-red-600',
+        bgColor: 'bg-red-50',
+        borderColor: 'border-red-200'
       },
       weather_advisory: {
         name: 'Weather Alerts',
@@ -204,23 +400,90 @@ export default function AIInsightsPage() {
             </Button>
             <div className="flex-1">
               <h1 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-blue-500" />
-                AI Insights
+                <Brain className="h-5 w-5 text-blue-500" />
+                AI Intelligence Center
               </h1>
               <p className="text-sm text-gray-600">
-                {farm?.name || `Farm ${farmId}`} • Intelligent Recommendations
+                {farm?.name || `Farm ${farmId}`} • Phase 3A Advanced AI
               </p>
             </div>
-            {criticalInsights > 0 && (
-              <Badge variant="destructive" className="text-xs">
-                {criticalInsights} Critical
-              </Badge>
-            )}
+            <div className="flex items-center gap-2">
+              {criticalAlerts.length > 0 && (
+                <Badge variant="destructive" className="text-xs">
+                  {criticalAlerts.length} Critical Alerts
+                </Badge>
+              )}
+              {criticalInsights > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  {criticalInsights} High Priority
+                </Badge>
+              )}
+              <Button variant="outline" size="sm" onClick={loadData}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="px-4 py-6">
+        {/* Critical Alerts Banner */}
+        {criticalAlerts.length > 0 && (
+          <div className="mb-6">
+            <CriticalAlertsBanner
+              alerts={criticalAlerts}
+              onAlertAction={handleAlertAction}
+            />
+          </div>
+        )}
+
+        {/* Phase 3A AI Intelligence Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Eye className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-blue-600">{totalInsights}</div>
+                  <div className="text-sm text-gray-600">Total AI Insights</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <Bug className="h-5 w-5 text-red-600" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-red-600">{pestPredictions.length}</div>
+                  <div className="text-sm text-gray-600">Active Pest Predictions</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Activity className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {farmerProfile ? Math.round(farmerProfile.riskTolerance * 100) : 50}%
+                  </div>
+                  <div className="text-sm text-gray-600">AI Learning Score</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Overview Stats */}
         <Card className="mb-6">
           <CardHeader className="pb-3">
@@ -367,7 +630,10 @@ export default function AIInsightsPage() {
                           variant="ghost" 
                           className="px-3"
                           onClick={() => {
-                            console.log('Mark as read');
+                            if (process.env.NODE_ENV === 'development') {
+                              // eslint-disable-next-line no-console
+                              console.log('Mark as read');
+                            }
                           }}
                         >
                           <CheckCircle className="h-4 w-4" />

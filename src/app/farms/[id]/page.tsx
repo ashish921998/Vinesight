@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { SupabaseService } from "@/lib/supabase-service";
 import { PhotoService } from "@/lib/photo-service";
-import { type Farm } from "@/lib/supabase";
 
 // Import our new components
 import { FarmHeader } from "@/components/farm-details/FarmHeader";
@@ -21,9 +20,10 @@ import { EditRecordModal } from "@/components/journal/EditRecordModal";
 import { AIInsightsCarousel } from "@/components/ai/AIInsightsCarousel";
 import { PestPredictionService } from "@/lib/pest-prediction-service";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { Farm } from "@/types/types";
 
 interface DashboardData {
-  farm: Farm | null;
+  farm: Farm;
   pendingTasksCount: number;
   recentIrrigations: any[];
   recentActivities: any[];
@@ -48,7 +48,7 @@ export default function FarmDetailsPage() {
   // Authentication
   const { user } = useSupabaseAuth();
 
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData>();
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -159,7 +159,7 @@ export default function FarmDetailsPage() {
           area: parseFloat(data.area || '0') || dashboardData?.farm?.area || 0,
           growth_stage: "Active",
           moisture_status: "Good",
-          system_discharge: dashboardData?.farm?.system_discharge || 100,
+          system_discharge: dashboardData?.farm?.systemDischarge || 100,
           notes: dayNotes || ''
         });
         break;
@@ -231,13 +231,6 @@ export default function FarmDetailsPage() {
     return record;
   };
 
-
-
-
-  const handleBack = () => {
-    router.push('/farms');
-  };
-
   const handleEditRecord = (record: any, recordType: string) => {
     setEditingRecord(record);
     setShowEditModal(true);
@@ -252,15 +245,13 @@ export default function FarmDetailsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Farm Header */}
-      <FarmHeader 
-        farm={dashboardData?.farm || null}
+      {dashboardData?.farm && <FarmHeader 
+        farm={dashboardData?.farm}
         loading={loading}
-        onBack={handleBack}
-      />
+      />}
 
       {/* Farm Overview */}
-      <FarmOverview 
-        dashboardData={dashboardData}
+      <FarmOverview
         loading={loading}
       />
 
@@ -273,7 +264,7 @@ export default function FarmDetailsPage() {
 
       {/* Phase 3A: AI-Powered Features */}
       {(dashboardData?.farm || process.env.NEXT_PUBLIC_BYPASS_AUTH) && (
-        <div className="px-4 mb-6">
+        <div className="px-4 mb-6 space-y-4">
           {/* Comprehensive AI Insights */}
           <AIInsightsCarousel 
             farmId={parseInt(farmId)} 
@@ -338,9 +329,6 @@ export default function FarmDetailsPage() {
           recordType={editingRecord.type as 'irrigation' | 'spray' | 'harvest' | 'fertigation' | 'expense' | 'soil_test'}
         />
       )}
-
-
-
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { SEOSchema } from "@/components/SEOSchema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,8 @@ import {
   Award,
   Zap
 } from "lucide-react";
-import { CloudDataService, Farm, IrrigationRecord, SprayRecord, HarvestRecord } from "@/lib/cloud-data-service";
+import { CloudDataService, IrrigationRecord, SprayRecord, HarvestRecord } from "@/lib/cloud-data-service";
+import { Farm } from '@/types/types';
 import { AnalyticsService, AdvancedAnalytics } from "@/lib/analytics-service";
 
 interface AnalyticsData {
@@ -50,11 +51,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'30d' | '90d' | '1y'>('30d');
 
-  useEffect(() => {
-    loadData();
-  }, [timeRange]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const farmList = await CloudDataService.getAllFarms();
@@ -117,7 +114,10 @@ export default function AnalyticsPage() {
             });
           }
         } catch (farmError) {
-          console.error(`Error loading data for farm ${farm.name}:`, farmError);
+          if (process.env.NODE_ENV === 'development') {
+            // eslint-disable-next-line no-console
+            console.error(`Error loading data for farm ${farm.name}:`, farmError);
+          }
         }
       }
 
@@ -145,7 +145,7 @@ export default function AnalyticsPage() {
       // Group sprays by pest/disease type
       const spraysByType = new Map<string, number>();
       allSprays.forEach(record => {
-        const type = record.pestDisease;
+        const type = record.pest_disease;
         spraysByType.set(type, (spraysByType.get(type) || 0) + 1);
       });
 
@@ -162,7 +162,7 @@ export default function AnalyticsPage() {
           type: 'irrigation' as const,
           farmName: (record as any).farmName,
           date: record.date,
-          details: `${record.duration}h irrigation - ${record.growthStage}`
+          details: `${record.duration}h irrigation - ${record.growth_stage}`
         });
       });
 
@@ -171,7 +171,7 @@ export default function AnalyticsPage() {
           type: 'spray' as const,
           farmName: (record as any).farmName,
           date: record.date,
-          details: `${record.pestDisease} treatment with ${record.chemical}`
+          details: `${record.pest_disease} treatment with ${record.chemical}`
         });
       });
 
@@ -196,15 +196,25 @@ export default function AnalyticsPage() {
         const advanced = await AnalyticsService.generateAdvancedAnalytics(farmList);
         setAdvancedAnalytics(advanced);
       } catch (error) {
-        console.error("Error generating advanced analytics:", error);
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.error("Error generating advanced analytics:", error);
+        }
       }
     } catch (error) {
-      console.error("Error loading analytics:", error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error("Error loading analytics:", error);
+      }
       setAnalytics(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedFarm, timeRange]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -382,7 +392,7 @@ export default function AnalyticsPage() {
                     {formatCurrency(advancedAnalytics.costAnalysis.totalCosts)}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {formatCurrency(advancedAnalytics.costAnalysis.costPerHectare)}/acre
+                    {formatCurrency(advancedAnalytics.costAnalysis.costPerAcre)}/acre
                   </p>
                 </CardContent>
               </Card>

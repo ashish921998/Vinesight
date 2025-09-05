@@ -1,9 +1,8 @@
 "use client";
 
-import { ArrowLeft, MapPin, Calendar, Grape } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MapPin, Calendar, Grape } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { type Farm } from "@/lib/supabase";
+import { type Farm } from "@/types/types";
 
 interface FarmHeaderProps {
   farm: Farm | null;
@@ -11,7 +10,7 @@ interface FarmHeaderProps {
   onBack: () => void;
 }
 
-export function FarmHeader({ farm, loading, onBack }: FarmHeaderProps) {
+export function FarmHeader({ farm, loading }: FarmHeaderProps) {
   if (loading) {
     return (
       <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-300 z-10 shadow-sm">
@@ -32,7 +31,7 @@ export function FarmHeader({ farm, loading, onBack }: FarmHeaderProps) {
 
   return (
     <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-300 z-10 shadow-sm">
-      <div className="p-4">
+      <div className="p-6">
         {/* Farm Header */}
         <div className="flex items-start gap-4">
           <div className="p-3 bg-green-100 rounded-2xl">
@@ -50,13 +49,13 @@ export function FarmHeader({ farm, loading, onBack }: FarmHeaderProps) {
               
               <div className="flex items-center gap-1 text-sm text-gray-600">
                 <Calendar className="h-4 w-4" />
-                <span>Since {new Date(farm.planting_date).getFullYear()}</span>
+                <span>Since {new Date(farm.plantingDate).getFullYear()}</span>
               </div>
             </div>
             
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary" className="bg-green-100 text-green-800">
-                {farm.grape_variety || 'Grape Vineyard'}
+                {farm.grapeVariety || 'Grape Vineyard'}
               </Badge>
               
               <Badge variant="outline" className="border-gray-300 text-gray-700">

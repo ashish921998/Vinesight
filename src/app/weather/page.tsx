@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { WeatherDashboard } from "@/components/weather/WeatherDashboard";
 import { SupabaseService } from "@/lib/supabase-service";
-import type { Farm } from "@/lib/supabase";
+import type { Farm } from "@/types/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -202,7 +202,7 @@ export default function WeatherPage() {
           farmLocation={{
             latitude: selectedFarm.latitude || 19.0825, // Use farm coordinates or default to Nashik
             longitude: selectedFarm.longitude || 73.1963,
-            name: selectedFarm.location_name || selectedFarm.region
+            name: selectedFarm.locationName || selectedFarm.region
           }}
           growthStage={selectedGrowthStage}
           soilType={selectedSoilType}

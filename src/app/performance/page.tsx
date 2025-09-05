@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,8 @@ import {
   Leaf,
   Sun
 } from 'lucide-react';
-import { CloudDataService, Farm } from '@/lib/cloud-data-service';
+import { CloudDataService } from '@/lib/cloud-data-service';
+import { Farm } from '@/types/types';
 
 interface FarmEfficiencyMetric {
   name: string;
@@ -40,17 +41,7 @@ export default function FarmEfficiencyPage() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-  useEffect(() => {
-    loadFarms();
-  }, []);
-
-  useEffect(() => {
-    if (selectedFarm) {
-      loadFarmEfficiencyMetrics();
-    }
-  }, [selectedFarm]);
-
-  const loadFarms = async () => {
+  const loadFarms = useCallback(async () => {
     try {
       const farmList = await CloudDataService.getAllFarms();
       setFarms(farmList);
@@ -58,9 +49,23 @@ export default function FarmEfficiencyPage() {
         setSelectedFarm(farmList[0]);
       }
     } catch (error) {
-      console.error('Error loading farms:', error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Error loading farms:', error);
+      }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadFarms();
+  }, [loadFarms]);
+
+  useEffect(() => {
+    if (selectedFarm) {
+      loadFarmEfficiencyMetrics();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFarm]); // loadFarmEfficiencyMetrics is not in deps to avoid infinite loop
 
   const loadFarmEfficiencyMetrics = async () => {
     if (!selectedFarm) return;
@@ -75,7 +80,7 @@ export default function FarmEfficiencyPage() {
       
       // Calculate efficiency metrics based on real data
       const totalHarvest = harvestRecords.reduce((sum, record) => sum + record.quantity, 0);
-      const totalIrrigation = irrigationRecords.reduce((sum, record) => sum + (record.duration * record.systemDischarge), 0);
+      const totalIrrigation = irrigationRecords.reduce((sum, record) => sum + (record.duration * record.system_discharge), 0);
       const yieldPerHectare = totalHarvest / selectedFarm.area;
       const waterEfficiency = totalHarvest / (totalIrrigation || 1); // kg per liter
       const avgPrice = harvestRecords.reduce((sum, record) => sum + (record.price || 0), 0) / (harvestRecords.length || 1);
@@ -151,7 +156,10 @@ export default function FarmEfficiencyPage() {
       
       setMetrics(efficiencyMetrics);
     } catch (error) {
-      console.error('Error loading farm efficiency metrics:', error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Error loading farm efficiency metrics:', error);
+      }
       // Provide default metrics if data loading fails
       const defaultMetrics: FarmEfficiencyMetric[] = [
         { name: 'Yield per Hectare', value: 2500, unit: 'kg/ha', status: 'good', benchmark: 3000, category: 'yield' },

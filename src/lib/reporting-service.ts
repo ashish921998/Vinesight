@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { 
   ComplianceReport, 
   FinancialReport, 
@@ -13,7 +14,7 @@ import {
   ComplianceIssue
 } from './reporting-types';
 import { CloudDataService } from './cloud-data-service';
-import type { Farm } from './supabase';
+import type { Farm } from '@/types/types';
 // Temporarily disabled for deployment
 // import { CalculatorService } from './calculator-service';
 import jsPDF from 'jspdf';

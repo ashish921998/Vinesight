@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Montserrat, Merriweather, Source_Code_Pro } from "next/font/google";
 import "./globals.css";
-import Navigation from "@/components/navigation";
 import { I18nProvider } from "@/components/providers/I18nProvider";
 import { AsyncErrorBoundary } from "@/components/ErrorBoundary";
 import { Suspense } from "react";
-import { BottomNavigation } from "@/components/mobile/BottomNavigation";
 import { GlobalAuthErrorHandler } from "@/components/auth/GlobalAuthErrorHandler";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { GoogleAnalytics, SearchConsoleVerification } from "@/components/GoogleAnalytics";
+import { LayoutContent } from "@/components/layout/LayoutContent";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -159,17 +158,7 @@ export default function RootLayout({
           }>
               <GlobalAuthErrorHandler />
               <I18nProvider>
-                <div className="min-h-screen bg-background pb-16 lg:pb-0">
-                  <Navigation />
-                  <main className="lg:pl-72 pt-0">
-                    {/* <div className="px-3 py-4 sm:px-4 sm:py-6 lg:px-8 lg:py-6"> */}
-                    <div>
-                      {children}
-                    </div>
-                  </main>
-                  <BottomNavigation />
-                  <Toaster />
-                </div>
+                <LayoutContent>{children}</LayoutContent>
               </I18nProvider>
           </Suspense>
         </AsyncErrorBoundary>

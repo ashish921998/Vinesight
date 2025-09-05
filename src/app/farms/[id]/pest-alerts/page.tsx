@@ -1,12 +1,12 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { PestAlertDashboard } from "@/components/ai/PestAlertDashboard";
 import { SupabaseService } from "@/lib/supabase-service";
-import { type Farm } from "@/lib/supabase";
+import { type Farm } from "@/types/types";
 
 export default function PestAlertsPage() {
   const params = useParams();
@@ -15,20 +15,23 @@ export default function PestAlertsPage() {
   const [farm, setFarm] = useState<Farm | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadFarmData();
-  }, [farmId]);
-
-  const loadFarmData = async () => {
+  const loadFarmData = useCallback(async () => {
     try {
       const data = await SupabaseService.getDashboardSummary(parseInt(farmId));
       setFarm(data.farm);
     } catch (error) {
-      console.error("Error loading farm data:", error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error("Error loading farm data:", error);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [farmId]);
+
+  useEffect(() => {
+    loadFarmData();
+  }, [loadFarmData]);
 
   const handleBack = () => {
     router.push(`/farms/${farmId}`);

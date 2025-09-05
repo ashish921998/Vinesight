@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,9 @@ import {
   Sparkles,
   Target
 } from "lucide-react";
-import { CloudDataService, Farm, TaskReminder } from "@/lib/cloud-data-service";
+import { CloudDataService, TaskReminder } from "@/lib/cloud-data-service";
+import type { Farm } from "@/types/types";
+import { SupabaseService } from "@/lib/supabase-service";
 import { TaskTemplateSelector } from "@/components/reminders/TaskTemplateSelector";
 import { NotificationSettings } from "@/components/reminders/NotificationSettings";
 import { NotificationService } from "@/lib/notification-service";
@@ -46,19 +48,58 @@ export default function RemindersPage() {
     priority: "medium" as const
   });
 
+  const loadFarms = useCallback(async () => {
+    try {
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('Reminders: Loading farms from CloudDataService...');
+      }
+      const farmList = await CloudDataService.getAllFarms();
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('Reminders: Loaded farms:', farmList.length, farmList);
+      }
+      setFarms(farmList);
+      if (farmList.length > 0 && !selectedFarm) {
+        setSelectedFarm(farmList[0]);
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error("Error loading farms:", error);
+      }
+    } finally {
+      setFarmsLoading(false);
+    }
+  }, [selectedFarm]);
+
+  const loadTasks = useCallback(async () => {
+    if (!selectedFarm) return;
+    
+    try {
+      const taskList = await SupabaseService.getTaskReminders(selectedFarm.id!);
+      setTasks(taskList);
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error("Error loading tasks:", error);
+      }
+    }
+  }, [selectedFarm]);
+
   useEffect(() => {
     loadFarms();
     // Initialize notification service
     if (typeof window !== 'undefined') {
       notificationServiceRef.current = NotificationService.getInstance();
     }
-  }, []);
+  }, [loadFarms]);
 
   useEffect(() => {
     if (selectedFarm) {
       loadTasks();
     }
-  }, [selectedFarm]);
+  }, [selectedFarm, loadTasks]);
 
   useEffect(() => {
     // Set up notifications when tasks change
@@ -69,32 +110,7 @@ export default function RemindersPage() {
     }
   }, [tasks]);
 
-  const loadFarms = async () => {
-    try {
-      console.log('Reminders: Loading farms from CloudDataService...');
-      const farmList = await CloudDataService.getAllFarms();
-      console.log('Reminders: Loaded farms:', farmList.length, farmList);
-      setFarms(farmList);
-      if (farmList.length > 0 && !selectedFarm) {
-        setSelectedFarm(farmList[0]);
-      }
-    } catch (error) {
-      console.error("Error loading farms:", error);
-    } finally {
-      setFarmsLoading(false);
-    }
-  };
-
-  const loadTasks = async () => {
-    if (!selectedFarm) return;
-    
-    try {
-      const taskList = await CloudDataService.getTaskReminders(selectedFarm.id!);
-      setTasks(taskList);
-    } catch (error) {
-      console.error("Error loading tasks:", error);
-    }
-  };
+  // Functions moved to useCallback above
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,36 +119,46 @@ export default function RemindersPage() {
     try {
       if (editingTask) {
         // For editing, we'd need an update method in CloudDataService
-        console.log("Editing not implemented yet");
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.log("Editing not implemented yet");
+        }
       } else {
-        await CloudDataService.addTaskReminder({
+        await SupabaseService.addTaskReminder({
           farmId: selectedFarm.id!,
           title: formData.title,
           description: formData.description,
           dueDate: formData.dueDate,
           type: formData.type,
           priority: formData.priority,
-          completed: false
+          completed: false,
+          completedAt: null
         });
       }
       
       resetForm();
       await loadTasks();
     } catch (error) {
-      console.error("Error saving task:", error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error("Error saving task:", error);
+      }
     }
   };
 
   const handleComplete = async (taskId: number) => {
     try {
-      await CloudDataService.completeTask(taskId);
+      await SupabaseService.completeTask(taskId);
       const completedTask = tasks.find(t => t.id === taskId);
       if (completedTask && notificationServiceRef.current) {
         notificationServiceRef.current.sendTaskCompletionCelebration(completedTask);
       }
       await loadTasks();
     } catch (error) {
-      console.error("Error completing task:", error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error("Error completing task:", error);
+      }
     }
   };
 
@@ -140,14 +166,15 @@ export default function RemindersPage() {
     if (!selectedFarm) return;
 
     try {
-      await CloudDataService.addTaskReminder({
+      await SupabaseService.addTaskReminder({
         farmId: selectedFarm.id!,
         title: templateData.title,
         description: templateData.description,
         dueDate: templateData.dueDate,
         type: templateData.type,
         priority: templateData.priority,
-        completed: false
+        completed: false,
+        completedAt: null
       });
       
       setShowTemplateSelector(false);
@@ -160,7 +187,10 @@ export default function RemindersPage() {
         });
       }
     } catch (error) {
-      console.error("Error saving task from template:", error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error("Error saving task from template:", error);
+      }
     }
   };
 
@@ -201,7 +231,8 @@ export default function RemindersPage() {
     });
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string | null) => {
+    if (!priority) return "border-gray-300 text-gray-500";
     switch (priority) {
       case 'high': return 'text-red-600 bg-red-50 border-red-200';
       case 'medium': return 'text-orange-600 bg-orange-50 border-gray-200';

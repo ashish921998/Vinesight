@@ -1,5 +1,5 @@
 import { CloudDataService } from './cloud-data-service';
-import type { Farm } from './supabase';
+import type { Farm } from '@/types/types';
 
 export interface CostAnalysis {
   totalCosts: number;
