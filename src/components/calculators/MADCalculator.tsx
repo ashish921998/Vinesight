@@ -322,7 +322,7 @@ export function MADCalculatorComponent() {
             {plantsPerAcre && (
               <div className="bg-green-200 p-4 rounded-lg">
                 <p className="text-sm font-medium text-green-800 mb-2">
-                  Plants per Hectare (P/H): <span className="text-lg">{plantsPerAcre.toFixed(2)}</span>
+                  Plants per Acre (P/A): <span className="text-lg">{plantsPerAcre.toFixed(2)}</span>
                 </p>
                 <p className="text-xs text-green-700">
                   Formula: 10000 ÷ (DBL ({madResult?.dbl}) × DBP ({dbp})) = {plantsPerAcre.toFixed(2)}

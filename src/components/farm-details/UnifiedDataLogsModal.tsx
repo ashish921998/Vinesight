@@ -70,7 +70,7 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
     borderColor: 'border-blue-200',
     fields: [
       { name: 'duration', type: 'number', label: 'Duration (hours)', required: true, min: 0, step: 0.1 },
-      { name: 'area', type: 'number', label: 'Area (hectares)', required: false, min: 0, step: 0.01 }
+      { name: 'area', type: 'number', label: 'Area (Acres)', required: false, min: 0, step: 0.01 }
     ]
   },
   spray: {
@@ -135,10 +135,10 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
 const logTypeLabels: Record<LogType, string> = {
   irrigation: 'Irrigation',
   spray: 'Spray Record',
+  fertigation: 'Fertigation',
+  soil_test: 'Soil Test',
   harvest: 'Harvest',
   expense: 'Expense',
-  fertigation: 'Fertigation',
-  soil_test: 'Soil Test'
 };
 
 export function UnifiedDataLogsModal({ 

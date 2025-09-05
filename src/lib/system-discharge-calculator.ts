@@ -53,7 +53,7 @@ export interface SystemResults {
   economics: {
     initialCost: number; // INR
     annualOperatingCost: number; // INR
-    costPerHectare: number; // INR/ha
+    costPerAcre: number; // INR/ha
     paybackPeriod: number; // years
   };
   recommendations: {
@@ -253,7 +253,7 @@ export class SystemDischargeCalculator {
     designParams: any,
     irrigationMethod: string,
     farmArea: number
-  ): { initialCost: number; annualOperatingCost: number; costPerHectare: number; paybackPeriod: number } {
+  ): { initialCost: number; annualOperatingCost: number; costPerAcre: number; paybackPeriod: number } {
     const costs = COMPONENT_COSTS[irrigationMethod as keyof typeof COMPONENT_COSTS];
     
     let initialCost = 0;
@@ -297,7 +297,7 @@ export class SystemDischargeCalculator {
     const electricityCost = designParams.pumpCapacity * 0.746 * 8 * 180 * 6; // kW × hours × days × rate
     const annualOperatingCost = maintenanceCost + electricityCost;
 
-    const costPerHectare = initialCost / farmArea;
+    const costPerAcre = initialCost / farmArea;
     
     // Simple payback calculation (assume 20% water savings worth ₹50,000/ha/year)
     const annualSavings = farmArea * 50000 * 0.2;
@@ -306,7 +306,7 @@ export class SystemDischargeCalculator {
     return {
       initialCost: Math.round(initialCost),
       annualOperatingCost: Math.round(annualOperatingCost),
-      costPerHectare: Math.round(costPerHectare),
+      costPerAcre: Math.round(costPerAcre),
       paybackPeriod: Math.round(paybackPeriod * 10) / 10
     };
   }

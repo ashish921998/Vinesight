@@ -35,10 +35,12 @@ A progressive web and mobile app designed to digitize grape farming operations f
 ### **Phase 1: Core Record-Keeping & Calculators** ✅ **COMPLETED**
 
 #### **4.1 Farm & Operations Management**
+
 - Add/edit/delete multiple Farms with:
   - Name, region, area (ha), grape variety, planting date
 
 #### **4.2 Scientific Calculators & Data Entry**
+
 - **Irrigation/Water Use Module:**
   - Evapotranspiration (ETc) calculator: `ETc = ETo * Kc`
   - **MAD (Maximum Allowable Deficit) Calculator:**
@@ -50,7 +52,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
     - Formula: `MAD Result * Refill Span`
   - **System Discharge Calculators:**
     - **System Discharge 1:**
-      - Plants per Hectare (P/H): `(DBL * DBP) / 1000`
+      - Plants per Acre (P/A): `(DBL * DBP) / 1000`
       - Final: `(P/H * Drippers per plant * Discharge per hour) / 10000`
     - **System Discharge 2:**
       - Formula: `((100 / DBL) * (100/ DBD) * Discharge per hour) / 10000`
@@ -67,6 +69,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
   - Record/guide on ascorbic acid methods (vitamin C), shaded drying, storage, etc.
 
 #### **4.3 Daily & Event-Based Journal**
+
 - Record daily/periodic operations:
   - Spray management (date, dose, pest/disease, weather, operator, area/field, etc.)
   - Irrigation events (date, duration, area, stage, moisture status)
@@ -80,10 +83,12 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - Task tracking: due reminders, notification list (to-do), weather alerts, irrigation trigger alerts, empty tank/event notification, etc.
 
 #### **4.4 Data & Export**
+
 - Cloud-based data storage with real-time sync
 - Export journals/reports as CSV or PDF
 
 #### **4.5 Multi-Language**
+
 - Full multilingual support with English, Hindi, Marathi UI toggle
 
 ---
@@ -91,6 +96,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 ### **Phase 2: AI Integration & Smart Farming** ✅ **COMPLETED**
 
 #### **4.6 AI-Powered Disease Detection**
+
 - **Computer Vision Analysis:** TensorFlow.js-powered image recognition for grape disease identification
 - **Mobile Camera Integration:** Real-time plant health assessment using device camera
 - **Disease Classification:** Automated detection of common grape diseases (downy mildew, powdery mildew, black rot, etc.)
@@ -98,6 +104,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **Multi-language Support:** Disease information and recommendations in English, Hindi, Marathi
 
 #### **4.7 AI Chatbot Assistant**
+
 - **Conversational AI:** OpenAI-powered farming assistant for instant guidance
 - **Multi-language Interface:** Natural language processing in English, Hindi, Marathi
 - **Context-Aware Responses:** Personalized recommendations based on farm data and current conditions
@@ -105,6 +112,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **Farming Knowledge Base:** Specialized grape farming expertise with local Indian practices
 
 #### **4.8 AI Analytics Dashboard**
+
 - **Farm Health Scoring:** AI-calculated overall farm performance metrics
 - **Predictive Analytics:** Yield predictions and optimization recommendations
 - **Trend Analysis:** Historical data patterns and insights
@@ -112,24 +120,28 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **Resource Optimization:** AI-driven irrigation and fertilization suggestions
 
 #### **4.9 Market Intelligence System**
+
 - **Price Prediction:** ML-based grape price forecasting
 - **Market Analysis:** Supply-demand trends and optimal selling timing
 - **Quality Assessment:** Grade prediction and market positioning advice
 - **Supply Chain Optimization:** Logistics and distribution recommendations
 
 #### **4.10 IoT Sensor Integration**
+
 - **Real-time Monitoring:** Soil moisture, temperature, humidity sensors
 - **Automated Alerts:** Smart notifications for irrigation, pest control
 - **Environmental Data:** Weather station integration and microclimate monitoring
 - **Precision Agriculture:** Data-driven decision making for optimal resource use
 
 #### **4.11 Voice Interface & Accessibility**
+
 - **Voice Commands:** Hands-free navigation and data entry
 - **Speech Recognition:** Multi-language voice input processing
 - **Audio Feedback:** Text-to-speech for illiterate or visually impaired users
 - **Voice-to-Action:** Direct command execution ("Record irrigation", "Check weather")
 
 #### **4.12 Advanced Image Processing**
+
 - **Plant Area Detection:** Automatic cropping and focus on relevant plant material
 - **Color Analysis:** Health indicators based on leaf coloration
 - **Growth Monitoring:** Visual tracking of plant development over time
@@ -138,6 +150,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 ### **Phase 3: Advanced AI Intelligence** 🧠 **IN DEVELOPMENT**
 
 #### **4.13 Personalized Crop Advisory (AI Agronomist)**
+
 - **Smart Recommendations:** AI analyzes farm history, weather, soil conditions, and growth stage
 - **Contextual Memory:** Remembers past decisions, outcomes, and farmer preferences
 - **Adaptive Learning:** Improves recommendations based on farm-specific results
@@ -146,6 +159,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **Local Adaptation:** Region-specific advice using community data and local conditions
 
 #### **4.14 Smart Task Generator**
+
 - **Predictive Scheduling:** AI generates optimal task timing based on multiple factors
 - **Weather Integration:** Adjusts recommendations based on 7-day weather forecasts
 - **Farm Context Awareness:** Considers current growth stage, recent activities, and resource availability
@@ -154,6 +168,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **Habit Formation:** "Just tick ✅ Done" workflow to reduce farmer decision fatigue
 
 #### **4.15 AI-Powered Pest & Disease Alerts**
+
 - **Predictive Modeling:** Combines weather data, historical patterns, and regional outbreak data
 - **Risk Scoring:** Daily pest/disease probability scores with confidence levels
 - **Early Warning System:** Push notifications 24-72 hours before optimal treatment windows
@@ -162,6 +177,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **Cost-Benefit Analysis:** ROI calculations for preventive vs reactive treatments
 
 #### **4.16 Expense → Profitability Insights**
+
 - **Intelligent Analysis:** AI identifies cost optimization opportunities across all farm operations
 - **ROI Tracking:** Links expenses to yield outcomes and profitability metrics
 - **Comparative Benchmarking:** Anonymous comparison with similar farms in region
@@ -170,6 +186,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **Investment Recommendations:** Suggests equipment/infrastructure upgrades with payback analysis
 
 #### **4.17 Enhanced AI Chat Assistant**
+
 - **Long-term Memory:** Remembers all conversations, decisions, and farm context across sessions
 - **Proactive Insights:** Offers unsolicited advice based on patterns and opportunities
 - **Multi-modal Interaction:** Voice, text, and image inputs with context understanding
@@ -178,6 +195,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **Expert Knowledge Integration:** Combines AI with access to agricultural research and local expertise
 
 #### **4.18 Market Intelligence**
+
 - **Price Prediction:** ML-based grape price forecasting using historical and market data
 - **Optimal Selling Windows:** AI recommends best times to sell based on quality and market conditions
 - **Quality Premium Analysis:** Links farm practices to grade premiums and buyer preferences
@@ -186,6 +204,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **Contract Farming Insights:** AI evaluates contract terms and recommends negotiation strategies
 
 #### **4.19 Community Learning Platform**
+
 - **Knowledge Extraction:** AI identifies successful practices from top-performing farms
 - **Anonymous Insights:** Share lessons learned without revealing individual farm data
 - **Collaborative Problem Solving:** Connect farmers facing similar challenges
@@ -194,6 +213,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **Mentor-Apprentice Matching:** AI connects experienced farmers with newcomers
 
 ### **Phase 4+ (Future Extensions)**
+
 - Blockchain traceability and certification
 - Drone integration for aerial monitoring
 - Advanced ML models for precision agriculture
@@ -207,6 +227,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 ## 5. User Stories
 
 ### **Core Features**
+
 - _As a grape farmer, I want to enter farm and crop data once, so I can re-use it for all calculations and reports._
 - _As a farmer, I want simple calculators (ETc, fertilization, LAI) with guidance to avoid errors._
 - _As a supervisor, I want to enter spray and irrigation records for compliance and review._
@@ -214,6 +235,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - _As a Marathi-speaking user, I want the entire interface and help in my language._
 
 ### **AI Features** ✅
+
 - _As a farmer, I want to take a photo of my grape plants and get instant disease diagnosis and treatment recommendations._
 - _As a non-English speaking farmer, I want to ask questions about farming in Hindi/Marathi and get spoken responses._
 - _As a busy farmer, I want AI to predict my harvest yield and suggest optimal selling times based on market data._
@@ -222,6 +244,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - _As a progressive farmer, I want real-time sensor data and AI alerts to prevent crop losses._
 
 ### **Phase 3: Advanced AI Features** 🧠
+
 - _As a grape farmer, I want AI to learn from my past decisions and outcomes to give me increasingly personalized recommendations._
 - _As a busy farmer, I want AI to generate my daily and weekly task list automatically based on weather, growth stage, and priorities._
 - _As a risk-averse farmer, I want AI to warn me 2-3 days before pest/disease outbreaks so I can take preventive action._
@@ -235,6 +258,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 ## 6. Success Metrics
 
 ### **Phase 1: Core Features** ✅
+
 - [x] User can add/edit/delete a farm and access calculators for that farm
 - [x] All key calculators implement formulas exactly as per notes
 - [x] Farmer can enter, view, and export all operations (spray, irrigation, fertigation, harvest)
@@ -243,6 +267,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - [x] Responsive and works on all mobiles/tablets
 
 ### **Phase 2: AI Features** ✅
+
 - [x] Users can take photos of grape plants and receive instant disease diagnosis
 - [x] AI provides treatment recommendations in local languages (English, Hindi, Marathi)
 - [x] Conversational AI assistant responds to farming questions with context-aware answers
@@ -255,6 +280,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - [x] Voice commands allow hands-free operation for accessibility
 
 ### **Phase 3: Advanced AI Features** 🧠 **IN DEVELOPMENT**
+
 - [ ] AI learns from individual farmer decisions and outcomes for personalized recommendations
 - [ ] Smart task generator creates optimal daily/weekly schedules based on multiple factors
 - [ ] Pest/disease alert system provides 24-72 hour advance warnings with treatment recommendations
@@ -271,6 +297,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 ## 7. Technical Architecture
 
 ### **Core Architecture**
+
 - **Frontend:** PWA/mobile friendly, cloud-connected, clear UI (cards, tables, reminders)
 - **Backend:** Cloud-based with real-time sync and analytics
 - **Storage:** Cloud-first with Supabase integration
@@ -278,6 +305,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **i18n:** Language files, easy toggling, right font support
 
 ### **AI Infrastructure** ✅ **IMPLEMENTED**
+
 - **AI Framework:** TensorFlow.js for client-side machine learning
 - **Computer Vision:** @mediapipe/tasks-vision for image processing
 - **Conversational AI:** OpenAI API for chatbot and natural language processing
@@ -292,6 +320,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 ## 8. Key Algorithms & Formulas
 
 ### **Scientific Calculations**
+
 - **Evapotranspiration:** `ETc = ETo * Kc`
 - **System Discharge:** see `"System Discharge formula No2"` in notes
 - **Water use per vine:** `ETc (mm/day) * area (m^2) = liters/day`
@@ -304,8 +333,9 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **Nutrient requirement and removal equations:** per crop guidelines in notes
 
 ### **AI Algorithms** ✅ **IMPLEMENTED**
+
 - **Disease Detection:** Convolutional Neural Network (CNN) for image classification
-- **Plant Health Scoring:** 
+- **Plant Health Scoring:**
   - `Green Health Index = (green_pixels / total_pixels) * 100`
   - `Browning Index = (brown_pixels / total_pixels) * 100`
   - `Overall Health = f(green_index, browning_index, yellowness_index)`
@@ -315,6 +345,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **Risk Assessment:** Weighted scoring of disease probability, weather risks, and market conditions
 
 ### **Phase 3: Advanced AI Algorithms** 🧠 **IN DEVELOPMENT**
+
 - **Personalized Advisory Algorithm:**
   - `Recommendation Score = w1*Historical_Success + w2*Weather_Fit + w3*Growth_Stage_Alignment + w4*Resource_Efficiency`
   - `Farmer_Preference_Weight = learning_rate * (outcome_success - predicted_success)`
