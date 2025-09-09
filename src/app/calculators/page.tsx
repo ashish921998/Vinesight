@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Calculator, 
@@ -70,15 +71,19 @@ const calculatorCategories = [
 ];
 
 export default function CalculatorsPage() {
+  // const pathname = usePathname();
   const [selectedCalculator, setSelectedCalculator] = useState<string | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
+  // Reset calculator selection when navigating back to main calculators page
+  // useEffect(() => {
+  //   if (pathname === '/calculators') {
+  //     setSelectedCalculator(null);
+  //     setExpandedCategory(null);
+  //   }
+  // }, [pathname]);
   const handleCalculatorSelect = (calculatorId: string) => {
     setSelectedCalculator(calculatorId);
-  };
-
-  const handleBackToCalculators = () => {
-    setSelectedCalculator(null);
   };
 
   // Get selected calculator details

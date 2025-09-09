@@ -368,9 +368,14 @@ export function BottomNavigation() {
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = mounted ? ((pathname === item.href) || (item.href !== '/' && pathname.startsWith(item.href))) : false;
-            
+
             const handleClick = () => {
-              router.push(item.href);
+              // Use window.location for reliable navigation that resets component state
+              if (typeof window !== 'undefined') {
+                window.location.href = item.href;
+              } else {
+                router.push(item.href);
+              }
             };
 
             return (
