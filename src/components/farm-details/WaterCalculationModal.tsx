@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Droplets, Calculator, Loader2 } from "lucide-react";
 import { SupabaseService } from "@/lib/supabase-service";
+import { NotificationService } from "@/lib/notification-service";
 import type { Farm } from "@/types/types";
 
 interface WaterCalculationModalProps {
@@ -24,7 +25,6 @@ export function WaterCalculationModal({
   onCalculationComplete 
 }: WaterCalculationModalProps) {
   const [formData, setFormData] = useState({
-    refillTank: "",
     cropCoefficient: "",
     evapotranspiration: ""
   });
@@ -32,23 +32,27 @@ export function WaterCalculationModal({
   const [calculationResult, setCalculationResult] = useState<number | null>(null);
 
   const handleCalculate = () => {
-    if (!formData.refillTank || !formData.cropCoefficient || !formData.evapotranspiration) {
+    if (!formData.cropCoefficient || !formData.evapotranspiration) {
       return;
     }
 
-    // Extract numeric value from brackets for refill tank (e.g., "0.2" from "Heavy Growth Period 50% (0.2)")
-    const refillTankValue = parseFloat(formData.refillTank);
     const cropCoefficientValue = parseFloat(formData.cropCoefficient);
     const evapotranspirationValue = parseFloat(formData.evapotranspiration);
+    const currentRemainingWater = farm.remainingWater || 0;
 
-    // Formula: total tank capacity * refill_tank / (crop_coefficient * evapotranspiration)
-    const totalTankCapacity = farm.totalTankCapacity || 0;
-    const result = (totalTankCapacity * refillTankValue) / (cropCoefficientValue * evapotranspirationValue);
+    // Formula: current remaining water - (crop_coefficient * evapotranspiration)
+    const result = currentRemainingWater - (cropCoefficientValue * evapotranspirationValue);
     setCalculationResult(result);
   };
 
   const handleSave = async () => {
-    if (calculationResult === null || !farm.id) return;
+    if (calculationResult === null) return;
+
+    // Ensure farm.id exists and is valid
+    if (!farm.id || typeof farm.id !== 'number') {
+      console.error("Invalid farm ID:", farm.id);
+      return;
+    }
 
     setIsCalculating(true);
     try {
@@ -57,6 +61,10 @@ export function WaterCalculationModal({
         remainingWater: calculationResult,
         waterCalculationUpdatedAt: new Date().toISOString()
       });
+
+      // Check water level and send notification if needed
+      const notificationService = NotificationService.getInstance();
+      notificationService.checkWaterLevelAndAlert(farm.name, calculationResult);
 
       onCalculationComplete();
       handleClose();
@@ -73,7 +81,6 @@ export function WaterCalculationModal({
 
   const handleClose = () => {
     setFormData({
-      refillTank: "",
       cropCoefficient: "",
       evapotranspiration: ""
     });
@@ -81,7 +88,7 @@ export function WaterCalculationModal({
     onClose();
   };
 
-  const isFormValid = formData.refillTank && formData.cropCoefficient && formData.evapotranspiration;
+  const isFormValid = formData.cropCoefficient && formData.evapotranspiration;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -94,35 +101,28 @@ export function WaterCalculationModal({
             Calculate Remaining Water
           </DialogTitle>
           <DialogDescription className="text-sm text-gray-600">
-            Enter current values to calculate remaining water in soil
-            {(!farm.totalTankCapacity || farm.totalTankCapacity === 0) && (
-              <div className="text-amber-600 text-xs mt-1 font-medium">
-                ⚠️ Total tank capacity not set. Please update farm settings for accurate calculations.
-              </div>
-            )}
+            Enter current values to calculate daily water reduction
           </DialogDescription>
+          {(!farm.remainingWater || farm.remainingWater === 0) && (
+            <div className="text-amber-600 text-xs mt-1 font-medium">
+              ⚠️ No current water level data. Please log irrigation first to establish baseline.
+            </div>
+          )}
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Refill Tank Select */}
-          <div>
-            <Label htmlFor="refillTank" className="text-sm font-medium text-gray-700">
-              Refill Tank (Growth Period) *
-            </Label>
-            <Select value={formData.refillTank} onValueChange={(value) => setFormData(prev => ({ ...prev, refillTank: value }))}>
-              <SelectTrigger className="mt-1 h-11">
-                <SelectValue placeholder="Select growth period" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0.2">Heavy Growth Period 50% (0.2)</SelectItem>
-                <SelectItem value="0.3">Growth Period 40% (0.3)</SelectItem>
-                <SelectItem value="0.4">Controlled Stress 30% (0.4)</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-gray-500 mt-1">
-              Select the growth period matching your current crop stage
-            </p>
-          </div>
+          {/* Current Water Level Display */}
+          {farm.remainingWater && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="text-center">
+                <div className="text-sm font-medium text-blue-700 mb-1">Current Water Level</div>
+                <div className="text-2xl font-bold text-blue-800">
+                  {farm.remainingWater.toFixed(1)} mm
+                </div>
+                <div className="text-xs text-blue-600">Available water in soil</div>
+              </div>
+            </div>
+          )}
 
           {/* Crop Coefficient */}
           <div>
@@ -198,7 +198,7 @@ export function WaterCalculationModal({
                 <div className="text-xs text-green-700 bg-green-100 p-2 rounded border">
                   <div className="font-medium mb-1">Calculation:</div>
                   <div>
-                    ({farm.totalTankCapacity || 0}L × {parseFloat(formData.refillTank).toFixed(1)}) ÷ ({formData.cropCoefficient} × {formData.evapotranspiration}) = {calculationResult.toFixed(1)} mm
+                    {(farm.remainingWater || 0).toFixed(1)} - {(parseFloat(formData.cropCoefficient) * parseFloat(formData.evapotranspiration)).toFixed(1)} = {calculationResult.toFixed(1)} mm
                   </div>
                 </div>
               </div>

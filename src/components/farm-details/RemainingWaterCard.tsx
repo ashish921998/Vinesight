@@ -23,8 +23,9 @@ export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCar
   };
 
   const getWaterStatus = (remainingWater: number) => {
-    if (remainingWater < 10) return { color: 'text-red-600 bg-red-50 border-red-200', text: 'Low' };
-    if (remainingWater < 25) return { color: 'text-orange-600 bg-orange-50 border-orange-200', text: 'Medium' };
+    if (remainingWater < 6) return { color: 'text-red-600 bg-red-50 border-red-200', text: 'Critical' };
+    if (remainingWater < 10) return { color: 'text-orange-600 bg-orange-50 border-orange-200', text: 'Low' };
+    if (remainingWater < 25) return { color: 'text-yellow-600 bg-yellow-50 border-yellow-200', text: 'Medium' };
     return { color: 'text-green-600 bg-green-50 border-green-200', text: 'Good' };
   };
 
@@ -67,7 +68,7 @@ export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCar
             {/* Main water level display */}
             <div className="text-center">
               <div className="text-3xl font-bold mb-1">
-                {farm.remainingWater!.toFixed(1)}
+                {farm.remainingWater!.toFixed(2)}
               </div>
               <div className="text-sm text-gray-600">
                 mm available water
@@ -76,13 +77,18 @@ export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCar
 
             {/* Status message */}
             <div className="text-center">
-              {farm.remainingWater! < 10 && (
-                <div className="text-sm text-red-600 font-medium">
-                  ⚠️ Low water level - consider irrigation
+              {farm.remainingWater! < 6 && (
+                <div className="text-sm text-red-600 font-medium bg-red-100 p-2 rounded border border-red-200">
+                  🚨 IRRIGATION NEEDED - Water level critical!
+                </div>
+              )}
+              {farm.remainingWater! >= 6 && farm.remainingWater! < 10 && (
+                <div className="text-sm text-orange-600 font-medium">
+                  ⚠️ Low water level - consider irrigation soon
                 </div>
               )}
               {farm.remainingWater! >= 10 && farm.remainingWater! < 25 && (
-                <div className="text-sm text-orange-600 font-medium">
+                <div className="text-sm text-yellow-600 font-medium">
                   💧 Medium water level - monitor closely
                 </div>
               )}

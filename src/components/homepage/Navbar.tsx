@@ -8,7 +8,6 @@ import {
   X, 
   Calculator,
   BookOpen,
-  Phone,
   ArrowRight
 } from "lucide-react";
 import { LoginButton } from "@/components/auth/LoginButton";
@@ -21,7 +20,6 @@ export function Navbar() {
   const navigation = [
     { name: 'Features', href: '#features' },
     { name: 'About', href: '#about' },
-    { name: 'Contact', href: '#contact', icon: Phone },
   ];
 
   const scrollToSection = (href: string) => {

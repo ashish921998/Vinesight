@@ -3,28 +3,15 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { 
   ArrowRight,
   CheckCircle,
   BarChart3,
-  Calculator,
   Brain,
   TrendingUp,
-  DollarSign,
-  Clock,
   Shield,
   Users,
-  Eye,
-  Star,
-  Mail,
-  Phone,
-  MapPin,
-  Facebook,
-  Twitter,
-  Linkedin,
-  Instagram,
   CloudSun
 } from "lucide-react";
 import { LoginButton } from "@/components/auth/LoginButton";
@@ -92,7 +79,7 @@ export default function Homepage() {
                 
                 <div className="flex flex-col sm:flex-row gap-4">
                   <LoginButton className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg font-semibold rounded-lg shadow-lg inline-flex items-center justify-center">
-                    Start Free Trial
+                    Start using Free
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </LoginButton>
                 </div>
@@ -101,7 +88,7 @@ export default function Homepage() {
               <div className="relative">
                 <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
                   <img 
-                    src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+                    src="https://images.unsplash.com/photo-1602330102257-04c00af50c1a?q=80&w=927&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="Modern smart farming with AI technology and data analytics"
                     className="w-full h-full object-cover"
                   />
@@ -124,7 +111,7 @@ export default function Homepage() {
               <div className="space-y-6">
                 <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100">
                   <img 
-                    src="https://images.unsplash.com/photo-1574943911736-39ceee6e4aa7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                    src="https://plus.unsplash.com/premium_photo-1661631096484-de84cb0e71c1?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="Real-Time Analytics"
                     className="w-full h-full object-cover"
                   />
@@ -172,7 +159,7 @@ export default function Homepage() {
               <div className="space-y-6">
                 <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100">
                   <img 
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7bf7042?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                    src="https://images.unsplash.com/photo-1744230673231-865d54a0aba4?q=80&w=3132&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="AI Recommendations"
                     className="w-full h-full object-cover"
                   />
@@ -341,11 +328,8 @@ export default function Homepage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <LoginButton className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-medium text-lg">
-                Start Free Trial
+                Start using for Free
               </LoginButton>
-              <Button variant="outline" className="px-8 py-3 border-2 text-lg">
-                Schedule Demo
-              </Button>
             </div>
           </div>
         </section>
@@ -429,7 +413,7 @@ export default function Homepage() {
               <div className="relative">
                 <div className="aspect-square rounded-2xl overflow-hidden shadow-2xl">
                   <img 
-                    src="https://images.unsplash.com/photo-1574943911736-39ceee6e4aa7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                    src="https://plus.unsplash.com/premium_photo-1661897775104-98e395fb49e1?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="Modern farming technology and data analytics"
                     className="w-full h-full object-cover"
                   />

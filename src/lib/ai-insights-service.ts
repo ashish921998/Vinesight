@@ -22,11 +22,46 @@ export interface AIInsight {
 }
 
 export class AIInsightsService {
+  // Simple in-memory cache for insights (5 minute TTL)
+  private static cache = new Map<string, { data: AIInsight[]; timestamp: number }>();
+  private static CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+  /**
+   * Get cached insights if available and not expired
+   */
+  private static getCachedInsights(farmId: number, userId: string): AIInsight[] | null {
+    const cacheKey = `${farmId}_${userId}`;
+    const cached = this.cache.get(cacheKey);
+    
+    if (cached && (Date.now() - cached.timestamp) < this.CACHE_TTL) {
+      return cached.data;
+    }
+    
+    return null;
+  }
+
+  /**
+   * Cache insights for future requests
+   */
+  private static setCachedInsights(farmId: number, userId: string, insights: AIInsight[]): void {
+    const cacheKey = `${farmId}_${userId}`;
+    this.cache.set(cacheKey, {
+      data: insights,
+      timestamp: Date.now()
+    });
+  }
+
   /**
    * Get all AI insights for a farm, sorted by priority and relevance
    */
   static async getInsightsForFarm(farmId: number, userId: string, limit = 10): Promise<AIInsight[]> {
     try {
+      // Check cache first
+      const cachedInsights = this.getCachedInsights(farmId, userId);
+      if (cachedInsights) {
+        return cachedInsights.slice(0, limit);
+      }
+
       const insights: AIInsight[] = [];
 
       // Get farm data for context
@@ -144,7 +179,7 @@ export class AIInsightsService {
       // Sort by priority and time relevance
       const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
       
-      return insights
+      const sortedInsights = insights
         .sort((a, b) => {
           // First by priority
           const aPriority = priorityOrder[a.priority];
@@ -159,6 +194,11 @@ export class AIInsightsService {
           return b.confidence - a.confidence;
         })
         .slice(0, limit);
+
+      // Cache the results
+      this.setCachedInsights(farmId, userId, sortedInsights);
+      
+      return sortedInsights;
 
     } catch (error) {
       console.error('Error getting AI insights:', error);
@@ -536,15 +576,31 @@ export class AIInsightsService {
    * Get insights by category for the detailed page
    */
   static async getInsightsByCategory(farmId: number, userId: string | null): Promise<Record<string, AIInsight[]>> {
+    // Check cache for category data
+    const cacheKey = `${farmId}_${userId}_categories`;
+    const cached = this.cache.get(cacheKey);
+    
+    if (cached && (Date.now() - cached.timestamp) < this.CACHE_TTL) {
+      return cached.data as any;
+    }
+
     const allInsights = await this.getInsightsForFarm(farmId, userId || 'anonymous', 50);
     
-    return allInsights.reduce((categories, insight) => {
-      if (!categories[insight.type]) {
-        categories[insight.type] = [];
+    const categories = allInsights.reduce((acc, insight) => {
+      if (!acc[insight.type]) {
+        acc[insight.type] = [];
       }
-      categories[insight.type].push(insight);
-      return categories;
+      acc[insight.type].push(insight);
+      return acc;
     }, {} as Record<string, AIInsight[]>);
+
+    // Cache the category results
+    this.cache.set(cacheKey, {
+      data: categories,
+      timestamp: Date.now()
+    });
+
+    return categories;
   }
 
   /**

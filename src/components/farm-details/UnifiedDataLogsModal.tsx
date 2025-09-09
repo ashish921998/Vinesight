@@ -69,8 +69,7 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
     bgColor: 'bg-blue-50',
     borderColor: 'border-blue-200',
     fields: [
-      { name: 'duration', type: 'number', label: 'Duration (hours)', required: true, min: 0, step: 0.1 },
-      { name: 'area', type: 'number', label: 'Area (Acres)', required: false, min: 0, step: 0.01 }
+      { name: 'duration', type: 'number', label: 'Duration (hours)', required: true, min: 0, step: 0.1 }
     ]
   },
   spray: {

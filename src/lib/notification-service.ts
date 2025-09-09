@@ -253,4 +253,72 @@ export class NotificationService {
       tag: 'seasonal-reminder'
     });
   }
+
+  // Water level alert notifications
+  sendWaterLevelAlert(farmName: string, waterLevel: number, alertType: 'critical' | 'low' | 'medium'): void {
+    if (!this.canSendNotifications()) return;
+
+    let title: string;
+    let body: string;
+    let icon: string;
+    let priority: boolean = false;
+
+    switch (alertType) {
+      case 'critical':
+        title = '🚨 URGENT: Critical Water Level';
+        body = `${farmName}: Only ${waterLevel.toFixed(1)}mm water remaining. IRRIGATION NEEDED IMMEDIATELY!`;
+        icon = '🚨';
+        priority = true;
+        break;
+      case 'low':
+        title = '⚠️ Low Water Level Alert';
+        body = `${farmName}: Water level is low (${waterLevel.toFixed(1)}mm). Consider irrigation soon.`;
+        icon = '⚠️';
+        break;
+      case 'medium':
+        title = '💧 Water Level Notice';
+        body = `${farmName}: Water level is moderate (${waterLevel.toFixed(1)}mm). Monitor closely.`;
+        icon = '💧';
+        break;
+    }
+
+    this.sendNotification(title, {
+      body,
+      tag: `water-level-${alertType}`,
+      requireInteraction: priority,
+      data: { 
+        type: 'water-alert', 
+        alertType, 
+        waterLevel, 
+        farmName,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  // Check water level and send appropriate alerts
+  checkWaterLevelAndAlert(farmName: string, waterLevel: number): void {
+    if (!this.canSendNotifications()) return;
+
+    // Critical: < 6mm
+    if (waterLevel < 6) {
+      this.sendWaterLevelAlert(farmName, waterLevel, 'critical');
+    }
+    // Low: 6-10mm
+    else if (waterLevel < 10) {
+      this.sendWaterLevelAlert(farmName, waterLevel, 'low');
+    }
+    // Medium: 10-25mm (only alert once per day to avoid spam)
+    else if (waterLevel < 25) {
+      const lastAlertKey = 'vinesight_last_medium_water_alert';
+      const lastAlert = localStorage.getItem(lastAlertKey);
+      const now = new Date();
+      const today = now.toDateString();
+      
+      if (lastAlert !== today) {
+        this.sendWaterLevelAlert(farmName, waterLevel, 'medium');
+        localStorage.setItem(lastAlertKey, today);
+      }
+    }
+  }
 }

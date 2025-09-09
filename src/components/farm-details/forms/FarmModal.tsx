@@ -322,11 +322,11 @@ export function FarmModal({
               <Input
                 id="systemDischarge"
                 type="number"
-                step="0.1"
+                step="0.0001"
                 min="0"
                 value={formData.systemDischarge}
                 onChange={(e) => handleInputChange("systemDischarge", e.target.value)}
-                placeholder="100.5"
+                placeholder="100.5000"
                 className="mt-1 h-11"
               />
               <p className="text-xs text-gray-500 mt-1">

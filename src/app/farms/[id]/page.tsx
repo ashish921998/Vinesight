@@ -23,7 +23,7 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { Farm } from "@/types/types";
 
 interface DashboardData {
-  farm: Farm;
+  farm: Farm | null;
   pendingTasksCount: number;
   recentIrrigations: any[];
   recentActivities: any[];
@@ -67,7 +67,7 @@ export default function FarmDetailsPage() {
       const data = await SupabaseService.getDashboardSummary(parseInt(farmId));
       setDashboardData({
         ...data,
-        farm: data.farm || null
+        farm: data.farm
       });
     } catch (error) {
       console.error("Error loading dashboard data:", error);
@@ -162,6 +162,29 @@ export default function FarmDetailsPage() {
           system_discharge: dashboardData?.farm?.systemDischarge || 100,
           notes: dayNotes || ''
         });
+        
+        // Update soil water level when irrigation is added
+        if (record && dashboardData?.farm) {
+          const duration = parseFloat(data.duration || '0');
+          const systemDischarge = dashboardData.farm.systemDischarge || 100;
+          
+          if (duration > 0 && systemDischarge > 0) {
+            // Calculate water added from this irrigation (in mm)
+            const waterAdded = duration * systemDischarge;
+            const currentWaterLevel = dashboardData.farm.remainingWater || 0;
+            const newWaterLevel = currentWaterLevel + waterAdded;
+            
+            await SupabaseService.updateFarm(parseInt(farmId), {
+              remainingWater: newWaterLevel,
+              waterCalculationUpdatedAt: new Date().toISOString()
+            });
+
+            // Check if new water level needs alert
+            const { NotificationService } = await import('@/lib/notification-service');
+            const notificationService = NotificationService.getInstance();
+            notificationService.checkWaterLevelAndAlert(dashboardData.farm.name, newWaterLevel);
+          }
+        }
         break;
       
       case 'spray':
@@ -273,8 +296,8 @@ export default function FarmDetailsPage() {
         </div>
       )}
 
-      {/* Water Level Card */}
-      {dashboardData?.farm && (
+      {/* Water Level Card - Only show if farm has irrigation records */}
+      {dashboardData?.farm && dashboardData.recordCounts.irrigation > 0 && (
         <div className="px-4 mb-4">
           <RemainingWaterCard 
             farm={dashboardData.farm} 

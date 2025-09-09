@@ -100,7 +100,7 @@ export interface SoilRecommendations {
     action: string;
     priority: 'urgent' | 'high' | 'medium' | 'low';
     timeframe: string;
-    expectedCost: number; // INR per hectare
+    expectedCost: number; // INR per acre
     expectedBenefit: string;
   }[];
   
@@ -726,7 +726,7 @@ export class SoilHealthAnalyzer {
   
   private static estimateCost(factor: string): number {
     const costs: Record<string, number> = {
-      'Soil Acidity': 12000, // Lime application cost per hectare
+      'Soil Acidity': 12000, // Lime application cost per acre
       'Soil Alkalinity': 8000, // Sulfur application cost
       'Soil Salinity': 15000, // Gypsum + drainage improvement
       'Low Organic Matter': 20000, // Compost application

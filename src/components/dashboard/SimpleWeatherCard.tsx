@@ -8,7 +8,8 @@ import {
   Cloud, 
   CloudRain, 
   Wind, 
-  Droplets
+  Droplets,
+  Gauge
 } from 'lucide-react';
 import { OpenMeteoWeatherService, type OpenMeteoWeatherData } from '@/lib/open-meteo-weather';
 import type { Farm } from '@/types/types';
@@ -120,11 +121,15 @@ export function SimpleWeatherCard({ farm }: SimpleWeatherCardProps) {
             </div>
             <div className="flex items-center gap-1">
               <CloudRain className="h-4 w-4" />
-              <span className="text-sm">{Math.round(weatherData.precipitationSum)}%</span>
+              <span className="text-sm">{Math.round(weatherData.precipitationSum)}mm</span>
             </div>
             <div className="flex items-center gap-1">
               <Wind className="h-4 w-4" />
-              <span className="text-sm">{Math.round(weatherData.windSpeed10m)} km/h</span>
+              <span className="text-sm">{Math.round(weatherData.windSpeed10m * 3.6)} km/h</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Gauge className="h-4 w-4" />
+              <span className="text-sm">ETo {weatherData.et0FaoEvapotranspiration.toFixed(1)}mm</span>
             </div>
           </div>
         </div>
@@ -137,7 +142,7 @@ export function SimpleWeatherCard({ farm }: SimpleWeatherCardProps) {
               {getWeatherIcon(day.temperatureMean, day.relativeHumidityMean, day.precipitationSum)}
               <div className="text-xs">
                 <span className="font-medium">{Math.round(day.temperatureMax)}°</span>
-                <span className="text-gray-500 ml-1">{Math.round(day.precipitationSum)}%</span>
+                <span className="text-gray-500 ml-1">{Math.round(day.precipitationSum)}mm</span>
               </div>
             </div>
           ))}

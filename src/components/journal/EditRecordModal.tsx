@@ -31,10 +31,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
         setFormData({
           date: irrigationRecord.date,
           duration: irrigationRecord.duration?.toString() || "",
-          area: irrigationRecord.area?.toString() || "",
-          growth_stage: irrigationRecord.growth_stage || "",
           moisture_status: irrigationRecord.moisture_status || "",
-          system_discharge: irrigationRecord.system_discharge?.toString() || "",
           notes: irrigationRecord.notes || ""
         });
       } else if (recordType === 'spray') {
@@ -100,10 +97,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
         await SupabaseService.updateIrrigationRecord(record.id!, {
           date: formData.date,
           duration: parseFloat(formData.duration),
-          area: parseFloat(formData.area),
-          growth_stage: formData.growth_stage,
           moisture_status: formData.moisture_status,
-          system_discharge: parseFloat(formData.system_discharge),
           notes: formData.notes
         });
       } else if (recordType === 'spray') {
@@ -231,63 +225,20 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
           {/* Record type specific fields */}
           {recordType === 'irrigation' && (
             <>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="duration" className="text-sm font-medium text-gray-700">
-                    Duration (hours) *
-                  </Label>
-                  <Input
-                    id="duration"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={formData.duration || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, duration: e.target.value }))}
-                    className="mt-1"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="area" className="text-sm font-medium text-gray-700">
-                    Area (acres)
-                  </Label>
-                  <Input
-                    id="area"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={formData.area || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, area: e.target.value }))}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="growth_stage" className="text-sm font-medium text-gray-700">
-                    Growth Stage
-                  </Label>
-                  <Input
-                    id="growth_stage"
-                    value={formData.growth_stage || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, growth_stage: e.target.value }))}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="system_discharge" className="text-sm font-medium text-gray-700">
-                    System Discharge
-                  </Label>
-                  <Input
-                    id="system_discharge"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={formData.system_discharge || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, system_discharge: e.target.value }))}
-                    className="mt-1"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="duration" className="text-sm font-medium text-gray-700">
+                  Duration (hours) *
+                </Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={formData.duration || ""}
+                  onChange={(e) => setFormData((prev: any) => ({ ...prev, duration: e.target.value }))}
+                  className="mt-1"
+                  required
+                />
               </div>
             </>
           )}
