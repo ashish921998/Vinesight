@@ -52,13 +52,18 @@ export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCar
           )}
         </div>
         <CardDescription className="text-xs">
-          Tank Capacity: {farm.totalTankCapacity} L
-          {farm.waterCalculationUpdatedAt && (
-            <span className="ml-2 flex items-center gap-1 mt-1">
-              <Clock className="h-3 w-3" />
-              Last calculated: {formatDate(farm.waterCalculationUpdatedAt)}
-            </span>
-          )}
+          <div className="space-y-1">
+            <div>Tank Capacity: {farm.totalTankCapacity} L</div>
+            {farm.systemDischarge && (
+              <div>System Discharge: {farm.systemDischarge.toFixed(6)} L/h</div>
+            )}
+            {farm.waterCalculationUpdatedAt && (
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                Last calculated: {formatDate(farm.waterCalculationUpdatedAt)}
+              </div>
+            )}
+          </div>
         </CardDescription>
       </CardHeader>
       

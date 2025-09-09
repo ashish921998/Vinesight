@@ -5,9 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { type Farm } from "@/types/types";
 
 interface FarmHeaderProps {
-  farm: Farm | null;
+  farm: Farm;
   loading: boolean;
-  onBack: () => void;
 }
 
 export function FarmHeader({ farm, loading }: FarmHeaderProps) {

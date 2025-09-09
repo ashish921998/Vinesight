@@ -134,13 +134,19 @@ export function WaterCalculationModal({
                 <SelectValue placeholder="Select growth stage" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="0.3">0.3 - Initial stage</SelectItem>
-                <SelectItem value="0.6">0.6 - Development stage</SelectItem>
-                <SelectItem value="0.8">0.8 - Mid-season</SelectItem>
-                <SelectItem value="1.0">1.0 - Mid-season (full)</SelectItem>
-                <SelectItem value="1.2">1.2 - Peak season</SelectItem>
-                <SelectItem value="0.7">0.7 - Late season</SelectItem>
-                <SelectItem value="0.5">0.5 - Maturity</SelectItem>
+              <SelectItem value="0.25">0.25 - Beginning budbreak</SelectItem>
+                <SelectItem value="0.3">0.3 - Shoot 30cm</SelectItem>
+                <SelectItem value="0.4">0.4 - Shoot 50cm</SelectItem>
+                <SelectItem value="0.5">0.5 - Shoot 80cm</SelectItem>
+                <SelectItem value="0.6">0.6 - Beginning Bloom</SelectItem>
+                <SelectItem value="0.7">0.7 - Fruit set</SelectItem>
+                <SelectItem value="0.80">0.8 - Berry size(6mm - 8mm)</SelectItem>
+                <SelectItem value="0.85">0.85 - Berry size(12mm)</SelectItem>
+                <SelectItem value="1.0">1 - Closing bunches</SelectItem>
+                <SelectItem value="1">1 - Beginning verison</SelectItem>
+                <SelectItem value="0.801">0.8 - Beginning harvest</SelectItem>
+                <SelectItem value="0.601">0.6 - End harvest</SelectItem>
+                <SelectItem value="0.501">0.5 - After harvest</SelectItem>
               </SelectContent>
             </Select>
           </div>

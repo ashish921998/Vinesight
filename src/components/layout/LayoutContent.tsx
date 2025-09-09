@@ -18,11 +18,10 @@ export function LayoutContent({ children }: LayoutContentProps) {
   const publicRoutes = [
     '/', // Homepage
     '/auth',
-    '/calculators',
   ];
 
   // Check if current route is public
-  const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/calculators');
+  const isPublicRoute = publicRoutes.includes(pathname);
 
   // Show sidebar only for authenticated users on private routes
   const showSidebar = !isPublicRoute && user;

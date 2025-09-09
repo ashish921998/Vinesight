@@ -15,7 +15,7 @@ import {
 import { ETcCalculatorComponent } from "@/components/calculators/ETcCalculator";
 import { LAICalculatorComponent } from "@/components/calculators/LAICalculator";
 import { NutrientCalculatorComponent } from "@/components/calculators/NutrientCalculator";
-import { SystemDischargeCalculatorComponent } from "@/components/calculators/SystemDischargeCalculator";
+import { SystemDischargeCalculatorComponent } from "@/components/calculators/NewSystemDischargeCalculator";
 import { MADCalculatorComponent } from "@/components/calculators/MADCalculator";
 
 const calculatorCategories = [
@@ -33,13 +33,13 @@ const calculatorCategories = [
       {
         id: "mad",
         title: "MAD (Maximum Allowable Deficit)",
-        description: "Complete irrigation planning: MAD → Refill Tank → System Discharge",
+        description: "Calculate maximum allowable water deficit and refill tank requirements",
         component: MADCalculatorComponent
       },
       {
         id: "system-discharge",
-        title: "System Flow Rate",
-        description: "Check if your irrigation system delivers adequate water",
+        title: "System Discharge Calculator",
+        description: "Calculate system discharge rates for irrigation planning",
         component: SystemDischargeCalculatorComponent
       }
     ]
@@ -74,7 +74,7 @@ const calculatorCategories = [
 
 export default function CalculatorsPage() {
   const [selectedCalculator, setSelectedCalculator] = useState<string | null>(null);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>("Irrigation & Water Use");
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   const handleCalculatorSelect = (calculatorId: string) => {
     setSelectedCalculator(calculatorId);
