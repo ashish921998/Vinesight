@@ -1,33 +1,12 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Droplets,
-  Scissors,
-  TrendingUp, 
-  DollarSign,
-  Activity,
-  Clock
-} from "lucide-react";
 
 interface FarmOverviewProps {
-  dashboardData: {
-    pendingTasksCount: number;
-    totalHarvest: number;
-    totalWaterUsage: number;
-    recordCounts: {
-      irrigation: number;
-      spray: number;
-      fertigation: number;
-      harvest: number;
-      expense: number;
-      soilTest: number;
-    };
-  } | null;
   loading: boolean;
 }
 
-export function FarmOverview({ dashboardData, loading }: FarmOverviewProps) {
+export function FarmOverview({ loading }: FarmOverviewProps) {
   if (loading) {
     return (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-6">
