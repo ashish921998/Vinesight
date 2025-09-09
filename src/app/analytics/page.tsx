@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { SEOSchema } from "@/components/SEOSchema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,8 +23,8 @@ import {
   Zap
 } from "lucide-react";
 import { CloudDataService, IrrigationRecord, SprayRecord, HarvestRecord } from "@/lib/cloud-data-service";
-import { Farm } from '@/types/types';
 import { AnalyticsService, AdvancedAnalytics } from "@/lib/analytics-service";
+import { Farm } from "@/types/types";
 
 interface AnalyticsData {
   totalFarms: number;
@@ -51,7 +51,11 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'30d' | '90d' | '1y'>('30d');
 
-  const loadData = useCallback(async () => {
+  useEffect(() => {
+    loadData();
+  }, [timeRange]);
+
+  const loadData = async () => {
     setLoading(true);
     try {
       const farmList = await CloudDataService.getAllFarms();
@@ -114,10 +118,7 @@ export default function AnalyticsPage() {
             });
           }
         } catch (farmError) {
-          if (process.env.NODE_ENV === 'development') {
-            // eslint-disable-next-line no-console
-            console.error(`Error loading data for farm ${farm.name}:`, farmError);
-          }
+          console.error(`Error loading data for farm ${farm.name}:`, farmError);
         }
       }
 
@@ -196,25 +197,15 @@ export default function AnalyticsPage() {
         const advanced = await AnalyticsService.generateAdvancedAnalytics(farmList);
         setAdvancedAnalytics(advanced);
       } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
-          console.error("Error generating advanced analytics:", error);
-        }
+        console.error("Error generating advanced analytics:", error);
       }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.error("Error loading analytics:", error);
-      }
+      console.error("Error loading analytics:", error);
       setAnalytics(null);
     } finally {
       setLoading(false);
     }
-  }, [selectedFarm, timeRange]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-IN', {
