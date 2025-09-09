@@ -143,7 +143,7 @@ export function WaterCalculationModal({
                 <SelectItem value="0.80">0.8 - Berry size(6mm - 8mm)</SelectItem>
                 <SelectItem value="0.85">0.85 - Berry size(12mm)</SelectItem>
                 <SelectItem value="1.0">1 - Closing bunches</SelectItem>
-                <SelectItem value="1">1 - Beginning verison</SelectItem>
+                <SelectItem value="1">1 - Beginning veraison(softening)</SelectItem>
                 <SelectItem value="0.801">0.8 - Beginning harvest</SelectItem>
                 <SelectItem value="0.601">0.6 - End harvest</SelectItem>
                 <SelectItem value="0.501">0.5 - After harvest</SelectItem>
