@@ -24,7 +24,7 @@ export function LayoutContent({ children }: LayoutContentProps) {
   const isPublicRoute = publicRoutes.includes(pathname);
 
   // Show sidebar only for authenticated users on private routes
-  const showSidebar = !isPublicRoute && user;
+  const showSidebar = !isPublicRoute && !!user;
 
   // For loading state on public routes, don't show sidebar
   if (loading && isPublicRoute) {

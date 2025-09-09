@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, memo, useCallback } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   Home, 
   Sprout, 
@@ -118,6 +117,7 @@ const logTypes = [
 
 export function BottomNavigation() {
   const pathname = usePathname();
+  const router = useRouter();
   const [showFarmLogsModal, setShowFarmLogsModal] = useState(false);
   const [farms, setFarms] = useState<Farm[]>([]);
   const [selectedFarm, setSelectedFarm] = useState<string>("");
@@ -367,13 +367,16 @@ export function BottomNavigation() {
         <div className="flex justify-around items-center px-2 py-1">
           {navigationItems.map((item) => {
             const Icon = item.icon;
-            const isActive = mounted ? pathname === item.href : false;
-            const isAIButton = item.name === 'AI';
+            const isActive = mounted ? ((pathname === item.href) || (item.href !== '/' && pathname.startsWith(item.href))) : false;
             
+            const handleClick = () => {
+              router.push(item.href);
+            };
+
             return (
-              <Link
+              <div
                 key={item.href}
-                href={item.href}
+                onClick={handleClick}
                 className={`
                   flex flex-col items-center justify-center
                   px-2 py-2 min-w-0 flex-1
@@ -404,7 +407,7 @@ export function BottomNavigation() {
                 `}>
                   {item.name}
                 </span>
-              </Link>
+              </div>
             );
           })}
         </div>
