@@ -278,7 +278,7 @@ export class ExportService {
     pdf.setFont('helvetica', 'normal');
     const farmDetails = [
       ['Region', data.farm.region || 'Not specified'],
-      ['Area', `${data.farm.area} hectares`],
+      ['Area', `${data.farm.area} acres`],
       ['Grape Variety', data.farm.grapeVariety || 'Not specified'],
       ['Planting Date', data.farm.plantingDate || 'Not specified'],
       ['Vine Spacing', data.farm.vineSpacing ? `${data.farm.vineSpacing}m` : 'Not specified'],
