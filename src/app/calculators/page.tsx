@@ -1,16 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { 
   Calculator, 
   Droplets, 
   Leaf, 
   Beaker, 
   ArrowRight,
-  ArrowLeft,
-  CheckCircle
 } from "lucide-react";
 import { ETcCalculatorComponent } from "@/components/calculators/ETcCalculator";
 import { LAICalculatorComponent } from "@/components/calculators/LAICalculator";
