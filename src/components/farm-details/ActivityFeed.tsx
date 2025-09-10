@@ -14,6 +14,7 @@ import {
   Clock,
   CheckCircle,
   Edit,
+  Trash2,
   ArrowRight
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -24,6 +25,7 @@ interface ActivityFeedProps {
   loading: boolean;
   onCompleteTask: (taskId: number) => Promise<void>;
   onEditRecord: (record: any, recordType: string) => void;
+  onDeleteRecord: (record: any, recordType: string) => void;
   farmId?: string;
 }
 
@@ -33,6 +35,7 @@ export function ActivityFeed({
   loading,
   onCompleteTask,
   onEditRecord,
+  onDeleteRecord,
   farmId
 }: ActivityFeedProps) {
   const router = useRouter();
@@ -195,16 +198,26 @@ export function ActivityFeed({
                       </div>
                     </div>
                     
-                    <div className="flex items-center h-full">
+                    <div className="flex items-center gap-1 h-full">
                       {(activity.type === 'irrigation' || activity.type === 'spray' || activity.type === 'harvest' || activity.type === 'fertigation' || activity.type === 'expense' || activity.type === 'soil_test') && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onEditRecord(activity, activity.type)}
-                          className="h-6 w-6 p-0 text-green-600 hover:text-green-800 hover:bg-green-100 flex-shrink-0"
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEditRecord(activity, activity.type)}
+                            className="h-6 w-6 p-0 text-green-600 hover:text-green-800 hover:bg-green-100 flex-shrink-0"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onDeleteRecord(activity, activity.type)}
+                            className="h-6 w-6 p-0 text-red-600 hover:text-red-800 hover:bg-red-100 flex-shrink-0"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>

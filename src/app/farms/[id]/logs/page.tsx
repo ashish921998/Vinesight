@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EditRecordModal } from "@/components/journal/EditRecordModal";
 import { cn } from "@/lib/utils";
 import { 
@@ -25,6 +26,7 @@ import {
   TestTube,
   Beaker,
   Edit,
+  Trash2,
   ChevronLeft,
   ChevronRight,
   Search,
@@ -75,6 +77,9 @@ export default function FarmLogsPage() {
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [editRecordType, setEditRecordType] = useState<'irrigation' | 'spray' | 'harvest' | 'fertigation' | 'expense' | 'soil_test'>('irrigation');
   const [showEditModal, setShowEditModal] = useState(false);
+  const [deletingRecord, setDeletingRecord] = useState<ActivityLog | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const totalPages = Math.ceil(totalLogs / itemsPerPage);
 
@@ -325,6 +330,54 @@ export default function FarmLogsPage() {
     setShowEditModal(false);
     setEditingRecord(null);
     loadLogs(); // Reload logs after editing
+  };
+
+  const handleDeleteRecord = (log: ActivityLog) => {
+    setDeletingRecord(log);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteRecord = async () => {
+    if (!deletingRecord) return;
+
+    try {
+      setIsDeleting(true);
+      
+      switch (deletingRecord.type) {
+        case 'irrigation':
+          await SupabaseService.deleteIrrigationRecord(deletingRecord.id);
+          break;
+        case 'spray':
+          await SupabaseService.deleteSprayRecord(deletingRecord.id);
+          break;
+        case 'harvest':
+          await SupabaseService.deleteHarvestRecord(deletingRecord.id);
+          break;
+        case 'fertigation':
+          await SupabaseService.deleteFertigationRecord(deletingRecord.id);
+          break;
+        case 'expense':
+          await SupabaseService.deleteExpenseRecord(deletingRecord.id);
+          break;
+        case 'soil_test':
+          await SupabaseService.deleteSoilTestRecord(deletingRecord.id);
+          break;
+        default:
+          throw new Error(`Unsupported record type: ${deletingRecord.type}`);
+      }
+
+      // Reload logs after deletion
+      await loadLogs();
+      
+      // Close dialog
+      setShowDeleteDialog(false);
+      setDeletingRecord(null);
+    } catch (error) {
+      console.error('Error deleting record:', error);
+      // You might want to show a toast notification here
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (loading && logs.length === 0) {
@@ -639,16 +692,26 @@ export default function FarmLogsPage() {
                         </div>
                       </div>
                       
-                      <div className="flex items-center h-full">
+                      <div className="flex items-center gap-1 h-full">
                         {(log.type === 'irrigation' || log.type === 'spray' || log.type === 'harvest' || log.type === 'fertigation' || log.type === 'expense' || log.type === 'soil_test') && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditRecord(log)}
-                            className="h-6 w-6 p-0 text-green-600 hover:text-green-800 hover:bg-green-100 flex-shrink-0"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditRecord(log)}
+                              className="h-6 w-6 p-0 text-green-600 hover:text-green-800 hover:bg-green-100 flex-shrink-0"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteRecord(log)}
+                              className="h-6 w-6 p-0 text-red-600 hover:text-red-800 hover:bg-red-100 flex-shrink-0"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -764,6 +827,37 @@ export default function FarmLogsPage() {
             recordType={editRecordType}
           />
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Delete Activity Log</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this {deletingRecord?.type.replace('_', ' ')} record from {deletingRecord?.date}? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteDialog(false);
+                  setDeletingRecord(null);
+                }}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDeleteRecord}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

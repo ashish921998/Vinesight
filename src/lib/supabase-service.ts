@@ -266,6 +266,16 @@ export class SupabaseService {
     return toApplicationFertigationRecord(data);
   }
 
+  static async deleteFertigationRecord(id: number): Promise<void> {
+    const supabase = getTypedSupabaseClient();
+    const { error } = await supabase
+      .from('fertigation_records')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  }
+
   // Harvest operations
   static async getHarvestRecords(farmId: number): Promise<HarvestRecord[]> {
     const supabase = getTypedSupabaseClient();
@@ -358,6 +368,16 @@ export class SupabaseService {
 
     if (error) throw error;
     return toApplicationExpenseRecord(data);
+  }
+
+  static async deleteExpenseRecord(id: number): Promise<void> {
+    const supabase = getTypedSupabaseClient();
+    const { error } = await supabase
+      .from('expense_records')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
   }
 
   // Calculation history operations
@@ -485,6 +505,16 @@ export class SupabaseService {
 
     if (error) throw error;
     return toApplicationSoilTestRecord(data);
+  }
+
+  static async deleteSoilTestRecord(id: number): Promise<void> {
+    const supabase = getTypedSupabaseClient();
+    const { error } = await supabase
+      .from('soil_test_records')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
   }
 
   // Export data functions
