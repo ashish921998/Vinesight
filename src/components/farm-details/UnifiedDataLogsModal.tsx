@@ -45,6 +45,7 @@ interface FormField {
   min?: number;
   max?: number;
   step?: number;
+  maxLength?: number;
 }
 
 interface LogTypeConfig {
@@ -78,9 +79,10 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
     bgColor: 'bg-green-50',
     borderColor: 'border-green-200',
     fields: [
-      { name: 'pest_disease', type: 'text', label: 'Pest/Disease', required: true, placeholder: 'e.g., Powdery mildew' },
-      { name: 'chemical', type: 'text', label: 'Chemical Used', required: true, placeholder: 'e.g., Sulfur fungicide' },
-      { name: 'quantity', type: 'number', label: 'Quantity (L/kg)', required: false, min: 0, step: 0.1 }
+      { name: 'chemical', type: 'text', label: 'Chemical Used', required: true, placeholder: 'e.g., Sulfur fungicide', maxLength: 10 },
+      { name: 'quantity_amount', type: 'number', label: 'Quantity Amount', required: false, min: 0, step: 0.1, placeholder: 'e.g., 500' },
+      { name: 'quantity_unit', type: 'select', label: 'Unit', required: false, options: ['gm/L', 'ml/L'] },
+      { name: 'water_volume', type: 'number', label: 'Water Volume (L)', required: false, min: 0, step: 0.1, placeholder: 'Total water used' }
     ]
   },
   harvest: {
@@ -328,6 +330,7 @@ export function UnifiedDataLogsModal({
                 setCurrentFormData(prev => ({ ...prev, [field.name]: e.target.value }))
               }
               placeholder={field.placeholder}
+              maxLength={field.maxLength}
               className="h-9"
             />
           </div>

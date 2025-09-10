@@ -42,9 +42,11 @@ export interface SprayRecord {
   id?: number;
   farm_id: number;
   date: string;
-  pest_disease: string;
   chemical: string;
   dose: string;
+  quantity_amount?: number; // numeric value for quantity
+  quantity_unit?: string; // 'gm/L' or 'ml/L'
+  water_volume?: number; // total water volume in liters
   area: number; // in acres
   weather: string;
   operator: string;

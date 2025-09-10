@@ -191,9 +191,11 @@ export default function FarmDetailsPage() {
         record = await SupabaseService.addSprayRecord({
           farm_id: parseInt(farmId),
           date: date,
-          pest_disease: data.pest_disease || 'General',
           chemical: data.chemical || 'Unknown',
-          dose: "As per label",
+          dose: data.quantity_amount && data.quantity_unit ? `${data.quantity_amount}${data.quantity_unit}` : "As per label",
+          quantity_amount: data.quantity_amount ? parseFloat(data.quantity_amount) : undefined,
+          quantity_unit: data.quantity_unit || undefined,
+          water_volume: data.water_volume ? parseFloat(data.water_volume) : undefined,
           area: dashboardData?.farm?.area || 0,
           weather: "Clear",
           operator: "Farm Owner",
