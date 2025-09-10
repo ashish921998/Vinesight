@@ -812,10 +812,8 @@ export type Database = {
       }
       farms: {
         Row: {
-          april_pruning: boolean | null
           area: number
           created_at: string | null
-          date_after_pruning: string | null
           date_of_pruning: string | null
           elevation: number | null
           grape_variety: string
@@ -826,7 +824,6 @@ export type Database = {
           location_updated_at: string | null
           longitude: number | null
           name: string
-          october_pruning: boolean | null
           planting_date: string
           region: string
           remaining_water: number | null
@@ -862,6 +859,7 @@ export type Database = {
           user_id?: string | null
           vine_spacing: number
           water_calculation_updated_at?: string | null
+          date_of_pruning: string | null
         }
         Update: {
           area?: number
@@ -886,6 +884,7 @@ export type Database = {
           user_id?: string | null
           vine_spacing?: number
           water_calculation_updated_at?: string | null
+          date_of_pruning?: string | null
         }
         Relationships: []
       }
