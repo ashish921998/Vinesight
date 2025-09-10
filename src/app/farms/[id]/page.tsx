@@ -15,6 +15,8 @@ import { RemainingWaterCard } from "@/components/farm-details/RemainingWaterCard
 import { UnifiedDataLogsModal } from "@/components/farm-details/UnifiedDataLogsModal";
 import { WaterCalculationModal } from "@/components/farm-details/WaterCalculationModal";
 import { EditRecordModal } from "@/components/journal/EditRecordModal";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 // Phase 3A: AI-Powered Components
 import { AIInsightsCarousel } from "@/components/ai/AIInsightsCarousel";
@@ -57,6 +59,9 @@ export default function FarmDetailsPage() {
   const [showWaterCalculationModal, setShowWaterCalculationModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [deletingRecord, setDeletingRecord] = useState<any>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // AI Features state
   const [aiPredictionsGenerated, setAiPredictionsGenerated] = useState(false);
@@ -259,6 +264,48 @@ export default function FarmDetailsPage() {
     setShowEditModal(true);
   };
 
+  const handleDeleteRecord = (record: any, recordType: string) => {
+    setDeletingRecord(record);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteRecord = async () => {
+    if (!deletingRecord) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      switch (deletingRecord.type) {
+        case 'irrigation':
+          await SupabaseService.deleteIrrigationRecord(deletingRecord.id);
+          break;
+        case 'spray':
+          await SupabaseService.deleteSprayRecord(deletingRecord.id);
+          break;
+        case 'harvest':
+          await SupabaseService.deleteHarvestRecord(deletingRecord.id);
+          break;
+        case 'fertigation':
+          await SupabaseService.deleteFertigationRecord(deletingRecord.id);
+          break;
+        case 'expense':
+          await SupabaseService.deleteExpenseRecord(deletingRecord.id);
+          break;
+        case 'soil_test':
+          await SupabaseService.deleteSoilTestRecord(deletingRecord.id);
+          break;
+      }
+      
+      await loadDashboardData();
+      setShowDeleteDialog(false);
+      setDeletingRecord(null);
+    } catch (error) {
+      console.error('Error deleting record:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleSaveRecord = () => {
     setShowEditModal(false);
     setEditingRecord(null);
@@ -318,6 +365,7 @@ export default function FarmDetailsPage() {
         loading={loading}
         onCompleteTask={completeTask}
         onEditRecord={handleEditRecord}
+        onDeleteRecord={handleDeleteRecord}
         farmId={farmId}
       />
 
@@ -352,6 +400,37 @@ export default function FarmDetailsPage() {
           recordType={editingRecord.type as 'irrigation' | 'spray' | 'harvest' | 'fertigation' | 'expense' | 'soil_test'}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete Activity Log</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this {deletingRecord?.type?.replace('_', ' ')} record from {deletingRecord?.date}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => { 
+                setShowDeleteDialog(false); 
+                setDeletingRecord(null); 
+              }} 
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmDeleteRecord} 
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
