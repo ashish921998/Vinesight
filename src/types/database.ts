@@ -812,8 +812,11 @@ export type Database = {
       }
       farms: {
         Row: {
+          april_pruning: boolean | null
           area: number
           created_at: string | null
+          date_after_pruning: string | null
+          date_of_pruning: string | null
           elevation: number | null
           grape_variety: string
           id: number
@@ -823,6 +826,7 @@ export type Database = {
           location_updated_at: string | null
           longitude: number | null
           name: string
+          october_pruning: boolean | null
           planting_date: string
           region: string
           remaining_water: number | null

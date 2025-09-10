@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { LocationForm } from "@/components/calculators/ETc/LocationForm";
 import type { LocationResult } from "@/lib/open-meteo-geocoding";
@@ -28,6 +29,8 @@ interface FormData {
   rowSpacing: string;
   totalTankCapacity: string;
   systemDischarge: string;
+  dateOfPruning: string;
+  pruningCycle: string;
 }
 
 interface LocationData {
@@ -53,7 +56,9 @@ export function FarmModal({
     vineSpacing: editingFarm?.vineSpacing?.toString() || "",
     rowSpacing: editingFarm?.rowSpacing?.toString() || "",
     totalTankCapacity: editingFarm?.totalTankCapacity?.toString() || "",
-    systemDischarge: editingFarm?.systemDischarge?.toString() || ""
+    systemDischarge: editingFarm?.systemDischarge?.toString() || "",
+    dateOfPruning: editingFarm?.dateOfPruning || "",
+    pruningCycle: editingFarm?.pruningCycle || ""
   }));
 
   const [locationData, setLocationData] = useState<LocationData>(() => ({
@@ -75,7 +80,9 @@ export function FarmModal({
         vineSpacing: editingFarm.vineSpacing?.toString() || "",
         rowSpacing: editingFarm.rowSpacing?.toString() || "",
         totalTankCapacity: editingFarm.totalTankCapacity?.toString() || "",
-        systemDischarge: editingFarm.systemDischarge?.toString() || ""
+        systemDischarge: editingFarm.systemDischarge?.toString() || "",
+        dateOfPruning: editingFarm.dateOfPruning || "",
+        pruningCycle: editingFarm.pruningCycle || ""
       });
       
       setLocationData({
@@ -95,7 +102,9 @@ export function FarmModal({
         vineSpacing: "",
         rowSpacing: "",
         totalTankCapacity: "",
-        systemDischarge: ""
+        systemDischarge: "",
+        dateOfPruning: "",
+        pruningCycle: ""
       });
       
       setLocationData({
@@ -149,6 +158,9 @@ export function FarmModal({
       rowSpacing: parseFloat(formData.rowSpacing),
       totalTankCapacity: formData.totalTankCapacity ? parseFloat(formData.totalTankCapacity) : undefined,
       systemDischarge: formData.systemDischarge ? parseFloat(formData.systemDischarge) : undefined,
+      // Include pruning data
+      dateOfPruning: formData.dateOfPruning || undefined,
+      pruningCycle: formData.pruningCycle || undefined,
       // Include location data if available
       latitude: locationData.latitude ? parseFloat(locationData.latitude) : undefined,
       longitude: locationData.longitude ? parseFloat(locationData.longitude) : undefined,
@@ -332,6 +344,50 @@ export function FarmModal({
               <p className="text-xs text-gray-500 mt-1">
                 Optional: Default irrigation system discharge rate
               </p>
+            </div>
+
+            {/* Pruning Section */}
+            <div className="pt-4 border-t border-gray-200">
+              <div className="mb-3">
+                <h4 className="text-sm font-medium text-gray-700 mb-1">Pruning (Optional)</h4>
+                <p className="text-xs text-gray-500">
+                  Track pruning activities for your vineyard
+                </p>
+              </div>
+              
+              {/* Pruning Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="dateOfPruning" className="text-sm font-medium text-gray-700">
+                    Date of Pruning
+                  </Label>
+                  <Input
+                    id="dateOfPruning"
+                    type="date"
+                    value={formData.dateOfPruning}
+                    onChange={(e) => handleInputChange("dateOfPruning", e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                    className="mt-1 h-11"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="pruningCycle" className="text-sm font-medium text-gray-700">
+                    Pruning Cycle
+                  </Label>
+                  <Select
+                    value={formData.pruningCycle}
+                    onValueChange={(value) => handleInputChange("pruningCycle", value)}
+                  >
+                    <SelectTrigger className="mt-1 h-11">
+                      <SelectValue placeholder="Select pruning cycle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="October">October</SelectItem>
+                      <SelectItem value="April">April</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
 
             {/* Location Section */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Calendar, Grape } from "lucide-react";
+import { MapPin, Grape, Calendar, Scissors } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { type Farm } from "@/types/types";
 
@@ -45,20 +45,23 @@ export function FarmHeader({ farm, loading }: FarmHeaderProps) {
                 <MapPin className="h-4 w-4" />
                 <span>{farm.region}</span>
               </div>
-              
-              <div className="flex items-center gap-1 text-sm text-gray-600">
-                <Calendar className="h-4 w-4" />
-                <span>Since {new Date(farm.plantingDate).getFullYear()}</span>
-              </div>
+              {farm.dateOfPruning && (
+                <div className="flex items-center gap-1 text-sm text-gray-600">
+                  <Calendar className="h-4 w-4" />
+                  <span>Pruned: {new Date(farm.dateOfPruning).toLocaleDateString()}</span>
+                </div>
+              )}
+              {farm.pruningCycle && (
+                <div className="flex items-center gap-1 text-sm text-gray-600">
+                  <Scissors className="h-4 w-4" />
+                  <span>{farm.pruningCycle} Pruning</span>
+                </div>
+              )}
             </div>
             
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary" className="bg-green-100 text-green-800">
                 {farm.grapeVariety || 'Grape Vineyard'}
-              </Badge>
-              
-              <Badge variant="outline" className="border-gray-300 text-gray-700">
-                {farm.area} acres
               </Badge>
             </div>
           </div>
