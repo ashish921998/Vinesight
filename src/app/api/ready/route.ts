@@ -26,36 +26,32 @@ async function check(url: string, init: RequestInit, timeoutMs: number) {
 export async function GET(req: NextRequest) {
   const requestId = req.headers.get(REQUEST_ID_HEADER) || undefined
   const log = createLogger(requestId)
-  const ts = new Date().toISOString()
-  log.info('health_start', { path: '/api/health' })
+  log.info('ready_start', { path: '/api/ready' })
 
-  const env = process.env.NEXT_PUBLIC_APP_ENV || process.env.NODE_ENV
-  const version = (pkg as any).version as string
+  const requiredEnv = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'] as const
+  const missingEnv = requiredEnv.filter((k) => !process.env[k])
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabase = supabaseUrl
     ? await check(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/`, { method: 'HEAD' }, 2000)
     : { ok: false, error: 'missing_supabase_url' }
 
-  const external = await check(
-    'https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&hourly=temperature_2m&forecast_days=1',
-    { method: 'GET' },
-    2000
-  )
+  const ok = missingEnv.length === 0 && supabase.ok
 
   const body = {
-    status: supabase.ok && external.ok ? 'ok' : 'degraded',
-    version,
-    environment: env,
-    timestamp: ts,
+    status: ok ? 'ready' : 'not_ready',
+    version: (pkg as any).version as string,
+    environment: process.env.NEXT_PUBLIC_APP_ENV || process.env.NODE_ENV,
+    timestamp: new Date().toISOString(),
     checks: {
+      env: { ok: missingEnv.length === 0, missing: missingEnv },
       supabase,
-      external,
     },
   }
 
-  const res = NextResponse.json(body, { status: 200, headers: { 'Cache-Control': 'no-store' } })
+  const status = ok ? 200 : 503
+  const res = NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store' } })
   res.headers.set(REQUEST_ID_HEADER, requestId || '')
-  log.info('health_finish', { status: body.status })
+  log.info('ready_finish', { status })
   return res
 }

@@ -1,10 +1,12 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { ensureRequestId, attachRequestIdHeader } from '@/lib/request-context'
 
 export async function middleware(req: NextRequest) {
+  const { id, headers } = ensureRequestId(req)
   let supabaseResponse = NextResponse.next({
-    request: req,
+    request: { headers },
   })
 
   const supabase = createServerClient(
@@ -18,7 +20,7 @@ export async function middleware(req: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => req.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
-            request: req,
+            request: { headers },
           })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
@@ -41,7 +43,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/', req.url))
   }
 
-  return supabaseResponse
+  return attachRequestIdHeader(supabaseResponse, id)
 }
 
 export const config = {
