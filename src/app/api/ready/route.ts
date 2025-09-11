@@ -23,7 +23,9 @@ async function check(url: string, init: RequestInit, timeoutMs: number) {
   }
 }
 
-export async function GET(req: NextRequest) {
+import { withSentryRoute } from '@/lib/with-monitoring'
+
+export const GET = withSentryRoute(async function GET(req: NextRequest) {
   const requestId = req.headers.get(REQUEST_ID_HEADER) || undefined
   const log = createLogger(requestId)
   log.info('ready_start', { path: '/api/ready' })
@@ -54,4 +56,4 @@ export async function GET(req: NextRequest) {
   res.headers.set(REQUEST_ID_HEADER, requestId || '')
   log.info('ready_finish', { status })
   return res
-}
+})
