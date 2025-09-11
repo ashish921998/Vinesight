@@ -22,8 +22,7 @@ import {
   Award,
   Zap
 } from "lucide-react";
-import { CloudDataService, IrrigationRecord, SprayRecord, HarvestRecord } from "@/lib/cloud-data-service";
-import { AnalyticsService, AdvancedAnalytics } from "@/lib/analytics-service";
+import { AdvancedAnalytics } from "@/lib/analytics-service";
 import { Farm } from "@/types/types";
 
 interface AnalyticsData {
@@ -58,147 +57,18 @@ export default function AnalyticsPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const farmList = await CloudDataService.getAllFarms();
-      setFarms(farmList);
-      
-      if (!selectedFarm && farmList.length > 0) {
-        setSelectedFarm(farmList[0]);
-      }
-
-      if (farmList.length === 0) {
-        setAnalytics(null);
-        setLoading(false);
-        return;
-      }
-
-      // Calculate analytics
-      const analyticsData: AnalyticsData = {
-        totalFarms: farmList.length,
-        totalArea: farmList.reduce((sum, farm) => sum + farm.area, 0),
-        totalIrrigationHours: 0,
-        totalHarvestQuantity: 0,
-        totalHarvestValue: 0,
-        irrigationsByMonth: [],
-        spraysByType: [],
-        harvestsByFarm: [],
-        recentActivity: []
-      };
-
-      // Get all records for analysis
-      const allIrrigations: (IrrigationRecord & { farmName: string })[] = [];
-      const allSprays: (SprayRecord & { farmName: string })[] = [];
-      const allHarvests: (HarvestRecord & { farmName: string })[] = [];
-
-      for (const farm of farmList) {
-        try {
-          const irrigations = await CloudDataService.getIrrigationRecords(farm.id!);
-          const sprays = await CloudDataService.getSprayRecords(farm.id!);
-          const harvests = await CloudDataService.getHarvestRecords(farm.id!);
-
-          // Add farm name to records
-          irrigations.forEach(record => {
-            allIrrigations.push({ ...record, farmName: farm.name });
-          });
-          sprays.forEach(record => {
-            allSprays.push({ ...record, farmName: farm.name });
-          });
-          harvests.forEach(record => {
-            allHarvests.push({ ...record, farmName: farm.name });
-          });
-
-          // Calculate farm-specific harvest totals
-          const farmHarvestQuantity = harvests.reduce((sum, h) => sum + h.quantity, 0);
-          const farmHarvestValue = harvests.reduce((sum, h) => sum + (h.quantity * (h.price || 0)), 0);
-          
-          if (farmHarvestQuantity > 0) {
-            analyticsData.harvestsByFarm.push({
-              farmName: farm.name,
-              quantity: farmHarvestQuantity,
-              value: farmHarvestValue
-            });
-          }
-        } catch (farmError) {
-          console.error(`Error loading data for farm ${farm.name}:`, farmError);
-        }
-      }
-
-      // Calculate totals
-      analyticsData.totalIrrigationHours = allIrrigations.reduce((sum, r) => sum + r.duration, 0);
-      analyticsData.totalHarvestQuantity = allHarvests.reduce((sum, r) => sum + r.quantity, 0);
-      analyticsData.totalHarvestValue = allHarvests.reduce((sum, r) => sum + (r.quantity * (r.price || 0)), 0);
-
-      // Group irrigations by month
-      const irrigationsByMonth = new Map<string, { hours: number; count: number }>();
-      allIrrigations.forEach(record => {
-        const date = new Date(record.date);
-        const monthYear = date.toLocaleString('default', { month: 'short', year: '2-digit' });
-        const existing = irrigationsByMonth.get(monthYear) || { hours: 0, count: 0 };
-        irrigationsByMonth.set(monthYear, {
-          hours: existing.hours + record.duration,
-          count: existing.count + 1
-        });
+      const res = await fetch('/api/analytics/aggregate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ range: timeRange })
       });
-
-      analyticsData.irrigationsByMonth = Array.from(irrigationsByMonth.entries())
-        .map(([month, data]) => ({ month, ...data }))
-        .slice(-6); // Last 6 months
-
-      // Group sprays by pest/disease type
-      const spraysByType = new Map<string, number>();
-      allSprays.forEach(record => {
-        const type = record.pest_disease;
-        spraysByType.set(type, (spraysByType.get(type) || 0) + 1);
-      });
-
-      analyticsData.spraysByType = Array.from(spraysByType.entries())
-        .map(([type, count]) => ({ type, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
-
-      // Recent activity (last 10 activities)
-      const recentActivity: any[] = [];
-      
-      allIrrigations.slice(-5).forEach(record => {
-        recentActivity.push({
-          type: 'irrigation' as const,
-          farmName: (record as any).farmName,
-          date: record.date,
-          details: `${record.duration}h irrigation - ${record.growth_stage}`
-        });
-      });
-
-      allSprays.slice(-5).forEach(record => {
-        recentActivity.push({
-          type: 'spray' as const,
-          farmName: (record as any).farmName,
-          date: record.date,
-          details: `${record.pest_disease} treatment with ${record.chemical}`
-        });
-      });
-
-      allHarvests.slice(-5).forEach(record => {
-        recentActivity.push({
-          type: 'harvest' as const,
-          farmName: (record as any).farmName,
-          date: record.date,
-          details: `${record.quantity}kg harvested - ${record.grade} grade`
-        });
-      });
-
-      // Sort by date descending
-      analyticsData.recentActivity = recentActivity
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 10);
-
+      if (!res.ok) throw new Error('Failed to aggregate analytics');
+      const { analytics: analyticsData, advanced, farms: farmList } = await res.json();
+      setFarms(farmList || []);
+      if (!selectedFarm && (farmList?.length || 0) > 0) setSelectedFarm(farmList[0]);
+      if ((farmList?.length || 0) === 0) { setAnalytics(null); setLoading(false); return; }
       setAnalytics(analyticsData);
-      
-      // Generate advanced analytics
-      try {
-        const advanced = await AnalyticsService.generateAdvancedAnalytics(farmList);
-        setAdvancedAnalytics(advanced);
-      } catch (error) {
-        console.error("Error generating advanced analytics:", error);
-      }
+      setAdvancedAnalytics(advanced);
     } catch (error) {
       console.error("Error loading analytics:", error);
       setAnalytics(null);

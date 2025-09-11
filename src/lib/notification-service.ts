@@ -1,14 +1,35 @@
 "use client";
 
 import { TaskReminder } from '../types/types';
+import { z } from 'zod'
+import { createNamespacedStorage, StorageBackends, storageNamespaces } from './storage'
 
 export interface NotificationSettings {
   enabled: boolean;
   dailyReminder: boolean;
   overdueTasks: boolean;
   upcomingTasks: boolean;
-  reminderTime: string; // Format: "HH:mm"
-  daysAdvance: number; // Days to notify before due date
+  reminderTime: string;
+  daysAdvance: number;
+}
+
+const SettingsSchema = z.object({
+  enabled: z.boolean(),
+  dailyReminder: z.boolean(),
+  overdueTasks: z.boolean(),
+  upcomingTasks: z.boolean(),
+  reminderTime: z.string().regex(/^\d{2}:\d{2}$/),
+  daysAdvance: z.number().min(0).max(14)
+})
+
+const storage = createNamespacedStorage(storageNamespaces.notifications, StorageBackends.local)
+
+function msUntilNextMidnight(): number {
+  const now = new Date()
+  const tomorrow = new Date(now)
+  tomorrow.setDate(now.getDate() + 1)
+  tomorrow.setHours(0, 0, 0, 0)
+  return Math.max(0, tomorrow.getTime() - now.getTime())
 }
 
 export class NotificationService {
@@ -29,15 +50,9 @@ export class NotificationService {
   }
 
   private loadSettings(): NotificationSettings {
-    if (typeof window === 'undefined') {
-      return this.getDefaultSettings();
-    }
-    
-    const saved = localStorage.getItem('vinesight_notification_settings');
-    if (saved) {
-      return { ...this.getDefaultSettings(), ...JSON.parse(saved) };
-    }
-    return this.getDefaultSettings();
+    const def = this.getDefaultSettings()
+    const saved = storage.get('settings', SettingsSchema)
+    return saved ? { ...def, ...saved } : def
   }
 
   private getDefaultSettings(): NotificationSettings {
@@ -53,9 +68,7 @@ export class NotificationService {
 
   saveSettings(settings: Partial<NotificationSettings>): void {
     this.settings = { ...this.settings, ...settings };
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('vinesight_notification_settings', JSON.stringify(this.settings));
-    }
+    storage.set('settings', this.settings, { schema: SettingsSchema })
   }
 
   getSettings(): NotificationSettings {
@@ -93,7 +106,6 @@ export class NotificationService {
       ...options
     });
 
-    // Auto-close after 10 seconds
     setTimeout(() => notification.close(), 10000);
   }
 
@@ -131,9 +143,7 @@ export class NotificationService {
   }
 
   scheduleTaskNotifications(tasks: TaskReminder[]): void {
-    // Clear existing notifications
     this.clearScheduledNotifications();
-
     if (!this.settings.enabled) return;
 
     const now = new Date();
@@ -145,29 +155,21 @@ export class NotificationService {
       const timeDiff = dueDate.getTime() - now.getTime();
       const daysUntil = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
-      // Schedule overdue notification (if already overdue)
       if (timeDiff < 0 && this.settings.overdueTasks) {
-        setTimeout(() => {
-          this.sendTaskReminder(task, 'overdue');
-        }, 1000); // Send immediately with small delay
+        setTimeout(() => { this.sendTaskReminder(task, 'overdue') }, 1000);
       }
 
-      // Schedule due today notification
       if (daysUntil === 0) {
         const [hour, minute] = this.settings.reminderTime.split(':').map(Number);
         const notifyTime = new Date(now);
         notifyTime.setHours(hour, minute, 0, 0);
         
         if (notifyTime > now) {
-          const timeoutId = setTimeout(() => {
-            this.sendTaskReminder(task, 'due_today');
-          }, notifyTime.getTime() - now.getTime());
-          
+          const timeoutId = setTimeout(() => { this.sendTaskReminder(task, 'due_today') }, notifyTime.getTime() - now.getTime());
           this.notificationQueue.set(`task-${task.id}-today`, timeoutId);
         }
       }
 
-      // Schedule upcoming notification
       if (daysUntil === this.settings.daysAdvance && this.settings.upcomingTasks) {
         const [hour, minute] = this.settings.reminderTime.split(':').map(Number);
         const notifyTime = new Date(now);
@@ -175,10 +177,7 @@ export class NotificationService {
         notifyTime.setHours(hour, minute, 0, 0);
         
         if (notifyTime > now) {
-          const timeoutId = setTimeout(() => {
-            this.sendTaskReminder(task, 'upcoming');
-          }, notifyTime.getTime() - now.getTime());
-          
+          const timeoutId = setTimeout(() => { this.sendTaskReminder(task, 'upcoming') }, notifyTime.getTime() - now.getTime());
           this.notificationQueue.set(`task-${task.id}-upcoming`, timeoutId);
         }
       }
@@ -193,7 +192,6 @@ export class NotificationService {
     const reminderTime = new Date(now);
     reminderTime.setHours(hour, minute, 0, 0);
     
-    // If reminder time has passed today, schedule for tomorrow
     if (reminderTime <= now) {
       reminderTime.setDate(reminderTime.getDate() + 1);
     }
@@ -211,22 +209,14 @@ export class NotificationService {
   }
 
   clearScheduledNotifications(): void {
-    this.notificationQueue.forEach((timeoutId) => {
-      clearTimeout(timeoutId);
-    });
+    this.notificationQueue.forEach((timeoutId) => { clearTimeout(timeoutId) });
     this.notificationQueue.clear();
   }
 
-  // Weather-based smart notifications
   sendWeatherAlert(message: string, priority: 'low' | 'medium' | 'high' = 'medium'): void {
     if (!this.canSendNotifications()) return;
 
-    const icons = {
-      low: '🌤️',
-      medium: '⛈️',
-      high: '🚨'
-    };
-
+    const icons = { low: '🌤️', medium: '⛈️', high: '🚨' } as const
     this.sendNotification(`${icons[priority]} Weather Alert`, {
       body: message,
       tag: 'weather-alert',
@@ -234,51 +224,42 @@ export class NotificationService {
     });
   }
 
-  // Task completion celebration
   sendTaskCompletionCelebration(task: TaskReminder): void {
     if (!this.canSendNotifications()) return;
-
     this.sendNotification('🎉 Task Completed!', {
       body: `Great job completing "${task.title}"!`,
       tag: 'task-completion'
     });
   }
 
-  // Seasonal reminders
   sendSeasonalReminder(season: string, tasks: string[]): void {
     if (!this.canSendNotifications() || tasks.length === 0) return;
-
     this.sendNotification(`🍇 ${season} Season Tasks`, {
       body: `Important ${season.toLowerCase()} tasks: ${tasks.slice(0, 3).join(', ')}${tasks.length > 3 ? '...' : ''}`,
       tag: 'seasonal-reminder'
     });
   }
 
-  // Water level alert notifications
   sendWaterLevelAlert(farmName: string, waterLevel: number, alertType: 'critical' | 'low' | 'medium'): void {
     if (!this.canSendNotifications()) return;
 
     let title: string;
     let body: string;
-    let icon: string;
     let priority: boolean = false;
 
     switch (alertType) {
       case 'critical':
         title = '🚨 URGENT: Critical Water Level';
         body = `${farmName}: Only ${waterLevel.toFixed(1)}mm water remaining. IRRIGATION NEEDED IMMEDIATELY!`;
-        icon = '🚨';
         priority = true;
         break;
       case 'low':
         title = '⚠️ Low Water Level Alert';
         body = `${farmName}: Water level is low (${waterLevel.toFixed(1)}mm). Consider irrigation soon.`;
-        icon = '⚠️';
         break;
       case 'medium':
         title = '💧 Water Level Notice';
         body = `${farmName}: Water level is moderate (${waterLevel.toFixed(1)}mm). Monitor closely.`;
-        icon = '💧';
         break;
     }
 
@@ -296,28 +277,19 @@ export class NotificationService {
     });
   }
 
-  // Check water level and send appropriate alerts
   checkWaterLevelAndAlert(farmName: string, waterLevel: number): void {
     if (!this.canSendNotifications()) return;
 
-    // Critical: < 6mm
     if (waterLevel < 6) {
       this.sendWaterLevelAlert(farmName, waterLevel, 'critical');
-    }
-    // Low: 6-10mm
-    else if (waterLevel < 10) {
+    } else if (waterLevel < 10) {
       this.sendWaterLevelAlert(farmName, waterLevel, 'low');
-    }
-    // Medium: 10-25mm (only alert once per day to avoid spam)
-    else if (waterLevel < 25) {
-      const lastAlertKey = 'vinesight_last_medium_water_alert';
-      const lastAlert = localStorage.getItem(lastAlertKey);
-      const now = new Date();
-      const today = now.toDateString();
-      
-      if (lastAlert !== today) {
+    } else if (waterLevel < 25) {
+      const last = storage.get<string>('last_medium_alert_day')
+      const today = new Date().toDateString()
+      if (last !== today) {
         this.sendWaterLevelAlert(farmName, waterLevel, 'medium');
-        localStorage.setItem(lastAlertKey, today);
+        storage.set('last_medium_alert_day', today, { ttlMs: msUntilNextMidnight() })
       }
     }
   }

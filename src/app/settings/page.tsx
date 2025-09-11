@@ -9,6 +9,8 @@ import {
   User
 } from "lucide-react";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { z } from "zod";
+import { createNamespacedStorage, StorageBackends, storageNamespaces } from "@/lib/storage";
 
 export default function SettingsPage() {
   const { user, signOut } = useSupabaseAuth();
@@ -16,14 +18,15 @@ export default function SettingsPage() {
   const [signOutLoading, setSignOutLoading] = useState(false);
 
   useEffect(() => {
-    // Load saved language preference
-    const savedLang = localStorage.getItem('vinesight-language') || 'en';
+    const settingsStorage = createNamespacedStorage(storageNamespaces.settings, StorageBackends.local);
+    const savedLang = settingsStorage.get('language', z.enum(['en','hi'])) || 'en';
     setLanguage(savedLang);
   }, []);
 
   const handleLanguageChange = (newLang: string) => {
     setLanguage(newLang);
-    localStorage.setItem('vinesight-language', newLang);
+    const settingsStorage = createNamespacedStorage(storageNamespaces.settings, StorageBackends.local);
+    settingsStorage.set('language', newLang, { schema: z.enum(['en','hi']) });
   };
 
 
