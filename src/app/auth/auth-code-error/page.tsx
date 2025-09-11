@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useEffect, Suspense } from 'react';
 import { createClient } from '@/lib/supabase';
+import { clearAllAppStorage } from '@/lib/storage';
 
 function AuthCodeErrorContent() {
   const searchParams = useSearchParams();
@@ -42,8 +43,8 @@ function AuthCodeErrorContent() {
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Error signing out:', error);
-      // Fallback: clear all possible auth keys
-      localStorage.clear();
+      // Fallback: clear app storage namespaces only
+      clearAllAppStorage();
     }
     window.location.href = '/';
   };

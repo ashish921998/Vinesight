@@ -3,6 +3,7 @@
  */
 
 import { getSupabaseClient } from './supabase';
+import { clearAllAppStorage } from './storage';
 
 /**
  * Clear all authentication data from browser storage
@@ -10,35 +11,20 @@ import { getSupabaseClient } from './supabase';
  */
 export async function clearAuthStorage(): Promise<void> {
   try {
-    // Clear Supabase session
     const supabase = getSupabaseClient();
     await supabase.auth.signOut({ scope: 'local' });
 
-    // Clear localStorage items related to auth
-    const authKeys = Object.keys(localStorage).filter(key => 
-      key.includes('supabase') || 
-      key.includes('auth') || 
-      key.includes('session') ||
-      key.includes('token')
-    );
-    
-    authKeys.forEach(key => {
-      localStorage.removeItem(key);
-    });
+    clearAllAppStorage();
 
-    // Clear sessionStorage items
-    const sessionAuthKeys = Object.keys(sessionStorage).filter(key =>
-      key.includes('supabase') ||
-      key.includes('auth') ||
-      key.includes('session') ||
-      key.includes('token')
-    );
+    try {
+      const keys = typeof window !== 'undefined' ? Object.keys(localStorage) : []
+      keys.filter(k => k.includes('supabase') || k.startsWith('sb-')).forEach(k => localStorage.removeItem(k))
+    } catch {}
 
-    sessionAuthKeys.forEach(key => {
-      sessionStorage.removeItem(key);
-    });
-
-    // Auth storage cleared successfully
+    try {
+      const skeys = typeof window !== 'undefined' ? Object.keys(sessionStorage) : []
+      skeys.filter(k => k.includes('supabase') || k.startsWith('sb-')).forEach(k => sessionStorage.removeItem(k))
+    } catch {}
   } catch (error) {
     console.error('Error clearing auth storage:', error);
   }

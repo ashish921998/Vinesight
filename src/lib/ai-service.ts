@@ -1,5 +1,3 @@
-import * as tf from '@tensorflow/tfjs';
-import OpenAI from 'openai';
 
 export interface DiseaseDetectionResult {
   disease: string;
@@ -128,108 +126,30 @@ export const GRAPE_DISEASES = {
 };
 
 export class AIService {
-  private static openai: OpenAI | null = null;
-  private static diseaseModel: tf.LayersModel | null = null;
-  
-  // Initialize OpenAI client - Use server-side API routes instead
-  static async initializeOpenAI() {
-    // OpenAI calls should go through server-side API routes
-    // Client-side API key exposure is a security vulnerability
-    this.openai = null; // Removed client-side OpenAI initialization
-  }
-  
-  // Load pre-trained disease detection model
-  static async loadDiseaseModel(): Promise<void> {
-    try {
-      // In a real implementation, you would load a trained model
-      // For now, we'll simulate with a basic model structure
-      
-      // Create a simple CNN model for demonstration
-      const model = tf.sequential({
-        layers: [
-          tf.layers.conv2d({
-            inputShape: [224, 224, 3],
-            filters: 32,
-            kernelSize: 3,
-            activation: 'relu'
-          }),
-          tf.layers.maxPooling2d({poolSize: 2}),
-          tf.layers.conv2d({filters: 64, kernelSize: 3, activation: 'relu'}),
-          tf.layers.maxPooling2d({poolSize: 2}),
-          tf.layers.flatten(),
-          tf.layers.dense({units: 128, activation: 'relu'}),
-          tf.layers.dropout({rate: 0.5}),
-          tf.layers.dense({units: Object.keys(GRAPE_DISEASES).length, activation: 'softmax'})
-        ]
-      });
-      
-      this.diseaseModel = model;
-    } catch (error) {
-    }
-  }
-  
-  // Analyze image for disease detection
+  // Analyze image for disease detection via server route
   static async analyzeImage(imageElement: HTMLImageElement | HTMLCanvasElement): Promise<ImageAnalysisResult> {
     try {
-      // Preprocess image for model input
-      const tensor = tf.browser.fromPixels(imageElement)
-        .resizeNearestNeighbor([224, 224])
-        .expandDims(0)
-        .div(255.0);
-      
-      // Simulate disease detection (replace with actual model prediction)
-      const predictions = await this.simulateDiseaseDetection(tensor);
-      
-      // Clean up tensor
-      tensor.dispose();
-      
-      return {
-        diseaseDetection: predictions.diseaseDetection,
-        plantHealth: predictions.plantHealth,
-        grapeClusterCount: predictions.grapeClusterCount,
-        berrySize: predictions.berrySize,
-        ripeness: predictions.ripeness
-      };
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas not supported');
+      const width = (imageElement as HTMLImageElement).width || (imageElement as HTMLCanvasElement).width;
+      const height = (imageElement as HTMLImageElement).height || (imageElement as HTMLCanvasElement).height;
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(imageElement as any, 0, 0);
+      const blob: Blob = await new Promise((resolve) => canvas.toBlob((b) => resolve(b as Blob), 'image/jpeg', 0.8));
+      return await this.analyzeBlob(blob);
     } catch (error) {
       throw new Error('Failed to analyze image');
     }
   }
-  
-  // Simulate disease detection (replace with actual model inference)
-  private static async simulateDiseaseDetection(tensor: tf.Tensor): Promise<ImageAnalysisResult> {
-    // Simulate analysis delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Generate random but realistic results for demo
-    const diseases = Object.keys(GRAPE_DISEASES);
-    const randomDisease = diseases[Math.floor(Math.random() * diseases.length)];
-    const confidence = 0.7 + Math.random() * 0.25; // 70-95% confidence
-    
-    const diseaseInfo = GRAPE_DISEASES[randomDisease as keyof typeof GRAPE_DISEASES];
-    
-    let severity: 'low' | 'medium' | 'high' | 'critical' = 'low';
-    if (confidence > 0.9) severity = 'critical';
-    else if (confidence > 0.8) severity = 'high';
-    else if (confidence > 0.7) severity = 'medium';
-    
-    return {
-      diseaseDetection: {
-        disease: diseaseInfo.name,
-        confidence,
-        severity,
-        treatment: diseaseInfo.treatments,
-        description: diseaseInfo.description,
-        preventionTips: diseaseInfo.prevention
-      },
-      plantHealth: {
-        overallHealth: randomDisease === 'healthy' ? 85 + Math.random() * 15 : 40 + Math.random() * 30,
-        leafColor: randomDisease === 'healthy' ? 'healthy' : Math.random() > 0.5 ? 'yellowing' : 'spotted',
-        leafDamage: randomDisease === 'healthy' ? Math.random() * 5 : 10 + Math.random() * 40
-      },
-      grapeClusterCount: Math.floor(3 + Math.random() * 8),
-      berrySize: ['small', 'medium', 'large'][Math.floor(Math.random() * 3)] as 'small' | 'medium' | 'large',
-      ripeness: ['unripe', 'veraison', 'ripe', 'overripe'][Math.floor(Math.random() * 4)] as 'unripe' | 'veraison' | 'ripe' | 'overripe'
-    };
+
+  static async analyzeBlob(blob: Blob): Promise<ImageAnalysisResult> {
+    const form = new FormData();
+    form.append('file', blob, 'photo.jpg');
+    const res = await fetch('/api/ai/vision', { method: 'POST', body: form });
+    if (!res.ok) throw new Error('Vision analysis failed');
+    return await res.json();
   }
   
   // Generate AI-powered recommendations
@@ -356,39 +276,35 @@ export class AIService {
     onStreamUpdate: (chunk: string) => void
   ): Promise<string> {
     try {
-      // Use the main chat route with streaming enabled
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000);
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message,
-          context,
-          stream: true // Enable streaming
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, context, stream: true }),
+        signal: controller.signal
       });
-      
-      if (!response.ok) {
-        throw new Error('Streaming request failed');
-      }
+      clearTimeout(timeout);
+      if (!response.ok) throw new Error('Streaming request failed');
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let fullResponse = '';
+      const started = Date.now();
+      let iterations = 0;
 
       if (reader) {
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-
+        let done = false;
+        while (!done && Date.now() - started < 45000 && iterations < 2000) {
+          iterations++;
+          const res = await reader.read();
+          done = !!res.done;
+          const value = res.value;
+          if (!value) continue;
           const chunk = decoder.decode(value, { stream: true });
-          
-          // Handle streaming text chunks
           const lines = chunk.split('\n');
           for (const line of lines) {
             if (line.startsWith('0:')) {
-              // Extract text content from stream format
               const content = line.slice(2).replace(/"/g, '');
               if (content && content !== 'null') {
                 fullResponse += content;
@@ -397,12 +313,12 @@ export class AIService {
             }
           }
         }
+        try { reader.releaseLock(); } catch {}
       }
 
       return fullResponse || this.generateFallbackResponse(message, context);
     } catch (error) {
       console.error('Streaming error:', error);
-      // Fallback to regular response
       return await this.getChatResponse(message, context);
     }
   }
@@ -894,5 +810,4 @@ export class AIService {
 
 // Initialize the AI service
 if (typeof window !== 'undefined') {
-  AIService.loadDiseaseModel();
 }

@@ -5,6 +5,7 @@
 
 import { createClient } from './supabase';
 import type { Database } from '@/types/database';
+import { conversationStorage } from './conversation-storage';
 
 // Enhanced interfaces that map to database schema
 export interface Message {
@@ -57,8 +58,7 @@ class SupabaseConversationStorage {
    */
   async loadConversations(userId?: string, farmId?: number): Promise<Conversation[]> {
     if (!userId) {
-      // Fallback to localStorage if no user (backward compatibility)
-      return this.loadFromLocalStorage();
+      return conversationStorage.loadConversations();
     }
 
     try {
@@ -95,8 +95,7 @@ class SupabaseConversationStorage {
    */
   async saveConversation(conversation: Conversation, userId?: string): Promise<Conversation | null> {
     if (!userId) {
-      // Fallback to localStorage if no user
-      this.saveToLocalStorage(conversation);
+      conversationStorage.saveConversation(conversation);
       return conversation;
     }
 
@@ -187,7 +186,7 @@ class SupabaseConversationStorage {
    */
   async getConversation(conversationId: string, userId?: string): Promise<Conversation | null> {
     if (!userId) {
-      return null;
+      return conversationStorage.getConversation(conversationId);
     }
 
     try {
@@ -241,7 +240,7 @@ class SupabaseConversationStorage {
    */
   async clearAllConversations(userId?: string): Promise<void> {
     if (!userId) {
-      localStorage.removeItem('ai_conversations');
+      conversationStorage.clearAllConversations();
       return;
     }
 
