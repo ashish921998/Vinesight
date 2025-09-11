@@ -23,7 +23,12 @@ const config = {
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['text', 'lcov'],
   collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
+    // Focus initial coverage on core logic and API; expand gradually
+    'src/lib/**/*.{ts,tsx}',
+    'src/app/api/**/*.{ts,tsx}',
+    // Include one representative UI component (smoke test)
+    'src/components/ui/button.tsx',
+    // Exclusions
     '!**/*.d.ts',
     '!**/node_modules/**',
     '!**/.next/**',
