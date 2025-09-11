@@ -42,6 +42,7 @@ export interface SprayRecord {
   id?: number;
   farm_id: number;
   date: string;
+  pest_disease?: string;
   chemical: string;
   dose: string;
   quantity_amount?: number; // numeric value for quantity

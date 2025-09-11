@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
       <SEOSchema 
         title="Privacy Policy - VineSight Grape Farming Assistant"
         description="Learn how VineSight protects your privacy and handles your farming data. Comprehensive privacy policy for Indian grape farmers."
-        type="website"
+        type="guide"
         image="https://farmai.vercel.app/og-image.png"
       />
 

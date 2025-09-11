@@ -6,8 +6,6 @@ import {
   Sprout, 
   Menu, 
   X, 
-  Calculator,
-  BookOpen,
   ArrowRight
 } from "lucide-react";
 import { LoginButton } from "@/components/auth/LoginButton";
@@ -54,9 +52,8 @@ export function Navbar() {
               <button
                 key={item.name}
                 onClick={() => scrollToSection(item.href)}
-                className="text-gray-600 hover:text-gray-900 font-medium transition-colors flex items-center gap-2"
+                className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
               >
-                {item.icon && <item.icon className="h-4 w-4" />}
                 {item.name}
               </button>
             ))}
@@ -96,7 +93,6 @@ export function Navbar() {
                 onClick={() => scrollToSection(item.href)}
                 className="block w-full text-left px-4 py-3 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-colors flex items-center gap-3"
               >
-                {item.icon && <item.icon className="h-5 w-5" />}
                 {item.name}
                 <ArrowRight className="h-4 w-4 ml-auto" />
               </button>
