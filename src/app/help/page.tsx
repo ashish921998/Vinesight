@@ -171,7 +171,7 @@ export default function HelpCenter() {
       <SEOSchema 
         title="Help Center - VineSight Grape Farming Assistant"
         description="Get help with VineSight's grape farming tools, calculators, AI features, and data management. Comprehensive guides and FAQs for Indian grape farmers."
-        type="website"
+        type="guide"
         image="https://farmai.vercel.app/og-image.png"
       />
 

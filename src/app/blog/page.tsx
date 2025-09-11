@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -239,7 +239,7 @@ export default function BlogPage() {
           <SEOSchema 
             title={`${post.title} - VineSight Blog`}
             description={post.excerpt}
-            type="article"
+            type="guide"
             image="https://farmai.vercel.app/og-image.png"
           />
 
@@ -311,7 +311,7 @@ export default function BlogPage() {
       <SEOSchema 
         title="Blog - VineSight Grape Farming Insights"
         description="Expert insights, tips, and guides for grape farming. Learn about irrigation, pest management, AI technology, and market trends from agricultural experts."
-        type="website"
+        type="guide"
         image="https://farmai.vercel.app/og-image.png"
       />
 
