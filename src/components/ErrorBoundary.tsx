@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import * as Sentry from '@sentry/nextjs'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,8 +51,7 @@ export class ErrorBoundary extends Component<Props, State> {
         });
       }
       
-      // Here you would send to error monitoring service like Sentry
-      // Sentry.captureException(error, { contexts: { react: errorInfo } });
+      Sentry.captureException(error, { contexts: { react: errorInfo } });
     } else {
       console.error('Error caught by boundary:', error, errorInfo);
     }
@@ -167,7 +167,7 @@ export function AsyncErrorBoundary({ children }: { children: ReactNode }) {
       console.error('Unhandled promise rejection:', event.reason);
       // In production, send to error monitoring service
       if (process.env.NODE_ENV === 'production') {
-        // Sentry.captureException(event.reason);
+        Sentry.captureException(event.reason as any);
       }
     };
 

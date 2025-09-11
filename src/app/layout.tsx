@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { GoogleAnalytics, SearchConsoleVerification } from "@/components/GoogleAnalytics";
 import { LayoutContent } from "@/components/layout/LayoutContent";
+import SentryInit from "@/components/SentryInit";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -147,6 +148,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${merriweather.variable} ${sourceCodePro.variable} antialiased`}
       >
+        <SentryInit />
         <AsyncErrorBoundary>
           <Suspense fallback={
             <div className="min-h-screen flex items-center justify-center bg-background">

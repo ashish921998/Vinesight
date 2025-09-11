@@ -1,4 +1,5 @@
 import withPWA from 'next-pwa';
+import { withSentryConfig } from '@sentry/nextjs';
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -127,4 +128,4 @@ const pwaConfig = withPWA({
   runtimeCaching: []
 });
 
-export default pwaConfig(nextConfig);
+export default withSentryConfig(pwaConfig(nextConfig), { silent: true }, { hideSourceMaps: true });
