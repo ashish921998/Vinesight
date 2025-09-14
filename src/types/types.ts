@@ -51,6 +51,7 @@ export interface Farm {
   timezone?: string; // timezone identifier
   locationSource?: 'manual' | 'search' | 'current'; // how location was set
   locationUpdatedAt?: string; // when location was last updated
+  dateOfPruning?: string; // Date when pruning was done
   createdAt?: string;
   updatedAt?: string;
   userId?: string; // For multi-user support

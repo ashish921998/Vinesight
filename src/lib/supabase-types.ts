@@ -86,7 +86,8 @@ export function toApplicationFarm(dbFarm: DatabaseFarm): Farm {
     locationUpdatedAt: dbFarm.location_updated_at || undefined,
     createdAt: dbFarm.created_at || undefined,
     updatedAt: dbFarm.updated_at || undefined,
-    userId: dbFarm.user_id || undefined
+    userId: dbFarm.user_id || undefined,
+    dateOfPruning: dbFarm.date_of_pruning || undefined
   }
 }
 
@@ -110,7 +111,8 @@ export function toDatabaseFarmInsert(appFarm: Omit<import('@/types/types').Farm,
     timezone: appFarm.timezone || null,
     location_source: appFarm.locationSource || null,
     location_updated_at: appFarm.locationUpdatedAt || null,
-    user_id: appFarm.user_id || null
+    user_id: appFarm.user_id || null,
+    date_of_pruning: appFarm.dateOfPruning || null
   }
 }
 
@@ -136,6 +138,7 @@ export function toDatabaseFarmUpdate(appFarmUpdates: Partial<Farm>): DatabaseFar
   if (appFarmUpdates.locationSource !== undefined) update.location_source = appFarmUpdates.locationSource || null
   if (appFarmUpdates.locationUpdatedAt !== undefined) update.location_updated_at = appFarmUpdates.locationUpdatedAt || null
   if (appFarmUpdates.userId !== undefined) update.user_id = appFarmUpdates.userId || null
+  if (appFarmUpdates.dateOfPruning !== undefined) update.date_of_pruning = appFarmUpdates.dateOfPruning || null
 
   return update
 }
@@ -190,9 +193,11 @@ export function toApplicationSprayRecord(dbRecord: DatabaseSprayRecord): import(
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
-    pest_disease: dbRecord.pest_disease,
     chemical: dbRecord.chemical,
     dose: dbRecord.dose,
+    quantity_amount: dbRecord.quantity_amount || undefined,
+    quantity_unit: dbRecord.quantity_unit || undefined,
+    water_volume: dbRecord.water_volume || undefined,
     area: dbRecord.area,
     weather: dbRecord.weather,
     operator: dbRecord.operator,
@@ -205,9 +210,11 @@ export function toDatabaseSprayInsert(appRecord: Omit<import('./supabase').Spray
   return {
     farm_id: appRecord.farm_id,
     date: appRecord.date,
-    pest_disease: appRecord.pest_disease,
     chemical: appRecord.chemical,
     dose: appRecord.dose,
+    quantity_amount: appRecord.quantity_amount || null,
+    quantity_unit: appRecord.quantity_unit || null,
+    water_volume: appRecord.water_volume || null,
     area: appRecord.area,
     weather: appRecord.weather,
     operator: appRecord.operator,

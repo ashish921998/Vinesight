@@ -814,6 +814,7 @@ export type Database = {
         Row: {
           area: number
           created_at: string | null
+          date_of_pruning: string | null
           elevation: number | null
           grape_variety: string
           id: number
@@ -858,6 +859,7 @@ export type Database = {
           user_id?: string | null
           vine_spacing: number
           water_calculation_updated_at?: string | null
+          date_of_pruning: string | null
         }
         Update: {
           area?: number
@@ -882,6 +884,7 @@ export type Database = {
           user_id?: string | null
           vine_spacing?: number
           water_calculation_updated_at?: string | null
+          date_of_pruning?: string | null
         }
         Relationships: []
       }

@@ -15,6 +15,7 @@ import { RemainingWaterCard } from "@/components/farm-details/RemainingWaterCard
 import { UnifiedDataLogsModal } from "@/components/farm-details/UnifiedDataLogsModal";
 import { WaterCalculationModal } from "@/components/farm-details/WaterCalculationModal";
 import { EditRecordModal } from "@/components/journal/EditRecordModal";
+import { FarmModal } from "@/components/farm-details/forms/FarmModal";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -62,6 +63,10 @@ export default function FarmDetailsPage() {
   const [deletingRecord, setDeletingRecord] = useState<any>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Farm edit modal states
+  const [showFarmModal, setShowFarmModal] = useState(false);
+  const [farmSubmitLoading, setFarmSubmitLoading] = useState(false);
 
   // AI Features state
   const [aiPredictionsGenerated, setAiPredictionsGenerated] = useState(false);
@@ -196,9 +201,11 @@ export default function FarmDetailsPage() {
         record = await SupabaseService.addSprayRecord({
           farm_id: parseInt(farmId),
           date: date,
-          pest_disease: data.pest_disease || 'General',
           chemical: data.chemical || 'Unknown',
-          dose: "As per label",
+          dose: data.quantity_amount && data.quantity_unit ? `${data.quantity_amount}${data.quantity_unit}` : "As per label",
+          quantity_amount: data.quantity_amount ? parseFloat(data.quantity_amount) : undefined,
+          quantity_unit: data.quantity_unit || undefined,
+          water_volume: data.water_volume ? parseFloat(data.water_volume) : undefined,
           area: dashboardData?.farm?.area || 0,
           weather: "Clear",
           operator: "Farm Owner",
@@ -312,12 +319,44 @@ export default function FarmDetailsPage() {
     loadDashboardData();
   };
 
+  // Farm edit and delete handlers
+  const handleEditFarm = (farm: Farm) => {
+    setShowFarmModal(true);
+  };
+
+  const handleDeleteFarm = async (farmId: number) => {
+    if (confirm("Are you sure you want to delete this farm? This will also delete all associated records.")) {
+      try {
+        await SupabaseService.deleteFarm(farmId);
+        router.push('/farms'); // Navigate back to farms list
+      } catch (error) {
+        console.error("Error deleting farm:", error);
+      }
+    }
+  };
+
+  const handleFarmSubmit = async (farmData: any) => {
+    try {
+      setFarmSubmitLoading(true);
+      await SupabaseService.updateFarm(parseInt(farmId), farmData);
+      await loadDashboardData();
+      setShowFarmModal(false);
+    } catch (error) {
+      console.error("Error updating farm:", error);
+      throw error;
+    } finally {
+      setFarmSubmitLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Farm Header */}
       {dashboardData?.farm && <FarmHeader 
         farm={dashboardData?.farm}
         loading={loading}
+        onEdit={handleEditFarm}
+        onDelete={handleDeleteFarm}
       />}
 
       {/* Farm Overview */}
@@ -431,6 +470,17 @@ export default function FarmDetailsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Farm Edit Modal */}
+      {dashboardData?.farm && (
+        <FarmModal
+          isOpen={showFarmModal}
+          onClose={() => setShowFarmModal(false)}
+          onSubmit={handleFarmSubmit}
+          editingFarm={dashboardData.farm}
+          isSubmitting={farmSubmitLoading}
+        />
+      )}
     </div>
   );
 }

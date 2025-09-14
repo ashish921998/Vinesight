@@ -28,6 +28,7 @@ interface FormData {
   rowSpacing: string;
   totalTankCapacity: string;
   systemDischarge: string;
+  dateOfPruning: string;
 }
 
 interface LocationData {
@@ -53,7 +54,8 @@ export function FarmModal({
     vineSpacing: editingFarm?.vineSpacing?.toString() || "",
     rowSpacing: editingFarm?.rowSpacing?.toString() || "",
     totalTankCapacity: editingFarm?.totalTankCapacity?.toString() || "",
-    systemDischarge: editingFarm?.systemDischarge?.toString() || ""
+    systemDischarge: editingFarm?.systemDischarge?.toString() || "",
+    dateOfPruning: editingFarm?.dateOfPruning || ""
   }));
 
   const [locationData, setLocationData] = useState<LocationData>(() => ({
@@ -75,7 +77,8 @@ export function FarmModal({
         vineSpacing: editingFarm.vineSpacing?.toString() || "",
         rowSpacing: editingFarm.rowSpacing?.toString() || "",
         totalTankCapacity: editingFarm.totalTankCapacity?.toString() || "",
-        systemDischarge: editingFarm.systemDischarge?.toString() || ""
+        systemDischarge: editingFarm.systemDischarge?.toString() || "",
+        dateOfPruning: editingFarm.dateOfPruning || ""
       });
       
       setLocationData({
@@ -95,7 +98,8 @@ export function FarmModal({
         vineSpacing: "",
         rowSpacing: "",
         totalTankCapacity: "",
-        systemDischarge: ""
+        systemDischarge: "",
+        dateOfPruning: ""
       });
       
       setLocationData({
@@ -149,7 +153,7 @@ export function FarmModal({
       rowSpacing: parseFloat(formData.rowSpacing),
       totalTankCapacity: formData.totalTankCapacity ? parseFloat(formData.totalTankCapacity) : undefined,
       systemDischarge: formData.systemDischarge ? parseFloat(formData.systemDischarge) : undefined,
-      // Include location data if available
+      dateOfPruning: formData.dateOfPruning || undefined,
       latitude: locationData.latitude ? parseFloat(locationData.latitude) : undefined,
       longitude: locationData.longitude ? parseFloat(locationData.longitude) : undefined,
       elevation: locationData.elevation ? parseInt(locationData.elevation) : undefined,
@@ -332,6 +336,31 @@ export function FarmModal({
               <p className="text-xs text-gray-500 mt-1">
                 Optional: Default irrigation system discharge rate
               </p>
+            </div>
+
+            {/* Pruning Section */}
+            <div className="pt-4 border-t border-gray-200">
+              <div className="mb-3">
+                <h4 className="text-sm font-medium text-gray-700 mb-1">Pruning (Optional)</h4>
+                <p className="text-xs text-gray-500">
+                  Track pruning activities for your vineyard
+                </p>
+              </div>
+              
+              {/* Pruning Fields */}
+                <div>
+                  <Label htmlFor="dateOfPruning" className="text-sm font-medium text-gray-700">
+                    Date of Pruning
+                  </Label>
+                  <Input
+                    id="dateOfPruning"
+                    type="date"
+                    value={formData.dateOfPruning}
+                    onChange={(e) => handleInputChange("dateOfPruning", e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                    className="mt-1 h-11"
+                  />
+              </div>
             </div>
 
             {/* Location Section */}
