@@ -26,7 +26,6 @@ export const getNavigation = (t: any) => [
   { name: t('navigation.farmManagement'), href: '/farms', icon: Sprout },
   { name: t('navigation.calculators'), href: '/calculators', icon: Calculator },
   { name: t('navigation.aiAssistant'), href: '/ai-assistant', icon: Brain },
-  { name: t('navigation.export'), href: '/reports', icon: Download },
   { name: t('navigation.analytics'), href: '/analytics', icon: Activity },
   { name: t('navigation.weather'), href: '/weather', icon: CloudSun },
   { name: t('navigation.reminders'), href: '/reminders', icon: Users },

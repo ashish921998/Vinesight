@@ -310,9 +310,6 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                   </div>
                 )}
               </div>
-              <div className="text-xs text-muted-foreground">
-                {weatherData.location?.name || selectedFarm?.locationName || selectedFarm?.region}
-              </div>
             </div>
           </div>
         )}
