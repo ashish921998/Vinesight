@@ -1,15 +1,15 @@
-"use client";
+'use client'
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function ExportPage() {
-  const router = useRouter();
+  const router = useRouter()
 
   useEffect(() => {
     // Redirect to the unified reports page
-    router.replace('/reports');
-  }, [router]);
+    router.replace('/reports')
+  }, [router])
 
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -18,5 +18,5 @@ export default function ExportPage() {
         <p className="text-muted-foreground">Redirecting to Reports...</p>
       </div>
     </div>
-  );
+  )
 }

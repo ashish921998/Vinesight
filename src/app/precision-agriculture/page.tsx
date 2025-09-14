@@ -1,139 +1,169 @@
-"use client";
+'use client'
 
-import { SEOSchema } from "@/components/SEOSchema";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Satellite, 
-  Database, 
-  Bot, 
-  Zap, 
-  BarChart3, 
+import { SEOSchema } from '@/components/SEOSchema'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import {
+  Satellite,
+  Database,
+  Bot,
+  Zap,
+  BarChart3,
   MapPin,
   Cpu,
   Wifi,
   Gauge,
-  TrendingUp
-} from "lucide-react";
+  TrendingUp,
+} from 'lucide-react'
 
 export default function PrecisionAgriculture() {
   const technologies = [
     {
       icon: Satellite,
-      title: "GPS & Remote Sensing",
-      description: "Satellite-guided precision farming",
-      benefits: ["Field mapping accuracy", "Variable rate applications", "Yield monitoring", "Boundary management"],
-      adoption: "95%",
-      roi: "20-30%"
+      title: 'GPS & Remote Sensing',
+      description: 'Satellite-guided precision farming',
+      benefits: [
+        'Field mapping accuracy',
+        'Variable rate applications',
+        'Yield monitoring',
+        'Boundary management',
+      ],
+      adoption: '95%',
+      roi: '20-30%',
     },
     {
       icon: Database,
-      title: "Data Analytics Platform",
-      description: "Big data for agricultural insights",
-      benefits: ["Predictive analytics", "Historical comparisons", "Performance benchmarking", "Decision support"],
-      adoption: "78%",
-      roi: "15-25%"
+      title: 'Data Analytics Platform',
+      description: 'Big data for agricultural insights',
+      benefits: [
+        'Predictive analytics',
+        'Historical comparisons',
+        'Performance benchmarking',
+        'Decision support',
+      ],
+      adoption: '78%',
+      roi: '15-25%',
     },
     {
       icon: Bot,
-      title: "Agricultural Robotics",
-      description: "Automated farming operations",
-      benefits: ["Precision planting", "Autonomous harvesting", "Selective spraying", "24/7 monitoring"],
-      adoption: "35%",
-      roi: "40-60%"
+      title: 'Agricultural Robotics',
+      description: 'Automated farming operations',
+      benefits: [
+        'Precision planting',
+        'Autonomous harvesting',
+        'Selective spraying',
+        '24/7 monitoring',
+      ],
+      adoption: '35%',
+      roi: '40-60%',
     },
     {
       icon: Wifi,
-      title: "IoT Sensor Networks",
-      description: "Real-time field monitoring",
-      benefits: ["Soil moisture tracking", "Weather monitoring", "Pest detection", "Equipment status"],
-      adoption: "65%",
-      roi: "25-35%"
-    }
-  ];
+      title: 'IoT Sensor Networks',
+      description: 'Real-time field monitoring',
+      benefits: [
+        'Soil moisture tracking',
+        'Weather monitoring',
+        'Pest detection',
+        'Equipment status',
+      ],
+      adoption: '65%',
+      roi: '25-35%',
+    },
+  ]
 
   const precisionTechniques = [
     {
-      category: "Soil Management",
+      category: 'Soil Management',
       icon: MapPin,
       techniques: [
-        "Grid soil sampling",
-        "Variable rate fertilization",
-        "pH management zones",
-        "Organic matter mapping"
+        'Grid soil sampling',
+        'Variable rate fertilization',
+        'pH management zones',
+        'Organic matter mapping',
       ],
-      impact: "30% reduction in fertilizer costs"
+      impact: '30% reduction in fertilizer costs',
     },
     {
-      category: "Crop Monitoring",
+      category: 'Crop Monitoring',
       icon: Gauge,
       techniques: [
-        "NDVI vegetation indices",
-        "Thermal imaging",
-        "Growth stage tracking",
-        "Stress detection"
+        'NDVI vegetation indices',
+        'Thermal imaging',
+        'Growth stage tracking',
+        'Stress detection',
       ],
-      impact: "20% increase in early problem detection"
+      impact: '20% increase in early problem detection',
     },
     {
-      category: "Water Management",
+      category: 'Water Management',
       icon: Zap,
       techniques: [
-        "Smart irrigation systems",
-        "Soil moisture optimization",
-        "Weather-based scheduling",
-        "Deficit irrigation strategies"
+        'Smart irrigation systems',
+        'Soil moisture optimization',
+        'Weather-based scheduling',
+        'Deficit irrigation strategies',
       ],
-      impact: "40% water usage reduction"
+      impact: '40% water usage reduction',
     },
     {
-      category: "Yield Optimization",
+      category: 'Yield Optimization',
       icon: TrendingUp,
       techniques: [
-        "Yield mapping",
-        "Prescription seeding",
-        "Harvest optimization",
-        "Quality prediction"
+        'Yield mapping',
+        'Prescription seeding',
+        'Harvest optimization',
+        'Quality prediction',
       ],
-      impact: "15-25% yield improvement"
-    }
-  ];
+      impact: '15-25% yield improvement',
+    },
+  ]
 
   const implementationSteps = [
     {
       step: 1,
-      title: "Assessment & Planning",
-      description: "Evaluate current operations and set precision agriculture goals",
-      duration: "2-4 weeks",
-      actions: ["Farm audit", "Technology needs analysis", "Budget planning", "ROI projections"]
+      title: 'Assessment & Planning',
+      description: 'Evaluate current operations and set precision agriculture goals',
+      duration: '2-4 weeks',
+      actions: ['Farm audit', 'Technology needs analysis', 'Budget planning', 'ROI projections'],
     },
     {
       step: 2,
-      title: "Infrastructure Setup",
-      description: "Install necessary hardware and connectivity",
-      duration: "4-8 weeks", 
-      actions: ["GPS base stations", "IoT sensor deployment", "Communication networks", "Data storage systems"]
+      title: 'Infrastructure Setup',
+      description: 'Install necessary hardware and connectivity',
+      duration: '4-8 weeks',
+      actions: [
+        'GPS base stations',
+        'IoT sensor deployment',
+        'Communication networks',
+        'Data storage systems',
+      ],
     },
     {
       step: 3,
-      title: "Data Collection",
-      description: "Begin gathering field and operational data",
-      duration: "1-2 seasons",
-      actions: ["Soil sampling", "Yield monitoring", "Weather tracking", "Equipment data logging"]
+      title: 'Data Collection',
+      description: 'Begin gathering field and operational data',
+      duration: '1-2 seasons',
+      actions: ['Soil sampling', 'Yield monitoring', 'Weather tracking', 'Equipment data logging'],
     },
     {
       step: 4,
-      title: "Analysis & Optimization",
-      description: "Use data insights to optimize operations",
-      duration: "Ongoing",
-      actions: ["Prescription maps", "Variable rate applications", "Performance monitoring", "Continuous improvement"]
-    }
-  ];
+      title: 'Analysis & Optimization',
+      description: 'Use data insights to optimize operations',
+      duration: 'Ongoing',
+      actions: [
+        'Prescription maps',
+        'Variable rate applications',
+        'Performance monitoring',
+        'Continuous improvement',
+      ],
+    },
+  ]
 
   return (
     <>
-      <SEOSchema 
+      <SEOSchema
         type="guide"
         title="Precision Agriculture Technology Guide - Smart Farming Solutions 2025"
         description="Complete guide to precision agriculture technologies, GPS farming, IoT sensors, and data-driven agricultural practices for modern farms."
@@ -141,7 +171,7 @@ export default function PrecisionAgriculture() {
         image="https://farmai.vercel.app/og-image.png"
         guideCategory="Precision Agriculture"
       />
-      
+
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Hero Section */}
         <div className="text-center mb-12">
@@ -149,8 +179,8 @@ export default function PrecisionAgriculture() {
             Precision Agriculture Technology
           </h1>
           <p className="text-xl text-muted-foreground mb-4 max-w-3xl mx-auto">
-            Transform your farming operations with cutting-edge technology. GPS guidance, IoT sensors, 
-            AI analytics, and robotic automation for maximum efficiency and sustainability.
+            Transform your farming operations with cutting-edge technology. GPS guidance, IoT
+            sensors, AI analytics, and robotic automation for maximum efficiency and sustainability.
           </p>
           <div className="flex flex-wrap justify-center gap-2 text-sm">
             <Badge variant="secondary">GPS Farming</Badge>
@@ -166,7 +196,7 @@ export default function PrecisionAgriculture() {
           <h2 className="text-3xl font-bold text-center mb-8">Core Technologies</h2>
           <div className="grid lg:grid-cols-2 gap-8">
             {technologies.map((tech) => {
-              const Icon = tech.icon;
+              const Icon = tech.icon
               return (
                 <Card key={tech.title} className="relative">
                   <CardHeader>
@@ -201,7 +231,7 @@ export default function PrecisionAgriculture() {
                     </ul>
                   </CardContent>
                 </Card>
-              );
+              )
             })}
           </div>
         </div>
@@ -211,7 +241,7 @@ export default function PrecisionAgriculture() {
           <h2 className="text-3xl font-bold text-center mb-8">Precision Farming Techniques</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {precisionTechniques.map((technique) => {
-              const Icon = technique.icon;
+              const Icon = technique.icon
               return (
                 <Card key={technique.category}>
                   <CardHeader>
@@ -234,7 +264,7 @@ export default function PrecisionAgriculture() {
                     </div>
                   </CardContent>
                 </Card>
-              );
+              )
             })}
           </div>
         </div>
@@ -284,9 +314,7 @@ export default function PrecisionAgriculture() {
         <Card className="mb-12">
           <CardHeader>
             <CardTitle className="text-2xl">Economic Benefits of Precision Agriculture</CardTitle>
-            <CardDescription>
-              Quantified returns from precision farming investments
-            </CardDescription>
+            <CardDescription>Quantified returns from precision farming investments</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -317,8 +345,9 @@ export default function PrecisionAgriculture() {
               Start Your Precision Agriculture Journey
             </h2>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              FarmAI integrates the latest precision agriculture technologies into an easy-to-use platform. 
-              Get GPS guidance, IoT sensor integration, and AI-powered analytics in one solution.
+              FarmAI integrates the latest precision agriculture technologies into an easy-to-use
+              platform. Get GPS guidance, IoT sensor integration, and AI-powered analytics in one
+              solution.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="h-12">
@@ -332,5 +361,5 @@ export default function PrecisionAgriculture() {
         </Card>
       </div>
     </>
-  );
+  )
 }

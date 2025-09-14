@@ -1,16 +1,16 @@
-"use client";
+'use client'
 
-import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { 
-  ArrowLeft, 
-  MessageCircle, 
-  AlertTriangle, 
+import { useParams, useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Progress } from '@/components/ui/progress'
+import {
+  ArrowLeft,
+  MessageCircle,
+  AlertTriangle,
   CheckCircle,
   TrendingUp,
   DollarSign,
@@ -29,60 +29,60 @@ import {
   Download,
   Settings,
   Users,
-  Activity
-} from "lucide-react";
-import { AIInsightsService, type AIInsight } from "@/lib/ai-insights-service";
-import { SupabaseService } from "@/lib/supabase-service";
-import { PestPredictionService } from "@/lib/pest-prediction-service";
-import { farmerLearningService } from "@/lib/farmer-learning-service";
-import { CriticalAlertsBanner } from "@/components/farm/CriticalAlertsBanner";
-import { type Farm } from "@/types/types";
-import { type CriticalAlert, type PestDiseasePrediction, type FarmerAIProfile } from "@/types/ai";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+  Activity,
+} from 'lucide-react'
+import { AIInsightsService, type AIInsight } from '@/lib/ai-insights-service'
+import { SupabaseService } from '@/lib/supabase-service'
+import { PestPredictionService } from '@/lib/pest-prediction-service'
+import { farmerLearningService } from '@/lib/farmer-learning-service'
+import { CriticalAlertsBanner } from '@/components/farm/CriticalAlertsBanner'
+import { type Farm } from '@/types/types'
+import { type CriticalAlert, type PestDiseasePrediction, type FarmerAIProfile } from '@/types/ai'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 export default function AIInsightsPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { user } = useSupabaseAuth();
-  const farmId = params.id as string;
-  
-  const [farm, setFarm] = useState<Farm | null>(null);
-  const [insightsByCategory, setInsightsByCategory] = useState<Record<string, AIInsight[]>>({});
-  const [criticalAlerts, setCriticalAlerts] = useState<CriticalAlert[]>([]);
-  const [pestPredictions, setPestPredictions] = useState<PestDiseasePrediction[]>([]);
-  const [farmerProfile, setFarmerProfile] = useState<FarmerAIProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const params = useParams()
+  const router = useRouter()
+  const { user } = useSupabaseAuth()
+  const farmId = params.id as string
+
+  const [farm, setFarm] = useState<Farm | null>(null)
+  const [insightsByCategory, setInsightsByCategory] = useState<Record<string, AIInsight[]>>({})
+  const [criticalAlerts, setCriticalAlerts] = useState<CriticalAlert[]>([])
+  const [pestPredictions, setPestPredictions] = useState<PestDiseasePrediction[]>([])
+  const [farmerProfile, setFarmerProfile] = useState<FarmerAIProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
   const loadInsights = useCallback(async () => {
     try {
       const insights = await AIInsightsService.getInsightsByCategory(
-        parseInt(farmId), 
-        user?.id || null
-      );
-      setInsightsByCategory(insights);
+        parseInt(farmId),
+        user?.id || null,
+      )
+      setInsightsByCategory(insights)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error("Error loading AI insights:", error);
+        console.error('Error loading AI insights:', error)
       }
       // Initialize with empty categories instead of mock data
-      setInsightsByCategory({});
+      setInsightsByCategory({})
     }
-  }, [farmId, user?.id]);
+  }, [farmId, user?.id])
 
   const loadCriticalAlerts = useCallback(async () => {
     try {
       // Generate critical alerts from pest predictions
-      const predictions = await PestPredictionService.getActivePredictions(parseInt(farmId));
-      const criticalPredictions = predictions.filter(p => 
-        p.riskLevel === 'critical' || p.riskLevel === 'high'
-      );
+      const predictions = await PestPredictionService.getActivePredictions(parseInt(farmId))
+      const criticalPredictions = predictions.filter(
+        (p) => p.riskLevel === 'critical' || p.riskLevel === 'high',
+      )
 
-      const alerts: CriticalAlert[] = criticalPredictions.map(prediction => ({
+      const alerts: CriticalAlert[] = criticalPredictions.map((prediction) => ({
         id: `pest_${prediction.id}`,
         type: 'pest_prediction' as const,
-        severity: prediction.riskLevel === 'critical' ? 'critical' as const : 'high' as const,
+        severity: prediction.riskLevel === 'critical' ? ('critical' as const) : ('high' as const),
         title: `${prediction.pestDiseaseType.replace('_', ' ').toUpperCase()} Risk Alert`,
         message: `${Math.round(prediction.probabilityScore * 100)}% probability of outbreak. ${prediction.preventionWindow.optimalTiming}`,
         icon: prediction.pestDiseaseType.includes('mildew') ? 'fungus' : 'pest',
@@ -90,118 +90,113 @@ export default function AIInsightsPage() {
         timeWindow: {
           start: prediction.preventionWindow.startDate,
           end: prediction.preventionWindow.endDate,
-          urgency: prediction.preventionWindow.optimalTiming
+          urgency: prediction.preventionWindow.optimalTiming,
         },
         actions: [
           {
             label: 'View Treatment Plan',
             type: 'primary' as const,
             action: 'navigate' as const,
-            actionData: { 
+            actionData: {
               route: `/farms/${farmId}/pest-management/${prediction.pestDiseaseType}`,
-              predictionId: prediction.id
-            }
+              predictionId: prediction.id,
+            },
           },
           {
             label: 'Acknowledge Alert',
             type: 'secondary' as const,
             action: 'execute' as const,
-            actionData: { action: 'acknowledge', predictionId: prediction.id }
-          }
+            actionData: { action: 'acknowledge', predictionId: prediction.id },
+          },
         ],
         farmId: parseInt(farmId),
-        createdAt: prediction.createdAt
-      }));
+        createdAt: prediction.createdAt,
+      }))
 
-      setCriticalAlerts(alerts);
+      setCriticalAlerts(alerts)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error("Error loading critical alerts:", error);
+        console.error('Error loading critical alerts:', error)
       }
     }
-  }, [farmId]);
+  }, [farmId])
 
   const loadPestPredictions = useCallback(async () => {
     try {
-      const predictions = await PestPredictionService.getActivePredictions(parseInt(farmId));
-      setPestPredictions(predictions);
+      const predictions = await PestPredictionService.getActivePredictions(parseInt(farmId))
+      setPestPredictions(predictions)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error("Error loading pest predictions:", error);
+        console.error('Error loading pest predictions:', error)
       }
     }
-  }, [farmId]);
+  }, [farmId])
 
   const loadFarmerProfile = useCallback(async () => {
     try {
       const profile = await farmerLearningService.getFarmerProfile(
-        user?.id || null, 
-        parseInt(farmId)
-      );
-      setFarmerProfile(profile);
+        user?.id || null,
+        parseInt(farmId),
+      )
+      setFarmerProfile(profile)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error("Error loading farmer profile:", error);
+        console.error('Error loading farmer profile:', error)
       }
     }
-  }, [farmId, user?.id]);
+  }, [farmId, user?.id])
 
   const loadData = useCallback(async () => {
     try {
-      setLoading(true);
-      
+      setLoading(true)
+
       // Load farm data first (essential for context)
-      const farmData = await SupabaseService.getDashboardSummary(parseInt(farmId));
-      setFarm(farmData.farm);
+      const farmData = await SupabaseService.getDashboardSummary(parseInt(farmId))
+      setFarm(farmData.farm)
 
       // Load critical data first for immediate display
-      await loadCriticalAlerts();
-      
+      await loadCriticalAlerts()
+
       // Load remaining data with staggered loading for better perceived performance
       setTimeout(async () => {
-        await Promise.all([
-          loadInsights(),
-          loadPestPredictions(),
-          loadFarmerProfile()
-        ]);
-      }, 100);
-
+        await Promise.all([loadInsights(), loadPestPredictions(), loadFarmerProfile()])
+      }, 100)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error("Error loading AI insights:", error);
+        console.error('Error loading AI insights:', error)
       }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [farmId, loadInsights, loadCriticalAlerts, loadPestPredictions, loadFarmerProfile]);
+  }, [farmId, loadInsights, loadCriticalAlerts, loadPestPredictions, loadFarmerProfile])
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    loadData()
+  }, [loadData])
 
   // These functions are now defined as useCallback above
 
   const handleBack = () => {
-    router.push(`/farms/${farmId}`);
-  };
+    router.push(`/farms/${farmId}`)
+  }
 
   const handleInsightAction = async (insight: AIInsight) => {
     try {
       if (insight.actionType === 'navigate' && insight.actionData?.route) {
-        router.push(insight.actionData.route);
+        router.push(insight.actionData.route)
       } else {
-        const result = await AIInsightsService.executeInsightAction(insight);
+        const result = await AIInsightsService.executeInsightAction(insight)
         if (result.success) {
           if (process.env.NODE_ENV === 'development') {
             // eslint-disable-next-line no-console
-            console.log(result.message);
+            console.log(result.message)
           }
           // Refresh insights after execution
-          await loadData();
+          await loadData()
         }
       }
 
@@ -213,34 +208,38 @@ export default function AIInsightsPage() {
           'accept_recommendation',
           {
             originalSuggestion: insight,
-            reasoning: 'User clicked on insight action'
-          }
-        );
+            reasoning: 'User clicked on insight action',
+          },
+        )
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error('Error handling insight action:', error);
+        console.error('Error handling insight action:', error)
       }
     }
-  };
+  }
 
-  const handleAlertAction = async (alertId: string, action: string, actionData?: Record<string, any>) => {
+  const handleAlertAction = async (
+    alertId: string,
+    action: string,
+    actionData?: Record<string, any>,
+  ) => {
     try {
       if (action === 'navigate' && actionData?.route) {
-        router.push(actionData.route);
+        router.push(actionData.route)
       } else if (action === 'execute' && actionData?.action === 'acknowledge') {
         // Mark alert as acknowledged
-        const predictionId = actionData.predictionId;
+        const predictionId = actionData.predictionId
         if (predictionId) {
           await PestPredictionService.updatePredictionOutcome(
             predictionId,
             'acknowledged',
-            'farmer_acknowledged'
-          );
-          
+            'farmer_acknowledged',
+          )
+
           // Remove from critical alerts
-          setCriticalAlerts(prev => prev.filter(alert => alert.id !== alertId));
+          setCriticalAlerts((prev) => prev.filter((alert) => alert.id !== alertId))
         }
       }
 
@@ -250,16 +249,16 @@ export default function AIInsightsPage() {
           user.id,
           parseInt(farmId),
           action === 'acknowledge' ? 'accept_recommendation' : 'reject_recommendation',
-          actionData || {}
-        );
+          actionData || {},
+        )
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error('Error handling alert action:', error);
+        console.error('Error handling alert action:', error)
       }
     }
-  };
+  }
 
   const getCategoryInfo = (categoryKey: string) => {
     const categories = {
@@ -269,28 +268,28 @@ export default function AIInsightsPage() {
         icon: Bug,
         color: 'text-red-600',
         bgColor: 'bg-red-50',
-        borderColor: 'border-red-200'
+        borderColor: 'border-red-200',
       },
       task_recommendation: {
         name: 'Smart Tasks',
         icon: CheckCircle,
         color: 'text-blue-600',
         bgColor: 'bg-blue-50',
-        borderColor: 'border-blue-200'
+        borderColor: 'border-blue-200',
       },
       profitability_insight: {
         name: 'Profitability',
         icon: BarChart3,
         color: 'text-emerald-600',
         bgColor: 'bg-emerald-50',
-        borderColor: 'border-emerald-200'
+        borderColor: 'border-emerald-200',
       },
       weather_alert: {
         name: 'Weather Alerts',
         icon: CloudRain,
         color: 'text-sky-600',
         bgColor: 'bg-sky-50',
-        borderColor: 'border-sky-200'
+        borderColor: 'border-sky-200',
       },
       // Legacy Categories
       pest_alert: {
@@ -298,74 +297,82 @@ export default function AIInsightsPage() {
         icon: AlertTriangle,
         color: 'text-red-600',
         bgColor: 'bg-red-50',
-        borderColor: 'border-red-200'
+        borderColor: 'border-red-200',
       },
       weather_advisory: {
         name: 'Weather Alerts',
         icon: CloudRain,
         color: 'text-sky-600',
         bgColor: 'bg-sky-50',
-        borderColor: 'border-sky-200'
+        borderColor: 'border-sky-200',
       },
       financial_insight: {
         name: 'Financial',
         icon: DollarSign,
         color: 'text-emerald-600',
         bgColor: 'bg-emerald-50',
-        borderColor: 'border-emerald-200'
+        borderColor: 'border-emerald-200',
       },
       growth_optimization: {
         name: 'Growth Tips',
         icon: Sprout,
         color: 'text-purple-600',
         bgColor: 'bg-purple-50',
-        borderColor: 'border-purple-200'
+        borderColor: 'border-purple-200',
       },
       market_intelligence: {
         name: 'Market Intel',
         icon: TrendingUp,
         color: 'text-orange-600',
         bgColor: 'bg-orange-50',
-        borderColor: 'border-orange-200'
-      }
-    };
+        borderColor: 'border-orange-200',
+      },
+    }
 
-    return categories[categoryKey as keyof typeof categories] || {
-      name: 'Other',
-      icon: Target,
-      color: 'text-gray-600',
-      bgColor: 'bg-gray-50',
-      borderColor: 'border-gray-200'
-    };
-  };
+    return (
+      categories[categoryKey as keyof typeof categories] || {
+        name: 'Other',
+        icon: Target,
+        color: 'text-gray-600',
+        bgColor: 'bg-gray-50',
+        borderColor: 'border-gray-200',
+      }
+    )
+  }
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'critical': return 'text-red-600 bg-red-50 border-red-200';
-      case 'high': return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      default: return 'text-green-600 bg-green-50 border-green-200';
+      case 'critical':
+        return 'text-red-600 bg-red-50 border-red-200'
+      case 'high':
+        return 'text-orange-600 bg-orange-50 border-orange-200'
+      case 'medium':
+        return 'text-yellow-600 bg-yellow-50 border-yellow-200'
+      default:
+        return 'text-green-600 bg-green-50 border-green-200'
     }
-  };
+  }
 
   const getAllInsights = () => {
-    return Object.values(insightsByCategory).flat().sort((a, b) => {
-      const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-      const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder];
-      const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder];
-      return aPriority - bPriority;
-    });
-  };
+    return Object.values(insightsByCategory)
+      .flat()
+      .sort((a, b) => {
+        const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
+        const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder]
+        const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder]
+        return aPriority - bPriority
+      })
+  }
 
   const getInsightsToShow = () => {
     if (selectedCategory === 'all') {
-      return getAllInsights();
+      return getAllInsights()
     }
-    return insightsByCategory[selectedCategory] || [];
-  };
+    return insightsByCategory[selectedCategory] || []
+  }
 
-  const totalInsights = getAllInsights().length;
-  const criticalInsights = getAllInsights().filter(i => i.priority === 'critical').length;
+  const totalInsights = getAllInsights().length
+  const criticalInsights = getAllInsights().filter((i) => i.priority === 'critical').length
 
   if (loading) {
     return (
@@ -393,7 +400,7 @@ export default function AIInsightsPage() {
               </div>
             ))}
           </div>
-          
+
           {/* Overview Card Skeleton */}
           <div className="bg-white rounded-lg p-6 mb-6 animate-pulse">
             <div className="flex items-center gap-2 mb-4">
@@ -420,7 +427,10 @@ export default function AIInsightsPage() {
           {/* Insight Cards Skeleton */}
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-lg border border-l-4 border-l-gray-300 animate-pulse">
+              <div
+                key={i}
+                className="bg-white rounded-lg border border-l-4 border-l-gray-300 animate-pulse"
+              >
                 <div className="p-4">
                   <div className="flex items-start gap-3 mb-3">
                     <div className="w-9 h-9 bg-gray-200 rounded-lg"></div>
@@ -444,7 +454,7 @@ export default function AIInsightsPage() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -453,12 +463,7 @@ export default function AIInsightsPage() {
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBack}
-              className="h-8 w-8 p-0"
-            >
+            <Button variant="ghost" size="sm" onClick={handleBack} className="h-8 w-8 p-0">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex-1">
@@ -493,10 +498,7 @@ export default function AIInsightsPage() {
         {/* Critical Alerts Banner */}
         {criticalAlerts.length > 0 && (
           <div className="mb-6">
-            <CriticalAlertsBanner
-              alerts={criticalAlerts}
-              onAlertAction={handleAlertAction}
-            />
+            <CriticalAlertsBanner alerts={criticalAlerts} onAlertAction={handleAlertAction} />
           </div>
         )}
 
@@ -567,7 +569,7 @@ export default function AIInsightsPage() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-green-600">
-                  {getAllInsights().filter(i => i.timeRelevant).length}
+                  {getAllInsights().filter((i) => i.timeRelevant).length}
                 </div>
                 <div className="text-xs text-gray-600">Time Sensitive</div>
               </div>
@@ -579,21 +581,25 @@ export default function AIInsightsPage() {
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="space-y-4">
           <div className="flex items-center gap-2 overflow-x-auto pb-2">
             <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 h-9">
-              <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
-              {Object.keys(insightsByCategory).slice(0, 5).map((categoryKey) => {
-                const category = getCategoryInfo(categoryKey);
-                const count = insightsByCategory[categoryKey].length;
-                return (
-                  <TabsTrigger key={categoryKey} value={categoryKey} className="text-xs relative">
-                    {category.name}
-                    {count > 0 && (
-                      <Badge variant="secondary" className="ml-1 text-[10px] h-4 w-4 p-0">
-                        {count}
-                      </Badge>
-                    )}
-                  </TabsTrigger>
-                );
-              })}
+              <TabsTrigger value="all" className="text-xs">
+                All
+              </TabsTrigger>
+              {Object.keys(insightsByCategory)
+                .slice(0, 5)
+                .map((categoryKey) => {
+                  const category = getCategoryInfo(categoryKey)
+                  const count = insightsByCategory[categoryKey].length
+                  return (
+                    <TabsTrigger key={categoryKey} value={categoryKey} className="text-xs relative">
+                      {category.name}
+                      {count > 0 && (
+                        <Badge variant="secondary" className="ml-1 text-[10px] h-4 w-4 p-0">
+                          {count}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                  )
+                })}
             </TabsList>
           </div>
 
@@ -605,7 +611,7 @@ export default function AIInsightsPage() {
                   <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
                   <h3 className="text-lg font-semibold text-green-800 mb-2">All Clear!</h3>
                   <p className="text-gray-600">
-                    {selectedCategory === 'all' 
+                    {selectedCategory === 'all'
                       ? 'No insights available at this time. Your farm is operating optimally.'
                       : 'No insights in this category right now.'}
                   </p>
@@ -613,12 +619,12 @@ export default function AIInsightsPage() {
               </Card>
             ) : (
               getInsightsToShow().map((insight) => {
-                const categoryInfo = getCategoryInfo(insight.type);
-                const IconComponent = categoryInfo.icon;
+                const categoryInfo = getCategoryInfo(insight.type)
+                const IconComponent = categoryInfo.icon
 
                 return (
-                  <Card 
-                    key={insight.id} 
+                  <Card
+                    key={insight.id}
                     className={`border-l-4 ${getPriorityColor(insight.priority)} ${
                       insight.priority === 'critical' ? 'ring-1 ring-red-100' : ''
                     }`}
@@ -632,9 +638,14 @@ export default function AIInsightsPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="font-semibold text-base">{insight.title}</h3>
-                              <Badge 
-                                variant={insight.priority === 'critical' ? 'destructive' : 
-                                        insight.priority === 'high' ? 'secondary' : 'outline'} 
+                              <Badge
+                                variant={
+                                  insight.priority === 'critical'
+                                    ? 'destructive'
+                                    : insight.priority === 'high'
+                                      ? 'secondary'
+                                      : 'outline'
+                                }
                                 className="text-xs"
                               >
                                 {insight.priority.toUpperCase()}
@@ -660,7 +671,9 @@ export default function AIInsightsPage() {
                       <div className="space-y-1">
                         <div className="flex justify-between items-center text-xs">
                           <span className="text-gray-600">AI Confidence</span>
-                          <span className="font-medium">{Math.round(insight.confidence * 100)}%</span>
+                          <span className="font-medium">
+                            {Math.round(insight.confidence * 100)}%
+                          </span>
                         </div>
                         <Progress value={insight.confidence * 100} className="h-2" />
                       </div>
@@ -678,9 +691,9 @@ export default function AIInsightsPage() {
 
                       {/* Action Buttons */}
                       <div className="flex gap-2 pt-2">
-                        <Button 
+                        <Button
                           onClick={() => handleInsightAction(insight)}
-                          size="sm" 
+                          size="sm"
                           className={`flex-1 ${
                             insight.priority === 'critical' ? '' : 'variant-outline'
                           }`}
@@ -688,14 +701,14 @@ export default function AIInsightsPage() {
                         >
                           {insight.actionLabel}
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           className="px-3"
                           onClick={() => {
                             if (process.env.NODE_ENV === 'development') {
                               // eslint-disable-next-line no-console
-                              console.log('Mark as read');
+                              console.log('Mark as read')
                             }
                           }}
                         >
@@ -704,12 +717,12 @@ export default function AIInsightsPage() {
                       </div>
                     </CardContent>
                   </Card>
-                );
+                )
               })
             )}
           </TabsContent>
         </Tabs>
       </div>
     </div>
-  );
+  )
 }

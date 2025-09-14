@@ -1,26 +1,19 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { 
-  NotificationService, 
-  NotificationSettings as INotificationSettings 
-} from "@/lib/notification-service";
-import { 
-  Bell, 
-  Clock, 
-  AlertTriangle, 
-  Calendar,
-  Settings,
-  CheckCircle2
-} from "lucide-react";
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import {
+  NotificationService,
+  NotificationSettings as INotificationSettings,
+} from '@/lib/notification-service'
+import { Bell, Clock, AlertTriangle, Calendar, Settings, CheckCircle2 } from 'lucide-react'
 
 interface NotificationSettingsProps {
-  onClose: () => void;
+  onClose: () => void
 }
 
 export function NotificationSettings({ onClose }: NotificationSettingsProps) {
@@ -29,75 +22,78 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     dailyReminder: true,
     overdueTasks: true,
     upcomingTasks: true,
-    reminderTime: "09:00",
-    daysAdvance: 1
-  });
-  const [permission, setPermission] = useState<NotificationPermission>('default');
-  const [saved, setSaved] = useState(false);
+    reminderTime: '09:00',
+    daysAdvance: 1,
+  })
+  const [permission, setPermission] = useState<NotificationPermission>('default')
+  const [saved, setSaved] = useState(false)
 
-  const notificationService = NotificationService.getInstance();
+  const notificationService = NotificationService.getInstance()
 
   useEffect(() => {
     // Load current settings
-    const currentSettings = notificationService.getSettings();
-    setSettings(currentSettings);
-    
+    const currentSettings = notificationService.getSettings()
+    setSettings(currentSettings)
+
     // Check permission
     if (typeof window !== 'undefined' && 'Notification' in window) {
-      setPermission(Notification.permission);
+      setPermission(Notification.permission)
     }
-  }, []);
+  }, [])
 
   const handlePermissionRequest = async () => {
-    const newPermission = await notificationService.requestPermission();
-    setPermission(newPermission);
-  };
+    const newPermission = await notificationService.requestPermission()
+    setPermission(newPermission)
+  }
 
-  const handleSettingChange = (key: keyof INotificationSettings, value: boolean | string | number) => {
-    setSettings(prev => ({
+  const handleSettingChange = (
+    key: keyof INotificationSettings,
+    value: boolean | string | number,
+  ) => {
+    setSettings((prev) => ({
       ...prev,
-      [key]: value
-    }));
-    setSaved(false);
-  };
+      [key]: value,
+    }))
+    setSaved(false)
+  }
 
   const handleSave = () => {
-    notificationService.saveSettings(settings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
+    notificationService.saveSettings(settings)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
 
   const testNotification = () => {
     notificationService.sendNotification('🍇 Test Notification', {
       body: 'VineSight notifications are working correctly!',
-      tag: 'test-notification'
-    });
-  };
+      tag: 'test-notification',
+    })
+  }
 
   const getPermissionStatus = () => {
     switch (permission) {
       case 'granted':
-        return { 
-          color: 'text-green-600', 
-          icon: <CheckCircle2 className="h-4 w-4" />, 
-          text: 'Notifications Enabled' 
-        };
+        return {
+          color: 'text-green-600',
+          icon: <CheckCircle2 className="h-4 w-4" />,
+          text: 'Notifications Enabled',
+        }
       case 'denied':
-        return { 
-          color: 'text-red-600', 
-          icon: <AlertTriangle className="h-4 w-4" />, 
-          text: 'Notifications Blocked' 
-        };
+        return {
+          color: 'text-red-600',
+          icon: <AlertTriangle className="h-4 w-4" />,
+          text: 'Notifications Blocked',
+        }
       default:
-        return { 
-          color: 'text-orange-600', 
-          icon: <Bell className="h-4 w-4" />, 
-          text: 'Permission Required' 
-        };
+        return {
+          color: 'text-orange-600',
+          icon: <Bell className="h-4 w-4" />,
+          text: 'Permission Required',
+        }
     }
-  };
+  }
 
-  const permissionStatus = getPermissionStatus();
+  const permissionStatus = getPermissionStatus()
 
   return (
     <Card className="w-full max-w-2xl">
@@ -106,9 +102,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           <Settings className="h-5 w-5" />
           Notification Settings
         </CardTitle>
-        <CardDescription>
-          Configure when and how you receive farming task reminders
-        </CardDescription>
+        <CardDescription>Configure when and how you receive farming task reminders</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Permission Status */}
@@ -116,32 +110,20 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className={permissionStatus.color}>
-                  {permissionStatus.icon}
-                </span>
+                <span className={permissionStatus.color}>{permissionStatus.icon}</span>
                 <div>
                   <h4 className="font-medium">Browser Notifications</h4>
-                  <p className={`text-sm ${permissionStatus.color}`}>
-                    {permissionStatus.text}
-                  </p>
+                  <p className={`text-sm ${permissionStatus.color}`}>{permissionStatus.text}</p>
                 </div>
               </div>
               <div className="flex gap-2">
                 {permission !== 'granted' && (
-                  <Button 
-                    size="sm" 
-                    onClick={handlePermissionRequest}
-                    variant="outline"
-                  >
+                  <Button size="sm" onClick={handlePermissionRequest} variant="outline">
                     Enable Notifications
                   </Button>
                 )}
                 {permission === 'granted' && (
-                  <Button 
-                    size="sm" 
-                    onClick={testNotification}
-                    variant="outline"
-                  >
+                  <Button size="sm" onClick={testNotification} variant="outline">
                     Test Notification
                   </Button>
                 )}
@@ -173,9 +155,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
                     <Clock className="h-4 w-4" />
                     Daily Reminder
                   </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Daily summary of pending tasks
-                  </p>
+                  <p className="text-sm text-muted-foreground">Daily summary of pending tasks</p>
                 </div>
                 <Switch
                   checked={settings.dailyReminder}
@@ -252,10 +232,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             Cancel
           </Button>
           <div className="flex gap-2">
-            <Button 
-              onClick={handleSave}
-              className={saved ? 'bg-green-600 hover:bg-green-700' : ''}
-            >
+            <Button onClick={handleSave} className={saved ? 'bg-green-600 hover:bg-green-700' : ''}>
               {saved ? (
                 <>
                   <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -269,5 +246,5 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

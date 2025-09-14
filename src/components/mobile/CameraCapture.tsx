@@ -1,108 +1,116 @@
-"use client";
+'use client'
 
-import { useState, useRef, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Camera, X, Check, RotateCcw } from "lucide-react";
-import Image from "next/image";
+import { useState, useRef, useCallback } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Camera, X, Check, RotateCcw } from 'lucide-react'
+import Image from 'next/image'
 
 interface CameraCaptureProps {
-  onPhotoCapture: (photoBlob: Blob, photoUrl: string) => void;
-  onClose: () => void;
-  title?: string;
-  maxWidth?: number;
-  maxHeight?: number;
+  onPhotoCapture: (photoBlob: Blob, photoUrl: string) => void
+  onClose: () => void
+  title?: string
+  maxWidth?: number
+  maxHeight?: number
 }
 
-export function CameraCapture({ 
-  onPhotoCapture, 
-  onClose, 
-  title = "Capture Photo",
+export function CameraCapture({
+  onPhotoCapture,
+  onClose,
+  title = 'Capture Photo',
   maxWidth = 1024,
-  maxHeight = 768 
+  maxHeight = 768,
 }: CameraCaptureProps) {
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
-  const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment')
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
 
   const startCamera = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
+        video: {
           facingMode: facingMode,
           width: { ideal: maxWidth },
-          height: { ideal: maxHeight }
-        }
-      });
-      
+          height: { ideal: maxHeight },
+        },
+      })
+
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setIsStreaming(true);
+        videoRef.current.srcObject = stream
+        streamRef.current = stream
+        setIsStreaming(true)
       }
     } catch (error) {
-      console.error("Camera access denied:", error);
-      alert("Camera access is required to take photos. Please enable camera permissions.");
+      console.error('Camera access denied:', error)
+      alert('Camera access is required to take photos. Please enable camera permissions.')
     }
-  }, [facingMode, maxWidth, maxHeight]);
+  }, [facingMode, maxWidth, maxHeight])
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
+      streamRef.current.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
     }
-    setIsStreaming(false);
-  }, []);
+    setIsStreaming(false)
+  }, [])
 
   const capturePhoto = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current) return
 
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    const context = canvas.getContext('2d')
 
-    if (!context) return;
+    if (!context) return
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    context.drawImage(video, 0, 0);
-    
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const photoUrl = canvas.toDataURL('image/jpeg', 0.8);
-        setCapturedPhoto(photoUrl);
-        stopCamera();
-      }
-    }, 'image/jpeg', 0.8);
-  }, [stopCamera]);
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+
+    context.drawImage(video, 0, 0)
+
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          const photoUrl = canvas.toDataURL('image/jpeg', 0.8)
+          setCapturedPhoto(photoUrl)
+          stopCamera()
+        }
+      },
+      'image/jpeg',
+      0.8,
+    )
+  }, [stopCamera])
 
   const confirmPhoto = useCallback(() => {
-    if (!capturedPhoto || !canvasRef.current) return;
+    if (!capturedPhoto || !canvasRef.current) return
 
-    canvasRef.current.toBlob((blob) => {
-      if (blob) {
-        onPhotoCapture(blob, capturedPhoto);
-        onClose();
-      }
-    }, 'image/jpeg', 0.8);
-  }, [capturedPhoto, onPhotoCapture, onClose]);
+    canvasRef.current.toBlob(
+      (blob) => {
+        if (blob) {
+          onPhotoCapture(blob, capturedPhoto)
+          onClose()
+        }
+      },
+      'image/jpeg',
+      0.8,
+    )
+  }, [capturedPhoto, onPhotoCapture, onClose])
 
   const retakePhoto = useCallback(() => {
-    setCapturedPhoto(null);
-    startCamera();
-  }, [startCamera]);
+    setCapturedPhoto(null)
+    startCamera()
+  }, [startCamera])
 
   const switchCamera = useCallback(() => {
-    setFacingMode(prev => prev === "user" ? "environment" : "user");
+    setFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'))
     if (isStreaming) {
-      stopCamera();
-      setTimeout(() => startCamera(), 100);
+      stopCamera()
+      setTimeout(() => startCamera(), 100)
     }
-  }, [isStreaming, stopCamera, startCamera]);
+  }, [isStreaming, stopCamera, startCamera])
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col lg:hidden">
@@ -120,7 +128,7 @@ export function CameraCapture({
             </Button>
           </div>
         </CardHeader>
-        
+
         <CardContent className="flex-1 p-0 relative">
           {!capturedPhoto ? (
             <>
@@ -148,7 +156,7 @@ export function CameraCapture({
                   </div>
                 )}
               </div>
-              
+
               {isStreaming && (
                 <div className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-4">
                   <Button
@@ -159,7 +167,6 @@ export function CameraCapture({
                   >
                     <RotateCcw className="h-6 w-6" />
                   </Button>
-                  
                   <Button
                     size="lg"
                     onClick={capturePhoto}
@@ -167,7 +174,6 @@ export function CameraCapture({
                   >
                     <Camera className="h-8 w-8" />
                   </Button>
-                  
                   <div className="w-12" /> {/* Spacer for symmetry */}
                 </div>
               )}
@@ -175,13 +181,13 @@ export function CameraCapture({
           ) : (
             <div className="w-full h-full flex flex-col">
               <div className="flex-1 flex items-center justify-center">
-                <Image 
-                  src={capturedPhoto} 
-                  alt="Captured photo" 
+                <Image
+                  src={capturedPhoto}
+                  alt="Captured photo"
                   className="max-w-full max-h-full object-contain"
                 />
               </div>
-              
+
               <div className="flex justify-center gap-4 p-6">
                 <Button
                   variant="outline"
@@ -203,8 +209,8 @@ export function CameraCapture({
           )}
         </CardContent>
       </Card>
-      
+
       <canvas ref={canvasRef} className="hidden" />
     </div>
-  );
+  )
 }

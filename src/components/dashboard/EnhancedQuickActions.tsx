@@ -1,13 +1,19 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-  Droplets, 
-  SprayCan, 
-  Scissors, 
+import { useState } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Droplets,
+  SprayCan,
+  Scissors,
   DollarSign,
   Camera,
   Mic,
@@ -17,166 +23,165 @@ import {
   TestTube,
   MapPin,
   Clock,
-  CheckCircle
-} from "lucide-react";
+  CheckCircle,
+} from 'lucide-react'
 
 interface QuickAction {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: React.ComponentType<any>;
-  color: string;
-  bgGradient: string;
-  oneTap?: boolean;
-  voiceEnabled?: boolean;
-  cameraEnabled?: boolean;
-  priority: number;
+  id: string
+  title: string
+  subtitle: string
+  icon: React.ComponentType<any>
+  color: string
+  bgGradient: string
+  oneTap?: boolean
+  voiceEnabled?: boolean
+  cameraEnabled?: boolean
+  priority: number
 }
 
 interface EnhancedQuickActionsProps {
-  onAction: (actionId: string, data?: any) => void;
-  onVoiceRecord?: (actionId: string) => void;
-  onCameraCapture?: (actionId: string) => void;
-  loading?: boolean;
+  onAction: (actionId: string, data?: any) => void
+  onVoiceRecord?: (actionId: string) => void
+  onCameraCapture?: (actionId: string) => void
+  loading?: boolean
 }
 
-export function EnhancedQuickActions({ 
-  onAction, 
-  onVoiceRecord, 
-  onCameraCapture, 
-  loading 
+export function EnhancedQuickActions({
+  onAction,
+  onVoiceRecord,
+  onCameraCapture,
+  loading,
 }: EnhancedQuickActionsProps) {
-  
-  const [showVoiceDialog, setShowVoiceDialog] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
+  const [showVoiceDialog, setShowVoiceDialog] = useState<string | null>(null)
+  const [isRecording, setIsRecording] = useState(false)
 
   const quickActions: QuickAction[] = [
     {
-      id: "irrigation",
-      title: "Log Irrigation",
-      subtitle: "Quick water log",
+      id: 'irrigation',
+      title: 'Log Irrigation',
+      subtitle: 'Quick water log',
       icon: Droplets,
-      color: "bg-primary/20 text-primary",
-      bgGradient: "from-primary/10 to-primary/20",
+      color: 'bg-primary/20 text-primary',
+      bgGradient: 'from-primary/10 to-primary/20',
       oneTap: true,
       voiceEnabled: true,
       cameraEnabled: true,
-      priority: 1
+      priority: 1,
     },
     {
-      id: "spray",
-      title: "Spray Record",
-      subtitle: "Pest & disease",
+      id: 'spray',
+      title: 'Spray Record',
+      subtitle: 'Pest & disease',
       icon: SprayCan,
-      color: "bg-primary/20 text-primary",
-      bgGradient: "from-primary/10 to-primary/20",
+      color: 'bg-primary/20 text-primary',
+      bgGradient: 'from-primary/10 to-primary/20',
       oneTap: true,
       voiceEnabled: true,
       cameraEnabled: true,
-      priority: 2
+      priority: 2,
     },
     {
-      id: "harvest",
-      title: "Record Harvest",
-      subtitle: "Log yield data",
+      id: 'harvest',
+      title: 'Record Harvest',
+      subtitle: 'Log yield data',
       icon: Scissors,
-      color: "bg-primary/20 text-primary",
-      bgGradient: "from-primary/10 to-primary/20",
+      color: 'bg-primary/20 text-primary',
+      bgGradient: 'from-primary/10 to-primary/20',
       oneTap: true,
       voiceEnabled: true,
-      priority: 3
+      priority: 3,
     },
     {
-      id: "expense",
-      title: "Add Expense",
-      subtitle: "Track costs",
+      id: 'expense',
+      title: 'Add Expense',
+      subtitle: 'Track costs',
       icon: DollarSign,
-      color: "bg-primary/20 text-primary",
-      bgGradient: "from-primary/10 to-primary/20",
+      color: 'bg-primary/20 text-primary',
+      bgGradient: 'from-primary/10 to-primary/20',
       oneTap: false,
       voiceEnabled: true,
-      priority: 4
+      priority: 4,
     },
     {
-      id: "fertigation",
-      title: "Fertigation",
-      subtitle: "Nutrient log",
+      id: 'fertigation',
+      title: 'Fertigation',
+      subtitle: 'Nutrient log',
       icon: Beaker,
-      color: "bg-primary/20 text-primary",
-      bgGradient: "from-primary/10 to-primary/20",
+      color: 'bg-primary/20 text-primary',
+      bgGradient: 'from-primary/10 to-primary/20',
       oneTap: true,
       voiceEnabled: true,
-      priority: 5
+      priority: 5,
     },
     {
-      id: "soil_test",
-      title: "Soil Test",
-      subtitle: "Record analysis",
+      id: 'soil_test',
+      title: 'Soil Test',
+      subtitle: 'Record analysis',
       icon: TestTube,
-      color: "bg-primary/20 text-primary",
-      bgGradient: "from-primary/10 to-primary/20",
+      color: 'bg-primary/20 text-primary',
+      bgGradient: 'from-primary/10 to-primary/20',
       oneTap: false,
       voiceEnabled: true,
       cameraEnabled: true,
-      priority: 6
+      priority: 6,
     },
     {
-      id: "field_photo",
-      title: "Field Photo",
-      subtitle: "Capture issues",
+      id: 'field_photo',
+      title: 'Field Photo',
+      subtitle: 'Capture issues',
       icon: Camera,
-      color: "bg-accent/20 text-accent-foreground",
-      bgGradient: "from-accent/10 to-accent/20",
+      color: 'bg-accent/20 text-accent-foreground',
+      bgGradient: 'from-accent/10 to-accent/20',
       oneTap: true,
       cameraEnabled: true,
-      priority: 7
+      priority: 7,
     },
     {
-      id: "voice_note",
-      title: "Voice Note",
-      subtitle: "Record memo",
+      id: 'voice_note',
+      title: 'Voice Note',
+      subtitle: 'Record memo',
       icon: Mic,
-      color: "bg-secondary/20 text-secondary-foreground",
-      bgGradient: "from-secondary/10 to-secondary/20",
+      color: 'bg-secondary/20 text-secondary-foreground',
+      bgGradient: 'from-secondary/10 to-secondary/20',
       oneTap: true,
       voiceEnabled: true,
-      priority: 8
-    }
-  ];
+      priority: 8,
+    },
+  ]
 
   const handleActionClick = (action: QuickAction) => {
     if (action.oneTap) {
-      onAction(action.id, { 
+      onAction(action.id, {
         timestamp: new Date(),
         location: 'current', // GPS would be added here
-        oneTap: true 
-      });
-      return;
+        oneTap: true,
+      })
+      return
     }
-    
+
     // Open detailed form/dialog for complex actions
-    onAction(action.id);
-  };
+    onAction(action.id)
+  }
 
   const handleVoiceAction = (actionId: string) => {
-    setShowVoiceDialog(actionId);
-  };
+    setShowVoiceDialog(actionId)
+  }
 
   const startVoiceRecording = () => {
-    setIsRecording(true);
+    setIsRecording(true)
     // Voice recording implementation would go here
-    onVoiceRecord?.(showVoiceDialog!);
-    
+    onVoiceRecord?.(showVoiceDialog!)
+
     // Simulate recording for demo
     setTimeout(() => {
-      setIsRecording(false);
-      setShowVoiceDialog(null);
-    }, 3000);
-  };
+      setIsRecording(false)
+      setShowVoiceDialog(null)
+    }, 3000)
+  }
 
   const handleCameraAction = (actionId: string) => {
-    onCameraCapture?.(actionId);
-  };
+    onCameraCapture?.(actionId)
+  }
 
   if (loading) {
     return (
@@ -194,7 +199,7 @@ export function EnhancedQuickActions({
           ))}
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -204,16 +209,16 @@ export function EnhancedQuickActions({
           <Plus className="h-5 w-5 text-primary" />
           Quick Actions
         </h3>
-        
+
         <div className="grid grid-cols-2 gap-2">
           {quickActions
             .sort((a, b) => a.priority - b.priority)
             .slice(0, 4)
             .map((action) => {
-              const Icon = action.icon;
-              
+              const Icon = action.icon
+
               return (
-                <Card 
+                <Card
                   key={action.id}
                   className={`
                     border-0 shadow-sm hover:shadow-md transition-all duration-200 
@@ -230,24 +235,24 @@ export function EnhancedQuickActions({
                         <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                       </div>
                     )}
-                    
+
                     {/* Main action icon */}
-                    <div className={`
+                    <div
+                      className={`
                       inline-flex items-center justify-center 
                       w-10 h-10 rounded-full mb-2
                       ${action.color}
-                    `}>
+                    `}
+                    >
                       <Icon className="h-5 w-5" />
                     </div>
-                    
+
                     {/* Action title and subtitle */}
-                    <h3 className="font-semibold text-sm text-foreground mb-1">
-                      {action.title}
-                    </h3>
+                    <h3 className="font-semibold text-sm text-foreground mb-1">{action.title}</h3>
                     <p className="text-xs text-muted-foreground leading-tight mb-2">
                       {action.subtitle}
                     </p>
-                    
+
                     {/* Secondary action buttons */}
                     <div className="flex justify-center gap-2 mt-2">
                       {action.voiceEnabled && (
@@ -256,29 +261,29 @@ export function EnhancedQuickActions({
                           variant="ghost"
                           className="h-6 w-6 p-0 hover:bg-primary/20 touch-manipulation"
                           onClick={(e) => {
-                            e.stopPropagation();
-                            handleVoiceAction(action.id);
+                            e.stopPropagation()
+                            handleVoiceAction(action.id)
                           }}
                         >
                           <Mic className="h-3 w-3" />
                         </Button>
                       )}
-                      
+
                       {action.cameraEnabled && (
                         <Button
                           size="sm"
                           variant="ghost"
                           className="h-6 w-6 p-0 hover:bg-primary/20 touch-manipulation"
                           onClick={(e) => {
-                            e.stopPropagation();
-                            handleCameraAction(action.id);
+                            e.stopPropagation()
+                            handleCameraAction(action.id)
                           }}
                         >
                           <Camera className="h-3 w-3" />
                         </Button>
                       )}
                     </div>
-                    
+
                     {/* One-tap success indicator */}
                     {action.oneTap && (
                       <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
@@ -287,10 +292,10 @@ export function EnhancedQuickActions({
                     )}
                   </CardContent>
                 </Card>
-              );
+              )
             })}
         </div>
-        
+
         {/* Quick location/time display */}
         <div className="mt-2 flex items-center justify-center gap-3 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
@@ -314,10 +319,10 @@ export function EnhancedQuickActions({
               Voice Recording
             </DialogTitle>
             <DialogDescription>
-              Record details for {quickActions.find(a => a.id === showVoiceDialog)?.title}
+              Record details for {quickActions.find((a) => a.id === showVoiceDialog)?.title}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="text-center py-6">
             {!isRecording ? (
               <div>
@@ -328,9 +333,7 @@ export function EnhancedQuickActions({
                 >
                   <Mic className="h-6 w-6" />
                 </Button>
-                <p className="text-sm text-muted-foreground mt-3">
-                  Tap to start recording
-                </p>
+                <p className="text-sm text-muted-foreground mt-3">Tap to start recording</p>
               </div>
             ) : (
               <div>
@@ -338,19 +341,17 @@ export function EnhancedQuickActions({
                   size="lg"
                   variant="destructive"
                   onClick={() => {
-                    setIsRecording(false);
-                    setShowVoiceDialog(null);
+                    setIsRecording(false)
+                    setShowVoiceDialog(null)
                   }}
                   className="h-16 w-16 rounded-full animate-pulse"
                 >
                   <MicOff className="h-6 w-6" />
                 </Button>
-                <p className="text-sm text-foreground mt-3 font-medium">
-                  Recording... Tap to stop
-                </p>
+                <p className="text-sm text-foreground mt-3 font-medium">Recording... Tap to stop</p>
                 <div className="flex items-center justify-center gap-1 mt-2">
                   {[...Array(3)].map((_, i) => (
-                    <div 
+                    <div
                       key={i}
                       className="w-2 h-2 bg-red-500 rounded-full animate-bounce"
                       style={{ animationDelay: `${i * 0.2}s` }}
@@ -363,5 +364,5 @@ export function EnhancedQuickActions({
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }

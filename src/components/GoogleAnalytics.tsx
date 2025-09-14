@@ -1,25 +1,25 @@
-"use client";
+'use client'
 
-import Script from 'next/script';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect, Suspense } from 'react';
-import { pageview } from '@/lib/analytics';
+import Script from 'next/script'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { useEffect, Suspense } from 'react'
+import { pageview } from '@/lib/analytics'
 
-const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-XXXXXXXXXX';
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-XXXXXXXXXX'
 
 function GoogleAnalyticsContent() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     if (pathname) {
-      const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
-      pageview(url);
+      const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '')
+      pageview(url)
     }
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams])
 
   if (process.env.NODE_ENV !== 'production') {
-    return null;
+    return null
   }
 
   return (
@@ -94,7 +94,7 @@ function GoogleAnalyticsContent() {
         }}
       />
     </>
-  );
+  )
 }
 
 export function GoogleAnalytics() {
@@ -102,18 +102,16 @@ export function GoogleAnalytics() {
     <Suspense fallback={null}>
       <GoogleAnalyticsContent />
     </Suspense>
-  );
+  )
 }
 
 // Google Search Console verification component
 export function SearchConsoleVerification() {
-  const verificationCode = process.env.NEXT_PUBLIC_GOOGLE_SEARCH_CONSOLE_VERIFICATION;
-  
+  const verificationCode = process.env.NEXT_PUBLIC_GOOGLE_SEARCH_CONSOLE_VERIFICATION
+
   if (!verificationCode) {
-    return null;
+    return null
   }
 
-  return (
-    <meta name="google-site-verification" content={verificationCode} />
-  );
+  return <meta name="google-site-verification" content={verificationCode} />
 }

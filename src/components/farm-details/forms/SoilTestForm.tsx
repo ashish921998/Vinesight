@@ -1,82 +1,82 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { TestTube, Upload, X, Loader2 } from "lucide-react";
+import { useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { TestTube, Upload, X, Loader2 } from 'lucide-react'
 
 interface SoilTestFormProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
   onSubmit: (data: {
-    date: string;
-    ph: string;
-    nitrogen: string;
-    phosphorus: string;
-    potassium: string;
-    organicMatter: string;
-    laboratory: string;
-    notes: string;
-    photos: File[];
-  }) => void;
-  isSubmitting: boolean;
+    date: string
+    ph: string
+    nitrogen: string
+    phosphorus: string
+    potassium: string
+    organicMatter: string
+    laboratory: string
+    notes: string
+    photos: File[]
+  }) => void
+  isSubmitting: boolean
 }
 
 export function SoilTestForm({ isOpen, onClose, onSubmit, isSubmitting }: SoilTestFormProps) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
-    ph: "",
-    nitrogen: "",
-    phosphorus: "",
-    potassium: "",
-    organicMatter: "",
-    laboratory: "",
-    notes: "",
-    photos: [] as File[]
-  });
+    ph: '',
+    nitrogen: '',
+    phosphorus: '',
+    potassium: '',
+    organicMatter: '',
+    laboratory: '',
+    notes: '',
+    photos: [] as File[],
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.ph) return;
-    onSubmit(formData);
-  };
+    e.preventDefault()
+    if (!formData.ph) return
+    onSubmit(formData)
+  }
 
   const handlePhotoAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setFormData(prev => ({
+    const files = Array.from(e.target.files || [])
+    setFormData((prev) => ({
       ...prev,
-      photos: [...prev.photos, ...files]
-    }));
-  };
+      photos: [...prev.photos, ...files],
+    }))
+  }
 
   const handlePhotoRemove = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
-    }));
-  };
+      photos: prev.photos.filter((_, i) => i !== index),
+    }))
+  }
 
   const resetForm = () => {
     setFormData({
       date: new Date().toISOString().split('T')[0],
-      ph: "",
-      nitrogen: "",
-      phosphorus: "",
-      potassium: "",
-      organicMatter: "",
-      laboratory: "",
-      notes: "",
-      photos: []
-    });
-  };
+      ph: '',
+      nitrogen: '',
+      phosphorus: '',
+      potassium: '',
+      organicMatter: '',
+      laboratory: '',
+      notes: '',
+      photos: [],
+    })
+  }
 
   const handleClose = () => {
-    resetForm();
-    onClose();
-  };
+    resetForm()
+    onClose()
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -87,7 +87,7 @@ export function SoilTestForm({ isOpen, onClose, onSubmit, isSubmitting }: SoilTe
             Log Soil Test
           </DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="date">Test Date</Label>
@@ -95,7 +95,7 @@ export function SoilTestForm({ isOpen, onClose, onSubmit, isSubmitting }: SoilTe
               id="date"
               type="date"
               value={formData.date}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
               required
             />
           </div>
@@ -107,7 +107,7 @@ export function SoilTestForm({ isOpen, onClose, onSubmit, isSubmitting }: SoilTe
               type="number"
               step="0.1"
               value={formData.ph}
-              onChange={(e) => setFormData(prev => ({ ...prev, ph: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, ph: e.target.value }))}
               placeholder="e.g., 6.5"
               required
             />
@@ -120,7 +120,7 @@ export function SoilTestForm({ isOpen, onClose, onSubmit, isSubmitting }: SoilTe
                 id="nitrogen"
                 type="number"
                 value={formData.nitrogen}
-                onChange={(e) => setFormData(prev => ({ ...prev, nitrogen: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, nitrogen: e.target.value }))}
                 placeholder="N"
               />
             </div>
@@ -131,7 +131,7 @@ export function SoilTestForm({ isOpen, onClose, onSubmit, isSubmitting }: SoilTe
                 id="phosphorus"
                 type="number"
                 value={formData.phosphorus}
-                onChange={(e) => setFormData(prev => ({ ...prev, phosphorus: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, phosphorus: e.target.value }))}
                 placeholder="P"
               />
             </div>
@@ -142,7 +142,7 @@ export function SoilTestForm({ isOpen, onClose, onSubmit, isSubmitting }: SoilTe
                 id="potassium"
                 type="number"
                 value={formData.potassium}
-                onChange={(e) => setFormData(prev => ({ ...prev, potassium: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, potassium: e.target.value }))}
                 placeholder="K"
               />
             </div>
@@ -155,7 +155,7 @@ export function SoilTestForm({ isOpen, onClose, onSubmit, isSubmitting }: SoilTe
               type="number"
               step="0.1"
               value={formData.organicMatter}
-              onChange={(e) => setFormData(prev => ({ ...prev, organicMatter: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, organicMatter: e.target.value }))}
               placeholder="e.g., 3.2"
             />
           </div>
@@ -165,7 +165,7 @@ export function SoilTestForm({ isOpen, onClose, onSubmit, isSubmitting }: SoilTe
             <Input
               id="laboratory"
               value={formData.laboratory}
-              onChange={(e) => setFormData(prev => ({ ...prev, laboratory: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, laboratory: e.target.value }))}
               placeholder="e.g., AgriLab, Home Test Kit"
             />
           </div>
@@ -175,7 +175,7 @@ export function SoilTestForm({ isOpen, onClose, onSubmit, isSubmitting }: SoilTe
             <Textarea
               id="notes"
               value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
               placeholder="Sampling location, weather conditions, recommendations, etc."
               className="h-20"
             />
@@ -231,10 +231,7 @@ export function SoilTestForm({ isOpen, onClose, onSubmit, isSubmitting }: SoilTe
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting || !formData.ph}
-            >
+            <Button type="submit" disabled={isSubmitting || !formData.ph}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -248,5 +245,5 @@ export function SoilTestForm({ isOpen, onClose, onSubmit, isSubmitting }: SoilTe
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

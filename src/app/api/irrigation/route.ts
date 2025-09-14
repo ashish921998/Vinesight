@@ -4,9 +4,8 @@ import { IrrigationSchema, validateAndSanitize, globalRateLimiter } from '@/lib/
 
 export async function GET(request: NextRequest) {
   try {
-    const clientIP = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'anonymous'
+    const clientIP =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous'
     if (!globalRateLimiter.checkLimit(`irrigation-get-${clientIP}`)) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
@@ -47,20 +46,19 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const clientIP = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'anonymous'
+    const clientIP =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous'
     if (!globalRateLimiter.checkLimit(`irrigation-post-${clientIP}`)) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
     const body = await request.json()
-    
+
     const validation = validateAndSanitize(IrrigationSchema, body)
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validation.errors }, 
-        { status: 400 }
+        { error: 'Validation failed', details: validation.errors },
+        { status: 400 },
       )
     }
 

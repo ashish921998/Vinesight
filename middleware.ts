@@ -21,11 +21,11 @@ export async function middleware(req: NextRequest) {
             request: req,
           })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, options),
           )
         },
       },
-    }
+    },
   )
 
   // IMPORTANT: Avoid writing any logic between createServerClient and

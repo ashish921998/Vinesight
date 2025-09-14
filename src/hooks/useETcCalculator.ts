@@ -1,19 +1,19 @@
-"use client";
+'use client'
 
-import { useState } from 'react';
-import { 
+import { useState } from 'react'
+import {
   ETcCalculator,
   type ETcCalculationInputs,
   type ETcResults,
   type GrapeGrowthStage,
-  type WeatherData
-} from '@/lib/etc-calculator';
-import type { Farm } from '@/types/types';
+  type WeatherData,
+} from '@/lib/etc-calculator'
+import type { Farm } from '@/types/types'
 
 export function useETcCalculator() {
-  const [results, setResults] = useState<ETcResults | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<ETcResults | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -30,38 +30,49 @@ export function useETcCalculator() {
     longitude: '',
     elevation: '',
     irrigationMethod: 'drip' as 'drip' | 'sprinkler' | 'surface',
-    soilType: 'loamy' as 'sandy' | 'loamy' | 'clay'
-  });
+    soilType: 'loamy' as 'sandy' | 'loamy' | 'clay',
+  })
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
-    }));
-  };
+      [field]: value,
+    }))
+  }
 
   const handleCalculate = (selectedFarm: Farm | null, useCustomData: boolean) => {
-    setError(null);
-    
+    setError(null)
+
     if (!useCustomData && !selectedFarm) {
-      setError('Please select a farm first or switch to custom data mode');
-      return;
+      setError('Please select a farm first or switch to custom data mode')
+      return
     }
 
-    if (!formData.temperatureMax || !formData.temperatureMin || !formData.humidity || !formData.windSpeed || formData.rainfall === '') {
-      setError('Please fill in all required weather data fields (temperature, humidity, wind speed, rainfall)');
-      return;
+    if (
+      !formData.temperatureMax ||
+      !formData.temperatureMin ||
+      !formData.humidity ||
+      !formData.windSpeed ||
+      formData.rainfall === ''
+    ) {
+      setError(
+        'Please fill in all required weather data fields (temperature, humidity, wind speed, rainfall)',
+      )
+      return
     }
 
     // Check if at least one solar radiation input is provided
-    const hasSolarData = formData.solarRadiation || formData.solarRadiationLux || formData.sunshineHours;
+    const hasSolarData =
+      formData.solarRadiation || formData.solarRadiationLux || formData.sunshineHours
     if (!hasSolarData) {
-      setError('Please provide at least one form of solar radiation data (solar radiation, lux, or sunshine hours)');
-      return;
+      setError(
+        'Please provide at least one form of solar radiation data (solar radiation, lux, or sunshine hours)',
+      )
+      return
     }
 
-    setLoading(true);
-    
+    setLoading(true)
+
     try {
       const weatherData: WeatherData = {
         date: formData.date,
@@ -71,9 +82,11 @@ export function useETcCalculator() {
         windSpeed: parseFloat(formData.windSpeed),
         rainfall: parseFloat(formData.rainfall), // Now required
         solarRadiation: formData.solarRadiation ? parseFloat(formData.solarRadiation) : undefined,
-        solarRadiationLux: formData.solarRadiationLux ? parseFloat(formData.solarRadiationLux) : undefined,
+        solarRadiationLux: formData.solarRadiationLux
+          ? parseFloat(formData.solarRadiationLux)
+          : undefined,
         sunshineHours: formData.sunshineHours ? parseFloat(formData.sunshineHours) : undefined,
-      };
+      }
 
       const inputs: ETcCalculationInputs = {
         farmId: selectedFarm?.id || 0,
@@ -81,28 +94,31 @@ export function useETcCalculator() {
         growthStage: formData.growthStage,
         plantingDate: selectedFarm?.plantingDate || '2024-01-01',
         location: {
-          latitude: formData.latitude ? parseFloat(formData.latitude) : (selectedFarm?.latitude || 19.0760),
-          longitude: formData.longitude ? parseFloat(formData.longitude) : (selectedFarm?.longitude || 72.8777),
-          elevation: formData.elevation ? parseFloat(formData.elevation) : 500
+          latitude: formData.latitude
+            ? parseFloat(formData.latitude)
+            : selectedFarm?.latitude || 19.076,
+          longitude: formData.longitude
+            ? parseFloat(formData.longitude)
+            : selectedFarm?.longitude || 72.8777,
+          elevation: formData.elevation ? parseFloat(formData.elevation) : 500,
         },
         irrigationMethod: formData.irrigationMethod,
-        soilType: formData.soilType
-      };
+        soilType: formData.soilType,
+      }
 
-      const calculationResults = ETcCalculator.calculateETc(inputs);
-      setResults(calculationResults);
-      
+      const calculationResults = ETcCalculator.calculateETc(inputs)
+      setResults(calculationResults)
     } catch (error) {
       // Log error in development only
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error('Calculation error:', error);
+        console.error('Calculation error:', error)
       }
-      setError('Error performing calculation. Please check your inputs.');
+      setError('Error performing calculation. Please check your inputs.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const resetForm = () => {
     setFormData({
@@ -120,11 +136,11 @@ export function useETcCalculator() {
       longitude: '',
       elevation: '',
       irrigationMethod: 'drip',
-      soilType: 'loamy'
-    });
-    setResults(null);
-    setError(null);
-  };
+      soilType: 'loamy',
+    })
+    setResults(null)
+    setError(null)
+  }
 
   return {
     formData,
@@ -134,5 +150,5 @@ export function useETcCalculator() {
     handleInputChange,
     handleCalculate,
     resetForm,
-  };
+  }
 }

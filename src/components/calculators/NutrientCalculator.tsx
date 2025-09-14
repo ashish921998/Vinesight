@@ -1,15 +1,21 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Beaker, 
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Beaker,
   Target,
   TrendingUp,
   AlertTriangle,
@@ -22,66 +28,68 @@ import {
   Activity,
   BarChart3,
   Calculator,
-  DollarSign
-} from 'lucide-react';
-import { 
+  DollarSign,
+} from 'lucide-react'
+import {
   NutrientCalculator,
   type NutrientCalculationInputs,
   type NutrientResults,
-  type SoilTestResults
-} from '@/lib/nutrient-calculator';
-import { SupabaseService } from '@/lib/supabase-service';
-import type { Farm } from '@/types/types';
+  type SoilTestResults,
+} from '@/lib/nutrient-calculator'
+import { SupabaseService } from '@/lib/supabase-service'
+import type { Farm } from '@/types/types'
 
 export function NutrientCalculatorComponent() {
-  const [farms, setFarms] = useState<Farm[]>([]);
-  const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<NutrientResults | null>(null);
-  const [activeSection, setActiveSection] = useState<'calculator' | 'symptoms' | 'schedule'>('calculator');
-  
+  const [farms, setFarms] = useState<Farm[]>([])
+  const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [results, setResults] = useState<NutrientResults | null>(null)
+  const [activeSection, setActiveSection] = useState<'calculator' | 'symptoms' | 'schedule'>(
+    'calculator',
+  )
+
   const [formData, setFormData] = useState({
-    targetYield: "",
-    currentGrowthStage: "budbreak" as const,
-    grapeVariety: "wine" as const,
-    irrigationMethod: "drip" as const,
+    targetYield: '',
+    currentGrowthStage: 'budbreak' as const,
+    grapeVariety: 'wine' as const,
+    irrigationMethod: 'drip' as const,
     // Soil test data
-    ph: "",
-    organicMatter: "",
-    nitrogen: "",
-    phosphorus: "",
-    potassium: "",
-    calcium: "",
-    magnesium: "",
-    sulfur: "",
-    boron: "",
-    zinc: "",
-    manganese: "",
-    iron: "",
-    copper: "",
-    cec: ""
-  });
+    ph: '',
+    organicMatter: '',
+    nitrogen: '',
+    phosphorus: '',
+    potassium: '',
+    calcium: '',
+    magnesium: '',
+    sulfur: '',
+    boron: '',
+    zinc: '',
+    manganese: '',
+    iron: '',
+    copper: '',
+    cec: '',
+  })
 
   useEffect(() => {
-    loadFarms();
-  }, []);
+    loadFarms()
+  }, [])
 
   const loadFarms = async () => {
     try {
-      const farmList = await SupabaseService.getAllFarms();
-      setFarms(farmList);
+      const farmList = await SupabaseService.getAllFarms()
+      setFarms(farmList)
       if (farmList.length > 0) {
-        setSelectedFarm(farmList[0]);
+        setSelectedFarm(farmList[0])
       }
     } catch (error) {
-      console.error('Error loading farms:', error);
+      console.error('Error loading farms:', error)
     }
-  };
+  }
 
   const handleCalculate = async () => {
-    if (!selectedFarm) return;
+    if (!selectedFarm) return
 
-    setLoading(true);
+    setLoading(true)
     try {
       const soilTest: SoilTestResults = {
         ph: parseFloat(formData.ph) || 7.0,
@@ -97,8 +105,8 @@ export function NutrientCalculatorComponent() {
         manganese: parseFloat(formData.manganese) || 15,
         iron: parseFloat(formData.iron) || 25,
         copper: parseFloat(formData.copper) || 1.5,
-        cec: parseFloat(formData.cec) || 15
-      };
+        cec: parseFloat(formData.cec) || 15,
+      }
 
       const inputs: NutrientCalculationInputs = {
         farmId: selectedFarm.id!,
@@ -108,11 +116,11 @@ export function NutrientCalculatorComponent() {
         irrigationMethod: formData.irrigationMethod,
         soilTest: soilTest,
         previousApplications: [],
-        farmArea: selectedFarm.area
-      };
+        farmArea: selectedFarm.area,
+      }
 
-      const calculationResults = NutrientCalculator.calculateNutrients(inputs);
-      setResults(calculationResults);
+      const calculationResults = NutrientCalculator.calculateNutrients(inputs)
+      setResults(calculationResults)
 
       // Save calculation to history
       await SupabaseService.addCalculationHistory({
@@ -120,53 +128,53 @@ export function NutrientCalculatorComponent() {
         calculation_type: 'nutrients',
         date: new Date().toISOString().split('T')[0],
         inputs: inputs,
-        outputs: calculationResults
-      });
+        outputs: calculationResults,
+      })
     } catch (error) {
-      console.error('Error calculating nutrient requirements:', error);
+      console.error('Error calculating nutrient requirements:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
-    }));
-  };
+      [field]: value,
+    }))
+  }
 
   const resetForm = () => {
     setFormData({
-      targetYield: "",
-      currentGrowthStage: "budbreak",
-      grapeVariety: "wine",
-      irrigationMethod: "drip",
-      ph: "",
-      organicMatter: "",
-      nitrogen: "",
-      phosphorus: "",
-      potassium: "",
-      calcium: "",
-      magnesium: "",
-      sulfur: "",
-      boron: "",
-      zinc: "",
-      manganese: "",
-      iron: "",
-      copper: "",
-      cec: ""
-    });
-    setResults(null);
-  };
+      targetYield: '',
+      currentGrowthStage: 'budbreak',
+      grapeVariety: 'wine',
+      irrigationMethod: 'drip',
+      ph: '',
+      organicMatter: '',
+      nitrogen: '',
+      phosphorus: '',
+      potassium: '',
+      calcium: '',
+      magnesium: '',
+      sulfur: '',
+      boron: '',
+      zinc: '',
+      manganese: '',
+      iron: '',
+      copper: '',
+      cec: '',
+    })
+    setResults(null)
+  }
 
   const getNutrientStatus = (deficit: number) => {
-    if (deficit > 50) return { variant: 'destructive' as const, status: 'High Need' };
-    if (deficit > 20) return { variant: 'secondary' as const, status: 'Moderate Need' };
-    return { variant: 'default' as const, status: 'Low Need' };
-  };
+    if (deficit > 50) return { variant: 'destructive' as const, status: 'High Need' }
+    if (deficit > 20) return { variant: 'secondary' as const, status: 'Moderate Need' }
+    return { variant: 'default' as const, status: 'Low Need' }
+  }
 
-  const deficiencySymptoms = NutrientCalculator.getDeficiencySymptoms();
+  const deficiencySymptoms = NutrientCalculator.getDeficiencySymptoms()
 
   return (
     <div className="space-y-4">
@@ -207,8 +215,8 @@ export function NutrientCalculatorComponent() {
                 <div
                   key={farm.id}
                   className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                    selectedFarm?.id === farm.id 
-                      ? 'border-green-500 bg-green-50' 
+                    selectedFarm?.id === farm.id
+                      ? 'border-green-500 bg-green-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                   onClick={() => setSelectedFarm(farm)}
@@ -216,7 +224,9 @@ export function NutrientCalculatorComponent() {
                   <div className="flex justify-between items-center">
                     <div>
                       <h4 className="font-medium text-gray-900 text-sm">{farm.name}</h4>
-                      <p className="text-xs text-gray-500">{farm.area}ha • {farm.grapeVariety}</p>
+                      <p className="text-xs text-gray-500">
+                        {farm.area}ha • {farm.grapeVariety}
+                      </p>
                     </div>
                     {selectedFarm?.id === farm.id && (
                       <CheckCircle className="h-4 w-4 text-green-500" />
@@ -244,26 +254,31 @@ export function NutrientCalculatorComponent() {
           <CardContent>
             <Beaker className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No farms available</h3>
-            <p className="text-muted-foreground">Please add a farm first to calculate nutrient requirements</p>
+            <p className="text-muted-foreground">
+              Please add a farm first to calculate nutrient requirements
+            </p>
           </CardContent>
         </Card>
       ) : (
         <>
           {/* Mobile-Optimized Input Sections */}
           <div className="mx-4 sm:mx-0 space-y-4 sm:space-y-3">
-            
             {/* Production Goals Section */}
             <Card>
-              <CardHeader 
+              <CardHeader
                 className="pb-4 sm:pb-3 cursor-pointer"
-                onClick={() => setActiveSection(activeSection === 'calculator' ? 'calculator' : 'calculator')}
+                onClick={() =>
+                  setActiveSection(activeSection === 'calculator' ? 'calculator' : 'calculator')
+                }
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 sm:gap-2">
                     <TrendingUp className="h-5 w-5 text-green-500" />
                     <CardTitle className="text-lg sm:text-base">Production Goals</CardTitle>
                   </div>
-                  <Badge variant="secondary" className="text-xs">Required</Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    Required
+                  </Badge>
                 </div>
                 <CardDescription className="text-sm sm:text-xs">
                   Enter your yield targets and production details
@@ -271,11 +286,12 @@ export function NutrientCalculatorComponent() {
               </CardHeader>
               {activeSection === 'calculator' && (
                 <CardContent className="pt-0 space-y-6 sm:space-y-4">
-                  
                   {/* Basic Production Info */}
                   <div className="grid grid-cols-1 gap-4 sm:gap-3">
                     <div>
-                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Target Yield (tons/ha)</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">
+                        Target Yield (tons/ha)
+                      </Label>
                       <Input
                         type="number"
                         step="0.5"
@@ -286,10 +302,21 @@ export function NutrientCalculatorComponent() {
                       />
                     </div>
                     <div>
-                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Current Growth Stage</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">
+                        Current Growth Stage
+                      </Label>
                       <Select
                         value={formData.currentGrowthStage}
-                        onValueChange={(value: 'dormant' | 'budbreak' | 'flowering' | 'fruit_set' | 'veraison' | 'harvest' | 'post_harvest') => handleInputChange('currentGrowthStage', value)}
+                        onValueChange={(
+                          value:
+                            | 'dormant'
+                            | 'budbreak'
+                            | 'flowering'
+                            | 'fruit_set'
+                            | 'veraison'
+                            | 'harvest'
+                            | 'post_harvest',
+                        ) => handleInputChange('currentGrowthStage', value)}
                       >
                         <SelectTrigger className="h-12 sm:h-11 text-base sm:text-sm">
                           <SelectValue />
@@ -306,10 +333,14 @@ export function NutrientCalculatorComponent() {
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Production Type</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">
+                        Production Type
+                      </Label>
                       <Select
                         value={formData.grapeVariety}
-                        onValueChange={(value: 'table' | 'wine' | 'raisin') => handleInputChange('grapeVariety', value)}
+                        onValueChange={(value: 'table' | 'wine' | 'raisin') =>
+                          handleInputChange('grapeVariety', value)
+                        }
                       >
                         <SelectTrigger className="h-12 sm:h-11 text-base sm:text-sm">
                           <SelectValue />
@@ -328,16 +359,20 @@ export function NutrientCalculatorComponent() {
 
             {/* Soil Test Data Section */}
             <Card>
-              <CardHeader 
+              <CardHeader
                 className="pb-4 sm:pb-3 cursor-pointer"
-                onClick={() => setActiveSection(activeSection === 'calculator' ? 'calculator' : 'calculator')}
+                onClick={() =>
+                  setActiveSection(activeSection === 'calculator' ? 'calculator' : 'calculator')
+                }
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 sm:gap-2">
                     <FlaskConical className="h-5 w-5 text-green-500" />
                     <CardTitle className="text-lg sm:text-base">Soil Test Results</CardTitle>
                   </div>
-                  <Badge variant="secondary" className="text-xs">Required</Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    Required
+                  </Badge>
                 </div>
                 <CardDescription className="text-sm sm:text-xs">
                   Enter your soil test results for precise recommendations
@@ -345,11 +380,12 @@ export function NutrientCalculatorComponent() {
               </CardHeader>
               {activeSection === 'calculator' && (
                 <CardContent className="pt-0 space-y-6 sm:space-y-4">
-                  
                   {/* Basic Soil Properties */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
                     <div>
-                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">pH</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">
+                        pH
+                      </Label>
                       <Input
                         type="number"
                         step="0.1"
@@ -360,7 +396,9 @@ export function NutrientCalculatorComponent() {
                       />
                     </div>
                     <div>
-                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Organic Matter (%)</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">
+                        Organic Matter (%)
+                      </Label>
                       <Input
                         type="number"
                         step="0.1"
@@ -375,7 +413,9 @@ export function NutrientCalculatorComponent() {
                   {/* Macronutrients */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
                     <div>
-                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Nitrogen (N) ppm</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">
+                        Nitrogen (N) ppm
+                      </Label>
                       <Input
                         type="number"
                         placeholder="20"
@@ -385,7 +425,9 @@ export function NutrientCalculatorComponent() {
                       />
                     </div>
                     <div>
-                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Phosphorus (P) ppm</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">
+                        Phosphorus (P) ppm
+                      </Label>
                       <Input
                         type="number"
                         placeholder="25"
@@ -398,7 +440,9 @@ export function NutrientCalculatorComponent() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
                     <div>
-                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Potassium (K) ppm</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">
+                        Potassium (K) ppm
+                      </Label>
                       <Input
                         type="number"
                         placeholder="150"
@@ -408,7 +452,9 @@ export function NutrientCalculatorComponent() {
                       />
                     </div>
                     <div>
-                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Calcium (Ca) ppm</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">
+                        Calcium (Ca) ppm
+                      </Label>
                       <Input
                         type="number"
                         placeholder="1200"
@@ -422,7 +468,9 @@ export function NutrientCalculatorComponent() {
                   {/* Micronutrients */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
                     <div>
-                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Zinc (Zn) ppm</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">
+                        Zinc (Zn) ppm
+                      </Label>
                       <Input
                         type="number"
                         step="0.1"
@@ -433,7 +481,9 @@ export function NutrientCalculatorComponent() {
                       />
                     </div>
                     <div>
-                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">Iron (Fe) ppm</Label>
+                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">
+                        Iron (Fe) ppm
+                      </Label>
                       <Input
                         type="number"
                         placeholder="25"
@@ -451,7 +501,7 @@ export function NutrientCalculatorComponent() {
           {/* Calculate Button */}
           <div className="px-4 sm:px-0 mt-6">
             <div className="flex gap-3 sm:gap-2">
-              <Button 
+              <Button
                 onClick={handleCalculate}
                 disabled={loading || !selectedFarm}
                 className="flex-1 h-14 sm:h-12 bg-green-600 hover:bg-green-700 text-white font-medium text-lg sm:text-base"
@@ -483,7 +533,6 @@ export function NutrientCalculatorComponent() {
           {/* Results Display */}
           {results && (
             <div className="mx-4 sm:mx-0 space-y-4 sm:space-y-3">
-              
               {/* Nutrient Recommendations */}
               <Card>
                 <CardHeader className="pb-4 sm:pb-3">
@@ -496,50 +545,86 @@ export function NutrientCalculatorComponent() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0 space-y-6 sm:space-y-4">
-                  
                   {/* Macronutrients */}
                   <div className="space-y-4 sm:space-y-3">
-                    <h4 className="font-semibold text-base sm:text-sm text-gray-800">Macronutrients</h4>
+                    <h4 className="font-semibold text-base sm:text-sm text-gray-800">
+                      Macronutrients
+                    </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-3">
                       <div className="bg-gray-50 p-4 sm:p-3 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-700">Nitrogen (N)</span>
-                          <Badge variant={getNutrientStatus(results.recommendations.nitrogen.deficit).variant} className="text-xs">
+                          <Badge
+                            variant={
+                              getNutrientStatus(results.recommendations.nitrogen.deficit).variant
+                            }
+                            className="text-xs"
+                          >
                             {getNutrientStatus(results.recommendations.nitrogen.deficit).status}
                           </Badge>
                         </div>
                         <div className="space-y-1 text-xs text-gray-600">
-                          <div>Required: {results.recommendations.nitrogen.required.toFixed(1)} kg/ha</div>
-                          <div>Available: {results.recommendations.nitrogen.available.toFixed(1)} kg/ha</div>
-                          <div>Deficit: {results.recommendations.nitrogen.deficit.toFixed(1)} kg/ha</div>
+                          <div>
+                            Required: {results.recommendations.nitrogen.required.toFixed(1)} kg/ha
+                          </div>
+                          <div>
+                            Available: {results.recommendations.nitrogen.available.toFixed(1)} kg/ha
+                          </div>
+                          <div>
+                            Deficit: {results.recommendations.nitrogen.deficit.toFixed(1)} kg/ha
+                          </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-gray-50 p-4 sm:p-3 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-700">Phosphorus (P)</span>
-                          <Badge variant={getNutrientStatus(results.recommendations.phosphorus.deficit).variant} className="text-xs">
+                          <Badge
+                            variant={
+                              getNutrientStatus(results.recommendations.phosphorus.deficit).variant
+                            }
+                            className="text-xs"
+                          >
                             {getNutrientStatus(results.recommendations.phosphorus.deficit).status}
                           </Badge>
                         </div>
                         <div className="space-y-1 text-xs text-gray-600">
-                          <div>Required: {results.recommendations.phosphorus.required.toFixed(1)} kg/ha</div>
-                          <div>Available: {results.recommendations.phosphorus.available.toFixed(1)} kg/ha</div>
-                          <div>Deficit: {results.recommendations.phosphorus.deficit.toFixed(1)} kg/ha</div>
+                          <div>
+                            Required: {results.recommendations.phosphorus.required.toFixed(1)} kg/ha
+                          </div>
+                          <div>
+                            Available: {results.recommendations.phosphorus.available.toFixed(1)}{' '}
+                            kg/ha
+                          </div>
+                          <div>
+                            Deficit: {results.recommendations.phosphorus.deficit.toFixed(1)} kg/ha
+                          </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-gray-50 p-4 sm:p-3 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-700">Potassium (K)</span>
-                          <Badge variant={getNutrientStatus(results.recommendations.potassium.deficit).variant} className="text-xs">
+                          <Badge
+                            variant={
+                              getNutrientStatus(results.recommendations.potassium.deficit).variant
+                            }
+                            className="text-xs"
+                          >
                             {getNutrientStatus(results.recommendations.potassium.deficit).status}
                           </Badge>
                         </div>
                         <div className="space-y-1 text-xs text-gray-600">
-                          <div>Required: {results.recommendations.potassium.required.toFixed(1)} kg/ha</div>
-                          <div>Available: {results.recommendations.potassium.available.toFixed(1)} kg/ha</div>
-                          <div>Deficit: {results.recommendations.potassium.deficit.toFixed(1)} kg/ha</div>
+                          <div>
+                            Required: {results.recommendations.potassium.required.toFixed(1)} kg/ha
+                          </div>
+                          <div>
+                            Available: {results.recommendations.potassium.available.toFixed(1)}{' '}
+                            kg/ha
+                          </div>
+                          <div>
+                            Deficit: {results.recommendations.potassium.deficit.toFixed(1)} kg/ha
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -547,47 +632,103 @@ export function NutrientCalculatorComponent() {
 
                   {/* Secondary Nutrients */}
                   <div className="space-y-4 sm:space-y-3">
-                    <h4 className="font-semibold text-base sm:text-sm text-gray-800">Secondary Nutrients</h4>
+                    <h4 className="font-semibold text-base sm:text-sm text-gray-800">
+                      Secondary Nutrients
+                    </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-3">
                       <div className="bg-gray-50 p-4 sm:p-3 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-700">Calcium (Ca)</span>
-                          <Badge variant={getNutrientStatus(results.recommendations.secondary.calcium.deficit).variant} className="text-xs">
-                            {getNutrientStatus(results.recommendations.secondary.calcium.deficit).status}
+                          <Badge
+                            variant={
+                              getNutrientStatus(results.recommendations.secondary.calcium.deficit)
+                                .variant
+                            }
+                            className="text-xs"
+                          >
+                            {
+                              getNutrientStatus(results.recommendations.secondary.calcium.deficit)
+                                .status
+                            }
                           </Badge>
                         </div>
                         <div className="space-y-1 text-xs text-gray-600">
-                          <div>Required: {results.recommendations.secondary.calcium.required.toFixed(1)} kg/ha</div>
-                          <div>Available: {results.recommendations.secondary.calcium.available.toFixed(1)} kg/ha</div>
-                          <div>Deficit: {results.recommendations.secondary.calcium.deficit.toFixed(1)} kg/ha</div>
+                          <div>
+                            Required:{' '}
+                            {results.recommendations.secondary.calcium.required.toFixed(1)} kg/ha
+                          </div>
+                          <div>
+                            Available:{' '}
+                            {results.recommendations.secondary.calcium.available.toFixed(1)} kg/ha
+                          </div>
+                          <div>
+                            Deficit: {results.recommendations.secondary.calcium.deficit.toFixed(1)}{' '}
+                            kg/ha
+                          </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-gray-50 p-4 sm:p-3 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-700">Magnesium (Mg)</span>
-                          <Badge variant={getNutrientStatus(results.recommendations.secondary.magnesium.deficit).variant} className="text-xs">
-                            {getNutrientStatus(results.recommendations.secondary.magnesium.deficit).status}
+                          <Badge
+                            variant={
+                              getNutrientStatus(results.recommendations.secondary.magnesium.deficit)
+                                .variant
+                            }
+                            className="text-xs"
+                          >
+                            {
+                              getNutrientStatus(results.recommendations.secondary.magnesium.deficit)
+                                .status
+                            }
                           </Badge>
                         </div>
                         <div className="space-y-1 text-xs text-gray-600">
-                          <div>Required: {results.recommendations.secondary.magnesium.required.toFixed(1)} kg/ha</div>
-                          <div>Available: {results.recommendations.secondary.magnesium.available.toFixed(1)} kg/ha</div>
-                          <div>Deficit: {results.recommendations.secondary.magnesium.deficit.toFixed(1)} kg/ha</div>
+                          <div>
+                            Required:{' '}
+                            {results.recommendations.secondary.magnesium.required.toFixed(1)} kg/ha
+                          </div>
+                          <div>
+                            Available:{' '}
+                            {results.recommendations.secondary.magnesium.available.toFixed(1)} kg/ha
+                          </div>
+                          <div>
+                            Deficit:{' '}
+                            {results.recommendations.secondary.magnesium.deficit.toFixed(1)} kg/ha
+                          </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-gray-50 p-4 sm:p-3 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-700">Sulfur (S)</span>
-                          <Badge variant={getNutrientStatus(results.recommendations.secondary.sulfur.deficit).variant} className="text-xs">
-                            {getNutrientStatus(results.recommendations.secondary.sulfur.deficit).status}
+                          <Badge
+                            variant={
+                              getNutrientStatus(results.recommendations.secondary.sulfur.deficit)
+                                .variant
+                            }
+                            className="text-xs"
+                          >
+                            {
+                              getNutrientStatus(results.recommendations.secondary.sulfur.deficit)
+                                .status
+                            }
                           </Badge>
                         </div>
                         <div className="space-y-1 text-xs text-gray-600">
-                          <div>Required: {results.recommendations.secondary.sulfur.required.toFixed(1)} kg/ha</div>
-                          <div>Available: {results.recommendations.secondary.sulfur.available.toFixed(1)} kg/ha</div>
-                          <div>Deficit: {results.recommendations.secondary.sulfur.deficit.toFixed(1)} kg/ha</div>
+                          <div>
+                            Required: {results.recommendations.secondary.sulfur.required.toFixed(1)}{' '}
+                            kg/ha
+                          </div>
+                          <div>
+                            Available:{' '}
+                            {results.recommendations.secondary.sulfur.available.toFixed(1)} kg/ha
+                          </div>
+                          <div>
+                            Deficit: {results.recommendations.secondary.sulfur.deficit.toFixed(1)}{' '}
+                            kg/ha
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -610,13 +751,18 @@ export function NutrientCalculatorComponent() {
                   {results.applicationSchedule.map((schedule, index) => (
                     <div key={index} className="bg-gray-50 p-4 sm:p-3 rounded-lg">
                       <div className="flex items-center justify-between mb-3 sm:mb-2">
-                        <h5 className="font-medium text-base sm:text-sm text-gray-800">{schedule.month}</h5>
-                        <Badge variant="outline" className="text-xs">{schedule.stage}</Badge>
+                        <h5 className="font-medium text-base sm:text-sm text-gray-800">
+                          {schedule.month}
+                        </h5>
+                        <Badge variant="outline" className="text-xs">
+                          {schedule.stage}
+                        </Badge>
                       </div>
                       <div className="space-y-2 sm:space-y-1">
                         {schedule.applications.map((app, appIndex) => (
                           <div key={appIndex} className="text-sm sm:text-xs text-gray-600">
-                            <span className="font-medium">{app.fertilizer}:</span> {app.rate.toFixed(1)} kg/ha - {app.method}
+                            <span className="font-medium">{app.fertilizer}:</span>{' '}
+                            {app.rate.toFixed(1)} kg/ha - {app.method}
                           </div>
                         ))}
                       </div>
@@ -654,5 +800,5 @@ export function NutrientCalculatorComponent() {
         </>
       )}
     </div>
-  );
+  )
 }

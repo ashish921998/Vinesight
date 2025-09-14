@@ -1,20 +1,20 @@
-"use client";
+'use client'
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { FarmerDashboard } from "@/components/dashboard/FarmerDashboard";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { FarmerDashboard } from '@/components/dashboard/FarmerDashboard'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 export default function DashboardPage() {
-  const { user, loading } = useSupabaseAuth();
-  const router = useRouter();
+  const { user, loading } = useSupabaseAuth()
+  const router = useRouter()
 
   // Redirect unauthenticated users to homepage
   useEffect(() => {
     if (!user && !loading) {
-      router.push('/');
+      router.push('/')
     }
-  }, [user, loading, router]);
+  }, [user, loading, router])
 
   // Show loading state
   if (loading) {
@@ -25,13 +25,13 @@ export default function DashboardPage() {
           <p className="text-muted-foreground mt-4">Loading Dashboard...</p>
         </div>
       </div>
-    );
+    )
   }
 
   // Don't show dashboard if user is not logged in (will redirect)
   if (!user) {
-    return null;
+    return null
   }
 
-  return <FarmerDashboard />;
+  return <FarmerDashboard />
 }

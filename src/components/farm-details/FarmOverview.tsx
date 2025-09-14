@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from '@/components/ui/card'
 
 interface FarmOverviewProps {
-  loading: boolean;
+  loading: boolean
 }
 
 export function FarmOverview({ loading }: FarmOverviewProps) {
@@ -24,9 +24,9 @@ export function FarmOverview({ loading }: FarmOverviewProps) {
           </Card>
         ))}
       </div>
-    );
+    )
   }
 
   // Remove the overview cards section - component now returns null
-  return null;
+  return null
 }

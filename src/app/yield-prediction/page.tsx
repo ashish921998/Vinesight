@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { YieldPredictionComponent } from "@/components/calculators/YieldPrediction";
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { YieldPredictionComponent } from '@/components/calculators/YieldPrediction'
 
 export default function YieldPredictionPage() {
   return (
@@ -10,5 +10,5 @@ export default function YieldPredictionPage() {
         <YieldPredictionComponent />
       </div>
     </ProtectedRoute>
-  );
+  )
 }

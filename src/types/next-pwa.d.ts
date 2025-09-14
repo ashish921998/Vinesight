@@ -1,27 +1,27 @@
 declare module 'next-pwa' {
-  import { NextConfig } from 'next';
-  
+  import { NextConfig } from 'next'
+
   interface PWAConfig {
-    dest: string;
-    register: boolean;
-    skipWaiting: boolean;
-    disable?: boolean;
-    sw?: string;
+    dest: string
+    register: boolean
+    skipWaiting: boolean
+    disable?: boolean
+    sw?: string
     runtimeCaching?: Array<{
-      urlPattern: RegExp;
-      handler: string;
+      urlPattern: RegExp
+      handler: string
       options?: {
-        cacheName: string;
+        cacheName: string
         expiration?: {
-          maxEntries: number;
-          maxAgeSeconds: number;
-        };
-        networkTimeoutSeconds?: number;
-      };
-    }>;
+          maxEntries: number
+          maxAgeSeconds: number
+        }
+        networkTimeoutSeconds?: number
+      }
+    }>
   }
-  
-  function nextPWA(config: PWAConfig): (nextConfig: NextConfig) => NextConfig;
-  
-  export default nextPWA;
+
+  function nextPWA(config: PWAConfig): (nextConfig: NextConfig) => NextConfig
+
+  export default nextPWA
 }

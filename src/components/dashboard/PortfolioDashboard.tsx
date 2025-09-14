@@ -1,15 +1,15 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  AlertTriangle, 
-  Droplets, 
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import {
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  Droplets,
   DollarSign,
   Activity,
   MapPin,
@@ -17,50 +17,50 @@ import {
   Users,
   Tractor,
   BarChart3,
-  Target
-} from "lucide-react";
+  Target,
+} from 'lucide-react'
 
 interface Farm {
-  id: string;
-  name: string;
-  location: string;
-  totalAcres: number;
-  cropType: string;
-  healthScore: number;
-  status: 'healthy' | 'attention' | 'critical';
-  currentYield: number;
-  expectedYield: number;
-  profitMargin: number;
-  waterUsage: number;
-  activeTasks: number;
-  criticalAlerts: number;
-  revenue: number;
-  expenses: number;
-  soilMoisture: number;
-  weatherRisk: 'low' | 'medium' | 'high';
-  harvestDays: number;
+  id: string
+  name: string
+  location: string
+  totalAcres: number
+  cropType: string
+  healthScore: number
+  status: 'healthy' | 'attention' | 'critical'
+  currentYield: number
+  expectedYield: number
+  profitMargin: number
+  waterUsage: number
+  activeTasks: number
+  criticalAlerts: number
+  revenue: number
+  expenses: number
+  soilMoisture: number
+  weatherRisk: 'low' | 'medium' | 'high'
+  harvestDays: number
 }
 
 interface PortfolioMetrics {
-  totalRevenue: number;
-  totalProfit: number;
-  totalAcres: number;
-  averageYield: number;
-  totalFarms: number;
-  criticalIssues: number;
-  resourceUtilization: number;
-  overallHealthScore: number;
+  totalRevenue: number
+  totalProfit: number
+  totalAcres: number
+  averageYield: number
+  totalFarms: number
+  criticalIssues: number
+  resourceUtilization: number
+  overallHealthScore: number
 }
 
 // Mock data for multi-farm portfolio
-const generatePortfolioData = (): { farms: Farm[], metrics: PortfolioMetrics } => {
+const generatePortfolioData = (): { farms: Farm[]; metrics: PortfolioMetrics } => {
   const farms: Farm[] = [
     {
-      id: "farm1",
-      name: "Vineyard Valley",
-      location: "Nashik, Maharashtra",
+      id: 'farm1',
+      name: 'Vineyard Valley',
+      location: 'Nashik, Maharashtra',
       totalAcres: 25,
-      cropType: "Grapes",
+      cropType: 'Grapes',
       healthScore: 92,
       status: 'healthy',
       currentYield: 8.5,
@@ -73,14 +73,14 @@ const generatePortfolioData = (): { farms: Farm[], metrics: PortfolioMetrics } =
       expenses: 134000,
       soilMoisture: 68,
       weatherRisk: 'low',
-      harvestDays: 45
+      harvestDays: 45,
     },
     {
-      id: "farm2", 
-      name: "Sunset Orchards",
-      location: "Pune, Maharashtra",
+      id: 'farm2',
+      name: 'Sunset Orchards',
+      location: 'Pune, Maharashtra',
       totalAcres: 18,
-      cropType: "Pomegranates",
+      cropType: 'Pomegranates',
       healthScore: 76,
       status: 'attention',
       currentYield: 6.8,
@@ -93,14 +93,14 @@ const generatePortfolioData = (): { farms: Farm[], metrics: PortfolioMetrics } =
       expenses: 126000,
       soilMoisture: 45,
       weatherRisk: 'medium',
-      harvestDays: 62
+      harvestDays: 62,
     },
     {
-      id: "farm3",
-      name: "Green Acres",
-      location: "Solapur, Maharashtra", 
+      id: 'farm3',
+      name: 'Green Acres',
+      location: 'Solapur, Maharashtra',
       totalAcres: 30,
-      cropType: "Cotton",
+      cropType: 'Cotton',
       healthScore: 58,
       status: 'critical',
       currentYield: 4.2,
@@ -113,14 +113,14 @@ const generatePortfolioData = (): { farms: Farm[], metrics: PortfolioMetrics } =
       expenses: 127000,
       soilMoisture: 28,
       weatherRisk: 'high',
-      harvestDays: 88
+      harvestDays: 88,
     },
     {
-      id: "farm4",
-      name: "Highland Farms",
-      location: "Satara, Maharashtra",
+      id: 'farm4',
+      name: 'Highland Farms',
+      location: 'Satara, Maharashtra',
       totalAcres: 22,
-      cropType: "Strawberries",
+      cropType: 'Strawberries',
       healthScore: 88,
       status: 'healthy',
       currentYield: 12.3,
@@ -133,9 +133,9 @@ const generatePortfolioData = (): { farms: Farm[], metrics: PortfolioMetrics } =
       expenses: 94000,
       soilMoisture: 72,
       weatherRisk: 'low',
-      harvestDays: 28
-    }
-  ];
+      harvestDays: 28,
+    },
+  ]
 
   const metrics: PortfolioMetrics = {
     totalRevenue: farms.reduce((sum, farm) => sum + farm.revenue, 0),
@@ -145,48 +145,52 @@ const generatePortfolioData = (): { farms: Farm[], metrics: PortfolioMetrics } =
     totalFarms: farms.length,
     criticalIssues: farms.reduce((sum, farm) => sum + farm.criticalAlerts, 0),
     resourceUtilization: farms.reduce((sum, farm) => sum + farm.waterUsage, 0) / farms.length,
-    overallHealthScore: farms.reduce((sum, farm) => sum + farm.healthScore, 0) / farms.length
-  };
+    overallHealthScore: farms.reduce((sum, farm) => sum + farm.healthScore, 0) / farms.length,
+  }
 
-  return { farms, metrics };
-};
+  return { farms, metrics }
+}
 
 interface PortfolioDashboardProps {
-  onFarmSelect?: (farmId: string) => void;
+  onFarmSelect?: (farmId: string) => void
 }
 
 export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
-  const [portfolioData, setPortfolioData] = useState(generatePortfolioData());
-  const [loading, setLoading] = useState(true);
+  const [portfolioData, setPortfolioData] = useState(generatePortfolioData())
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // Simulate loading
     setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-  }, []);
+      setLoading(false)
+    }, 1000)
+  }, [])
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'bg-green-100 border-green-200 text-green-800';
-      case 'attention': return 'bg-amber-100 border-amber-200 text-amber-800';
-      case 'critical': return 'bg-red-100 border-red-200 text-red-800';
-      default: return 'bg-gray-100 border-gray-200 text-gray-800';
+      case 'healthy':
+        return 'bg-green-100 border-green-200 text-green-800'
+      case 'attention':
+        return 'bg-amber-100 border-amber-200 text-amber-800'
+      case 'critical':
+        return 'bg-red-100 border-red-200 text-red-800'
+      default:
+        return 'bg-gray-100 border-gray-200 text-gray-800'
     }
-  };
+  }
 
   const getHealthScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-amber-600';
-    return 'text-red-600';
-  };
+    if (score >= 80) return 'text-green-600'
+    if (score >= 60) return 'text-amber-600'
+    return 'text-red-600'
+  }
 
   const formatCurrency = (amount: number) => {
-    return `₹${(amount / 1000).toFixed(0)}K`;
-  };
+    return `₹${(amount / 1000).toFixed(0)}K`
+  }
 
-  const criticalFarms = portfolioData.farms.filter(farm => farm.status === 'critical');
-  const attentionFarms = portfolioData.farms.filter(farm => farm.status === 'attention');
+  const criticalFarms = portfolioData.farms.filter((farm) => farm.status === 'critical')
+  const attentionFarms = portfolioData.farms.filter((farm) => farm.status === 'attention')
 
   if (loading) {
     return (
@@ -201,7 +205,7 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
           <div className="h-64 bg-gray-200 rounded" />
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -209,7 +213,9 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
       {/* Mobile-optimized header */}
       <div className="mb-4">
         <h1 className="text-xl font-bold text-foreground mb-1">Portfolio Overview</h1>
-        <p className="text-sm text-muted-foreground">{portfolioData.metrics.totalFarms} farms • {portfolioData.metrics.totalAcres} acres</p>
+        <p className="text-sm text-muted-foreground">
+          {portfolioData.metrics.totalFarms} farms • {portfolioData.metrics.totalAcres} acres
+        </p>
       </div>
 
       {/* Critical Issues Alert - Mobile Optimized */}
@@ -223,7 +229,7 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
                   {portfolioData.metrics.criticalIssues} Critical Issues
                 </h3>
                 <p className="text-xs text-red-600 leading-relaxed">
-                  {criticalFarms.map(farm => farm.name).join(', ')} need immediate action
+                  {criticalFarms.map((farm) => farm.name).join(', ')} need immediate action
                 </p>
               </div>
             </div>
@@ -263,7 +269,9 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
               <Activity className="h-4 w-4 text-blue-600" />
               <span className="text-xs text-muted-foreground">Health</span>
             </div>
-            <div className={`text-lg font-bold ${getHealthScoreColor(portfolioData.metrics.overallHealthScore)}`}>
+            <div
+              className={`text-lg font-bold ${getHealthScoreColor(portfolioData.metrics.overallHealthScore)}`}
+            >
               {portfolioData.metrics.overallHealthScore.toFixed(0)}
             </div>
           </CardContent>
@@ -328,9 +336,12 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
                       <div className="font-semibold text-sm">
                         {farm.currentYield}/{farm.expectedYield}T
                       </div>
-                      <Progress value={(farm.currentYield / farm.expectedYield) * 100} className="h-1 mt-1" />
+                      <Progress
+                        value={(farm.currentYield / farm.expectedYield) * 100}
+                        className="h-1 mt-1"
+                      />
                     </div>
-                    
+
                     <div>
                       <div className="text-xs text-muted-foreground">Water Usage</div>
                       <div className="font-semibold text-sm">{farm.waterUsage}%</div>
@@ -345,13 +356,11 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
                         {farm.profitMargin.toFixed(1)}%
                       </div>
                     </div>
-                    
+
                     <div>
                       <div className="text-xs text-muted-foreground">Tasks/Harvest</div>
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-sm">
-                          {farm.activeTasks} tasks
-                        </span>
+                        <span className="font-semibold text-sm">{farm.activeTasks} tasks</span>
                         <span className="font-semibold text-sm text-primary">
                           {farm.harvestDays}d
                         </span>
@@ -387,7 +396,8 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
                   <span className="font-medium text-red-800">Critical Action Required</span>
                 </div>
                 <p className="text-sm text-red-700">
-                  Green Acres needs immediate irrigation - soil moisture at 28%. Consider reallocating water resources from Highland Farms.
+                  Green Acres needs immediate irrigation - soil moisture at 28%. Consider
+                  reallocating water resources from Highland Farms.
                 </p>
               </div>
             )}
@@ -398,7 +408,8 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
                 <span className="font-medium text-blue-800">Equipment Optimization</span>
               </div>
               <p className="text-sm text-blue-700">
-                Highland Farms harvest starts in 28 days. Plan to move harvesting equipment from Vineyard Valley after their completion.
+                Highland Farms harvest starts in 28 days. Plan to move harvesting equipment from
+                Vineyard Valley after their completion.
               </p>
             </div>
 
@@ -408,12 +419,13 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
                 <span className="font-medium text-green-800">Performance Insight</span>
               </div>
               <p className="text-sm text-green-700">
-                Vineyard Valley's irrigation efficiency is 15% better than portfolio average. Consider applying their practices to other farms.
+                Vineyard Valley's irrigation efficiency is 15% better than portfolio average.
+                Consider applying their practices to other farms.
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

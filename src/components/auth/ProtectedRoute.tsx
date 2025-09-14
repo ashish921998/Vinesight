@@ -1,29 +1,30 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LoginButton } from './LoginButton';
-import { Loader2, Lock } from 'lucide-react';
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useEffect, useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { LoginButton } from './LoginButton'
+import { Loader2, Lock } from 'lucide-react'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  children: React.ReactNode
+  fallback?: React.ReactNode
 }
 
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
-  const { user, loading } = useSupabaseAuth();
-  const [mounted, setMounted] = useState(false);
+  const { user, loading } = useSupabaseAuth()
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-  
+    setMounted(true)
+  }, [])
+
   // Development mode - bypass auth for local testing ONLY
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  const isLocalhost = mounted && 
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const bypassAuth = isDevelopment && isLocalhost && process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  const isLocalhost =
+    mounted &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  const bypassAuth = isDevelopment && isLocalhost && process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true'
 
   // Show loading until component is mounted and auth check is complete
   if (!mounted || (loading && !bypassAuth)) {
@@ -34,12 +35,12 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
           <span>Loading...</span>
         </div>
       </div>
-    );
+    )
   }
 
   if (!user && !bypassAuth) {
     if (fallback) {
-      return <>{fallback}</>;
+      return <>{fallback}</>
     }
 
     return (
@@ -55,14 +56,12 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
             <p className="text-muted-foreground">
               You need to sign in to access this page. Please use Google to continue.
             </p>
-            <LoginButton className="w-full">
-              Sign in to continue
-            </LoginButton>
+            <LoginButton className="w-full">Sign in to continue</LoginButton>
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
-  return <>{children}</>;
+  return <>{children}</>
 }

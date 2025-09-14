@@ -1,84 +1,77 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Sun, 
-  Cloud, 
-  CloudRain, 
-  Wind, 
-  Droplets,
-  Gauge
-} from 'lucide-react';
-import { OpenMeteoWeatherService, type OpenMeteoWeatherData } from '@/lib/open-meteo-weather';
-import type { Farm } from '@/types/types';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Card, CardContent } from '@/components/ui/card'
+import { Sun, Cloud, CloudRain, Wind, Droplets, Gauge } from 'lucide-react'
+import { OpenMeteoWeatherService, type OpenMeteoWeatherData } from '@/lib/open-meteo-weather'
+import type { Farm } from '@/types/types'
 
 interface SimpleWeatherCardProps {
-  farm: Farm;
+  farm: Farm
 }
 
 export function SimpleWeatherCard({ farm }: SimpleWeatherCardProps) {
-  const [weatherData, setWeatherData] = useState<OpenMeteoWeatherData | null>(null);
-  const [forecast, setForecast] = useState<OpenMeteoWeatherData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const [weatherData, setWeatherData] = useState<OpenMeteoWeatherData | null>(null)
+  const [forecast, setForecast] = useState<OpenMeteoWeatherData[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
-  const hasLocationData = farm.latitude && farm.longitude;
+  const hasLocationData = farm.latitude && farm.longitude
 
   const fetchWeatherData = async () => {
-    if (!hasLocationData) return;
+    if (!hasLocationData) return
 
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];
-      
+      const today = new Date()
+      const todayStr = today.toISOString().split('T')[0]
+
       // Get next 3 days for forecast
-      const threeDaysLater = new Date(today);
-      threeDaysLater.setDate(today.getDate() + 2);
-      const threeDaysLaterStr = threeDaysLater.toISOString().split('T')[0];
-      
+      const threeDaysLater = new Date(today)
+      threeDaysLater.setDate(today.getDate() + 2)
+      const threeDaysLaterStr = threeDaysLater.toISOString().split('T')[0]
+
       const weatherDataArray = await OpenMeteoWeatherService.getWeatherData(
-        farm.latitude!, 
-        farm.longitude!, 
-        todayStr, 
-        threeDaysLaterStr
-      );
-      
+        farm.latitude!,
+        farm.longitude!,
+        todayStr,
+        threeDaysLaterStr,
+      )
+
       if (weatherDataArray.length > 0) {
-        setWeatherData(weatherDataArray[0]);
-        setForecast(weatherDataArray.slice(1, 4));
+        setWeatherData(weatherDataArray[0])
+        setForecast(weatherDataArray.slice(1, 4))
       }
     } catch (error) {
-      console.error('Error fetching weather data:', error);
+      console.error('Error fetching weather data:', error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
     if (hasLocationData) {
-      fetchWeatherData();
+      fetchWeatherData()
     }
-  }, [farm.latitude, farm.longitude]);
+  }, [farm.latitude, farm.longitude])
 
   const getWeatherIcon = (temp: number, humidity: number, precipitation: number) => {
-    if (precipitation > 1) return <CloudRain className="h-5 w-5 text-blue-600" />;
-    if (humidity > 80) return <Cloud className="h-5 w-5 text-gray-600" />;
-    return <Sun className="h-5 w-5 text-yellow-500" />;
-  };
+    if (precipitation > 1) return <CloudRain className="h-5 w-5 text-blue-600" />
+    if (humidity > 80) return <Cloud className="h-5 w-5 text-gray-600" />
+    return <Sun className="h-5 w-5 text-yellow-500" />
+  }
 
   const getDayName = (dateStr: string, index: number) => {
-    if (index === 0) return 'Tue';
-    if (index === 1) return 'Wed'; 
-    if (index === 2) return 'Thu';
-    return new Date(dateStr).toLocaleDateString('en', { weekday: 'short' });
-  };
+    if (index === 0) return 'Tue'
+    if (index === 1) return 'Wed'
+    if (index === 2) return 'Thu'
+    return new Date(dateStr).toLocaleDateString('en', { weekday: 'short' })
+  }
 
   const handleCardClick = () => {
-    router.push('/weather');
-  };
+    router.push('/weather')
+  }
 
   if (!hasLocationData || isLoading || !weatherData) {
     return (
@@ -95,7 +88,7 @@ export function SimpleWeatherCard({ farm }: SimpleWeatherCardProps) {
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -129,7 +122,9 @@ export function SimpleWeatherCard({ farm }: SimpleWeatherCardProps) {
             </div>
             <div className="flex items-center gap-1">
               <Gauge className="h-4 w-4" />
-              <span className="text-sm">ETo {weatherData.et0FaoEvapotranspiration.toFixed(1)}mm</span>
+              <span className="text-sm">
+                ETo {weatherData.et0FaoEvapotranspiration.toFixed(1)}mm
+              </span>
             </div>
           </div>
         </div>
@@ -138,7 +133,9 @@ export function SimpleWeatherCard({ farm }: SimpleWeatherCardProps) {
         <div className="flex justify-between">
           {forecast.map((day, index) => (
             <div key={day.date} className="flex flex-col items-center gap-1">
-              <span className="text-xs font-medium text-gray-600">{getDayName(day.date, index)}</span>
+              <span className="text-xs font-medium text-gray-600">
+                {getDayName(day.date, index)}
+              </span>
               {getWeatherIcon(day.temperatureMean, day.relativeHumidityMean, day.precipitationSum)}
               <div className="text-xs">
                 <span className="font-medium">{Math.round(day.temperatureMax)}°</span>
@@ -149,5 +146,5 @@ export function SimpleWeatherCard({ farm }: SimpleWeatherCardProps) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

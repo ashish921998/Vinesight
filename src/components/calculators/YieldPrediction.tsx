@@ -1,16 +1,22 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
 import {
   TrendingUp,
   BarChart3,
@@ -24,14 +30,14 @@ import {
   Leaf,
   Grape,
   CloudRain,
-  Thermometer
-} from "lucide-react";
+  Thermometer,
+} from 'lucide-react'
 import {
   YieldPredictionEngine,
   type YieldPredictionInputs,
   type YieldPredictionResults,
-  type HistoricalYieldData
-} from "@/lib/yield-prediction";
+  type HistoricalYieldData,
+} from '@/lib/yield-prediction'
 
 export function YieldPredictionComponent() {
   const [inputs, setInputs] = useState<YieldPredictionInputs>({
@@ -46,25 +52,25 @@ export function YieldPredictionComponent() {
           averageTemp: 22.5,
           totalRainfall: 450,
           sunlightHours: 2800,
-          extremeWeatherEvents: 2
+          extremeWeatherEvents: 2,
         },
         floweringPeriod: {
           averageTemp: 18.5,
           rainfall: 45,
-          windSpeed: 3.2
+          windSpeed: 3.2,
         },
         ripening: {
           averageTemp: 26.8,
           rainfall: 28,
-          heatWavesDays: 8
-        }
+          heatWavesDays: 8,
+        },
       },
       plannedManagement: {
         pruningIntensity: 'moderate',
         irrigationAmount: 350,
         fertilizationProgram: 'standard',
         canopyManagement: 'standard',
-        pestControl: 4
+        pestControl: 4,
       },
       currentSoil: {
         organicMatter: 3.2,
@@ -72,23 +78,23 @@ export function YieldPredictionComponent() {
         phosphorus: 45,
         potassium: 180,
         pH: 6.3,
-        drainage: 'good'
+        drainage: 'good',
       },
       budBreakDate: new Date('2024-03-15'),
       floweringDate: new Date('2024-05-10'),
-      veraison: null
+      veraison: null,
     },
     economicFactors: {
-      targetPrice: 8.50,
+      targetPrice: 8.5,
       productionCost: 12000,
       laborCost: 25,
       inputCosts: {
         fertilizer: 800,
         pesticides: 600,
-        water: 400
-      }
-    }
-  });
+        water: 400,
+      },
+    },
+  })
 
   const [historicalInput, setHistoricalInput] = useState<Partial<HistoricalYieldData>>({
     year: 2023,
@@ -105,25 +111,25 @@ export function YieldPredictionComponent() {
         averageTemp: 21.8,
         totalRainfall: 380,
         sunlightHours: 2650,
-        extremeWeatherEvents: 1
+        extremeWeatherEvents: 1,
       },
       floweringPeriod: {
         averageTemp: 17.2,
         rainfall: 32,
-        windSpeed: 2.8
+        windSpeed: 2.8,
       },
       ripening: {
         averageTemp: 25.4,
         rainfall: 15,
-        heatWavesDays: 5
-      }
+        heatWavesDays: 5,
+      },
     },
     managementPractices: {
       pruningIntensity: 'moderate',
       irrigationAmount: 320,
       fertilizationProgram: 'standard',
       canopyManagement: 'standard',
-      pestControl: 3
+      pestControl: 3,
     },
     soilConditions: {
       organicMatter: 3.0,
@@ -131,13 +137,13 @@ export function YieldPredictionComponent() {
       phosphorus: 42,
       potassium: 175,
       pH: 6.2,
-      drainage: 'good'
-    }
-  });
+      drainage: 'good',
+    },
+  })
 
-  const [results, setResults] = useState<YieldPredictionResults | null>(null);
-  const [isCalculating, setIsCalculating] = useState(false);
-  const [activeHistoricalYear, setActiveHistoricalYear] = useState<number>(2023);
+  const [results, setResults] = useState<YieldPredictionResults | null>(null)
+  const [isCalculating, setIsCalculating] = useState(false)
+  const [activeHistoricalYear, setActiveHistoricalYear] = useState<number>(2023)
 
   // Add sample historical data
   useEffect(() => {
@@ -153,16 +159,21 @@ export function YieldPredictionComponent() {
         pH: 3.62,
         harvestDate: new Date('2023-09-12'),
         weatherConditions: {
-          growingSeason: { averageTemp: 21.5, totalRainfall: 390, sunlightHours: 2680, extremeWeatherEvents: 1 },
+          growingSeason: {
+            averageTemp: 21.5,
+            totalRainfall: 390,
+            sunlightHours: 2680,
+            extremeWeatherEvents: 1,
+          },
           floweringPeriod: { averageTemp: 17.8, rainfall: 35, windSpeed: 2.9 },
-          ripening: { averageTemp: 25.2, rainfall: 18, heatWavesDays: 6 }
+          ripening: { averageTemp: 25.2, rainfall: 18, heatWavesDays: 6 },
         },
         managementPractices: {
           pruningIntensity: 'moderate',
           irrigationAmount: 315,
           fertilizationProgram: 'standard',
           canopyManagement: 'standard',
-          pestControl: 3
+          pestControl: 3,
         },
         soilConditions: {
           organicMatter: 2.9,
@@ -170,8 +181,8 @@ export function YieldPredictionComponent() {
           phosphorus: 41,
           potassium: 172,
           pH: 6.1,
-          drainage: 'good'
-        }
+          drainage: 'good',
+        },
       },
       {
         year: 2022,
@@ -184,16 +195,21 @@ export function YieldPredictionComponent() {
         pH: 3.58,
         harvestDate: new Date('2022-09-18'),
         weatherConditions: {
-          growingSeason: { averageTemp: 20.2, totalRainfall: 520, sunlightHours: 2420, extremeWeatherEvents: 3 },
+          growingSeason: {
+            averageTemp: 20.2,
+            totalRainfall: 520,
+            sunlightHours: 2420,
+            extremeWeatherEvents: 3,
+          },
           floweringPeriod: { averageTemp: 16.5, rainfall: 85, windSpeed: 4.2 },
-          ripening: { averageTemp: 23.8, rainfall: 45, heatWavesDays: 3 }
+          ripening: { averageTemp: 23.8, rainfall: 45, heatWavesDays: 3 },
         },
         managementPractices: {
           pruningIntensity: 'moderate',
           irrigationAmount: 280,
           fertilizationProgram: 'standard',
           canopyManagement: 'minimal',
-          pestControl: 4
+          pestControl: 4,
         },
         soilConditions: {
           organicMatter: 2.7,
@@ -201,8 +217,8 @@ export function YieldPredictionComponent() {
           phosphorus: 38,
           potassium: 165,
           pH: 6.0,
-          drainage: 'moderate'
-        }
+          drainage: 'moderate',
+        },
       },
       {
         year: 2021,
@@ -215,16 +231,21 @@ export function YieldPredictionComponent() {
         pH: 3.68,
         harvestDate: new Date('2021-09-08'),
         weatherConditions: {
-          growingSeason: { averageTemp: 23.1, totalRainfall: 285, sunlightHours: 2890, extremeWeatherEvents: 0 },
+          growingSeason: {
+            averageTemp: 23.1,
+            totalRainfall: 285,
+            sunlightHours: 2890,
+            extremeWeatherEvents: 0,
+          },
           floweringPeriod: { averageTemp: 19.2, rainfall: 12, windSpeed: 2.1 },
-          ripening: { averageTemp: 27.5, rainfall: 8, heatWavesDays: 12 }
+          ripening: { averageTemp: 27.5, rainfall: 8, heatWavesDays: 12 },
         },
         managementPractices: {
           pruningIntensity: 'light',
           irrigationAmount: 420,
           fertilizationProgram: 'intensive',
           canopyManagement: 'intensive',
-          pestControl: 5
+          pestControl: 5,
         },
         soilConditions: {
           organicMatter: 3.4,
@@ -232,22 +253,22 @@ export function YieldPredictionComponent() {
           phosphorus: 52,
           potassium: 195,
           pH: 6.4,
-          drainage: 'good'
-        }
-      }
-    ];
-    
-    setInputs(prev => ({ ...prev, historicalData: sampleData }));
-  }, []);
+          drainage: 'good',
+        },
+      },
+    ]
+
+    setInputs((prev) => ({ ...prev, historicalData: sampleData }))
+  }, [])
 
   const addHistoricalData = () => {
     if (historicalInput.year && historicalInput.yieldPerAcre) {
-      const newData: HistoricalYieldData = historicalInput as HistoricalYieldData;
-      setInputs(prev => ({
+      const newData: HistoricalYieldData = historicalInput as HistoricalYieldData
+      setInputs((prev) => ({
         ...prev,
-        historicalData: [...prev.historicalData, newData].sort((a, b) => b.year - a.year)
-      }));
-      
+        historicalData: [...prev.historicalData, newData].sort((a, b) => b.year - a.year),
+      }))
+
       // Reset form
       setHistoricalInput({
         year: new Date().getFullYear(),
@@ -257,54 +278,65 @@ export function YieldPredictionComponent() {
         berrySize: 'medium',
         sugarContent: 24.2,
         acidity: 6.5,
-        pH: 3.6
-      });
+        pH: 3.6,
+      })
     }
-  };
+  }
 
   const predictYield = () => {
-    setIsCalculating(true);
-    
+    setIsCalculating(true)
+
     setTimeout(() => {
-      const prediction = YieldPredictionEngine.predictYield(inputs);
-      setResults(prediction);
-      setIsCalculating(false);
-    }, 2000);
-  };
+      const prediction = YieldPredictionEngine.predictYield(inputs)
+      setResults(prediction)
+      setIsCalculating(false)
+    }, 2000)
+  }
 
   const getScenarioColor = (scenario: string) => {
     switch (scenario) {
-      case 'optimistic': return 'text-green-600';
-      case 'realistic': return 'text-green-600';
-      case 'pessimistic': return 'text-orange-600';
-      default: return 'text-gray-600';
+      case 'optimistic':
+        return 'text-green-600'
+      case 'realistic':
+        return 'text-green-600'
+      case 'pessimistic':
+        return 'text-orange-600'
+      default:
+        return 'text-gray-600'
     }
-  };
+  }
 
   const getQualityColor = (quality: string) => {
     switch (quality) {
-      case 'excellent': return 'text-green-600';
-      case 'good': return 'text-green-600';
-      case 'average': return 'text-orange-600';
-      default: return 'text-red-600';
+      case 'excellent':
+        return 'text-green-600'
+      case 'good':
+        return 'text-green-600'
+      case 'average':
+        return 'text-orange-600'
+      default:
+        return 'text-red-600'
     }
-  };
+  }
 
   const getRiskColor = (impact: string) => {
     switch (impact) {
-      case 'high': return 'text-red-600';
-      case 'medium': return 'text-orange-600';
-      default: return 'text-green-600';
+      case 'high':
+        return 'text-red-600'
+      case 'medium':
+        return 'text-orange-600'
+      default:
+        return 'text-green-600'
     }
-  };
+  }
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 0
-    }).format(value);
-  };
+      minimumFractionDigits: 0,
+    }).format(value)
+  }
 
   return (
     <div className="space-y-6">
@@ -315,7 +347,8 @@ export function YieldPredictionComponent() {
             Yield Prediction System
           </CardTitle>
           <CardDescription className="text-green-700">
-            AI-powered yield forecasting using historical data, weather patterns, and vineyard conditions
+            AI-powered yield forecasting using historical data, weather patterns, and vineyard
+            conditions
           </CardDescription>
         </CardHeader>
       </Card>
@@ -343,10 +376,10 @@ export function YieldPredictionComponent() {
                   <Label>Grape Variety</Label>
                   <Select
                     value={inputs.currentSeasonData.grapeVariety}
-                    onValueChange={(value: any) => 
-                      setInputs(prev => ({
+                    onValueChange={(value: any) =>
+                      setInputs((prev) => ({
                         ...prev,
-                        currentSeasonData: { ...prev.currentSeasonData, grapeVariety: value }
+                        currentSeasonData: { ...prev.currentSeasonData, grapeVariety: value },
                       }))
                     }
                   >
@@ -370,24 +403,30 @@ export function YieldPredictionComponent() {
                     <Input
                       type="number"
                       value={inputs.currentSeasonData.vineAge}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
-                          currentSeasonData: { ...prev.currentSeasonData, vineAge: parseInt(e.target.value) }
+                          currentSeasonData: {
+                            ...prev.currentSeasonData,
+                            vineAge: parseInt(e.target.value),
+                          },
                         }))
                       }
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Planting Density (vines/ha)</Label>
                     <Input
                       type="number"
                       value={inputs.currentSeasonData.plantingDensity}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
-                          currentSeasonData: { ...prev.currentSeasonData, plantingDensity: parseInt(e.target.value) }
+                          currentSeasonData: {
+                            ...prev.currentSeasonData,
+                            plantingDensity: parseInt(e.target.value),
+                          },
                         }))
                       }
                     />
@@ -398,10 +437,10 @@ export function YieldPredictionComponent() {
                   <Label>Target Quality</Label>
                   <Select
                     value={inputs.currentSeasonData.targetQuality}
-                    onValueChange={(value: any) => 
-                      setInputs(prev => ({
+                    onValueChange={(value: any) =>
+                      setInputs((prev) => ({
                         ...prev,
-                        currentSeasonData: { ...prev.currentSeasonData, targetQuality: value }
+                        currentSeasonData: { ...prev.currentSeasonData, targetQuality: value },
                       }))
                     }
                   >
@@ -433,24 +472,30 @@ export function YieldPredictionComponent() {
                       type="number"
                       step="0.10"
                       value={inputs.economicFactors.targetPrice}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
-                          economicFactors: { ...prev.economicFactors, targetPrice: parseFloat(e.target.value) }
+                          economicFactors: {
+                            ...prev.economicFactors,
+                            targetPrice: parseFloat(e.target.value),
+                          },
                         }))
                       }
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Production Cost ($/ha)</Label>
                     <Input
                       type="number"
                       value={inputs.economicFactors.productionCost}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
-                          economicFactors: { ...prev.economicFactors, productionCost: parseFloat(e.target.value) }
+                          economicFactors: {
+                            ...prev.economicFactors,
+                            productionCost: parseFloat(e.target.value),
+                          },
                         }))
                       }
                     />
@@ -463,30 +508,33 @@ export function YieldPredictionComponent() {
                     <Input
                       type="number"
                       value={inputs.economicFactors.laborCost}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
-                          economicFactors: { ...prev.economicFactors, laborCost: parseFloat(e.target.value) }
+                          economicFactors: {
+                            ...prev.economicFactors,
+                            laborCost: parseFloat(e.target.value),
+                          },
                         }))
                       }
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Fertilizer Cost ($)</Label>
                     <Input
                       type="number"
                       value={inputs.economicFactors.inputCosts.fertilizer}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
-                          economicFactors: { 
-                            ...prev.economicFactors, 
-                            inputCosts: { 
-                              ...prev.economicFactors.inputCosts, 
-                              fertilizer: parseFloat(e.target.value) 
-                            }
-                          }
+                          economicFactors: {
+                            ...prev.economicFactors,
+                            inputCosts: {
+                              ...prev.economicFactors.inputCosts,
+                              fertilizer: parseFloat(e.target.value),
+                            },
+                          },
                         }))
                       }
                     />
@@ -499,36 +547,36 @@ export function YieldPredictionComponent() {
                     <Input
                       type="number"
                       value={inputs.economicFactors.inputCosts.pesticides}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
-                          economicFactors: { 
-                            ...prev.economicFactors, 
-                            inputCosts: { 
-                              ...prev.economicFactors.inputCosts, 
-                              pesticides: parseFloat(e.target.value) 
-                            }
-                          }
+                          economicFactors: {
+                            ...prev.economicFactors,
+                            inputCosts: {
+                              ...prev.economicFactors.inputCosts,
+                              pesticides: parseFloat(e.target.value),
+                            },
+                          },
                         }))
                       }
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Water Cost ($)</Label>
                     <Input
                       type="number"
                       value={inputs.economicFactors.inputCosts.water}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
-                          economicFactors: { 
-                            ...prev.economicFactors, 
-                            inputCosts: { 
-                              ...prev.economicFactors.inputCosts, 
-                              water: parseFloat(e.target.value) 
-                            }
-                          }
+                          economicFactors: {
+                            ...prev.economicFactors,
+                            inputCosts: {
+                              ...prev.economicFactors.inputCosts,
+                              water: parseFloat(e.target.value),
+                            },
+                          },
                         }))
                       }
                     />
@@ -558,16 +606,23 @@ export function YieldPredictionComponent() {
                     <Input
                       type="number"
                       value={historicalInput.year || ''}
-                      onChange={(e) => setHistoricalInput(prev => ({ ...prev, year: parseInt(e.target.value) }))}
+                      onChange={(e) =>
+                        setHistoricalInput((prev) => ({ ...prev, year: parseInt(e.target.value) }))
+                      }
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Yield (kg/ha)</Label>
                     <Input
                       type="number"
                       value={historicalInput.yieldPerAcre || ''}
-                      onChange={(e) => setHistoricalInput(prev => ({ ...prev, yieldPerAcre: parseFloat(e.target.value) }))}
+                      onChange={(e) =>
+                        setHistoricalInput((prev) => ({
+                          ...prev,
+                          yieldPerAcre: parseFloat(e.target.value),
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -579,27 +634,39 @@ export function YieldPredictionComponent() {
                       type="number"
                       step="0.1"
                       value={historicalInput.sugarContent || ''}
-                      onChange={(e) => setHistoricalInput(prev => ({ ...prev, sugarContent: parseFloat(e.target.value) }))}
+                      onChange={(e) =>
+                        setHistoricalInput((prev) => ({
+                          ...prev,
+                          sugarContent: parseFloat(e.target.value),
+                        }))
+                      }
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Acidity (g/L)</Label>
                     <Input
                       type="number"
                       step="0.1"
                       value={historicalInput.acidity || ''}
-                      onChange={(e) => setHistoricalInput(prev => ({ ...prev, acidity: parseFloat(e.target.value) }))}
+                      onChange={(e) =>
+                        setHistoricalInput((prev) => ({
+                          ...prev,
+                          acidity: parseFloat(e.target.value),
+                        }))
+                      }
                     />
                   </div>
-                  
+
                   <div>
                     <Label>pH</Label>
                     <Input
                       type="number"
                       step="0.01"
                       value={historicalInput.pH || ''}
-                      onChange={(e) => setHistoricalInput(prev => ({ ...prev, pH: parseFloat(e.target.value) }))}
+                      onChange={(e) =>
+                        setHistoricalInput((prev) => ({ ...prev, pH: parseFloat(e.target.value) }))
+                      }
                     />
                   </div>
                 </div>
@@ -623,7 +690,10 @@ export function YieldPredictionComponent() {
               <CardContent>
                 <div className="space-y-3 max-h-64 overflow-y-auto">
                   {inputs.historicalData.map((data, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded"
+                    >
                       <div>
                         <span className="font-medium text-sm">{data.year}</span>
                         <div className="text-xs text-muted-foreground">
@@ -659,8 +729,8 @@ export function YieldPredictionComponent() {
                       type="number"
                       step="0.1"
                       value={inputs.currentSeasonData.currentWeather.growingSeason.averageTemp}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
                           currentSeasonData: {
                             ...prev.currentSeasonData,
@@ -668,22 +738,22 @@ export function YieldPredictionComponent() {
                               ...prev.currentSeasonData.currentWeather,
                               growingSeason: {
                                 ...prev.currentSeasonData.currentWeather.growingSeason,
-                                averageTemp: parseFloat(e.target.value)
-                              }
-                            }
-                          }
+                                averageTemp: parseFloat(e.target.value),
+                              },
+                            },
+                          },
                         }))
                       }
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Total Rainfall (mm)</Label>
                     <Input
                       type="number"
                       value={inputs.currentSeasonData.currentWeather.growingSeason.totalRainfall}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
                           currentSeasonData: {
                             ...prev.currentSeasonData,
@@ -691,10 +761,10 @@ export function YieldPredictionComponent() {
                               ...prev.currentSeasonData.currentWeather,
                               growingSeason: {
                                 ...prev.currentSeasonData.currentWeather.growingSeason,
-                                totalRainfall: parseFloat(e.target.value)
-                              }
-                            }
-                          }
+                                totalRainfall: parseFloat(e.target.value),
+                              },
+                            },
+                          },
                         }))
                       }
                     />
@@ -707,8 +777,8 @@ export function YieldPredictionComponent() {
                     <Input
                       type="number"
                       value={inputs.currentSeasonData.currentWeather.growingSeason.sunlightHours}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
                           currentSeasonData: {
                             ...prev.currentSeasonData,
@@ -716,22 +786,24 @@ export function YieldPredictionComponent() {
                               ...prev.currentSeasonData.currentWeather,
                               growingSeason: {
                                 ...prev.currentSeasonData.currentWeather.growingSeason,
-                                sunlightHours: parseFloat(e.target.value)
-                              }
-                            }
-                          }
+                                sunlightHours: parseFloat(e.target.value),
+                              },
+                            },
+                          },
                         }))
                       }
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Extreme Weather Events</Label>
                     <Input
                       type="number"
-                      value={inputs.currentSeasonData.currentWeather.growingSeason.extremeWeatherEvents}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      value={
+                        inputs.currentSeasonData.currentWeather.growingSeason.extremeWeatherEvents
+                      }
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
                           currentSeasonData: {
                             ...prev.currentSeasonData,
@@ -739,10 +811,10 @@ export function YieldPredictionComponent() {
                               ...prev.currentSeasonData.currentWeather,
                               growingSeason: {
                                 ...prev.currentSeasonData.currentWeather.growingSeason,
-                                extremeWeatherEvents: parseInt(e.target.value)
-                              }
-                            }
-                          }
+                                extremeWeatherEvents: parseInt(e.target.value),
+                              },
+                            },
+                          },
                         }))
                       }
                     />
@@ -763,16 +835,16 @@ export function YieldPredictionComponent() {
                   <Label>Pruning Intensity</Label>
                   <Select
                     value={inputs.currentSeasonData.plannedManagement.pruningIntensity}
-                    onValueChange={(value: any) => 
-                      setInputs(prev => ({
+                    onValueChange={(value: any) =>
+                      setInputs((prev) => ({
                         ...prev,
                         currentSeasonData: {
                           ...prev.currentSeasonData,
                           plannedManagement: {
                             ...prev.currentSeasonData.plannedManagement,
-                            pruningIntensity: value
-                          }
-                        }
+                            pruningIntensity: value,
+                          },
+                        },
                       }))
                     }
                   >
@@ -793,36 +865,36 @@ export function YieldPredictionComponent() {
                     <Input
                       type="number"
                       value={inputs.currentSeasonData.plannedManagement.irrigationAmount}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
                           currentSeasonData: {
                             ...prev.currentSeasonData,
                             plannedManagement: {
                               ...prev.currentSeasonData.plannedManagement,
-                              irrigationAmount: parseFloat(e.target.value)
-                            }
-                          }
+                              irrigationAmount: parseFloat(e.target.value),
+                            },
+                          },
                         }))
                       }
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Pest Control Applications</Label>
                     <Input
                       type="number"
                       value={inputs.currentSeasonData.plannedManagement.pestControl}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
                           currentSeasonData: {
                             ...prev.currentSeasonData,
                             plannedManagement: {
                               ...prev.currentSeasonData.plannedManagement,
-                              pestControl: parseInt(e.target.value)
-                            }
-                          }
+                              pestControl: parseInt(e.target.value),
+                            },
+                          },
                         }))
                       }
                     />
@@ -835,7 +907,7 @@ export function YieldPredictionComponent() {
 
         <TabsContent value="prediction" className="space-y-6">
           <div className="flex justify-center">
-            <Button 
+            <Button
               onClick={predictYield}
               disabled={isCalculating || inputs.historicalData.length === 0}
               className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
@@ -860,21 +932,31 @@ export function YieldPredictionComponent() {
               {/* Prediction Overview */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {Object.entries(results.prediction.scenarios).map(([scenario, data]) => (
-                  <Card key={scenario} className="border-l-4" style={{ borderLeftColor: scenario === 'optimistic' ? '#16a34a' : scenario === 'realistic' ? '#2563eb' : '#ea580c' }}>
+                  <Card
+                    key={scenario}
+                    className="border-l-4"
+                    style={{
+                      borderLeftColor:
+                        scenario === 'optimistic'
+                          ? '#16a34a'
+                          : scenario === 'realistic'
+                            ? '#2563eb'
+                            : '#ea580c',
+                    }}
+                  >
                     <CardHeader>
                       <CardTitle className={`text-lg capitalize ${getScenarioColor(scenario)}`}>
                         {scenario} Scenario
                       </CardTitle>
-                      <CardDescription>
-                        {data.probability}% probability
-                      </CardDescription>
+                      <CardDescription>{data.probability}% probability</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="text-3xl font-bold mb-2">
                         {data.yield.toLocaleString()} kg/ha
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {Math.round(data.yield / inputs.currentSeasonData.plantingDensity * 1000)} kg/vine
+                        {Math.round((data.yield / inputs.currentSeasonData.plantingDensity) * 1000)}{' '}
+                        kg/vine
                       </div>
                     </CardContent>
                   </Card>
@@ -894,11 +976,14 @@ export function YieldPredictionComponent() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">Overall Quality</span>
-                        <Badge variant="outline" className={getQualityColor(results.quality.overallQuality)}>
+                        <Badge
+                          variant="outline"
+                          className={getQualityColor(results.quality.overallQuality)}
+                        >
                           {results.quality.overallQuality.replace('_', ' ').toUpperCase()}
                         </Badge>
                       </div>
-                      
+
                       <div>
                         <div className="flex justify-between text-sm mb-1">
                           <span>Quality Score</span>
@@ -907,7 +992,7 @@ export function YieldPredictionComponent() {
                         <Progress value={results.quality.qualityScore} className="h-2" />
                       </div>
                     </div>
-                    
+
                     <div className="space-y-3">
                       <div className="flex justify-between text-sm">
                         <span>Sugar Content:</span>
@@ -915,14 +1000,14 @@ export function YieldPredictionComponent() {
                           {results.quality.sugarContent.predicted.toFixed(1)}° Brix
                         </span>
                       </div>
-                      
+
                       <div className="flex justify-between text-sm">
                         <span>Acidity:</span>
                         <span className="font-medium">
                           {results.quality.acidity.predicted.toFixed(1)} g/L
                         </span>
                       </div>
-                      
+
                       <div className="flex justify-between text-sm">
                         <span>pH:</span>
                         <span className="font-medium">
@@ -931,9 +1016,9 @@ export function YieldPredictionComponent() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <Separator className="my-4" />
-                  
+
                   <div className="bg-gray-50 p-4 rounded">
                     <div className="text-sm font-medium mb-2">Optimal Harvest Window</div>
                     <div className="grid grid-cols-3 gap-4 text-sm">
@@ -943,7 +1028,9 @@ export function YieldPredictionComponent() {
                       </div>
                       <div>
                         <div className="text-muted-foreground">Optimal</div>
-                        <div className="font-medium">{results.quality.harvestWindow.optimal.toLocaleDateString()}</div>
+                        <div className="font-medium">
+                          {results.quality.harvestWindow.optimal.toLocaleDateString()}
+                        </div>
                       </div>
                       <div>
                         <div className="text-muted-foreground">Latest</div>
@@ -998,7 +1085,8 @@ export function YieldPredictionComponent() {
                       <div className="flex-1">
                         <div className="font-medium text-sm">{rec.action}</div>
                         <div className="text-xs text-muted-foreground mt-1">
-                          <strong>Timing:</strong> {rec.timing} | <strong>Impact:</strong> {rec.impact}
+                          <strong>Timing:</strong> {rec.timing} | <strong>Impact:</strong>{' '}
+                          {rec.impact}
                         </div>
                       </div>
                     </div>
@@ -1015,14 +1103,26 @@ export function YieldPredictionComponent() {
                   <CardContent>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-2xl font-bold">{results.confidence}%</span>
-                      <Badge variant={results.confidence >= 80 ? 'default' : results.confidence >= 60 ? 'secondary' : 'destructive'}>
-                        {results.confidence >= 80 ? 'High' : results.confidence >= 60 ? 'Medium' : 'Low'}
+                      <Badge
+                        variant={
+                          results.confidence >= 80
+                            ? 'default'
+                            : results.confidence >= 60
+                              ? 'secondary'
+                              : 'destructive'
+                        }
+                      >
+                        {results.confidence >= 80
+                          ? 'High'
+                          : results.confidence >= 60
+                            ? 'Medium'
+                            : 'Low'}
                       </Badge>
                     </div>
                     <Progress value={results.confidence} className="h-2" />
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Data Quality</CardTitle>
@@ -1063,9 +1163,7 @@ export function YieldPredictionComponent() {
                       <div className="text-3xl font-bold text-green-600 mb-2">
                         {formatCurrency(revenue)}
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        per acre
-                      </div>
+                      <div className="text-sm text-muted-foreground">per acre</div>
                     </CardContent>
                   </Card>
                 ))}
@@ -1088,14 +1186,14 @@ export function YieldPredictionComponent() {
                           {formatCurrency(results.economics.costs.total)}
                         </span>
                       </div>
-                      
+
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Cost per kg</span>
                         <span className="font-medium">
                           {formatCurrency(results.economics.costs.perKg)}
                         </span>
                       </div>
-                      
+
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Break-even yield</span>
                         <span className="font-medium">
@@ -1103,7 +1201,7 @@ export function YieldPredictionComponent() {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-3">
                       <div className="text-sm font-medium mb-2">Cost Breakdown</div>
                       {Object.entries(results.economics.costs.breakdown).map(([category, cost]) => (
@@ -1127,15 +1225,15 @@ export function YieldPredictionComponent() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className={`text-3xl font-bold mb-2 ${profit.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <div
+                        className={`text-3xl font-bold mb-2 ${profit.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                      >
                         {formatCurrency(profit.profit)}
                       </div>
                       <div className="text-sm text-muted-foreground mb-2">
                         {profit.margin.toFixed(1)}% margin
                       </div>
-                      <div className="text-xs">
-                        per acre
-                      </div>
+                      <div className="text-xs">per acre</div>
                     </CardContent>
                   </Card>
                 ))}
@@ -1147,7 +1245,9 @@ export function YieldPredictionComponent() {
                   <CardTitle>Return on Investment</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-4xl font-bold mb-2 ${results.economics.roi >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div
+                    className={`text-4xl font-bold mb-2 ${results.economics.roi >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                  >
                     {results.economics.roi.toFixed(1)}%
                   </div>
                   <div className="text-muted-foreground">
@@ -1160,5 +1260,5 @@ export function YieldPredictionComponent() {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

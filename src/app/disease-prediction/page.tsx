@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { DiseasePredictionComponent } from "@/components/calculators/DiseasePrediction";
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { DiseasePredictionComponent } from '@/components/calculators/DiseasePrediction'
 
 export default function DiseasePredictionPage() {
   return (
@@ -10,5 +10,5 @@ export default function DiseasePredictionPage() {
         <DiseasePredictionComponent />
       </div>
     </ProtectedRoute>
-  );
+  )
 }

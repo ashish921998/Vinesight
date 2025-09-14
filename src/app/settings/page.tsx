@@ -1,47 +1,42 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { 
-  Languages, 
-  LogOut,
-  User
-} from "lucide-react";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Languages, LogOut, User } from 'lucide-react'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 export default function SettingsPage() {
-  const { user, signOut } = useSupabaseAuth();
-  const [language, setLanguage] = useState('en');
-  const [signOutLoading, setSignOutLoading] = useState(false);
+  const { user, signOut } = useSupabaseAuth()
+  const [language, setLanguage] = useState('en')
+  const [signOutLoading, setSignOutLoading] = useState(false)
 
   useEffect(() => {
     // Load saved language preference
-    const savedLang = localStorage.getItem('vinesight-language') || 'en';
-    setLanguage(savedLang);
-  }, []);
+    const savedLang = localStorage.getItem('vinesight-language') || 'en'
+    setLanguage(savedLang)
+  }, [])
 
   const handleLanguageChange = (newLang: string) => {
-    setLanguage(newLang);
-    localStorage.setItem('vinesight-language', newLang);
-  };
-
+    setLanguage(newLang)
+    localStorage.setItem('vinesight-language', newLang)
+  }
 
   const handleSignOut = async () => {
     try {
-      setSignOutLoading(true);
-      await signOut();
+      setSignOutLoading(true)
+      await signOut()
     } catch (error) {
-      alert('Failed to sign out. Please try again.');
+      alert('Failed to sign out. Please try again.')
     } finally {
-      setSignOutLoading(false);
+      setSignOutLoading(false)
     }
-  };
+  }
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
-  ];
+  ]
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -56,7 +51,6 @@ export default function SettingsPage() {
 
       {/* Settings */}
       <div className="p-4 space-y-3">
-        
         {/* Account Settings */}
         <Card>
           <CardHeader className="pb-3">
@@ -75,9 +69,7 @@ export default function SettingsPage() {
                       <p className="font-medium text-green-900 text-sm">
                         {user.user_metadata?.full_name || 'User'}
                       </p>
-                      <p className="text-xs text-green-600 truncate">
-                        {user.email}
-                      </p>
+                      <p className="text-xs text-green-600 truncate">{user.email}</p>
                     </div>
                   </div>
                 </div>
@@ -97,7 +89,7 @@ export default function SettingsPage() {
               <div className="text-center py-6">
                 <User className="h-8 w-8 mx-auto text-gray-300 mb-3" />
                 <p className="text-gray-500 mb-3 text-sm">Not signed in</p>
-                <Button onClick={() => window.location.href = '/auth'} size="sm">
+                <Button onClick={() => (window.location.href = '/auth')} size="sm">
                   Sign In
                 </Button>
               </div>
@@ -117,7 +109,7 @@ export default function SettingsPage() {
             {languages.map((lang) => (
               <Button
                 key={lang.code}
-                variant={language === lang.code ? "default" : "outline"}
+                variant={language === lang.code ? 'default' : 'outline'}
                 onClick={() => handleLanguageChange(lang.code)}
                 className="w-full justify-start h-9"
                 size="sm"
@@ -130,5 +122,5 @@ export default function SettingsPage() {
         </Card>
       </div>
     </div>
-  );
+  )
 }

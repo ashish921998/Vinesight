@@ -1,17 +1,17 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { 
-  Cloud, 
-  Sun, 
-  CloudRain, 
-  Thermometer, 
-  Droplets, 
-  Wind, 
-  Eye, 
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Cloud,
+  Sun,
+  CloudRain,
+  Thermometer,
+  Droplets,
+  Wind,
+  Eye,
   Gauge,
   Sunrise,
   Sunset,
@@ -21,87 +21,98 @@ import {
   Info,
   Zap,
   Timer,
-  TrendingUp
-} from "lucide-react";
-import { WeatherService, WeatherData, ETc, WeatherAlerts } from "@/lib/weather-service";
+  TrendingUp,
+} from 'lucide-react'
+import { WeatherService, WeatherData, ETc, WeatherAlerts } from '@/lib/weather-service'
 
 interface WeatherDashboardProps {
-  farmLocation?: { latitude: number; longitude: number; name?: string };
-  growthStage?: string;
-  soilType?: string;
+  farmLocation?: { latitude: number; longitude: number; name?: string }
+  growthStage?: string
+  soilType?: string
 }
 
-export function WeatherDashboard({ 
-  farmLocation, 
-  growthStage = "Flowering",
-  soilType = "medium" 
+export function WeatherDashboard({
+  farmLocation,
+  growthStage = 'Flowering',
+  soilType = 'medium',
 }: WeatherDashboardProps) {
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [etc, setEtc] = useState<ETc | null>(null);
-  const [alerts, setAlerts] = useState<WeatherAlerts | null>(null);
-  const [irrigationSchedule, setIrrigationSchedule] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [weather, setWeather] = useState<WeatherData | null>(null)
+  const [etc, setEtc] = useState<ETc | null>(null)
+  const [alerts, setAlerts] = useState<WeatherAlerts | null>(null)
+  const [irrigationSchedule, setIrrigationSchedule] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   useEffect(() => {
-    loadWeatherData();
+    loadWeatherData()
     // Refresh weather data every 30 minutes
-    const interval = setInterval(loadWeatherData, 30 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [farmLocation]);
+    const interval = setInterval(loadWeatherData, 30 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [farmLocation])
 
   const loadWeatherData = async () => {
     try {
-      setLoading(true);
+      setLoading(true)
       const weatherData = await WeatherService.getCurrentWeather(
         farmLocation?.latitude,
-        farmLocation?.longitude
-      );
-      
-      const etcData = WeatherService.calculateETc(weatherData, growthStage);
-      const alertsData = WeatherService.generateWeatherAlerts(weatherData, etcData);
-      const scheduleData = WeatherService.generateIrrigationSchedule(weatherData, etcData, soilType);
-      
-      setWeather(weatherData);
-      setEtc(etcData);
-      setAlerts(alertsData);
-      setIrrigationSchedule(scheduleData);
-      setLastUpdated(new Date());
+        farmLocation?.longitude,
+      )
+
+      const etcData = WeatherService.calculateETc(weatherData, growthStage)
+      const alertsData = WeatherService.generateWeatherAlerts(weatherData, etcData)
+      const scheduleData = WeatherService.generateIrrigationSchedule(weatherData, etcData, soilType)
+
+      setWeather(weatherData)
+      setEtc(etcData)
+      setAlerts(alertsData)
+      setIrrigationSchedule(scheduleData)
+      setLastUpdated(new Date())
     } catch (error) {
-      console.error('Error loading weather data:', error);
+      console.error('Error loading weather data:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const getWeatherIcon = (condition: string, isDay: boolean = true) => {
-    const lower = condition.toLowerCase();
+    const lower = condition.toLowerCase()
     if (lower.includes('rain') || lower.includes('drizzle')) {
-      return <CloudRain className="h-6 w-6 text-green-500" />;
+      return <CloudRain className="h-6 w-6 text-green-500" />
     } else if (lower.includes('cloud')) {
-      return <Cloud className="h-6 w-6 text-gray-500" />;
+      return <Cloud className="h-6 w-6 text-gray-500" />
     } else if (lower.includes('sun') || lower.includes('clear')) {
-      return <Sun className="h-6 w-6 text-green-400" />;
+      return <Sun className="h-6 w-6 text-green-400" />
     }
-    return isDay ? <Sun className="h-6 w-6 text-green-400" /> : <Cloud className="h-6 w-6 text-gray-500" />;
-  };
+    return isDay ? (
+      <Sun className="h-6 w-6 text-green-400" />
+    ) : (
+      <Cloud className="h-6 w-6 text-gray-500" />
+    )
+  }
 
   const getAlertIcon = (type: 'warning' | 'info' | 'success') => {
     switch (type) {
-      case 'warning': return <AlertTriangle className="h-4 w-4 text-green-600" />;
-      case 'success': return <CheckCircle className="h-4 w-4 text-green-600" />;
-      default: return <Info className="h-4 w-4 text-green-700" />;
+      case 'warning':
+        return <AlertTriangle className="h-4 w-4 text-green-600" />
+      case 'success':
+        return <CheckCircle className="h-4 w-4 text-green-600" />
+      default:
+        return <Info className="h-4 w-4 text-green-700" />
     }
-  };
+  }
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-green-200 text-green-800 border-green-300';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'high':
+        return 'bg-red-100 text-red-800 border-red-200'
+      case 'medium':
+        return 'bg-green-200 text-green-800 border-green-300'
+      case 'low':
+        return 'bg-green-100 text-green-800 border-green-200'
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200'
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -117,7 +128,7 @@ export function WeatherDashboard({
           ))}
         </div>
       </div>
-    );
+    )
   }
 
   if (!weather || !etc || !alerts) {
@@ -129,12 +140,10 @@ export function WeatherDashboard({
           <p className="text-muted-foreground mb-4">
             Unable to fetch weather data. Please check your internet connection.
           </p>
-          <Button onClick={loadWeatherData}>
-            Try Again
-          </Button>
+          <Button onClick={loadWeatherData}>Try Again</Button>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -184,7 +193,11 @@ export function WeatherDashboard({
                 <p className="text-sm text-muted-foreground">Humidity</p>
                 <p className="text-2xl font-bold">{weather.current.humidity}%</p>
                 <p className="text-xs text-muted-foreground">
-                  {weather.current.humidity > 70 ? 'High' : weather.current.humidity > 40 ? 'Moderate' : 'Low'}
+                  {weather.current.humidity > 70
+                    ? 'High'
+                    : weather.current.humidity > 40
+                      ? 'Moderate'
+                      : 'Low'}
                 </p>
               </div>
               <Droplets className="h-6 w-6 text-green-500" />
@@ -278,27 +291,35 @@ export function WeatherDashboard({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className={`p-4 rounded-lg border ${
-                alerts.irrigation.shouldIrrigate ? 'bg-green-100 border-green-300' : 'bg-green-50 border-green-200'
-              }`}>
+              <div
+                className={`p-4 rounded-lg border ${
+                  alerts.irrigation.shouldIrrigate
+                    ? 'bg-green-100 border-green-300'
+                    : 'bg-green-50 border-green-200'
+                }`}
+              >
                 <div className="flex items-center gap-2 mb-2">
-                  {alerts.irrigation.shouldIrrigate ? 
-                    <Droplets className="h-4 w-4 text-green-600" /> :
+                  {alerts.irrigation.shouldIrrigate ? (
+                    <Droplets className="h-4 w-4 text-green-600" />
+                  ) : (
                     <CheckCircle className="h-4 w-4 text-green-600" />
-                  }
+                  )}
                   <span className="font-medium">
-                    {alerts.irrigation.shouldIrrigate ? 'Irrigation Recommended' : 'No Irrigation Needed'}
+                    {alerts.irrigation.shouldIrrigate
+                      ? 'Irrigation Recommended'
+                      : 'No Irrigation Needed'}
                   </span>
                   <Badge variant="outline" className={getPriorityColor(alerts.irrigation.urgency)}>
                     {alerts.irrigation.urgency} priority
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground mb-2">
-                  {alerts.irrigation.reason}
-                </p>
+                <p className="text-sm text-muted-foreground mb-2">{alerts.irrigation.reason}</p>
                 <div className="space-y-1">
                   {alerts.irrigation.recommendations.map((rec, index) => (
-                    <div key={index} className="text-xs text-muted-foreground flex items-center gap-1">
+                    <div
+                      key={index}
+                      className="text-xs text-muted-foreground flex items-center gap-1"
+                    >
                       <span>•</span> {rec}
                     </div>
                   ))}
@@ -313,9 +334,14 @@ export function WeatherDashboard({
                   </h4>
                   <div className="space-y-2">
                     {irrigationSchedule.schedule.slice(0, 3).map((item: any, index: number) => (
-                      <div key={index} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
+                      <div
+                        key={index}
+                        className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded"
+                      >
                         <div>
-                          <span className="font-medium">{new Date(item.date).toLocaleDateString()}</span>
+                          <span className="font-medium">
+                            {new Date(item.date).toLocaleDateString()}
+                          </span>
                           <span className="text-muted-foreground ml-2">{item.duration}h</span>
                         </div>
                         <Badge variant="outline" className={getPriorityColor(item.priority)}>
@@ -346,24 +372,32 @@ export function WeatherDashboard({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Badge 
-                variant="outline" 
-                className={`${alerts.pest.riskLevel === 'high' ? 'bg-red-100 text-red-800' : 
-                              alerts.pest.riskLevel === 'medium' ? 'bg-green-200 text-green-800' : 
-                              'bg-green-100 text-green-800'}`}
+              <Badge
+                variant="outline"
+                className={`${
+                  alerts.pest.riskLevel === 'high'
+                    ? 'bg-red-100 text-red-800'
+                    : alerts.pest.riskLevel === 'medium'
+                      ? 'bg-green-200 text-green-800'
+                      : 'bg-green-100 text-green-800'
+                }`}
               >
                 {alerts.pest.riskLevel} risk
               </Badge>
               <div>
                 <h5 className="font-medium mb-1">Current Conditions:</h5>
                 {alerts.pest.conditions.map((condition, index) => (
-                  <p key={index} className="text-sm text-muted-foreground">• {condition}</p>
+                  <p key={index} className="text-sm text-muted-foreground">
+                    • {condition}
+                  </p>
                 ))}
               </div>
               <div>
                 <h5 className="font-medium mb-1">Precautions:</h5>
                 {alerts.pest.precautions.map((precaution, index) => (
-                  <p key={index} className="text-sm text-muted-foreground">• {precaution}</p>
+                  <p key={index} className="text-sm text-muted-foreground">
+                    • {precaution}
+                  </p>
                 ))}
               </div>
             </div>
@@ -380,22 +414,25 @@ export function WeatherDashboard({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className={`flex items-center gap-2 ${alerts.harvest.isOptimal ? 'text-green-600' : 'text-green-700'}`}>
-                {alerts.harvest.isOptimal ? 
-                  <CheckCircle className="h-4 w-4" /> : 
+              <div
+                className={`flex items-center gap-2 ${alerts.harvest.isOptimal ? 'text-green-600' : 'text-green-700'}`}
+              >
+                {alerts.harvest.isOptimal ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
                   <AlertTriangle className="h-4 w-4" />
-                }
+                )}
                 <span className="font-medium">
                   {alerts.harvest.isOptimal ? 'Optimal' : 'Suboptimal'} Conditions
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground">
-                {alerts.harvest.conditions}
-              </p>
+              <p className="text-sm text-muted-foreground">{alerts.harvest.conditions}</p>
               <div>
                 <h5 className="font-medium mb-1">Recommendations:</h5>
                 {alerts.harvest.recommendations.map((rec, index) => (
-                  <p key={index} className="text-sm text-muted-foreground">• {rec}</p>
+                  <p key={index} className="text-sm text-muted-foreground">
+                    • {rec}
+                  </p>
                 ))}
               </div>
             </div>
@@ -432,15 +469,21 @@ export function WeatherDashboard({
                 <div className="border-t pt-3">
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Sunrise</span>
-                    <span className="text-sm font-medium">{weather.forecast[0]?.sunrise || 'N/A'}</span>
+                    <span className="text-sm font-medium">
+                      {weather.forecast[0]?.sunrise || 'N/A'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Sunset</span>
-                    <span className="text-sm font-medium">{weather.forecast[0]?.sunset || 'N/A'}</span>
+                    <span className="text-sm font-medium">
+                      {weather.forecast[0]?.sunset || 'N/A'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Day Length</span>
-                    <span className="text-sm font-medium">{weather.forecast[0]?.dayLength?.toFixed(1) || 'N/A'} hrs</span>
+                    <span className="text-sm font-medium">
+                      {weather.forecast[0]?.dayLength?.toFixed(1) || 'N/A'} hrs
+                    </span>
                   </div>
                 </div>
               )}
@@ -463,11 +506,11 @@ export function WeatherDashboard({
             {weather.forecast.map((day, index) => (
               <div key={index} className="text-center p-3 border rounded-lg">
                 <div className="text-sm font-medium mb-2">
-                  {index === 0 ? 'Today' : new Date(day.date).toLocaleDateString('en', { weekday: 'short' })}
+                  {index === 0
+                    ? 'Today'
+                    : new Date(day.date).toLocaleDateString('en', { weekday: 'short' })}
                 </div>
-                <div className="flex justify-center mb-2">
-                  {getWeatherIcon(day.condition)}
-                </div>
+                <div className="flex justify-center mb-2">{getWeatherIcon(day.condition)}</div>
                 <div className="text-xs mb-1">
                   <div className="font-medium">{day.maxTemp}°</div>
                   <div className="text-muted-foreground">{day.minTemp}°</div>
@@ -479,9 +522,7 @@ export function WeatherDashboard({
                       {day.precipitation}mm
                     </div>
                   )}
-                  {day.precipitationProbability > 0 && (
-                    <div>{day.precipitationProbability}%</div>
-                  )}
+                  {day.precipitationProbability > 0 && <div>{day.precipitationProbability}%</div>}
                 </div>
               </div>
             ))}
@@ -489,5 +530,5 @@ export function WeatherDashboard({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

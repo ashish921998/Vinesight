@@ -1,17 +1,23 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Droplets } from 'lucide-react';
-import type { GrapeGrowthStage } from '@/lib/etc-calculator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Droplets } from 'lucide-react'
+import type { GrapeGrowthStage } from '@/lib/etc-calculator'
 
 interface CropInformationFormProps {
   formData: {
-    growthStage: GrapeGrowthStage;
-    irrigationMethod: 'drip' | 'sprinkler' | 'surface';
-    soilType: 'sandy' | 'loamy' | 'clay';
-  };
-  onInputChange: (field: string, value: string) => void;
+    growthStage: GrapeGrowthStage
+    irrigationMethod: 'drip' | 'sprinkler' | 'surface'
+    soilType: 'sandy' | 'loamy' | 'clay'
+  }
+  onInputChange: (field: string, value: string) => void
 }
 
 const growthStages = [
@@ -21,32 +27,29 @@ const growthStages = [
   { value: 'fruit_set', label: 'Fruit Set', period: 'May-Jun' },
   { value: 'veraison', label: 'Veraison', period: 'Jul-Aug' },
   { value: 'harvest', label: 'Harvest', period: 'Aug-Oct' },
-  { value: 'post_harvest', label: 'Post Harvest', period: 'Oct-Nov' }
-];
+  { value: 'post_harvest', label: 'Post Harvest', period: 'Oct-Nov' },
+]
 
-export function CropInformationForm({
-  formData,
-  onInputChange
-}: CropInformationFormProps) {
-  const selectedGrowthStage = growthStages.find(stage => stage.value === formData.growthStage);
+export function CropInformationForm({ formData, onInputChange }: CropInformationFormProps) {
+  const selectedGrowthStage = growthStages.find((stage) => stage.value === formData.growthStage)
 
   return (
     <Card>
-      <CardHeader
-        className="pb-3"
-      >
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Droplets className="h-4 w-4 text-green-500" />
             <CardTitle className="text-base">Crop Information</CardTitle>
           </div>
-          <Badge variant="secondary" className="text-xs">Required</Badge>
+          <Badge variant="secondary" className="text-xs">
+            Required
+          </Badge>
         </div>
         <CardDescription className="text-xs">
           Growth stage and farming method details
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="pt-0 space-y-4">
         <div>
           <Label className="text-sm font-medium text-gray-700">Growth Stage</Label>
@@ -79,7 +82,9 @@ export function CropInformationForm({
           <Label className="text-sm font-medium text-gray-700">Irrigation Method</Label>
           <Select
             value={formData.irrigationMethod}
-            onValueChange={(value: 'drip' | 'sprinkler' | 'surface') => onInputChange('irrigationMethod', value)}
+            onValueChange={(value: 'drip' | 'sprinkler' | 'surface') =>
+              onInputChange('irrigationMethod', value)
+            }
           >
             <SelectTrigger className="h-11 text-base mt-1">
               <SelectValue />
@@ -110,5 +115,5 @@ export function CropInformationForm({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

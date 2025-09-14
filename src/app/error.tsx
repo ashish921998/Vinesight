@@ -4,7 +4,13 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { useEffect } from 'react'
 
-export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
   useEffect(() => {
     console.error('Global error boundary:', error)
   }, [error])
@@ -16,11 +22,11 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
         <p className="text-muted-foreground">An unexpected error occurred. You can try again.</p>
         <div className="flex items-center justify-center gap-3">
           <Button onClick={() => reset()}>Try again</Button>
-          <Link className="underline text-primary hover:text-primary/80" href="/">Go home</Link>
+          <Link className="underline text-primary hover:text-primary/80" href="/">
+            Go home
+          </Link>
         </div>
       </div>
     </div>
   )
 }
-
-

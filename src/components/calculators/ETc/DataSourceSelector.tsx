@@ -1,15 +1,15 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, Info } from 'lucide-react';
-import type { Farm } from '@/types/types';
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { CheckCircle, Info } from 'lucide-react'
+import type { Farm } from '@/types/types'
 
 interface DataSourceSelectorProps {
-  user: any;
-  farms: Farm[];
-  selectedFarm: Farm | null;
-  useCustomData: boolean;
-  onFarmSelect: (farm: Farm) => void;
-  onDataSourceChange: (useCustom: boolean) => void;
+  user: any
+  farms: Farm[]
+  selectedFarm: Farm | null
+  useCustomData: boolean
+  onFarmSelect: (farm: Farm) => void
+  onDataSourceChange: (useCustom: boolean) => void
 }
 
 export function DataSourceSelector({
@@ -18,7 +18,7 @@ export function DataSourceSelector({
   selectedFarm,
   useCustomData,
   onFarmSelect,
-  onDataSourceChange
+  onDataSourceChange,
 }: DataSourceSelectorProps) {
   return (
     <Card className="mx-4">
@@ -27,7 +27,7 @@ export function DataSourceSelector({
           <h3 className="font-semibold text-gray-900">Data Source</h3>
           <div className="flex bg-gray-100 rounded-lg p-1">
             <Button
-              variant={useCustomData ? "default" : "ghost"}
+              variant={useCustomData ? 'default' : 'ghost'}
               size="sm"
               onClick={() => onDataSourceChange(true)}
               className="text-xs px-3 py-1"
@@ -36,7 +36,7 @@ export function DataSourceSelector({
             </Button>
             {user && (
               <Button
-                variant={!useCustomData ? "default" : "ghost"}
+                variant={!useCustomData ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => onDataSourceChange(false)}
                 className="text-xs px-3 py-1"
@@ -53,8 +53,8 @@ export function DataSourceSelector({
               <div
                 key={farm.id}
                 className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                  selectedFarm?.id === farm.id 
-                    ? 'border-green-500 bg-green-50' 
+                  selectedFarm?.id === farm.id
+                    ? 'border-green-500 bg-green-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
                 onClick={() => onFarmSelect(farm)}
@@ -62,7 +62,9 @@ export function DataSourceSelector({
                 <div className="flex justify-between items-center">
                   <div>
                     <h4 className="font-medium text-gray-900 text-sm">{farm.name}</h4>
-                    <p className="text-xs text-gray-500">{farm.region} • {farm.area}ha</p>
+                    <p className="text-xs text-gray-500">
+                      {farm.region} • {farm.area}ha
+                    </p>
                   </div>
                   {selectedFarm?.id === farm.id && (
                     <CheckCircle className="h-4 w-4 text-green-500" />
@@ -83,14 +85,13 @@ export function DataSourceSelector({
               <span className="font-medium text-sm">Manual Entry Mode</span>
             </div>
             <p className="text-green-600 text-xs mt-1">
-              {!user 
-                ? "No sign-in required - enter your data below."
-                : "Using manual data entry mode."
-              }
+              {!user
+                ? 'No sign-in required - enter your data below.'
+                : 'Using manual data entry mode.'}
             </p>
           </div>
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

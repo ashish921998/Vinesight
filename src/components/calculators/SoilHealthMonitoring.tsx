@@ -1,16 +1,22 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
 import {
   Leaf,
   Beaker,
@@ -27,14 +33,14 @@ import {
   ArrowUp,
   ArrowDown,
   Minus,
-  Sprout
-} from "lucide-react";
+  Sprout,
+} from 'lucide-react'
 import {
   SoilHealthAnalyzer,
   type SoilHealthInputs,
   type SoilHealthResults,
-  type SoilTestData
-} from "@/lib/soil-health";
+  type SoilTestData,
+} from '@/lib/soil-health'
 
 export function SoilHealthMonitoringComponent() {
   const [inputs, setInputs] = useState<SoilHealthInputs>({
@@ -43,14 +49,14 @@ export function SoilHealthMonitoringComponent() {
       farmId: 'demo-farm-001',
       location: {
         fieldName: 'Block A - Main Vineyard',
-        depth: 15
+        depth: 15,
       },
       physical: {
         soilTexture: 'loam',
         bulkDensity: 1.35,
         porosity: 48,
         waterHoldingCapacity: 28,
-        infiltrationRate: 12
+        infiltrationRate: 12,
       },
       chemical: {
         pH: 6.8,
@@ -62,17 +68,17 @@ export function SoilHealthMonitoringComponent() {
           total: 0.12,
           available: 245,
           nitrate: 35,
-          ammonium: 15
+          ammonium: 15,
         },
         phosphorus: {
           total: 450,
           available: 28,
-          organic: 180
+          organic: 180,
         },
         potassium: {
           total: 1800,
           available: 220,
-          exchangeable: 180
+          exchangeable: 180,
         },
         calcium: 1850,
         magnesium: 180,
@@ -82,7 +88,7 @@ export function SoilHealthMonitoringComponent() {
         zinc: 2.1,
         copper: 1.2,
         boron: 0.8,
-        molybdenum: 0.15
+        molybdenum: 0.15,
       },
       biological: {
         microbialBiomassCarbon: 285,
@@ -90,11 +96,11 @@ export function SoilHealthMonitoringComponent() {
         enzymeActivity: {
           dehydrogenase: 35,
           phosphatase: 180,
-          urease: 48
+          urease: 48,
         },
         earthwormCount: 85,
-        nematodeCount: 450
-      }
+        nematodeCount: 450,
+      },
     },
     farmContext: {
       cropType: 'grapes',
@@ -106,72 +112,79 @@ export function SoilHealthMonitoringComponent() {
         organicMatter: true,
         coverCrops: true,
         tillage: 'minimum_till',
-        chemicalInputs: 'medium'
-      }
+        chemicalInputs: 'medium',
+      },
     },
     climateData: {
       averageRainfall: 650,
       temperature: { min: 12, max: 35 },
       humidity: 65,
-      windSpeed: 8
-    }
-  });
+      windSpeed: 8,
+    },
+  })
 
-  const [results, setResults] = useState<SoilHealthResults | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [activeTab, setActiveTab] = useState('input');
+  const [results, setResults] = useState<SoilHealthResults | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [activeTab, setActiveTab] = useState('input')
 
   const analyzeSoilHealth = () => {
-    setIsAnalyzing(true);
-    
+    setIsAnalyzing(true)
+
     setTimeout(() => {
-      const analysis = SoilHealthAnalyzer.analyzeSoilHealth(inputs);
-      setResults(analysis);
-      setIsAnalyzing(false);
-      setActiveTab('results');
-    }, 2000);
-  };
+      const analysis = SoilHealthAnalyzer.analyzeSoilHealth(inputs)
+      setResults(analysis)
+      setIsAnalyzing(false)
+      setActiveTab('results')
+    }, 2000)
+  }
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600 bg-green-50';
-    if (score >= 65) return 'text-blue-600 bg-blue-50';
-    if (score >= 45) return 'text-orange-600 bg-orange-50';
-    return 'text-red-600 bg-red-50';
-  };
+    if (score >= 80) return 'text-green-600 bg-green-50'
+    if (score >= 65) return 'text-blue-600 bg-blue-50'
+    if (score >= 45) return 'text-orange-600 bg-orange-50'
+    return 'text-red-600 bg-red-50'
+  }
 
   const getScoreColorBar = (score: number) => {
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 65) return 'bg-blue-500';
-    if (score >= 45) return 'bg-orange-500';
-    return 'bg-red-500';
-  };
+    if (score >= 80) return 'bg-green-500'
+    if (score >= 65) return 'bg-blue-500'
+    if (score >= 45) return 'bg-orange-500'
+    return 'bg-red-500'
+  }
 
   const getCategoryBadge = (category: string) => {
     const variants = {
       excellent: 'bg-green-600 text-white',
       good: 'bg-blue-600 text-white',
       fair: 'bg-orange-600 text-white',
-      poor: 'bg-red-600 text-white'
-    };
-    return variants[category as keyof typeof variants] || variants.fair;
-  };
+      poor: 'bg-red-600 text-white',
+    }
+    return variants[category as keyof typeof variants] || variants.fair
+  }
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'severe': return 'text-red-700 bg-red-50 border-red-200';
-      case 'high': return 'text-orange-700 bg-orange-50 border-gray-200';
-      case 'moderate': return 'text-orange-700 bg-orange-50 border-gray-200';
-      default: return 'text-blue-700 bg-blue-50 border-blue-200';
+      case 'severe':
+        return 'text-red-700 bg-red-50 border-red-200'
+      case 'high':
+        return 'text-orange-700 bg-orange-50 border-gray-200'
+      case 'moderate':
+        return 'text-orange-700 bg-orange-50 border-gray-200'
+      default:
+        return 'text-blue-700 bg-blue-50 border-blue-200'
     }
-  };
+  }
 
   const getTrendIcon = (direction: string) => {
     switch (direction) {
-      case 'improving': return <ArrowUp className="h-4 w-4 text-green-600" />;
-      case 'declining': return <ArrowDown className="h-4 w-4 text-red-600" />;
-      default: return <Minus className="h-4 w-4 text-gray-600" />;
+      case 'improving':
+        return <ArrowUp className="h-4 w-4 text-green-600" />
+      case 'declining':
+        return <ArrowDown className="h-4 w-4 text-red-600" />
+      default:
+        return <Minus className="h-4 w-4 text-gray-600" />
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -212,43 +225,43 @@ export function SoilHealthMonitoringComponent() {
                   <Input
                     type="date"
                     value={inputs.testData.testDate.toISOString().split('T')[0]}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
-                        testData: { ...prev.testData, testDate: new Date(e.target.value) }
+                        testData: { ...prev.testData, testDate: new Date(e.target.value) },
                       }))
                     }
                   />
                 </div>
-                
+
                 <div>
                   <Label>Field Name</Label>
                   <Input
                     value={inputs.testData.location.fieldName}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          location: { ...prev.testData.location, fieldName: e.target.value }
-                        }
+                          location: { ...prev.testData.location, fieldName: e.target.value },
+                        },
                       }))
                     }
                     placeholder="e.g., Block A - Main Vineyard"
                   />
                 </div>
-                
+
                 <div>
                   <Label>Sampling Depth (cm)</Label>
                   <Select
                     value={inputs.testData.location.depth.toString()}
-                    onValueChange={(value) => 
-                      setInputs(prev => ({
+                    onValueChange={(value) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          location: { ...prev.testData.location, depth: parseInt(value) }
-                        }
+                          location: { ...prev.testData.location, depth: parseInt(value) },
+                        },
                       }))
                     }
                   >
@@ -277,10 +290,10 @@ export function SoilHealthMonitoringComponent() {
                   <Label>Grape Variety</Label>
                   <Select
                     value={inputs.farmContext.variety}
-                    onValueChange={(value) => 
-                      setInputs(prev => ({
+                    onValueChange={(value) =>
+                      setInputs((prev) => ({
                         ...prev,
-                        farmContext: { ...prev.farmContext, variety: value }
+                        farmContext: { ...prev.farmContext, variety: value },
                       }))
                     }
                   >
@@ -297,29 +310,32 @@ export function SoilHealthMonitoringComponent() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label>Planting Year</Label>
                   <Input
                     type="number"
                     value={inputs.farmContext.plantingYear}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
-                        farmContext: { ...prev.farmContext, plantingYear: parseInt(e.target.value) }
+                        farmContext: {
+                          ...prev.farmContext,
+                          plantingYear: parseInt(e.target.value),
+                        },
                       }))
                     }
                   />
                 </div>
-                
+
                 <div>
                   <Label>Irrigation Method</Label>
                   <Select
                     value={inputs.farmContext.irrigationMethod}
-                    onValueChange={(value: any) => 
-                      setInputs(prev => ({
+                    onValueChange={(value: any) =>
+                      setInputs((prev) => ({
                         ...prev,
-                        farmContext: { ...prev.farmContext, irrigationMethod: value }
+                        farmContext: { ...prev.farmContext, irrigationMethod: value },
                       }))
                     }
                   >
@@ -356,13 +372,13 @@ export function SoilHealthMonitoringComponent() {
                   <Label>Soil Texture</Label>
                   <Select
                     value={inputs.testData.physical.soilTexture}
-                    onValueChange={(value: any) => 
-                      setInputs(prev => ({
+                    onValueChange={(value: any) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          physical: { ...prev.testData.physical, soilTexture: value }
-                        }
+                          physical: { ...prev.testData.physical, soilTexture: value },
+                        },
                       }))
                     }
                   >
@@ -384,90 +400,94 @@ export function SoilHealthMonitoringComponent() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label>Bulk Density (g/cm³)</Label>
                   <Input
                     type="number"
                     step="0.01"
                     value={inputs.testData.physical.bulkDensity}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          physical: { ...prev.testData.physical, bulkDensity: parseFloat(e.target.value) }
-                        }
+                          physical: {
+                            ...prev.testData.physical,
+                            bulkDensity: parseFloat(e.target.value),
+                          },
+                        },
                       }))
                     }
                   />
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Optimal: 1.0-1.6 g/cm³
-                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Optimal: 1.0-1.6 g/cm³</div>
                 </div>
-                
+
                 <div>
                   <Label>Porosity (%)</Label>
                   <Input
                     type="number"
                     value={inputs.testData.physical.porosity}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          physical: { ...prev.testData.physical, porosity: parseFloat(e.target.value) }
-                        }
+                          physical: {
+                            ...prev.testData.physical,
+                            porosity: parseFloat(e.target.value),
+                          },
+                        },
                       }))
                     }
                   />
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Optimal: 35-60%
-                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Optimal: 35-60%</div>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
                   <Label>Water Holding Capacity (%)</Label>
                   <Input
                     type="number"
                     value={inputs.testData.physical.waterHoldingCapacity}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          physical: { ...prev.testData.physical, waterHoldingCapacity: parseFloat(e.target.value) }
-                        }
+                          physical: {
+                            ...prev.testData.physical,
+                            waterHoldingCapacity: parseFloat(e.target.value),
+                          },
+                        },
                       }))
                     }
                   />
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Optimal: 20-40%
-                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Optimal: 20-40%</div>
                 </div>
-                
+
                 <div>
                   <Label>Infiltration Rate (mm/hr)</Label>
                   <Input
                     type="number"
                     value={inputs.testData.physical.infiltrationRate}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          physical: { ...prev.testData.physical, infiltrationRate: parseFloat(e.target.value) }
-                        }
+                          physical: {
+                            ...prev.testData.physical,
+                            infiltrationRate: parseFloat(e.target.value),
+                          },
+                        },
                       }))
                     }
                   />
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Good: &gt;10 mm/hr
-                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Good: &gt;10 mm/hr</div>
                 </div>
-                
+
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-blue-800 mb-2">Physical Properties Guide</h4>
                   <ul className="text-sm text-blue-700 space-y-1">
@@ -498,13 +518,13 @@ export function SoilHealthMonitoringComponent() {
                     type="number"
                     step="0.1"
                     value={inputs.testData.chemical.pH}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          chemical: { ...prev.testData.chemical, pH: parseFloat(e.target.value) }
-                        }
+                          chemical: { ...prev.testData.chemical, pH: parseFloat(e.target.value) },
+                        },
                       }))
                     }
                   />
@@ -512,20 +532,23 @@ export function SoilHealthMonitoringComponent() {
                     Optimal for grapes: 6.0-7.5
                   </div>
                 </div>
-                
+
                 <div>
                   <Label>Electrical Conductivity (dS/m)</Label>
                   <Input
                     type="number"
                     step="0.1"
                     value={inputs.testData.chemical.electricalConductivity}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          chemical: { ...prev.testData.chemical, electricalConductivity: parseFloat(e.target.value) }
-                        }
+                          chemical: {
+                            ...prev.testData.chemical,
+                            electricalConductivity: parseFloat(e.target.value),
+                          },
+                        },
                       }))
                     }
                   />
@@ -533,51 +556,53 @@ export function SoilHealthMonitoringComponent() {
                     Low salinity: &lt;2.0 dS/m
                   </div>
                 </div>
-                
+
                 <div>
                   <Label>Organic Matter (%)</Label>
                   <Input
                     type="number"
                     step="0.1"
                     value={inputs.testData.chemical.organicMatter}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          chemical: { ...prev.testData.chemical, organicMatter: parseFloat(e.target.value) }
-                        }
+                          chemical: {
+                            ...prev.testData.chemical,
+                            organicMatter: parseFloat(e.target.value),
+                          },
+                        },
                       }))
                     }
                   />
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Good: &gt;2.0%
-                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Good: &gt;2.0%</div>
                 </div>
-                
+
                 <div>
                   <Label>Cation Exchange Capacity (cmol(+)/kg)</Label>
                   <Input
                     type="number"
                     step="0.1"
                     value={inputs.testData.chemical.cationExchangeCapacity}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          chemical: { ...prev.testData.chemical, cationExchangeCapacity: parseFloat(e.target.value) }
-                        }
+                          chemical: {
+                            ...prev.testData.chemical,
+                            cationExchangeCapacity: parseFloat(e.target.value),
+                          },
+                        },
                       }))
                     }
                   />
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Good: 10-30 cmol(+)/kg
-                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Good: 10-30 cmol(+)/kg</div>
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Macronutrients (mg/kg)</CardTitle>
@@ -588,73 +613,76 @@ export function SoilHealthMonitoringComponent() {
                   <Input
                     type="number"
                     value={inputs.testData.chemical.nitrogen.available}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
                           chemical: {
                             ...prev.testData.chemical,
-                            nitrogen: { ...prev.testData.chemical.nitrogen, available: parseFloat(e.target.value) }
-                          }
-                        }
+                            nitrogen: {
+                              ...prev.testData.chemical.nitrogen,
+                              available: parseFloat(e.target.value),
+                            },
+                          },
+                        },
                       }))
                     }
                   />
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Adequate: 200-400 mg/kg
-                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Adequate: 200-400 mg/kg</div>
                 </div>
-                
+
                 <div>
                   <Label>Available Phosphorus (P)</Label>
                   <Input
                     type="number"
                     value={inputs.testData.chemical.phosphorus.available}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
                           chemical: {
                             ...prev.testData.chemical,
-                            phosphorus: { ...prev.testData.chemical.phosphorus, available: parseFloat(e.target.value) }
-                          }
-                        }
+                            phosphorus: {
+                              ...prev.testData.chemical.phosphorus,
+                              available: parseFloat(e.target.value),
+                            },
+                          },
+                        },
                       }))
                     }
                   />
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Adequate: 15-50 mg/kg
-                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Adequate: 15-50 mg/kg</div>
                 </div>
-                
+
                 <div>
                   <Label>Available Potassium (K)</Label>
                   <Input
                     type="number"
                     value={inputs.testData.chemical.potassium.available}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
                           chemical: {
                             ...prev.testData.chemical,
-                            potassium: { ...prev.testData.chemical.potassium, available: parseFloat(e.target.value) }
-                          }
-                        }
+                            potassium: {
+                              ...prev.testData.chemical.potassium,
+                              available: parseFloat(e.target.value),
+                            },
+                          },
+                        },
                       }))
                     }
                   />
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Adequate: 150-350 mg/kg
-                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Adequate: 150-350 mg/kg</div>
                 </div>
               </CardContent>
             </Card>
           </div>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Secondary Nutrients & Micronutrients (mg/kg)</CardTitle>
@@ -666,66 +694,72 @@ export function SoilHealthMonitoringComponent() {
                   <Input
                     type="number"
                     value={inputs.testData.chemical.calcium}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          chemical: { ...prev.testData.chemical, calcium: parseFloat(e.target.value) }
-                        }
+                          chemical: {
+                            ...prev.testData.chemical,
+                            calcium: parseFloat(e.target.value),
+                          },
+                        },
                       }))
                     }
                   />
                 </div>
-                
+
                 <div>
                   <Label>Magnesium</Label>
                   <Input
                     type="number"
                     value={inputs.testData.chemical.magnesium}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          chemical: { ...prev.testData.chemical, magnesium: parseFloat(e.target.value) }
-                        }
+                          chemical: {
+                            ...prev.testData.chemical,
+                            magnesium: parseFloat(e.target.value),
+                          },
+                        },
                       }))
                     }
                   />
                 </div>
-                
+
                 <div>
                   <Label>Iron</Label>
                   <Input
                     type="number"
                     step="0.1"
                     value={inputs.testData.chemical.iron}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          chemical: { ...prev.testData.chemical, iron: parseFloat(e.target.value) }
-                        }
+                          chemical: { ...prev.testData.chemical, iron: parseFloat(e.target.value) },
+                        },
                       }))
                     }
                   />
                 </div>
-                
+
                 <div>
                   <Label>Zinc</Label>
                   <Input
                     type="number"
                     step="0.1"
                     value={inputs.testData.chemical.zinc}
-                    onChange={(e) => 
-                      setInputs(prev => ({
+                    onChange={(e) =>
+                      setInputs((prev) => ({
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          chemical: { ...prev.testData.chemical, zinc: parseFloat(e.target.value) }
-                        }
+                          chemical: { ...prev.testData.chemical, zinc: parseFloat(e.target.value) },
+                        },
                       }))
                     }
                   />
@@ -754,33 +788,37 @@ export function SoilHealthMonitoringComponent() {
                     <Input
                       type="number"
                       value={inputs.testData.biological.microbialBiomassCarbon}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
                           testData: {
                             ...prev.testData,
-                            biological: { ...prev.testData.biological, microbialBiomassCarbon: parseFloat(e.target.value) }
-                          }
+                            biological: {
+                              ...prev.testData.biological,
+                              microbialBiomassCarbon: parseFloat(e.target.value),
+                            },
+                          },
                         }))
                       }
                     />
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Good: &gt;200 mg/kg
-                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">Good: &gt;200 mg/kg</div>
                   </div>
-                  
+
                   <div>
                     <Label>Soil Respiration (mg CO₂/kg/day)</Label>
                     <Input
                       type="number"
                       value={inputs.testData.biological.soilRespiration}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
                           testData: {
                             ...prev.testData,
-                            biological: { ...prev.testData.biological, soilRespiration: parseFloat(e.target.value) }
-                          }
+                            biological: {
+                              ...prev.testData.biological,
+                              soilRespiration: parseFloat(e.target.value),
+                            },
+                          },
                         }))
                       }
                     />
@@ -788,36 +826,37 @@ export function SoilHealthMonitoringComponent() {
                       Active: &gt;30 mg/kg/day
                     </div>
                   </div>
-                  
+
                   <div>
                     <Label>Earthworm Count (per m²)</Label>
                     <Input
                       type="number"
                       value={inputs.testData.biological.earthwormCount}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
                           testData: {
                             ...prev.testData,
-                            biological: { ...prev.testData.biological, earthwormCount: parseFloat(e.target.value) }
-                          }
+                            biological: {
+                              ...prev.testData.biological,
+                              earthwormCount: parseFloat(e.target.value),
+                            },
+                          },
                         }))
                       }
                     />
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Healthy: &gt;50 per m²
-                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">Healthy: &gt;50 per m²</div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div>
                     <Label>Dehydrogenase Activity (μg TPF/g/24h)</Label>
                     <Input
                       type="number"
                       value={inputs.testData.biological.enzymeActivity.dehydrogenase}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
                           testData: {
                             ...prev.testData,
@@ -825,22 +864,22 @@ export function SoilHealthMonitoringComponent() {
                               ...prev.testData.biological,
                               enzymeActivity: {
                                 ...prev.testData.biological.enzymeActivity,
-                                dehydrogenase: parseFloat(e.target.value)
-                              }
-                            }
-                          }
+                                dehydrogenase: parseFloat(e.target.value),
+                              },
+                            },
+                          },
                         }))
                       }
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Phosphatase Activity (μg p-nitrophenol/g/h)</Label>
                     <Input
                       type="number"
                       value={inputs.testData.biological.enzymeActivity.phosphatase}
-                      onChange={(e) => 
-                        setInputs(prev => ({
+                      onChange={(e) =>
+                        setInputs((prev) => ({
                           ...prev,
                           testData: {
                             ...prev.testData,
@@ -848,17 +887,19 @@ export function SoilHealthMonitoringComponent() {
                               ...prev.testData.biological,
                               enzymeActivity: {
                                 ...prev.testData.biological.enzymeActivity,
-                                phosphatase: parseFloat(e.target.value)
-                              }
-                            }
-                          }
+                                phosphatase: parseFloat(e.target.value),
+                              },
+                            },
+                          },
                         }))
                       }
                     />
                   </div>
-                  
+
                   <div className="bg-green-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-green-800 mb-2">Biological Health Indicators</h4>
+                    <h4 className="font-semibold text-green-800 mb-2">
+                      Biological Health Indicators
+                    </h4>
                     <ul className="text-sm text-green-700 space-y-1">
                       <li>• High microbial activity = healthy soil</li>
                       <li>• Earthworms improve soil structure</li>
@@ -874,7 +915,7 @@ export function SoilHealthMonitoringComponent() {
 
         <TabsContent value="results" className="space-y-6">
           <div className="flex justify-center">
-            <Button 
+            <Button
               onClick={analyzeSoilHealth}
               disabled={isAnalyzing}
               className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
@@ -915,24 +956,19 @@ export function SoilHealthMonitoringComponent() {
                     <div className="text-6xl font-bold text-green-600 mb-2">
                       {results.healthMetrics.overallScore}
                     </div>
-                    <div className="text-lg text-muted-foreground">
-                      out of 100 points
-                    </div>
-                    <Progress 
-                      value={results.healthMetrics.overallScore} 
-                      className="mt-4 h-3"
-                    />
+                    <div className="text-lg text-muted-foreground">out of 100 points</div>
+                    <Progress value={results.healthMetrics.overallScore} className="mt-4 h-3" />
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {Object.entries(results.healthMetrics.subscores).map(([category, data]) => (
-                      <div key={category} className={`p-4 rounded-lg border ${getScoreColor(data.score)}`}>
+                      <div
+                        key={category}
+                        className={`p-4 rounded-lg border ${getScoreColor(data.score)}`}
+                      >
                         <div className="font-semibold capitalize mb-2">{category} Properties</div>
                         <div className="text-2xl font-bold mb-2">{data.score}/100</div>
-                        <Progress 
-                          value={data.score} 
-                          className="mb-3 h-2"
-                        />
+                        <Progress value={data.score} className="mb-3 h-2" />
                         <ul className="text-sm space-y-1">
                           {data.indicators.map((indicator, i) => (
                             <li key={i} className="flex items-center gap-2">
@@ -958,7 +994,14 @@ export function SoilHealthMonitoringComponent() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {results.alerts.map((alert, index) => (
-                      <Alert key={index} className={alert.type === 'critical' ? 'border-red-400 bg-red-50' : 'border-gray-400 bg-orange-50'}>
+                      <Alert
+                        key={index}
+                        className={
+                          alert.type === 'critical'
+                            ? 'border-red-400 bg-red-50'
+                            : 'border-gray-400 bg-orange-50'
+                        }
+                      >
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription>
                           <div className="flex items-center justify-between">
@@ -966,7 +1009,8 @@ export function SoilHealthMonitoringComponent() {
                               <strong>{alert.parameter}:</strong> {alert.message}
                               <br />
                               <span className="text-xs text-muted-foreground">
-                                Current: {alert.currentValue} | Optimal: {alert.optimalRange[0]}-{alert.optimalRange[1]}
+                                Current: {alert.currentValue} | Optimal: {alert.optimalRange[0]}-
+                                {alert.optimalRange[1]}
                               </span>
                             </div>
                             {alert.actionRequired && (
@@ -990,7 +1034,10 @@ export function SoilHealthMonitoringComponent() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {results.healthMetrics.limitations.map((limitation, index) => (
-                    <div key={index} className={`p-4 rounded-lg border ${getSeverityColor(limitation.severity)}`}>
+                    <div
+                      key={index}
+                      className={`p-4 rounded-lg border ${getSeverityColor(limitation.severity)}`}
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-semibold">{limitation.factor}</h4>
                         <Badge variant="outline" className={getSeverityColor(limitation.severity)}>
@@ -1019,20 +1066,30 @@ export function SoilHealthMonitoringComponent() {
                 <CardContent>
                   <div className="space-y-3">
                     {results.healthMetrics.trends.map((trend, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded">
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 border rounded"
+                      >
                         <div className="flex items-center gap-3">
                           {getTrendIcon(trend.direction)}
                           <div>
                             <div className="font-medium">{trend.parameter}</div>
                             <div className="text-sm text-muted-foreground">
-                              {Math.abs(trend.rate)}% per year - {trend.significance.replace('_', ' ')}
+                              {Math.abs(trend.rate)}% per year -{' '}
+                              {trend.significance.replace('_', ' ')}
                             </div>
                           </div>
                         </div>
-                        <Badge variant="outline" className={
-                          trend.direction === 'improving' ? 'text-green-600' : 
-                          trend.direction === 'declining' ? 'text-red-600' : 'text-gray-600'
-                        }>
+                        <Badge
+                          variant="outline"
+                          className={
+                            trend.direction === 'improving'
+                              ? 'text-green-600'
+                              : trend.direction === 'declining'
+                                ? 'text-red-600'
+                                : 'text-gray-600'
+                          }
+                        >
                           {trend.direction.toUpperCase()}
                         </Badge>
                       </div>
@@ -1063,11 +1120,15 @@ export function SoilHealthMonitoringComponent() {
                           </div>
                           <div>
                             <div className="text-sm text-muted-foreground">Productivity</div>
-                            <div className="text-lg font-semibold text-blue-600">{data.productivity}%</div>
+                            <div className="text-lg font-semibold text-blue-600">
+                              {data.productivity}%
+                            </div>
                           </div>
                           <div>
                             <div className="text-sm text-muted-foreground">Sustainability</div>
-                            <div className="text-lg font-semibold text-green-600">{data.sustainability}%</div>
+                            <div className="text-lg font-semibold text-green-600">
+                              {data.sustainability}%
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1084,8 +1145,21 @@ export function SoilHealthMonitoringComponent() {
                 <CardContent>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-2xl font-bold">{results.confidence}%</span>
-                    <Badge variant={results.confidence >= 80 ? 'default' : results.confidence >= 60 ? 'secondary' : 'destructive'}>
-                      {results.confidence >= 80 ? 'High' : results.confidence >= 60 ? 'Medium' : 'Low'} Confidence
+                    <Badge
+                      variant={
+                        results.confidence >= 80
+                          ? 'default'
+                          : results.confidence >= 60
+                            ? 'secondary'
+                            : 'destructive'
+                      }
+                    >
+                      {results.confidence >= 80
+                        ? 'High'
+                        : results.confidence >= 60
+                          ? 'Medium'
+                          : 'Low'}{' '}
+                      Confidence
                     </Badge>
                   </div>
                   <Progress value={results.confidence} className="h-2" />
@@ -1112,21 +1186,29 @@ export function SoilHealthMonitoringComponent() {
                 <CardContent className="space-y-3">
                   {results.recommendations.immediate.map((action, index) => (
                     <div key={index} className="flex items-start gap-3 p-3 bg-white rounded border">
-                      <div className={`w-2 h-2 rounded-full mt-2 ${
-                        action.priority === 'urgent' ? 'bg-red-600' :
-                        action.priority === 'high' ? 'bg-orange-500' :
-                        action.priority === 'medium' ? 'bg-orange-500' : 'bg-green-500'
-                      }`}></div>
+                      <div
+                        className={`w-2 h-2 rounded-full mt-2 ${
+                          action.priority === 'urgent'
+                            ? 'bg-red-600'
+                            : action.priority === 'high'
+                              ? 'bg-orange-500'
+                              : action.priority === 'medium'
+                                ? 'bg-orange-500'
+                                : 'bg-green-500'
+                        }`}
+                      ></div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <div className="font-medium">{action.action}</div>
-                          <Badge variant={action.priority === 'urgent' ? 'destructive' : 'secondary'}>
+                          <Badge
+                            variant={action.priority === 'urgent' ? 'destructive' : 'secondary'}
+                          >
                             {action.priority.toUpperCase()}
                           </Badge>
                         </div>
                         <div className="text-sm text-muted-foreground mb-2">
-                          <strong>Timeline:</strong> {action.timeframe} | 
-                          <strong> Cost:</strong> ₹{action.expectedCost.toLocaleString()}/ha
+                          <strong>Timeline:</strong> {action.timeframe} |<strong> Cost:</strong> ₹
+                          {action.expectedCost.toLocaleString()}/ha
                         </div>
                         <div className="text-sm">
                           <strong>Expected Benefit:</strong> {action.expectedBenefit}
@@ -1154,32 +1236,43 @@ export function SoilHealthMonitoringComponent() {
                           Need: {fert.deficiency.toFixed(0)} kg/ha
                         </span>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-green-50 p-3 rounded">
                           <h5 className="font-medium text-green-800 mb-2">Organic Option</h5>
                           <div className="text-sm">
-                            <strong>Source:</strong> {fert.recommendation.organic.source}<br />
-                            <strong>Quantity:</strong> {fert.recommendation.organic.quantity}<br />
+                            <strong>Source:</strong> {fert.recommendation.organic.source}
+                            <br />
+                            <strong>Quantity:</strong> {fert.recommendation.organic.quantity}
+                            <br />
                             <strong>Timing:</strong> {fert.recommendation.organic.timing}
                           </div>
                         </div>
-                        
+
                         <div className="bg-blue-50 p-3 rounded">
                           <h5 className="font-medium text-blue-800 mb-2">Inorganic Option</h5>
                           <div className="text-sm">
-                            <strong>Fertilizer:</strong> {fert.recommendation.inorganic.fertilizer}<br />
-                            <strong>Quantity:</strong> {fert.recommendation.inorganic.quantity}<br />
+                            <strong>Fertilizer:</strong> {fert.recommendation.inorganic.fertilizer}
+                            <br />
+                            <strong>Quantity:</strong> {fert.recommendation.inorganic.quantity}
+                            <br />
                             <strong>Timing:</strong> {fert.recommendation.inorganic.timing}
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="mt-3 p-3 bg-gray-50 rounded">
                         <div className="text-sm">
-                          <strong>Investment:</strong> ₹{fert.costBenefit.investment.toLocaleString()} | 
-                          <strong> Expected Return:</strong> ₹{fert.costBenefit.expectedReturn.toLocaleString()} | 
-                          <strong> ROI:</strong> {(((fert.costBenefit.expectedReturn - fert.costBenefit.investment) / fert.costBenefit.investment) * 100).toFixed(0)}%
+                          <strong>Investment:</strong> ₹
+                          {fert.costBenefit.investment.toLocaleString()} |
+                          <strong> Expected Return:</strong> ₹
+                          {fert.costBenefit.expectedReturn.toLocaleString()} |<strong> ROI:</strong>{' '}
+                          {(
+                            ((fert.costBenefit.expectedReturn - fert.costBenefit.investment) /
+                              fert.costBenefit.investment) *
+                            100
+                          ).toFixed(0)}
+                          %
                         </div>
                       </div>
                     </div>
@@ -1202,7 +1295,7 @@ export function SoilHealthMonitoringComponent() {
                         <h4 className="font-semibold capitalize mb-3">
                           {season.season.replace('_', ' ')} Season
                         </h4>
-                        
+
                         <div className="mb-3">
                           <h5 className="font-medium mb-2">Actions:</h5>
                           <ul className="text-sm space-y-1">
@@ -1214,14 +1307,18 @@ export function SoilHealthMonitoringComponent() {
                             ))}
                           </ul>
                         </div>
-                        
+
                         <div>
                           <h5 className="font-medium mb-2">Materials & Costs:</h5>
                           <div className="text-sm space-y-1">
                             {season.materials.map((material, i) => (
                               <div key={i} className="flex justify-between">
-                                <span>{material.name} ({material.quantity})</span>
-                                <span className="font-medium">₹{material.cost.toLocaleString()}</span>
+                                <span>
+                                  {material.name} ({material.quantity})
+                                </span>
+                                <span className="font-medium">
+                                  ₹{material.cost.toLocaleString()}
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -1248,13 +1345,18 @@ export function SoilHealthMonitoringComponent() {
                         <strong>Timeline:</strong> {strategy.timeline}
                       </p>
                       <p className="text-sm mb-4">{strategy.strategy}</p>
-                      
+
                       <div>
                         <h5 className="font-medium mb-2">Milestones:</h5>
                         <div className="space-y-2">
                           {strategy.milestones.map((milestone, i) => (
-                            <div key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                              <span className="text-sm">Year {milestone.year}: {milestone.target}</span>
+                            <div
+                              key={i}
+                              className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                            >
+                              <span className="text-sm">
+                                Year {milestone.year}: {milestone.target}
+                              </span>
                               <Badge variant="outline">{milestone.metric}</Badge>
                             </div>
                           ))}
@@ -1277,14 +1379,16 @@ export function SoilHealthMonitoringComponent() {
                   <CardContent className="space-y-4">
                     <div className="bg-white p-4 rounded-lg">
                       <h4 className="font-semibold mb-2">Nutrient Calculator Integration</h4>
-                      <p className="text-sm mb-2">Soil health data will automatically adjust fertilizer recommendations:</p>
+                      <p className="text-sm mb-2">
+                        Soil health data will automatically adjust fertilizer recommendations:
+                      </p>
                       <ul className="text-sm space-y-1">
                         <li>• Nitrogen recommendations adjusted by soil availability</li>
                         <li>• Phosphorus rates optimized based on soil test results</li>
                         <li>• Organic matter bonus reduces synthetic fertilizer needs</li>
                       </ul>
                     </div>
-                    
+
                     <div className="bg-white p-4 rounded-lg">
                       <h4 className="font-semibold mb-2">Disease Risk Integration</h4>
                       <p className="text-sm mb-2">Soil health influences disease susceptibility:</p>
@@ -1297,12 +1401,16 @@ export function SoilHealthMonitoringComponent() {
                         ))}
                       </ul>
                     </div>
-                    
+
                     <div className="bg-white p-4 rounded-lg">
                       <h4 className="font-semibold mb-2">Yield Prediction Enhancement</h4>
                       <p className="text-sm">
-                        Soil health score of <strong>{Math.round(results.integrations.yieldPrediction.soilHealthFactor * 100)}%</strong> will be 
-                        applied as a yield adjustment factor in predictions, ensuring more accurate forecasts.
+                        Soil health score of{' '}
+                        <strong>
+                          {Math.round(results.integrations.yieldPrediction.soilHealthFactor * 100)}%
+                        </strong>{' '}
+                        will be applied as a yield adjustment factor in predictions, ensuring more
+                        accurate forecasts.
                       </p>
                     </div>
                   </CardContent>
@@ -1313,5 +1421,5 @@ export function SoilHealthMonitoringComponent() {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

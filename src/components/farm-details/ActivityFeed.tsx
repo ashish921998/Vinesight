@@ -1,12 +1,12 @@
-"use client";
+'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { 
-  Droplets, 
-  SprayCan, 
-  Scissors, 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Droplets,
+  SprayCan,
+  Scissors,
   DollarSign,
   TestTube,
   Beaker,
@@ -15,53 +15,67 @@ import {
   CheckCircle,
   Edit,
   Trash2,
-  ArrowRight
-} from "lucide-react";
-import { useRouter } from "next/navigation";
+  ArrowRight,
+} from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface ActivityFeedProps {
-  recentActivities: any[];
-  pendingTasks: any[];
-  loading: boolean;
-  onCompleteTask: (taskId: number) => Promise<void>;
-  onEditRecord: (record: any, recordType: string) => void;
-  onDeleteRecord: (record: any, recordType: string) => void;
-  farmId?: string;
+  recentActivities: any[]
+  pendingTasks: any[]
+  loading: boolean
+  onCompleteTask: (taskId: number) => Promise<void>
+  onEditRecord: (record: any, recordType: string) => void
+  onDeleteRecord: (record: any, recordType: string) => void
+  farmId?: string
 }
 
-export function ActivityFeed({ 
-  recentActivities, 
-  pendingTasks, 
+export function ActivityFeed({
+  recentActivities,
+  pendingTasks,
   loading,
   onCompleteTask,
   onEditRecord,
   onDeleteRecord,
-  farmId
+  farmId,
 }: ActivityFeedProps) {
-  const router = useRouter();
+  const router = useRouter()
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'irrigation': return Droplets;
-      case 'spray': return SprayCan;
-      case 'harvest': return Scissors;
-      case 'expense': return DollarSign;
-      case 'fertigation': return Beaker;
-      case 'soil_test': return TestTube;
-      default: return Calendar;
+      case 'irrigation':
+        return Droplets
+      case 'spray':
+        return SprayCan
+      case 'harvest':
+        return Scissors
+      case 'expense':
+        return DollarSign
+      case 'fertigation':
+        return Beaker
+      case 'soil_test':
+        return TestTube
+      default:
+        return Calendar
     }
-  };
+  }
 
   const getActivityColor = (type: string) => {
     switch (type) {
-      case 'irrigation': return 'bg-green-100 text-green-600';
-      case 'spray': return 'bg-green-100 text-green-600';
-      case 'harvest': return 'bg-green-200 text-green-700';
-      case 'expense': return 'bg-green-300 text-green-800';
-      case 'fertigation': return 'bg-emerald-100 text-emerald-600';
-      case 'soil_test': return 'bg-green-400 text-green-900';
-      default: return 'bg-gray-100 text-gray-600';
+      case 'irrigation':
+        return 'bg-green-100 text-green-600'
+      case 'spray':
+        return 'bg-green-100 text-green-600'
+      case 'harvest':
+        return 'bg-green-200 text-green-700'
+      case 'expense':
+        return 'bg-green-300 text-green-800'
+      case 'fertigation':
+        return 'bg-emerald-100 text-emerald-600'
+      case 'soil_test':
+        return 'bg-green-400 text-green-900'
+      default:
+        return 'bg-gray-100 text-gray-600'
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -106,7 +120,7 @@ export function ActivityFeed({
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   return (
@@ -123,20 +137,24 @@ export function ActivityFeed({
           <CardContent>
             <div className="space-y-3">
               {pendingTasks.slice(0, 3).map((task, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-green-200">
+                <div
+                  key={index}
+                  className="flex items-center gap-3 p-3 bg-white rounded-xl border border-green-200"
+                >
                   <div className="p-2 bg-green-100 rounded-lg">
                     <CheckCircle className="h-4 w-4 text-green-600" />
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 text-sm">
                       {task.title || task.task_type || 'Task'}
                     </p>
                     <p className="text-xs text-gray-600">
-                      Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No date'}
+                      Due:{' '}
+                      {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No date'}
                     </p>
                   </div>
-                  
+
                   <button
                     onClick={() => onCompleteTask(task.id)}
                     className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium hover:bg-green-200 transition-colors"
@@ -162,15 +180,18 @@ export function ActivityFeed({
           {recentActivities && recentActivities.length > 0 ? (
             <div className="space-y-2">
               {recentActivities.slice(0, 5).map((activity, index) => {
-                const Icon = getActivityIcon(activity.type);
-                
+                const Icon = getActivityIcon(activity.type)
+
                 return (
-                  <div key={index} className="flex items-start justify-between gap-2 p-2 bg-gray-50 rounded-lg h-14">
+                  <div
+                    key={index}
+                    className="flex items-start justify-between gap-2 p-2 bg-gray-50 rounded-lg h-14"
+                  >
                     <div className="flex items-start gap-2 flex-1 min-w-0">
                       <div className="p-1 bg-green-100 rounded-md flex-shrink-0 mt-0.5">
                         <Icon className="h-3 w-3 text-green-600" />
                       </div>
-                      
+
                       <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
                         <div className="flex items-center gap-2 mb-1">
                           <p className="font-medium text-gray-900 text-sm capitalize truncate">
@@ -180,26 +201,28 @@ export function ActivityFeed({
                             {new Date(activity.date || activity.created_at).toLocaleDateString()}
                           </span>
                         </div>
-                        
+
                         <div className="h-4">
                           {activity.notes ? (
                             <p className="text-xs text-gray-600 break-words line-clamp-1">
-                              {activity.notes.length > 60 
-                                ? `${activity.notes.substring(0, 60)}...` 
-                                : activity.notes
-                              }
+                              {activity.notes.length > 60
+                                ? `${activity.notes.substring(0, 60)}...`
+                                : activity.notes}
                             </p>
                           ) : (
-                            <p className="text-xs text-gray-400 italic">
-                              No notes added
-                            </p>
+                            <p className="text-xs text-gray-400 italic">No notes added</p>
                           )}
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-1 h-full">
-                      {(activity.type === 'irrigation' || activity.type === 'spray' || activity.type === 'harvest' || activity.type === 'fertigation' || activity.type === 'expense' || activity.type === 'soil_test') && (
+                      {(activity.type === 'irrigation' ||
+                        activity.type === 'spray' ||
+                        activity.type === 'harvest' ||
+                        activity.type === 'fertigation' ||
+                        activity.type === 'expense' ||
+                        activity.type === 'soil_test') && (
                         <>
                           <Button
                             variant="ghost"
@@ -221,7 +244,7 @@ export function ActivityFeed({
                       )}
                     </div>
                   </div>
-                );
+                )
               })}
             </div>
           ) : (
@@ -233,7 +256,7 @@ export function ActivityFeed({
               </p>
             </div>
           )}
-          
+
           {recentActivities && recentActivities.length > 0 && (
             <div className="pt-2 border-t border-gray-100 mt-2">
               <Button
@@ -249,5 +272,5 @@ export function ActivityFeed({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

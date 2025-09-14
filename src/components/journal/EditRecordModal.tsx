@@ -1,100 +1,126 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Droplets, SprayCan, Scissors, Loader2, DollarSign, Beaker, TestTube } from "lucide-react";
-import { SupabaseService } from "@/lib/supabase-service";
-import type { IrrigationRecord, SprayRecord, HarvestRecord, FertigationRecord, ExpenseRecord, SoilTestRecord } from "@/lib/supabase";
+import { useState, useEffect } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Droplets, SprayCan, Scissors, Loader2, DollarSign, Beaker, TestTube } from 'lucide-react'
+import { SupabaseService } from '@/lib/supabase-service'
+import type {
+  IrrigationRecord,
+  SprayRecord,
+  HarvestRecord,
+  FertigationRecord,
+  ExpenseRecord,
+  SoilTestRecord,
+} from '@/lib/supabase'
 
 interface EditRecordModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: () => void;
-  record: IrrigationRecord | SprayRecord | HarvestRecord | FertigationRecord | ExpenseRecord | SoilTestRecord | null;
-  recordType: 'irrigation' | 'spray' | 'harvest' | 'fertigation' | 'expense' | 'soil_test';
+  isOpen: boolean
+  onClose: () => void
+  onSave: () => void
+  record:
+    | IrrigationRecord
+    | SprayRecord
+    | HarvestRecord
+    | FertigationRecord
+    | ExpenseRecord
+    | SoilTestRecord
+    | null
+  recordType: 'irrigation' | 'spray' | 'harvest' | 'fertigation' | 'expense' | 'soil_test'
 }
 
-export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }: EditRecordModalProps) {
-  const [formData, setFormData] = useState<any>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export function EditRecordModal({
+  isOpen,
+  onClose,
+  onSave,
+  record,
+  recordType,
+}: EditRecordModalProps) {
+  const [formData, setFormData] = useState<any>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (record) {
       // Initialize form data based on record type
       if (recordType === 'irrigation') {
-        const irrigationRecord = record as IrrigationRecord;
+        const irrigationRecord = record as IrrigationRecord
         setFormData({
           date: irrigationRecord.date,
-          duration: irrigationRecord.duration?.toString() || "",
-          area: irrigationRecord.area?.toString() || "",
-          growth_stage: irrigationRecord.growth_stage || "",
-          moisture_status: irrigationRecord.moisture_status || "",
-          system_discharge: irrigationRecord.system_discharge?.toString() || "",
-          notes: irrigationRecord.notes || ""
-        });
+          duration: irrigationRecord.duration?.toString() || '',
+          area: irrigationRecord.area?.toString() || '',
+          growth_stage: irrigationRecord.growth_stage || '',
+          moisture_status: irrigationRecord.moisture_status || '',
+          system_discharge: irrigationRecord.system_discharge?.toString() || '',
+          notes: irrigationRecord.notes || '',
+        })
       } else if (recordType === 'spray') {
-        const sprayRecord = record as SprayRecord;
+        const sprayRecord = record as SprayRecord
         setFormData({
           date: sprayRecord.date,
-          pest_disease: sprayRecord.pest_disease || "",
-          chemical: sprayRecord.chemical || "",
-          dose: sprayRecord.dose || "",
-          area: sprayRecord.area?.toString() || "",
-          weather: sprayRecord.weather || "",
-          operator: sprayRecord.operator || "",
-          notes: sprayRecord.notes || ""
-        });
+          pest_disease: sprayRecord.pest_disease || '',
+          chemical: sprayRecord.chemical || '',
+          dose: sprayRecord.dose || '',
+          area: sprayRecord.area?.toString() || '',
+          weather: sprayRecord.weather || '',
+          operator: sprayRecord.operator || '',
+          notes: sprayRecord.notes || '',
+        })
       } else if (recordType === 'harvest') {
-        const harvestRecord = record as HarvestRecord;
+        const harvestRecord = record as HarvestRecord
         setFormData({
           date: harvestRecord.date,
-          quantity: harvestRecord.quantity?.toString() || "",
-          grade: harvestRecord.grade || "",
-          price: harvestRecord.price?.toString() || "",
-          buyer: harvestRecord.buyer || "",
-          notes: harvestRecord.notes || ""
-        });
+          quantity: harvestRecord.quantity?.toString() || '',
+          grade: harvestRecord.grade || '',
+          price: harvestRecord.price?.toString() || '',
+          buyer: harvestRecord.buyer || '',
+          notes: harvestRecord.notes || '',
+        })
       } else if (recordType === 'fertigation') {
-        const fertigationRecord = record as FertigationRecord;
+        const fertigationRecord = record as FertigationRecord
         setFormData({
           date: fertigationRecord.date,
-          fertilizer: fertigationRecord.fertilizer || "",
-          dose: fertigationRecord.dose || "",
-          purpose: fertigationRecord.purpose || "",
-          area: fertigationRecord.area?.toString() || "",
-          notes: fertigationRecord.notes || ""
-        });
+          fertilizer: fertigationRecord.fertilizer || '',
+          dose: fertigationRecord.dose || '',
+          purpose: fertigationRecord.purpose || '',
+          area: fertigationRecord.area?.toString() || '',
+          notes: fertigationRecord.notes || '',
+        })
       } else if (recordType === 'expense') {
-        const expenseRecord = record as ExpenseRecord;
+        const expenseRecord = record as ExpenseRecord
         setFormData({
           date: expenseRecord.date,
-          type: expenseRecord.type || "",
-          description: expenseRecord.description || "",
-          cost: expenseRecord.cost?.toString() || "",
-          remarks: expenseRecord.remarks || ""
-        });
+          type: expenseRecord.type || '',
+          description: expenseRecord.description || '',
+          cost: expenseRecord.cost?.toString() || '',
+          remarks: expenseRecord.remarks || '',
+        })
       } else if (recordType === 'soil_test') {
-        const soilTestRecord = record as SoilTestRecord;
+        const soilTestRecord = record as SoilTestRecord
         setFormData({
           date: soilTestRecord.date,
           parameters: soilTestRecord.parameters || {},
-          recommendations: soilTestRecord.recommendations || "",
-          notes: soilTestRecord.notes || ""
-        });
+          recommendations: soilTestRecord.recommendations || '',
+          notes: soilTestRecord.notes || '',
+        })
       }
     }
-  }, [record, recordType]);
+  }, [record, recordType])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!record) return;
+    e.preventDefault()
+    if (!record) return
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
       if (recordType === 'irrigation') {
         await SupabaseService.updateIrrigationRecord(record.id!, {
@@ -104,8 +130,8 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
           growth_stage: formData.growth_stage,
           moisture_status: formData.moisture_status,
           system_discharge: parseFloat(formData.system_discharge),
-          notes: formData.notes
-        });
+          notes: formData.notes,
+        })
       } else if (recordType === 'spray') {
         await SupabaseService.updateSprayRecord(record.id!, {
           date: formData.date,
@@ -115,8 +141,8 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
           area: parseFloat(formData.area),
           weather: formData.weather,
           operator: formData.operator,
-          notes: formData.notes
-        });
+          notes: formData.notes,
+        })
       } else if (recordType === 'harvest') {
         await SupabaseService.updateHarvestRecord(record.id!, {
           date: formData.date,
@@ -124,8 +150,8 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
           grade: formData.grade,
           price: formData.price ? parseFloat(formData.price) : undefined,
           buyer: formData.buyer || undefined,
-          notes: formData.notes
-        });
+          notes: formData.notes,
+        })
       } else if (recordType === 'fertigation') {
         await SupabaseService.updateFertigationRecord(record.id!, {
           date: formData.date,
@@ -133,80 +159,99 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
           dose: formData.dose,
           purpose: formData.purpose,
           area: parseFloat(formData.area),
-          notes: formData.notes
-        });
+          notes: formData.notes,
+        })
       } else if (recordType === 'expense') {
         await SupabaseService.updateExpenseRecord(record.id!, {
           date: formData.date,
           type: formData.type,
           description: formData.description,
           cost: parseFloat(formData.cost),
-          remarks: formData.remarks
-        });
+          remarks: formData.remarks,
+        })
       } else if (recordType === 'soil_test') {
         await SupabaseService.updateSoilTestRecord(record.id!, {
           date: formData.date,
           parameters: formData.parameters,
           recommendations: formData.recommendations,
-          notes: formData.notes
-        });
+          notes: formData.notes,
+        })
       }
 
-      onSave();
-      onClose();
+      onSave()
+      onClose()
     } catch (error) {
-      console.error("Error updating record:", error);
+      console.error('Error updating record:', error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const getIcon = () => {
     switch (recordType) {
-      case 'irrigation': return <Droplets className="h-5 w-5" />;
-      case 'spray': return <SprayCan className="h-5 w-5" />;
-      case 'harvest': return <Scissors className="h-5 w-5" />;
-      case 'fertigation': return <Beaker className="h-5 w-5" />;
-      case 'expense': return <DollarSign className="h-5 w-5" />;
-      case 'soil_test': return <TestTube className="h-5 w-5" />;
-      default: return <Droplets className="h-5 w-5" />;
+      case 'irrigation':
+        return <Droplets className="h-5 w-5" />
+      case 'spray':
+        return <SprayCan className="h-5 w-5" />
+      case 'harvest':
+        return <Scissors className="h-5 w-5" />
+      case 'fertigation':
+        return <Beaker className="h-5 w-5" />
+      case 'expense':
+        return <DollarSign className="h-5 w-5" />
+      case 'soil_test':
+        return <TestTube className="h-5 w-5" />
+      default:
+        return <Droplets className="h-5 w-5" />
     }
-  };
+  }
 
   const getTitle = () => {
     switch (recordType) {
-      case 'irrigation': return 'Edit Irrigation Record';
-      case 'spray': return 'Edit Spray Record';
-      case 'harvest': return 'Edit Harvest Record';
-      case 'fertigation': return 'Edit Fertigation Record';
-      case 'expense': return 'Edit Expense Record';
-      case 'soil_test': return 'Edit Soil Test Record';
-      default: return 'Edit Record';
+      case 'irrigation':
+        return 'Edit Irrigation Record'
+      case 'spray':
+        return 'Edit Spray Record'
+      case 'harvest':
+        return 'Edit Harvest Record'
+      case 'fertigation':
+        return 'Edit Fertigation Record'
+      case 'expense':
+        return 'Edit Expense Record'
+      case 'soil_test':
+        return 'Edit Soil Test Record'
+      default:
+        return 'Edit Record'
     }
-  };
+  }
 
   const getColor = () => {
     switch (recordType) {
-      case 'irrigation': return 'text-blue-700 bg-blue-100';
-      case 'spray': return 'text-green-700 bg-green-100';
-      case 'harvest': return 'text-purple-700 bg-purple-100';
-      case 'fertigation': return 'text-emerald-700 bg-emerald-100';
-      case 'expense': return 'text-orange-700 bg-orange-100';
-      case 'soil_test': return 'text-teal-700 bg-teal-100';
-      default: return 'text-blue-700 bg-blue-100';
+      case 'irrigation':
+        return 'text-blue-700 bg-blue-100'
+      case 'spray':
+        return 'text-green-700 bg-green-100'
+      case 'harvest':
+        return 'text-purple-700 bg-purple-100'
+      case 'fertigation':
+        return 'text-emerald-700 bg-emerald-100'
+      case 'expense':
+        return 'text-orange-700 bg-orange-100'
+      case 'soil_test':
+        return 'text-teal-700 bg-teal-100'
+      default:
+        return 'text-blue-700 bg-blue-100'
     }
-  };
+  }
 
-  if (!record) return null;
+  if (!record) return null
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md mx-auto">
         <DialogHeader>
           <DialogTitle className={`flex items-center gap-3 ${getColor().split(' ')[0]}`}>
-            <div className={`p-2 rounded-xl ${getColor()}`}>
-              {getIcon()}
-            </div>
+            <div className={`p-2 rounded-xl ${getColor()}`}>{getIcon()}</div>
             {getTitle()}
           </DialogTitle>
         </DialogHeader>
@@ -220,7 +265,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
             <Input
               id="date"
               type="date"
-              value={formData.date || ""}
+              value={formData.date || ''}
               onChange={(e) => setFormData((prev: any) => ({ ...prev, date: e.target.value }))}
               max={new Date().toISOString().split('T')[0]}
               className="mt-1"
@@ -241,8 +286,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     type="number"
                     step="0.1"
                     min="0"
-                    value={formData.duration || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, duration: e.target.value }))}
+                    value={formData.duration || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({ ...prev, duration: e.target.value }))
+                    }
                     className="mt-1"
                     required
                   />
@@ -256,8 +303,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     type="number"
                     step="0.1"
                     min="0"
-                    value={formData.area || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, area: e.target.value }))}
+                    value={formData.area || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({ ...prev, area: e.target.value }))
+                    }
                     className="mt-1"
                   />
                 </div>
@@ -269,8 +318,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   </Label>
                   <Input
                     id="growth_stage"
-                    value={formData.growth_stage || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, growth_stage: e.target.value }))}
+                    value={formData.growth_stage || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({ ...prev, growth_stage: e.target.value }))
+                    }
                     className="mt-1"
                   />
                 </div>
@@ -283,8 +334,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     type="number"
                     step="0.1"
                     min="0"
-                    value={formData.system_discharge || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, system_discharge: e.target.value }))}
+                    value={formData.system_discharge || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({ ...prev, system_discharge: e.target.value }))
+                    }
                     className="mt-1"
                   />
                 </div>
@@ -300,8 +353,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                 </Label>
                 <Input
                   id="chemical"
-                  value={formData.chemical || ""}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, chemical: e.target.value }))}
+                  value={formData.chemical || ''}
+                  onChange={(e) =>
+                    setFormData((prev: any) => ({ ...prev, chemical: e.target.value }))
+                  }
                   className="mt-1"
                   required
                 />
@@ -313,8 +368,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   </Label>
                   <Input
                     id="pest_disease"
-                    value={formData.pest_disease || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, pest_disease: e.target.value }))}
+                    value={formData.pest_disease || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({ ...prev, pest_disease: e.target.value }))
+                    }
                     className="mt-1"
                   />
                 </div>
@@ -324,8 +381,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   </Label>
                   <Input
                     id="dose"
-                    value={formData.dose || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, dose: e.target.value }))}
+                    value={formData.dose || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({ ...prev, dose: e.target.value }))
+                    }
                     className="mt-1"
                   />
                 </div>
@@ -345,8 +404,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     type="number"
                     step="0.1"
                     min="0"
-                    value={formData.quantity || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, quantity: e.target.value }))}
+                    value={formData.quantity || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({ ...prev, quantity: e.target.value }))
+                    }
                     className="mt-1"
                     required
                   />
@@ -356,8 +417,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     Grade *
                   </Label>
                   <Select
-                    value={formData.grade || ""}
-                    onValueChange={(value) => setFormData((prev: any) => ({ ...prev, grade: value }))}
+                    value={formData.grade || ''}
+                    onValueChange={(value) =>
+                      setFormData((prev: any) => ({ ...prev, grade: value }))
+                    }
                   >
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Select grade" />
@@ -381,8 +444,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     type="number"
                     step="0.01"
                     min="0"
-                    value={formData.price || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, price: e.target.value }))}
+                    value={formData.price || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({ ...prev, price: e.target.value }))
+                    }
                     className="mt-1"
                   />
                 </div>
@@ -392,8 +457,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   </Label>
                   <Input
                     id="buyer"
-                    value={formData.buyer || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, buyer: e.target.value }))}
+                    value={formData.buyer || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({ ...prev, buyer: e.target.value }))
+                    }
                     className="mt-1"
                   />
                 </div>
@@ -409,8 +476,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                 </Label>
                 <Input
                   id="fertilizer"
-                  value={formData.fertilizer || ""}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, fertilizer: e.target.value }))}
+                  value={formData.fertilizer || ''}
+                  onChange={(e) =>
+                    setFormData((prev: any) => ({ ...prev, fertilizer: e.target.value }))
+                  }
                   className="mt-1"
                   required
                 />
@@ -422,8 +491,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   </Label>
                   <Input
                     id="dose"
-                    value={formData.dose || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, dose: e.target.value }))}
+                    value={formData.dose || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({ ...prev, dose: e.target.value }))
+                    }
                     className="mt-1"
                     required
                   />
@@ -437,8 +508,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     type="number"
                     step="0.1"
                     min="0"
-                    value={formData.area || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ ...prev, area: e.target.value }))}
+                    value={formData.area || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({ ...prev, area: e.target.value }))
+                    }
                     className="mt-1"
                   />
                 </div>
@@ -449,8 +522,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                 </Label>
                 <Input
                   id="purpose"
-                  value={formData.purpose || ""}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, purpose: e.target.value }))}
+                  value={formData.purpose || ''}
+                  onChange={(e) =>
+                    setFormData((prev: any) => ({ ...prev, purpose: e.target.value }))
+                  }
                   className="mt-1"
                 />
               </div>
@@ -464,7 +539,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   Category *
                 </Label>
                 <Select
-                  value={formData.type || ""}
+                  value={formData.type || ''}
                   onValueChange={(value) => setFormData((prev: any) => ({ ...prev, type: value }))}
                 >
                   <SelectTrigger className="mt-1">
@@ -484,8 +559,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                 </Label>
                 <Input
                   id="description"
-                  value={formData.description || ""}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, description: e.target.value }))}
+                  value={formData.description || ''}
+                  onChange={(e) =>
+                    setFormData((prev: any) => ({ ...prev, description: e.target.value }))
+                  }
                   className="mt-1"
                   required
                 />
@@ -499,7 +576,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   type="number"
                   step="0.01"
                   min="0"
-                  value={formData.cost || ""}
+                  value={formData.cost || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, cost: e.target.value }))}
                   className="mt-1"
                   required
@@ -521,11 +598,13 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     step="0.1"
                     min="0"
                     max="14"
-                    value={formData.parameters?.pH || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ 
-                      ...prev, 
-                      parameters: { ...prev.parameters, pH: parseFloat(e.target.value) || 0 }
-                    }))}
+                    value={formData.parameters?.pH || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        parameters: { ...prev.parameters, pH: parseFloat(e.target.value) || 0 },
+                      }))
+                    }
                     className="mt-1"
                   />
                 </div>
@@ -538,11 +617,16 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     type="number"
                     step="0.1"
                     min="0"
-                    value={formData.parameters?.nitrogen || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ 
-                      ...prev, 
-                      parameters: { ...prev.parameters, nitrogen: parseFloat(e.target.value) || 0 }
-                    }))}
+                    value={formData.parameters?.nitrogen || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        parameters: {
+                          ...prev.parameters,
+                          nitrogen: parseFloat(e.target.value) || 0,
+                        },
+                      }))
+                    }
                     className="mt-1"
                   />
                 </div>
@@ -557,11 +641,16 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     type="number"
                     step="0.1"
                     min="0"
-                    value={formData.parameters?.phosphorus || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ 
-                      ...prev, 
-                      parameters: { ...prev.parameters, phosphorus: parseFloat(e.target.value) || 0 }
-                    }))}
+                    value={formData.parameters?.phosphorus || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        parameters: {
+                          ...prev.parameters,
+                          phosphorus: parseFloat(e.target.value) || 0,
+                        },
+                      }))
+                    }
                     className="mt-1"
                   />
                 </div>
@@ -574,11 +663,16 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                     type="number"
                     step="0.1"
                     min="0"
-                    value={formData.parameters?.potassium || ""}
-                    onChange={(e) => setFormData((prev: any) => ({ 
-                      ...prev, 
-                      parameters: { ...prev.parameters, potassium: parseFloat(e.target.value) || 0 }
-                    }))}
+                    value={formData.parameters?.potassium || ''}
+                    onChange={(e) =>
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        parameters: {
+                          ...prev.parameters,
+                          potassium: parseFloat(e.target.value) || 0,
+                        },
+                      }))
+                    }
                     className="mt-1"
                   />
                 </div>
@@ -589,8 +683,10 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                 </Label>
                 <Textarea
                   id="recommendations"
-                  value={formData.recommendations || ""}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, recommendations: e.target.value }))}
+                  value={formData.recommendations || ''}
+                  onChange={(e) =>
+                    setFormData((prev: any) => ({ ...prev, recommendations: e.target.value }))
+                  }
                   className="mt-1 resize-none"
                   rows={3}
                 />
@@ -605,11 +701,13 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
             </Label>
             <Textarea
               id="notes"
-              value={recordType === 'expense' ? (formData.remarks || "") : (formData.notes || "")}
-              onChange={(e) => setFormData((prev: any) => ({ 
-                ...prev, 
-                [recordType === 'expense' ? 'remarks' : 'notes']: e.target.value 
-              }))}
+              value={recordType === 'expense' ? formData.remarks || '' : formData.notes || ''}
+              onChange={(e) =>
+                setFormData((prev: any) => ({
+                  ...prev,
+                  [recordType === 'expense' ? 'remarks' : 'notes']: e.target.value,
+                }))
+              }
               placeholder="Any additional notes..."
               className="mt-1 resize-none"
               rows={3}
@@ -618,12 +716,7 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="flex-1"
-            >
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Cancel
             </Button>
             <Button
@@ -637,12 +730,12 @@ export function EditRecordModal({ isOpen, onClose, onSave, record, recordType }:
                   Saving...
                 </>
               ) : (
-                "Save Changes"
+                'Save Changes'
               )}
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

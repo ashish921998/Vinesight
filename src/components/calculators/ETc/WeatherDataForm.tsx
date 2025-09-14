@@ -1,32 +1,38 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ThermometerSun, CloudSun, Download, Loader2 } from 'lucide-react';
-import { useState, useCallback } from 'react';
-import { OpenMeteoWeatherService, type OpenMeteoWeatherData } from '@/lib/open-meteo-weather';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { ThermometerSun, CloudSun, Download, Loader2 } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { OpenMeteoWeatherService, type OpenMeteoWeatherData } from '@/lib/open-meteo-weather'
 
 interface WeatherDataFormProps {
   formData: {
-    date: string;
-    temperatureMax: string;
-    temperatureMin: string;
-    humidity: string;
-    windSpeed: string;
-    rainfall: string;
-    solarRadiation: string;
-    solarRadiationLux: string;
-    sunshineHours: string;
-  };
+    date: string
+    temperatureMax: string
+    temperatureMin: string
+    humidity: string
+    windSpeed: string
+    rainfall: string
+    solarRadiation: string
+    solarRadiationLux: string
+    sunshineHours: string
+  }
   locationData?: {
-    latitude: string;
-    longitude: string;
-    locationName?: string;
-  };
-  onInputChange: (field: string, value: string) => void;
-  onOpenMeteoDataLoad?: (data: OpenMeteoWeatherData) => void;
+    latitude: string
+    longitude: string
+    locationName?: string
+  }
+  onInputChange: (field: string, value: string) => void
+  onOpenMeteoDataLoad?: (data: OpenMeteoWeatherData) => void
 }
 
 export function WeatherDataForm({
@@ -35,53 +41,58 @@ export function WeatherDataForm({
   onInputChange,
   onOpenMeteoDataLoad,
 }: WeatherDataFormProps) {
-  const [solarRadiationType, setSolarRadiationType] = useState<'MJ' | 'lux'>('MJ');
-  const [isLoadingWeatherData, setIsLoadingWeatherData] = useState(false);
-  const [lastFetchedDate, setLastFetchedDate] = useState<string | null>(null);
+  const [solarRadiationType, setSolarRadiationType] = useState<'MJ' | 'lux'>('MJ')
+  const [isLoadingWeatherData, setIsLoadingWeatherData] = useState(false)
+  const [lastFetchedDate, setLastFetchedDate] = useState<string | null>(null)
 
   const fetchOpenMeteoWeather = useCallback(async () => {
     if (!locationData?.latitude || !locationData?.longitude || !formData.date) {
-      return;
+      return
     }
 
-    setIsLoadingWeatherData(true);
+    setIsLoadingWeatherData(true)
     try {
-      const lat = parseFloat(locationData.latitude);
-      const lon = parseFloat(locationData.longitude);
-      
-      const weatherData = await OpenMeteoWeatherService.getWeatherData(lat, lon, formData.date, formData.date);
-      
+      const lat = parseFloat(locationData.latitude)
+      const lon = parseFloat(locationData.longitude)
+
+      const weatherData = await OpenMeteoWeatherService.getWeatherData(
+        lat,
+        lon,
+        formData.date,
+        formData.date,
+      )
+
       if (weatherData.length > 0) {
-        const dayData = weatherData[0];
-        const convertedData = OpenMeteoWeatherService.convertToETcWeatherData(dayData);
-        
+        const dayData = weatherData[0]
+        const convertedData = OpenMeteoWeatherService.convertToETcWeatherData(dayData)
+
         // Update form with Open-Meteo data
-        onInputChange('temperatureMax', convertedData.temperatureMax.toString());
-        onInputChange('temperatureMin', convertedData.temperatureMin.toString());
-        onInputChange('humidity', convertedData.humidity.toString());
-        onInputChange('windSpeed', convertedData.windSpeed.toString());
-        onInputChange('rainfall', convertedData.rainfall.toString());
-        onInputChange('solarRadiation', convertedData.solarRadiation.toString());
-        onInputChange('sunshineHours', convertedData.sunshineHours.toString());
-        
-        setLastFetchedDate(formData.date);
-        
+        onInputChange('temperatureMax', convertedData.temperatureMax.toString())
+        onInputChange('temperatureMin', convertedData.temperatureMin.toString())
+        onInputChange('humidity', convertedData.humidity.toString())
+        onInputChange('windSpeed', convertedData.windSpeed.toString())
+        onInputChange('rainfall', convertedData.rainfall.toString())
+        onInputChange('solarRadiation', convertedData.solarRadiation.toString())
+        onInputChange('sunshineHours', convertedData.sunshineHours.toString())
+
+        setLastFetchedDate(formData.date)
+
         // Notify parent component about Open-Meteo data for validation
         if (onOpenMeteoDataLoad) {
-          onOpenMeteoDataLoad(dayData);
+          onOpenMeteoDataLoad(dayData)
         }
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Error fetching Open-Meteo weather data:', error);
+        console.error('Error fetching Open-Meteo weather data:', error)
       }
     } finally {
-      setIsLoadingWeatherData(false);
+      setIsLoadingWeatherData(false)
     }
-  }, [locationData, formData.date, onInputChange, onOpenMeteoDataLoad]);
+  }, [locationData, formData.date, onInputChange, onOpenMeteoDataLoad])
 
-  const hasLocationAndDate = locationData?.latitude && locationData?.longitude && formData.date;
-  const hasDataChanged = lastFetchedDate !== formData.date;
+  const hasLocationAndDate = locationData?.latitude && locationData?.longitude && formData.date
+  const hasDataChanged = lastFetchedDate !== formData.date
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -108,16 +119,17 @@ export function WeatherDataForm({
                 Auto-fetch
               </Button>
             )}
-            <Badge variant="secondary" className="text-xs">Required</Badge>
+            <Badge variant="secondary" className="text-xs">
+              Required
+            </Badge>
           </div>
         </div>
         <CardDescription className="text-xs">
-          {hasLocationAndDate 
+          {hasLocationAndDate
             ? `Weather conditions for ${locationData?.locationName || 'selected location'} on ${formData.date || 'selected date'}`
-            : 'Enter location and date to auto-fetch weather data, or input manually'
-          }
+            : 'Enter location and date to auto-fetch weather data, or input manually'}
         </CardDescription>
-        
+
         {lastFetchedDate && (
           <div className="mt-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-md">
             <div className="flex items-center gap-2 text-xs text-blue-800">
@@ -127,10 +139,9 @@ export function WeatherDataForm({
           </div>
         )}
       </CardHeader>
-      
+
       <CardContent className="pt-0 space-y-4">
         <div className="grid grid-cols-1 gap-3">
-          
           <div>
             <Label className="text-sm font-medium text-gray-700">Date</Label>
             <Input
@@ -191,7 +202,9 @@ export function WeatherDataForm({
           </div>
 
           <div>
-            <Label className="text-sm font-medium text-gray-700">Rainfall (mm) <span className="text-red-500">*</span></Label>
+            <Label className="text-sm font-medium text-gray-700">
+              Rainfall (mm) <span className="text-red-500">*</span>
+            </Label>
             <Input
               type="number"
               placeholder="0"
@@ -209,8 +222,13 @@ export function WeatherDataForm({
           <div className="space-y-3">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label className="text-sm font-medium text-gray-700">Solar Radiation <span className="text-red-500">*</span></Label>
-                <Select value={solarRadiationType} onValueChange={(value: 'MJ' | 'lux') => setSolarRadiationType(value)}>
+                <Label className="text-sm font-medium text-gray-700">
+                  Solar Radiation <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={solarRadiationType}
+                  onValueChange={(value: 'MJ' | 'lux') => setSolarRadiationType(value)}
+                >
                   <SelectTrigger className="w-24 h-8">
                     <SelectValue />
                   </SelectTrigger>
@@ -220,7 +238,7 @@ export function WeatherDataForm({
                   </SelectContent>
                 </Select>
               </div>
-              
+
               {solarRadiationType === 'MJ' ? (
                 <Input
                   type="number"
@@ -247,15 +265,16 @@ export function WeatherDataForm({
                 />
               )}
               <p className="text-xs text-gray-500 mt-1">
-                {solarRadiationType === 'MJ' 
+                {solarRadiationType === 'MJ'
                   ? 'Direct solar radiation measurement (MJ/m²/day)'
-                  : 'Light intensity in lux (0-150,000 typical range)'
-                }
+                  : 'Light intensity in lux (0-150,000 typical range)'}
               </p>
             </div>
-            
+
             <div>
-              <Label className="text-sm font-medium text-gray-700">Sunshine Hours - Alternative</Label>
+              <Label className="text-sm font-medium text-gray-700">
+                Sunshine Hours - Alternative
+              </Label>
               <Input
                 type="number"
                 placeholder="8.5"
@@ -266,11 +285,13 @@ export function WeatherDataForm({
                 onChange={(e) => onInputChange('sunshineHours', e.target.value)}
                 className="h-11 text-base mt-1"
               />
-              <p className="text-xs text-gray-500 mt-1">Alternative to solar radiation - hours of bright sunshine per day</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Alternative to solar radiation - hours of bright sunshine per day
+              </p>
             </div>
           </div>
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
