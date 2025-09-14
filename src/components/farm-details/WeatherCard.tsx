@@ -246,7 +246,7 @@ export function WeatherCard({ farm }: WeatherCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Cloud className="h-4 w-4 text-blue-500" />
-            <CardTitle className="text-base">Today's Weather</CardTitle>
+            <CardTitle className="text-base">Today&apos;s Weather</CardTitle>
           </div>
           <div className="flex items-center gap-2">
             {lastUpdated && (
@@ -353,11 +353,13 @@ export function WeatherCard({ farm }: WeatherCardProps) {
 
         {/* Solar Radiation & Sunshine */}
         <div className="space-y-2">
-          {/* Today's Solar Radiation */}
+          {/* Today&apos;s Solar Radiation */}
           <div className="p-2 bg-yellow-50 border border-yellow-100 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <Sun className="h-4 w-4 text-yellow-600" />
-              <span className="text-xs font-medium text-yellow-700">Today's Solar Radiation</span>
+              <span className="text-xs font-medium text-yellow-700">
+                Today&apos;s Solar Radiation
+              </span>
             </div>
             <div className="space-y-2">
               <div className="space-y-1">
@@ -391,7 +393,7 @@ export function WeatherCard({ farm }: WeatherCardProps) {
             <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Sun className="h-4 w-4 text-amber-600" />
-                <span className="text-sm font-medium text-amber-700">Today's Solar Radiation Range (Lux)</span>
+                <span className="text-sm font-medium text-amber-700">Today&apos;s Solar Radiation Range (Lux)</span>
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">

@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -245,7 +246,7 @@ export default function BlogPage() {
           <SEOSchema
             title={`${post.title} - VineSight Blog`}
             description={post.excerpt}
-            type="article"
+            type="guide"
             image="https://farmai.vercel.app/og-image.png"
           />
 
@@ -296,8 +297,8 @@ export default function BlogPage() {
                     Full Article Coming Soon
                   </h3>
                   <p className="text-gray-500">
-                    We're working on detailed articles for our blog. Stay tuned for comprehensive
-                    content!
+                    We&apos;re working on detailed articles for our blog. Stay tuned for
+                    comprehensive content!
                   </p>
                 </div>
               </div>
@@ -320,7 +321,7 @@ export default function BlogPage() {
       <SEOSchema
         title="Blog - VineSight Grape Farming Insights"
         description="Expert insights, tips, and guides for grape farming. Learn about irrigation, pest management, AI technology, and market trends from agricultural experts."
-        type="website"
+        type="guide"
         image="https://farmai.vercel.app/og-image.png"
       />
 
@@ -393,8 +394,8 @@ export default function BlogPage() {
           {selectedCategory && (
             <div className="flex items-center gap-2 mb-4">
               <Badge variant="secondary">
-                Showing {filteredPosts.length} articles in "
-                {blogCategories.find((c) => c.id === selectedCategory)?.name}"
+                Showing {filteredPosts.length} articles in &quot;
+                {blogCategories.find((c) => c.id === selectedCategory)?.name}&quot;
               </Badge>
               <Button variant="ghost" size="sm" onClick={() => setSelectedCategory(null)}>
                 Clear filter

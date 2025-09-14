@@ -419,7 +419,7 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
                 <span className="font-medium text-green-800">Performance Insight</span>
               </div>
               <p className="text-sm text-green-700">
-                Vineyard Valley's irrigation efficiency is 15% better than portfolio average.
+                Vineyard Valley&apos;s irrigation efficiency is 15% better than portfolio average.
                 Consider applying their practices to other farms.
               </p>
             </div>

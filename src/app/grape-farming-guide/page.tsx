@@ -221,8 +221,8 @@ export default function GrapeFarmingGuide() {
               Ready to Transform Your Vineyard?
             </h2>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Join thousands of successful grape farmers using FarmAI's smart management tools. Get
-              AI-powered insights, yield predictions, and personalized farming recommendations.
+              Join thousands of successful grape farmers using FarmAI&apos;s smart management tools.
+              Get AI-powered insights, yield predictions, and personalized farming recommendations.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="h-12">

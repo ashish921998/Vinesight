@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
       <SEOSchema
         title="Privacy Policy - VineSight Grape Farming Assistant"
         description="Learn how VineSight protects your privacy and handles your farming data. Comprehensive privacy policy for Indian grape farmers."
-        type="website"
+        type="guide"
         image="https://farmai.vercel.app/og-image.png"
       />
 
@@ -458,8 +458,8 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 mb-4">
-                We're committed to transparency about our privacy practices. If you have any
-                questions or concerns, please don't hesitate to reach out.
+                We&apos;re committed to transparency about our privacy practices. If you have any
+                questions or concerns, please don&apos;t hesitate to reach out.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -499,7 +499,7 @@ export default function PrivacyPolicyPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-2 h-2 bg-gray-400 rounded-full mt-2"></span>
-                  <span>Update the "Last updated" date at the top of this page</span>
+                  <span>Update the &quot;Last updated&quot; date at the top of this page</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-2 h-2 bg-gray-400 rounded-full mt-2"></span>
@@ -513,8 +513,8 @@ export default function PrivacyPolicyPage() {
         {/* Footer */}
         <div className="mt-16 text-center">
           <p className="text-gray-500 text-sm">
-            This privacy policy is part of our commitment to protecting Indian farmers' data and
-            privacy rights.
+            This privacy policy is part of our commitment to protecting Indian farmers&apos; data
+            and privacy rights.
           </p>
         </div>
       </div>

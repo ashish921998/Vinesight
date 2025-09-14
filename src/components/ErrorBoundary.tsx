@@ -91,8 +91,8 @@ export class ErrorBoundary extends Component<Props, State> {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                We're sorry, but something unexpected happened. The error has been logged and our
-                team has been notified.
+                We&apos;re sorry, but something unexpected happened. The error has been logged and
+                our team has been notified.
               </p>
 
               {process.env.NODE_ENV === 'development' && this.state.error && (

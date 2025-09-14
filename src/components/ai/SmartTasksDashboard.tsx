@@ -257,7 +257,7 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
               No Active Recommendations
             </h3>
             <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-              Generate AI-powered task recommendations based on your farm's current conditions.
+              Generate AI-powered task recommendations based on your farm&apos;s current conditions.
             </p>
             <Button
               onClick={generateNewRecommendations}
@@ -276,7 +276,7 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
             <div>
               <h3 className="text-base font-semibold mb-3 flex items-center gap-2 px-1">
                 <Calendar className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                <span>Today's Tasks ({todayTasks.length})</span>
+                <span>Today&apos;s Tasks ({todayTasks.length})</span>
               </h3>
               <div className="space-y-3">
                 {todayTasks.map((task) => (

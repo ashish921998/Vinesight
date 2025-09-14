@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Card } from '@/components/ui/card'
 import {
   ArrowRight,
@@ -89,10 +90,11 @@ export default function Homepage() {
 
               <div className="relative">
                 <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
-                  <img
+                  <Image
                     src="https://images.unsplash.com/photo-1602330102257-04c00af50c1a?q=80&w=927&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="Modern smart farming with AI technology and data analytics"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
               </div>
@@ -112,17 +114,18 @@ export default function Homepage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
               <div className="space-y-6">
                 <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100">
-                  <img
+                  <Image
                     src="https://plus.unsplash.com/premium_photo-1661631096484-de84cb0e71c1?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="Real-Time Analytics"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
                 <div className="space-y-4">
                   <h3 className="text-2xl font-bold text-gray-900">Real-Time Analytics</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Monitor your farm's performance with comprehensive dashboards and real-time data
-                    visualization.
+                    Monitor your farm&apos;s performance with comprehensive dashboards and real-time
+                    data visualization.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
@@ -139,10 +142,11 @@ export default function Homepage() {
 
               <div className="space-y-6">
                 <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100">
-                  <img
+                  <Image
                     src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
                     alt="Crop Management"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
                 <div className="space-y-4">
@@ -165,17 +169,18 @@ export default function Homepage() {
 
               <div className="space-y-6">
                 <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100">
-                  <img
+                  <Image
                     src="https://images.unsplash.com/photo-1744230673231-865d54a0aba4?q=80&w=3132&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="AI Recommendations"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
                 <div className="space-y-4">
                   <h3 className="text-2xl font-bold text-gray-900">AI Recommendations</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Get personalized farming recommendations based on your farm's data and external
-                    factors.
+                    Get personalized farming recommendations based on your farm&apos;s data and
+                    external factors.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
@@ -451,10 +456,11 @@ export default function Homepage() {
 
               <div className="relative">
                 <div className="aspect-square rounded-2xl overflow-hidden shadow-2xl">
-                  <img
+                  <Image
                     src="https://plus.unsplash.com/premium_photo-1661897775104-98e395fb49e1?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="Modern farming technology and data analytics"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
               </div>

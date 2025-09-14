@@ -368,7 +368,8 @@ export default function FarmEfficiencyPage() {
               Farm Efficiency Dashboard
             </h1>
             <p className="text-muted-foreground mt-2">
-              Monitor your farm's efficiency metrics, yield performance, and resource utilization
+              Monitor your farm&apos;s efficiency metrics, yield performance, and resource
+              utilization
             </p>
           </div>
           <Button onClick={refreshMetrics} className="gap-2">

@@ -282,7 +282,7 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MessageCircle className="h-4 w-4 text-blue-500" />
-            <h3 className="text-sm font-semibold">Today's AI Insights</h3>
+            <h3 className="text-sm font-semibold">Today&apos;s AI Insights</h3>
           </div>
           <div className="flex items-center gap-2">
             {hasMore && (

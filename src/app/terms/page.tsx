@@ -25,7 +25,7 @@ export default function TermsOfServicePage() {
       <SEOSchema
         title="Terms of Service - VineSight Grape Farming Assistant"
         description="Terms and conditions for using VineSight's grape farming platform. Legal terms for Indian grape farmers and agricultural services."
-        type="website"
+        type="guide"
         image="https://farmai.vercel.app/og-image.png"
       />
 
@@ -64,9 +64,9 @@ export default function TermsOfServicePage() {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-3">Agreement Overview</h2>
                   <p className="text-gray-700 mb-4">
-                    These Terms of Service ("Terms") govern your access to and use of VineSight's
-                    agricultural platform and services. By using our platform, you agree to these
-                    terms and our Privacy Policy.
+                    These Terms of Service (&quot;Terms&quot;) govern your access to and use of
+                    VineSight&apos;s agricultural platform and services. By using our platform, you
+                    agree to these terms and our Privacy Policy.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-700">
-                By accessing or using VineSight's services, you acknowledge that you have read,
+                By accessing or using VineSight&apos;s services, you acknowledge that you have read,
                 understood, and agree to be bound by these Terms. If you do not agree to these
                 Terms, you may not use our services.
               </p>
@@ -446,8 +446,8 @@ export default function TermsOfServicePage() {
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <h3 className="font-semibold text-red-900 mb-2">Limitation of Liability</h3>
                 <p className="text-red-800 text-sm">
-                  VineSight provides services "as is" and cannot be held liable for crop losses,
-                  equipment damage, or other agricultural outcomes resulting from use of our
+                  VineSight provides services &quot;as is&quot; and cannot be held liable for crop
+                  losses, equipment damage, or other agricultural outcomes resulting from use of our
                   platform. Users are responsible for validating all recommendations against local
                   conditions and expert advice.
                 </p>
