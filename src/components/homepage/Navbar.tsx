@@ -1,38 +1,31 @@
-"use client";
+'use client'
 
-import { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { 
-  Sprout, 
-  Menu, 
-  X, 
-  Calculator,
-  BookOpen,
-  ArrowRight
-} from "lucide-react";
-import { LoginButton } from "@/components/auth/LoginButton";
-import { useRouter } from 'next/navigation';
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Sprout, Menu, X, Calculator, BookOpen, ArrowRight } from 'lucide-react'
+import { LoginButton } from '@/components/auth/LoginButton'
+import { useRouter } from 'next/navigation'
 
 export function Navbar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const router = useRouter();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const router = useRouter()
 
   const navigation = [
     { name: 'Features', href: '#features' },
     { name: 'About', href: '#about' },
-  ];
+  ]
 
   const scrollToSection = (href: string) => {
     if (href.startsWith('#')) {
-      const element = document.querySelector(href);
+      const element = document.querySelector(href)
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+        element.scrollIntoView({ behavior: 'smooth' })
       }
     } else {
-      router.push(href);
+      router.push(href)
     }
-    setIsMobileMenuOpen(false);
-  };
+    setIsMobileMenuOpen(false)
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
@@ -76,11 +69,7 @@ export function Navbar() {
               size="sm"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              {isMobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           </div>
         </div>
@@ -101,7 +90,7 @@ export function Navbar() {
                 <ArrowRight className="h-4 w-4 ml-auto" />
               </button>
             ))}
-            
+
             <div className="pt-4 border-t border-gray-200">
               <LoginButton className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 rounded-lg font-medium">
                 Sign In to Get Started
@@ -111,5 +100,5 @@ export function Navbar() {
         </div>
       )}
     </nav>
-  );
+  )
 }

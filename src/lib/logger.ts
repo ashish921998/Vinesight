@@ -3,48 +3,48 @@ export enum LogLevel {
   ERROR = 0,
   WARN = 1,
   INFO = 2,
-  DEBUG = 3
+  DEBUG = 3,
 }
 
 class Logger {
-  private level: LogLevel = LogLevel.INFO;
-  
+  private level: LogLevel = LogLevel.INFO
+
   constructor() {
     // Set log level based on environment
     if (process.env.NODE_ENV === 'development') {
-      this.level = LogLevel.DEBUG;
+      this.level = LogLevel.DEBUG
     } else if (process.env.NODE_ENV === 'production') {
-      this.level = LogLevel.ERROR;
+      this.level = LogLevel.ERROR
     }
   }
-  
+
   private shouldLog(level: LogLevel): boolean {
-    return level <= this.level;
+    return level <= this.level
   }
-  
+
   error(message: string, ...args: any[]): void {
     if (this.shouldLog(LogLevel.ERROR)) {
-      console.error(`[ERROR] ${message}`, ...args);
+      console.error(`[ERROR] ${message}`, ...args)
     }
   }
-  
+
   warn(message: string, ...args: any[]): void {
     if (this.shouldLog(LogLevel.WARN)) {
-      console.warn(`[WARN] ${message}`, ...args);
+      console.warn(`[WARN] ${message}`, ...args)
     }
   }
-  
+
   info(message: string, ...args: any[]): void {
     if (this.shouldLog(LogLevel.INFO)) {
-      console.log(`[INFO] ${message}`, ...args);
+      console.log(`[INFO] ${message}`, ...args)
     }
   }
-  
+
   debug(message: string, ...args: any[]): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
-      console.log(`[DEBUG] ${message}`, ...args);
+      console.log(`[DEBUG] ${message}`, ...args)
     }
   }
 }
 
-export const logger = new Logger();
+export const logger = new Logger()

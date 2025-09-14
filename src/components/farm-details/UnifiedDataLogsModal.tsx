@@ -1,18 +1,24 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Droplets, 
-  SprayCan, 
-  Scissors, 
+import { useState, useEffect } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import {
+  Droplets,
+  SprayCan,
+  Scissors,
   DollarSign,
   TestTube,
   Beaker,
@@ -23,44 +29,44 @@ import {
   Edit2,
   Trash2,
   Calendar,
-  CheckCircle
-} from "lucide-react";
+  CheckCircle,
+} from 'lucide-react'
 
-export type LogType = 'irrigation' | 'spray' | 'harvest' | 'expense' | 'fertigation' | 'soil_test';
+export type LogType = 'irrigation' | 'spray' | 'harvest' | 'expense' | 'fertigation' | 'soil_test'
 
 interface LogEntry {
-  id: string; // temporary ID for session
-  type: LogType;
-  data: Record<string, any>;
-  isValid: boolean;
+  id: string // temporary ID for session
+  type: LogType
+  data: Record<string, any>
+  isValid: boolean
 }
 
 interface FormField {
-  name: string;
-  type: 'text' | 'number' | 'select' | 'textarea';
-  label: string;
-  required: boolean;
-  options?: string[];
-  placeholder?: string;
-  min?: number;
-  max?: number;
-  step?: number;
-  maxLength?: number;
+  name: string
+  type: 'text' | 'number' | 'select' | 'textarea'
+  label: string
+  required: boolean
+  options?: string[]
+  placeholder?: string
+  min?: number
+  max?: number
+  step?: number
+  maxLength?: number
 }
 
 interface LogTypeConfig {
-  icon: any;
-  color: string;
-  bgColor: string;
-  borderColor: string;
-  fields: FormField[];
+  icon: any
+  color: string
+  bgColor: string
+  borderColor: string
+  fields: FormField[]
 }
 
 interface UnifiedDataLogsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (logs: LogEntry[], date: string, dayNotes: string, dayPhotos: File[]) => void;
-  isSubmitting: boolean;
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (logs: LogEntry[], date: string, dayNotes: string, dayPhotos: File[]) => void
+  isSubmitting: boolean
 }
 
 const logTypeConfigs: Record<LogType, LogTypeConfig> = {
@@ -70,8 +76,15 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
     bgColor: 'bg-blue-50',
     borderColor: 'border-blue-200',
     fields: [
-      { name: 'duration', type: 'number', label: 'Duration (hours)', required: true, min: 0, step: 0.1 }
-    ]
+      {
+        name: 'duration',
+        type: 'number',
+        label: 'Duration (hours)',
+        required: true,
+        min: 0,
+        step: 0.1,
+      },
+    ],
   },
   spray: {
     icon: SprayCan,
@@ -79,11 +92,40 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
     bgColor: 'bg-green-50',
     borderColor: 'border-green-200',
     fields: [
-      { name: 'chemical', type: 'text', label: 'Chemical Used', required: true, placeholder: 'e.g., Sulfur fungicide', maxLength: 10 },
-      { name: 'quantity_amount', type: 'number', label: 'Quantity Amount', required: false, min: 0, step: 0.1, placeholder: 'e.g., 500' },
-      { name: 'quantity_unit', type: 'select', label: 'Unit', required: false, options: ['gm/L', 'ml/L'] },
-      { name: 'water_volume', type: 'number', label: 'Water Volume (L)', required: false, min: 0, step: 0.1, placeholder: 'Total water used' }
-    ]
+      {
+        name: 'chemical',
+        type: 'text',
+        label: 'Chemical Used',
+        required: true,
+        placeholder: 'e.g., Sulfur fungicide',
+        maxLength: 10,
+      },
+      {
+        name: 'quantity_amount',
+        type: 'number',
+        label: 'Quantity Amount',
+        required: false,
+        min: 0,
+        step: 0.1,
+        placeholder: 'e.g., 500',
+      },
+      {
+        name: 'quantity_unit',
+        type: 'select',
+        label: 'Unit',
+        required: false,
+        options: ['gm/L', 'ml/L'],
+      },
+      {
+        name: 'water_volume',
+        type: 'number',
+        label: 'Water Volume (L)',
+        required: false,
+        min: 0,
+        step: 0.1,
+        placeholder: 'Total water used',
+      },
+    ],
   },
   harvest: {
     icon: Scissors,
@@ -91,10 +133,22 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
     bgColor: 'bg-yellow-50',
     borderColor: 'border-yellow-200',
     fields: [
-      { name: 'quantity', type: 'number', label: 'Quantity (kg)', required: true, min: 0, step: 0.1 },
-      { name: 'grade', type: 'select', label: 'Grade', required: true, 
-        options: ['Premium', 'Standard', 'Below Standard'] }
-    ]
+      {
+        name: 'quantity',
+        type: 'number',
+        label: 'Quantity (kg)',
+        required: true,
+        min: 0,
+        step: 0.1,
+      },
+      {
+        name: 'grade',
+        type: 'select',
+        label: 'Grade',
+        required: true,
+        options: ['Premium', 'Standard', 'Below Standard'],
+      },
+    ],
   },
   expense: {
     icon: DollarSign,
@@ -102,12 +156,36 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
     bgColor: 'bg-red-50',
     borderColor: 'border-red-200',
     fields: [
-      { name: 'type', type: 'select', label: 'Category', required: true,
-        options: ['labor', 'materials', 'equipment', 'other'] },
-      { name: 'description', type: 'text', label: 'Description', required: true, placeholder: 'Brief description' },
-      { name: 'cost', type: 'number', label: 'Amount (₹)', required: true, min: 0, step: 0.01 },
-      { name: 'vendor', type: 'text', label: 'Vendor', required: false, placeholder: 'Vendor name (optional)' }
-    ]
+      {
+        name: 'type',
+        type: 'select',
+        label: 'Category',
+        required: true,
+        options: ['labor', 'materials', 'equipment', 'other'],
+      },
+      {
+        name: 'description',
+        type: 'text',
+        label: 'Description',
+        required: true,
+        placeholder: 'Brief description',
+      },
+      {
+        name: 'cost',
+        type: 'number',
+        label: 'Amount (₹)',
+        required: true,
+        min: 0,
+        step: 0.01,
+      },
+      {
+        name: 'vendor',
+        type: 'text',
+        label: 'Vendor',
+        required: false,
+        placeholder: 'Vendor name (optional)',
+      },
+    ],
   },
   fertigation: {
     icon: Beaker,
@@ -115,9 +193,22 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
     bgColor: 'bg-purple-50',
     borderColor: 'border-purple-200',
     fields: [
-      { name: 'fertilizer', type: 'text', label: 'Fertilizer Type', required: true, placeholder: 'e.g., NPK 19:19:19' },
-      { name: 'quantity', type: 'number', label: 'Quantity (kg/L)', required: false, min: 0, step: 0.1 }
-    ]
+      {
+        name: 'fertilizer',
+        type: 'text',
+        label: 'Fertilizer Type',
+        required: true,
+        placeholder: 'e.g., NPK 19:19:19',
+      },
+      {
+        name: 'quantity',
+        type: 'number',
+        label: 'Quantity (kg/L)',
+        required: false,
+        min: 0,
+        step: 0.1,
+      },
+    ],
   },
   soil_test: {
     icon: TestTube,
@@ -125,13 +216,39 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
     bgColor: 'bg-orange-50',
     borderColor: 'border-orange-200',
     fields: [
-      { name: 'ph', type: 'number', label: 'pH Level', required: true, min: 0, max: 14, step: 0.1 },
-      { name: 'nitrogen', type: 'number', label: 'Nitrogen (ppm)', required: false, min: 0 },
-      { name: 'phosphorus', type: 'number', label: 'Phosphorus (ppm)', required: false, min: 0 },
-      { name: 'potassium', type: 'number', label: 'Potassium (ppm)', required: false, min: 0 }
-    ]
-  }
-};
+      {
+        name: 'ph',
+        type: 'number',
+        label: 'pH Level',
+        required: true,
+        min: 0,
+        max: 14,
+        step: 0.1,
+      },
+      {
+        name: 'nitrogen',
+        type: 'number',
+        label: 'Nitrogen (ppm)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'phosphorus',
+        type: 'number',
+        label: 'Phosphorus (ppm)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'potassium',
+        type: 'number',
+        label: 'Potassium (ppm)',
+        required: false,
+        min: 0,
+      },
+    ],
+  },
+}
 
 const logTypeLabels: Record<LogType, string> = {
   irrigation: 'Irrigation',
@@ -140,113 +257,264 @@ const logTypeLabels: Record<LogType, string> = {
   soil_test: 'Soil Test',
   harvest: 'Harvest',
   expense: 'Expense',
-};
+}
 
-export function UnifiedDataLogsModal({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  isSubmitting 
+export function UnifiedDataLogsModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  isSubmitting,
 }: UnifiedDataLogsModalProps) {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [currentLogType, setCurrentLogType] = useState<LogType | null>(null);
-  const [currentFormData, setCurrentFormData] = useState<Record<string, any>>({});
-  const [sessionLogs, setSessionLogs] = useState<LogEntry[]>([]);
-  const [editingLogId, setEditingLogId] = useState<string | null>(null);
-  
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [currentLogType, setCurrentLogType] = useState<LogType | null>(null)
+  const [currentFormData, setCurrentFormData] = useState<Record<string, any>>({})
+  const [sessionLogs, setSessionLogs] = useState<LogEntry[]>([])
+  const [editingLogId, setEditingLogId] = useState<string | null>(null)
+
   // Shared day-level data
-  const [dayNotes, setDayNotes] = useState('');
-  const [dayPhotos, setDayPhotos] = useState<File[]>([]);
+  const [dayNotes, setDayNotes] = useState('')
+  const [dayPhotos, setDayPhotos] = useState<File[]>([])
+
+  // Multiple spray entries state
+  const [multipleSprayMode, setMultipleSprayMode] = useState(false)
+  const [sprayEntries, setSprayEntries] = useState<
+    Array<{ id: string; data: Record<string, any>; isValid: boolean }>
+  >([])
 
   // Reset modal state when opened/closed
   useEffect(() => {
     if (!isOpen) {
-      setCurrentLogType(null);
-      setCurrentFormData({});
-      setSessionLogs([]);
-      setEditingLogId(null);
-      setSelectedDate(new Date().toISOString().split('T')[0]);
-      setDayNotes('');
-      setDayPhotos([]);
+      setCurrentLogType(null)
+      setCurrentFormData({})
+      setSessionLogs([])
+      setEditingLogId(null)
+      setSelectedDate(new Date().toISOString().split('T')[0])
+      setDayNotes('')
+      setDayPhotos([])
+      setMultipleSprayMode(false)
+      setSprayEntries([])
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   // Reset current form when log type changes
   useEffect(() => {
     if (currentLogType && !editingLogId) {
-      setCurrentFormData({});
-    }
-  }, [currentLogType, editingLogId]);
-
-  const validateCurrentForm = (): boolean => {
-    if (!currentLogType) return false;
-
-    const config = logTypeConfigs[currentLogType];
-    for (const field of config.fields) {
-      if (field.required && !currentFormData[field.name]) {
-        return false;
+      setCurrentFormData({})
+      if (currentLogType === 'spray') {
+        setSprayEntries([{ id: Date.now().toString(), data: {}, isValid: false }])
+        setMultipleSprayMode(true)
+      } else {
+        setMultipleSprayMode(false)
+        setSprayEntries([])
       }
     }
-    return true;
-  };
+  }, [currentLogType, editingLogId])
+
+  const validateCurrentForm = (): boolean => {
+    if (!currentLogType) return false
+
+    if (currentLogType === 'spray' && multipleSprayMode) {
+      return sprayEntries.some((entry) => entry.isValid)
+    }
+
+    const config = logTypeConfigs[currentLogType]
+    for (const field of config.fields) {
+      if (field.required && !currentFormData[field.name]) {
+        return false
+      }
+    }
+    return true
+  }
+
+  const validateSprayEntry = (data: Record<string, any>): boolean => {
+    const config = logTypeConfigs['spray']
+    for (const field of config.fields) {
+      if (field.required && !data[field.name]) {
+        return false
+      }
+    }
+    return true
+  }
+
+  const handleAddSprayEntry = () => {
+    if (sprayEntries.length >= 10) return
+
+    const newEntry = {
+      id: Date.now().toString(),
+      data: {},
+      isValid: false,
+    }
+    setSprayEntries((prev) => [...prev, newEntry])
+  }
+
+  const handleRemoveSprayEntry = (entryId: string) => {
+    if (sprayEntries.length === 1) return
+    setSprayEntries((prev) => prev.filter((entry) => entry.id !== entryId))
+  }
+
+  const handleSprayEntryChange = (entryId: string, field: string, value: any) => {
+    setSprayEntries((prev) =>
+      prev.map((entry) => {
+        if (entry.id === entryId) {
+          const newData = { ...entry.data, [field]: value }
+          return {
+            ...entry,
+            data: newData,
+            isValid: validateSprayEntry(newData),
+          }
+        }
+        return entry
+      }),
+    )
+  }
 
   const handleAddLogEntry = () => {
-    if (!currentLogType || !validateCurrentForm()) return;
+    if (!currentLogType || !validateCurrentForm()) return
+
+    if (currentLogType === 'spray' && multipleSprayMode) {
+      // Handle multiple spray entries
+      const validSprayEntries = sprayEntries.filter((entry) => entry.isValid)
+
+      const newSprayLogs: LogEntry[] = validSprayEntries.map((entry) => ({
+        id: entry.id + '_spray',
+        type: 'spray',
+        data: { ...entry.data },
+        isValid: true,
+      }))
+
+      setSessionLogs((prev) => [...prev, ...newSprayLogs])
+
+      // Reset spray mode
+      setCurrentLogType(null)
+      setMultipleSprayMode(false)
+      setSprayEntries([])
+      return
+    }
 
     const logEntry: LogEntry = {
       id: editingLogId || Date.now().toString(),
       type: currentLogType,
       data: {
-        ...currentFormData
+        ...currentFormData,
       },
-      isValid: true
-    };
+      isValid: true,
+    }
 
     if (editingLogId) {
       // Update existing log
-      setSessionLogs(prev => 
-        prev.map(log => log.id === editingLogId ? logEntry : log)
-      );
-      setEditingLogId(null);
+      setSessionLogs((prev) => prev.map((log) => (log.id === editingLogId ? logEntry : log)))
+      setEditingLogId(null)
     } else {
       // Add new log
-      setSessionLogs(prev => [...prev, logEntry]);
+      setSessionLogs((prev) => [...prev, logEntry])
     }
 
     // Reset form
-    setCurrentLogType(null);
-    setCurrentFormData({});
-  };
+    setCurrentLogType(null)
+    setCurrentFormData({})
+  }
 
   const handleEditLog = (logId: string) => {
-    const log = sessionLogs.find(l => l.id === logId);
-    if (!log) return;
+    const log = sessionLogs.find((l) => l.id === logId)
+    if (!log) return
 
-    setEditingLogId(logId);
-    setCurrentLogType(log.type);
-    setCurrentFormData({ ...log.data });
-  };
+    setEditingLogId(logId)
+    setCurrentLogType(log.type)
+    setCurrentFormData({ ...log.data })
+  }
 
   const handleRemoveLog = (logId: string) => {
-    setSessionLogs(prev => prev.filter(log => log.id !== logId));
-  };
+    setSessionLogs((prev) => prev.filter((log) => log.id !== logId))
+  }
 
   const handlePhotoAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setDayPhotos(prev => [...prev, ...files]);
-  };
+    const files = Array.from(e.target.files || [])
+    setDayPhotos((prev) => [...prev, ...files])
+  }
 
   const handlePhotoRemove = (index: number) => {
-    setDayPhotos(prev => prev.filter((_, i) => i !== index));
-  };
+    setDayPhotos((prev) => prev.filter((_, i) => i !== index))
+  }
 
   const handleSaveAllLogs = () => {
-    if (sessionLogs.length === 0) return;
-    onSubmit(sessionLogs, selectedDate, dayNotes, dayPhotos);
-  };
+    if (sessionLogs.length === 0) return
+    onSubmit(sessionLogs, selectedDate, dayNotes, dayPhotos)
+  }
+
+  const renderSprayEntryField = (
+    entry: { id: string; data: Record<string, any>; isValid: boolean },
+    field: FormField,
+  ) => {
+    const value = entry.data[field.name] || ''
+
+    switch (field.type) {
+      case 'select':
+        return (
+          <div key={field.name} className="space-y-1">
+            <Label className="text-sm font-medium text-gray-700">
+              {field.label}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </Label>
+            <Select
+              value={value}
+              onValueChange={(newValue) => handleSprayEntryChange(entry.id, field.name, newValue)}
+            >
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
+              </SelectTrigger>
+              <SelectContent>
+                {field.options?.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )
+
+      case 'number':
+        return (
+          <div key={field.name} className="space-y-1">
+            <Label className="text-sm font-medium text-gray-700">
+              {field.label}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </Label>
+            <Input
+              type="number"
+              value={value}
+              onChange={(e) => handleSprayEntryChange(entry.id, field.name, e.target.value)}
+              placeholder={field.placeholder}
+              min={field.min}
+              max={field.max}
+              step={field.step}
+              className="h-9"
+            />
+          </div>
+        )
+
+      default:
+        return (
+          <div key={field.name} className="space-y-1">
+            <Label className="text-sm font-medium text-gray-700">
+              {field.label}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </Label>
+            <Input
+              type="text"
+              value={value}
+              onChange={(e) => handleSprayEntryChange(entry.id, field.name, e.target.value)}
+              placeholder={field.placeholder}
+              maxLength={field.maxLength}
+              className="h-9"
+            />
+          </div>
+        )
+    }
+  }
 
   const renderFormField = (field: FormField) => {
-    const value = currentFormData[field.name] || '';
+    const value = currentFormData[field.name] || ''
 
     switch (field.type) {
       case 'select':
@@ -259,7 +527,10 @@ export function UnifiedDataLogsModal({
             <Select
               value={value}
               onValueChange={(newValue) =>
-                setCurrentFormData(prev => ({ ...prev, [field.name]: newValue }))
+                setCurrentFormData((prev) => ({
+                  ...prev,
+                  [field.name]: newValue,
+                }))
               }
             >
               <SelectTrigger className="h-9">
@@ -274,7 +545,7 @@ export function UnifiedDataLogsModal({
               </SelectContent>
             </Select>
           </div>
-        );
+        )
 
       case 'number':
         return (
@@ -287,7 +558,10 @@ export function UnifiedDataLogsModal({
               type="number"
               value={value}
               onChange={(e) =>
-                setCurrentFormData(prev => ({ ...prev, [field.name]: e.target.value }))
+                setCurrentFormData((prev) => ({
+                  ...prev,
+                  [field.name]: e.target.value,
+                }))
               }
               placeholder={field.placeholder}
               min={field.min}
@@ -296,7 +570,7 @@ export function UnifiedDataLogsModal({
               className="h-9"
             />
           </div>
-        );
+        )
 
       case 'textarea':
         return (
@@ -308,13 +582,16 @@ export function UnifiedDataLogsModal({
             <Textarea
               value={value}
               onChange={(e) =>
-                setCurrentFormData(prev => ({ ...prev, [field.name]: e.target.value }))
+                setCurrentFormData((prev) => ({
+                  ...prev,
+                  [field.name]: e.target.value,
+                }))
               }
               placeholder={field.placeholder}
               className="min-h-[80px]"
             />
           </div>
-        );
+        )
 
       default:
         return (
@@ -327,16 +604,19 @@ export function UnifiedDataLogsModal({
               type="text"
               value={value}
               onChange={(e) =>
-                setCurrentFormData(prev => ({ ...prev, [field.name]: e.target.value }))
+                setCurrentFormData((prev) => ({
+                  ...prev,
+                  [field.name]: e.target.value,
+                }))
               }
               placeholder={field.placeholder}
               maxLength={field.maxLength}
               className="h-9"
             />
           </div>
-        );
+        )
     }
-  };
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -372,12 +652,12 @@ export function UnifiedDataLogsModal({
               </CardHeader>
               <CardContent className="space-y-2">
                 {sessionLogs.map((log) => {
-                  const config = logTypeConfigs[log.type];
-                  const Icon = config.icon;
-                  
+                  const config = logTypeConfigs[log.type]
+                  const Icon = config.icon
+
                   return (
-                    <div 
-                      key={log.id} 
+                    <div
+                      key={log.id}
                       className={`flex items-center justify-between p-2 rounded-lg border ${config.bgColor} ${config.borderColor}`}
                     >
                       <div className="flex items-center gap-2">
@@ -412,7 +692,7 @@ export function UnifiedDataLogsModal({
                         </Button>
                       </div>
                     </div>
-                  );
+                  )
                 })}
               </CardContent>
             </Card>
@@ -433,8 +713,8 @@ export function UnifiedDataLogsModal({
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(logTypeLabels).map(([type, label]) => {
-                  const config = logTypeConfigs[type as LogType];
-                  const Icon = config.icon;
+                  const config = logTypeConfigs[type as LogType]
+                  const Icon = config.icon
                   return (
                     <SelectItem key={type} value={type}>
                       <div className="flex items-center gap-2">
@@ -442,7 +722,7 @@ export function UnifiedDataLogsModal({
                         {label}
                       </div>
                     </SelectItem>
-                  );
+                  )
                 })}
               </SelectContent>
             </Select>
@@ -450,28 +730,96 @@ export function UnifiedDataLogsModal({
 
           {/* Dynamic Form Fields */}
           {currentLogType && (
-            <Card className={`${logTypeConfigs[currentLogType].bgColor} ${logTypeConfigs[currentLogType].borderColor} border`}>
+            <Card
+              className={`${logTypeConfigs[currentLogType].bgColor} ${logTypeConfigs[currentLogType].borderColor} border`}
+            >
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
                   {(() => {
-                    const Icon = logTypeConfigs[currentLogType].icon;
-                    return <Icon className={`h-4 w-4 ${logTypeConfigs[currentLogType].color}`} />;
+                    const Icon = logTypeConfigs[currentLogType].icon
+                    return <Icon className={`h-4 w-4 ${logTypeConfigs[currentLogType].color}`} />
                   })()}
                   {logTypeLabels[currentLogType]} Details
+                  {currentLogType === 'spray' && multipleSprayMode && (
+                    <Badge variant="outline" className="ml-2">
+                      {sprayEntries.length}/10 entries
+                    </Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {/* Dynamic fields */}
-                {logTypeConfigs[currentLogType].fields.map(renderFormField)}
+                {/* Multiple Spray Entries */}
+                {currentLogType === 'spray' && multipleSprayMode ? (
+                  <div className="space-y-4">
+                    {sprayEntries.map((entry, index) => (
+                      <Card
+                        key={entry.id}
+                        className="bg-white border-2 border-dashed border-gray-200"
+                      >
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <SprayCan className="h-4 w-4 text-green-600" />
+                              Spray {index + 1}
+                              {entry.isValid && <CheckCircle className="h-4 w-4 text-green-600" />}
+                            </CardTitle>
+                            {sprayEntries.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveSprayEntry(entry.id)}
+                                className="h-6 w-6 p-0 text-red-600 hover:text-red-800"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {logTypeConfigs[currentLogType].fields.map((field) =>
+                            renderSprayEntryField(entry, field),
+                          )}
 
-                {/* Add Entry Button */}
-                <Button
-                  onClick={handleAddLogEntry}
-                  disabled={!validateCurrentForm()}
-                  className="w-full"
-                >
-                  {editingLogId ? 'Update Log Entry' : 'Add Log Entry'}
-                </Button>
+                          {/* Add button after water volume field */}
+                          {index === sprayEntries.length - 1 && sprayEntries.length < 10 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleAddSprayEntry}
+                              className="w-full mt-2 border-dashed"
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add Another Spray
+                            </Button>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+
+                    {/* Save Multiple Spray Entries Button */}
+                    <Button
+                      onClick={handleAddLogEntry}
+                      disabled={!validateCurrentForm()}
+                      className="w-full"
+                    >
+                      Save All Spray Entries ({sprayEntries.filter((e) => e.isValid).length})
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Dynamic fields for non-spray logs */}
+                    {logTypeConfigs[currentLogType].fields.map(renderFormField)}
+
+                    {/* Add Entry Button */}
+                    <Button
+                      onClick={handleAddLogEntry}
+                      disabled={!validateCurrentForm()}
+                      className="w-full"
+                    >
+                      {editingLogId ? 'Update Log Entry' : 'Add Log Entry'}
+                    </Button>
+                  </>
+                )}
               </CardContent>
             </Card>
           )}
@@ -528,7 +876,11 @@ export function UnifiedDataLogsModal({
                     {dayPhotos.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {dayPhotos.map((photo, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
                             {photo.name.slice(0, 10)}...
                             <Button
                               variant="ghost"
@@ -554,7 +906,11 @@ export function UnifiedDataLogsModal({
           <div className="text-sm text-gray-500">
             {sessionLogs.length} log{sessionLogs.length !== 1 ? 's' : ''} ready to save
             {dayNotes && <span className="ml-2">• Notes included</span>}
-            {dayPhotos.length > 0 && <span className="ml-2">• {dayPhotos.length} photo{dayPhotos.length !== 1 ? 's' : ''} included</span>}
+            {dayPhotos.length > 0 && (
+              <span className="ml-2">
+                • {dayPhotos.length} photo{dayPhotos.length !== 1 ? 's' : ''} included
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
@@ -572,5 +928,5 @@ export function UnifiedDataLogsModal({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

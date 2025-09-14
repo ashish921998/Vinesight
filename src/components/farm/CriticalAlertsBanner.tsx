@@ -1,58 +1,49 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  AlertTriangle, 
-  Bug, 
-  Zap, 
-  Clock,
-  ChevronRight,
-  X,
-  Shield,
-  Sprout
-} from 'lucide-react';
-import type { CriticalAlert } from '@/types/ai';
+import React from 'react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { AlertTriangle, Bug, Zap, Clock, ChevronRight, X, Shield, Sprout } from 'lucide-react'
+import type { CriticalAlert } from '@/types/ai'
 
 interface CriticalAlertsBannerProps {
-  alerts: CriticalAlert[];
-  onAlertAction: (alertId: string, action: string, actionData?: Record<string, any>) => void;
-  onDismiss?: (alertId: string) => void;
-  className?: string;
+  alerts: CriticalAlert[]
+  onAlertAction: (alertId: string, action: string, actionData?: Record<string, any>) => void
+  onDismiss?: (alertId: string) => void
+  className?: string
 }
 
 export function CriticalAlertsBanner({
   alerts,
   onAlertAction,
   onDismiss,
-  className = ''
+  className = '',
 }: CriticalAlertsBannerProps) {
   if (!alerts || alerts.length === 0) {
-    return null;
+    return null
   }
 
-  const criticalAlerts = alerts.filter(alert => alert.severity === 'critical');
-  const highAlerts = alerts.filter(alert => alert.severity === 'high');
+  const criticalAlerts = alerts.filter((alert) => alert.severity === 'critical')
+  const highAlerts = alerts.filter((alert) => alert.severity === 'high')
 
   const getAlertIcon = (type: string, severity: string) => {
-    const iconSize = severity === 'critical' ? 'h-6 w-6' : 'h-5 w-5';
-    const iconColor = severity === 'critical' ? 'text-red-600' : 'text-orange-600';
-    
+    const iconSize = severity === 'critical' ? 'h-6 w-6' : 'h-5 w-5'
+    const iconColor = severity === 'critical' ? 'text-red-600' : 'text-orange-600'
+
     switch (type) {
       case 'pest_prediction':
-        return <Bug className={`${iconSize} ${iconColor}`} />;
+        return <Bug className={`${iconSize} ${iconColor}`} />
       case 'weather_warning':
-        return <Zap className={`${iconSize} ${iconColor}`} />;
+        return <Zap className={`${iconSize} ${iconColor}`} />
       case 'equipment_failure':
-        return <AlertTriangle className={`${iconSize} ${iconColor}`} />;
+        return <AlertTriangle className={`${iconSize} ${iconColor}`} />
       case 'market_crash':
-        return <Sprout className={`${iconSize} ${iconColor}`} />;
+        return <Sprout className={`${iconSize} ${iconColor}`} />
       default:
-        return <AlertTriangle className={`${iconSize} ${iconColor}`} />;
+        return <AlertTriangle className={`${iconSize} ${iconColor}`} />
     }
-  };
+  }
 
   const getAlertColors = (severity: string) => {
     if (severity === 'critical') {
@@ -61,34 +52,32 @@ export function CriticalAlertsBanner({
         background: 'bg-red-50',
         text: 'text-red-900',
         badge: 'bg-red-100 text-red-800',
-        button: 'bg-red-600 hover:bg-red-700 text-white'
-      };
+        button: 'bg-red-600 hover:bg-red-700 text-white',
+      }
     } else {
       return {
         border: 'border-orange-500',
         background: 'bg-orange-50',
         text: 'text-orange-900',
         badge: 'bg-orange-100 text-orange-800',
-        button: 'bg-orange-600 hover:bg-orange-700 text-white'
-      };
+        button: 'bg-orange-600 hover:bg-orange-700 text-white',
+      }
     }
-  };
+  }
 
   const handleAlertAction = (alert: CriticalAlert, actionIndex: number) => {
-    const action = alert.actions[actionIndex];
-    onAlertAction(alert.id, action.action, action.actionData);
-  };
+    const action = alert.actions[actionIndex]
+    onAlertAction(alert.id, action.action, action.actionData)
+  }
 
   const AlertCard = ({ alert }: { alert: CriticalAlert }) => {
-    const colors = getAlertColors(alert.severity);
-    const timeRemaining = alert.timeWindow.end.getTime() - new Date().getTime();
-    const hoursRemaining = Math.max(0, Math.floor(timeRemaining / (1000 * 60 * 60)));
-    const daysRemaining = Math.floor(hoursRemaining / 24);
+    const colors = getAlertColors(alert.severity)
+    const timeRemaining = alert.timeWindow.end.getTime() - new Date().getTime()
+    const hoursRemaining = Math.max(0, Math.floor(timeRemaining / (1000 * 60 * 60)))
+    const daysRemaining = Math.floor(hoursRemaining / 24)
 
     return (
-      <Alert 
-        className={`${colors.border} ${colors.background} border-l-4 mb-3 shadow-md relative`}
-      >
+      <Alert className={`${colors.border} ${colors.background} border-l-4 mb-3 shadow-md relative`}>
         {/* Dismiss button */}
         {onDismiss && (
           <button
@@ -101,16 +90,12 @@ export function CriticalAlertsBanner({
 
         <div className="flex items-start gap-3 pr-8">
           {/* Alert Icon */}
-          <div className="flex-shrink-0 mt-0.5">
-            {getAlertIcon(alert.type, alert.severity)}
-          </div>
+          <div className="flex-shrink-0 mt-0.5">{getAlertIcon(alert.type, alert.severity)}</div>
 
           {/* Alert Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className={`font-semibold text-lg ${colors.text}`}>
-                {alert.title}
-              </h3>
+              <h3 className={`font-semibold text-lg ${colors.text}`}>{alert.title}</h3>
               <Badge variant="outline" className={colors.badge}>
                 {alert.severity.toUpperCase()}
               </Badge>
@@ -124,12 +109,11 @@ export function CriticalAlertsBanner({
             <div className="flex items-center gap-2 mb-4">
               <Clock className="h-4 w-4 text-gray-600" />
               <span className="text-sm text-gray-700">
-                {daysRemaining > 0 
+                {daysRemaining > 0
                   ? `${daysRemaining} days ${hoursRemaining % 24} hours remaining`
-                  : hoursRemaining > 0 
+                  : hoursRemaining > 0
                     ? `${hoursRemaining} hours remaining`
-                    : 'Action required immediately'
-                }
+                    : 'Action required immediately'}
               </span>
             </div>
 
@@ -144,27 +128,25 @@ export function CriticalAlertsBanner({
                   onClick={() => handleAlertAction(alert, index)}
                 >
                   {action.label}
-                  {action.type === 'primary' && (
-                    <ChevronRight className="ml-1 h-3 w-3" />
-                  )}
+                  {action.type === 'primary' && <ChevronRight className="ml-1 h-3 w-3" />}
                 </Button>
               ))}
             </div>
           </div>
         </div>
       </Alert>
-    );
-  };
+    )
+  }
 
   return (
     <div className={`space-y-1 ${className}`}>
       {/* Critical Alerts - Always show first */}
-      {criticalAlerts.map(alert => (
+      {criticalAlerts.map((alert) => (
         <AlertCard key={alert.id} alert={alert} />
       ))}
 
       {/* High Priority Alerts */}
-      {highAlerts.map(alert => (
+      {highAlerts.map((alert) => (
         <AlertCard key={alert.id} alert={alert} />
       ))}
 
@@ -178,11 +160,7 @@ export function CriticalAlertsBanner({
                 {alerts.length} active alerts requiring your attention
               </span>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onAlertAction('all', 'view_all')}
-            >
+            <Button size="sm" variant="outline" onClick={() => onAlertAction('all', 'view_all')}>
               View All Alerts
               <ChevronRight className="ml-1 h-3 w-3" />
             </Button>
@@ -190,7 +168,7 @@ export function CriticalAlertsBanner({
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export default CriticalAlertsBanner;
+export default CriticalAlertsBanner

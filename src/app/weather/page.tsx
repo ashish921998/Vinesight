@@ -1,55 +1,61 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { WeatherDashboard } from "@/components/weather/WeatherDashboard";
-import { SupabaseService } from "@/lib/supabase-service";
-import type { Farm } from "@/types/types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CloudSun, MapPin, Sprout, Mountain } from "lucide-react";
+import { useState, useEffect } from 'react'
+import { WeatherDashboard } from '@/components/weather/WeatherDashboard'
+import { SupabaseService } from '@/lib/supabase-service'
+import type { Farm } from '@/types/types'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { CloudSun, MapPin, Sprout, Mountain } from 'lucide-react'
 
 export default function WeatherPage() {
-  const [farms, setFarms] = useState<Farm[]>([]);
-  const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
-  const [selectedGrowthStage, setSelectedGrowthStage] = useState("Flowering");
-  const [selectedSoilType, setSelectedSoilType] = useState("medium");
-  const [loading, setLoading] = useState(true);
+  const [farms, setFarms] = useState<Farm[]>([])
+  const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null)
+  const [selectedGrowthStage, setSelectedGrowthStage] = useState('Flowering')
+  const [selectedSoilType, setSelectedSoilType] = useState('medium')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadFarms();
-  }, []);
+    loadFarms()
+  }, [])
 
   const loadFarms = async () => {
     try {
-      const farmList = await SupabaseService.getAllFarms();
-      setFarms(farmList);
+      const farmList = await SupabaseService.getAllFarms()
+      setFarms(farmList)
       if (farmList.length > 0) {
-        setSelectedFarm(farmList[0]);
+        setSelectedFarm(farmList[0])
       }
     } catch (error) {
-      console.error("Error loading farms:", error);
+      console.error('Error loading farms:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const growthStages = [
-    { value: "Budbreak", label: "Budbreak", description: "Early spring growth" },
-    { value: "Leaf development", label: "Leaf Development", description: "New leaves forming" },
-    { value: "Flowering", label: "Flowering", description: "Bloom period" },
-    { value: "Fruit set", label: "Fruit Set", description: "Berries forming" },
-    { value: "Veraison", label: "Veraison", description: "Berry color change" },
-    { value: "Harvest", label: "Harvest", description: "Ready for picking" },
-    { value: "Post-harvest", label: "Post-harvest", description: "After harvest" },
-    { value: "Dormant", label: "Dormant", description: "Winter dormancy" }
-  ];
+    { value: 'Budbreak', label: 'Budbreak', description: 'Early spring growth' },
+    { value: 'Leaf development', label: 'Leaf Development', description: 'New leaves forming' },
+    { value: 'Flowering', label: 'Flowering', description: 'Bloom period' },
+    { value: 'Fruit set', label: 'Fruit Set', description: 'Berries forming' },
+    { value: 'Veraison', label: 'Veraison', description: 'Berry color change' },
+    { value: 'Harvest', label: 'Harvest', description: 'Ready for picking' },
+    { value: 'Post-harvest', label: 'Post-harvest', description: 'After harvest' },
+    { value: 'Dormant', label: 'Dormant', description: 'Winter dormancy' },
+  ]
 
   const soilTypes = [
-    { value: "sandy", label: "Sandy Soil", description: "Well-draining, low water holding" },
-    { value: "medium", label: "Loamy Soil", description: "Balanced drainage and retention" },
-    { value: "clay", label: "Clay Soil", description: "High water holding capacity" }
-  ];
+    { value: 'sandy', label: 'Sandy Soil', description: 'Well-draining, low water holding' },
+    { value: 'medium', label: 'Loamy Soil', description: 'Balanced drainage and retention' },
+    { value: 'clay', label: 'Clay Soil', description: 'High water holding capacity' },
+  ]
 
   if (loading) {
     return (
@@ -61,7 +67,7 @@ export default function WeatherPage() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -94,8 +100,8 @@ export default function WeatherPage() {
               <Select
                 value={selectedFarm?.id?.toString()}
                 onValueChange={(value) => {
-                  const farm = farms.find(f => f.id?.toString() === value);
-                  setSelectedFarm(farm || null);
+                  const farm = farms.find((f) => f.id?.toString() === value)
+                  setSelectedFarm(farm || null)
                 }}
               >
                 <SelectTrigger>
@@ -126,10 +132,7 @@ export default function WeatherPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Select
-                value={selectedGrowthStage}
-                onValueChange={setSelectedGrowthStage}
-              >
+              <Select value={selectedGrowthStage} onValueChange={setSelectedGrowthStage}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -138,9 +141,7 @@ export default function WeatherPage() {
                     <SelectItem key={stage.value} value={stage.value}>
                       <div>
                         <div className="font-medium">{stage.label}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {stage.description}
-                        </div>
+                        <div className="text-sm text-muted-foreground">{stage.description}</div>
                       </div>
                     </SelectItem>
                   ))}
@@ -158,10 +159,7 @@ export default function WeatherPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Select
-                value={selectedSoilType}
-                onValueChange={setSelectedSoilType}
-              >
+              <Select value={selectedSoilType} onValueChange={setSelectedSoilType}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -170,9 +168,7 @@ export default function WeatherPage() {
                     <SelectItem key={soil.value} value={soil.value}>
                       <div>
                         <div className="font-medium">{soil.label}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {soil.description}
-                        </div>
+                        <div className="text-sm text-muted-foreground">{soil.description}</div>
                       </div>
                     </SelectItem>
                   ))}
@@ -187,11 +183,10 @@ export default function WeatherPage() {
             <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Farms Added</h3>
             <p className="text-muted-foreground mb-4">
-              Add your first farm to get personalized weather intelligence and irrigation recommendations.
+              Add your first farm to get personalized weather intelligence and irrigation
+              recommendations.
             </p>
-            <Button onClick={() => window.location.href = "/farms"}>
-              Add Your First Farm
-            </Button>
+            <Button onClick={() => (window.location.href = '/farms')}>Add Your First Farm</Button>
           </CardContent>
         </Card>
       )}
@@ -202,7 +197,7 @@ export default function WeatherPage() {
           farmLocation={{
             latitude: selectedFarm.latitude || 19.0825, // Use farm coordinates or default to Nashik
             longitude: selectedFarm.longitude || 73.1963,
-            name: selectedFarm.locationName || selectedFarm.region
+            name: selectedFarm.locationName || selectedFarm.region,
           }}
           growthStage={selectedGrowthStage}
           soilType={selectedSoilType}
@@ -217,12 +212,12 @@ export default function WeatherPage() {
           </CardHeader>
           <CardContent className="text-sm space-y-2">
             <p>
-              <strong>Evapotranspiration (ETc)</strong> represents the total water lost from your vineyard 
-              through evaporation from soil and transpiration from grape vines.
+              <strong>Evapotranspiration (ETc)</strong> represents the total water lost from your
+              vineyard through evaporation from soil and transpiration from grape vines.
             </p>
             <p>
-              Our calculations use the Penman-Monteith equation combined with crop-specific coefficients 
-              for different growth stages to provide accurate irrigation requirements.
+              Our calculations use the Penman-Monteith equation combined with crop-specific
+              coefficients for different growth stages to provide accurate irrigation requirements.
             </p>
             <div className="mt-4">
               <h4 className="font-medium mb-2">Growth Stage Coefficients:</h4>
@@ -245,14 +240,23 @@ export default function WeatherPage() {
               Our intelligent irrigation system considers multiple factors to optimize water usage:
             </p>
             <div className="space-y-1">
-              <div>• <strong>Weather forecasts</strong> - Adjusts for upcoming rainfall</div>
-              <div>• <strong>Soil moisture</strong> - Considers soil type and water holding capacity</div>
-              <div>• <strong>Growth stage</strong> - Matches water needs to vine development</div>
-              <div>• <strong>Environmental conditions</strong> - Factors in temperature, humidity, and wind</div>
+              <div>
+                • <strong>Weather forecasts</strong> - Adjusts for upcoming rainfall
+              </div>
+              <div>
+                • <strong>Soil moisture</strong> - Considers soil type and water holding capacity
+              </div>
+              <div>
+                • <strong>Growth stage</strong> - Matches water needs to vine development
+              </div>
+              <div>
+                • <strong>Environmental conditions</strong> - Factors in temperature, humidity, and
+                wind
+              </div>
             </div>
             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
               <p className="text-xs text-blue-800">
-                <strong>Pro Tip:</strong> Schedule irrigations during early morning hours (4-8 AM) 
+                <strong>Pro Tip:</strong> Schedule irrigations during early morning hours (4-8 AM)
                 for maximum efficiency and reduced evaporation losses.
               </p>
             </div>
@@ -260,5 +264,5 @@ export default function WeatherPage() {
         </Card>
       </div>
     </div>
-  );
+  )
 }

@@ -1,90 +1,100 @@
-import { supabase } from './supabase';
-import { PestPredictionService } from './pest-prediction-service';
-import { SmartTaskGenerator } from './smart-task-generator';
-import { WeatherService } from './weather-service';
+import { supabase } from './supabase'
+import { PestPredictionService } from './pest-prediction-service'
+import { SmartTaskGenerator } from './smart-task-generator'
+import { WeatherService } from './weather-service'
 
 export interface AIInsight {
-  id: string;
-  type: 'pest_prediction' | 'task_recommendation' | 'profitability_insight' | 'weather_alert' | 'general_advice';
-  priority: 'critical' | 'high' | 'medium' | 'low';
-  title: string;
-  subtitle: string;
-  description?: string;
-  icon: string;
-  actionLabel: string;
-  actionType: 'navigate' | 'execute';
-  actionData?: any;
-  confidence: number;
-  timeRelevant: boolean;
-  expiresAt?: Date;
-  tags?: string[];
-  data?: any;
+  id: string
+  type:
+    | 'pest_prediction'
+    | 'task_recommendation'
+    | 'profitability_insight'
+    | 'weather_alert'
+    | 'general_advice'
+  priority: 'critical' | 'high' | 'medium' | 'low'
+  title: string
+  subtitle: string
+  description?: string
+  icon: string
+  actionLabel: string
+  actionType: 'navigate' | 'execute'
+  actionData?: any
+  confidence: number
+  timeRelevant: boolean
+  expiresAt?: Date
+  tags?: string[]
+  data?: any
 }
 
 export class AIInsightsService {
   // Simple in-memory cache for insights (5 minute TTL)
-  private static cache = new Map<string, { data: AIInsight[]; timestamp: number }>();
-  private static CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  private static cache = new Map<string, { data: AIInsight[]; timestamp: number }>()
+  private static CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
   /**
    * Get cached insights if available and not expired
    */
   private static getCachedInsights(farmId: number, userId: string): AIInsight[] | null {
-    const cacheKey = `${farmId}_${userId}`;
-    const cached = this.cache.get(cacheKey);
-    
-    if (cached && (Date.now() - cached.timestamp) < this.CACHE_TTL) {
-      return cached.data;
+    const cacheKey = `${farmId}_${userId}`
+    const cached = this.cache.get(cacheKey)
+
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      return cached.data
     }
-    
-    return null;
+
+    return null
   }
 
   /**
    * Cache insights for future requests
    */
   private static setCachedInsights(farmId: number, userId: string, insights: AIInsight[]): void {
-    const cacheKey = `${farmId}_${userId}`;
+    const cacheKey = `${farmId}_${userId}`
     this.cache.set(cacheKey, {
       data: insights,
-      timestamp: Date.now()
-    });
+      timestamp: Date.now(),
+    })
   }
 
   /**
    * Get all AI insights for a farm, sorted by priority and relevance
    */
-  static async getInsightsForFarm(farmId: number, userId: string, limit = 10): Promise<AIInsight[]> {
+  static async getInsightsForFarm(
+    farmId: number,
+    userId: string,
+    limit = 10,
+  ): Promise<AIInsight[]> {
     try {
       // Check cache first
-      const cachedInsights = this.getCachedInsights(farmId, userId);
+      const cachedInsights = this.getCachedInsights(farmId, userId)
       if (cachedInsights) {
-        return cachedInsights.slice(0, limit);
+        return cachedInsights.slice(0, limit)
       }
 
-      const insights: AIInsight[] = [];
+      const insights: AIInsight[] = []
 
       // Get farm data for context
-      const { data: farm } = await supabase
-        .from('farms')
-        .select('*')
-        .eq('id', farmId)
-        .single();
+      const { data: farm } = await supabase.from('farms').select('*').eq('id', farmId).single()
 
-      if (!farm) return [];
+      if (!farm) return []
 
       // 1. Pest & Disease Alerts
-      const pestPredictions = await PestPredictionService.getActivePredictions(farmId);
-      const criticalPests = pestPredictions.filter(p => p.riskLevel === 'critical' || p.riskLevel === 'high');
-      
-      criticalPests.forEach(pest => {
-        const daysUntil = Math.ceil((pest.predictedOnsetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+      const pestPredictions = await PestPredictionService.getActivePredictions(farmId)
+      const criticalPests = pestPredictions.filter(
+        (p) => p.riskLevel === 'critical' || p.riskLevel === 'high',
+      )
+
+      criticalPests.forEach((pest) => {
+        const daysUntil = Math.ceil(
+          (pest.predictedOnsetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
+        )
         insights.push({
           id: `pest_${pest.id}`,
           type: 'pest_prediction',
           priority: pest.riskLevel === 'critical' ? 'critical' : 'high',
-          title: `${pest.pestDiseaseType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} Risk`,
-          subtitle: daysUntil > 0 ? `Prevention window: ${daysUntil} days` : 'Immediate action needed',
+          title: `${pest.pestDiseaseType.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())} Risk`,
+          subtitle:
+            daysUntil > 0 ? `Prevention window: ${daysUntil} days` : 'Immediate action needed',
           icon: 'AlertTriangle',
           actionLabel: pest.riskLevel === 'critical' ? 'Apply Treatment' : 'View Prevention',
           actionType: 'navigate',
@@ -93,19 +103,20 @@ export class AIInsightsService {
           timeRelevant: daysUntil <= 7,
           expiresAt: pest.predictedOnsetDate,
           tags: ['pest', 'disease', 'prevention'],
-          data: pest
-        });
-      });
+          data: pest,
+        })
+      })
 
       // 2. Smart Task Recommendations
-      const taskRecommendations = await SmartTaskGenerator.getActiveRecommendations(farmId);
-      const highPriorityTasks = taskRecommendations.filter(t => t.priorityScore >= 0.7);
-      
-      highPriorityTasks.slice(0, 3).forEach(task => {
+      const taskRecommendations = await SmartTaskGenerator.getActiveRecommendations(farmId)
+      const highPriorityTasks = taskRecommendations.filter((t) => t.priorityScore >= 0.7)
+
+      highPriorityTasks.slice(0, 3).forEach((task) => {
         insights.push({
           id: `task_${task.id}`,
           type: 'task_recommendation',
-          priority: task.priorityScore >= 0.9 ? 'critical' : task.priorityScore >= 0.8 ? 'high' : 'medium',
+          priority:
+            task.priorityScore >= 0.9 ? 'critical' : task.priorityScore >= 0.8 ? 'high' : 'medium',
           title: this.getTaskTitle(task.taskType),
           subtitle: task.reasoning.substring(0, 60) + '...',
           icon: this.getTaskIcon(task.taskType),
@@ -116,15 +127,15 @@ export class AIInsightsService {
           timeRelevant: true,
           expiresAt: task.expiresAt ? new Date(task.expiresAt) : undefined,
           tags: ['task', 'recommendation', task.taskType],
-          data: task
-        });
-      });
+          data: task,
+        })
+      })
 
       // 3. AI-Powered Weather-Based Insights
       try {
-        const weatherData = await WeatherService.getCurrentWeather(farmId);
-        const activities = await this.getRecentActivities(farmId);
-        
+        const weatherData = await WeatherService.getCurrentWeather(farmId)
+        const activities = await this.getRecentActivities(farmId)
+
         // Call weather insights API
         const response = await fetch('/api/ai/weather-insights', {
           method: 'POST',
@@ -132,13 +143,13 @@ export class AIInsightsService {
           body: JSON.stringify({
             weatherData,
             farmData: farm,
-            history: activities
-          })
-        });
-        
-        const { success, data: aiWeatherInsights } = await response.json();
-        if (!success || !aiWeatherInsights) throw new Error('API call failed');
-        
+            history: activities,
+          }),
+        })
+
+        const { success, data: aiWeatherInsights } = await response.json()
+        if (!success || !aiWeatherInsights) throw new Error('API call failed')
+
         // Convert AI insights to our format
         aiWeatherInsights.forEach((aiInsight: any, index: number) => {
           insights.push({
@@ -153,56 +164,55 @@ export class AIInsightsService {
             actionData: { route: `/farms/${farmId}/weather` },
             confidence: aiInsight.confidence,
             timeRelevant: aiInsight.timeRelevant,
-            tags: ['weather', 'ai', 'advisory']
-          });
-        });
+            tags: ['weather', 'ai', 'advisory'],
+          })
+        })
       } catch (error) {
-        console.warn('AI weather insights unavailable, falling back:', error);
+        console.warn('AI weather insights unavailable, falling back:', error)
         // Fallback to basic weather insights
         try {
-          const weatherData = await WeatherService.getCurrentWeather(farmId);
-          const basicWeatherInsights = this.generateWeatherInsights(weatherData, farm);
-          insights.push(...basicWeatherInsights);
+          const weatherData = await WeatherService.getCurrentWeather(farmId)
+          const basicWeatherInsights = this.generateWeatherInsights(weatherData, farm)
+          insights.push(...basicWeatherInsights)
         } catch (fallbackError) {
-          console.warn('Weather insights completely unavailable:', fallbackError);
+          console.warn('Weather insights completely unavailable:', fallbackError)
         }
       }
 
       // 4. Financial Insights (Mock for now - can be enhanced with real data)
-      const financialInsights = await this.getFinancialInsights(farmId);
-      insights.push(...financialInsights);
+      const financialInsights = await this.getFinancialInsights(farmId)
+      insights.push(...financialInsights)
 
       // 5. Growth Stage Optimization
-      const growthInsights = await this.getGrowthOptimizationInsights(farmId, farm);
-      insights.push(...growthInsights);
+      const growthInsights = await this.getGrowthOptimizationInsights(farmId, farm)
+      insights.push(...growthInsights)
 
       // Sort by priority and time relevance
-      const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-      
+      const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
+
       const sortedInsights = insights
         .sort((a, b) => {
           // First by priority
-          const aPriority = priorityOrder[a.priority];
-          const bPriority = priorityOrder[b.priority];
-          if (aPriority !== bPriority) return aPriority - bPriority;
-          
+          const aPriority = priorityOrder[a.priority]
+          const bPriority = priorityOrder[b.priority]
+          if (aPriority !== bPriority) return aPriority - bPriority
+
           // Then by time relevance
-          if (a.timeRelevant && !b.timeRelevant) return -1;
-          if (!a.timeRelevant && b.timeRelevant) return 1;
-          
+          if (a.timeRelevant && !b.timeRelevant) return -1
+          if (!a.timeRelevant && b.timeRelevant) return 1
+
           // Finally by confidence
-          return b.confidence - a.confidence;
+          return b.confidence - a.confidence
         })
-        .slice(0, limit);
+        .slice(0, limit)
 
       // Cache the results
-      this.setCachedInsights(farmId, userId, sortedInsights);
-      
-      return sortedInsights;
+      this.setCachedInsights(farmId, userId, sortedInsights)
 
+      return sortedInsights
     } catch (error) {
-      console.error('Error getting AI insights:', error);
-      return [];
+      console.error('Error getting AI insights:', error)
+      return []
     }
   }
 
@@ -210,7 +220,7 @@ export class AIInsightsService {
    * Generate weather-based insights
    */
   private static generateWeatherInsights(weatherData: any, farm: any): AIInsight[] {
-    const insights: AIInsight[] = [];
+    const insights: AIInsight[] = []
 
     if (weatherData.humidity > 80 && weatherData.temperature > 20) {
       insights.push({
@@ -225,8 +235,8 @@ export class AIInsightsService {
         actionData: { route: `/farms/${farm.id}/pest-alerts` },
         confidence: 0.85,
         timeRelevant: true,
-        tags: ['weather', 'disease', 'prevention']
-      });
+        tags: ['weather', 'disease', 'prevention'],
+      })
     }
 
     if (weatherData.wind_speed > 15) {
@@ -242,11 +252,11 @@ export class AIInsightsService {
         actionData: { route: `/farms/${farm.id}/weather` },
         confidence: 0.9,
         timeRelevant: true,
-        tags: ['weather', 'spray', 'safety']
-      });
+        tags: ['weather', 'spray', 'safety'],
+      })
     }
 
-    return insights;
+    return insights
   }
 
   /**
@@ -255,23 +265,23 @@ export class AIInsightsService {
   private static async getFinancialInsights(farmId: number): Promise<AIInsight[]> {
     try {
       // Get recent expense data
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
       const { data: recentExpenses } = await supabase
         .from('expense_records')
         .select('*')
         .eq('farm_id', farmId)
-        .gte('date', thirtyDaysAgo.toISOString().split('T')[0]);
+        .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
 
-      if (!recentExpenses || recentExpenses.length === 0) return [];
+      if (!recentExpenses || recentExpenses.length === 0) return []
 
       // Get historical data for AI analysis
-      const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
+      const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000)
       const { data: historicalExpenses } = await supabase
         .from('expense_records')
         .select('*')
         .eq('farm_id', farmId)
         .gte('date', sixMonthsAgo.toISOString().split('T')[0])
-        .lt('date', thirtyDaysAgo.toISOString().split('T')[0]);
+        .lt('date', thirtyDaysAgo.toISOString().split('T')[0])
 
       // Use AI to analyze financial patterns
       const response = await fetch('/api/ai/financial-analysis', {
@@ -279,39 +289,43 @@ export class AIInsightsService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           expenses: recentExpenses,
-          historicalData: historicalExpenses || []
-        })
-      });
-      
-      const { success, data: aiAnalysis } = await response.json();
-      if (!success || !aiAnalysis) throw new Error('Financial analysis API failed');
+          historicalData: historicalExpenses || [],
+        }),
+      })
 
-      const insights: AIInsight[] = [];
-      const totalSpent = recentExpenses.reduce((sum, exp) => sum + exp.cost, 0);
+      const { success, data: aiAnalysis } = await response.json()
+      if (!success || !aiAnalysis) throw new Error('Financial analysis API failed')
+
+      const insights: AIInsight[] = []
+      const totalSpent = recentExpenses.reduce((sum, exp) => sum + exp.cost, 0)
 
       // Create insights based on AI analysis
       if (aiAnalysis.confidence > 0.7) {
-        const priority = Math.abs(aiAnalysis.varianceFromAverage) > 25 ? 'high' : 'medium';
-        
+        const priority = Math.abs(aiAnalysis.varianceFromAverage) > 25 ? 'high' : 'medium'
+
         insights.push({
           id: 'ai_financial_analysis',
           type: 'profitability_insight',
           priority,
           title: this.getFinancialInsightTitle(aiAnalysis.trend, aiAnalysis.varianceFromAverage),
           subtitle: aiAnalysis.recommendation.substring(0, 60) + '...',
-          icon: aiAnalysis.trend === 'increasing' ? 'TrendingUp' : 
-                aiAnalysis.trend === 'decreasing' ? 'TrendingDown' : 'DollarSign',
+          icon:
+            aiAnalysis.trend === 'increasing'
+              ? 'TrendingUp'
+              : aiAnalysis.trend === 'decreasing'
+                ? 'TrendingDown'
+                : 'DollarSign',
           actionLabel: 'View Analysis',
           actionType: 'navigate',
-          actionData: { 
+          actionData: {
             route: `/farms/${farmId}/reports`,
-            analysis: aiAnalysis
+            analysis: aiAnalysis,
           },
           confidence: aiAnalysis.confidence,
           timeRelevant: true,
           tags: ['finance', 'ai', aiAnalysis.trend, 'analysis'],
-          data: aiAnalysis
-        });
+          data: aiAnalysis,
+        })
       }
 
       // Add risk factors as separate insights if significant
@@ -329,30 +343,30 @@ export class AIInsightsService {
             actionData: { route: `/farms/${farmId}/reports` },
             confidence: aiAnalysis.confidence,
             timeRelevant: true,
-            tags: ['finance', 'risk', 'ai']
-          });
-        });
+            tags: ['finance', 'risk', 'ai'],
+          })
+        })
       }
 
-      return insights;
+      return insights
     } catch (error) {
-      console.warn('AI financial analysis failed, using fallback:', error);
-      
+      console.warn('AI financial analysis failed, using fallback:', error)
+
       // Fallback to basic analysis
       try {
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
         const { data: expenses } = await supabase
           .from('expense_records')
           .select('*')
           .eq('farm_id', farmId)
-          .gte('date', thirtyDaysAgo.toISOString().split('T')[0]);
+          .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
 
-        if (!expenses || expenses.length === 0) return [];
+        if (!expenses || expenses.length === 0) return []
 
-        const totalSpent = expenses.reduce((sum, exp) => sum + exp.cost, 0);
-        const avgMonthlySpend = 15000; // Basic fallback baseline
+        const totalSpent = expenses.reduce((sum, exp) => sum + exp.cost, 0)
+        const avgMonthlySpend = 15000 // Basic fallback baseline
 
-        const insights: AIInsight[] = [];
+        const insights: AIInsight[] = []
 
         if (totalSpent > avgMonthlySpend * 1.2) {
           insights.push({
@@ -367,14 +381,14 @@ export class AIInsightsService {
             actionData: { route: `/farms/${farmId}/reports` },
             confidence: 0.6,
             timeRelevant: true,
-            tags: ['finance', 'expense', 'fallback']
-          });
+            tags: ['finance', 'expense', 'fallback'],
+          })
         }
 
-        return insights;
+        return insights
       } catch (fallbackError) {
-        console.error('Financial insights completely failed:', fallbackError);
-        return [];
+        console.error('Financial insights completely failed:', fallbackError)
+        return []
       }
     }
   }
@@ -383,30 +397,39 @@ export class AIInsightsService {
    * Generate financial insight title based on AI analysis
    */
   private static getFinancialInsightTitle(trend: string, variance: number): string {
-    const absVariance = Math.abs(variance);
-    
+    const absVariance = Math.abs(variance)
+
     if (trend === 'increasing') {
-      return absVariance > 30 ? 'High Spending Increase Detected' : 
-             absVariance > 15 ? 'Moderate Spending Increase' : 'Spending Trending Up';
+      return absVariance > 30
+        ? 'High Spending Increase Detected'
+        : absVariance > 15
+          ? 'Moderate Spending Increase'
+          : 'Spending Trending Up'
     } else if (trend === 'decreasing') {
-      return absVariance > 30 ? 'Significant Cost Reduction' : 
-             absVariance > 15 ? 'Spending Optimization Detected' : 'Costs Trending Down';
+      return absVariance > 30
+        ? 'Significant Cost Reduction'
+        : absVariance > 15
+          ? 'Spending Optimization Detected'
+          : 'Costs Trending Down'
     } else {
-      return 'Stable Spending Pattern';
+      return 'Stable Spending Pattern'
     }
   }
 
   /**
    * Get AI-powered growth stage optimization insights
    */
-  private static async getGrowthOptimizationInsights(farmId: number, farm: any): Promise<AIInsight[]> {
-    const insights: AIInsight[] = [];
+  private static async getGrowthOptimizationInsights(
+    farmId: number,
+    farm: any,
+  ): Promise<AIInsight[]> {
+    const insights: AIInsight[] = []
 
     try {
       // Get recent activities for context
-      const activities = await this.getRecentActivities(farmId);
-      const weatherData = await WeatherService.getCurrentWeather(farm.region);
-      
+      const activities = await this.getRecentActivities(farmId)
+      const weatherData = await WeatherService.getCurrentWeather(farm.region)
+
       // AI-powered growth stage analysis
       const response = await fetch('/api/ai/growth-analysis', {
         method: 'POST',
@@ -414,12 +437,12 @@ export class AIInsightsService {
         body: JSON.stringify({
           farmData: farm,
           activities,
-          weather: weatherData
-        })
-      });
-      
-      const { success, data: growthAnalysis } = await response.json();
-      if (!success || !growthAnalysis) throw new Error('Growth analysis API failed');
+          weather: weatherData,
+        }),
+      })
+
+      const { success, data: growthAnalysis } = await response.json()
+      if (!success || !growthAnalysis) throw new Error('Growth analysis API failed')
 
       if (growthAnalysis.confidence > 0.6) {
         insights.push({
@@ -431,22 +454,23 @@ export class AIInsightsService {
           icon: 'Sprout',
           actionLabel: 'View Recommendations',
           actionType: 'navigate',
-          actionData: { 
+          actionData: {
             route: `/farms/${farmId}/growth-guide`,
-            recommendations: growthAnalysis.recommendations
+            recommendations: growthAnalysis.recommendations,
           },
           confidence: growthAnalysis.confidence,
           timeRelevant: growthAnalysis.timeRelevant,
           tags: ['growth', 'ai', growthAnalysis.stage, 'optimization'],
-          data: growthAnalysis
-        });
+          data: growthAnalysis,
+        })
       }
     } catch (error) {
-      console.warn('AI growth stage analysis failed, using fallback:', error);
-      
+      console.warn('AI growth stage analysis failed, using fallback:', error)
+
       // Fallback to basic month-based analysis
-      const currentMonth = new Date().getMonth();
-      if (currentMonth >= 2 && currentMonth <= 4) { // March-May: Flowering/Fruit Set
+      const currentMonth = new Date().getMonth()
+      if (currentMonth >= 2 && currentMonth <= 4) {
+        // March-May: Flowering/Fruit Set
         insights.push({
           id: 'growth_flowering_fallback',
           type: 'general_advice',
@@ -459,12 +483,12 @@ export class AIInsightsService {
           actionData: { route: `/farms/${farmId}/growth-guide` },
           confidence: 0.6,
           timeRelevant: true,
-          tags: ['growth', 'flowering', 'fallback']
-        });
+          tags: ['growth', 'flowering', 'fallback'],
+        })
       }
     }
 
-    return insights;
+    return insights
   }
 
   /**
@@ -478,10 +502,12 @@ export class AIInsightsService {
       fruit_set: 'Fruit Set Period',
       veraison: 'Veraison Stage',
       harvest: 'Harvest Time',
-      dormancy: 'Dormancy Period'
-    };
-    
-    return titles[stage] || `${stage.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} Stage`;
+      dormancy: 'Dormancy Period',
+    }
+
+    return (
+      titles[stage] || `${stage.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())} Stage`
+    )
   }
 
   /**
@@ -489,63 +515,77 @@ export class AIInsightsService {
    */
   private static async getRecentActivities(farmId: number): Promise<any[]> {
     try {
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
-      
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0]
+
       // Get recent activities from different tables (matching actual database schema)
       const [irrigations, sprays, fertigations] = await Promise.all([
-        supabase.from('irrigation_records').select('*').eq('farm_id', farmId).gte('date', thirtyDaysAgoStr).limit(5),
-        supabase.from('spray_records').select('*').eq('farm_id', farmId).gte('date', thirtyDaysAgoStr).limit(5),
-        supabase.from('fertigation_records').select('*').eq('farm_id', farmId).gte('date', thirtyDaysAgoStr).limit(5)
-      ]);
+        supabase
+          .from('irrigation_records')
+          .select('*')
+          .eq('farm_id', farmId)
+          .gte('date', thirtyDaysAgoStr)
+          .limit(5),
+        supabase
+          .from('spray_records')
+          .select('*')
+          .eq('farm_id', farmId)
+          .gte('date', thirtyDaysAgoStr)
+          .limit(5),
+        supabase
+          .from('fertigation_records')
+          .select('*')
+          .eq('farm_id', farmId)
+          .gte('date', thirtyDaysAgoStr)
+          .limit(5),
+      ])
 
       // Combine activities with standardized format
-      const activities: any[] = [];
-      
+      const activities: any[] = []
+
       if (irrigations.data) {
-        irrigations.data.forEach(record => {
+        irrigations.data.forEach((record) => {
           activities.push({
             id: record.id,
             activity_type: 'irrigation',
             date: record.date,
             notes: record.notes || `${record.duration}h irrigation, ${record.area} area`,
-            created_at: record.created_at
-          });
-        });
+            created_at: record.created_at,
+          })
+        })
       }
-      
+
       if (sprays.data) {
-        sprays.data.forEach(record => {
+        sprays.data.forEach((record) => {
           activities.push({
             id: record.id,
             activity_type: 'spray',
             date: record.date,
             notes: record.notes || `${record.chemical} for ${record.pest_disease}`,
-            created_at: record.created_at
-          });
-        });
+            created_at: record.created_at,
+          })
+        })
       }
-      
+
       if (fertigations.data) {
-        fertigations.data.forEach(record => {
+        fertigations.data.forEach((record) => {
           activities.push({
             id: record.id,
             activity_type: 'fertigation',
             date: record.date,
             notes: record.notes || `${record.fertilizer} application`,
-            created_at: record.created_at
-          });
-        });
+            created_at: record.created_at,
+          })
+        })
       }
 
       // Sort by date and return recent activities
       return activities
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 10);
-        
+        .slice(0, 10)
     } catch (error) {
-      console.warn('Could not fetch recent activities:', error);
-      return [];
+      console.warn('Could not fetch recent activities:', error)
+      return []
     }
   }
 
@@ -554,85 +594,103 @@ export class AIInsightsService {
    */
   private static getTaskTitle(taskType: string): string {
     switch (taskType) {
-      case 'irrigation': return 'Irrigation Recommended';
-      case 'spray': return 'Protective Spray Due';
-      case 'fertigation': return 'Nutrition Application';
-      case 'pruning': return 'Pruning Required';
-      default: return 'Farm Task Pending';
+      case 'irrigation':
+        return 'Irrigation Recommended'
+      case 'spray':
+        return 'Protective Spray Due'
+      case 'fertigation':
+        return 'Nutrition Application'
+      case 'pruning':
+        return 'Pruning Required'
+      default:
+        return 'Farm Task Pending'
     }
   }
 
   private static getTaskIcon(taskType: string): string {
     switch (taskType) {
-      case 'irrigation': return 'Droplets';
-      case 'spray': return 'SprayCan';
-      case 'fertigation': return 'Zap';
-      case 'pruning': return 'Scissors';
-      default: return 'CheckCircle';
+      case 'irrigation':
+        return 'Droplets'
+      case 'spray':
+        return 'SprayCan'
+      case 'fertigation':
+        return 'Zap'
+      case 'pruning':
+        return 'Scissors'
+      default:
+        return 'CheckCircle'
     }
   }
 
   /**
    * Get insights by category for the detailed page
    */
-  static async getInsightsByCategory(farmId: number, userId: string | null): Promise<Record<string, AIInsight[]>> {
+  static async getInsightsByCategory(
+    farmId: number,
+    userId: string | null,
+  ): Promise<Record<string, AIInsight[]>> {
     // Check cache for category data
-    const cacheKey = `${farmId}_${userId}_categories`;
-    const cached = this.cache.get(cacheKey);
-    
-    if (cached && (Date.now() - cached.timestamp) < this.CACHE_TTL) {
-      return cached.data as any;
+    const cacheKey = `${farmId}_${userId}_categories`
+    const cached = this.cache.get(cacheKey)
+
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      return cached.data as any
     }
 
-    const allInsights = await this.getInsightsForFarm(farmId, userId || 'anonymous', 50);
-    
-    const categories = allInsights.reduce((acc, insight) => {
-      if (!acc[insight.type]) {
-        acc[insight.type] = [];
-      }
-      acc[insight.type].push(insight);
-      return acc;
-    }, {} as Record<string, AIInsight[]>);
+    const allInsights = await this.getInsightsForFarm(farmId, userId || 'anonymous', 50)
+
+    const categories = allInsights.reduce(
+      (acc, insight) => {
+        if (!acc[insight.type]) {
+          acc[insight.type] = []
+        }
+        acc[insight.type].push(insight)
+        return acc
+      },
+      {} as Record<string, AIInsight[]>,
+    )
 
     // Cache the category results
     this.cache.set(cacheKey, {
       data: categories,
-      timestamp: Date.now()
-    });
+      timestamp: Date.now(),
+    })
 
-    return categories;
+    return categories
   }
 
   /**
    * Execute an AI insight action
    */
-  static async executeInsightAction(insight: AIInsight): Promise<{ success: boolean; message: string }> {
+  static async executeInsightAction(
+    insight: AIInsight,
+  ): Promise<{ success: boolean; message: string }> {
     try {
       switch (insight.actionType) {
         case 'execute':
           // Handle task execution
           if (insight.type === 'task_recommendation' && insight.data) {
             // Mark task as executed or create a pending task
-            return { success: true, message: 'Task scheduled for execution' };
+            return { success: true, message: 'Task scheduled for execution' }
           }
-          break;
-        
+          break
+
         case 'navigate':
           // Navigation is handled by the UI component
-          return { success: true, message: 'Navigating to details' };
-        
+          return { success: true, message: 'Navigating to details' }
+
         case 'execute':
           // Execute action for detailed information
-          return { success: true, message: 'Executing action' };
-        
+          return { success: true, message: 'Executing action' }
+
         default:
-          return { success: false, message: 'Unknown action type' };
+          return { success: false, message: 'Unknown action type' }
       }
-      
-      return { success: true, message: 'Action completed' };
+
+      return { success: true, message: 'Action completed' }
     } catch (error) {
-      console.error('Error executing insight action:', error);
-      return { success: false, message: 'Action failed' };
+      console.error('Error executing insight action:', error)
+      return { success: false, message: 'Action failed' }
     }
   }
 }

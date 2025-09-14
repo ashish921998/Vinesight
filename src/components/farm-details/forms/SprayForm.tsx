@@ -1,67 +1,62 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { SprayCan, Upload, X } from "lucide-react";
+import { useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { SprayCan, Upload, X } from 'lucide-react'
 
 interface SprayFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: {
-    date: string;
-    product: string;
-    notes: string;
-    photos: File[];
-  }) => void;
-  isSubmitting: boolean;
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (data: { date: string; product: string; notes: string; photos: File[] }) => void
+  isSubmitting: boolean
 }
 
 export function SprayForm({ isOpen, onClose, onSubmit, isSubmitting }: SprayFormProps) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
-    product: "",
-    notes: "",
-    photos: [] as File[]
-  });
+    product: '',
+    notes: '',
+    photos: [] as File[],
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.product) return;
-    onSubmit(formData);
-  };
+    e.preventDefault()
+    if (!formData.product) return
+    onSubmit(formData)
+  }
 
   const handlePhotoAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setFormData(prev => ({
+    const files = Array.from(e.target.files || [])
+    setFormData((prev) => ({
       ...prev,
-      photos: [...prev.photos, ...files]
-    }));
-  };
+      photos: [...prev.photos, ...files],
+    }))
+  }
 
   const handlePhotoRemove = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
-    }));
-  };
+      photos: prev.photos.filter((_, i) => i !== index),
+    }))
+  }
 
   const resetForm = () => {
-    setFormData({ 
+    setFormData({
       date: new Date().toISOString().split('T')[0],
-      product: "", 
-      notes: "", 
-      photos: [] 
-    });
-  };
+      product: '',
+      notes: '',
+      photos: [],
+    })
+  }
 
   const handleClose = () => {
-    resetForm();
-    onClose();
-  };
+    resetForm()
+    onClose()
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -85,7 +80,7 @@ export function SprayForm({ isOpen, onClose, onSubmit, isSubmitting }: SprayForm
               id="date"
               type="date"
               value={formData.date}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
               max={new Date().toISOString().split('T')[0]}
               className="mt-1"
               required
@@ -99,7 +94,7 @@ export function SprayForm({ isOpen, onClose, onSubmit, isSubmitting }: SprayForm
             <Input
               id="product"
               value={formData.product}
-              onChange={(e) => setFormData(prev => ({ ...prev, product: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, product: e.target.value }))}
               placeholder="e.g., Mancozeb, Copper Sulfate"
               className="mt-1"
               required
@@ -113,7 +108,7 @@ export function SprayForm({ isOpen, onClose, onSubmit, isSubmitting }: SprayForm
             <Textarea
               id="notes"
               value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
               placeholder="Target pest/disease, weather conditions, dosage..."
               className="mt-1 resize-none"
               rows={3}
@@ -140,10 +135,11 @@ export function SprayForm({ isOpen, onClose, onSubmit, isSubmitting }: SprayForm
             {formData.photos.length > 0 && (
               <div className="mt-3 space-y-2">
                 {formData.photos.map((photo, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-700 truncate">
-                      {photo.name}
-                    </span>
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                  >
+                    <span className="text-sm text-gray-700 truncate">{photo.name}</span>
                     <button
                       type="button"
                       onClick={() => handlePhotoRemove(index)}
@@ -158,12 +154,7 @@ export function SprayForm({ isOpen, onClose, onSubmit, isSubmitting }: SprayForm
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              className="flex-1"
-            >
+            <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
               Cancel
             </Button>
             <Button
@@ -171,11 +162,11 @@ export function SprayForm({ isOpen, onClose, onSubmit, isSubmitting }: SprayForm
               disabled={!formData.product || isSubmitting}
               className="flex-1 bg-green-600 hover:bg-green-700"
             >
-              {isSubmitting ? "Saving..." : "Save Treatment"}
+              {isSubmitting ? 'Saving...' : 'Save Treatment'}
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

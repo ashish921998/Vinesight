@@ -1,46 +1,45 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { 
-  Sprout, 
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import {
+  Sprout,
   Calculator,
-  Settings, 
-  Activity, 
-  Users, 
+  Settings,
+  Activity,
+  Users,
   Home,
   Download,
   CloudSun,
   BarChart3,
   TrendingUp,
-  Brain
-} from "lucide-react";
-import { LoginButton } from "./auth/LoginButton";
-import { UserMenu } from "./auth/UserMenu";
-import { LanguageSwitcher } from "./ui/language-switcher";
-import { useTranslation } from "react-i18next";
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+  Brain,
+} from 'lucide-react'
+import { LoginButton } from './auth/LoginButton'
+import { UserMenu } from './auth/UserMenu'
+import { LanguageSwitcher } from './ui/language-switcher'
+import { useTranslation } from 'react-i18next'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 export const getNavigation = (t: any) => [
   { name: t('navigation.dashboard'), href: '/', icon: Home },
   { name: t('navigation.farmManagement'), href: '/farms', icon: Sprout },
   { name: t('navigation.calculators'), href: '/calculators', icon: Calculator },
   { name: t('navigation.aiAssistant'), href: '/ai-assistant', icon: Brain },
-  { name: t('navigation.export'), href: '/reports', icon: Download },
   { name: t('navigation.analytics'), href: '/analytics', icon: Activity },
   { name: t('navigation.weather'), href: '/weather', icon: CloudSun },
   { name: t('navigation.reminders'), href: '/reminders', icon: Users },
   { name: t('navigation.reports'), href: '/reports', icon: BarChart3 },
   { name: 'Farm Efficiency', href: '/performance', icon: TrendingUp },
   { name: t('navigation.settings'), href: '/settings', icon: Settings },
-];
+]
 
 export default function Navigation() {
-  const pathname = usePathname();
-  const { t } = useTranslation();
-  const { user, loading } = useSupabaseAuth();
-  
-  const navigation = getNavigation(t);
+  const pathname = usePathname()
+  const { t } = useTranslation()
+  const { user, loading } = useSupabaseAuth()
+
+  const navigation = getNavigation(t)
 
   return (
     <>
@@ -58,17 +57,18 @@ export default function Navigation() {
               <li>
                 <ul role="list" className="-mx-2 space-y-1">
                   {navigation.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = pathname === item.href;
+                    const Icon = item.icon
+                    const isActive = pathname === item.href
                     return (
                       <li key={item.name}>
                         <Link
                           href={item.href}
                           className={`
                             group flex gap-x-3 rounded-md p-3 text-sm leading-6 font-semibold
-                            ${isActive 
-                              ? 'bg-secondary text-primary' 
-                              : 'text-foreground hover:text-primary hover:bg-secondary'
+                            ${
+                              isActive
+                                ? 'bg-secondary text-primary'
+                                : 'text-foreground hover:text-primary hover:bg-secondary'
                             }
                           `}
                         >
@@ -79,7 +79,7 @@ export default function Navigation() {
                           {item.name}
                         </Link>
                       </li>
-                    );
+                    )
                   })}
                 </ul>
               </li>
@@ -101,7 +101,6 @@ export default function Navigation() {
           </div>
         </div>
       </div>
-
     </>
-  );
+  )
 }

@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import { useState } from 'react';
-import { User as UserIcon, LogOut, Settings } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react'
+import { User as UserIcon, LogOut, Settings } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,26 +10,26 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+} from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 export function UserMenu() {
-  const { user, signOut } = useSupabaseAuth();
-  const [loading, setLoading] = useState(false);
+  const { user, signOut } = useSupabaseAuth()
+  const [loading, setLoading] = useState(false)
 
   const handleSignOut = async () => {
     try {
-      setLoading(true);
-      await signOut();
+      setLoading(true)
+      await signOut()
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('Error signing out:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  if (!user) return null;
+  if (!user) return null
 
   return (
     <DropdownMenu>
@@ -51,13 +51,11 @@ export function UserMenu() {
             <p className="text-sm font-medium leading-none">
               {user.user_metadata?.full_name || 'User'}
             </p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
-            </p>
+            <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => window.location.href = '/settings'}>
+        <DropdownMenuItem onClick={() => (window.location.href = '/settings')}>
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>
@@ -67,5 +65,5 @@ export function UserMenu() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

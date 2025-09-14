@@ -1,14 +1,14 @@
-"use client";
+'use client'
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Bell, 
-  Plus, 
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import {
+  Bell,
+  Plus,
   Calendar,
   AlertCircle,
   CheckCircle2,
@@ -16,112 +16,112 @@ import {
   Filter,
   Settings,
   Sparkles,
-  Target
-} from "lucide-react";
-import { CloudDataService, TaskReminder } from "@/lib/cloud-data-service";
-import type { Farm } from "@/types/types";
-import { SupabaseService } from "@/lib/supabase-service";
-import { TaskTemplateSelector } from "@/components/reminders/TaskTemplateSelector";
-import { NotificationSettings } from "@/components/reminders/NotificationSettings";
-import { NotificationService } from "@/lib/notification-service";
-import { getCurrentSeasonTemplates } from "@/lib/task-templates";
+  Target,
+} from 'lucide-react'
+import { CloudDataService, TaskReminder } from '@/lib/cloud-data-service'
+import type { Farm } from '@/types/types'
+import { SupabaseService } from '@/lib/supabase-service'
+import { TaskTemplateSelector } from '@/components/reminders/TaskTemplateSelector'
+import { NotificationSettings } from '@/components/reminders/NotificationSettings'
+import { NotificationService } from '@/lib/notification-service'
+import { getCurrentSeasonTemplates } from '@/lib/task-templates'
 
 export default function RemindersPage() {
-  const [farms, setFarms] = useState<Farm[]>([]);
-  const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
-  const [tasks, setTasks] = useState<TaskReminder[]>([]);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
-  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
-  const [editingTask, setEditingTask] = useState<TaskReminder | null>(null);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'completed' | 'overdue'>('all');
-  const [showSeasonalSuggestions, setShowSeasonalSuggestions] = useState(true);
-  const [farmsLoading, setFarmsLoading] = useState(true);
-  
-  const notificationServiceRef = useRef<NotificationService | null>(null);
+  const [farms, setFarms] = useState<Farm[]>([])
+  const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null)
+  const [tasks, setTasks] = useState<TaskReminder[]>([])
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false)
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false)
+  const [editingTask, setEditingTask] = useState<TaskReminder | null>(null)
+  const [filter, setFilter] = useState<'all' | 'pending' | 'completed' | 'overdue'>('all')
+  const [showSeasonalSuggestions, setShowSeasonalSuggestions] = useState(true)
+  const [farmsLoading, setFarmsLoading] = useState(true)
+
+  const notificationServiceRef = useRef<NotificationService | null>(null)
 
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    dueDate: "",
-    type: "other" as const,
-    priority: "medium" as const
-  });
+    title: '',
+    description: '',
+    dueDate: '',
+    type: 'other' as const,
+    priority: 'medium' as const,
+  })
 
   const loadFarms = useCallback(async () => {
     try {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.log('Reminders: Loading farms from CloudDataService...');
+        console.log('Reminders: Loading farms from CloudDataService...')
       }
-      const farmList = await CloudDataService.getAllFarms();
+      const farmList = await CloudDataService.getAllFarms()
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.log('Reminders: Loaded farms:', farmList.length, farmList);
+        console.log('Reminders: Loaded farms:', farmList.length, farmList)
       }
-      setFarms(farmList);
+      setFarms(farmList)
       if (farmList.length > 0 && !selectedFarm) {
-        setSelectedFarm(farmList[0]);
+        setSelectedFarm(farmList[0])
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error("Error loading farms:", error);
+        console.error('Error loading farms:', error)
       }
     } finally {
-      setFarmsLoading(false);
+      setFarmsLoading(false)
     }
-  }, [selectedFarm]);
+  }, [selectedFarm])
 
   const loadTasks = useCallback(async () => {
-    if (!selectedFarm) return;
-    
+    if (!selectedFarm) return
+
     try {
-      const taskList = await SupabaseService.getTaskReminders(selectedFarm.id!);
-      setTasks(taskList);
+      const taskList = await SupabaseService.getTaskReminders(selectedFarm.id!)
+      setTasks(taskList)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error("Error loading tasks:", error);
+        console.error('Error loading tasks:', error)
       }
     }
-  }, [selectedFarm]);
+  }, [selectedFarm])
 
   useEffect(() => {
-    loadFarms();
+    loadFarms()
     // Initialize notification service
     if (typeof window !== 'undefined') {
-      notificationServiceRef.current = NotificationService.getInstance();
+      notificationServiceRef.current = NotificationService.getInstance()
     }
-  }, [loadFarms]);
+  }, [loadFarms])
 
   useEffect(() => {
     if (selectedFarm) {
-      loadTasks();
+      loadTasks()
     }
-  }, [selectedFarm, loadTasks]);
+  }, [selectedFarm, loadTasks])
 
   useEffect(() => {
     // Set up notifications when tasks change
     if (notificationServiceRef.current && tasks.length > 0) {
-      notificationServiceRef.current.scheduleTaskNotifications(tasks);
-      const pendingCount = tasks.filter(t => !t.completed).length;
-      notificationServiceRef.current.scheduleDailyReminder(pendingCount);
+      notificationServiceRef.current.scheduleTaskNotifications(tasks)
+      const pendingCount = tasks.filter((t) => !t.completed).length
+      notificationServiceRef.current.scheduleDailyReminder(pendingCount)
     }
-  }, [tasks]);
+  }, [tasks])
 
   // Functions moved to useCallback above
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedFarm) return;
+    e.preventDefault()
+    if (!selectedFarm) return
 
     try {
       if (editingTask) {
         // For editing, we'd need an update method in CloudDataService
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
-          console.log("Editing not implemented yet");
+          console.log('Editing not implemented yet')
         }
       } else {
         await SupabaseService.addTaskReminder({
@@ -132,38 +132,38 @@ export default function RemindersPage() {
           type: formData.type,
           priority: formData.priority,
           completed: false,
-          completedAt: null
-        });
+          completedAt: null,
+        })
       }
-      
-      resetForm();
-      await loadTasks();
+
+      resetForm()
+      await loadTasks()
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error("Error saving task:", error);
+        console.error('Error saving task:', error)
       }
     }
-  };
+  }
 
   const handleComplete = async (taskId: number) => {
     try {
-      await SupabaseService.completeTask(taskId);
-      const completedTask = tasks.find(t => t.id === taskId);
+      await SupabaseService.completeTask(taskId)
+      const completedTask = tasks.find((t) => t.id === taskId)
       if (completedTask && notificationServiceRef.current) {
-        notificationServiceRef.current.sendTaskCompletionCelebration(completedTask);
+        notificationServiceRef.current.sendTaskCompletionCelebration(completedTask)
       }
-      await loadTasks();
+      await loadTasks()
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error("Error completing task:", error);
+        console.error('Error completing task:', error)
       }
     }
-  };
+  }
 
   const handleTemplateSelect = async (templateData: any) => {
-    if (!selectedFarm) return;
+    if (!selectedFarm) return
 
     try {
       await SupabaseService.addTaskReminder({
@@ -174,93 +174,103 @@ export default function RemindersPage() {
         type: templateData.type,
         priority: templateData.priority,
         completed: false,
-        completedAt: null
-      });
-      
-      setShowTemplateSelector(false);
-      await loadTasks();
-      
+        completedAt: null,
+      })
+
+      setShowTemplateSelector(false)
+      await loadTasks()
+
       if (notificationServiceRef.current) {
         notificationServiceRef.current.sendNotification('✅ Task Created!', {
           body: `"${templateData.title}" has been added to your farm tasks.`,
-          tag: 'task-created'
-        });
+          tag: 'task-created',
+        })
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error("Error saving task from template:", error);
+        console.error('Error saving task from template:', error)
       }
     }
-  };
+  }
 
   const resetForm = () => {
     setFormData({
-      title: "",
-      description: "",
-      dueDate: "",
-      type: "other",
-      priority: "medium"
-    });
-    setShowAddForm(false);
-    setEditingTask(null);
-  };
+      title: '',
+      description: '',
+      dueDate: '',
+      type: 'other',
+      priority: 'medium',
+    })
+    setShowAddForm(false)
+    setEditingTask(null)
+  }
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
-    }));
-  };
+      [field]: value,
+    }))
+  }
 
   const getFilteredTasks = () => {
-    const now = new Date();
-    now.setHours(23, 59, 59, 999); // End of today
+    const now = new Date()
+    now.setHours(23, 59, 59, 999) // End of today
 
-    return tasks.filter(task => {
+    return tasks.filter((task) => {
       switch (filter) {
         case 'pending':
-          return !task.completed;
+          return !task.completed
         case 'completed':
-          return task.completed;
+          return task.completed
         case 'overdue':
-          return !task.completed && new Date(task.dueDate) < now;
+          return !task.completed && new Date(task.dueDate) < now
         default:
-          return true;
+          return true
       }
-    });
-  };
+    })
+  }
 
   const getPriorityColor = (priority: string | null) => {
-    if (!priority) return "border-gray-300 text-gray-500";
+    if (!priority) return 'border-gray-300 text-gray-500'
     switch (priority) {
-      case 'high': return 'text-red-600 bg-red-50 border-red-200';
-      case 'medium': return 'text-orange-600 bg-orange-50 border-gray-200';
-      case 'low': return 'text-green-600 bg-green-50 border-green-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+      case 'high':
+        return 'text-red-600 bg-red-50 border-red-200'
+      case 'medium':
+        return 'text-orange-600 bg-orange-50 border-gray-200'
+      case 'low':
+        return 'text-green-600 bg-green-50 border-green-200'
+      default:
+        return 'text-gray-600 bg-gray-50 border-gray-200'
     }
-  };
+  }
 
   const getTaskTypeIcon = (type: string) => {
     switch (type) {
-      case 'irrigation': return '💧';
-      case 'spray': return '🌿';
-      case 'fertigation': return '🧪';
-      case 'training': return '✂️';
-      case 'harvest': return '🍇';
-      default: return '📋';
+      case 'irrigation':
+        return '💧'
+      case 'spray':
+        return '🌿'
+      case 'fertigation':
+        return '🧪'
+      case 'training':
+        return '✂️'
+      case 'harvest':
+        return '🍇'
+      default:
+        return '📋'
     }
-  };
+  }
 
   const isOverdue = (dueDate: string) => {
-    const now = new Date();
-    now.setHours(23, 59, 59, 999);
-    return new Date(dueDate) < now;
-  };
+    const now = new Date()
+    now.setHours(23, 59, 59, 999)
+    return new Date(dueDate) < now
+  }
 
-  const filteredTasks = getFilteredTasks();
-  const pendingTasks = tasks.filter(t => !t.completed);
-  const overdueTasks = tasks.filter(t => !t.completed && isOverdue(t.dueDate));
+  const filteredTasks = getFilteredTasks()
+  const pendingTasks = tasks.filter((t) => !t.completed)
+  const overdueTasks = tasks.filter((t) => !t.completed && isOverdue(t.dueDate))
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -276,7 +286,7 @@ export default function RemindersPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
+          <Button
             variant="outline"
             onClick={() => setShowNotificationSettings(true)}
             className="flex items-center gap-2"
@@ -284,17 +294,11 @@ export default function RemindersPage() {
             <Settings className="h-4 w-4" />
             Notifications
           </Button>
-          <Button 
-            onClick={() => setShowTemplateSelector(true)}
-            className="flex items-center gap-2"
-          >
+          <Button onClick={() => setShowTemplateSelector(true)} className="flex items-center gap-2">
             <Sparkles className="h-4 w-4" />
             Smart Templates
           </Button>
-          <Button 
-            onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2"
-          >
+          <Button onClick={() => setShowAddForm(true)} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             Custom Task
           </Button>
@@ -310,48 +314,51 @@ export default function RemindersPage() {
                 <Target className="h-5 w-5" />
                 Seasonal Task Recommendations
               </CardTitle>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setShowSeasonalSuggestions(false)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setShowSeasonalSuggestions(false)}>
                 ✕
               </Button>
             </div>
-            <CardDescription>
-              Important farming tasks for the current season
-            </CardDescription>
+            <CardDescription>Important farming tasks for the current season</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {getCurrentSeasonTemplates().slice(0, 6).map((template) => (
-                <div 
-                  key={template.id} 
-                  className="flex items-center gap-3 p-3 bg-white rounded-lg border border-primary/10"
-                >
-                  <span className="text-2xl">
-                    {template.type === 'irrigation' ? '💧' : 
-                     template.type === 'spray' ? '🌿' : 
-                     template.type === 'training' ? '✂️' : 
-                     template.type === 'harvest' ? '🍇' : '📋'}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm truncate">{template.title}</h4>
-                    <p className="text-xs text-muted-foreground truncate">{template.description}</p>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => {
-                      setShowTemplateSelector(true);
-                      setShowSeasonalSuggestions(false);
-                    }}
-                    className="shrink-0"
+              {getCurrentSeasonTemplates()
+                .slice(0, 6)
+                .map((template) => (
+                  <div
+                    key={template.id}
+                    className="flex items-center gap-3 p-3 bg-white rounded-lg border border-primary/10"
                   >
-                    Add
-                  </Button>
-                </div>
-              ))}
+                    <span className="text-2xl">
+                      {template.type === 'irrigation'
+                        ? '💧'
+                        : template.type === 'spray'
+                          ? '🌿'
+                          : template.type === 'training'
+                            ? '✂️'
+                            : template.type === 'harvest'
+                              ? '🍇'
+                              : '📋'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-sm truncate">{template.title}</h4>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {template.description}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setShowTemplateSelector(true)
+                        setShowSeasonalSuggestions(false)
+                      }}
+                      className="shrink-0"
+                    >
+                      Add
+                    </Button>
+                  </div>
+                ))}
             </div>
           </CardContent>
         </Card>
@@ -367,9 +374,7 @@ export default function RemindersPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{pendingTasks.length}</div>
-              <p className="text-xs text-muted-foreground">
-                {overdueTasks.length} overdue
-              </p>
+              <p className="text-xs text-muted-foreground">{overdueTasks.length} overdue</p>
             </CardContent>
           </Card>
 
@@ -379,10 +384,8 @@ export default function RemindersPage() {
               <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{tasks.filter(t => t.completed).length}</div>
-              <p className="text-xs text-muted-foreground">
-                This month
-              </p>
+              <div className="text-2xl font-bold">{tasks.filter((t) => t.completed).length}</div>
+              <p className="text-xs text-muted-foreground">This month</p>
             </CardContent>
           </Card>
 
@@ -393,9 +396,7 @@ export default function RemindersPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">{overdueTasks.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Need attention
-              </p>
+              <p className="text-xs text-muted-foreground">Need attention</p>
             </CardContent>
           </Card>
         </div>
@@ -413,7 +414,7 @@ export default function RemindersPage() {
               {farms.map((farm) => (
                 <Button
                   key={farm.id}
-                  variant={selectedFarm?.id === farm.id ? "default" : "outline"}
+                  variant={selectedFarm?.id === farm.id ? 'default' : 'outline'}
                   onClick={() => setSelectedFarm(farm)}
                 >
                   {farm.name}
@@ -430,12 +431,8 @@ export default function RemindersPage() {
           {showAddForm && (
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle>
-                  {editingTask ? "Edit Task" : "Add New Task"}
-                </CardTitle>
-                <CardDescription>
-                  Create a reminder for {selectedFarm.name}
-                </CardDescription>
+                <CardTitle>{editingTask ? 'Edit Task' : 'Add New Task'}</CardTitle>
+                <CardDescription>Create a reminder for {selectedFarm.name}</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -445,7 +442,7 @@ export default function RemindersPage() {
                       <Input
                         id="title"
                         value={formData.title}
-                        onChange={(e) => handleInputChange("title", e.target.value)}
+                        onChange={(e) => handleInputChange('title', e.target.value)}
                         placeholder="e.g., Winter Pruning"
                         required
                       />
@@ -456,7 +453,7 @@ export default function RemindersPage() {
                         id="dueDate"
                         type="date"
                         value={formData.dueDate}
-                        onChange={(e) => handleInputChange("dueDate", e.target.value)}
+                        onChange={(e) => handleInputChange('dueDate', e.target.value)}
                         required
                       />
                     </div>
@@ -465,7 +462,7 @@ export default function RemindersPage() {
                       <select
                         id="type"
                         value={formData.type}
-                        onChange={(e) => handleInputChange("type", e.target.value)}
+                        onChange={(e) => handleInputChange('type', e.target.value)}
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <option value="irrigation">Irrigation</option>
@@ -481,7 +478,7 @@ export default function RemindersPage() {
                       <select
                         id="priority"
                         value={formData.priority}
-                        onChange={(e) => handleInputChange("priority", e.target.value)}
+                        onChange={(e) => handleInputChange('priority', e.target.value)}
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <option value="low">Low</option>
@@ -490,21 +487,19 @@ export default function RemindersPage() {
                       </select>
                     </div>
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="description">Description (optional)</Label>
                     <Input
                       id="description"
                       value={formData.description}
-                      onChange={(e) => handleInputChange("description", e.target.value)}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
                       placeholder="Additional details about this task"
                     />
                   </div>
-                  
+
                   <div className="flex gap-2">
-                    <Button type="submit">
-                      {editingTask ? "Update Task" : "Add Task"}
-                    </Button>
+                    <Button type="submit">{editingTask ? 'Update Task' : 'Add Task'}</Button>
                     <Button type="button" variant="outline" onClick={resetForm}>
                       Cancel
                     </Button>
@@ -524,33 +519,33 @@ export default function RemindersPage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                <Button 
-                  variant={filter === 'all' ? 'default' : 'outline'} 
+                <Button
+                  variant={filter === 'all' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilter('all')}
                 >
                   All ({tasks.length})
                 </Button>
-                <Button 
-                  variant={filter === 'pending' ? 'default' : 'outline'} 
+                <Button
+                  variant={filter === 'pending' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilter('pending')}
                 >
                   Pending ({pendingTasks.length})
                 </Button>
-                <Button 
-                  variant={filter === 'overdue' ? 'default' : 'outline'} 
+                <Button
+                  variant={filter === 'overdue' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilter('overdue')}
                 >
                   Overdue ({overdueTasks.length})
                 </Button>
-                <Button 
-                  variant={filter === 'completed' ? 'default' : 'outline'} 
+                <Button
+                  variant={filter === 'completed' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilter('completed')}
                 >
-                  Completed ({tasks.filter(t => t.completed).length})
+                  Completed ({tasks.filter((t) => t.completed).length})
                 </Button>
               </div>
             </CardContent>
@@ -563,21 +558,19 @@ export default function RemindersPage() {
                 <Calendar className="h-5 w-5" />
                 Tasks for {selectedFarm.name}
               </CardTitle>
-              <CardDescription>
-                {filteredTasks.length} tasks shown
-              </CardDescription>
+              <CardDescription>{filteredTasks.length} tasks shown</CardDescription>
             </CardHeader>
             <CardContent>
               {filteredTasks.length > 0 ? (
                 <div className="space-y-4">
                   {filteredTasks.map((task) => (
-                    <div 
-                      key={task.id} 
+                    <div
+                      key={task.id}
                       className={`border rounded-lg p-4 ${
-                        task.completed 
-                          ? 'bg-gray-50 opacity-75' 
-                          : isOverdue(task.dueDate) 
-                            ? 'bg-red-50 border-red-200' 
+                        task.completed
+                          ? 'bg-gray-50 opacity-75'
+                          : isOverdue(task.dueDate)
+                            ? 'bg-red-50 border-red-200'
                             : 'bg-white'
                       }`}
                     >
@@ -585,34 +578,34 @@ export default function RemindersPage() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-lg">{getTaskTypeIcon(task.type)}</span>
-                            <h3 className={`font-semibold ${task.completed ? 'line-through text-gray-500' : ''}`}>
+                            <h3
+                              className={`font-semibold ${task.completed ? 'line-through text-gray-500' : ''}`}
+                            >
                               {task.title}
                             </h3>
-                            <Badge 
-                              variant="outline" 
-                              className={getPriorityColor(task.priority)}
-                            >
+                            <Badge variant="outline" className={getPriorityColor(task.priority)}>
                               {task.priority} priority
                             </Badge>
                             {isOverdue(task.dueDate) && !task.completed && (
-                              <Badge variant="outline" className="text-red-600 bg-red-50 border-red-200">
+                              <Badge
+                                variant="outline"
+                                className="text-red-600 bg-red-50 border-red-200"
+                              >
                                 Overdue
                               </Badge>
                             )}
                           </div>
-                          
+
                           {task.description && (
-                            <p className="text-sm text-muted-foreground mb-2">
-                              {task.description}
-                            </p>
+                            <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
                           )}
-                          
+
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
                             <Badge variant="outline">{task.type}</Badge>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                           {!task.completed && (
                             <Button
@@ -636,9 +629,7 @@ export default function RemindersPage() {
               ) : (
                 <div className="text-center py-8">
                   <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">
-                    No tasks found
-                  </h3>
+                  <h3 className="text-lg font-semibold mb-2">No tasks found</h3>
                   <p className="text-muted-foreground mb-4">
                     Add your first farming task to get organized
                   </p>
@@ -670,9 +661,7 @@ export default function RemindersPage() {
             <p className="text-muted-foreground mb-4">
               Add a farm first to start managing tasks and reminders
             </p>
-            <Button onClick={() => window.location.href = "/farms"}>
-              Add Your First Farm
-            </Button>
+            <Button onClick={() => (window.location.href = '/farms')}>Add Your First Farm</Button>
           </CardContent>
         </Card>
       ) : null}
@@ -693,11 +682,9 @@ export default function RemindersPage() {
       {/* Notification Settings Modal */}
       {showNotificationSettings && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <NotificationSettings
-            onClose={() => setShowNotificationSettings(false)}
-          />
+          <NotificationSettings onClose={() => setShowNotificationSettings(false)} />
         </div>
       )}
     </div>
-  );
+  )
 }

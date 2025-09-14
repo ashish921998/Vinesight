@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
   ArrowLeft,
   Shield,
   Lock,
@@ -12,18 +12,18 @@ import {
   Mail,
   FileText,
   AlertTriangle,
-  CheckCircle
-} from "lucide-react";
-import { SEOSchema } from "@/components/SEOSchema";
-import Link from 'next/link';
+  CheckCircle,
+} from 'lucide-react'
+import { SEOSchema } from '@/components/SEOSchema'
+import Link from 'next/link'
 
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      <SEOSchema 
+      <SEOSchema
         title="Privacy Policy - VineSight Grape Farming Assistant"
         description="Learn how VineSight protects your privacy and handles your farming data. Comprehensive privacy policy for Indian grape farmers."
-        type="website"
+        type="guide"
         image="https://farmai.vercel.app/og-image.png"
       />
 
@@ -38,7 +38,7 @@ export default function PrivacyPolicyPage() {
               </Button>
             </Link>
           </div>
-          
+
           <div className="text-center max-w-3xl mx-auto">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center">
@@ -46,12 +46,8 @@ export default function PrivacyPolicyPage() {
               </div>
               <h1 className="text-4xl font-bold text-gray-900">Privacy Policy</h1>
             </div>
-            <p className="text-xl text-gray-600 mb-4">
-              How we protect and handle your data
-            </p>
-            <p className="text-sm text-gray-500">
-              Last updated: January 15, 2024
-            </p>
+            <p className="text-xl text-gray-600 mb-4">How we protect and handle your data</p>
+            <p className="text-sm text-gray-500">Last updated: January 15, 2024</p>
           </div>
         </div>
       </div>
@@ -64,10 +60,13 @@ export default function PrivacyPolicyPage() {
               <div className="flex items-start gap-4">
                 <CheckCircle className="h-8 w-8 text-green-600 mt-1" />
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-3">Our Privacy Commitment</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                    Our Privacy Commitment
+                  </h2>
                   <p className="text-gray-700 mb-4">
-                    At VineSight, we understand that your farming data is valuable and sensitive. We are committed to 
-                    protecting your privacy and being transparent about how we collect, use, and protect your information.
+                    At VineSight, we understand that your farming data is valuable and sensitive. We
+                    are committed to protecting your privacy and being transparent about how we
+                    collect, use, and protect your information.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-center gap-2">
@@ -179,7 +178,9 @@ export default function PrivacyPolicyPage() {
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                      <span className="text-sm">Generate accurate irrigation and spray schedules</span>
+                      <span className="text-sm">
+                        Generate accurate irrigation and spray schedules
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
@@ -192,7 +193,9 @@ export default function PrivacyPolicyPage() {
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Improvement & Support</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    Improvement & Support
+                  </h3>
                   <ul className="space-y-2 text-gray-700">
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
@@ -228,7 +231,7 @@ export default function PrivacyPolicyPage() {
               <p className="text-gray-700">
                 We implement industry-standard security measures to protect your data:
               </p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
@@ -237,7 +240,9 @@ export default function PrivacyPolicyPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-900">Encryption</h4>
-                      <p className="text-sm text-gray-600">All data transmitted and stored is encrypted using AES-256</p>
+                      <p className="text-sm text-gray-600">
+                        All data transmitted and stored is encrypted using AES-256
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -246,7 +251,9 @@ export default function PrivacyPolicyPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-900">Secure Infrastructure</h4>
-                      <p className="text-sm text-gray-600">Data hosted on secure cloud servers with regular backups</p>
+                      <p className="text-sm text-gray-600">
+                        Data hosted on secure cloud servers with regular backups
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -257,7 +264,9 @@ export default function PrivacyPolicyPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-900">Access Control</h4>
-                      <p className="text-sm text-gray-600">Strict access controls and authentication protocols</p>
+                      <p className="text-sm text-gray-600">
+                        Strict access controls and authentication protocols
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -266,7 +275,9 @@ export default function PrivacyPolicyPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-900">Privacy by Design</h4>
-                      <p className="text-sm text-gray-600">Data minimization and purpose limitation principles</p>
+                      <p className="text-sm text-gray-600">
+                        Data minimization and purpose limitation principles
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -289,7 +300,8 @@ export default function PrivacyPolicyPage() {
                   <div>
                     <h3 className="font-semibold text-red-900 mb-1">We Do NOT Sell Your Data</h3>
                     <p className="text-red-700 text-sm">
-                      VineSight never sells, rents, or trades your personal or farming data to third parties.
+                      VineSight never sells, rents, or trades your personal or farming data to third
+                      parties.
                     </p>
                   </div>
                 </div>
@@ -337,7 +349,9 @@ export default function PrivacyPolicyPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Data Access & Control</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    Data Access & Control
+                  </h3>
                   <ul className="space-y-2 text-gray-700">
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
@@ -358,7 +372,9 @@ export default function PrivacyPolicyPage() {
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Communication Preferences</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    Communication Preferences
+                  </h3>
                   <ul className="space-y-2 text-gray-700">
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
@@ -391,10 +407,8 @@ export default function PrivacyPolicyPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-gray-700">
-                We retain your information only as long as necessary:
-              </p>
-              
+              <p className="text-gray-700">We retain your information only as long as necessary:</p>
+
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -403,7 +417,8 @@ export default function PrivacyPolicyPage() {
                   <div>
                     <h4 className="font-semibold text-gray-900">Active Account Data</h4>
                     <p className="text-sm text-gray-600">
-                      Retained while your account is active and for up to 2 years after account closure
+                      Retained while your account is active and for up to 2 years after account
+                      closure
                     </p>
                   </div>
                 </div>
@@ -443,10 +458,10 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 mb-4">
-                We're committed to transparency about our privacy practices. If you have any questions or concerns, 
-                please don't hesitate to reach out.
+                We&apos;re committed to transparency about our privacy practices. If you have any
+                questions or concerns, please don&apos;t hesitate to reach out.
               </p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center">
                   <Mail className="h-8 w-8 text-green-600 mx-auto mb-2" />
@@ -474,8 +489,8 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 mb-4">
-                We may update this privacy policy from time to time to reflect changes in our practices or legal requirements. 
-                When we make significant changes, we will:
+                We may update this privacy policy from time to time to reflect changes in our
+                practices or legal requirements. When we make significant changes, we will:
               </p>
               <ul className="space-y-2 text-gray-700 ml-4">
                 <li className="flex items-start gap-2">
@@ -484,7 +499,7 @@ export default function PrivacyPolicyPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-2 h-2 bg-gray-400 rounded-full mt-2"></span>
-                  <span>Update the "Last updated" date at the top of this page</span>
+                  <span>Update the &quot;Last updated&quot; date at the top of this page</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-2 h-2 bg-gray-400 rounded-full mt-2"></span>
@@ -498,10 +513,11 @@ export default function PrivacyPolicyPage() {
         {/* Footer */}
         <div className="mt-16 text-center">
           <p className="text-gray-500 text-sm">
-            This privacy policy is part of our commitment to protecting Indian farmers' data and privacy rights.
+            This privacy policy is part of our commitment to protecting Indian farmers&apos; data
+            and privacy rights.
           </p>
         </div>
       </div>
     </div>
-  );
+  )
 }

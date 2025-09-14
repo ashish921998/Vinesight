@@ -1,94 +1,106 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Droplets, Calculator, Loader2 } from "lucide-react";
-import { SupabaseService } from "@/lib/supabase-service";
-import { NotificationService } from "@/lib/notification-service";
-import type { Farm } from "@/types/types";
+import { useState } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Droplets, Calculator, Loader2 } from 'lucide-react'
+import { SupabaseService } from '@/lib/supabase-service'
+import { NotificationService } from '@/lib/notification-service'
+import type { Farm } from '@/types/types'
 
 interface WaterCalculationModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  farm: Farm;
-  onCalculationComplete: () => void;
+  isOpen: boolean
+  onClose: () => void
+  farm: Farm
+  onCalculationComplete: () => void
 }
 
-export function WaterCalculationModal({ 
-  isOpen, 
-  onClose, 
-  farm, 
-  onCalculationComplete 
+export function WaterCalculationModal({
+  isOpen,
+  onClose,
+  farm,
+  onCalculationComplete,
 }: WaterCalculationModalProps) {
   const [formData, setFormData] = useState({
-    cropCoefficient: "",
-    evapotranspiration: ""
-  });
-  const [isCalculating, setIsCalculating] = useState(false);
-  const [calculationResult, setCalculationResult] = useState<number | null>(null);
+    cropCoefficient: '',
+    evapotranspiration: '',
+  })
+  const [isCalculating, setIsCalculating] = useState(false)
+  const [calculationResult, setCalculationResult] = useState<number | null>(null)
 
   const handleCalculate = () => {
     if (!formData.cropCoefficient || !formData.evapotranspiration) {
-      return;
+      return
     }
 
-    const cropCoefficientValue = parseFloat(formData.cropCoefficient);
-    const evapotranspirationValue = parseFloat(formData.evapotranspiration);
-    const currentRemainingWater = farm.remainingWater || 0;
+    const cropCoefficientValue = parseFloat(formData.cropCoefficient)
+    const evapotranspirationValue = parseFloat(formData.evapotranspiration)
+    const currentRemainingWater = farm.remainingWater || 0
 
     // Formula: current remaining water - (crop_coefficient * evapotranspiration)
-    const result = currentRemainingWater - (cropCoefficientValue * evapotranspirationValue);
-    setCalculationResult(result);
-  };
+    const result = currentRemainingWater - cropCoefficientValue * evapotranspirationValue
+    setCalculationResult(result)
+  }
 
   const handleSave = async () => {
-    if (calculationResult === null) return;
+    if (calculationResult === null) return
 
     // Ensure farm.id exists and is valid
     if (!farm.id || typeof farm.id !== 'number') {
-      console.error("Invalid farm ID:", farm.id);
-      return;
+      console.error('Invalid farm ID:', farm.id)
+      return
     }
 
-    setIsCalculating(true);
+    setIsCalculating(true)
     try {
       // Update farm with calculated remaining water and timestamp
       await SupabaseService.updateFarm(farm.id, {
         remainingWater: calculationResult,
-        waterCalculationUpdatedAt: new Date().toISOString()
-      });
+        waterCalculationUpdatedAt: new Date().toISOString(),
+      })
 
       // Check water level and send notification if needed
-      const notificationService = NotificationService.getInstance();
-      notificationService.checkWaterLevelAndAlert(farm.name, calculationResult);
+      const notificationService = NotificationService.getInstance()
+      notificationService.checkWaterLevelAndAlert(farm.name, calculationResult)
 
-      onCalculationComplete();
-      handleClose();
+      onCalculationComplete()
+      handleClose()
     } catch (error) {
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error("Error saving water calculation:", error);
+        console.error('Error saving water calculation:', error)
       }
     } finally {
-      setIsCalculating(false);
+      setIsCalculating(false)
     }
-  };
+  }
 
   const handleClose = () => {
     setFormData({
-      cropCoefficient: "",
-      evapotranspiration: ""
-    });
-    setCalculationResult(null);
-    onClose();
-  };
+      cropCoefficient: '',
+      evapotranspiration: '',
+    })
+    setCalculationResult(null)
+    onClose()
+  }
 
-  const isFormValid = formData.cropCoefficient && formData.evapotranspiration;
+  const isFormValid = formData.cropCoefficient && formData.evapotranspiration
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -129,12 +141,17 @@ export function WaterCalculationModal({
             <Label htmlFor="cropCoefficient" className="text-sm font-medium text-gray-700">
               Crop Coefficient (Kc) *
             </Label>
-            <Select value={formData.cropCoefficient} onValueChange={(value) => setFormData(prev => ({ ...prev, cropCoefficient: value }))}>
+            <Select
+              value={formData.cropCoefficient}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, cropCoefficient: value }))
+              }
+            >
               <SelectTrigger className="mt-1 h-11">
                 <SelectValue placeholder="Select growth stage" />
               </SelectTrigger>
               <SelectContent>
-              <SelectItem value="0.25">0.25 - Beginning budbreak</SelectItem>
+                <SelectItem value="0.25">0.25 - Beginning budbreak</SelectItem>
                 <SelectItem value="0.3">0.3 - Shoot 30cm</SelectItem>
                 <SelectItem value="0.4">0.4 - Shoot 50cm</SelectItem>
                 <SelectItem value="0.5">0.5 - Shoot 80cm</SelectItem>
@@ -162,7 +179,9 @@ export function WaterCalculationModal({
               step="0.1"
               min="0"
               value={formData.evapotranspiration}
-              onChange={(e) => setFormData(prev => ({ ...prev, evapotranspiration: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, evapotranspiration: e.target.value }))
+              }
               placeholder="4.5"
               className="mt-1 h-11"
               required
@@ -196,15 +215,17 @@ export function WaterCalculationModal({
                 <div className="text-2xl font-bold text-green-800 mb-1">
                   {calculationResult.toFixed(1)} mm
                 </div>
-                <div className="text-xs text-green-600 mb-3">
-                  Available water in soil
-                </div>
-                
+                <div className="text-xs text-green-600 mb-3">Available water in soil</div>
+
                 {/* Formula breakdown */}
                 <div className="text-xs text-green-700 bg-green-100 p-2 rounded border">
                   <div className="font-medium mb-1">Calculation:</div>
                   <div>
-                    {(farm.remainingWater || 0).toFixed(1)} - {(parseFloat(formData.cropCoefficient) * parseFloat(formData.evapotranspiration)).toFixed(1)} = {calculationResult.toFixed(1)} mm
+                    {(farm.remainingWater || 0).toFixed(1)} -{' '}
+                    {(
+                      parseFloat(formData.cropCoefficient) * parseFloat(formData.evapotranspiration)
+                    ).toFixed(1)}{' '}
+                    = {calculationResult.toFixed(1)} mm
                   </div>
                 </div>
               </div>
@@ -214,12 +235,7 @@ export function WaterCalculationModal({
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleClose}
-            className="flex-1 h-11"
-          >
+          <Button type="button" variant="outline" onClick={handleClose} className="flex-1 h-11">
             Cancel
           </Button>
           <Button
@@ -243,5 +259,5 @@ export function WaterCalculationModal({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

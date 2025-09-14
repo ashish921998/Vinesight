@@ -1,16 +1,10 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.12 (cd3cf9e)"
+    PostgrestVersion: '12.2.12 (cd3cf9e)'
   }
   public: {
     Tables: {
@@ -68,11 +62,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ai_alerts_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'ai_alerts_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -106,11 +100,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ai_context_cache_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'ai_context_cache_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -147,11 +141,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ai_conversation_context_conversation_id_fkey"
-            columns: ["conversation_id"]
+            foreignKeyName: 'ai_conversation_context_conversation_id_fkey'
+            columns: ['conversation_id']
             isOneToOne: false
-            referencedRelation: "ai_conversations"
-            referencedColumns: ["id"]
+            referencedRelation: 'ai_conversations'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -197,11 +191,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ai_conversations_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'ai_conversations_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -244,11 +238,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ai_messages_conversation_id_fkey"
-            columns: ["conversation_id"]
+            foreignKeyName: 'ai_messages_conversation_id_fkey'
+            columns: ['conversation_id']
             isOneToOne: false
-            referencedRelation: "ai_conversations"
-            referencedColumns: ["id"]
+            referencedRelation: 'ai_conversations'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -306,11 +300,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ai_task_recommendations_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'ai_task_recommendations_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -344,11 +338,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "calculation_history_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'calculation_history_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -397,18 +391,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "canopy_analyses_analysis_id_fkey"
-            columns: ["analysis_id"]
+            foreignKeyName: 'canopy_analyses_analysis_id_fkey'
+            columns: ['analysis_id']
             isOneToOne: false
-            referencedRelation: "image_analyses"
-            referencedColumns: ["id"]
+            referencedRelation: 'image_analyses'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "canopy_analyses_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'canopy_analyses_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -463,18 +457,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "collection_prompts_collection_id_fkey"
-            columns: ["collection_id"]
+            foreignKeyName: 'collection_prompts_collection_id_fkey'
+            columns: ['collection_id']
             isOneToOne: false
-            referencedRelation: "collections"
-            referencedColumns: ["id"]
+            referencedRelation: 'collections'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "collection_prompts_prompt_id_fkey"
-            columns: ["prompt_id"]
+            foreignKeyName: 'collection_prompts_prompt_id_fkey'
+            columns: ['prompt_id']
             isOneToOne: false
-            referencedRelation: "prompts"
-            referencedColumns: ["id"]
+            referencedRelation: 'prompts'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -508,11 +502,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "collections_owner_id_fkey"
-            columns: ["owner_id"]
+            foreignKeyName: 'collections_owner_id_fkey'
+            columns: ['owner_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -549,25 +543,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "comments_author_id_fkey"
-            columns: ["author_id"]
+            foreignKeyName: 'comments_author_id_fkey'
+            columns: ['author_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "comments_parent_comment_id_fkey"
-            columns: ["parent_comment_id"]
+            foreignKeyName: 'comments_parent_comment_id_fkey'
+            columns: ['parent_comment_id']
             isOneToOne: false
-            referencedRelation: "comments"
-            referencedColumns: ["id"]
+            referencedRelation: 'comments'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "comments_prompt_id_fkey"
-            columns: ["prompt_id"]
+            foreignKeyName: 'comments_prompt_id_fkey'
+            columns: ['prompt_id']
             isOneToOne: false
-            referencedRelation: "prompts"
-            referencedColumns: ["id"]
+            referencedRelation: 'prompts'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -664,11 +658,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "detected_conditions_analysis_id_fkey"
-            columns: ["analysis_id"]
+            foreignKeyName: 'detected_conditions_analysis_id_fkey'
+            columns: ['analysis_id']
             isOneToOne: false
-            referencedRelation: "image_analyses"
-            referencedColumns: ["id"]
+            referencedRelation: 'image_analyses'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -714,11 +708,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "disease_risk_assessments_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'disease_risk_assessments_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -755,11 +749,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "expense_records_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'expense_records_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -802,11 +796,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "farmer_ai_profiles_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'farmer_ai_profiles_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -909,18 +903,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "favorites_prompt_id_fkey"
-            columns: ["prompt_id"]
+            foreignKeyName: 'favorites_prompt_id_fkey'
+            columns: ['prompt_id']
             isOneToOne: false
-            referencedRelation: "prompts"
-            referencedColumns: ["id"]
+            referencedRelation: 'prompts'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "favorites_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'favorites_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -960,11 +954,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fertigation_records_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'fertigation_records_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1004,11 +998,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "harvest_records_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'harvest_records_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1060,11 +1054,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "image_analyses_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'image_analyses_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1107,11 +1101,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "irrigation_records_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'irrigation_records_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1208,18 +1202,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "maturity_assessments_analysis_id_fkey"
-            columns: ["analysis_id"]
+            foreignKeyName: 'maturity_assessments_analysis_id_fkey'
+            columns: ['analysis_id']
             isOneToOne: false
-            referencedRelation: "image_analyses"
-            referencedColumns: ["id"]
+            referencedRelation: 'image_analyses'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "maturity_assessments_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'maturity_assessments_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1289,11 +1283,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pest_disease_predictions_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'pest_disease_predictions_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1381,11 +1375,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "profitability_analyses_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'profitability_analyses_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1410,18 +1404,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "prompt_likes_prompt_id_fkey"
-            columns: ["prompt_id"]
+            foreignKeyName: 'prompt_likes_prompt_id_fkey'
+            columns: ['prompt_id']
             isOneToOne: false
-            referencedRelation: "prompts"
-            referencedColumns: ["id"]
+            referencedRelation: 'prompts'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "prompt_likes_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'prompt_likes_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1446,18 +1440,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "prompt_tags_prompt_id_fkey"
-            columns: ["prompt_id"]
+            foreignKeyName: 'prompt_tags_prompt_id_fkey'
+            columns: ['prompt_id']
             isOneToOne: false
-            referencedRelation: "prompts"
-            referencedColumns: ["id"]
+            referencedRelation: 'prompts'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "prompt_tags_tag_id_fkey"
-            columns: ["tag_id"]
+            foreignKeyName: 'prompt_tags_tag_id_fkey'
+            columns: ['tag_id']
             isOneToOne: false
-            referencedRelation: "tags"
-            referencedColumns: ["id"]
+            referencedRelation: 'tags'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1524,25 +1518,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "prompts_author_id_fkey"
-            columns: ["author_id"]
+            foreignKeyName: 'prompts_author_id_fkey'
+            columns: ['author_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "prompts_category_id_fkey"
-            columns: ["category_id"]
+            foreignKeyName: 'prompts_category_id_fkey'
+            columns: ['category_id']
             isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
+            referencedRelation: 'categories'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "prompts_parent_prompt_id_fkey"
-            columns: ["parent_prompt_id"]
+            foreignKeyName: 'prompts_parent_prompt_id_fkey'
+            columns: ['parent_prompt_id']
             isOneToOne: false
-            referencedRelation: "prompts"
-            referencedColumns: ["id"]
+            referencedRelation: 'prompts'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1576,11 +1570,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "soil_test_records_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'soil_test_records_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1626,11 +1620,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "spray_records_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'spray_records_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1679,11 +1673,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "spray_windows_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'spray_windows_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1717,11 +1711,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "submissions_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'submissions_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1788,11 +1782,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "task_reminders_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'task_reminders_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1817,18 +1811,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "votes_submission_id_fkey"
-            columns: ["submission_id"]
+            foreignKeyName: 'votes_submission_id_fkey'
+            columns: ['submission_id']
             isOneToOne: false
-            referencedRelation: "submissions"
-            referencedColumns: ["id"]
+            referencedRelation: 'submissions'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "votes_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'votes_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1883,18 +1877,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "weather_data_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'weather_data_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "weather_data_station_id_fkey"
-            columns: ["station_id"]
+            foreignKeyName: 'weather_data_station_id_fkey'
+            columns: ['station_id']
             isOneToOne: false
-            referencedRelation: "weather_stations"
-            referencedColumns: ["id"]
+            referencedRelation: 'weather_stations'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -1946,11 +1940,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "weather_forecasts_farm_id_fkey"
-            columns: ["farm_id"]
+            foreignKeyName: 'weather_forecasts_farm_id_fkey'
+            columns: ['farm_id']
             isOneToOne: false
-            referencedRelation: "farms"
-            referencedColumns: ["id"]
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -2026,33 +2020,31 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -2061,23 +2053,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
+    | keyof DefaultSchema['Tables']
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -2086,23 +2078,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
+    | keyof DefaultSchema['Tables']
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -2111,36 +2103,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
+    | keyof DefaultSchema['Enums']
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
+    | keyof DefaultSchema['CompositeTypes']
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {

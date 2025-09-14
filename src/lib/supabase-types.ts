@@ -2,28 +2,28 @@
 import { Database } from '@/types/database'
 
 // Import application types from both sources
-import type { 
-  IrrigationRecord, 
-  SprayRecord, 
-  FertigationRecord, 
-  HarvestRecord, 
+import type {
+  IrrigationRecord,
+  SprayRecord,
+  FertigationRecord,
+  HarvestRecord,
   ExpenseRecord,
   CalculationHistory,
-  SoilTestRecord
-} from './supabase';
-import type { TaskReminder, Farm } from '@/types/types';
+  SoilTestRecord,
+} from './supabase'
+import type { TaskReminder, Farm } from '@/types/types'
 
 // Re-export application types
-export type { 
+export type {
   TaskReminder,
-  IrrigationRecord, 
-  SprayRecord, 
-  FertigationRecord, 
-  HarvestRecord, 
+  IrrigationRecord,
+  SprayRecord,
+  FertigationRecord,
+  HarvestRecord,
   ExpenseRecord,
   CalculationHistory,
-  SoilTestRecord
-};
+  SoilTestRecord,
+}
 
 // Extract database table types
 export type DatabaseFarm = Database['public']['Tables']['farms']['Row']
@@ -31,16 +31,20 @@ export type DatabaseFarmInsert = Database['public']['Tables']['farms']['Insert']
 export type DatabaseFarmUpdate = Database['public']['Tables']['farms']['Update']
 
 export type DatabaseIrrigationRecord = Database['public']['Tables']['irrigation_records']['Row']
-export type DatabaseIrrigationRecordInsert = Database['public']['Tables']['irrigation_records']['Insert']
-export type DatabaseIrrigationRecordUpdate = Database['public']['Tables']['irrigation_records']['Update']
+export type DatabaseIrrigationRecordInsert =
+  Database['public']['Tables']['irrigation_records']['Insert']
+export type DatabaseIrrigationRecordUpdate =
+  Database['public']['Tables']['irrigation_records']['Update']
 
 export type DatabaseSprayRecord = Database['public']['Tables']['spray_records']['Row']
 export type DatabaseSprayRecordInsert = Database['public']['Tables']['spray_records']['Insert']
 export type DatabaseSprayRecordUpdate = Database['public']['Tables']['spray_records']['Update']
 
 export type DatabaseFertigationRecord = Database['public']['Tables']['fertigation_records']['Row']
-export type DatabaseFertigationRecordInsert = Database['public']['Tables']['fertigation_records']['Insert']
-export type DatabaseFertigationRecordUpdate = Database['public']['Tables']['fertigation_records']['Update']
+export type DatabaseFertigationRecordInsert =
+  Database['public']['Tables']['fertigation_records']['Insert']
+export type DatabaseFertigationRecordUpdate =
+  Database['public']['Tables']['fertigation_records']['Update']
 
 export type DatabaseHarvestRecord = Database['public']['Tables']['harvest_records']['Row']
 export type DatabaseHarvestRecordInsert = Database['public']['Tables']['harvest_records']['Insert']
@@ -51,16 +55,20 @@ export type DatabaseExpenseRecordInsert = Database['public']['Tables']['expense_
 export type DatabaseExpenseRecordUpdate = Database['public']['Tables']['expense_records']['Update']
 
 export type DatabaseCalculationHistory = Database['public']['Tables']['calculation_history']['Row']
-export type DatabaseCalculationHistoryInsert = Database['public']['Tables']['calculation_history']['Insert']
-export type DatabaseCalculationHistoryUpdate = Database['public']['Tables']['calculation_history']['Update']
+export type DatabaseCalculationHistoryInsert =
+  Database['public']['Tables']['calculation_history']['Insert']
+export type DatabaseCalculationHistoryUpdate =
+  Database['public']['Tables']['calculation_history']['Update']
 
 export type DatabaseTaskReminder = Database['public']['Tables']['task_reminders']['Row']
 export type DatabaseTaskReminderInsert = Database['public']['Tables']['task_reminders']['Insert']
 export type DatabaseTaskReminderUpdate = Database['public']['Tables']['task_reminders']['Update']
 
 export type DatabaseSoilTestRecord = Database['public']['Tables']['soil_test_records']['Row']
-export type DatabaseSoilTestRecordInsert = Database['public']['Tables']['soil_test_records']['Insert']
-export type DatabaseSoilTestRecordUpdate = Database['public']['Tables']['soil_test_records']['Update']
+export type DatabaseSoilTestRecordInsert =
+  Database['public']['Tables']['soil_test_records']['Insert']
+export type DatabaseSoilTestRecordUpdate =
+  Database['public']['Tables']['soil_test_records']['Update']
 
 // Type conversion utilities
 export function toApplicationFarm(dbFarm: DatabaseFarm): Farm {
@@ -87,11 +95,15 @@ export function toApplicationFarm(dbFarm: DatabaseFarm): Farm {
     createdAt: dbFarm.created_at || undefined,
     updatedAt: dbFarm.updated_at || undefined,
     userId: dbFarm.user_id || undefined,
-    dateOfPruning: dbFarm.date_of_pruning || undefined
+    dateOfPruning: dbFarm.date_of_pruning || undefined,
   }
 }
 
-export function toDatabaseFarmInsert(appFarm: Omit<import('@/types/types').Farm, 'id' | 'createdAt' | 'updatedAt'> & { user_id: string }): DatabaseFarmInsert {
+export function toDatabaseFarmInsert(
+  appFarm: Omit<import('@/types/types').Farm, 'id' | 'createdAt' | 'updatedAt'> & {
+    user_id: string
+  },
+): DatabaseFarmInsert {
   return {
     name: appFarm.name,
     region: appFarm.region,
@@ -112,13 +124,13 @@ export function toDatabaseFarmInsert(appFarm: Omit<import('@/types/types').Farm,
     location_source: appFarm.locationSource || null,
     location_updated_at: appFarm.locationUpdatedAt || null,
     user_id: appFarm.user_id || null,
-    date_of_pruning: appFarm.dateOfPruning || null
+    date_of_pruning: appFarm.dateOfPruning || null,
   }
 }
 
 export function toDatabaseFarmUpdate(appFarmUpdates: Partial<Farm>): DatabaseFarmUpdate {
   const update: DatabaseFarmUpdate = {}
-  
+
   if (appFarmUpdates.name !== undefined) update.name = appFarmUpdates.name
   if (appFarmUpdates.region !== undefined) update.region = appFarmUpdates.region
   if (appFarmUpdates.area !== undefined) update.area = appFarmUpdates.area
@@ -126,25 +138,35 @@ export function toDatabaseFarmUpdate(appFarmUpdates: Partial<Farm>): DatabaseFar
   if (appFarmUpdates.plantingDate !== undefined) update.planting_date = appFarmUpdates.plantingDate
   if (appFarmUpdates.vineSpacing !== undefined) update.vine_spacing = appFarmUpdates.vineSpacing
   if (appFarmUpdates.rowSpacing !== undefined) update.row_spacing = appFarmUpdates.rowSpacing
-  if (appFarmUpdates.totalTankCapacity !== undefined) update.total_tank_capacity = appFarmUpdates.totalTankCapacity || null
-  if (appFarmUpdates.systemDischarge !== undefined) update.system_discharge = appFarmUpdates.systemDischarge || null
-  if (appFarmUpdates.remainingWater !== undefined) update.remaining_water = appFarmUpdates.remainingWater || null
-  if (appFarmUpdates.waterCalculationUpdatedAt !== undefined) update.water_calculation_updated_at = appFarmUpdates.waterCalculationUpdatedAt || null
+  if (appFarmUpdates.totalTankCapacity !== undefined)
+    update.total_tank_capacity = appFarmUpdates.totalTankCapacity || null
+  if (appFarmUpdates.systemDischarge !== undefined)
+    update.system_discharge = appFarmUpdates.systemDischarge || null
+  if (appFarmUpdates.remainingWater !== undefined)
+    update.remaining_water = appFarmUpdates.remainingWater || null
+  if (appFarmUpdates.waterCalculationUpdatedAt !== undefined)
+    update.water_calculation_updated_at = appFarmUpdates.waterCalculationUpdatedAt || null
   if (appFarmUpdates.latitude !== undefined) update.latitude = appFarmUpdates.latitude || null
   if (appFarmUpdates.longitude !== undefined) update.longitude = appFarmUpdates.longitude || null
   if (appFarmUpdates.elevation !== undefined) update.elevation = appFarmUpdates.elevation || null
-  if (appFarmUpdates.locationName !== undefined) update.location_name = appFarmUpdates.locationName || null
+  if (appFarmUpdates.locationName !== undefined)
+    update.location_name = appFarmUpdates.locationName || null
   if (appFarmUpdates.timezone !== undefined) update.timezone = appFarmUpdates.timezone || null
-  if (appFarmUpdates.locationSource !== undefined) update.location_source = appFarmUpdates.locationSource || null
-  if (appFarmUpdates.locationUpdatedAt !== undefined) update.location_updated_at = appFarmUpdates.locationUpdatedAt || null
+  if (appFarmUpdates.locationSource !== undefined)
+    update.location_source = appFarmUpdates.locationSource || null
+  if (appFarmUpdates.locationUpdatedAt !== undefined)
+    update.location_updated_at = appFarmUpdates.locationUpdatedAt || null
   if (appFarmUpdates.userId !== undefined) update.user_id = appFarmUpdates.userId || null
-  if (appFarmUpdates.dateOfPruning !== undefined) update.date_of_pruning = appFarmUpdates.dateOfPruning || null
+  if (appFarmUpdates.dateOfPruning !== undefined)
+    update.date_of_pruning = appFarmUpdates.dateOfPruning || null
 
   return update
 }
 
 // Similar conversion functions for other record types...
-export function toApplicationIrrigationRecord(dbRecord: DatabaseIrrigationRecord): import('./supabase').IrrigationRecord {
+export function toApplicationIrrigationRecord(
+  dbRecord: DatabaseIrrigationRecord,
+): import('./supabase').IrrigationRecord {
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
@@ -155,11 +177,13 @@ export function toApplicationIrrigationRecord(dbRecord: DatabaseIrrigationRecord
     moisture_status: dbRecord.moisture_status,
     system_discharge: dbRecord.system_discharge,
     notes: dbRecord.notes || undefined,
-    created_at: dbRecord.created_at || undefined
+    created_at: dbRecord.created_at || undefined,
   }
 }
 
-export function toDatabaseIrrigationInsert(appRecord: Omit<import('./supabase').IrrigationRecord, 'id' | 'created_at'>): DatabaseIrrigationRecordInsert {
+export function toDatabaseIrrigationInsert(
+  appRecord: Omit<import('./supabase').IrrigationRecord, 'id' | 'created_at'>,
+): DatabaseIrrigationRecordInsert {
   return {
     farm_id: appRecord.farm_id,
     date: appRecord.date,
@@ -168,27 +192,32 @@ export function toDatabaseIrrigationInsert(appRecord: Omit<import('./supabase').
     growth_stage: appRecord.growth_stage,
     moisture_status: appRecord.moisture_status,
     system_discharge: appRecord.system_discharge,
-    notes: appRecord.notes || null
+    notes: appRecord.notes || null,
   }
 }
 
-export function toDatabaseIrrigationUpdate(appUpdates: Partial<import('./supabase').IrrigationRecord>): DatabaseIrrigationRecordUpdate {
+export function toDatabaseIrrigationUpdate(
+  appUpdates: Partial<import('./supabase').IrrigationRecord>,
+): DatabaseIrrigationRecordUpdate {
   const update: DatabaseIrrigationRecordUpdate = {}
-  
+
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.duration !== undefined) update.duration = appUpdates.duration
   if (appUpdates.area !== undefined) update.area = appUpdates.area
   if (appUpdates.growth_stage !== undefined) update.growth_stage = appUpdates.growth_stage
   if (appUpdates.moisture_status !== undefined) update.moisture_status = appUpdates.moisture_status
-  if (appUpdates.system_discharge !== undefined) update.system_discharge = appUpdates.system_discharge
+  if (appUpdates.system_discharge !== undefined)
+    update.system_discharge = appUpdates.system_discharge
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
 
   return update
 }
 
 // Spray Record conversion functions
-export function toApplicationSprayRecord(dbRecord: DatabaseSprayRecord): import('./supabase').SprayRecord {
+export function toApplicationSprayRecord(
+  dbRecord: DatabaseSprayRecord,
+): import('./supabase').SprayRecord {
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
@@ -202,11 +231,13 @@ export function toApplicationSprayRecord(dbRecord: DatabaseSprayRecord): import(
     weather: dbRecord.weather,
     operator: dbRecord.operator,
     notes: dbRecord.notes || undefined,
-    created_at: dbRecord.created_at || undefined
+    created_at: dbRecord.created_at || undefined,
   }
 }
 
-export function toDatabaseSprayInsert(appRecord: Omit<import('./supabase').SprayRecord, 'id' | 'created_at'>): DatabaseSprayRecordInsert {
+export function toDatabaseSprayInsert(
+  appRecord: Omit<import('./supabase').SprayRecord, 'id' | 'created_at'>,
+): DatabaseSprayRecordInsert {
   return {
     farm_id: appRecord.farm_id,
     date: appRecord.date,
@@ -218,13 +249,15 @@ export function toDatabaseSprayInsert(appRecord: Omit<import('./supabase').Spray
     area: appRecord.area,
     weather: appRecord.weather,
     operator: appRecord.operator,
-    notes: appRecord.notes || null
+    notes: appRecord.notes || null,
   }
 }
 
-export function toDatabaseSprayUpdate(appUpdates: Partial<import('./supabase').SprayRecord>): DatabaseSprayRecordUpdate {
+export function toDatabaseSprayUpdate(
+  appUpdates: Partial<import('./supabase').SprayRecord>,
+): DatabaseSprayRecordUpdate {
   const update: DatabaseSprayRecordUpdate = {}
-  
+
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.pest_disease !== undefined) update.pest_disease = appUpdates.pest_disease
@@ -239,7 +272,9 @@ export function toDatabaseSprayUpdate(appUpdates: Partial<import('./supabase').S
 }
 
 // Fertigation Record conversion functions
-export function toApplicationFertigationRecord(dbRecord: DatabaseFertigationRecord): import('./supabase').FertigationRecord {
+export function toApplicationFertigationRecord(
+  dbRecord: DatabaseFertigationRecord,
+): import('./supabase').FertigationRecord {
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
@@ -249,11 +284,13 @@ export function toApplicationFertigationRecord(dbRecord: DatabaseFertigationReco
     purpose: dbRecord.purpose,
     area: dbRecord.area,
     notes: dbRecord.notes || undefined,
-    created_at: dbRecord.created_at || undefined
+    created_at: dbRecord.created_at || undefined,
   }
 }
 
-export function toDatabaseFertigationInsert(appRecord: Omit<import('./supabase').FertigationRecord, 'id' | 'created_at'>): DatabaseFertigationRecordInsert {
+export function toDatabaseFertigationInsert(
+  appRecord: Omit<import('./supabase').FertigationRecord, 'id' | 'created_at'>,
+): DatabaseFertigationRecordInsert {
   return {
     farm_id: appRecord.farm_id,
     date: appRecord.date,
@@ -261,13 +298,15 @@ export function toDatabaseFertigationInsert(appRecord: Omit<import('./supabase')
     dose: appRecord.dose,
     purpose: appRecord.purpose,
     area: appRecord.area,
-    notes: appRecord.notes || null
+    notes: appRecord.notes || null,
   }
 }
 
-export function toDatabaseFertigationUpdate(appUpdates: Partial<import('./supabase').FertigationRecord>): DatabaseFertigationRecordUpdate {
+export function toDatabaseFertigationUpdate(
+  appUpdates: Partial<import('./supabase').FertigationRecord>,
+): DatabaseFertigationRecordUpdate {
   const update: DatabaseFertigationRecordUpdate = {}
-  
+
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.fertilizer !== undefined) update.fertilizer = appUpdates.fertilizer
@@ -280,7 +319,9 @@ export function toDatabaseFertigationUpdate(appUpdates: Partial<import('./supaba
 }
 
 // Harvest Record conversion functions
-export function toApplicationHarvestRecord(dbRecord: DatabaseHarvestRecord): import('./supabase').HarvestRecord {
+export function toApplicationHarvestRecord(
+  dbRecord: DatabaseHarvestRecord,
+): import('./supabase').HarvestRecord {
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
@@ -290,11 +331,13 @@ export function toApplicationHarvestRecord(dbRecord: DatabaseHarvestRecord): imp
     price: dbRecord.price || undefined,
     buyer: dbRecord.buyer || undefined,
     notes: dbRecord.notes || undefined,
-    created_at: dbRecord.created_at || undefined
+    created_at: dbRecord.created_at || undefined,
   }
 }
 
-export function toDatabaseHarvestInsert(appRecord: Omit<import('./supabase').HarvestRecord, 'id' | 'created_at'>): DatabaseHarvestRecordInsert {
+export function toDatabaseHarvestInsert(
+  appRecord: Omit<import('./supabase').HarvestRecord, 'id' | 'created_at'>,
+): DatabaseHarvestRecordInsert {
   return {
     farm_id: appRecord.farm_id,
     date: appRecord.date,
@@ -302,13 +345,15 @@ export function toDatabaseHarvestInsert(appRecord: Omit<import('./supabase').Har
     grade: appRecord.grade,
     price: appRecord.price || null,
     buyer: appRecord.buyer || null,
-    notes: appRecord.notes || null
+    notes: appRecord.notes || null,
   }
 }
 
-export function toDatabaseHarvestUpdate(appUpdates: Partial<import('./supabase').HarvestRecord>): DatabaseHarvestRecordUpdate {
+export function toDatabaseHarvestUpdate(
+  appUpdates: Partial<import('./supabase').HarvestRecord>,
+): DatabaseHarvestRecordUpdate {
   const update: DatabaseHarvestRecordUpdate = {}
-  
+
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.quantity !== undefined) update.quantity = appUpdates.quantity
@@ -321,33 +366,39 @@ export function toDatabaseHarvestUpdate(appUpdates: Partial<import('./supabase')
 }
 
 // Expense Record conversion functions
-export function toApplicationExpenseRecord(dbRecord: DatabaseExpenseRecord): import('./supabase').ExpenseRecord {
+export function toApplicationExpenseRecord(
+  dbRecord: DatabaseExpenseRecord,
+): import('./supabase').ExpenseRecord {
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
-    type: dbRecord.type as "labor" | "materials" | "equipment" | "other",
+    type: dbRecord.type as 'labor' | 'materials' | 'equipment' | 'other',
     description: dbRecord.description,
     cost: dbRecord.cost,
     remarks: dbRecord.remarks || undefined,
-    created_at: dbRecord.created_at || undefined
+    created_at: dbRecord.created_at || undefined,
   }
 }
 
-export function toDatabaseExpenseInsert(appRecord: Omit<import('./supabase').ExpenseRecord, 'id' | 'created_at'>): DatabaseExpenseRecordInsert {
+export function toDatabaseExpenseInsert(
+  appRecord: Omit<import('./supabase').ExpenseRecord, 'id' | 'created_at'>,
+): DatabaseExpenseRecordInsert {
   return {
     farm_id: appRecord.farm_id,
     date: appRecord.date,
     type: appRecord.type,
     description: appRecord.description,
     cost: appRecord.cost,
-    remarks: appRecord.remarks || null
+    remarks: appRecord.remarks || null,
   }
 }
 
-export function toDatabaseExpenseUpdate(appUpdates: Partial<import('./supabase').ExpenseRecord>): DatabaseExpenseRecordUpdate {
+export function toDatabaseExpenseUpdate(
+  appUpdates: Partial<import('./supabase').ExpenseRecord>,
+): DatabaseExpenseRecordUpdate {
   const update: DatabaseExpenseRecordUpdate = {}
-  
+
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.type !== undefined) update.type = appUpdates.type
@@ -359,25 +410,29 @@ export function toDatabaseExpenseUpdate(appUpdates: Partial<import('./supabase')
 }
 
 // Calculation History conversion functions
-export function toApplicationCalculationHistory(dbRecord: DatabaseCalculationHistory): import('./supabase').CalculationHistory {
+export function toApplicationCalculationHistory(
+  dbRecord: DatabaseCalculationHistory,
+): import('./supabase').CalculationHistory {
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
-    calculation_type: dbRecord.calculation_type as "etc" | "nutrients" | "lai" | "discharge",
+    calculation_type: dbRecord.calculation_type as 'etc' | 'nutrients' | 'lai' | 'discharge',
     inputs: (dbRecord.inputs as Record<string, any>) || {},
     outputs: (dbRecord.outputs as Record<string, any>) || {},
     date: dbRecord.date,
-    created_at: dbRecord.created_at || undefined
+    created_at: dbRecord.created_at || undefined,
   }
 }
 
-export function toDatabaseCalculationHistoryInsert(appRecord: Omit<import('./supabase').CalculationHistory, 'id' | 'created_at'>): DatabaseCalculationHistoryInsert {
+export function toDatabaseCalculationHistoryInsert(
+  appRecord: Omit<import('./supabase').CalculationHistory, 'id' | 'created_at'>,
+): DatabaseCalculationHistoryInsert {
   return {
     farm_id: appRecord.farm_id,
     calculation_type: appRecord.calculation_type,
     inputs: appRecord.inputs,
     outputs: appRecord.outputs,
-    date: appRecord.date
+    date: appRecord.date,
   }
 }
 
@@ -393,11 +448,13 @@ export function toApplicationTaskReminder(dbRecord: DatabaseTaskReminder): TaskR
     completed: dbRecord.completed || false,
     priority: dbRecord.priority || null,
     createdAt: dbRecord.created_at || null,
-    completedAt: dbRecord.completed_at || null
+    completedAt: dbRecord.completed_at || null,
   }
 }
 
-export function toDatabaseTaskReminderInsert(appRecord: Omit<TaskReminder, 'id' | 'createdAt'>): DatabaseTaskReminderInsert {
+export function toDatabaseTaskReminderInsert(
+  appRecord: Omit<TaskReminder, 'id' | 'createdAt'>,
+): DatabaseTaskReminderInsert {
   return {
     farm_id: appRecord.farmId,
     title: appRecord.title,
@@ -406,13 +463,15 @@ export function toDatabaseTaskReminderInsert(appRecord: Omit<TaskReminder, 'id' 
     type: appRecord.type,
     completed: appRecord.completed,
     priority: appRecord.priority,
-    completed_at: appRecord.completedAt
+    completed_at: appRecord.completedAt,
   }
 }
 
-export function toDatabaseTaskReminderUpdate(appUpdates: Partial<TaskReminder>): DatabaseTaskReminderUpdate {
+export function toDatabaseTaskReminderUpdate(
+  appUpdates: Partial<TaskReminder>,
+): DatabaseTaskReminderUpdate {
   const update: DatabaseTaskReminderUpdate = {}
-  
+
   if (appUpdates.farmId !== undefined) update.farm_id = appUpdates.farmId
   if (appUpdates.title !== undefined) update.title = appUpdates.title
   if (appUpdates.description !== undefined) update.description = appUpdates.description
@@ -426,7 +485,9 @@ export function toDatabaseTaskReminderUpdate(appUpdates: Partial<TaskReminder>):
 }
 
 // Soil Test Record conversion functions
-export function toApplicationSoilTestRecord(dbRecord: DatabaseSoilTestRecord): import('./supabase').SoilTestRecord {
+export function toApplicationSoilTestRecord(
+  dbRecord: DatabaseSoilTestRecord,
+): import('./supabase').SoilTestRecord {
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
@@ -434,27 +495,32 @@ export function toApplicationSoilTestRecord(dbRecord: DatabaseSoilTestRecord): i
     parameters: (dbRecord.parameters as Record<string, number>) || {},
     recommendations: dbRecord.recommendations || undefined,
     notes: dbRecord.notes || undefined,
-    created_at: dbRecord.created_at || undefined
+    created_at: dbRecord.created_at || undefined,
   }
 }
 
-export function toDatabaseSoilTestInsert(appRecord: Omit<import('./supabase').SoilTestRecord, 'id' | 'created_at'>): DatabaseSoilTestRecordInsert {
+export function toDatabaseSoilTestInsert(
+  appRecord: Omit<import('./supabase').SoilTestRecord, 'id' | 'created_at'>,
+): DatabaseSoilTestRecordInsert {
   return {
     farm_id: appRecord.farm_id,
     date: appRecord.date,
     parameters: appRecord.parameters,
     recommendations: appRecord.recommendations || null,
-    notes: appRecord.notes || null
+    notes: appRecord.notes || null,
   }
 }
 
-export function toDatabaseSoilTestUpdate(appUpdates: Partial<import('./supabase').SoilTestRecord>): DatabaseSoilTestRecordUpdate {
+export function toDatabaseSoilTestUpdate(
+  appUpdates: Partial<import('./supabase').SoilTestRecord>,
+): DatabaseSoilTestRecordUpdate {
   const update: DatabaseSoilTestRecordUpdate = {}
-  
+
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.parameters !== undefined) update.parameters = appUpdates.parameters
-  if (appUpdates.recommendations !== undefined) update.recommendations = appUpdates.recommendations || null
+  if (appUpdates.recommendations !== undefined)
+    update.recommendations = appUpdates.recommendations || null
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
 
   return update

@@ -1,16 +1,16 @@
-"use client";
+'use client'
 
 // Google Analytics 4 configuration
-export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-XXXXXXXXXX';
+export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-XXXXXXXXXX'
 
 // Google Analytics pageview tracking
 export const pageview = (url: string) => {
   if (typeof window !== 'undefined' && window.gtag) {
     window.gtag('config', GA_MEASUREMENT_ID, {
       page_location: url,
-    });
+    })
   }
-};
+}
 
 // Google Analytics event tracking
 export const event = (
@@ -21,11 +21,11 @@ export const event = (
     value,
     ...customParameters
   }: {
-    event_category?: string;
-    event_label?: string;
-    value?: number;
-    [key: string]: any;
-  } = {}
+    event_category?: string
+    event_label?: string
+    value?: number
+    [key: string]: any
+  } = {},
 ) => {
   if (typeof window !== 'undefined' && window.gtag) {
     window.gtag('event', action, {
@@ -33,9 +33,9 @@ export const event = (
       event_label,
       value,
       ...customParameters,
-    });
+    })
   }
-};
+}
 
 // Specific farm-related events
 export const trackFarmEvent = (eventName: string, farmData?: any) => {
@@ -45,9 +45,9 @@ export const trackFarmEvent = (eventName: string, farmData?: any) => {
     custom_parameters: {
       farm_size: farmData?.size,
       crop_type: farmData?.cropType,
-    }
-  });
-};
+    },
+  })
+}
 
 export const trackCalculatorUsage = (calculatorType: string, result?: any) => {
   event('calculator_used', {
@@ -55,30 +55,30 @@ export const trackCalculatorUsage = (calculatorType: string, result?: any) => {
     event_label: calculatorType,
     custom_parameters: {
       calculator_type: calculatorType,
-      has_result: !!result
-    }
-  });
-};
+      has_result: !!result,
+    },
+  })
+}
 
 export const trackAIInteraction = (interactionType: string, queryType?: string) => {
   event('ai_interaction', {
     event_category: 'ai_assistant',
     event_label: interactionType,
     custom_parameters: {
-      query_type: queryType
-    }
-  });
-};
+      query_type: queryType,
+    },
+  })
+}
 
 export const trackUserJourney = (milestone: string, userType: 'authenticated' | 'guest') => {
   event('user_journey', {
     event_category: 'engagement',
     event_label: milestone,
     custom_parameters: {
-      user_type: userType
-    }
-  });
-};
+      user_type: userType,
+    },
+  })
+}
 
 // Enhanced ecommerce events for farming tools
 export const trackToolUsage = (toolName: string, success: boolean = true) => {
@@ -88,18 +88,14 @@ export const trackToolUsage = (toolName: string, success: boolean = true) => {
     value: success ? 1 : 0,
     custom_parameters: {
       tool_name: toolName,
-      success_status: success
-    }
-  });
-};
+      success_status: success,
+    },
+  })
+}
 
 // Declare gtag function for TypeScript
 declare global {
   interface Window {
-    gtag: (
-      command: 'config' | 'event' | 'consent',
-      targetId: string,
-      config?: any
-    ) => void;
+    gtag: (command: 'config' | 'event' | 'consent', targetId: string, config?: any) => void
   }
 }

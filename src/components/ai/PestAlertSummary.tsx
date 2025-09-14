@@ -1,78 +1,80 @@
-"use client";
+'use client'
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  AlertTriangle, 
-  TrendingUp,
-  Shield,
-  ChevronRight,
-  Bug,
-  Zap
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { PestPredictionService } from '@/lib/pest-prediction-service';
-import type { PestDiseasePrediction } from '@/types/ai';
+import { useState, useEffect, useCallback } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { AlertTriangle, TrendingUp, Shield, ChevronRight, Bug, Zap } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { PestPredictionService } from '@/lib/pest-prediction-service'
+import type { PestDiseasePrediction } from '@/types/ai'
 
 interface PestAlertSummaryProps {
-  farmId: number;
-  className?: string;
+  farmId: number
+  className?: string
 }
 
 export function PestAlertSummary({ farmId, className }: PestAlertSummaryProps) {
-  const [predictions, setPredictions] = useState<PestDiseasePrediction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [predictions, setPredictions] = useState<PestDiseasePrediction[]>([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   const loadPredictions = useCallback(async () => {
     try {
-      setLoading(true);
-      const activePredictions = await PestPredictionService.getActivePredictions(farmId);
-      setPredictions(activePredictions);
+      setLoading(true)
+      const activePredictions = await PestPredictionService.getActivePredictions(farmId)
+      setPredictions(activePredictions)
     } catch (error) {
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error('Error loading pest predictions:', error);
+        console.error('Error loading pest predictions:', error)
       }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [farmId]);
+  }, [farmId])
 
   useEffect(() => {
-    loadPredictions();
-  }, [loadPredictions]);
+    loadPredictions()
+  }, [loadPredictions])
 
   const formatPestName = (pestType: string) => {
-    return pestType.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-  };
+    return pestType
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
 
   const getRiskColor = (riskLevel: string) => {
     switch (riskLevel) {
-      case 'critical': return 'text-red-600 bg-red-50 border-red-200';
-      case 'high': return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'low': return 'text-green-600 bg-green-50 border-green-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+      case 'critical':
+        return 'text-red-600 bg-red-50 border-red-200'
+      case 'high':
+        return 'text-orange-600 bg-orange-50 border-orange-200'
+      case 'medium':
+        return 'text-yellow-600 bg-yellow-50 border-yellow-200'
+      case 'low':
+        return 'text-green-600 bg-green-50 border-green-200'
+      default:
+        return 'text-gray-600 bg-gray-50 border-gray-200'
     }
-  };
+  }
 
   const getRiskIcon = (riskLevel: string) => {
     switch (riskLevel) {
-      case 'critical': return <AlertTriangle className="h-4 w-4 text-red-600" />;
-      case 'high': return <TrendingUp className="h-4 w-4 text-orange-600" />;
-      default: return <Bug className="h-4 w-4 text-gray-600" />;
+      case 'critical':
+        return <AlertTriangle className="h-4 w-4 text-red-600" />
+      case 'high':
+        return <TrendingUp className="h-4 w-4 text-orange-600" />
+      default:
+        return <Bug className="h-4 w-4 text-gray-600" />
     }
-  };
+  }
 
   const handleViewDetails = () => {
-    router.push(`/farms/${farmId}/pest-alerts`);
-  };
+    router.push(`/farms/${farmId}/pest-alerts`)
+  }
 
   if (loading) {
     return (
@@ -87,7 +89,7 @@ export function PestAlertSummary({ farmId, className }: PestAlertSummaryProps) {
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   if (predictions.length === 0) {
@@ -108,16 +110,16 @@ export function PestAlertSummary({ farmId, className }: PestAlertSummaryProps) {
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
-  const criticalAlerts = predictions.filter(p => p.riskLevel === 'critical');
-  const highAlerts = predictions.filter(p => p.riskLevel === 'high');
-  const mediumAlerts = predictions.filter(p => p.riskLevel === 'medium');
-  const lowAlerts = predictions.filter(p => p.riskLevel === 'low');
+  const criticalAlerts = predictions.filter((p) => p.riskLevel === 'critical')
+  const highAlerts = predictions.filter((p) => p.riskLevel === 'high')
+  const mediumAlerts = predictions.filter((p) => p.riskLevel === 'medium')
+  const lowAlerts = predictions.filter((p) => p.riskLevel === 'low')
 
   // Get the most urgent alert
-  const mostUrgentAlert = criticalAlerts[0] || highAlerts[0] || predictions[0];
+  const mostUrgentAlert = criticalAlerts[0] || highAlerts[0] || predictions[0]
 
   return (
     <Card className={`${className} border-l-4 ${getRiskColor(mostUrgentAlert?.riskLevel)}`}>
@@ -158,8 +160,8 @@ export function PestAlertSummary({ farmId, className }: PestAlertSummaryProps) {
                   <h4 className="text-sm font-medium truncate">
                     {formatPestName(mostUrgentAlert.pestDiseaseType)}
                   </h4>
-                  <Badge 
-                    variant={mostUrgentAlert.riskLevel === 'critical' ? 'destructive' : 'secondary'} 
+                  <Badge
+                    variant={mostUrgentAlert.riskLevel === 'critical' ? 'destructive' : 'secondary'}
                     className="text-xs"
                   >
                     {Math.round(mostUrgentAlert.probabilityScore * 100)}%
@@ -173,7 +175,7 @@ export function PestAlertSummary({ farmId, className }: PestAlertSummaryProps) {
           )}
 
           {/* View Details Button */}
-          <Button 
+          <Button
             onClick={handleViewDetails}
             variant="outline"
             size="sm"
@@ -185,5 +187,5 @@ export function PestAlertSummary({ farmId, className }: PestAlertSummaryProps) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

@@ -1,15 +1,15 @@
-"use client";
+'use client'
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { 
-  CheckCircle2, 
-  Clock, 
-  Calendar, 
-  Droplets, 
+import { useState, useEffect, useCallback } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import {
+  CheckCircle2,
+  Clock,
+  Calendar,
+  Droplets,
   SprayCan,
   Scissors,
   FlaskConical,
@@ -20,46 +20,46 @@ import {
   ThumbsDown,
   Brain,
   Zap,
-  CloudRain
-} from 'lucide-react';
-import { SmartTaskGenerator } from '@/lib/smart-task-generator';
-import type { AITaskRecommendation, RecommendationRequest } from '@/types/ai';
+  CloudRain,
+} from 'lucide-react'
+import { SmartTaskGenerator } from '@/lib/smart-task-generator'
+import type { AITaskRecommendation, RecommendationRequest } from '@/types/ai'
 
 interface SmartTasksDashboardProps {
-  farmId: number;
-  userId: string;
-  className?: string;
+  farmId: number
+  userId: string
+  className?: string
 }
 
 export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDashboardProps) {
-  const [recommendations, setRecommendations] = useState<AITaskRecommendation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [generatingNew, setGeneratingNew] = useState(false);
+  const [recommendations, setRecommendations] = useState<AITaskRecommendation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [generatingNew, setGeneratingNew] = useState(false)
 
   const loadRecommendations = useCallback(async () => {
     try {
-      setLoading(true);
-      const activeRecommendations = await SmartTaskGenerator.getActiveRecommendations(farmId);
-      setRecommendations(activeRecommendations);
+      setLoading(true)
+      const activeRecommendations = await SmartTaskGenerator.getActiveRecommendations(farmId)
+      setRecommendations(activeRecommendations)
     } catch (error) {
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error('Error loading recommendations:', error);
+        console.error('Error loading recommendations:', error)
       }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [farmId]);
+  }, [farmId])
 
   useEffect(() => {
-    loadRecommendations();
-  }, [loadRecommendations]);
+    loadRecommendations()
+  }, [loadRecommendations])
 
   const generateNewRecommendations = async () => {
     try {
-      setGeneratingNew(true);
-      
+      setGeneratingNew(true)
+
       const request: RecommendationRequest = {
         farmId,
         userId,
@@ -68,87 +68,99 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
           growthStage: undefined, // Will be determined by the service
           recentActivities: [], // Will be fetched by the service
           availableResources: [],
-          farmConditions: {}
-        }
-      };
+          farmConditions: {},
+        },
+      }
 
-      const result = await SmartTaskGenerator.generateSmartTasks(request);
-      
+      const result = await SmartTaskGenerator.generateSmartTasks(request)
+
       if (result.success && result.data) {
         // Refresh the recommendations list
-        await loadRecommendations();
+        await loadRecommendations()
       }
     } catch (error) {
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
-          console.error('Error generating new recommendations:', error);
+          console.error('Error generating new recommendations:', error)
         }
       }
     } finally {
-      setGeneratingNew(false);
+      setGeneratingNew(false)
     }
-  };
+  }
 
-  const handleTaskAction = async (taskId: string, action: 'accepted' | 'rejected' | 'completed', feedback?: string) => {
+  const handleTaskAction = async (
+    taskId: string,
+    action: 'accepted' | 'rejected' | 'completed',
+    feedback?: string,
+  ) => {
     try {
-      await SmartTaskGenerator.updateTaskStatus(taskId, action, feedback);
-      await loadRecommendations(); // Refresh the list
+      await SmartTaskGenerator.updateTaskStatus(taskId, action, feedback)
+      await loadRecommendations() // Refresh the list
     } catch (error) {
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
-          console.error('Error updating task:', error);
+          console.error('Error updating task:', error)
         }
       }
     }
-  };
+  }
 
   const getTaskIcon = (taskType: string) => {
     switch (taskType) {
-      case 'irrigation': return <Droplets className="h-5 w-5 text-blue-600" />;
-      case 'spray': return <SprayCan className="h-5 w-5 text-orange-600" />;
-      case 'harvest': return <CheckCircle2 className="h-5 w-5 text-green-600" />;
-      case 'fertigation': return <FlaskConical className="h-5 w-5 text-purple-600" />;
-      case 'pruning': return <Scissors className="h-5 w-5 text-red-600" />;
-      case 'soil_test': return <Settings className="h-5 w-5 text-gray-600" />;
-      default: return <Calendar className="h-5 w-5 text-gray-600" />;
+      case 'irrigation':
+        return <Droplets className="h-5 w-5 text-blue-600" />
+      case 'spray':
+        return <SprayCan className="h-5 w-5 text-orange-600" />
+      case 'harvest':
+        return <CheckCircle2 className="h-5 w-5 text-green-600" />
+      case 'fertigation':
+        return <FlaskConical className="h-5 w-5 text-purple-600" />
+      case 'pruning':
+        return <Scissors className="h-5 w-5 text-red-600" />
+      case 'soil_test':
+        return <Settings className="h-5 w-5 text-gray-600" />
+      default:
+        return <Calendar className="h-5 w-5 text-gray-600" />
     }
-  };
+  }
 
   const getPriorityColor = (priorityScore: number) => {
-    if (priorityScore >= 0.8) return 'text-red-600 bg-red-50 border-red-200';
-    if (priorityScore >= 0.6) return 'text-orange-600 bg-orange-50 border-orange-200';
-    if (priorityScore >= 0.4) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    return 'text-green-600 bg-green-50 border-green-200';
-  };
+    if (priorityScore >= 0.8) return 'text-red-600 bg-red-50 border-red-200'
+    if (priorityScore >= 0.6) return 'text-orange-600 bg-orange-50 border-orange-200'
+    if (priorityScore >= 0.4) return 'text-yellow-600 bg-yellow-50 border-yellow-200'
+    return 'text-green-600 bg-green-50 border-green-200'
+  }
 
   const getPriorityLabel = (priorityScore: number) => {
-    if (priorityScore >= 0.8) return 'CRITICAL';
-    if (priorityScore >= 0.6) return 'HIGH';
-    if (priorityScore >= 0.4) return 'MEDIUM';
-    return 'LOW';
-  };
+    if (priorityScore >= 0.8) return 'CRITICAL'
+    if (priorityScore >= 0.6) return 'HIGH'
+    if (priorityScore >= 0.4) return 'MEDIUM'
+    return 'LOW'
+  }
 
   const formatTaskType = (taskType: string) => {
-    return taskType.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-  };
+    return taskType
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
 
   const getDaysFromNow = (date: Date) => {
-    const now = new Date();
-    const diffTime = date.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Tomorrow';
-    if (diffDays === -1) return 'Yesterday';
-    if (diffDays > 0) return `In ${diffDays} days`;
-    return `${Math.abs(diffDays)} days ago`;
-  };
+    const now = new Date()
+    const diffTime = date.getTime() - now.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 0) return 'Today'
+    if (diffDays === 1) return 'Tomorrow'
+    if (diffDays === -1) return 'Yesterday'
+    if (diffDays > 0) return `In ${diffDays} days`
+    return `${Math.abs(diffDays)} days ago`
+  }
 
   if (loading) {
     return (
@@ -161,22 +173,22 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
           </div>
         </div>
       </div>
-    );
+    )
   }
 
-  const todayTasks = recommendations.filter(r => {
-    const taskDate = new Date(r.recommendedDate);
-    const today = new Date();
-    return taskDate.toDateString() === today.toDateString();
-  });
+  const todayTasks = recommendations.filter((r) => {
+    const taskDate = new Date(r.recommendedDate)
+    const today = new Date()
+    return taskDate.toDateString() === today.toDateString()
+  })
 
-  const upcomingTasks = recommendations.filter(r => {
-    const taskDate = new Date(r.recommendedDate);
-    const today = new Date();
-    return taskDate > today;
-  });
+  const upcomingTasks = recommendations.filter((r) => {
+    const taskDate = new Date(r.recommendedDate)
+    const today = new Date()
+    return taskDate > today
+  })
 
-  const highPriorityTasks = recommendations.filter(r => r.priorityScore >= 0.7);
+  const highPriorityTasks = recommendations.filter((r) => r.priorityScore >= 0.7)
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -194,7 +206,7 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
                   AI-generated tasks based on your farm conditions
                 </CardDescription>
               </div>
-              <Button 
+              <Button
                 onClick={generateNewRecommendations}
                 disabled={generatingNew}
                 size="sm"
@@ -216,7 +228,7 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
             </div>
           </div>
         </CardHeader>
-        
+
         {recommendations.length > 0 && (
           <CardContent className="pt-0 px-4">
             <div className="grid grid-cols-3 gap-3 text-sm">
@@ -241,12 +253,14 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
         <Card>
           <CardContent className="p-6 text-center">
             <Brain className="h-10 w-10 text-purple-400 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-gray-800 mb-2">No Active Recommendations</h3>
+            <h3 className="text-base font-semibold text-gray-800 mb-2">
+              No Active Recommendations
+            </h3>
             <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-              Generate AI-powered task recommendations based on your farm's current conditions.
+              Generate AI-powered task recommendations based on your farm&apos;s current conditions.
             </p>
-            <Button 
-              onClick={generateNewRecommendations} 
+            <Button
+              onClick={generateNewRecommendations}
               disabled={generatingNew}
               className="w-full sm:w-auto"
             >
@@ -262,16 +276,11 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
             <div>
               <h3 className="text-base font-semibold mb-3 flex items-center gap-2 px-1">
                 <Calendar className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                <span>Today's Tasks ({todayTasks.length})</span>
+                <span>Today&apos;s Tasks ({todayTasks.length})</span>
               </h3>
               <div className="space-y-3">
                 {todayTasks.map((task) => (
-                  <TaskCard 
-                    key={task.id} 
-                    task={task} 
-                    onAction={handleTaskAction}
-                    isToday={true}
-                  />
+                  <TaskCard key={task.id} task={task} onAction={handleTaskAction} isToday={true} />
                 ))}
               </div>
             </div>
@@ -286,12 +295,7 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
               </h3>
               <div className="space-y-3">
                 {upcomingTasks.map((task) => (
-                  <TaskCard 
-                    key={task.id} 
-                    task={task} 
-                    onAction={handleTaskAction}
-                    isToday={false}
-                  />
+                  <TaskCard key={task.id} task={task} onAction={handleTaskAction} isToday={false} />
                 ))}
               </div>
             </div>
@@ -307,85 +311,105 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
             <span className="text-sm font-medium">Personalized AI Recommendations</span>
           </div>
           <div className="text-xs text-purple-700 leading-relaxed">
-            Tasks generated from weather, farm history, and pest predictions. Accept or reject to help AI learn your style.
+            Tasks generated from weather, farm history, and pest predictions. Accept or reject to
+            help AI learn your style.
           </div>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
 
 interface TaskCardProps {
-  task: AITaskRecommendation;
-  onAction: (taskId: string, action: 'accepted' | 'rejected' | 'completed', feedback?: string) => void;
-  isToday: boolean;
+  task: AITaskRecommendation
+  onAction: (
+    taskId: string,
+    action: 'accepted' | 'rejected' | 'completed',
+    feedback?: string,
+  ) => void
+  isToday: boolean
 }
 
 function TaskCard({ task, onAction, isToday }: TaskCardProps) {
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(false)
 
   const getPriorityColor = (priorityScore: number) => {
-    if (priorityScore >= 0.8) return 'border-l-red-500 bg-red-50';
-    if (priorityScore >= 0.6) return 'border-l-orange-500 bg-orange-50';
-    if (priorityScore >= 0.4) return 'border-l-yellow-500 bg-yellow-50';
-    return 'border-l-green-500 bg-green-50';
-  };
+    if (priorityScore >= 0.8) return 'border-l-red-500 bg-red-50'
+    if (priorityScore >= 0.6) return 'border-l-orange-500 bg-orange-50'
+    if (priorityScore >= 0.4) return 'border-l-yellow-500 bg-yellow-50'
+    return 'border-l-green-500 bg-green-50'
+  }
 
   const getTaskIcon = (taskType: string) => {
     switch (taskType) {
-      case 'irrigation': return <Droplets className="h-5 w-5 text-blue-600" />;
-      case 'spray': return <SprayCan className="h-5 w-5 text-orange-600" />;
-      case 'harvest': return <CheckCircle2 className="h-5 w-5 text-green-600" />;
-      case 'fertigation': return <FlaskConical className="h-5 w-5 text-purple-600" />;
-      case 'pruning': return <Scissors className="h-5 w-5 text-red-600" />;
-      case 'soil_test': return <Settings className="h-5 w-5 text-gray-600" />;
-      default: return <Calendar className="h-5 w-5 text-gray-600" />;
+      case 'irrigation':
+        return <Droplets className="h-5 w-5 text-blue-600" />
+      case 'spray':
+        return <SprayCan className="h-5 w-5 text-orange-600" />
+      case 'harvest':
+        return <CheckCircle2 className="h-5 w-5 text-green-600" />
+      case 'fertigation':
+        return <FlaskConical className="h-5 w-5 text-purple-600" />
+      case 'pruning':
+        return <Scissors className="h-5 w-5 text-red-600" />
+      case 'soil_test':
+        return <Settings className="h-5 w-5 text-gray-600" />
+      default:
+        return <Calendar className="h-5 w-5 text-gray-600" />
     }
-  };
+  }
 
   const formatTaskType = (taskType: string) => {
-    return taskType.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-  };
+    return taskType
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
 
   const getDaysFromNow = (date: Date) => {
-    const now = new Date();
-    const diffTime = date.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Tomorrow';
-    if (diffDays === -1) return 'Yesterday';
-    if (diffDays > 0) return `In ${diffDays} days`;
-    return `${Math.abs(diffDays)} days ago`;
-  };
+    const now = new Date()
+    const diffTime = date.getTime() - now.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 0) return 'Today'
+    if (diffDays === 1) return 'Tomorrow'
+    if (diffDays === -1) return 'Yesterday'
+    if (diffDays > 0) return `In ${diffDays} days`
+    return `${Math.abs(diffDays)} days ago`
+  }
 
   const getPriorityLabel = (priorityScore: number) => {
-    if (priorityScore >= 0.8) return 'CRITICAL';
-    if (priorityScore >= 0.6) return 'HIGH';
-    if (priorityScore >= 0.4) return 'MEDIUM';
-    return 'LOW';
-  };
+    if (priorityScore >= 0.8) return 'CRITICAL'
+    if (priorityScore >= 0.6) return 'HIGH'
+    if (priorityScore >= 0.4) return 'MEDIUM'
+    return 'LOW'
+  }
 
   return (
-    <Card className={`border-l-4 ${getPriorityColor(task.priorityScore)} transition-all duration-200 hover:shadow-md`}>
+    <Card
+      className={`border-l-4 ${getPriorityColor(task.priorityScore)} transition-all duration-200 hover:shadow-md`}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               {getTaskIcon(task.taskType)}
               <div>
-                <h3 className="font-semibold">
-                  {formatTaskType(task.taskType)}
-                </h3>
+                <h3 className="font-semibold">{formatTaskType(task.taskType)}</h3>
                 <div className="flex items-center gap-3 text-sm text-gray-600">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     <span>{getDaysFromNow(task.recommendedDate)}</span>
                   </div>
-                  <Badge variant={task.priorityScore >= 0.7 ? 'destructive' : 
-                                task.priorityScore >= 0.5 ? 'secondary' : 'outline'}>
+                  <Badge
+                    variant={
+                      task.priorityScore >= 0.7
+                        ? 'destructive'
+                        : task.priorityScore >= 0.5
+                          ? 'secondary'
+                          : 'outline'
+                    }
+                  >
                     {getPriorityLabel(task.priorityScore)}
                   </Badge>
                   {task.weatherDependent && (
@@ -399,9 +423,7 @@ function TaskCard({ task, onAction, isToday }: TaskCardProps) {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm font-medium">
-              {Math.round(task.confidenceScore * 100)}%
-            </div>
+            <div className="text-sm font-medium">{Math.round(task.confidenceScore * 100)}%</div>
             <div className="text-xs text-gray-500">AI Confidence</div>
           </div>
         </div>
@@ -429,7 +451,7 @@ function TaskCard({ task, onAction, isToday }: TaskCardProps) {
               <Settings className="h-4 w-4" />
               {showDetails ? 'Hide' : 'Show'} Details
             </button>
-            
+
             {showDetails && (
               <div className="space-y-2 text-sm">
                 {task.taskDetails.duration && (
@@ -438,7 +460,7 @@ function TaskCard({ task, onAction, isToday }: TaskCardProps) {
                     <span>Estimated Duration: {task.taskDetails.duration} minutes</span>
                   </div>
                 )}
-                
+
                 {task.taskDetails.resources && task.taskDetails.resources.length > 0 && (
                   <div>
                     <div className="font-medium text-gray-700 mb-1">Resources Needed:</div>
@@ -451,7 +473,7 @@ function TaskCard({ task, onAction, isToday }: TaskCardProps) {
                     </div>
                   </div>
                 )}
-                
+
                 {task.taskDetails.conditions && task.taskDetails.conditions.length > 0 && (
                   <div>
                     <div className="font-medium text-gray-700 mb-1">Conditions:</div>
@@ -483,27 +505,27 @@ function TaskCard({ task, onAction, isToday }: TaskCardProps) {
 
         {/* Action Buttons */}
         <div className="flex gap-2">
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             onClick={() => onAction(task.id, 'accepted')}
             className="flex-1"
-            variant={isToday ? "default" : "outline"}
+            variant={isToday ? 'default' : 'outline'}
           >
             <ThumbsUp className="h-4 w-4 mr-1" />
             Accept Task
           </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
+          <Button
+            size="sm"
+            variant="outline"
             onClick={() => onAction(task.id, 'completed')}
             className="flex-1"
           >
             <CheckCircle2 className="h-4 w-4 mr-1" />
             Mark Done
           </Button>
-          <Button 
-            size="sm" 
-            variant="ghost" 
+          <Button
+            size="sm"
+            variant="ghost"
             onClick={() => onAction(task.id, 'rejected', 'Not applicable')}
           >
             <ThumbsDown className="h-4 w-4" />
@@ -516,11 +538,9 @@ function TaskCard({ task, onAction, isToday }: TaskCardProps) {
             <Progress value={task.confidenceScore * 100} className="w-16 h-1" />
             <span>{Math.round(task.confidenceScore * 100)}% confidence</span>
           </div>
-          <div>
-            Expires: {task.expiresAt?.toLocaleDateString() || 'No expiry'}
-          </div>
+          <div>Expires: {task.expiresAt?.toLocaleDateString() || 'No expiry'}</div>
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

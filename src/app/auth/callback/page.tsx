@@ -1,89 +1,80 @@
-"use client";
+'use client'
 
-import { useEffect, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase';
+import { useEffect, Suspense } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
 
 function AuthCallbackContent() {
-  const router = useRouter();
+  const router = useRouter()
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
         // Check if we have tokens in the URL fragment
-        const hashFragment = window.location.hash.substring(1);
-        const searchParams = new URLSearchParams(hashFragment);
-        
-        const accessToken = searchParams.get('access_token');
-        const refreshToken = searchParams.get('refresh_token');
-        const error = searchParams.get('error');
-        const errorDescription = searchParams.get('error_description');
+        const hashFragment = window.location.hash.substring(1)
+        const searchParams = new URLSearchParams(hashFragment)
 
-        // console.log('Client callback processing:', { 
-        //   hasAccessToken: !!accessToken, 
-        //   hasRefreshToken: !!refreshToken, 
-        //   error: error,
-        //   fragment: hashFragment 
-        // });
+        const accessToken = searchParams.get('access_token')
+        const refreshToken = searchParams.get('refresh_token')
+        const error = searchParams.get('error')
 
         // Handle errors
         if (error) {
-          router.push(`/auth/auth-code-error?error=${error}`);
-          return;
+          router.push(`/auth/auth-code-error?error=${error}`)
+          return
         }
 
         // If we have tokens in fragment, set the session directly
         if (accessToken && refreshToken) {
-          const supabase = createClient();
-          
+          const supabase = createClient()
+
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
-            refresh_token: refreshToken
-          });
+            refresh_token: refreshToken,
+          })
 
           if (error) {
-            router.push(`/auth/auth-code-error?error=session_failed`);
-            return;
+            router.push(`/auth/auth-code-error?error=session_failed`)
+            return
           }
 
           if (data?.session) {
             // Clear the fragment from URL and redirect to home
-            window.history.replaceState({}, document.title, window.location.pathname);
-            router.push('/');
-            return;
+            window.history.replaceState({}, document.title, window.location.pathname)
+            router.push('/')
+            return
           }
         }
 
         // If no tokens in fragment, check for authorization code in query params
-        const currentUrl = new URL(window.location.href);
-        const code = currentUrl.searchParams.get('code');
-        
+        const currentUrl = new URL(window.location.href)
+        const code = currentUrl.searchParams.get('code')
+
         if (code) {
-          const supabase = createClient();
-          
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-          
+          const supabase = createClient()
+
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+
           if (error) {
-            router.push(`/auth/auth-code-error?error=code_exchange_failed`);
-            return;
+            router.push(`/auth/auth-code-error?error=code_exchange_failed`)
+            return
           }
-          
+
           if (data?.session) {
-            router.push('/');
-            return;
+            router.push('/')
+            return
           }
         }
 
         // No tokens found anywhere
-        router.push(`/auth/auth-code-error?error=no_tokens`);
-        
+        router.push(`/auth/auth-code-error?error=no_tokens`)
       } catch (error) {
-        router.push(`/auth/auth-code-error?error=unexpected`);
+        router.push(`/auth/auth-code-error?error=unexpected`)
       }
-    };
+    }
 
-    handleAuthCallback();
-  }, [router]);
+    handleAuthCallback()
+  }, [router])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -92,20 +83,22 @@ function AuthCallbackContent() {
         <p className="text-muted-foreground">Completing authentication...</p>
       </div>
     </div>
-  );
+  )
 }
 
 export default function AuthCallback() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <AuthCallbackContent />
     </Suspense>
-  );
+  )
 }

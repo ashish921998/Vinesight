@@ -1,77 +1,83 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Scissors, Upload, X } from "lucide-react";
+import { useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Scissors, Upload, X } from 'lucide-react'
 
 interface HarvestFormProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
   onSubmit: (data: {
-    date: string;
-    quantity: string;
-    quality: string;
-    price?: string;
-    buyer?: string;
-    notes: string;
-    photos: File[];
-  }) => void;
-  isSubmitting: boolean;
+    date: string
+    quantity: string
+    quality: string
+    price?: string
+    buyer?: string
+    notes: string
+    photos: File[]
+  }) => void
+  isSubmitting: boolean
 }
 
 export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: HarvestFormProps) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
-    quantity: "",
-    quality: "",
-    price: "",
-    buyer: "",
-    notes: "",
-    photos: [] as File[]
-  });
+    quantity: '',
+    quality: '',
+    price: '',
+    buyer: '',
+    notes: '',
+    photos: [] as File[],
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.quantity || !formData.quality) return;
-    onSubmit(formData);
-  };
+    e.preventDefault()
+    if (!formData.quantity || !formData.quality) return
+    onSubmit(formData)
+  }
 
   const handlePhotoAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setFormData(prev => ({
+    const files = Array.from(e.target.files || [])
+    setFormData((prev) => ({
       ...prev,
-      photos: [...prev.photos, ...files]
-    }));
-  };
+      photos: [...prev.photos, ...files],
+    }))
+  }
 
   const handlePhotoRemove = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
-    }));
-  };
+      photos: prev.photos.filter((_, i) => i !== index),
+    }))
+  }
 
   const resetForm = () => {
-    setFormData({ 
+    setFormData({
       date: new Date().toISOString().split('T')[0],
-      quantity: "", 
-      quality: "", 
-      price: "", 
-      buyer: "", 
-      notes: "", 
-      photos: [] 
-    });
-  };
+      quantity: '',
+      quality: '',
+      price: '',
+      buyer: '',
+      notes: '',
+      photos: [],
+    })
+  }
 
   const handleClose = () => {
-    resetForm();
-    onClose();
-  };
+    resetForm()
+    onClose()
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -95,7 +101,7 @@ export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: Harvest
               id="date"
               type="date"
               value={formData.date}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
               max={new Date().toISOString().split('T')[0]}
               className="mt-1"
               required
@@ -113,7 +119,7 @@ export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: Harvest
                 step="0.1"
                 min="0"
                 value={formData.quantity}
-                onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, quantity: e.target.value }))}
                 placeholder="100"
                 className="mt-1"
                 required
@@ -126,7 +132,7 @@ export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: Harvest
               </Label>
               <Select
                 value={formData.quality}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, quality: value }))}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, quality: value }))}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select quality" />
@@ -152,7 +158,7 @@ export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: Harvest
                 step="0.01"
                 min="0"
                 value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
                 placeholder="150"
                 className="mt-1"
               />
@@ -165,7 +171,7 @@ export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: Harvest
               <Input
                 id="buyer"
                 value={formData.buyer}
-                onChange={(e) => setFormData(prev => ({ ...prev, buyer: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, buyer: e.target.value }))}
                 placeholder="Market/Company"
                 className="mt-1"
               />
@@ -179,7 +185,7 @@ export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: Harvest
             <Textarea
               id="notes"
               value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
               placeholder="Harvest conditions, transportation details..."
               className="mt-1 resize-none"
               rows={3}
@@ -206,10 +212,11 @@ export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: Harvest
             {formData.photos.length > 0 && (
               <div className="mt-3 space-y-2">
                 {formData.photos.map((photo, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-700 truncate">
-                      {photo.name}
-                    </span>
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                  >
+                    <span className="text-sm text-gray-700 truncate">{photo.name}</span>
                     <button
                       type="button"
                       onClick={() => handlePhotoRemove(index)}
@@ -224,12 +231,7 @@ export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: Harvest
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              className="flex-1"
-            >
+            <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
               Cancel
             </Button>
             <Button
@@ -237,11 +239,11 @@ export function HarvestForm({ isOpen, onClose, onSubmit, isSubmitting }: Harvest
               disabled={!formData.quantity || !formData.quality || isSubmitting}
               className="flex-1 bg-green-600 hover:bg-green-700"
             >
-              {isSubmitting ? "Saving..." : "Save Harvest"}
+              {isSubmitting ? 'Saving...' : 'Save Harvest'}
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

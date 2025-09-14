@@ -1,61 +1,67 @@
-"use client";
+'use client'
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowRight, Calculator, Droplets } from 'lucide-react';
+import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { ArrowRight, Calculator, Droplets } from 'lucide-react'
 
 interface MADResult {
-  mad: number;
-  dbl: number; // Store DBL for System Discharge calculations
+  mad: number
+  dbl: number // Store DBL for System Discharge calculations
 }
 
 export function MADCalculatorComponent() {
   // Step 1: MAD Calculator
-  const [dbl, setDbl] = useState(''); // Distance Between Lines (vine spacing)
-  const [rootDepth, setRootDepth] = useState('');
-  const [rootWidth, setRootWidth] = useState('');
-  const [waterRetention, setWaterRetention] = useState('');
-  const [madResult, setMadResult] = useState<MADResult | null>(null);
-  
+  const [dbl, setDbl] = useState('') // Distance Between Lines (vine spacing)
+  const [rootDepth, setRootDepth] = useState('')
+  const [rootWidth, setRootWidth] = useState('')
+  const [waterRetention, setWaterRetention] = useState('')
+  const [madResult, setMadResult] = useState<MADResult | null>(null)
+
   // Step 2: Refill Tank Calculator
-  const [refillSpan, setRefillSpan] = useState('');
-  const [refillTankResult, setRefillTankResult] = useState<number | null>(null);
+  const [refillSpan, setRefillSpan] = useState('')
+  const [refillTankResult, setRefillTankResult] = useState<number | null>(null)
 
   const calculateMAD = () => {
-    const dblNum = parseFloat(dbl);
-    const rootDepthNum = parseFloat(rootDepth);
-    const rootWidthNum = parseFloat(rootWidth);
-    const waterRetentionNum = parseFloat(waterRetention);
+    const dblNum = parseFloat(dbl)
+    const rootDepthNum = parseFloat(rootDepth)
+    const rootWidthNum = parseFloat(rootWidth)
+    const waterRetentionNum = parseFloat(waterRetention)
 
     if (dblNum && rootDepthNum && rootWidthNum && waterRetentionNum) {
       // Formula: (100/(DBL) * Root Depth * Root Width * Water Retention * 100) / 10000
-      const result = (100 / dblNum * rootDepthNum * rootWidthNum * waterRetentionNum * 100) / 10000;
-      setMadResult({ mad: result, dbl: dblNum });
+      const result =
+        ((100 / dblNum) * rootDepthNum * rootWidthNum * waterRetentionNum * 100) / 10000
+      setMadResult({ mad: result, dbl: dblNum })
     }
-  };
+  }
 
   const calculateRefillTank = () => {
     if (madResult && refillSpan) {
-      const refillSpanValue = parseFloat(refillSpan);
-      const result = madResult.mad * refillSpanValue;
-      setRefillTankResult(result);
+      const refillSpanValue = parseFloat(refillSpan)
+      const result = madResult.mad * refillSpanValue
+      setRefillTankResult(result)
     }
-  };
-
+  }
 
   const resetCalculator = () => {
-    setDbl('');
-    setRootDepth('');
-    setRootWidth('');
-    setWaterRetention('');
-    setMadResult(null);
-    setRefillSpan('');
-    setRefillTankResult(null);
-  };
+    setDbl('')
+    setRootDepth('')
+    setRootWidth('')
+    setWaterRetention('')
+    setMadResult(null)
+    setRefillSpan('')
+    setRefillTankResult(null)
+  }
 
   return (
     <div className="space-y-4">
@@ -114,15 +120,15 @@ export function MADCalculatorComponent() {
               />
             </div>
           </div>
-          
-          <Button 
+
+          <Button
             onClick={calculateMAD}
             disabled={!dbl || !rootDepth || !rootWidth || !waterRetention}
             className="w-full"
           >
             Calculate MAD
           </Button>
-          
+
           {madResult && (
             <div className="bg-green-50 p-4 rounded-lg">
               <p className="text-sm font-medium text-green-800">
@@ -156,15 +162,11 @@ export function MADCalculatorComponent() {
                 </SelectContent>
               </Select>
             </div>
-            
-            <Button 
-              onClick={calculateRefillTank}
-              disabled={!refillSpan}
-              className="w-full"
-            >
+
+            <Button onClick={calculateRefillTank} disabled={!refillSpan} className="w-full">
               Calculate Refill Tank
             </Button>
-            
+
             {refillTankResult && (
               <div className="bg-green-50 p-4 rounded-lg">
                 <p className="text-sm font-medium text-green-800">
@@ -179,7 +181,6 @@ export function MADCalculatorComponent() {
         </Card>
       )}
 
-
       {/* Reset Button */}
       {(madResult || refillTankResult) && (
         <div className="text-center">
@@ -189,5 +190,5 @@ export function MADCalculatorComponent() {
         </div>
       )}
     </div>
-  );
+  )
 }

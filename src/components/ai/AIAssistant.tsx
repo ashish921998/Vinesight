@@ -1,162 +1,186 @@
-'use client';
+'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, Mic, MicOff, Bot, User, Loader2, X, Paperclip, History, Plus, Copy, Check, ArrowRight, Trash2 } from 'lucide-react';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ImageAnalysisResult } from '@/lib/ai-service';
-import { cn } from '@/lib/utils';
-import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
-import { getQuotaStatus, incrementQuestionCount } from '@/lib/quota-service';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Textarea } from '../ui/textarea';
-import { supabaseConversationStorage, type Message, type Conversation } from '@/lib/supabase-conversation-storage';
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import {
+  MessageCircle,
+  Mic,
+  MicOff,
+  Bot,
+  User,
+  Loader2,
+  X,
+  Paperclip,
+  History,
+  Plus,
+  Copy,
+  Check,
+  ArrowRight,
+  Trash2,
+} from 'lucide-react'
+import Image from 'next/image'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ImageAnalysisResult } from '@/lib/ai-service'
+import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
+import { getQuotaStatus, incrementQuestionCount } from '@/lib/quota-service'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { Textarea } from '../ui/textarea'
+import {
+  supabaseConversationStorage,
+  type Message,
+  type Conversation,
+} from '@/lib/supabase-conversation-storage'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 // Message and Conversation interfaces now imported from conversation-storage
 
 interface AIAssistantProps {
-  farmData?: any;
-  recentAnalysis?: ImageAnalysisResult[];
-  isOpen?: boolean;
-  onToggle?: () => void;
-  className?: string;
-  isMobile?: boolean;
+  farmData?: any
+  recentAnalysis?: ImageAnalysisResult[]
+  isOpen?: boolean
+  onToggle?: () => void
+  className?: string
+  isMobile?: boolean
 }
 
-export function AIAssistant({ 
-  farmData, 
-  recentAnalysis, 
-  isOpen = false, 
-  onToggle, 
+export function AIAssistant({
+  farmData,
+  recentAnalysis,
+  isOpen = false,
+  onToggle,
   className,
-  isMobile: propIsMobile
+  isMobile: propIsMobile,
 }: AIAssistantProps) {
-  const { t, i18n } = useTranslation();
-  const { user, loading: authLoading } = useSupabaseAuth();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [isMobile, setIsMobile] = useState(propIsMobile || false);
-  const [quotaStatus, setQuotaStatus] = useState(() => getQuotaStatus());
-  const [showHistory, setShowHistory] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  const currentConversationIdRef = useRef<string | null>(null); // Synchronous reference to prevent race conditions
-  const savingInProgressRef = useRef<boolean>(false); // Prevent concurrent saves
-  const [pendingAttachments, setPendingAttachments] = useState<Array<{type: 'image'; name: string; url: string; size?: number}>>([]);
-  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const handleSendMessageRef = useRef<((message?: string) => Promise<void>) | null>(null);
+  const { t, i18n } = useTranslation()
+  const { user, loading: authLoading } = useSupabaseAuth()
+  const [messages, setMessages] = useState<Message[]>([])
+  const [inputValue, setInputValue] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isListening, setIsListening] = useState(false)
+  const [isMobile, setIsMobile] = useState(propIsMobile || false)
+  const [quotaStatus, setQuotaStatus] = useState(() => getQuotaStatus())
+  const [showHistory, setShowHistory] = useState(false)
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
+  const currentConversationIdRef = useRef<string | null>(null) // Synchronous reference to prevent race conditions
+  const savingInProgressRef = useRef<boolean>(false) // Prevent concurrent saves
+  const [pendingAttachments, setPendingAttachments] = useState<
+    Array<{ type: 'image'; name: string; url: string; size?: number }>
+  >([])
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const recognitionRef = useRef<any>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const handleSendMessageRef = useRef<((message?: string) => Promise<void>) | null>(null)
 
   // Load conversations from storage on mount
   useEffect(() => {
     const loadConversations = async () => {
-      if (authLoading) return; // Wait for auth to load
-      
-      const stored = await supabaseConversationStorage.loadConversations(user?.id, farmData?.id);
-      setConversations(stored);
+      if (authLoading) return // Wait for auth to load
+
+      const stored = await supabaseConversationStorage.loadConversations(user?.id, farmData?.id)
+      setConversations(stored)
 
       // Auto-migrate localStorage data if user is authenticated and no conversations exist
       if (user && stored.length === 0) {
         try {
-          await supabaseConversationStorage.migrateFromLocalStorage(user.id);
+          await supabaseConversationStorage.migrateFromLocalStorage(user.id)
           // Reload conversations after migration
-          const migratedConversations = await supabaseConversationStorage.loadConversations(user?.id, farmData?.id);
-          setConversations(migratedConversations);
+          const migratedConversations = await supabaseConversationStorage.loadConversations(
+            user?.id,
+            farmData?.id,
+          )
+          setConversations(migratedConversations)
         } catch (error) {
           // Log error for debugging in development only
           if (process.env.NODE_ENV === 'development') {
             // eslint-disable-next-line no-console
-            console.error('Migration error:', error);
+            console.error('Migration error:', error)
           }
         }
       }
-    };
-    loadConversations();
-  }, [user, authLoading, farmData?.id]);
+    }
+    loadConversations()
+  }, [user, authLoading, farmData?.id])
 
   // Update quota status when user authentication changes
   useEffect(() => {
     if (!authLoading) {
-      setQuotaStatus(getQuotaStatus(user?.id));
+      setQuotaStatus(getQuotaStatus(user?.id))
     }
-  }, [user?.id, authLoading]);
+  }, [user?.id, authLoading])
 
   // Check if device is mobile (only if not provided as prop)
   useEffect(() => {
     if (propIsMobile === undefined) {
       const checkMobile = () => {
-        setIsMobile(window.innerWidth <= 768);
-      };
-      checkMobile();
-      window.addEventListener('resize', checkMobile);
-      return () => window.removeEventListener('resize', checkMobile);
+        setIsMobile(window.innerWidth <= 768)
+      }
+      checkMobile()
+      window.addEventListener('resize', checkMobile)
+      return () => window.removeEventListener('resize', checkMobile)
     } else {
-      setIsMobile(propIsMobile);
+      setIsMobile(propIsMobile)
     }
-  }, [propIsMobile]);
+  }, [propIsMobile])
 
   // Initialize speech recognition (once on mount)
   useEffect(() => {
     if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-IN'; // Default language, will be updated by separate effect
-      
-      recognition.onstart = () => setIsListening(true);
-      recognition.onend = () => setIsListening(false);
-      recognition.onerror = () => setIsListening(false);
-      
+      const SpeechRecognition = window.webkitSpeechRecognition
+      const recognition = new SpeechRecognition()
+
+      recognition.continuous = false
+      recognition.interimResults = false
+      recognition.lang = 'en-IN' // Default language, will be updated by separate effect
+
+      recognition.onstart = () => setIsListening(true)
+      recognition.onend = () => setIsListening(false)
+      recognition.onerror = () => setIsListening(false)
+
       recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInputValue(transcript);
+        const transcript = event.results[0][0].transcript
+        setInputValue(transcript)
         // Use ref to avoid memory leaks and get current handler
         if (handleSendMessageRef.current) {
-          handleSendMessageRef.current(transcript);
+          handleSendMessageRef.current(transcript)
         }
-      };
-      
-      recognitionRef.current = recognition;
+      }
+
+      recognitionRef.current = recognition
 
       // Cleanup function
       return () => {
         if (recognitionRef.current) {
-          recognitionRef.current.abort();
-          recognitionRef.current = null;
+          recognitionRef.current.abort()
+          recognitionRef.current = null
         }
-      };
+      }
     }
-  }, []); // Only run once on mount
+  }, []) // Only run once on mount
 
   // Update speech recognition language when language changes
   useEffect(() => {
     if (recognitionRef.current) {
-      recognitionRef.current.lang = i18n.language === 'hi' ? 'hi-IN' : 
-                                   i18n.language === 'mr' ? 'mr-IN' : 'en-IN';
+      recognitionRef.current.lang =
+        i18n.language === 'hi' ? 'hi-IN' : i18n.language === 'mr' ? 'mr-IN' : 'en-IN'
     }
-  }, [i18n.language]);
+  }, [i18n.language])
 
   const getWelcomeMessage = useCallback(() => {
     switch (i18n.language) {
       case 'hi':
-        return 'नमस्ते! मैं आपका AI कृषि सहायक हूं। अंगूर की खेती के बारे में कोई भी प्रश्न पूछें - रोग, सिंचाई, उर्वरक, या कटाई के बारे में।';
+        return 'नमस्ते! मैं आपका AI कृषि सहायक हूं। अंगूर की खेती के बारे में कोई भी प्रश्न पूछें - रोग, सिंचाई, उर्वरक, या कटाई के बारे में।'
       case 'mr':
-        return 'नमस्कार! मी तुमचा AI कृषी सहाय्यक आहे. द्राक्ष शेतीबाबत कोणताही प्रश्न विचारा - रोग, सिंचन, खत, किंवा कापणी बद्दल.';
+        return 'नमस्कार! मी तुमचा AI कृषी सहाय्यक आहे. द्राक्ष शेतीबाबत कोणताही प्रश्न विचारा - रोग, सिंचन, खत, किंवा कापणी बद्दल.'
       default:
-        return 'Hello! I\'m your AI farming assistant. Ask me anything about grape farming - diseases, irrigation, fertilization, or harvesting.';
+        return "Hello! I'm your AI farming assistant. Ask me anything about grape farming - diseases, irrigation, fertilization, or harvesting."
     }
-  }, [i18n.language]);
+  }, [i18n.language])
 
   // Handle welcome message
   useEffect(() => {
@@ -166,442 +190,486 @@ export function AIAssistant({
         content: getWelcomeMessage(),
         role: 'assistant',
         timestamp: new Date(),
-        language: i18n.language
-      };
-      setMessages([welcomeMessage]);
-    } else if (messages.length === 1 && messages[0].role === 'assistant' && messages[0].language !== i18n.language) {
+        language: i18n.language,
+      }
+      setMessages([welcomeMessage])
+    } else if (
+      messages.length === 1 &&
+      messages[0].role === 'assistant' &&
+      messages[0].language !== i18n.language
+    ) {
       // Update welcome message language if it's the only message and language changed
       const updatedWelcomeMessage: Message = {
         ...messages[0],
         content: getWelcomeMessage(),
-        language: i18n.language
-      };
-      setMessages([updatedWelcomeMessage]);
+        language: i18n.language,
+      }
+      setMessages([updatedWelcomeMessage])
     }
-  }, [messages, i18n.language, getWelcomeMessage]);
+  }, [messages, i18n.language, getWelcomeMessage])
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   const analyzeQuery = (text: string) => {
-    const lowerText = text.toLowerCase();
+    const lowerText = text.toLowerCase()
     const queryTypes = [
-      { type: 'disease', keywords: ['disease', 'sick', 'spots', 'fungus', 'mold', 'rot', 'बीमारी', 'रोग', 'आजार'] },
-      { type: 'irrigation', keywords: ['water', 'irrigation', 'dry', 'drought', 'सिंचाई', 'पानी', 'पाणी'] },
-      { type: 'fertilizer', keywords: ['fertilizer', 'nutrition', 'feed', 'nutrient', 'उर्वरक', 'खाद', 'खत'] },
+      {
+        type: 'disease',
+        keywords: ['disease', 'sick', 'spots', 'fungus', 'mold', 'rot', 'बीमारी', 'रोग', 'आजार'],
+      },
+      {
+        type: 'irrigation',
+        keywords: ['water', 'irrigation', 'dry', 'drought', 'सिंचाई', 'पानी', 'पाणी'],
+      },
+      {
+        type: 'fertilizer',
+        keywords: ['fertilizer', 'nutrition', 'feed', 'nutrient', 'उर्वरक', 'खाद', 'खत'],
+      },
       { type: 'harvest', keywords: ['harvest', 'pick', 'ripe', 'maturity', 'कटाई', 'कापणी'] },
       { type: 'pruning', keywords: ['pruning', 'trim', 'cut', 'canopy', 'छंटाई', 'छाटणी'] },
       { type: 'pest', keywords: ['pest', 'insect', 'bug', 'कीट', 'कीड़े'] },
       { type: 'weather', keywords: ['weather', 'rain', 'temperature', 'मौसम', 'बारिश'] },
-      { type: 'soil', keywords: ['soil', 'ph', 'organic', 'मिट्टी', 'माती'] }
-    ];
+      { type: 'soil', keywords: ['soil', 'ph', 'organic', 'मिट्टी', 'माती'] },
+    ]
 
     for (const queryType of queryTypes) {
-      const matchCount = queryType.keywords.filter(keyword => lowerText.includes(keyword)).length;
+      const matchCount = queryType.keywords.filter((keyword) => lowerText.includes(keyword)).length
       if (matchCount > 0) {
         return {
           queryType: queryType.type,
           confidence: Math.min(matchCount / queryType.keywords.length + 0.5, 1),
-          relatedTopics: queryType.keywords.filter(keyword => lowerText.includes(keyword))
-        };
+          relatedTopics: queryType.keywords.filter((keyword) => lowerText.includes(keyword)),
+        }
       }
     }
 
-    return { queryType: 'general', confidence: 0.5, relatedTopics: [] };
-  };
+    return { queryType: 'general', confidence: 0.5, relatedTopics: [] }
+  }
 
-  const buildConversationContext = useCallback((currentMessages?: Message[]) => {
-    const messagesToUse = currentMessages || messages;
-    const recentMessages = messagesToUse.slice(-5); // Last 5 messages for context
-    const conversationTopics = recentMessages
-      .filter(msg => msg.context?.queryType)
-      .map(msg => msg.context!.queryType)
-      .filter((topic): topic is string => topic !== undefined); // Filter out undefined values
-    
-    return {
-      farmData,
-      language: i18n.language as 'en' | 'hi' | 'mr',
-      recentAnalysis,
-      conversationHistory: recentMessages.map(msg => ({
-        role: msg.role,
-        content: msg.content,
-        queryType: msg.context?.queryType
-      })),
-      recentTopics: [...new Set(conversationTopics)]
-    };
-  }, [messages, farmData, recentAnalysis, i18n.language]);
+  const buildConversationContext = useCallback(
+    (currentMessages?: Message[]) => {
+      const messagesToUse = currentMessages || messages
+      const recentMessages = messagesToUse.slice(-5) // Last 5 messages for context
+      const conversationTopics = recentMessages
+        .filter((msg) => msg.context?.queryType)
+        .map((msg) => msg.context!.queryType)
+        .filter((topic): topic is string => topic !== undefined) // Filter out undefined values
 
+      return {
+        farmData,
+        language: i18n.language as 'en' | 'hi' | 'mr',
+        recentAnalysis,
+        conversationHistory: recentMessages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+          queryType: msg.context?.queryType,
+        })),
+        recentTopics: [...new Set(conversationTopics)],
+      }
+    },
+    [messages, farmData, recentAnalysis, i18n.language],
+  )
 
   // Atomic function to get or create conversation ID
   const getOrCreateConversationId = useCallback(() => {
-    let conversationId = currentConversationIdRef.current;
+    let conversationId = currentConversationIdRef.current
     if (!conversationId) {
-      conversationId = Date.now().toString();
-      currentConversationIdRef.current = conversationId;
-      setCurrentConversationId(conversationId);
+      conversationId = Date.now().toString()
+      currentConversationIdRef.current = conversationId
+      setCurrentConversationId(conversationId)
     }
-    return conversationId;
-  }, []);
+    return conversationId
+  }, [])
 
   // Immediately save individual messages to prevent data loss
-  const saveMessageImmediately = useCallback(async (allMessages: Message[]) => {
-    if (allMessages.length <= 1) return; // Don't save if only welcome message + new message
-    if (savingInProgressRef.current) return; // Prevent concurrent saves
+  const saveMessageImmediately = useCallback(
+    async (allMessages: Message[]) => {
+      if (allMessages.length <= 1) return // Don't save if only welcome message + new message
+      if (savingInProgressRef.current) return // Prevent concurrent saves
 
-    // Use atomic function to prevent race conditions
-    const conversationId = getOrCreateConversationId();
+      // Use atomic function to prevent race conditions
+      const conversationId = getOrCreateConversationId()
 
-    const title = supabaseConversationStorage.generateTitle(allMessages);
-    
-    const conversation: Conversation = {
-      id: conversationId,
-      title,
-      messages: allMessages,
-      createdAt: currentConversationId ? 
-        (conversations.find(c => c.id === conversationId)?.createdAt || new Date()) : 
-        new Date(),
-      updatedAt: new Date(),
-      farmId: farmData?.id,
-      userId: user?.id,
-      lastMessageAt: new Date(),
-      messageCount: allMessages.length
-    };
-    
-    try {
-      savingInProgressRef.current = true; // Mark saving in progress
-      const savedConversation = await supabaseConversationStorage.saveConversation(conversation, user?.id);
-      
-      if (savedConversation) {
-        // Update local state with saved conversation
-        setConversations(prev => {
-          const existing = prev.find(c => c.id === conversationId);
-          if (existing) {
-            return prev.map(c => c.id === conversationId ? savedConversation : c);
-          }
-          return [savedConversation, ...prev];
-        });
-        
-        // Update conversation ID if it changed (timestamp -> database ID)
-        if (savedConversation.id !== conversationId) {
-          currentConversationIdRef.current = savedConversation.id; // Update ref immediately
-          setCurrentConversationId(savedConversation.id);
-        }
-      }
-    } catch (error) {
-      // Log error for debugging in development only
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.error('Error saving message immediately:', error);
-      }
-    } finally {
-      savingInProgressRef.current = false; // Always reset saving flag
-    }
-  }, [getOrCreateConversationId, conversations, user?.id, farmData?.id]);
+      const title = supabaseConversationStorage.generateTitle(allMessages)
 
-  const handleSendMessage = useCallback(async (text?: string) => {
-    const messageText = text || inputValue.trim();
-    if ((!messageText && pendingAttachments.length === 0) || isLoading) return;
-
-    // Analyze the query
-    const queryAnalysis = analyzeQuery(messageText);
-
-    // Add user message with context and attachments
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: messageText || 'Shared an image',
-      role: 'user',
-      timestamp: new Date(),
-      attachments: pendingAttachments.length > 0 ? [...pendingAttachments] : undefined,
-      context: queryAnalysis
-    };
-
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    setInputValue('');
-    setPendingAttachments([]); // Clear pending attachments
-    setIsLoading(true);
-
-    // Increment quota count since user is sending a question
-    incrementQuestionCount(user?.id);
-
-    // Immediately save the user message to ensure no data loss
-    try {
-      await saveMessageImmediately(updatedMessages);
-    } catch (error) {
-      // Log error for debugging in development only
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.error('Failed to save user message:', error);
-      }
-      toast.error('Failed to save your message. Please try again.');
-    }
-
-    // Create streaming assistant message
-    const assistantMessageId = (Date.now() + 1).toString();
-    const streamingMessage: Message = {
-      id: assistantMessageId,
-      content: '',
-      role: 'assistant',
-      timestamp: new Date(),
-      language: i18n.language,
-      context: {
-        queryType: queryAnalysis.queryType,
-        confidence: queryAnalysis.confidence
-      }
-    };
-
-    setMessages(prev => [...prev, streamingMessage]);
-
-    try {
-      // Build enhanced context for AI response with updated messages
-      const conversationContext = buildConversationContext(updatedMessages);
-      
-      // Call the AI chat API directly
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: messageText,
-          context: conversationContext,
-          attachments: pendingAttachments,
-          stream: true
-        }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          // Handle authentication error
-          const errorData = await response.json().catch(() => ({}));
-          if (errorData.code === 'UNAUTHORIZED') {
-            throw new Error('AUTHENTICATION_REQUIRED');
-          }
-        }
-        
-        if (response.status === 429) {
-          // Handle quota exceeded error
-          const errorData = await response.json().catch(() => ({}));
-          if (errorData.code === 'QUOTA_EXCEEDED') {
-            throw new Error('QUOTA_EXCEEDED');
-          }
-        }
-        
-        throw new Error(`Failed to get AI response: ${response.status}`);
+      const conversation: Conversation = {
+        id: conversationId,
+        title,
+        messages: allMessages,
+        createdAt: currentConversationId
+          ? conversations.find((c) => c.id === conversationId)?.createdAt || new Date()
+          : new Date(),
+        updatedAt: new Date(),
+        farmId: farmData?.id,
+        userId: user?.id,
+        lastMessageAt: new Date(),
+        messageCount: allMessages.length,
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('No response body');
-      }
-
-      const decoder = new TextDecoder();
-      let done = false;
-      let fullResponse = '';
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        
-        if (value) {
-          const chunk = decoder.decode(value);
-          fullResponse += chunk;
-          
-          // Update the streaming message in real-time
-          setMessages(prev => prev.map(msg => 
-            msg.id === assistantMessageId 
-              ? { ...msg, content: fullResponse }
-              : msg
-          ));
-        }
-      }
-
-      // Immediately save the completed AI response
-      const completedAssistantMessage: Message = { 
-        ...streamingMessage, 
-        content: fullResponse
-      };
-      const completedMessages = [...updatedMessages, completedAssistantMessage];
-      
       try {
-        await saveMessageImmediately(completedMessages);
+        savingInProgressRef.current = true // Mark saving in progress
+        const savedConversation = await supabaseConversationStorage.saveConversation(
+          conversation,
+          user?.id,
+        )
+
+        if (savedConversation) {
+          // Update local state with saved conversation
+          setConversations((prev) => {
+            const existing = prev.find((c) => c.id === conversationId)
+            if (existing) {
+              return prev.map((c) => (c.id === conversationId ? savedConversation : c))
+            }
+            return [savedConversation, ...prev]
+          })
+
+          // Update conversation ID if it changed (timestamp -> database ID)
+          if (savedConversation.id !== conversationId) {
+            currentConversationIdRef.current = savedConversation.id // Update ref immediately
+            setCurrentConversationId(savedConversation.id)
+          }
+        }
       } catch (error) {
         // Log error for debugging in development only
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
-          console.error('Failed to save assistant message:', error);
+          console.error('Error saving message immediately:', error)
         }
-        toast.error('Failed to save conversation. Your message was sent but may not be saved.');
+      } finally {
+        savingInProgressRef.current = false // Always reset saving flag
+      }
+    },
+    [getOrCreateConversationId, conversations, user?.id, farmData?.id],
+  )
+
+  const handleSendMessage = useCallback(
+    async (text?: string) => {
+      const messageText = text || inputValue.trim()
+      if ((!messageText && pendingAttachments.length === 0) || isLoading) return
+
+      // Analyze the query
+      const queryAnalysis = analyzeQuery(messageText)
+
+      // Add user message with context and attachments
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: messageText || 'Shared an image',
+        role: 'user',
+        timestamp: new Date(),
+        attachments: pendingAttachments.length > 0 ? [...pendingAttachments] : undefined,
+        context: queryAnalysis,
       }
 
-    } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.error('Chat error:', error);
-      }
-      
-      let errorContent = '';
-      if (error instanceof Error && error.message === 'AUTHENTICATION_REQUIRED') {
-        errorContent = i18n.language === 'hi' ? 'कृपया AI सहायक का उपयोग करने के लिए साइन इन करें।' :
-                       i18n.language === 'mr' ? 'कृपया AI सहाय्यक वापरण्यासाठी साइन इन करा.' :
-                       'Please sign in to use the AI Assistant.';
-      } else if (error instanceof Error && error.message === 'QUOTA_EXCEEDED') {
-        // Show toast notification for quota exceeded
-        const toastMessage = i18n.language === 'hi' ? 'दैनिक प्रश्न सीमा (5) पूर्ण हो गई। कल फिर कोशिश करें।' :
-                             i18n.language === 'mr' ? 'दैनिक प्रश्न मर्यादा (5) संपली. उद्या पुन्हा प्रयत्न करा.' :
-                             'Daily question limit (5) reached. Try again tomorrow.';
-        
-        toast.error(toastMessage, {
-          duration: 5000,
-          position: 'top-center'
-        });
-        
-        errorContent = i18n.language === 'hi' ? 'दैनिक प्रश्न सीमा पूर्ण हो गई (5/5)। कल वापस आएं।' :
-                       i18n.language === 'mr' ? 'दैनिक प्रश्न मर्यादा संपली (5/5). उद्या परत या.' :
-                       'Daily question limit reached (5/5). Come back tomorrow.';
-      } else {
-        errorContent = i18n.language === 'hi' ? 'क्षमा करें, कुछ गलत हुआ। कृपया फिर से कोशिश करें।' :
-                       i18n.language === 'mr' ? 'माफ करा, काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.' :
-                       'Sorry, something went wrong. Please try again.';
-      }
-      
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: errorContent,
-        role: 'assistant',
-        timestamp: new Date()
-      };
-      
-      // Replace the streaming message with error
-      setMessages(prev => prev.map(msg => 
-        msg.id === assistantMessageId ? errorMessage : msg
-      ));
+      const updatedMessages = [...messages, userMessage]
+      setMessages(updatedMessages)
+      setInputValue('')
+      setPendingAttachments([]) // Clear pending attachments
+      setIsLoading(true)
 
-      // Immediately save the error message
-      const errorMessages = [...updatedMessages, errorMessage];
+      // Increment quota count since user is sending a question
+      incrementQuestionCount(user?.id)
+
+      // Immediately save the user message to ensure no data loss
       try {
-        await saveMessageImmediately(errorMessages);
-      } catch (saveError) {
+        await saveMessageImmediately(updatedMessages)
+      } catch (error) {
         // Log error for debugging in development only
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
-          console.error('Failed to save error message:', saveError);
+          console.error('Failed to save user message:', error)
         }
-        // Don't show another toast here as user already sees the error response
+        toast.error('Failed to save your message. Please try again.')
       }
-    } finally {
-      setIsLoading(false);
-      // Update quota status after message attempt
-      setQuotaStatus(getQuotaStatus(user?.id));
-    }
-  }, [inputValue, isLoading, messages, i18n.language, buildConversationContext, pendingAttachments, saveMessageImmediately, user?.id]);
+
+      // Create streaming assistant message
+      const assistantMessageId = (Date.now() + 1).toString()
+      const streamingMessage: Message = {
+        id: assistantMessageId,
+        content: '',
+        role: 'assistant',
+        timestamp: new Date(),
+        language: i18n.language,
+        context: {
+          queryType: queryAnalysis.queryType,
+          confidence: queryAnalysis.confidence,
+        },
+      }
+
+      setMessages((prev) => [...prev, streamingMessage])
+
+      try {
+        // Build enhanced context for AI response with updated messages
+        const conversationContext = buildConversationContext(updatedMessages)
+
+        // Call the AI chat API directly
+        const response = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: messageText,
+            context: conversationContext,
+            attachments: pendingAttachments,
+            stream: true,
+          }),
+        })
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Handle authentication error
+            const errorData = await response.json().catch(() => ({}))
+            if (errorData.code === 'UNAUTHORIZED') {
+              throw new Error('AUTHENTICATION_REQUIRED')
+            }
+          }
+
+          if (response.status === 429) {
+            // Handle quota exceeded error
+            const errorData = await response.json().catch(() => ({}))
+            if (errorData.code === 'QUOTA_EXCEEDED') {
+              throw new Error('QUOTA_EXCEEDED')
+            }
+          }
+
+          throw new Error(`Failed to get AI response: ${response.status}`)
+        }
+
+        const reader = response.body?.getReader()
+        if (!reader) {
+          throw new Error('No response body')
+        }
+
+        const decoder = new TextDecoder()
+        let done = false
+        let fullResponse = ''
+
+        while (!done) {
+          const { value, done: doneReading } = await reader.read()
+          done = doneReading
+
+          if (value) {
+            const chunk = decoder.decode(value)
+            fullResponse += chunk
+
+            // Update the streaming message in real-time
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMessageId ? { ...msg, content: fullResponse } : msg,
+              ),
+            )
+          }
+        }
+
+        // Immediately save the completed AI response
+        const completedAssistantMessage: Message = {
+          ...streamingMessage,
+          content: fullResponse,
+        }
+        const completedMessages = [...updatedMessages, completedAssistantMessage]
+
+        try {
+          await saveMessageImmediately(completedMessages)
+        } catch (error) {
+          // Log error for debugging in development only
+          if (process.env.NODE_ENV === 'development') {
+            // eslint-disable-next-line no-console
+            console.error('Failed to save assistant message:', error)
+          }
+          toast.error('Failed to save conversation. Your message was sent but may not be saved.')
+        }
+      } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.error('Chat error:', error)
+        }
+
+        let errorContent = ''
+        if (error instanceof Error && error.message === 'AUTHENTICATION_REQUIRED') {
+          errorContent =
+            i18n.language === 'hi'
+              ? 'कृपया AI सहायक का उपयोग करने के लिए साइन इन करें।'
+              : i18n.language === 'mr'
+                ? 'कृपया AI सहाय्यक वापरण्यासाठी साइन इन करा.'
+                : 'Please sign in to use the AI Assistant.'
+        } else if (error instanceof Error && error.message === 'QUOTA_EXCEEDED') {
+          // Show toast notification for quota exceeded
+          const toastMessage =
+            i18n.language === 'hi'
+              ? 'दैनिक प्रश्न सीमा (5) पूर्ण हो गई। कल फिर कोशिश करें।'
+              : i18n.language === 'mr'
+                ? 'दैनिक प्रश्न मर्यादा (5) संपली. उद्या पुन्हा प्रयत्न करा.'
+                : 'Daily question limit (5) reached. Try again tomorrow.'
+
+          toast.error(toastMessage, {
+            duration: 5000,
+            position: 'top-center',
+          })
+
+          errorContent =
+            i18n.language === 'hi'
+              ? 'दैनिक प्रश्न सीमा पूर्ण हो गई (5/5)। कल वापस आएं।'
+              : i18n.language === 'mr'
+                ? 'दैनिक प्रश्न मर्यादा संपली (5/5). उद्या परत या.'
+                : 'Daily question limit reached (5/5). Come back tomorrow.'
+        } else {
+          errorContent =
+            i18n.language === 'hi'
+              ? 'क्षमा करें, कुछ गलत हुआ। कृपया फिर से कोशिश करें।'
+              : i18n.language === 'mr'
+                ? 'माफ करा, काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.'
+                : 'Sorry, something went wrong. Please try again.'
+        }
+
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: errorContent,
+          role: 'assistant',
+          timestamp: new Date(),
+        }
+
+        // Replace the streaming message with error
+        setMessages((prev) =>
+          prev.map((msg) => (msg.id === assistantMessageId ? errorMessage : msg)),
+        )
+
+        // Immediately save the error message
+        const errorMessages = [...updatedMessages, errorMessage]
+        try {
+          await saveMessageImmediately(errorMessages)
+        } catch (saveError) {
+          // Log error for debugging in development only
+          if (process.env.NODE_ENV === 'development') {
+            // eslint-disable-next-line no-console
+            console.error('Failed to save error message:', saveError)
+          }
+          // Don't show another toast here as user already sees the error response
+        }
+      } finally {
+        setIsLoading(false)
+        // Update quota status after message attempt
+        setQuotaStatus(getQuotaStatus(user?.id))
+      }
+    },
+    [
+      inputValue,
+      isLoading,
+      messages,
+      i18n.language,
+      buildConversationContext,
+      pendingAttachments,
+      saveMessageImmediately,
+      user?.id,
+    ],
+  )
 
   // Store current handleSendMessage in ref for speech recognition
   useEffect(() => {
-    handleSendMessageRef.current = handleSendMessage;
-  }, [handleSendMessage]);
+    handleSendMessageRef.current = handleSendMessage
+  }, [handleSendMessage])
 
   const startListening = () => {
     if (recognitionRef.current && !isListening) {
-      recognitionRef.current.start();
+      recognitionRef.current.start()
     }
-  };
+  }
 
   const stopListening = () => {
     if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
+      recognitionRef.current.stop()
     }
-  };
+  }
 
   // Simple attachment handlers
   const handleAttachClick = () => {
-    fileInputRef.current?.click();
-  };
+    fileInputRef.current?.click()
+  }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const file = event.target.files?.[0]
     if (file && file.type.startsWith('image/')) {
       // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size must be less than 5MB');
-        return;
+        toast.error('Image size must be less than 5MB')
+        return
       }
 
-      const reader = new FileReader();
+      const reader = new FileReader()
       reader.onload = (e) => {
-        const imageUrl = e.target?.result as string;
+        const imageUrl = e.target?.result as string
         const attachment = {
           type: 'image' as const,
           name: file.name,
           url: imageUrl,
-          size: file.size
-        };
-        
-        setPendingAttachments(prev => [...prev, attachment]);
-      };
-      reader.readAsDataURL(file);
+          size: file.size,
+        }
+
+        setPendingAttachments((prev) => [...prev, attachment])
+      }
+      reader.readAsDataURL(file)
     } else if (file) {
-      toast.error('Only image files are supported');
+      toast.error('Only image files are supported')
     }
-    
+
     // Reset the input
     if (event.target) {
-      event.target.value = '';
+      event.target.value = ''
     }
-  };
+  }
 
   // Copy message to clipboard
   const copyToClipboard = async (text: string, messageId: string) => {
     try {
-      await navigator.clipboard.writeText(text);
-      setCopiedMessageId(messageId);
-      toast.success('Message copied to clipboard');
-      
+      await navigator.clipboard.writeText(text)
+      setCopiedMessageId(messageId)
+      toast.success('Message copied to clipboard')
+
       // Reset the copied state after 2 seconds
-      setTimeout(() => setCopiedMessageId(null), 2000);
+      setTimeout(() => setCopiedMessageId(null), 2000)
     } catch (err) {
-      toast.error('Failed to copy message');
+      toast.error('Failed to copy message')
     }
-  };
+  }
 
   // Remove attachment from pending list
   const removeAttachment = (index: number) => {
-    setPendingAttachments(prev => prev.filter((_, i) => i !== index));
-  };
+    setPendingAttachments((prev) => prev.filter((_, i) => i !== index))
+  }
 
   // Conversation management with persistent storage
   const startNewConversation = () => {
-    setMessages([]);
-    setCurrentConversationId(null);
-    currentConversationIdRef.current = null; // Sync ref
-    setShowHistory(false);
-    setPendingAttachments([]); // Clear any pending attachments
-  };
+    setMessages([])
+    setCurrentConversationId(null)
+    currentConversationIdRef.current = null // Sync ref
+    setShowHistory(false)
+    setPendingAttachments([]) // Clear any pending attachments
+  }
 
   const loadConversation = (conversationId: string) => {
-    const conversation = conversations.find(c => c.id === conversationId);
+    const conversation = conversations.find((c) => c.id === conversationId)
     if (conversation) {
-      setMessages(conversation.messages);
-      setCurrentConversationId(conversationId);
-      currentConversationIdRef.current = conversationId; // Sync ref
-      setShowHistory(false);
+      setMessages(conversation.messages)
+      setCurrentConversationId(conversationId)
+      currentConversationIdRef.current = conversationId // Sync ref
+      setShowHistory(false)
     }
-  };
+  }
 
   const deleteConversation = async (conversationId: string) => {
     // Delete from persistent storage
-    await supabaseConversationStorage.deleteConversation(conversationId, user?.id);
-    
+    await supabaseConversationStorage.deleteConversation(conversationId, user?.id)
+
     // Update local state
-    setConversations(prev => prev.filter(c => c.id !== conversationId));
-    
+    setConversations((prev) => prev.filter((c) => c.id !== conversationId))
+
     // If we're deleting the current conversation, start a new one
     if (currentConversationId === conversationId) {
-      startNewConversation();
+      startNewConversation()
     }
-  };
+  }
 
   const formatMessage = (content: string, isAssistant: boolean = false) => {
     if (isAssistant) {
@@ -612,18 +680,24 @@ export function AIAssistant({
           components={{
             // Customize rendering for chat bubbles
             p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-            ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
-            ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+            ul: ({ children }) => (
+              <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>
+            ),
+            ol: ({ children }) => (
+              <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>
+            ),
             li: ({ children }) => <li className="ml-0">{children}</li>,
             code: ({ children, ...props }) => {
-              const isInline = !props.className?.includes('language-');
+              const isInline = !props.className?.includes('language-')
               return isInline ? (
-                <code className="bg-gray-200 px-1 py-0.5 rounded text-xs font-mono">{children}</code>
+                <code className="bg-gray-200 px-1 py-0.5 rounded text-xs font-mono">
+                  {children}
+                </code>
               ) : (
                 <pre className="bg-gray-100 p-2 rounded text-xs font-mono overflow-x-auto mb-2">
                   <code>{children}</code>
                 </pre>
-              );
+              )
             },
             strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
             em: ({ children }) => <em className="italic">{children}</em>,
@@ -639,29 +713,29 @@ export function AIAssistant({
         >
           {content}
         </ReactMarkdown>
-      );
+      )
     } else {
       // Simple formatting for user messages
       return content.split('\n').map((line, index) => (
         <p key={index} className="mb-2 last:mb-0">
           {line}
         </p>
-      ));
+      ))
     }
-  };
+  }
 
   const quickQuestions = [
     {
       en: 'How to prevent grape diseases?',
       hi: 'अंगूर के रोगों से कैसे बचाव करें?',
-      mr: 'द्राक्षाच्या आजारांपासून कसे बचाव करावा?'
+      mr: 'द्राक्षाच्या आजारांपासून कसे बचाव करावा?',
     },
     {
       en: 'Harvest time indicators',
       hi: 'कटाई के समय के संकेत',
-      mr: 'कापणीच्या वेळेचे संकेत'
-    }
-  ];
+      mr: 'कापणीच्या वेळेचे संकेत',
+    },
+  ]
 
   // Mobile floating chat button
   if (!isOpen && isMobile) {
@@ -669,64 +743,55 @@ export function AIAssistant({
       <Button
         onClick={onToggle}
         size="lg"
-        className={cn(
-          "fixed bottom-4 right-4 z-50 rounded-full w-14 h-14 shadow-lg",
-          className
-        )}
+        className={cn('fixed bottom-4 right-4 z-50 rounded-full w-14 h-14 shadow-lg', className)}
       >
         <MessageCircle className="w-6 h-6" />
       </Button>
-    );
+    )
   }
 
-
   return (
-    <Card className={cn(
-      "flex flex-col rounded-none",
-      isMobile 
-        ? "h-screen" 
-        : "h-[calc(100vh)]",
-      isMobile && isOpen && "fixed inset-0 z-50 rounded-none pb-16",
-      className
-    )}>
+    <Card
+      className={cn(
+        'flex flex-col rounded-none',
+        isMobile ? 'h-screen' : 'h-[calc(100vh)]',
+        isMobile && isOpen && 'fixed inset-0 z-50 rounded-none pb-16',
+        className,
+      )}
+    >
       <CardHeader className="flex-shrink-0 pb-3 border-b">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Bot className="w-5 h-5" />
-            <span className="text-base sm:text-lg">
-              {t('ai_assistant', 'AI Assistant')}
-            </span>
+            <span className="text-base sm:text-lg">{t('ai_assistant', 'AI Assistant')}</span>
           </div>
           <div className="flex items-center gap-2">
             {/* History button */}
             <Button
-              variant="ghost" 
-              size="sm" 
+              variant="ghost"
+              size="sm"
               onClick={() => setShowHistory(!showHistory)}
               className="h-8"
             >
               <History className="w-4 h-4" />
             </Button>
-            
+
             {/* New conversation button */}
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={startNewConversation}
-              className="h-8"
-            >
+            <Button variant="ghost" size="sm" onClick={startNewConversation} className="h-8">
               <Plus className="w-4 h-4" />
             </Button>
-            
+
             {/* Quota indicator */}
-            <div className={cn(
-              "text-xs px-2 py-1 rounded-full",
-              quotaStatus.isExceeded 
-                ? "bg-red-100 text-red-600" 
-                : quotaStatus.remaining <= 1 
-                  ? "bg-yellow-100 text-yellow-600"
-                  : "bg-green-100 text-green-600"
-            )}>
+            <div
+              className={cn(
+                'text-xs px-2 py-1 rounded-full',
+                quotaStatus.isExceeded
+                  ? 'bg-red-100 text-red-600'
+                  : quotaStatus.remaining <= 1
+                    ? 'bg-yellow-100 text-yellow-600'
+                    : 'bg-green-100 text-green-600',
+              )}
+            >
               {quotaStatus.remaining}/{quotaStatus.limit}
             </div>
             {isMobile && onToggle && (
@@ -744,9 +809,9 @@ export function AIAssistant({
           <div className="flex-shrink-0 border-b bg-gray-50 p-4 max-h-60 overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium">Conversation History</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setShowHistory(false)}
                 className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
               >
@@ -760,28 +825,24 @@ export function AIAssistant({
                 {conversations
                   .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
                   .map((conv) => (
-                    <div 
+                    <div
                       key={conv.id}
                       className={cn(
-                        "group flex items-center justify-between p-2 rounded cursor-pointer text-xs hover:bg-gray-200",
-                        currentConversationId === conv.id && "bg-blue-100"
+                        'group flex items-center justify-between p-2 rounded cursor-pointer text-xs hover:bg-gray-200',
+                        currentConversationId === conv.id && 'bg-blue-100',
                       )}
                     >
-                      <div 
-                        onClick={() => loadConversation(conv.id)}
-                        className="flex-1 min-w-0"
-                      >
-                        <div className="font-medium text-gray-900 truncate">
-                          {conv.title}
-                        </div>
+                      <div onClick={() => loadConversation(conv.id)} className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 truncate">{conv.title}</div>
                         <div className="text-gray-500 text-xs">
-                          {conv.updatedAt.toLocaleDateString()} • {conv.messages.length - 1} messages
+                          {conv.updatedAt.toLocaleDateString()} • {conv.messages.length - 1}{' '}
+                          messages
                         </div>
                       </div>
                       <Button
                         onClick={(e) => {
-                          e.stopPropagation();
-                          deleteConversation(conv.id);
+                          e.stopPropagation()
+                          deleteConversation(conv.id)
                         }}
                         variant="ghost"
                         size="sm"
@@ -795,44 +856,45 @@ export function AIAssistant({
             )}
           </div>
         )}
-        
+
         {/* Messages Container with proper flex layout */}
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={cn(
-                  "flex gap-3",
-                  message.role === 'user' && "flex-row-reverse"
-                )}
+                className={cn('flex gap-3', message.role === 'user' && 'flex-row-reverse')}
               >
-                <div className={cn(
-                  "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-                  message.role === 'user' 
-                    ? "bg-blue-500 text-white" 
-                    : "bg-green-500 text-white"
-                )}>
+                <div
+                  className={cn(
+                    'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
+                    message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-green-500 text-white',
+                  )}
+                >
                   {message.role === 'user' ? (
                     <User className="w-4 h-4" />
                   ) : (
                     <Bot className="w-4 h-4" />
                   )}
                 </div>
-                
-                <div className={cn(
-                  "flex-1 max-w-[85%] space-y-2",
-                  message.role === 'user' && "flex-col items-end"
-                )}>
+
+                <div
+                  className={cn(
+                    'flex-1 max-w-[85%] space-y-2',
+                    message.role === 'user' && 'flex-col items-end',
+                  )}
+                >
                   {/* Message content */}
-                  <div className={cn(
-                    "relative group p-3 rounded-2xl text-sm break-words",
-                    message.role === 'user'
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-100 text-gray-900"
-                  )}>
+                  <div
+                    className={cn(
+                      'relative group p-3 rounded-2xl text-sm break-words',
+                      message.role === 'user'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-900',
+                    )}
+                  >
                     {formatMessage(message.content, message.role === 'assistant')}
-                    
+
                     {/* Copy button for assistant messages */}
                     {message.role === 'assistant' && (
                       <Button
@@ -840,8 +902,8 @@ export function AIAssistant({
                         variant="ghost"
                         size="sm"
                         className={cn(
-                          "absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity",
-                          "bg-white/80 hover:bg-white text-gray-600 hover:text-gray-900"
+                          'absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity',
+                          'bg-white/80 hover:bg-white text-gray-600 hover:text-gray-900',
                         )}
                       >
                         {copiedMessageId === message.id ? (
@@ -852,7 +914,7 @@ export function AIAssistant({
                       </Button>
                     )}
                   </div>
-                  
+
                   {/* Attachments */}
                   {message.attachments && message.attachments.length > 0 && (
                     <div className="space-y-2">
@@ -860,8 +922,8 @@ export function AIAssistant({
                         <div
                           key={index}
                           className={cn(
-                            "max-w-xs rounded-lg overflow-hidden border",
-                            message.role === 'user' ? "border-blue-200" : "border-gray-200"
+                            'max-w-xs rounded-lg overflow-hidden border',
+                            message.role === 'user' ? 'border-blue-200' : 'border-gray-200',
                           )}
                         >
                           {attachment.type === 'image' && (
@@ -921,7 +983,9 @@ export function AIAssistant({
                     key={index}
                     variant="outline"
                     size="sm"
-                    onClick={() => handleSendMessage(question[i18n.language as keyof typeof question])}
+                    onClick={() =>
+                      handleSendMessage(question[i18n.language as keyof typeof question])
+                    }
                     className="text-xs h-8"
                   >
                     {question[i18n.language as keyof typeof question]}
@@ -955,9 +1019,7 @@ export function AIAssistant({
                     >
                       <X className="w-3 h-3" />
                     </Button>
-                    <div className="p-1 text-xs text-gray-600 truncate">
-                      {attachment.name}
-                    </div>
+                    <div className="p-1 text-xs text-gray-600 truncate">{attachment.name}</div>
                   </div>
                 ))}
               </div>
@@ -965,10 +1027,12 @@ export function AIAssistant({
           )}
 
           {/* Input Area - Fixed at bottom - Perplexity.ai style */}
-          <div className={cn(
-            "flex-shrink-0 p-4 bg-white border-t",
-            // Extra bottom padding for mobile to avoid bottom navigation
-          )}>
+          <div
+            className={cn(
+              'flex-shrink-0 p-4 bg-white border-t',
+              // Extra bottom padding for mobile to avoid bottom navigation
+            )}
+          >
             {/* Hidden file input */}
             <input
               ref={fileInputRef}
@@ -977,7 +1041,7 @@ export function AIAssistant({
               onChange={handleFileSelect}
               className="hidden"
             />
-            
+
             {/* Main input container with responsive design */}
             <div className="relative w-full max-w-4xl mx-auto">
               {isMobile ? (
@@ -986,43 +1050,47 @@ export function AIAssistant({
                   {/* Main textarea container */}
                   <div className="relative bg-white border border-gray-300 rounded-xl px-4 py-3 shadow-sm">
                     <Textarea
-                      style={{ 
-                        resize: "none",
-                        minHeight: "28px",
-                        maxHeight: "120px"
+                      style={{
+                        resize: 'none',
+                        minHeight: '28px',
+                        maxHeight: '120px',
                       }}
                       rows={1}
                       ref={inputRef}
                       value={inputValue}
                       onChange={(e) => {
-                        setInputValue(e.target.value);
-                        const textarea = e.target;
-                        textarea.style.height = 'auto';
-                        textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+                        setInputValue(e.target.value)
+                        const textarea = e.target
+                        textarea.style.height = 'auto'
+                        textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px'
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
+                          e.preventDefault()
+                          handleSendMessage()
                         }
                       }}
                       placeholder={
-                        quotaStatus.isExceeded ? 
-                          (i18n.language === 'hi' ? 'दैनिक सीमा समाप्त - कल वापस आएं' :
-                           i18n.language === 'mr' ? 'दैनिक मर्यादा संपली - उद्या परत या' :
-                           'Daily limit reached - come back tomorrow') :
-                          (i18n.language === 'hi' ? 'कुछ भी पूछें...' :
-                           i18n.language === 'mr' ? 'काहीही विचारा...' :
-                           'Ask anything')
+                        quotaStatus.isExceeded
+                          ? i18n.language === 'hi'
+                            ? 'दैनिक सीमा समाप्त - कल वापस आएं'
+                            : i18n.language === 'mr'
+                              ? 'दैनिक मर्यादा संपली - उद्या परत या'
+                              : 'Daily limit reached - come back tomorrow'
+                          : i18n.language === 'hi'
+                            ? 'कुछ भी पूछें...'
+                            : i18n.language === 'mr'
+                              ? 'काहीही विचारा...'
+                              : 'Ask anything'
                       }
                       disabled={isLoading || quotaStatus.isExceeded}
                       className={cn(
-                        "w-full bg-transparent border-0 resize-none text-base leading-7 p-0",
-                        "focus:outline-none placeholder-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0",
-                        "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300",
+                        'w-full bg-transparent border-0 resize-none text-base leading-7 p-0',
+                        'focus:outline-none placeholder-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0',
+                        'scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300',
                       )}
                     />
-                    
+
                     {/* Buttons row below textarea */}
                     <div className="flex items-center justify-between">
                       {/* Attach button - left side */}
@@ -1035,7 +1103,7 @@ export function AIAssistant({
                       >
                         <Paperclip className="w-6 h-5" />
                       </Button>
-                      
+
                       {/* Right side buttons */}
                       <div className="flex items-center gap-4 flex-shrink-0">
                         {/* Mic button */}
@@ -1046,10 +1114,10 @@ export function AIAssistant({
                             size="sm"
                             onClick={isListening ? stopListening : startListening}
                             className={cn(
-                              "p-0 h-5 w-6",
-                              isListening 
-                                ? "bg-red-50 text-red-500 hover:bg-red-100" 
-                                : "hover:bg-gray-100 text-gray-500"
+                              'p-0 h-5 w-6',
+                              isListening
+                                ? 'bg-red-50 text-red-500 hover:bg-red-100'
+                                : 'hover:bg-gray-100 text-gray-500',
                             )}
                           >
                             {isListening ? (
@@ -1059,25 +1127,31 @@ export function AIAssistant({
                             )}
                           </Button>
                         )}
-                        
+
                         {/* Send button - teal circular button */}
-                      <Button
-                        onClick={() => handleSendMessage()}
-                        disabled={(!inputValue.trim() && pendingAttachments.length === 0) || isLoading || quotaStatus.isExceeded}
-                        size="sm"
-                        className={cn(
-                          "p-0 h-5 w-8 rounded-lg flex items-center justify-center",
-                          (!inputValue.trim() && pendingAttachments.length === 0) || isLoading || quotaStatus.isExceeded
-                            ? "bg-gray-300 text-gray-400 cursor-not-allowed"
-                              : "bg-primary hover:bg-teal-700 text-white"
-                        )}
-                      >
-                        {isLoading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <ArrowRight className="w-4 h-4" />
-                        )}
-                      </Button>
+                        <Button
+                          onClick={() => handleSendMessage()}
+                          disabled={
+                            (!inputValue.trim() && pendingAttachments.length === 0) ||
+                            isLoading ||
+                            quotaStatus.isExceeded
+                          }
+                          size="sm"
+                          className={cn(
+                            'p-0 h-5 w-8 rounded-lg flex items-center justify-center',
+                            (!inputValue.trim() && pendingAttachments.length === 0) ||
+                              isLoading ||
+                              quotaStatus.isExceeded
+                              ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
+                              : 'bg-primary hover:bg-teal-700 text-white',
+                          )}
+                        >
+                          {isLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <ArrowRight className="w-4 h-4" />
+                          )}
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -1087,44 +1161,48 @@ export function AIAssistant({
                 <div className="relative bg-white border border-gray-300 rounded-xl px-4 py-3 shadow-sm max-w-4xl mx-auto">
                   {/* Textarea */}
                   <Textarea
-                    style={{ 
-                      resize: "none",
-                      minHeight: "28px",
-                      maxHeight: "120px"
+                    style={{
+                      resize: 'none',
+                      minHeight: '28px',
+                      maxHeight: '120px',
                     }}
                     rows={1}
                     ref={inputRef}
                     value={inputValue}
                     onChange={(e) => {
-                      setInputValue(e.target.value);
+                      setInputValue(e.target.value)
                       // Auto-resize textarea
-                      const textarea = e.target;
-                      textarea.style.height = 'auto';
-                      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+                      const textarea = e.target
+                      textarea.style.height = 'auto'
+                      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px'
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
+                        e.preventDefault()
+                        handleSendMessage()
                       }
                     }}
                     placeholder={
-                      quotaStatus.isExceeded ? 
-                        (i18n.language === 'hi' ? 'दैनिक सीमा समाप्त - कल वापस आएं' :
-                         i18n.language === 'mr' ? 'दैनिक मर्यादा संपली - उद्या परत या' :
-                         'Daily limit reached - come back tomorrow') :
-                        (i18n.language === 'hi' ? 'कुछ भी पूछें...' :
-                         i18n.language === 'mr' ? 'काहीही विचारा...' :
-                         'Ask anything')
+                      quotaStatus.isExceeded
+                        ? i18n.language === 'hi'
+                          ? 'दैनिक सीमा समाप्त - कल वापस आएं'
+                          : i18n.language === 'mr'
+                            ? 'दैनिक मर्यादा संपली - उद्या परत या'
+                            : 'Daily limit reached - come back tomorrow'
+                        : i18n.language === 'hi'
+                          ? 'कुछ भी पूछें...'
+                          : i18n.language === 'mr'
+                            ? 'काहीही विचारा...'
+                            : 'Ask anything'
                     }
                     disabled={isLoading || quotaStatus.isExceeded}
                     className={cn(
-                      "w-full bg-transparent border-0 resize-none text-base leading-7 p-0",
-                      "focus:outline-none focus:ring-0 placeholder-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0",
-                      "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300"
+                      'w-full bg-transparent border-0 resize-none text-base leading-7 p-0',
+                      'focus:outline-none focus:ring-0 placeholder-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0',
+                      'scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300',
                     )}
                   />
-                  
+
                   {/* Buttons row below textarea */}
                   <div className="flex items-center justify-between pt-3">
                     {/* Left side - empty for desktop, or could add attach */}
@@ -1137,7 +1215,7 @@ export function AIAssistant({
                     >
                       <Paperclip className="w-5 h-5" />
                     </Button>
-                    
+
                     {/* Right side buttons */}
                     <div className="flex items-center gap-3 flex-shrink-0">
                       {/* Mic button */}
@@ -1148,10 +1226,10 @@ export function AIAssistant({
                           size="sm"
                           onClick={isListening ? stopListening : startListening}
                           className={cn(
-                            "p-0 h-7 w-7 hover:bg-gray-100",
-                            isListening 
-                              ? "bg-red-50 text-red-500 hover:bg-red-100" 
-                              : "text-gray-500"
+                            'p-0 h-7 w-7 hover:bg-gray-100',
+                            isListening
+                              ? 'bg-red-50 text-red-500 hover:bg-red-100'
+                              : 'text-gray-500',
                           )}
                         >
                           {isListening ? (
@@ -1161,17 +1239,23 @@ export function AIAssistant({
                           )}
                         </Button>
                       )}
-                      
+
                       {/* Send button */}
                       <Button
                         onClick={() => handleSendMessage()}
-                        disabled={(!inputValue.trim() && pendingAttachments.length === 0) || isLoading || quotaStatus.isExceeded}
+                        disabled={
+                          (!inputValue.trim() && pendingAttachments.length === 0) ||
+                          isLoading ||
+                          quotaStatus.isExceeded
+                        }
                         size="sm"
                         className={cn(
-                          "p-0 h-8 w-8 rounded-lg flex items-center justify-center",
-                          (!inputValue.trim() && pendingAttachments.length === 0) || isLoading || quotaStatus.isExceeded
-                             ? "bg-gray-300 text-gray-400 cursor-not-allowed"
-                              : "bg-primary hover:bg-teal-700 text-white"
+                          'p-0 h-8 w-8 rounded-lg flex items-center justify-center',
+                          (!inputValue.trim() && pendingAttachments.length === 0) ||
+                            isLoading ||
+                            quotaStatus.isExceeded
+                            ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
+                            : 'bg-primary hover:bg-teal-700 text-white',
                         )}
                       >
                         {isLoading ? (
@@ -1184,7 +1268,7 @@ export function AIAssistant({
                   </div>
                 </div>
               )}
-              
+
               {/* Listening indicator */}
               {isListening && (
                 <div className="absolute -top-8 left-3 flex items-center gap-2 px-2 py-1 bg-red-50 border border-red-200 rounded-lg">
@@ -1203,12 +1287,12 @@ export function AIAssistant({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 // Declare global type for WebKit Speech Recognition
 declare global {
   interface Window {
-    webkitSpeechRecognition: any;
+    webkitSpeechRecognition: any
   }
 }

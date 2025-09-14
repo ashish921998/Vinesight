@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
   ArrowLeft,
   FileText,
   Shield,
@@ -14,18 +14,18 @@ import {
   Mail,
   Globe,
   Calendar,
-  CreditCard
-} from "lucide-react";
-import { SEOSchema } from "@/components/SEOSchema";
-import Link from 'next/link';
+  CreditCard,
+} from 'lucide-react'
+import { SEOSchema } from '@/components/SEOSchema'
+import Link from 'next/link'
 
 export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      <SEOSchema 
+      <SEOSchema
         title="Terms of Service - VineSight Grape Farming Assistant"
         description="Terms and conditions for using VineSight's grape farming platform. Legal terms for Indian grape farmers and agricultural services."
-        type="website"
+        type="guide"
         image="https://farmai.vercel.app/og-image.png"
       />
 
@@ -40,7 +40,7 @@ export default function TermsOfServicePage() {
               </Button>
             </Link>
           </div>
-          
+
           <div className="text-center max-w-3xl mx-auto">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center">
@@ -48,12 +48,8 @@ export default function TermsOfServicePage() {
               </div>
               <h1 className="text-4xl font-bold text-gray-900">Terms of Service</h1>
             </div>
-            <p className="text-xl text-gray-600 mb-4">
-              Terms and conditions for using VineSight
-            </p>
-            <p className="text-sm text-gray-500">
-              Last updated: January 15, 2024
-            </p>
+            <p className="text-xl text-gray-600 mb-4">Terms and conditions for using VineSight</p>
+            <p className="text-sm text-gray-500">Last updated: January 15, 2024</p>
           </div>
         </div>
       </div>
@@ -68,8 +64,9 @@ export default function TermsOfServicePage() {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-3">Agreement Overview</h2>
                   <p className="text-gray-700 mb-4">
-                    These Terms of Service ("Terms") govern your access to and use of VineSight's agricultural 
-                    platform and services. By using our platform, you agree to these terms and our Privacy Policy.
+                    These Terms of Service (&quot;Terms&quot;) govern your access to and use of
+                    VineSight&apos;s agricultural platform and services. By using our platform, you
+                    agree to these terms and our Privacy Policy.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-center gap-2">
@@ -103,10 +100,11 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-700">
-                By accessing or using VineSight's services, you acknowledge that you have read, understood, 
-                and agree to be bound by these Terms. If you do not agree to these Terms, you may not use our services.
+                By accessing or using VineSight&apos;s services, you acknowledge that you have read,
+                understood, and agree to be bound by these Terms. If you do not agree to these
+                Terms, you may not use our services.
               </p>
-              
+
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h3 className="font-semibold text-green-900 mb-2">Eligibility Requirements</h3>
                 <ul className="space-y-1 text-green-800 text-sm">
@@ -129,9 +127,10 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-700">
-                VineSight provides a comprehensive digital platform for grape farming management, including:
+                VineSight provides a comprehensive digital platform for grape farming management,
+                including:
               </p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Core Features</h3>
@@ -194,7 +193,9 @@ export default function TermsOfServicePage() {
                   <ul className="space-y-2 text-gray-700 ml-4">
                     <li className="flex items-start gap-2">
                       <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                      <span>Maintain the security and confidentiality of your account credentials</span>
+                      <span>
+                        Maintain the security and confidentiality of your account credentials
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
@@ -212,7 +213,9 @@ export default function TermsOfServicePage() {
                   <ul className="space-y-2 text-gray-700 ml-4">
                     <li className="flex items-start gap-2">
                       <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                      <span>Provide accurate and complete information about your farm and operations</span>
+                      <span>
+                        Provide accurate and complete information about your farm and operations
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
@@ -256,7 +259,9 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-800 font-medium mb-2">The following activities are strictly prohibited:</p>
+                <p className="text-red-800 font-medium mb-2">
+                  The following activities are strictly prohibited:
+                </p>
                 <ul className="space-y-2 text-red-700 text-sm">
                   <li>• Sharing account credentials or allowing unauthorized access</li>
                   <li>• Attempting to reverse engineer, decompile, or extract our algorithms</li>
@@ -269,8 +274,9 @@ export default function TermsOfServicePage() {
               </div>
 
               <p className="text-gray-700">
-                Violations of these prohibitions may result in immediate account suspension or termination, 
-                and may be reported to relevant authorities if illegal activity is suspected.
+                Violations of these prohibitions may result in immediate account suspension or
+                termination, and may be reported to relevant authorities if illegal activity is
+                suspected.
               </p>
             </CardContent>
           </Card>
@@ -355,10 +361,13 @@ export default function TermsOfServicePage() {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Service Modifications</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Service Modifications
+                  </h3>
                   <p className="text-gray-700">
-                    We reserve the right to modify, update, or discontinue features with reasonable notice. 
-                    Major changes affecting core functionality will be communicated at least 30 days in advance.
+                    We reserve the right to modify, update, or discontinue features with reasonable
+                    notice. Major changes affecting core functionality will be communicated at least
+                    30 days in advance.
                   </p>
                 </div>
               </div>
@@ -389,9 +398,7 @@ export default function TermsOfServicePage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Premium Features</h3>
-                  <p className="text-gray-700 mb-2">
-                    Advanced features may require subscription:
-                  </p>
+                  <p className="text-gray-700 mb-2">Advanced features may require subscription:</p>
                   <ul className="space-y-1 text-gray-700 text-sm">
                     <li>• Advanced AI predictions and recommendations</li>
                     <li>• Unlimited data storage and history</li>
@@ -425,8 +432,8 @@ export default function TermsOfServicePage() {
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <h3 className="font-semibold text-yellow-900 mb-2">Agricultural Guidance</h3>
                 <p className="text-yellow-800 text-sm mb-2">
-                  VineSight provides information and recommendations based on data analysis and agricultural science. 
-                  However, farming decisions should always consider:
+                  VineSight provides information and recommendations based on data analysis and
+                  agricultural science. However, farming decisions should always consider:
                 </p>
                 <ul className="space-y-1 text-yellow-800 text-sm">
                   <li>• Local conditions and micro-climate variations</li>
@@ -439,9 +446,10 @@ export default function TermsOfServicePage() {
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <h3 className="font-semibold text-red-900 mb-2">Limitation of Liability</h3>
                 <p className="text-red-800 text-sm">
-                  VineSight provides services "as is" and cannot be held liable for crop losses, equipment damage, 
-                  or other agricultural outcomes resulting from use of our platform. Users are responsible for 
-                  validating all recommendations against local conditions and expert advice.
+                  VineSight provides services &quot;as is&quot; and cannot be held liable for crop
+                  losses, equipment damage, or other agricultural outcomes resulting from use of our
+                  platform. Users are responsible for validating all recommendations against local
+                  conditions and expert advice.
                 </p>
               </div>
             </CardContent>
@@ -456,7 +464,9 @@ export default function TermsOfServicePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">By You</h3>
-                  <p className="text-gray-700 mb-2">You may terminate your account at any time by:</p>
+                  <p className="text-gray-700 mb-2">
+                    You may terminate your account at any time by:
+                  </p>
                   <ul className="space-y-1 text-gray-700 text-sm">
                     <li>• Using account deletion option in settings</li>
                     <li>• Contacting our support team</li>
@@ -486,7 +496,8 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-700 mb-4">
-                These Terms are governed by the laws of India. Any disputes will be resolved through:
+                These Terms are governed by the laws of India. Any disputes will be resolved
+                through:
               </p>
 
               <div className="space-y-3">
@@ -497,7 +508,8 @@ export default function TermsOfServicePage() {
                   <div>
                     <h4 className="font-semibold text-gray-900">1. Direct Communication</h4>
                     <p className="text-sm text-gray-600">
-                      We encourage resolving disputes through direct communication with our support team
+                      We encourage resolving disputes through direct communication with our support
+                      team
                     </p>
                   </div>
                 </div>
@@ -508,7 +520,8 @@ export default function TermsOfServicePage() {
                   <div>
                     <h4 className="font-semibold text-gray-900">2. Arbitration</h4>
                     <p className="text-sm text-gray-600">
-                      Unresolved disputes may be subject to binding arbitration under Indian Arbitration law
+                      Unresolved disputes may be subject to binding arbitration under Indian
+                      Arbitration law
                     </p>
                   </div>
                 </div>
@@ -519,7 +532,8 @@ export default function TermsOfServicePage() {
                   <div>
                     <h4 className="font-semibold text-gray-900">3. Jurisdiction</h4>
                     <p className="text-sm text-gray-600">
-                      Courts in Maharashtra, India have exclusive jurisdiction for any legal proceedings
+                      Courts in Maharashtra, India have exclusive jurisdiction for any legal
+                      proceedings
                     </p>
                   </div>
                 </div>
@@ -539,7 +553,7 @@ export default function TermsOfServicePage() {
               <p className="text-gray-700 mb-4">
                 If you have questions about these Terms of Service, please contact us:
               </p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center">
                   <Mail className="h-8 w-8 text-purple-600 mx-auto mb-2" />
@@ -564,10 +578,11 @@ export default function TermsOfServicePage() {
         {/* Footer */}
         <div className="mt-16 text-center">
           <p className="text-gray-500 text-sm">
-            By using VineSight, you acknowledge that you have read, understood, and agree to these Terms of Service.
+            By using VineSight, you acknowledge that you have read, understood, and agree to these
+            Terms of Service.
           </p>
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,21 +1,21 @@
-"use client";
+'use client'
 
-import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface FormActionsProps {
-  onSubmit?: () => void;
-  onCancel?: () => void;
-  onReset?: () => void;
-  submitLabel?: string;
-  cancelLabel?: string;
-  resetLabel?: string;
-  isLoading?: boolean;
-  isSubmitDisabled?: boolean;
-  className?: string;
-  submitVariant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
-  layout?: 'horizontal' | 'vertical';
+  onSubmit?: () => void
+  onCancel?: () => void
+  onReset?: () => void
+  submitLabel?: string
+  cancelLabel?: string
+  resetLabel?: string
+  isLoading?: boolean
+  isSubmitDisabled?: boolean
+  className?: string
+  submitVariant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+  layout?: 'horizontal' | 'vertical'
 }
 
 export function FormActions({
@@ -29,20 +29,20 @@ export function FormActions({
   isSubmitDisabled = false,
   className,
   submitVariant = 'default',
-  layout = 'horizontal'
+  layout = 'horizontal',
 }: FormActionsProps) {
   const containerClassName = cn(
-    "flex gap-2",
+    'flex gap-2',
     layout === 'vertical' ? 'flex-col' : 'flex-row justify-end',
-    className
-  );
+    className,
+  )
 
   return (
     <div className={containerClassName}>
       {onReset && (
-        <Button 
-          type="button" 
-          variant="outline" 
+        <Button
+          type="button"
+          variant="outline"
           onClick={onReset}
           disabled={isLoading}
           className={layout === 'vertical' ? 'w-full' : ''}
@@ -50,11 +50,11 @@ export function FormActions({
           {resetLabel}
         </Button>
       )}
-      
+
       {onCancel && (
-        <Button 
-          type="button" 
-          variant="outline" 
+        <Button
+          type="button"
+          variant="outline"
           onClick={onCancel}
           disabled={isLoading}
           className={layout === 'vertical' ? 'w-full' : ''}
@@ -62,10 +62,10 @@ export function FormActions({
           {cancelLabel}
         </Button>
       )}
-      
+
       {onSubmit && (
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           variant={submitVariant}
           onClick={onSubmit}
           disabled={isLoading || isSubmitDisabled}
@@ -76,5 +76,5 @@ export function FormActions({
         </Button>
       )}
     </div>
-  );
+  )
 }

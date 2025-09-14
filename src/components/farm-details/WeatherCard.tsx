@@ -1,145 +1,150 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Cloud, 
-  CloudRain, 
-  Sun, 
-  Wind, 
-  Thermometer, 
-  Droplets, 
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import {
+  Cloud,
+  CloudRain,
+  Sun,
+  Wind,
+  Thermometer,
+  Droplets,
   Eye,
   RefreshCw,
   AlertCircle,
   Calendar,
-  MapPin
-} from 'lucide-react';
-import { OpenMeteoWeatherService, type OpenMeteoWeatherData } from '@/lib/open-meteo-weather';
-import type { Farm } from '@/types/types';
+  MapPin,
+} from 'lucide-react'
+import { OpenMeteoWeatherService, type OpenMeteoWeatherData } from '@/lib/open-meteo-weather'
+import type { Farm } from '@/types/types'
 
 interface WeatherCardProps {
-  farm: Farm;
+  farm: Farm
 }
 
 export function WeatherCard({ farm }: WeatherCardProps) {
-  const [weatherData, setWeatherData] = useState<OpenMeteoWeatherData | null>(null);
-  const [weeklyWeatherData, setWeeklyWeatherData] = useState<OpenMeteoWeatherData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [weatherData, setWeatherData] = useState<OpenMeteoWeatherData | null>(null)
+  const [weeklyWeatherData, setWeeklyWeatherData] = useState<OpenMeteoWeatherData[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
-  const hasLocationData = farm.latitude && farm.longitude;
+  const hasLocationData = farm.latitude && farm.longitude
 
   const fetchWeatherData = async () => {
     if (!hasLocationData) {
-      setError("Farm location data is required for weather information");
-      return;
+      setError('Farm location data is required for weather information')
+      return
     }
 
-    setIsLoading(true);
-    setError(null);
-    
+    setIsLoading(true)
+    setError(null)
+
     try {
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];
-      
+      const today = new Date()
+      const todayStr = today.toISOString().split('T')[0]
+
       // Get last 7 days for trend analysis
-      const weekAgo = new Date(today);
-      weekAgo.setDate(today.getDate() - 6);
-      const weekAgoStr = weekAgo.toISOString().split('T')[0];
-      
+      const weekAgo = new Date(today)
+      weekAgo.setDate(today.getDate() - 6)
+      const weekAgoStr = weekAgo.toISOString().split('T')[0]
+
       // Fetch both today's data and weekly data
       const [todayData, weeklyData] = await Promise.all([
         OpenMeteoWeatherService.getWeatherData(farm.latitude!, farm.longitude!, todayStr, todayStr),
-        OpenMeteoWeatherService.getWeatherData(farm.latitude!, farm.longitude!, weekAgoStr, todayStr)
-      ]);
-      
+        OpenMeteoWeatherService.getWeatherData(
+          farm.latitude!,
+          farm.longitude!,
+          weekAgoStr,
+          todayStr,
+        ),
+      ])
+
       if (todayData.length > 0) {
-        setWeatherData(todayData[0]);
-        setWeeklyWeatherData(weeklyData);
-        setLastUpdated(new Date());
-        
+        setWeatherData(todayData[0])
+        setWeeklyWeatherData(weeklyData)
+        setLastUpdated(new Date())
+
         // Fetch hourly solar radiation data for today
         try {
           const luxData = await OpenMeteoWeatherService.getHourlySolarRadiation(
             farm.latitude!,
             farm.longitude!,
-            todayData[0].date
-          );
-          setSolarLuxData(luxData);
+            todayData[0].date,
+          )
+          setSolarLuxData(luxData)
         } catch (luxError) {
           // Log error for debugging in development only
           if (process.env.NODE_ENV === 'development') {
             // eslint-disable-next-line no-console
-            console.error('Error fetching solar radiation data:', luxError);
+            console.error('Error fetching solar radiation data:', luxError)
           }
         }
       } else {
-        setError("No weather data available for this location");
+        setError('No weather data available for this location')
       }
     } catch (err) {
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error('Error fetching weather data:', err);
+        console.error('Error fetching weather data:', err)
       }
-      setError("Failed to fetch weather data");
+      setError('Failed to fetch weather data')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
     if (hasLocationData) {
-      fetchWeatherData();
+      fetchWeatherData()
     }
-  }, [farm.latitude, farm.longitude]);
+  }, [farm.latitude, farm.longitude])
 
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true
-    }).format(date);
-  };
+      hour12: true,
+    }).format(date)
+  }
 
   // Solar radiation lux data state
   const [solarLuxData, setSolarLuxData] = useState<{
-    minLux: number;
-    maxLux: number;
-    avgLux: number;
-    hourlyLux: number[];
-  } | null>(null);
+    minLux: number
+    maxLux: number
+    avgLux: number
+    hourlyLux: number[]
+  } | null>(null)
 
   // Fetch hourly solar radiation data for accurate lux measurements
   const fetchSolarRadiationData = async () => {
-    if (!hasLocationData || !weatherData) return;
-    
+    if (!hasLocationData || !weatherData) return
+
     try {
       const luxData = await OpenMeteoWeatherService.getHourlySolarRadiation(
         farm.latitude!,
         farm.longitude!,
-        weatherData.date
-      );
-      setSolarLuxData(luxData);
+        weatherData.date,
+      )
+      setSolarLuxData(luxData)
     } catch (error) {
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error('Error fetching hourly solar radiation:', error);
+        console.error('Error fetching hourly solar radiation:', error)
       }
     }
-  };
+  }
 
   // Fetch solar radiation data when weather data is available
   useEffect(() => {
     if (weatherData && hasLocationData) {
-      fetchSolarRadiationData();
+      fetchSolarRadiationData()
     }
-  }, [weatherData, farm.latitude, farm.longitude]);
+  }, [weatherData, farm.latitude, farm.longitude])
 
   if (!hasLocationData) {
     return (
@@ -150,7 +155,9 @@ export function WeatherCard({ farm }: WeatherCardProps) {
               <Cloud className="h-4 w-4 text-gray-400" />
               <CardTitle className="text-base">Weather Data</CardTitle>
             </div>
-            <Badge variant="outline" className="text-xs">Location Required</Badge>
+            <Badge variant="outline" className="text-xs">
+              Location Required
+            </Badge>
           </div>
           <CardDescription className="text-xs">
             Add farm location to view weather information
@@ -165,7 +172,7 @@ export function WeatherCard({ farm }: WeatherCardProps) {
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   if (error) {
@@ -177,9 +184,9 @@ export function WeatherCard({ farm }: WeatherCardProps) {
               <Cloud className="h-4 w-4 text-red-500" />
               <CardTitle className="text-base">Weather Data</CardTitle>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={fetchWeatherData}
               disabled={isLoading}
               className="h-8 px-3"
@@ -198,7 +205,7 @@ export function WeatherCard({ farm }: WeatherCardProps) {
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   if (isLoading) {
@@ -228,10 +235,10 @@ export function WeatherCard({ farm }: WeatherCardProps) {
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
-  if (!weatherData) return null;
+  if (!weatherData) return null
 
   return (
     <Card>
@@ -239,17 +246,15 @@ export function WeatherCard({ farm }: WeatherCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Cloud className="h-4 w-4 text-blue-500" />
-            <CardTitle className="text-base">Today's Weather</CardTitle>
+            <CardTitle className="text-base">Today&apos;s Weather</CardTitle>
           </div>
           <div className="flex items-center gap-2">
             {lastUpdated && (
-              <span className="text-xs text-gray-500">
-                {formatTime(lastUpdated)}
-              </span>
+              <span className="text-xs text-gray-500">{formatTime(lastUpdated)}</span>
             )}
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={fetchWeatherData}
               disabled={isLoading}
               className="h-7 px-2"
@@ -260,10 +265,11 @@ export function WeatherCard({ farm }: WeatherCardProps) {
         </div>
         <CardDescription className="text-xs flex items-center gap-1 mt-1">
           <Calendar className="h-3 w-3" />
-          {weatherData.date} • {farm.locationName || `${farm.latitude?.toFixed(3)}, ${farm.longitude?.toFixed(3)}`}
+          {weatherData.date} •{' '}
+          {farm.locationName || `${farm.latitude?.toFixed(3)}, ${farm.longitude?.toFixed(3)}`}
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="pt-0 px-3 pb-3 space-y-3">
         {/* Temperature Section */}
         <div className="grid grid-cols-2 gap-2">
@@ -275,15 +281,21 @@ export function WeatherCard({ farm }: WeatherCardProps) {
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
                 <span className="text-red-600">Max</span>
-                <span className="font-semibold text-red-800">{weatherData.temperatureMax.toFixed(1)}°C</span>
+                <span className="font-semibold text-red-800">
+                  {weatherData.temperatureMax.toFixed(1)}°C
+                </span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-red-600">Min</span>
-                <span className="font-semibold text-red-800">{weatherData.temperatureMin.toFixed(1)}°C</span>
+                <span className="font-semibold text-red-800">
+                  {weatherData.temperatureMin.toFixed(1)}°C
+                </span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-red-600">Avg</span>
-                <span className="font-semibold text-red-800">{weatherData.temperatureMean.toFixed(1)}°C</span>
+                <span className="font-semibold text-red-800">
+                  {weatherData.temperatureMean.toFixed(1)}°C
+                </span>
               </div>
             </div>
           </div>
@@ -296,15 +308,21 @@ export function WeatherCard({ farm }: WeatherCardProps) {
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
                 <span className="text-blue-600">Max</span>
-                <span className="font-semibold text-blue-800">{weatherData.relativeHumidityMax.toFixed(0)}%</span>
+                <span className="font-semibold text-blue-800">
+                  {weatherData.relativeHumidityMax.toFixed(0)}%
+                </span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-blue-600">Min</span>
-                <span className="font-semibold text-blue-800">{weatherData.relativeHumidityMin.toFixed(0)}%</span>
+                <span className="font-semibold text-blue-800">
+                  {weatherData.relativeHumidityMin.toFixed(0)}%
+                </span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-blue-600">Avg</span>
-                <span className="font-semibold text-blue-800">{weatherData.relativeHumidityMean.toFixed(0)}%</span>
+                <span className="font-semibold text-blue-800">
+                  {weatherData.relativeHumidityMean.toFixed(0)}%
+                </span>
               </div>
             </div>
           </div>
@@ -317,7 +335,9 @@ export function WeatherCard({ farm }: WeatherCardProps) {
               <Wind className="h-4 w-4 text-gray-600" />
               <span className="text-xs font-medium text-gray-700">Wind Speed</span>
             </div>
-            <span className="font-semibold text-gray-800 text-sm">{weatherData.windSpeed10m.toFixed(1)} m/s</span>
+            <span className="font-semibold text-gray-800 text-sm">
+              {weatherData.windSpeed10m.toFixed(1)} m/s
+            </span>
           </div>
 
           <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
@@ -325,27 +345,35 @@ export function WeatherCard({ farm }: WeatherCardProps) {
               <CloudRain className="h-4 w-4 text-blue-600" />
               <span className="text-xs font-medium text-blue-700">Rainfall</span>
             </div>
-            <span className="font-semibold text-blue-800 text-sm">{weatherData.precipitationSum.toFixed(1)} mm</span>
+            <span className="font-semibold text-blue-800 text-sm">
+              {weatherData.precipitationSum.toFixed(1)} mm
+            </span>
           </div>
         </div>
 
         {/* Solar Radiation & Sunshine */}
         <div className="space-y-2">
-          {/* Today's Solar Radiation */}
+          {/* Today&apos;s Solar Radiation */}
           <div className="p-2 bg-yellow-50 border border-yellow-100 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <Sun className="h-4 w-4 text-yellow-600" />
-              <span className="text-xs font-medium text-yellow-700">Today's Solar Radiation</span>
+              <span className="text-xs font-medium text-yellow-700">
+                Today&apos;s Solar Radiation
+              </span>
             </div>
             <div className="space-y-2">
               <div className="space-y-1">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-yellow-600">Energy</span>
-                  <span className="font-semibold text-yellow-800">{weatherData.shortwaveRadiationSum.toFixed(1)} MJ/m²</span>
+                  <span className="font-semibold text-yellow-800">
+                    {weatherData.shortwaveRadiationSum.toFixed(1)} MJ/m²
+                  </span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-yellow-600">Intensity</span>
-                  <span className="font-semibold text-yellow-800">{(weatherData.shortwaveRadiationSum / 0.0036).toFixed(0)} Wh/m²</span>
+                  <span className="font-semibold text-yellow-800">
+                    {(weatherData.shortwaveRadiationSum / 0.0036).toFixed(0)} Wh/m²
+                  </span>
                 </div>
               </div>
               <div className="flex justify-between items-center pt-1 border-t border-yellow-200">
@@ -365,7 +393,7 @@ export function WeatherCard({ farm }: WeatherCardProps) {
             <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Sun className="h-4 w-4 text-amber-600" />
-                <span className="text-sm font-medium text-amber-700">Today's Solar Radiation Range (Lux)</span>
+                <span className="text-sm font-medium text-amber-700">Today&apos;s Solar Radiation Range (Lux)</span>
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
@@ -390,7 +418,9 @@ export function WeatherCard({ farm }: WeatherCardProps) {
               <Eye className="h-4 w-4 text-orange-600" />
               <span className="text-xs font-medium text-orange-700">Sunshine Duration</span>
             </div>
-            <span className="font-semibold text-orange-800 text-sm">{weatherData.sunshineDuration.toFixed(1)} hrs</span>
+            <span className="font-semibold text-orange-800 text-sm">
+              {weatherData.sunshineDuration.toFixed(1)} hrs
+            </span>
           </div>
         </div>
 
@@ -399,12 +429,12 @@ export function WeatherCard({ farm }: WeatherCardProps) {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Droplets className="h-4 w-4 text-green-600" />
-              <span className="text-xs font-medium text-green-700">Reference Evapotranspiration (ETo)</span>
+              <span className="text-xs font-medium text-green-700">
+                Reference Evapotranspiration (ETo)
+              </span>
             </div>
             <div className="flex items-center justify-between">
-              <div className="text-xs text-green-600">
-                FAO-56 Penman-Monteith
-              </div>
+              <div className="text-xs text-green-600">FAO-56 Penman-Monteith</div>
               <div className="text-right">
                 <div className="font-bold text-sm text-green-800">
                   {weatherData.et0FaoEvapotranspiration.toFixed(2)} mm/day
@@ -421,12 +451,10 @@ export function WeatherCard({ farm }: WeatherCardProps) {
               <MapPin className="h-3 w-3" />
               <span>Elevation: {weatherData.elevation}m</span>
             </div>
-            <div>
-              Timezone: {weatherData.timezone}
-            </div>
+            <div>Timezone: {weatherData.timezone}</div>
           </div>
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

@@ -1,70 +1,70 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Beaker, Upload, X, Loader2 } from "lucide-react";
+import { useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Beaker, Upload, X, Loader2 } from 'lucide-react'
 
 interface FertigationFormProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
   onSubmit: (data: {
-    date: string;
-    fertilizer: string;
-    dose: string;
-    notes: string;
-    photos: File[];
-  }) => void;
-  isSubmitting: boolean;
+    date: string
+    fertilizer: string
+    dose: string
+    notes: string
+    photos: File[]
+  }) => void
+  isSubmitting: boolean
 }
 
 export function FertigationForm({ isOpen, onClose, onSubmit, isSubmitting }: FertigationFormProps) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
-    fertilizer: "",
-    dose: "",
-    notes: "",
-    photos: [] as File[]
-  });
+    fertilizer: '',
+    dose: '',
+    notes: '',
+    photos: [] as File[],
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.fertilizer || !formData.dose) return;
-    onSubmit(formData);
-  };
+    e.preventDefault()
+    if (!formData.fertilizer || !formData.dose) return
+    onSubmit(formData)
+  }
 
   const handlePhotoAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setFormData(prev => ({
+    const files = Array.from(e.target.files || [])
+    setFormData((prev) => ({
       ...prev,
-      photos: [...prev.photos, ...files]
-    }));
-  };
+      photos: [...prev.photos, ...files],
+    }))
+  }
 
   const handlePhotoRemove = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
-    }));
-  };
+      photos: prev.photos.filter((_, i) => i !== index),
+    }))
+  }
 
   const resetForm = () => {
     setFormData({
       date: new Date().toISOString().split('T')[0],
-      fertilizer: "",
-      dose: "",
-      notes: "",
-      photos: []
-    });
-  };
+      fertilizer: '',
+      dose: '',
+      notes: '',
+      photos: [],
+    })
+  }
 
   const handleClose = () => {
-    resetForm();
-    onClose();
-  };
+    resetForm()
+    onClose()
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -75,7 +75,7 @@ export function FertigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Fer
             Log Fertigation
           </DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
@@ -83,7 +83,7 @@ export function FertigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Fer
               id="date"
               type="date"
               value={formData.date}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
               required
             />
           </div>
@@ -93,7 +93,7 @@ export function FertigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Fer
             <Input
               id="fertilizer"
               value={formData.fertilizer}
-              onChange={(e) => setFormData(prev => ({ ...prev, fertilizer: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, fertilizer: e.target.value }))}
               placeholder="e.g., NPK 19-19-19"
               required
             />
@@ -104,7 +104,7 @@ export function FertigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Fer
             <Input
               id="dose"
               value={formData.dose}
-              onChange={(e) => setFormData(prev => ({ ...prev, dose: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, dose: e.target.value }))}
               placeholder="e.g., 2.5 kg/ha"
               required
             />
@@ -115,7 +115,7 @@ export function FertigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Fer
             <Textarea
               id="notes"
               value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
               placeholder="Weather conditions, growth stage, etc."
               className="h-20"
             />
@@ -171,10 +171,7 @@ export function FertigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Fer
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting || !formData.fertilizer || !formData.dose}
-            >
+            <Button type="submit" disabled={isSubmitting || !formData.fertilizer || !formData.dose}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -188,5 +185,5 @@ export function FertigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Fer
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

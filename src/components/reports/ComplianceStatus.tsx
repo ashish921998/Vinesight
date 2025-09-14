@@ -1,81 +1,81 @@
-"use client";
+'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { 
-  Shield, 
-  CheckCircle, 
-  AlertTriangle, 
-  Clock, 
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import {
+  Shield,
+  CheckCircle,
+  AlertTriangle,
+  Clock,
   AlertCircle,
   FileCheck,
   Calendar,
   Award,
-  ExternalLink
-} from 'lucide-react';
-import { RegulatoryCompliance, RegulatoryStandard, ComplianceIssue } from '@/lib/reporting-types';
+  ExternalLink,
+} from 'lucide-react'
+import { RegulatoryCompliance, RegulatoryStandard, ComplianceIssue } from '@/lib/reporting-types'
 
 interface ComplianceStatusProps {
-  compliance: RegulatoryCompliance;
+  compliance: RegulatoryCompliance
 }
 
 export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
   const getComplianceIcon = (status: RegulatoryStandard['complianceStatus']) => {
     switch (status) {
       case 'compliant':
-        return { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' };
+        return { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' }
       case 'non_compliant':
-        return { icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' };
+        return { icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' }
       case 'pending':
-        return { icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' };
+        return { icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' }
       case 'not_applicable':
-        return { icon: AlertTriangle, color: 'text-gray-600', bg: 'bg-gray-50' };
+        return { icon: AlertTriangle, color: 'text-gray-600', bg: 'bg-gray-50' }
       default:
-        return { icon: AlertTriangle, color: 'text-gray-600', bg: 'bg-gray-50' };
+        return { icon: AlertTriangle, color: 'text-gray-600', bg: 'bg-gray-50' }
     }
-  };
+  }
 
   const getSeverityColor = (severity: ComplianceIssue['severity']) => {
     switch (severity) {
       case 'critical':
-        return 'text-red-700 bg-red-100 border-red-300';
+        return 'text-red-700 bg-red-100 border-red-300'
       case 'high':
-        return 'text-orange-700 bg-orange-100 border-gray-300';
+        return 'text-orange-700 bg-orange-100 border-gray-300'
       case 'medium':
-        return 'text-orange-700 bg-orange-100 border-gray-300';
+        return 'text-orange-700 bg-orange-100 border-gray-300'
       case 'low':
-        return 'text-blue-700 bg-blue-100 border-blue-300';
+        return 'text-blue-700 bg-blue-100 border-blue-300'
       default:
-        return 'text-gray-700 bg-gray-100 border-gray-300';
+        return 'text-gray-700 bg-gray-100 border-gray-300'
     }
-  };
+  }
 
   const getComplianceScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 70) return 'text-orange-600';
-    return 'text-red-600';
-  };
+    if (score >= 90) return 'text-green-600'
+    if (score >= 70) return 'text-orange-600'
+    return 'text-red-600'
+  }
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-IN', {
       day: 'numeric',
       month: 'short',
-      year: 'numeric'
-    }).format(date);
-  };
+      year: 'numeric',
+    }).format(date)
+  }
 
   const getDaysUntilAudit = () => {
-    if (!compliance.nextAuditDate) return null;
-    const today = new Date();
-    const audit = new Date(compliance.nextAuditDate);
-    const diffTime = audit.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
+    if (!compliance.nextAuditDate) return null
+    const today = new Date()
+    const audit = new Date(compliance.nextAuditDate)
+    const diffTime = audit.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays
+  }
 
-  const daysUntilAudit = getDaysUntilAudit();
+  const daysUntilAudit = getDaysUntilAudit()
 
   return (
     <div className="space-y-6">
@@ -89,7 +89,9 @@ export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Overall Score</p>
-                <p className={`text-2xl font-bold ${getComplianceScoreColor(compliance.complianceScore)}`}>
+                <p
+                  className={`text-2xl font-bold ${getComplianceScoreColor(compliance.complianceScore)}`}
+                >
                   {compliance.complianceScore}%
                 </p>
               </div>
@@ -109,7 +111,7 @@ export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
               <div>
                 <p className="text-sm text-muted-foreground">Compliant Standards</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {compliance.standards.filter(s => s.complianceStatus === 'compliant').length}
+                  {compliance.standards.filter((s) => s.complianceStatus === 'compliant').length}
                   <span className="text-sm text-muted-foreground">
                     /{compliance.standards.length}
                   </span>
@@ -128,11 +130,11 @@ export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
               <div>
                 <p className="text-sm text-muted-foreground">Next Audit</p>
                 <p className="text-lg font-bold text-purple-600">
-                  {daysUntilAudit !== null ? (
-                    daysUntilAudit > 0 ? `${daysUntilAudit} days` : 'Overdue'
-                  ) : (
-                    'Not scheduled'
-                  )}
+                  {daysUntilAudit !== null
+                    ? daysUntilAudit > 0
+                      ? `${daysUntilAudit} days`
+                      : 'Overdue'
+                    : 'Not scheduled'}
                 </p>
                 {compliance.nextAuditDate && (
                   <p className="text-xs text-muted-foreground">
@@ -159,22 +161,24 @@ export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
         <CardContent>
           <div className="space-y-4">
             {compliance.standards.map((standard, index) => {
-              const statusInfo = getComplianceIcon(standard.complianceStatus);
-              const StatusIcon = statusInfo.icon;
+              const statusInfo = getComplianceIcon(standard.complianceStatus)
+              const StatusIcon = statusInfo.icon
 
               return (
                 <Card key={index} className="border-l-4 border-l-blue-500">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3 flex-1">
-                        <div className={`h-10 w-10 rounded-lg ${statusInfo.bg} flex items-center justify-center`}>
+                        <div
+                          className={`h-10 w-10 rounded-lg ${statusInfo.bg} flex items-center justify-center`}
+                        >
                           <StatusIcon className={`h-5 w-5 ${statusInfo.color}`} />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <h3 className="font-medium">{standard.name}</h3>
-                            <Badge 
-                              variant="outline" 
+                            <Badge
+                              variant="outline"
                               className={`text-xs ${statusInfo.color.replace('text-', 'text-')} ${statusInfo.bg.replace('bg-', 'bg-')}`}
                             >
                               {standard.complianceStatus.replace('_', ' ').toUpperCase()}
@@ -227,7 +231,7 @@ export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
                     )}
                   </CardContent>
                 </Card>
-              );
+              )
             })}
           </div>
         </CardContent>
@@ -241,22 +245,26 @@ export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
               <AlertTriangle className="h-5 w-5 text-orange-600" />
               Compliance Issues
               <Badge variant="destructive" className="ml-2">
-                {compliance.issues.filter(issue => issue.status === 'open').length} Open
+                {compliance.issues.filter((issue) => issue.status === 'open').length} Open
               </Badge>
             </CardTitle>
-            <CardDescription>
-              Active compliance issues requiring attention
-            </CardDescription>
+            <CardDescription>Active compliance issues requiring attention</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {compliance.issues.map((issue) => (
-                <Card key={issue.id} className={`border-l-4 ${
-                  issue.severity === 'critical' ? 'border-l-red-500' :
-                  issue.severity === 'high' ? 'border-l-orange-500' :
-                  issue.severity === 'medium' ? 'border-l-gray-500' :
-                  'border-l-blue-500'
-                }`}>
+                <Card
+                  key={issue.id}
+                  className={`border-l-4 ${
+                    issue.severity === 'critical'
+                      ? 'border-l-red-500'
+                      : issue.severity === 'high'
+                        ? 'border-l-orange-500'
+                        : issue.severity === 'medium'
+                          ? 'border-l-gray-500'
+                          : 'border-l-blue-500'
+                  }`}
+                >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -313,11 +321,15 @@ export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
                   <p className="text-sm font-medium">Next Audit</p>
                   <p className="text-lg">{formatDate(compliance.nextAuditDate)}</p>
                   {daysUntilAudit !== null && (
-                    <p className={`text-sm ${
-                      daysUntilAudit <= 30 ? 'text-orange-600' : 
-                      daysUntilAudit <= 7 ? 'text-red-600' : 
-                      'text-green-600'
-                    }`}>
+                    <p
+                      className={`text-sm ${
+                        daysUntilAudit <= 30
+                          ? 'text-orange-600'
+                          : daysUntilAudit <= 7
+                            ? 'text-red-600'
+                            : 'text-green-600'
+                      }`}
+                    >
                       {daysUntilAudit > 0 ? `${daysUntilAudit} days remaining` : 'Audit is overdue'}
                     </p>
                   )}
@@ -344,13 +356,17 @@ export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Applicable Standards</span>
-                <Badge variant="secondary">
-                  {compliance.standards.length}
-                </Badge>
+                <Badge variant="secondary">{compliance.standards.length}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Compliance Score</span>
-                <Badge className={getComplianceScoreColor(compliance.complianceScore).replace('text-', 'bg-').replace('600', '100 text-') + '-600'}>
+                <Badge
+                  className={
+                    getComplianceScoreColor(compliance.complianceScore)
+                      .replace('text-', 'bg-')
+                      .replace('600', '100 text-') + '-600'
+                  }
+                >
                   {compliance.complianceScore}%
                 </Badge>
               </div>
@@ -359,5 +375,5 @@ export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
         </Card>
       </div>
     </div>
-  );
+  )
 }

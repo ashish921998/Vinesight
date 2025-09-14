@@ -1,41 +1,44 @@
-"use client";
+'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Droplets, Calculator, Clock } from "lucide-react";
-import type { Farm } from "@/types/types";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Droplets, Calculator, Clock } from 'lucide-react'
+import type { Farm } from '@/types/types'
 
 interface RemainingWaterCardProps {
-  farm: Farm;
-  onCalculateClick: () => void;
+  farm: Farm
+  onCalculateClick: () => void
 }
 
 export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCardProps) {
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = new Date(dateString)
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
+      minute: '2-digit',
+    }).format(date)
+  }
 
   const getWaterStatus = (remainingWater: number) => {
-    if (remainingWater < 6) return { color: 'text-red-600 bg-red-50 border-red-200', text: 'Critical' };
-    if (remainingWater < 10) return { color: 'text-orange-600 bg-orange-50 border-orange-200', text: 'Low' };
-    if (remainingWater < 25) return { color: 'text-yellow-600 bg-yellow-50 border-yellow-200', text: 'Medium' };
-    return { color: 'text-green-600 bg-green-50 border-green-200', text: 'Good' };
-  };
+    if (remainingWater < 6)
+      return { color: 'text-red-600 bg-red-50 border-red-200', text: 'Critical' }
+    if (remainingWater < 10)
+      return { color: 'text-orange-600 bg-orange-50 border-orange-200', text: 'Low' }
+    if (remainingWater < 25)
+      return { color: 'text-yellow-600 bg-yellow-50 border-yellow-200', text: 'Medium' }
+    return { color: 'text-green-600 bg-green-50 border-green-200', text: 'Good' }
+  }
 
   // Don't show the card if farm doesn't have tank capacity configured
   if (!farm.totalTankCapacity) {
-    return null;
+    return null
   }
 
-  const hasWaterData = farm.remainingWater !== null && farm.remainingWater !== undefined;
-  const status = hasWaterData ? getWaterStatus(farm.remainingWater!) : null;
+  const hasWaterData = farm.remainingWater !== null && farm.remainingWater !== undefined
+  const status = hasWaterData ? getWaterStatus(farm.remainingWater!) : null
 
   return (
     <Card className={`border-0 shadow-sm ${status?.color || 'border-gray-200'}`}>
@@ -66,18 +69,14 @@ export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCar
           </div>
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="pt-0">
         {hasWaterData ? (
           <div className="space-y-4">
             {/* Main water level display */}
             <div className="text-center">
-              <div className="text-3xl font-bold mb-1">
-                {farm.remainingWater!.toFixed(2)}
-              </div>
-              <div className="text-sm text-gray-600">
-                mm available water
-              </div>
+              <div className="text-3xl font-bold mb-1">{farm.remainingWater!.toFixed(2)}</div>
+              <div className="text-sm text-gray-600">mm available water</div>
             </div>
 
             {/* Status message */}
@@ -98,19 +97,13 @@ export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCar
                 </div>
               )}
               {farm.remainingWater! >= 25 && (
-                <div className="text-sm text-green-600 font-medium">
-                  ✅ Good water level
-                </div>
+                <div className="text-sm text-green-600 font-medium">✅ Good water level</div>
               )}
             </div>
 
             {/* Update button */}
             <div className="pt-2">
-              <Button
-                onClick={onCalculateClick}
-                variant="outline"
-                className="w-full h-10 text-sm"
-              >
+              <Button onClick={onCalculateClick} variant="outline" className="w-full h-10 text-sm">
                 <Calculator className="h-4 w-4 mr-2" />
                 Update Calculation
               </Button>
@@ -119,13 +112,8 @@ export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCar
         ) : (
           <div className="text-center py-6">
             <Calculator className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm text-gray-500 mb-4">
-              No water calculation available
-            </p>
-            <Button
-              onClick={onCalculateClick}
-              className="h-11 px-6 bg-blue-600 hover:bg-blue-700"
-            >
+            <p className="text-sm text-gray-500 mb-4">No water calculation available</p>
+            <Button onClick={onCalculateClick} className="h-11 px-6 bg-blue-600 hover:bg-blue-700">
               <Calculator className="h-4 w-4 mr-2" />
               Calculate Water Level
             </Button>
@@ -133,5 +121,5 @@ export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCar
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

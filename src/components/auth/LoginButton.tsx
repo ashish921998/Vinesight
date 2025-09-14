@@ -1,22 +1,22 @@
-"use client";
+'use client'
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { createClient } from '@/lib/supabase';
-import { Loader2 } from 'lucide-react';
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { createClient } from '@/lib/supabase'
+import { Loader2 } from 'lucide-react'
 
 interface LoginButtonProps {
-  className?: string;
-  children?: React.ReactNode;
+  className?: string
+  children?: React.ReactNode
 }
 
 export function LoginButton({ className, children }: LoginButtonProps) {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
 
   const handleGoogleSignIn = async () => {
     try {
-      setLoading(true);
-      const supabase = createClient();
+      setLoading(true)
+      const supabase = createClient()
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -24,25 +24,21 @@ export function LoginButton({ className, children }: LoginButtonProps) {
           queryParams: {
             access_type: 'online',
             prompt: 'consent',
-          }
-        }
-      });
+          },
+        },
+      })
       if (error) {
-        console.error('Error signing in:', error);
+        console.error('Error signing in:', error)
       }
     } catch (error) {
-      console.error('Error signing in:', error);
+      console.error('Error signing in:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <Button 
-      onClick={handleGoogleSignIn}
-      disabled={loading}
-      className={`w-full ${className}`}
-    >
+    <Button onClick={handleGoogleSignIn} disabled={loading} className={`w-full ${className}`}>
       {loading ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -72,5 +68,5 @@ export function LoginButton({ className, children }: LoginButtonProps) {
         </>
       )}
     </Button>
-  );
+  )
 }

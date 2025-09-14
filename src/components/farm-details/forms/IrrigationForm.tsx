@@ -1,67 +1,62 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Droplets, Upload, X, Loader2 } from "lucide-react";
+import { useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Droplets, Upload, X, Loader2 } from 'lucide-react'
 
 interface IrrigationFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: {
-    date: string;
-    duration: string;
-    notes: string;
-    photos: File[];
-  }) => void;
-  isSubmitting: boolean;
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (data: { date: string; duration: string; notes: string; photos: File[] }) => void
+  isSubmitting: boolean
 }
 
 export function IrrigationForm({ isOpen, onClose, onSubmit, isSubmitting }: IrrigationFormProps) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
-    duration: "",
-    notes: "",
-    photos: [] as File[]
-  });
+    duration: '',
+    notes: '',
+    photos: [] as File[],
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.duration) return;
-    onSubmit(formData);
-  };
+    e.preventDefault()
+    if (!formData.duration) return
+    onSubmit(formData)
+  }
 
   const handlePhotoAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setFormData(prev => ({
+    const files = Array.from(e.target.files || [])
+    setFormData((prev) => ({
       ...prev,
-      photos: [...prev.photos, ...files]
-    }));
-  };
+      photos: [...prev.photos, ...files],
+    }))
+  }
 
   const handlePhotoRemove = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
-    }));
-  };
+      photos: prev.photos.filter((_, i) => i !== index),
+    }))
+  }
 
   const resetForm = () => {
-    setFormData({ 
+    setFormData({
       date: new Date().toISOString().split('T')[0],
-      duration: "", 
-      notes: "", 
-      photos: [] 
-    });
-  };
+      duration: '',
+      notes: '',
+      photos: [],
+    })
+  }
 
   const handleClose = () => {
-    resetForm();
-    onClose();
-  };
+    resetForm()
+    onClose()
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -85,7 +80,7 @@ export function IrrigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Irri
               id="date"
               type="date"
               value={formData.date}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
               max={new Date().toISOString().split('T')[0]} // Prevent future dates
               className="mt-1"
               required
@@ -102,7 +97,7 @@ export function IrrigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Irri
               step="0.1"
               min="0"
               value={formData.duration}
-              onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, duration: e.target.value }))}
               placeholder="2.5"
               className="mt-1"
               required
@@ -116,7 +111,7 @@ export function IrrigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Irri
             <Textarea
               id="notes"
               value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
               placeholder="Any observations about the irrigation..."
               className="mt-1 resize-none"
               rows={3}
@@ -143,10 +138,11 @@ export function IrrigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Irri
             {formData.photos.length > 0 && (
               <div className="mt-3 space-y-2">
                 {formData.photos.map((photo, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-700 truncate">
-                      {photo.name}
-                    </span>
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                  >
+                    <span className="text-sm text-gray-700 truncate">{photo.name}</span>
                     <button
                       type="button"
                       onClick={() => handlePhotoRemove(index)}
@@ -161,12 +157,7 @@ export function IrrigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Irri
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              className="flex-1"
-            >
+            <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
               Cancel
             </Button>
             <Button
@@ -174,18 +165,18 @@ export function IrrigationForm({ isOpen, onClose, onSubmit, isSubmitting }: Irri
               disabled={!formData.duration || isSubmitting}
               className="flex-1 bg-blue-600 hover:bg-blue-700"
             >
-{isSubmitting ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Saving...
                 </>
               ) : (
-                "Save Irrigation"
+                'Save Irrigation'
               )}
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
