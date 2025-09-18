@@ -103,11 +103,12 @@ export function SimpleWeatherCard({ farm }: SimpleWeatherCardProps) {
         </div>
 
         {/* Current Temperature */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-3">
             <span className="text-3xl font-light">{Math.round(weatherData.temperatureMean)}°C</span>
           </div>
-          <div className="flex items-center gap-3 text-gray-600">
+          {/* Weather Metrics - Mobile Optimized Grid */}
+          <div className="grid grid-cols-2 gap-2 text-gray-600">
             <div className="flex items-center gap-1">
               <Droplets className="h-4 w-4" />
               <span className="text-sm">{Math.round(weatherData.relativeHumidityMean)}%</span>
