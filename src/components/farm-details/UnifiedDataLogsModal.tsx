@@ -203,10 +203,17 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
       {
         name: 'quantity',
         type: 'number',
-        label: 'Quantity (kg/L)',
+        label: 'Quantity',
         required: false,
         min: 0,
         step: 0.1,
+      },
+      {
+        name: 'unit',
+        type: 'select',
+        label: 'Unit',
+        required: false,
+        options: ['kg/acre', 'liter/acre'],
       },
     ],
   },
@@ -281,6 +288,12 @@ export function UnifiedDataLogsModal({
     Array<{ id: string; data: Record<string, any>; isValid: boolean }>
   >([])
 
+  // Multiple fertigation entries state
+  const [multipleFertigationMode, setMultipleFertigationMode] = useState(false)
+  const [fertigationEntries, setFertigationEntries] = useState<
+    Array<{ id: string; data: Record<string, any>; isValid: boolean }>
+  >([])
+
   // Reset modal state when opened/closed
   useEffect(() => {
     if (!isOpen) {
@@ -293,6 +306,8 @@ export function UnifiedDataLogsModal({
       setDayPhotos([])
       setMultipleSprayMode(false)
       setSprayEntries([])
+      setMultipleFertigationMode(false)
+      setFertigationEntries([])
     }
   }, [isOpen])
 
@@ -303,9 +318,18 @@ export function UnifiedDataLogsModal({
       if (currentLogType === 'spray') {
         setSprayEntries([{ id: Date.now().toString(), data: {}, isValid: false }])
         setMultipleSprayMode(true)
+        setMultipleFertigationMode(false)
+        setFertigationEntries([])
+      } else if (currentLogType === 'fertigation') {
+        setFertigationEntries([{ id: Date.now().toString(), data: {}, isValid: false }])
+        setMultipleFertigationMode(true)
+        setMultipleSprayMode(false)
+        setSprayEntries([])
       } else {
         setMultipleSprayMode(false)
         setSprayEntries([])
+        setMultipleFertigationMode(false)
+        setFertigationEntries([])
       }
     }
   }, [currentLogType, editingLogId])
@@ -361,6 +385,48 @@ export function UnifiedDataLogsModal({
             ...entry,
             data: newData,
             isValid: validateSprayEntry(newData),
+          }
+        }
+        return entry
+      }),
+    )
+  }
+
+  const validateFertigationEntry = (data: Record<string, any>): boolean => {
+    const config = logTypeConfigs['fertigation']
+    for (const field of config.fields) {
+      if (field.required && !data[field.name]) {
+        return false
+      }
+    }
+    return true
+  }
+
+  const handleAddFertigationEntry = () => {
+    if (fertigationEntries.length >= 10) return
+
+    const newEntry = {
+      id: Date.now().toString(),
+      data: {},
+      isValid: false,
+    }
+    setFertigationEntries((prev) => [...prev, newEntry])
+  }
+
+  const handleRemoveFertigationEntry = (entryId: string) => {
+    if (fertigationEntries.length === 1) return
+    setFertigationEntries((prev) => prev.filter((entry) => entry.id !== entryId))
+  }
+
+  const handleFertigationEntryChange = (entryId: string, field: string, value: any) => {
+    setFertigationEntries((prev) =>
+      prev.map((entry) => {
+        if (entry.id === entryId) {
+          const newData = { ...entry.data, [field]: value }
+          return {
+            ...entry,
+            data: newData,
+            isValid: validateFertigationEntry(newData),
           }
         }
         return entry
@@ -504,6 +570,80 @@ export function UnifiedDataLogsModal({
               type="text"
               value={value}
               onChange={(e) => handleSprayEntryChange(entry.id, field.name, e.target.value)}
+              placeholder={field.placeholder}
+              maxLength={field.maxLength}
+              className="h-9"
+            />
+          </div>
+        )
+    }
+  }
+
+  const renderFertigationEntryField = (
+    entry: { id: string; data: Record<string, any>; isValid: boolean },
+    field: FormField,
+  ) => {
+    const value = entry.data[field.name] || ''
+
+    switch (field.type) {
+      case 'select':
+        return (
+          <div key={field.name} className="space-y-1">
+            <Label className="text-sm font-medium text-gray-700">
+              {field.label}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </Label>
+            <Select
+              value={value}
+              onValueChange={(newValue) =>
+                handleFertigationEntryChange(entry.id, field.name, newValue)
+              }
+            >
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
+              </SelectTrigger>
+              <SelectContent>
+                {field.options?.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )
+
+      case 'number':
+        return (
+          <div key={field.name} className="space-y-1">
+            <Label className="text-sm font-medium text-gray-700">
+              {field.label}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </Label>
+            <Input
+              type="number"
+              value={value}
+              onChange={(e) => handleFertigationEntryChange(entry.id, field.name, e.target.value)}
+              placeholder={field.placeholder}
+              min={field.min}
+              max={field.max}
+              step={field.step}
+              className="h-9"
+            />
+          </div>
+        )
+
+      default:
+        return (
+          <div key={field.name} className="space-y-1">
+            <Label className="text-sm font-medium text-gray-700">
+              {field.label}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </Label>
+            <Input
+              type="text"
+              value={value}
+              onChange={(e) => handleFertigationEntryChange(entry.id, field.name, e.target.value)}
               placeholder={field.placeholder}
               maxLength={field.maxLength}
               className="h-9"
@@ -666,7 +806,7 @@ export function UnifiedDataLogsModal({
                           <p className="font-medium text-sm">{logTypeLabels[log.type]}</p>
                           <p className="text-xs text-gray-600">
                             {Object.entries(log.data)
-                              .filter(([key, value]) => value)
+                              .filter(([, value]) => value)
                               .map(([key, value]) => `${key}: ${value}`)
                               .slice(0, 2)
                               .join(', ')}
@@ -745,6 +885,11 @@ export function UnifiedDataLogsModal({
                       {sprayEntries.length}/10 entries
                     </Badge>
                   )}
+                  {currentLogType === 'fertigation' && multipleFertigationMode && (
+                    <Badge variant="outline" className="ml-2">
+                      {fertigationEntries.length}/10 entries
+                    </Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -803,6 +948,64 @@ export function UnifiedDataLogsModal({
                       className="w-full"
                     >
                       Save All Spray Entries ({sprayEntries.filter((e) => e.isValid).length})
+                    </Button>
+                  </div>
+                ) : currentLogType === 'fertigation' && multipleFertigationMode ? (
+                  <div className="space-y-4">
+                    {fertigationEntries.map((entry, index) => (
+                      <Card
+                        key={entry.id}
+                        className="bg-white border-2 border-dashed border-gray-200"
+                      >
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <Droplets className="h-4 w-4 text-blue-600" />
+                              Fertigation {index + 1}
+                              {entry.isValid && <CheckCircle className="h-4 w-4 text-green-600" />}
+                            </CardTitle>
+                            {fertigationEntries.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveFertigationEntry(entry.id)}
+                                className="h-6 w-6 p-0 text-red-600 hover:text-red-800"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {logTypeConfigs[currentLogType].fields.map((field) =>
+                            renderFertigationEntryField(entry, field),
+                          )}
+
+                          {/* Add button after last field */}
+                          {index === fertigationEntries.length - 1 &&
+                            fertigationEntries.length < 10 && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleAddFertigationEntry}
+                                className="w-full mt-2 border-dashed"
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Add Another Fertigation
+                              </Button>
+                            )}
+                        </CardContent>
+                      </Card>
+                    ))}
+
+                    {/* Save Multiple Fertigation Entries Button */}
+                    <Button
+                      onClick={handleAddLogEntry}
+                      disabled={!validateCurrentForm()}
+                      className="w-full"
+                    >
+                      Save All Fertigation Entries (
+                      {fertigationEntries.filter((e) => e.isValid).length})
                     </Button>
                   </div>
                 ) : (
