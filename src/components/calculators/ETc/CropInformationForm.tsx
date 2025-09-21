@@ -60,7 +60,7 @@ export function CropInformationForm({ formData, onInputChange }: CropInformation
             <SelectTrigger className="h-11 text-base mt-1">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[60vh] overflow-y-auto">
               {growthStages.map((stage) => (
                 <SelectItem key={stage.value} value={stage.value}>
                   <div className="flex flex-col">
@@ -89,7 +89,7 @@ export function CropInformationForm({ formData, onInputChange }: CropInformation
             <SelectTrigger className="h-11 text-base mt-1">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[60vh] overflow-y-auto">
               <SelectItem value="drip">Drip Irrigation</SelectItem>
               <SelectItem value="sprinkler">Sprinkler</SelectItem>
               <SelectItem value="surface">Surface Irrigation</SelectItem>
@@ -106,7 +106,7 @@ export function CropInformationForm({ formData, onInputChange }: CropInformation
             <SelectTrigger className="h-11 text-base mt-1">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[60vh] overflow-y-auto">
               <SelectItem value="sandy">Sandy Soil</SelectItem>
               <SelectItem value="loamy">Loamy Soil</SelectItem>
               <SelectItem value="clay">Clay Soil</SelectItem>

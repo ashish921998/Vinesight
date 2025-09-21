@@ -45,9 +45,9 @@ export interface SprayRecord {
   date: string
   chemical: string
   dose: string
-  quantity_amount?: number // numeric value for quantity
-  quantity_unit?: string // 'gm/L' or 'ml/L'
-  water_volume?: number // total water volume in liters
+  quantity_amount: number
+  quantity_unit: string // 'gm/L' or 'ml/L'
+  water_volume: number // total water volume in liters
   area: number // in acres
   weather: string
   operator: string
@@ -118,6 +118,17 @@ export interface SoilTestRecord {
   farm_id: number
   date: string
   parameters: Record<string, number> // pH, N, P, K, etc.
+  recommendations?: string
+  notes?: string
+  created_at?: string
+}
+
+export interface PetioleTestRecord {
+  id?: number
+  farm_id: number
+  date: string
+  sample_id?: string
+  parameters?: Record<string, number>
   recommendations?: string
   notes?: string
   created_at?: string

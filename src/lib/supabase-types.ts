@@ -10,6 +10,7 @@ import type {
   ExpenseRecord,
   CalculationHistory,
   SoilTestRecord,
+  PetioleTestRecord,
 } from './supabase'
 import type { TaskReminder, Farm } from '@/types/types'
 
@@ -23,6 +24,7 @@ export type {
   ExpenseRecord,
   CalculationHistory,
   SoilTestRecord,
+  PetioleTestRecord,
 }
 
 // Extract database table types
@@ -70,6 +72,12 @@ export type DatabaseSoilTestRecordInsert =
 export type DatabaseSoilTestRecordUpdate =
   Database['public']['Tables']['soil_test_records']['Update']
 
+// Petiole Test Record database types
+export type DatabasePetioleTestRecord = Database['public']['Tables']['petiole_test_records']['Row']
+export type DatabasePetioleTestRecordInsert =
+  Database['public']['Tables']['petiole_test_records']['Insert']
+export type DatabasePetioleTestRecordUpdate =
+  Database['public']['Tables']['petiole_test_records']['Update']
 // Type conversion utilities
 export function toApplicationFarm(dbFarm: DatabaseFarm): Farm {
   return {
@@ -224,9 +232,9 @@ export function toApplicationSprayRecord(
     date: dbRecord.date,
     chemical: dbRecord.chemical,
     dose: dbRecord.dose,
-    quantity_amount: dbRecord.quantity_amount || undefined,
-    quantity_unit: dbRecord.quantity_unit || undefined,
-    water_volume: dbRecord.water_volume || undefined,
+    quantity_amount: dbRecord.quantity_amount,
+    quantity_unit: dbRecord.quantity_unit,
+    water_volume: dbRecord.water_volume,
     area: dbRecord.area,
     weather: dbRecord.weather,
     operator: dbRecord.operator,
@@ -243,9 +251,9 @@ export function toDatabaseSprayInsert(
     date: appRecord.date,
     chemical: appRecord.chemical,
     dose: appRecord.dose,
-    quantity_amount: appRecord.quantity_amount || null,
-    quantity_unit: appRecord.quantity_unit || null,
-    water_volume: appRecord.water_volume || null,
+    quantity_amount: appRecord.quantity_amount,
+    quantity_unit: appRecord.quantity_unit,
+    water_volume: appRecord.water_volume,
     area: appRecord.area,
     weather: appRecord.weather,
     operator: appRecord.operator,
@@ -260,7 +268,6 @@ export function toDatabaseSprayUpdate(
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
-  if (appUpdates.pest_disease !== undefined) update.pest_disease = appUpdates.pest_disease
   if (appUpdates.chemical !== undefined) update.chemical = appUpdates.chemical
   if (appUpdates.dose !== undefined) update.dose = appUpdates.dose
   if (appUpdates.area !== undefined) update.area = appUpdates.area
@@ -519,6 +526,51 @@ export function toDatabaseSoilTestUpdate(
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.parameters !== undefined) update.parameters = appUpdates.parameters
+  if (appUpdates.recommendations !== undefined)
+    update.recommendations = appUpdates.recommendations || null
+  if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
+  return update
+}
+
+// Petiole Test Record conversion functions
+export function toApplicationPetioleTestRecord(
+  dbRecord: DatabasePetioleTestRecord,
+): import('./supabase').PetioleTestRecord {
+  return {
+    id: dbRecord.id,
+    farm_id: dbRecord.farm_id!,
+    date: dbRecord.date,
+    parameters: (dbRecord.parameters as Record<string, number>) || {},
+    recommendations: dbRecord.recommendations || undefined,
+    notes: dbRecord.notes || undefined,
+    created_at: dbRecord.created_at || undefined,
+  }
+}
+
+export function toDatabasePetioleTestInsert(
+  appRecord: Omit<import('./supabase').PetioleTestRecord, 'id' | 'created_at'>,
+): DatabasePetioleTestRecordInsert {
+  return {
+    farm_id: appRecord.farm_id,
+    date: appRecord.date,
+    parameters: appRecord.parameters || {},
+    recommendations: appRecord.recommendations || null,
+    notes: appRecord.notes || null,
+  }
+}
+
+export function toDatabasePetioleTestUpdate(
+  appUpdates: Partial<import('./supabase').PetioleTestRecord>,
+): DatabasePetioleTestRecordUpdate {
+  const update: DatabasePetioleTestRecordUpdate = {}
+
+  if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
+  if (appUpdates.date !== undefined) update.date = appUpdates.date
+
+  if (appUpdates.parameters !== undefined) {
+    update.parameters = appUpdates.parameters
+  }
+
   if (appUpdates.recommendations !== undefined)
     update.recommendations = appUpdates.recommendations || null
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null

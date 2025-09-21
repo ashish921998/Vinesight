@@ -1383,163 +1383,6 @@ export type Database = {
           },
         ]
       }
-      prompt_likes: {
-        Row: {
-          created_at: string | null
-          id: string
-          prompt_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          prompt_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          prompt_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'prompt_likes_prompt_id_fkey'
-            columns: ['prompt_id']
-            isOneToOne: false
-            referencedRelation: 'prompts'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'prompt_likes_user_id_fkey'
-            columns: ['user_id']
-            isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      prompt_tags: {
-        Row: {
-          created_at: string | null
-          id: string
-          prompt_id: string | null
-          tag_id: string | null
-        }
-        Insert: {
-          added_at?: string | null
-          id?: string
-          prompt_id?: string | null
-          tag_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          prompt_id?: string | null
-          tag_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'prompt_tags_prompt_id_fkey'
-            columns: ['prompt_id']
-            isOneToOne: false
-            referencedRelation: 'prompts'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'prompt_tags_tag_id_fkey'
-            columns: ['tag_id']
-            isOneToOne: false
-            referencedRelation: 'tags'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      prompts: {
-        Row: {
-          author_id: string | null
-          category_id: string | null
-          content: string
-          created_at: string | null
-          description: string | null
-          difficulty_level: string | null
-          estimated_tokens: number | null
-          example_output: string | null
-          id: string
-          is_featured: boolean | null
-          is_public: boolean | null
-          likes_count: number | null
-          parent_prompt_id: string | null
-          title: string
-          updated_at: string | null
-          usage_count: number | null
-          version: number | null
-          views_count: number | null
-        }
-        Insert: {
-          author_id?: string | null
-          category_id?: string | null
-          content: string
-          created_at?: string | null
-          description?: string | null
-          difficulty_level?: string | null
-          estimated_tokens?: number | null
-          example_output?: string | null
-          id?: string
-          is_featured?: boolean | null
-          is_public?: boolean | null
-          likes_count?: number | null
-          parent_prompt_id?: string | null
-          title: string
-          updated_at?: string | null
-          usage_count?: number | null
-          version?: number | null
-          views_count?: number | null
-        }
-        Update: {
-          author_id?: string | null
-          category_id?: string | null
-          content?: string
-          created_at?: string | null
-          description?: string | null
-          difficulty_level?: string | null
-          estimated_tokens?: number | null
-          example_output?: string | null
-          id?: string
-          is_featured?: boolean | null
-          is_public?: boolean | null
-          likes_count?: number | null
-          parent_prompt_id?: string | null
-          title?: string
-          updated_at?: string | null
-          usage_count?: number | null
-          version?: number | null
-          views_count?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'prompts_author_id_fkey'
-            columns: ['author_id']
-            isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'prompts_category_id_fkey'
-            columns: ['category_id']
-            isOneToOne: false
-            referencedRelation: 'categories'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'prompts_parent_prompt_id_fkey'
-            columns: ['parent_prompt_id']
-            isOneToOne: false
-            referencedRelation: 'prompts'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       soil_test_records: {
         Row: {
           created_at: string | null
@@ -1578,6 +1421,44 @@ export type Database = {
           },
         ]
       }
+      petiole_test_records: {
+        Row: {
+          created_at: string | null
+          date: string
+          farm_id: number | null
+          id: number
+          notes: string | null
+          parameters: Json
+          recommendations: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          farm_id?: number | null
+          id?: number
+          notes?: string | null
+          parameters: Json
+          recommendations?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          farm_id?: number | null
+          id?: number
+          notes?: string | null
+          parameters?: Json
+          recommendations?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'petiole_test_records_farm_id_fkey'
+            columns: ['farm_id']
+            isOneToOne: false
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       spray_records: {
         Row: {
           area: number
@@ -1589,8 +1470,10 @@ export type Database = {
           id: number
           notes: string | null
           operator: string
-          pest_disease: string
           weather: string
+          water_volume: number
+          quantity_amount: number
+          quantity_unit: string
         }
         Insert: {
           area: number
@@ -1602,8 +1485,10 @@ export type Database = {
           id?: number
           notes?: string | null
           operator: string
-          pest_disease: string
           weather: string
+          water_volume?: number
+          quantity_amount?: number
+          quantity_unit?: string
         }
         Update: {
           area?: number
@@ -1615,8 +1500,10 @@ export type Database = {
           id?: number
           notes?: string | null
           operator?: string
-          pest_disease?: string
           weather?: string
+          water_volume?: number
+          quantity_amount?: number
+          quantity_unit?: string
         }
         Relationships: [
           {
@@ -1681,68 +1568,6 @@ export type Database = {
           },
         ]
       }
-      submissions: {
-        Row: {
-          challenge_id: string
-          created_at: string | null
-          id: string
-          live_url: string | null
-          updated_at: string | null
-          user_id: string | null
-          votes_count: number | null
-        }
-        Insert: {
-          challenge_id: string
-          created_at?: string | null
-          id?: string
-          live_url?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          votes_count?: number | null
-        }
-        Update: {
-          challenge_id?: string
-          created_at?: string | null
-          id?: string
-          live_url?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          votes_count?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'submissions_user_id_fkey'
-            columns: ['user_id']
-            isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      tags: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-          slug: string
-          usage_count: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-          slug: string
-          usage_count?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          slug?: string
-          usage_count?: number | null
-        }
-        Relationships: []
-      }
       task_reminders: {
         Row: {
           completed: boolean | null
@@ -1786,42 +1611,6 @@ export type Database = {
             columns: ['farm_id']
             isOneToOne: false
             referencedRelation: 'farms'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      votes: {
-        Row: {
-          created_at: string | null
-          id: string
-          submission_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          submission_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          submission_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'votes_submission_id_fkey'
-            columns: ['submission_id']
-            isOneToOne: false
-            referencedRelation: 'submissions'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'votes_user_id_fkey'
-            columns: ['user_id']
-            isOneToOne: false
-            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
         ]
@@ -1986,10 +1775,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      activate_daily_challenge: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
       decay_context_relevance: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1997,18 +1782,6 @@ export type Database = {
       expire_old_task_recommendations: {
         Args: Record<PropertyKey, never>
         Returns: undefined
-      }
-      get_challenges_remaining_count: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      get_next_available_challenge: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      mark_challenge_as_used: {
-        Args: { activation_method?: string; challenge_id: string }
-        Returns: boolean
       }
     }
     Enums: {
