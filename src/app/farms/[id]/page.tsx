@@ -215,9 +215,9 @@ export default function FarmDetailsPage() {
             data.quantity_amount && data.quantity_unit
               ? `${data.quantity_amount}${data.quantity_unit}`
               : 'As per label',
-          quantity_amount: data.quantity_amount ? parseFloat(data.quantity_amount) : undefined,
-          quantity_unit: data.quantity_unit || undefined,
-          water_volume: data.water_volume ? parseFloat(data.water_volume) : undefined,
+          quantity_amount: data.quantity_amount ? parseFloat(data.quantity_amount) : 0,
+          quantity_unit: data.quantity_unit || 'gm/L',
+          water_volume: data.water_volume ? parseFloat(data.water_volume) : 0,
           area: dashboardData?.farm?.area || 0,
           weather: 'Clear',
           operator: 'Farm Owner',
@@ -270,6 +270,60 @@ export default function FarmDetailsPage() {
             phosphorus: parseFloat(data.phosphorus || '0'),
             potassium: parseFloat(data.potassium || '0'),
           },
+          notes: dayNotes || '',
+        })
+        break
+
+      case 'petiole_test':
+        // Create parameters object with all the nutrient values
+        const parameters: Record<string, number> = {}
+
+        // Check each field and add to parameters if it exists
+        if (data.total_nitrogen !== undefined && data.total_nitrogen !== '') {
+          parameters.total_nitrogen = parseFloat(data.total_nitrogen)
+        }
+        if (data.phosphorus !== undefined && data.phosphorus !== '') {
+          parameters.phosphorus = parseFloat(data.phosphorus)
+        }
+        if (data.potassium !== undefined && data.potassium !== '') {
+          parameters.potassium = parseFloat(data.potassium)
+        }
+        if (data.calcium !== undefined && data.calcium !== '') {
+          parameters.calcium = parseFloat(data.calcium)
+        }
+        if (data.magnesium !== undefined && data.magnesium !== '') {
+          parameters.magnesium = parseFloat(data.magnesium)
+        }
+        if (data.sulphur !== undefined && data.sulphur !== '') {
+          parameters.sulfur = parseFloat(data.sulphur)
+        }
+        if (data.ferrous !== undefined && data.ferrous !== '') {
+          parameters.iron = parseFloat(data.ferrous)
+        }
+        if (data.manganese !== undefined && data.manganese !== '') {
+          parameters.manganese = parseFloat(data.manganese)
+        }
+        if (data.zinc !== undefined && data.zinc !== '') {
+          parameters.zinc = parseFloat(data.zinc)
+        }
+        if (data.copper !== undefined && data.copper !== '') {
+          parameters.copper = parseFloat(data.copper)
+        }
+        if (data.boron !== undefined && data.boron !== '') {
+          parameters.boron = parseFloat(data.boron)
+        }
+        if (data.nitrate_nitrogen !== undefined && data.nitrate_nitrogen !== '') {
+          parameters.nitrate_nitrogen = parseFloat(data.nitrate_nitrogen)
+        }
+        if (data.ammonical_nitrogen !== undefined && data.ammonical_nitrogen !== '') {
+          parameters.ammonium_nitrogen = parseFloat(data.ammonical_nitrogen)
+        }
+
+        record = await SupabaseService.addPetioleTestRecord({
+          farm_id: parseInt(farmId),
+          date: date,
+          sample_id: data.sample_id || '',
+          parameters: parameters,
           notes: dayNotes || '',
         })
         break

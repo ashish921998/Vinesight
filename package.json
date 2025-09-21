@@ -76,6 +76,7 @@
     "eslint-plugin-prettier": "^5.5.4",
     "prettier": "^3.6.2",
     "shadcn": "^3.0.0",
+    "supabase": "^2.40.7",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

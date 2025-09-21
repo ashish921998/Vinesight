@@ -32,7 +32,14 @@ import {
   CheckCircle,
 } from 'lucide-react'
 
-export type LogType = 'irrigation' | 'spray' | 'harvest' | 'expense' | 'fertigation' | 'soil_test'
+export type LogType =
+  | 'irrigation'
+  | 'spray'
+  | 'harvest'
+  | 'expense'
+  | 'fertigation'
+  | 'soil_test'
+  | 'petiole_test'
 
 interface LogEntry {
   id: string // temporary ID for session
@@ -217,6 +224,140 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
       },
     ],
   },
+  petiole_test: {
+    icon: TestTube,
+    color: 'text-green-700',
+    bgColor: 'bg-green-50',
+    borderColor: 'border-green-200',
+    fields: [
+      {
+        name: 'total_nitrogen',
+        type: 'number',
+        label: 'Total Nitrogen (%)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'nitrate_nitrogen',
+        type: 'number',
+        label: 'Nitrate Nitrogen (PPM)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'ammonical_nitrogen',
+        type: 'number',
+        label: 'Ammonical Nitrogen (PPM)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'phosphorus',
+        type: 'number',
+        label: 'Phosphorus (%)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'potassium',
+        type: 'number',
+        label: 'Potassium (%)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'calcium',
+        type: 'number',
+        label: 'Calcium (%)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'magnesium',
+        type: 'number',
+        label: 'Magnesium (%)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'sulphur',
+        type: 'number',
+        label: 'Sulphur (%)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'ferrous',
+        type: 'number',
+        label: 'Ferrous (PPM)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'manganese',
+        type: 'number',
+        label: 'Manganese (PPM)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'zinc',
+        type: 'number',
+        label: 'Zinc (PPM)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'copper',
+        type: 'number',
+        label: 'Copper (PPM)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'boron',
+        type: 'number',
+        label: 'Boron (PPM)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'molybdenum',
+        type: 'number',
+        label: 'Molybdenum (PPM)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'sodium',
+        type: 'number',
+        label: 'Sodium (%)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'chloride',
+        type: 'number',
+        label: 'Chloride (%)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'carbonate',
+        type: 'number',
+        label: 'Carbonate (PPM)',
+        required: false,
+        min: 0,
+      },
+      {
+        name: 'bicarbonate',
+        type: 'number',
+        label: 'Bicarbonate (PPM)',
+        required: false,
+        min: 0,
+      },
+    ],
+  },
   soil_test: {
     icon: TestTube,
     color: 'text-orange-600',
@@ -264,6 +405,7 @@ const logTypeLabels: Record<LogType, string> = {
   soil_test: 'Soil Test',
   harvest: 'Harvest',
   expense: 'Expense',
+  petiole_test: 'Petiole Test',
 }
 
 export function UnifiedDataLogsModal({
@@ -339,6 +481,10 @@ export function UnifiedDataLogsModal({
 
     if (currentLogType === 'spray' && multipleSprayMode) {
       return sprayEntries.some((entry) => entry.isValid)
+    }
+
+    if (currentLogType === 'fertigation' && multipleFertigationMode) {
+      return fertigationEntries.some((entry) => entry.isValid)
     }
 
     const config = logTypeConfigs[currentLogType]
@@ -454,6 +600,26 @@ export function UnifiedDataLogsModal({
       setCurrentLogType(null)
       setMultipleSprayMode(false)
       setSprayEntries([])
+      return
+    }
+
+    if (currentLogType === 'fertigation' && multipleFertigationMode) {
+      // Handle multiple fertigation entries
+      const validFertigationEntries = fertigationEntries.filter((entry) => entry.isValid)
+
+      const newFertigationLogs: LogEntry[] = validFertigationEntries.map((entry) => ({
+        id: entry.id + '_fertigation',
+        type: 'fertigation',
+        data: { ...entry.data },
+        isValid: true,
+      }))
+
+      setSessionLogs((prev) => [...prev, ...newFertigationLogs])
+
+      // Reset fertigation mode
+      setCurrentLogType(null)
+      setMultipleFertigationMode(false)
+      setFertigationEntries([])
       return
     }
 

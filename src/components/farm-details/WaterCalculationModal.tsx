@@ -150,7 +150,7 @@ export function WaterCalculationModal({
               <SelectTrigger className="mt-1 h-11">
                 <SelectValue placeholder="Select growth stage" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-60 overflow-y-auto">
                 <SelectItem value="0.25">0.25 - Beginning budbreak</SelectItem>
                 <SelectItem value="0.3">0.3 - Shoot 30cm</SelectItem>
                 <SelectItem value="0.4">0.4 - Shoot 50cm</SelectItem>

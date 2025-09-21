@@ -7,6 +7,7 @@ import {
   type ExpenseRecord,
   type CalculationHistory,
   type SoilTestRecord,
+  type PetioleTestRecord,
 } from './supabase'
 import { type Farm, type TaskReminder } from '@/types/types'
 import {
@@ -36,6 +37,9 @@ import {
   toApplicationSoilTestRecord,
   toDatabaseSoilTestInsert,
   toDatabaseSoilTestUpdate,
+  toApplicationPetioleTestRecord,
+  toDatabasePetioleTestInsert,
+  toDatabasePetioleTestUpdate,
 } from './supabase-types'
 
 export class SupabaseService {
@@ -523,6 +527,70 @@ export class SupabaseService {
   static async deleteSoilTestRecord(id: number): Promise<void> {
     const supabase = getTypedSupabaseClient()
     const { error } = await supabase.from('soil_test_records').delete().eq('id', id)
+
+    if (error) throw error
+  }
+
+  // Petiole test operations
+  static async getPetioleTestRecords(farmId: number): Promise<PetioleTestRecord[]> {
+    const supabase = getTypedSupabaseClient()
+    const { data, error } = await supabase
+      .from('petiole_test_records')
+      .select('*')
+      .eq('farm_id', farmId)
+      .order('date', { ascending: false })
+
+    if (error) throw error
+    return (data || []).map(toApplicationPetioleTestRecord)
+  }
+
+  static async addPetioleTestRecord(
+    record: Omit<PetioleTestRecord, 'id' | 'created_at'>,
+  ): Promise<PetioleTestRecord> {
+    const supabase = getTypedSupabaseClient()
+    const dbRecord = toDatabasePetioleTestInsert(record)
+
+    // Validate that at least one nutrient parameter is provided
+    if (!dbRecord.parameters || Object.keys(dbRecord.parameters).length === 0) {
+      throw new Error('At least one nutrient parameter must be provided for a petiole test record')
+    }
+
+    const { data, error } = await supabase
+      .from('petiole_test_records')
+      .insert(dbRecord as any)
+      .select()
+      .single()
+
+    if (error) throw error
+    return toApplicationPetioleTestRecord(data)
+  }
+
+  static async updatePetioleTestRecord(
+    id: number,
+    updates: Partial<PetioleTestRecord>,
+  ): Promise<PetioleTestRecord> {
+    const supabase = getTypedSupabaseClient()
+    const dbUpdates = toDatabasePetioleTestUpdate(updates)
+
+    // If parameters are being updated, validate that at least one nutrient parameter is provided
+    if (updates.parameters && Object.keys(updates.parameters).length === 0) {
+      throw new Error('At least one nutrient parameter must be provided for a petiole test record')
+    }
+
+    const { data, error } = await supabase
+      .from('petiole_test_records')
+      .update(dbUpdates as any)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return toApplicationPetioleTestRecord(data)
+  }
+
+  static async deletePetioleTestRecord(id: number): Promise<void> {
+    const supabase = getTypedSupabaseClient()
+    const { error } = await supabase.from('petiole_test_records').delete().eq('id', id)
 
     if (error) throw error
   }

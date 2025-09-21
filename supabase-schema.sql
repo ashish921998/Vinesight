@@ -122,6 +122,17 @@ CREATE TABLE soil_test_records (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create petiole_test_records table
+CREATE TABLE petiole_test_records (
+  id BIGSERIAL PRIMARY KEY,
+  farm_id BIGINT REFERENCES farms(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  parameters JSONB NOT NULL, -- N, P, K, Ca, Mg, etc.
+  recommendations TEXT,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX idx_farms_user_id ON farms(user_id);
 CREATE INDEX idx_irrigation_records_farm_id ON irrigation_records(farm_id);
@@ -141,6 +152,8 @@ CREATE INDEX idx_task_reminders_due_date ON task_reminders(due_date);
 CREATE INDEX idx_task_reminders_completed ON task_reminders(completed);
 CREATE INDEX idx_soil_test_records_farm_id ON soil_test_records(farm_id);
 CREATE INDEX idx_soil_test_records_date ON soil_test_records(date);
+CREATE INDEX idx_petiole_test_records_farm_id ON petiole_test_records(farm_id);
+CREATE INDEX idx_petiole_test_records_date ON petiole_test_records(date);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE farms ENABLE ROW LEVEL SECURITY;
@@ -152,6 +165,7 @@ ALTER TABLE expense_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE calculation_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE task_reminders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE soil_test_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE petiole_test_records ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for farms table
 CREATE POLICY "Users can view their own farms" ON farms FOR SELECT USING (auth.uid() = user_id);
@@ -270,6 +284,20 @@ CREATE POLICY "Users can update soil test records for their farms" ON soil_test_
 );
 CREATE POLICY "Users can delete soil test records for their farms" ON soil_test_records FOR DELETE USING (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_test_records.farm_id AND farms.user_id = auth.uid())
+);
+
+-- Petiole test records
+CREATE POLICY "Users can view their farm petiole test records" ON petiole_test_records FOR SELECT USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = petiole_test_records.farm_id AND farms.user_id = auth.uid())
+);
+CREATE POLICY "Users can insert petiole test records for their farms" ON petiole_test_records FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = petiole_test_records.farm_id AND farms.user_id = auth.uid())
+);
+CREATE POLICY "Users can update petiole test records for their farms" ON petiole_test_records FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = petiole_test_records.farm_id AND farms.user_id = auth.uid())
+);
+CREATE POLICY "Users can delete petiole test records for their farms" ON petiole_test_records FOR DELETE USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = petiole_test_records.farm_id AND farms.user_id = auth.uid())
 );
 
 -- Function to automatically update the updated_at column
