@@ -127,14 +127,16 @@ export default function FarmLogsPage() {
       const farmIdNum = parseInt(selectedFarm)
 
       // Load different types of logs
-      const [irrigation, spray, harvest, expenses, fertigation, soilTests] = await Promise.all([
-        SupabaseService.getIrrigationRecords(farmIdNum),
-        SupabaseService.getSprayRecords(farmIdNum),
-        SupabaseService.getHarvestRecords(farmIdNum),
-        SupabaseService.getExpenseRecords(farmIdNum),
-        SupabaseService.getFertigationRecords(farmIdNum),
-        SupabaseService.getSoilTestRecords(farmIdNum),
-      ])
+      const [irrigation, spray, harvest, expenses, fertigation, soilTests, petioleTests] =
+        await Promise.all([
+          SupabaseService.getIrrigationRecords(farmIdNum),
+          SupabaseService.getSprayRecords(farmIdNum),
+          SupabaseService.getHarvestRecords(farmIdNum),
+          SupabaseService.getExpenseRecords(farmIdNum),
+          SupabaseService.getFertigationRecords(farmIdNum),
+          SupabaseService.getSoilTestRecords(farmIdNum),
+          SupabaseService.getPetioleTestRecords(farmIdNum),
+        ])
 
       // Combine and format all logs, filtering out records without valid IDs
       const combinedLogs: ActivityLog[] = [
@@ -193,6 +195,15 @@ export default function FarmLogsPage() {
           .map((log) => ({
             id: log.id!,
             type: 'soil_test',
+            date: log.date,
+            notes: log.notes,
+            created_at: log.created_at || log.date,
+          })),
+        ...petioleTests
+          .filter((log) => log.id != null)
+          .map((log) => ({
+            id: log.id!,
+            type: 'petiole_test',
             date: log.date,
             notes: log.notes,
             created_at: log.created_at || log.date,
@@ -281,6 +292,7 @@ export default function FarmLogsPage() {
     { value: 'expense', label: 'Expense' },
     { value: 'fertigation', label: 'Fertigation' },
     { value: 'soil_test', label: 'Soil Test' },
+    { value: 'petiole_test', label: 'Petiole Test' },
   ]
 
   // Handle activity type checkbox toggle
@@ -306,6 +318,8 @@ export default function FarmLogsPage() {
       case 'fertigation':
         return Beaker
       case 'soil_test':
+        return TestTube
+      case 'petiole_test':
         return TestTube
       default:
         return CalendarIcon
@@ -355,6 +369,10 @@ export default function FarmLogsPage() {
         const records = await SupabaseService.getSoilTestRecords(parseInt(selectedFarm))
         recordData = records.find((r) => r.id === log.id)
         setEditRecordType('soil_test')
+      } else if (log.type === 'petiole_test') {
+        const records = await SupabaseService.getPetioleTestRecords(parseInt(selectedFarm))
+        recordData = records.find((r) => r.id === log.id)
+        setEditRecordType('soil_test') // Reuse soil test modal for petiole tests
       }
 
       if (recordData) {
@@ -401,6 +419,9 @@ export default function FarmLogsPage() {
           break
         case 'soil_test':
           await SupabaseService.deleteSoilTestRecord(deletingRecord.id)
+          break
+        case 'petiole_test':
+          await SupabaseService.deletePetioleTestRecord(deletingRecord.id)
           break
         default:
           throw new Error(`Unsupported record type: ${deletingRecord.type}`)
@@ -737,7 +758,8 @@ export default function FarmLogsPage() {
                           log.type === 'harvest' ||
                           log.type === 'fertigation' ||
                           log.type === 'expense' ||
-                          log.type === 'soil_test') && (
+                          log.type === 'soil_test' ||
+                          log.type === 'petiole_test') && (
                           <>
                             <Button
                               variant="ghost"

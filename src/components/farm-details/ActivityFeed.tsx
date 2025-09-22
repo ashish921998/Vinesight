@@ -53,6 +53,8 @@ export function ActivityFeed({
         return Beaker
       case 'soil_test':
         return TestTube
+      case 'petiole_test':
+        return TestTube
       default:
         return Calendar
     }
@@ -71,6 +73,8 @@ export function ActivityFeed({
       case 'fertigation':
         return 'bg-emerald-100 text-emerald-600'
       case 'soil_test':
+        return 'bg-green-400 text-green-900'
+      case 'petiole_test':
         return 'bg-green-400 text-green-900'
       default:
         return 'bg-gray-100 text-gray-600'
@@ -222,7 +226,8 @@ export function ActivityFeed({
                         activity.type === 'harvest' ||
                         activity.type === 'fertigation' ||
                         activity.type === 'expense' ||
-                        activity.type === 'soil_test') && (
+                        activity.type === 'soil_test' ||
+                        activity.type === 'petiole_test') && (
                         <>
                           <Button
                             variant="ghost"
