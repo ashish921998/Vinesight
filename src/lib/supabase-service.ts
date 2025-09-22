@@ -625,6 +625,7 @@ export class SupabaseService {
       harvestRecords,
       expenseRecords,
       soilTestRecords,
+      petioleTestRecords,
     ] = await Promise.all([
       this.getFarmById(farmId),
       this.getPendingTasks(farmId),
@@ -634,6 +635,7 @@ export class SupabaseService {
       this.getHarvestRecords(farmId),
       this.getExpenseRecords(farmId),
       this.getSoilTestRecords(farmId),
+      this.getPetioleTestRecords(farmId),
     ])
 
     const totalHarvest = harvestRecords.reduce((sum, record) => sum + record.quantity, 0)
@@ -652,6 +654,7 @@ export class SupabaseService {
       ...harvestRecords.slice(0, 3).map((record) => ({ ...record, type: 'harvest' })),
       ...expenseRecords.slice(0, 3).map((record) => ({ ...record, type: 'expense' })),
       ...soilTestRecords.slice(0, 3).map((record) => ({ ...record, type: 'soil_test' })),
+      ...petioleTestRecords.slice(0, 3).map((record) => ({ ...record, type: 'petiole_test' })),
     ]
       .sort(
         (a, b) =>
@@ -675,6 +678,7 @@ export class SupabaseService {
         harvest: harvestRecords.length,
         expense: expenseRecords.length,
         soilTest: soilTestRecords.length,
+        petioleTest: petioleTestRecords.length,
       },
     }
   }
