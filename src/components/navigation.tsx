@@ -9,7 +9,6 @@ import {
   Activity,
   Users,
   Home,
-  Download,
   CloudSun,
   BarChart3,
   TrendingUp,

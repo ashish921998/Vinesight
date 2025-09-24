@@ -13,12 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   FileText,
-  Download,
-  Calendar,
   Filter,
   Eye,
   FileSpreadsheet,
@@ -30,9 +27,7 @@ import {
   Droplets,
   SprayCan,
   Scissors,
-  Shield,
   TrendingUp,
-  PieChart,
 } from 'lucide-react'
 import { CloudDataService } from '@/lib/cloud-data-service'
 import { ExportService, type ExportOptions } from '@/lib/export-service'
