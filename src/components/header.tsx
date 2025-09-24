@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button'
 
 export function Header() {
   return (
@@ -8,9 +8,15 @@ export function Header() {
           <div className="flex items-center space-x-8">
             <div className="text-[#37322f] font-semibold text-lg">Brillance</div>
             <div className="hidden md:flex items-center space-x-6">
-              <button className="text-[#37322f] hover:text-[#37322f]/80 text-sm font-medium">Products</button>
-              <button className="text-[#37322f] hover:text-[#37322f]/80 text-sm font-medium">Pricing</button>
-              <button className="text-[#37322f] hover:text-[#37322f]/80 text-sm font-medium">Docs</button>
+              <button className="text-[#37322f] hover:text-[#37322f]/80 text-sm font-medium">
+                Products
+              </button>
+              <button className="text-[#37322f] hover:text-[#37322f]/80 text-sm font-medium">
+                Pricing
+              </button>
+              <button className="text-[#37322f] hover:text-[#37322f]/80 text-sm font-medium">
+                Docs
+              </button>
             </div>
           </div>
           <Button variant="ghost" className="text-[#37322f] hover:bg-[#37322f]/5">
