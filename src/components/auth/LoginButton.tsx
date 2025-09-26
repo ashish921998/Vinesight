@@ -1,44 +1,31 @@
 'use client'
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { createClient } from '@/lib/supabase'
 import { Loader2 } from 'lucide-react'
+import { cva, type VariantProps } from 'class-variance-authority'
+import { buttonVariants } from '@/components/ui/button'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 interface LoginButtonProps {
   className?: string
   children?: React.ReactNode
+  variant?: VariantProps<typeof buttonVariants>['variant']
 }
 
-export function LoginButton({ className, children }: LoginButtonProps) {
-  const [loading, setLoading] = useState(false)
+export function LoginButton({ className, children, variant }: LoginButtonProps) {
+  const { signInWithGoogle, loading } = useSupabaseAuth()
 
   const handleGoogleSignIn = async () => {
-    try {
-      setLoading(true)
-      const supabase = createClient()
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            access_type: 'online',
-            prompt: 'consent',
-          },
-        },
-      })
-      if (error) {
-        console.error('Error signing in:', error)
-      }
-    } catch (error) {
-      console.error('Error signing in:', error)
-    } finally {
-      setLoading(false)
-    }
+    await signInWithGoogle()
   }
 
   return (
-    <Button onClick={handleGoogleSignIn} disabled={loading} className={`w-full ${className}`}>
+    <Button
+      onClick={handleGoogleSignIn}
+      disabled={loading}
+      variant={variant}
+      className={`w-full ${className}`}
+    >
       {loading ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
