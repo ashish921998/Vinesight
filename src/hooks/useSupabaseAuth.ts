@@ -166,6 +166,63 @@ export function useSupabaseAuth() {
     }
   }
 
+  const resendVerificationEmail = async ({ email }: { email: string }) => {
+    setAuthState((prev) => ({ ...prev, loading: true, error: null }))
+
+    try {
+      const supabase = createClient()
+
+      // Check if user exists first
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
+      if (userError) {
+        setAuthState((prev) => ({ ...prev, error: userError.message, loading: false }))
+        return { success: false, error: userError.message }
+      }
+
+      // If user exists but not confirmed, resend verification email
+      if (user && !user.email_confirmed_at) {
+        const { error } = await supabase.auth.resend({
+          type: 'signup',
+          email,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        })
+
+        if (error) {
+          setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
+          return { success: false, error: error.message }
+        }
+      } else {
+        // If user doesn't exist or is already confirmed, try to sign up again
+        // This will trigger a new verification email
+        const { error } = await supabase.auth.signUp({
+          email,
+          password: 'temp-password-for-resend',
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        })
+
+        if (error) {
+          setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
+          return { success: false, error: error.message }
+        }
+      }
+
+      setAuthState((prev) => ({ ...prev, loading: false }))
+      return { success: true, message: 'Verification email resent successfully' }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
+      return { success: false, error: errorMessage }
+    }
+  }
+
   const resetPassword = async ({ email }: ResetPasswordParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
 
@@ -260,6 +317,7 @@ export function useSupabaseAuth() {
     signInWithEmail,
     signUpWithEmail,
     signInWithGoogle,
+    resendVerificationEmail,
     resetPassword,
     signOut,
     clearError,

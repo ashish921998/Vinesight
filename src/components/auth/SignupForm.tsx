@@ -19,9 +19,9 @@ export default function SignupForm() {
   const router = useRouter()
   const { signUpWithEmail, loading, error, user, clearError } = useSupabaseAuth()
 
-  // Redirect if user is already logged in
+  // Redirect if user is already logged in and email is confirmed
   useEffect(() => {
-    if (user) {
+    if (user && user.email_confirmed_at) {
       router.push('/dashboard')
     }
   }, [user, router])
@@ -57,8 +57,8 @@ export default function SignupForm() {
 
     if (result.success) {
       if (result.needsEmailConfirmation) {
-        setNeedsEmailConfirmation(true)
-        setShowSuccess(true)
+        // Redirect to verification page with email parameter
+        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
       } else {
         router.push('/dashboard')
       }

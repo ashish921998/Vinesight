@@ -17,9 +17,9 @@ export default function LoginPage() {
   const router = useRouter()
   const { signInWithEmail, loading, error, user, clearError } = useSupabaseAuth()
 
-  // Redirect if user is already logged in
+  // Redirect if user is already logged in and email is confirmed
   useEffect(() => {
-    if (user) {
+    if (user && user.email_confirmed_at) {
       router.push('/dashboard')
     }
   }, [user, router])
