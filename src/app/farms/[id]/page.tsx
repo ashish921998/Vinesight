@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button'
 import { AIInsightsCarousel } from '@/components/ai/AIInsightsCarousel'
 import { PestPredictionService } from '@/lib/pest-prediction-service'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Farm } from '@/types/types'
 
 interface DashboardData {
@@ -420,137 +421,139 @@ export default function FarmDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Farm Header */}
-      {dashboardData?.farm && (
-        <FarmHeader
-          farm={dashboardData?.farm}
-          loading={loading}
-          onEdit={handleEditFarm}
-          onDelete={handleDeleteFarm}
-        />
-      )}
-
-      {/* Farm Overview */}
-      <FarmOverview loading={loading} />
-
-      {/* Weather Card */}
-      {dashboardData?.farm && (
-        <div className="px-4 mt-6 mb-4">
-          <SimpleWeatherCard farm={dashboardData.farm} />
-        </div>
-      )}
-
-      {/* Phase 3A: AI-Powered Features */}
-      {(dashboardData?.farm || process.env.NEXT_PUBLIC_BYPASS_AUTH) && (
-        <div className="px-4 mb-6 space-y-4">
-          {/* Comprehensive AI Insights */}
-          <AIInsightsCarousel farmId={parseInt(farmId)} className="w-full" />
-        </div>
-      )}
-
-      {/* Water Level Card - Only show if farm has irrigation records */}
-      {dashboardData?.farm && dashboardData.recordCounts.irrigation > 0 && (
-        <div className="px-4 mb-4">
-          <RemainingWaterCard
-            farm={dashboardData.farm}
-            onCalculateClick={() => setShowWaterCalculationModal(true)}
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
+        {/* Farm Header */}
+        {dashboardData?.farm && (
+          <FarmHeader
+            farm={dashboardData?.farm}
+            loading={loading}
+            onEdit={handleEditFarm}
+            onDelete={handleDeleteFarm}
           />
-        </div>
-      )}
+        )}
 
-      {/* Quick Actions */}
-      <QuickActions onDataLogsClick={() => setShowDataLogsModal(true)} />
+        {/* Farm Overview */}
+        <FarmOverview loading={loading} />
 
-      {/* Activity Feed */}
-      <ActivityFeed
-        recentActivities={dashboardData?.recentActivities || []}
-        pendingTasks={dashboardData?.pendingTasks || []}
-        loading={loading}
-        onCompleteTask={completeTask}
-        onEditRecord={handleEditRecord}
-        onDeleteRecord={handleDeleteRecord}
-        farmId={farmId}
-      />
+        {/* Weather Card */}
+        {dashboardData?.farm && (
+          <div className="px-4 mt-6 mb-4">
+            <SimpleWeatherCard farm={dashboardData.farm} />
+          </div>
+        )}
 
-      {/* Unified Data Logs Modal */}
-      <UnifiedDataLogsModal
-        isOpen={showDataLogsModal}
-        onClose={() => setShowDataLogsModal(false)}
-        onSubmit={handleDataLogsSubmit}
-        isSubmitting={isSubmitting}
-      />
+        {/* Phase 3A: AI-Powered Features */}
+        {(dashboardData?.farm || process.env.NEXT_PUBLIC_BYPASS_AUTH) && (
+          <div className="px-4 mb-6 space-y-4">
+            {/* Comprehensive AI Insights */}
+            <AIInsightsCarousel farmId={parseInt(farmId)} className="w-full" />
+          </div>
+        )}
 
-      {/* Water Calculation Modal */}
-      {dashboardData?.farm && (
-        <WaterCalculationModal
-          isOpen={showWaterCalculationModal}
-          onClose={() => setShowWaterCalculationModal(false)}
-          farm={dashboardData.farm}
-          onCalculationComplete={loadDashboardData}
+        {/* Water Level Card - Only show if farm has irrigation records */}
+        {dashboardData?.farm && dashboardData.recordCounts.irrigation > 0 && (
+          <div className="px-4 mb-4">
+            <RemainingWaterCard
+              farm={dashboardData.farm}
+              onCalculateClick={() => setShowWaterCalculationModal(true)}
+            />
+          </div>
+        )}
+
+        {/* Quick Actions */}
+        <QuickActions onDataLogsClick={() => setShowDataLogsModal(true)} />
+
+        {/* Activity Feed */}
+        <ActivityFeed
+          recentActivities={dashboardData?.recentActivities || []}
+          pendingTasks={dashboardData?.pendingTasks || []}
+          loading={loading}
+          onCompleteTask={completeTask}
+          onEditRecord={handleEditRecord}
+          onDeleteRecord={handleDeleteRecord}
+          farmId={farmId}
         />
-      )}
 
-      {/* Edit Record Modal */}
-      {editingRecord && (
-        <EditRecordModal
-          isOpen={showEditModal}
-          onClose={() => {
-            setShowEditModal(false)
-            setEditingRecord(null)
-          }}
-          onSave={handleSaveRecord}
-          record={editingRecord}
-          recordType={
-            editingRecord.type as
-              | 'irrigation'
-              | 'spray'
-              | 'harvest'
-              | 'fertigation'
-              | 'expense'
-              | 'soil_test'
-          }
+        {/* Unified Data Logs Modal */}
+        <UnifiedDataLogsModal
+          isOpen={showDataLogsModal}
+          onClose={() => setShowDataLogsModal(false)}
+          onSubmit={handleDataLogsSubmit}
+          isSubmitting={isSubmitting}
         />
-      )}
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Delete Activity Log</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this {deletingRecord?.type?.replace('_', ' ')} record
-              from {deletingRecord?.date}? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowDeleteDialog(false)
-                setDeletingRecord(null)
-              }}
-              disabled={isDeleting}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDeleteRecord} disabled={isDeleting}>
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        {/* Water Calculation Modal */}
+        {dashboardData?.farm && (
+          <WaterCalculationModal
+            isOpen={showWaterCalculationModal}
+            onClose={() => setShowWaterCalculationModal(false)}
+            farm={dashboardData.farm}
+            onCalculationComplete={loadDashboardData}
+          />
+        )}
 
-      {/* Farm Edit Modal */}
-      {dashboardData?.farm && (
-        <FarmModal
-          isOpen={showFarmModal}
-          onClose={() => setShowFarmModal(false)}
-          onSubmit={handleFarmSubmit}
-          editingFarm={dashboardData.farm}
-          isSubmitting={farmSubmitLoading}
-        />
-      )}
-    </div>
+        {/* Edit Record Modal */}
+        {editingRecord && (
+          <EditRecordModal
+            isOpen={showEditModal}
+            onClose={() => {
+              setShowEditModal(false)
+              setEditingRecord(null)
+            }}
+            onSave={handleSaveRecord}
+            record={editingRecord}
+            recordType={
+              editingRecord.type as
+                | 'irrigation'
+                | 'spray'
+                | 'harvest'
+                | 'fertigation'
+                | 'expense'
+                | 'soil_test'
+            }
+          />
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Delete Activity Log</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this {deletingRecord?.type?.replace('_', ' ')}{' '}
+                record from {deletingRecord?.date}? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteDialog(false)
+                  setDeletingRecord(null)
+                }}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmDeleteRecord} disabled={isDeleting}>
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Farm Edit Modal */}
+        {dashboardData?.farm && (
+          <FarmModal
+            isOpen={showFarmModal}
+            onClose={() => setShowFarmModal(false)}
+            onSubmit={handleFarmSubmit}
+            editingFarm={dashboardData.farm}
+            isSubmitting={farmSubmitLoading}
+          />
+        )}
+      </div>
+    </ProtectedRoute>
   )
 }

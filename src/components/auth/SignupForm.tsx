@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoginButton } from '@/components/auth/LoginButton'
+import { PasswordInput } from '@/components/ui/password-input'
 
 export default function SignupForm() {
   const [email, setEmail] = useState('')
@@ -119,21 +120,14 @@ export default function SignupForm() {
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-card-foreground mb-2"
-              >
-                Password
-              </label>
-              <input
+              <PasswordInput
                 id="password"
-                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                 placeholder="Create a password"
+                label="Password"
               />
               <p className="mt-1 text-xs text-muted-foreground">
                 Password must be at least 6 characters long
@@ -141,25 +135,20 @@ export default function SignupForm() {
             </div>
 
             <div>
-              <label
-                htmlFor="confirm-password"
-                className="block text-sm font-medium text-card-foreground mb-2"
-              >
-                Confirm password
-              </label>
-              <input
+              <PasswordInput
                 id="confirm-password"
-                type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                 placeholder="Re-enter your password"
+                label="Confirm password"
+                error={
+                  password !== confirmPassword && confirmPassword
+                    ? 'Passwords do not match'
+                    : undefined
+                }
               />
-              {password !== confirmPassword && confirmPassword && (
-                <p className="mt-1 text-xs text-red-600">Passwords do not match</p>
-              )}
             </div>
 
             <Button

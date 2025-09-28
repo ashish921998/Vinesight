@@ -40,7 +40,7 @@ import { type Farm } from '@/types/types'
 const navigationItems = [
   {
     name: 'Dashboard',
-    href: '/',
+    href: '/dashboard',
     icon: Home,
     color: 'text-primary',
   },

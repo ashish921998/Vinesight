@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 export const getNavigation = (t: any) => [
-  { name: t('navigation.dashboard'), href: '/', icon: Home },
+  { name: t('navigation.dashboard'), href: '/dashboard', icon: Home },
   { name: t('navigation.farmManagement'), href: '/farms', icon: Sprout },
   { name: t('navigation.calculators'), href: '/calculators', icon: Calculator },
   { name: t('navigation.aiAssistant'), href: '/ai-assistant', icon: Brain },

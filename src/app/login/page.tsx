@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoginButton } from '@/components/auth/LoginButton'
+import { PasswordInput } from '@/components/ui/password-input'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -103,20 +104,13 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-card-foreground mb-2"
-              >
-                Password
-              </label>
-              <input
+              <PasswordInput
                 id="password"
-                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                 placeholder="Enter your password"
+                label="Password"
               />
             </div>
 
@@ -195,8 +189,8 @@ export default function LoginPage() {
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{' '}
-            <Link href="/signup" className="font-medium text-primary hover:text-primary/80">
-              Start your free trial
+            <Link href="/signup" className="font-medium">
+              Create Account for free
             </Link>
           </p>
         </div>
