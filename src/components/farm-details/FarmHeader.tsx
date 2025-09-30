@@ -1,6 +1,6 @@
 'use client'
 
-import { MapPin, Grape, Scissors, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Grape, Scissors, Edit, Trash2, MoreVertical } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,6 +20,26 @@ interface FarmHeaderProps {
 }
 
 export function FarmHeader({ farm, loading, onEdit, onDelete }: FarmHeaderProps) {
+  const calculateDaysAfterPruning = (pruningDate?: string) => {
+    if (!pruningDate) return null
+
+    const pruning = new Date(pruningDate)
+    const today = new Date()
+
+    const pruningMidnight = new Date(pruning.getFullYear(), pruning.getMonth(), pruning.getDate())
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+
+    const diffTime = todayMidnight.getTime() - pruningMidnight.getTime()
+
+    const rawDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+    const diffDays = rawDays + 1
+
+    return diffDays > 0 ? diffDays : null
+  }
+
+  const daysAfterPruning = calculateDaysAfterPruning(farm.dateOfPruning)
+
   if (loading) {
     return (
       <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-300 z-10 shadow-sm">
@@ -40,44 +60,34 @@ export function FarmHeader({ farm, loading, onEdit, onDelete }: FarmHeaderProps)
 
   return (
     <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-300 z-10 shadow-sm">
-      <div className="p-6">
-        {/* Farm Header */}
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-green-100 rounded-2xl">
-            <Grape className="h-8 w-8 text-green-600" />
+      <div className="p-3">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center">
+              <Grape className="h-5 w-5 text-white" />
+            </div>
           </div>
 
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{capitalize(farm.name)}</h1>
-
-            <div className="flex flex-wrap gap-3 mb-3">
-              <div className="flex items-center gap-1 text-sm text-gray-600">
-                <MapPin className="h-4 w-4" />
-                <span>{farm.region}</span>
-              </div>
-              {farm.dateOfPruning && (
-                <div className="flex items-center gap-1 text-sm text-gray-600">
-                  <Scissors className="h-4 w-4" />
-                  <span>
-                    {new Date(farm.dateOfPruning).toLocaleString('default', {
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center mb-1">
+              <h1 className="text-lg font-bold text-gray-900 truncate" style={{ maxWidth: '75%' }}>
+                {capitalize(farm.name)}
+              </h1>
+              {daysAfterPruning !== null && (
+                <div className="flex-shrink-0 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full ml-2 flex items-center gap-1">
+                  <Scissors className="h-3 w-3" />
+                  {daysAfterPruning}d
                 </div>
               )}
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary" className="bg-green-100 text-green-800">
-                {farm.grapeVariety || 'Grape Vineyard'}
-              </Badge>
-            </div>
+            <Badge variant="secondary" className="bg-green-50 text-green-700 text-xs">
+              {farm.grapeVariety || 'Grape Vineyard'}
+            </Badge>
           </div>
 
-          {/* Edit/Delete Actions */}
           {(onEdit || onDelete) && (
-            <div className="ml-4">
+            <div className="flex-shrink-0">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100">
