@@ -30,6 +30,7 @@ import {
 } from 'lucide-react'
 import { CloudDataService } from '@/lib/cloud-data-service'
 import { Farm } from '@/types/types'
+import { capitalize } from '@/lib/utils'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 
 interface FarmEfficiencyMetric {

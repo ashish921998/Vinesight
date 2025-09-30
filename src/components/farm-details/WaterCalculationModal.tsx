@@ -22,6 +22,7 @@ import { Droplets, Calculator, Loader2 } from 'lucide-react'
 import { SupabaseService } from '@/lib/supabase-service'
 import { NotificationService } from '@/lib/notification-service'
 import type { Farm } from '@/types/types'
+import { capitalize } from '@/lib/utils'
 
 interface WaterCalculationModalProps {
   isOpen: boolean
@@ -76,7 +77,7 @@ export function WaterCalculationModal({
 
       // Check water level and send notification if needed
       const notificationService = NotificationService.getInstance()
-      notificationService.checkWaterLevelAndAlert(farm.name, calculationResult)
+      notificationService.checkWaterLevelAndAlert(capitalize(farm.name), calculationResult)
 
       onCalculationComplete()
       handleClose()

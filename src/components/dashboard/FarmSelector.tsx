@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ChevronDown, MapPin, Activity, AlertTriangle, TrendingUp, ArrowLeft } from 'lucide-react'
+import { capitalize } from '@/lib/utils'
 
 interface Farm {
   id: string
@@ -72,7 +73,7 @@ export function FarmSelector({
             <>
               <div className={`w-3 h-3 rounded-full ${getStatusColor(selectedFarm.status)}`} />
               <div className="min-w-0 flex-1">
-                <div className="font-medium truncate">{selectedFarm.name}</div>
+                <div className="font-medium truncate">{capitalize(selectedFarm.name)}</div>
                 <div className="text-xs text-muted-foreground truncate">
                   {selectedFarm.location}
                 </div>
@@ -138,7 +139,7 @@ export function FarmSelector({
                       className={`w-3 h-3 rounded-full flex-shrink-0 ${getStatusColor(farm.status)}`}
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium truncate">{farm.name}</div>
+                      <div className="font-medium truncate">{capitalize(farm.name)}</div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="h-3 w-3" />
                         <span className="truncate">{farm.location}</span>
@@ -226,7 +227,9 @@ export function FarmTabs({
           onClick={() => onFarmSelect(farm.id)}
         >
           <div className="text-center min-w-16">
-            <div className="text-xs font-medium truncate max-w-20">{farm.name.split(' ')[0]}</div>
+            <div className="text-xs font-medium truncate max-w-20">
+              {capitalize(farm.name.split(' ')[0])}
+            </div>
             <div className="flex items-center justify-center gap-1 mt-1">
               {farm.criticalAlerts > 0 && <AlertTriangle className="h-3 w-3 text-red-600" />}
               <span className="text-xs font-bold">{farm.healthScore}</span>

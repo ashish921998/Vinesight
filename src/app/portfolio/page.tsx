@@ -7,12 +7,13 @@ import { FarmSelector, FarmTabs } from '@/components/dashboard/FarmSelector'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Settings } from 'lucide-react'
 import Link from 'next/link'
+import { capitalize } from '@/lib/utils'
 
 // Mock farms data matching the PortfolioDashboard
 const farms = [
   {
     id: 'farm1',
-    name: 'Vineyard Valley',
+    name: capitalize('Vineyard Valley'),
     location: 'Nashik, Maharashtra',
     status: 'healthy' as const,
     healthScore: 92,
@@ -21,7 +22,7 @@ const farms = [
   },
   {
     id: 'farm2',
-    name: 'Sunset Orchards',
+    name: capitalize('Sunset Orchards'),
     location: 'Pune, Maharashtra',
     status: 'attention' as const,
     healthScore: 76,
@@ -30,7 +31,7 @@ const farms = [
   },
   {
     id: 'farm3',
-    name: 'Green Acres',
+    name: capitalize('Green Acres'),
     location: 'Solapur, Maharashtra',
     status: 'critical' as const,
     healthScore: 58,
@@ -39,7 +40,7 @@ const farms = [
   },
   {
     id: 'farm4',
-    name: 'Highland Farms',
+    name: capitalize('Highland Farms'),
     location: 'Satara, Maharashtra',
     status: 'healthy' as const,
     healthScore: 88,
@@ -149,7 +150,7 @@ export default function PortfolioPage() {
                           : 'bg-red-500'
                     }`}
                   />
-                  <span className="text-sm font-medium">{selectedFarm.name}</span>
+                  <span className="text-sm font-medium">{capitalize(selectedFarm.name)}</span>
                   <span className="text-xs text-muted-foreground">•</span>
                   <span className="text-xs text-muted-foreground">{selectedFarm.location}</span>
                 </div>

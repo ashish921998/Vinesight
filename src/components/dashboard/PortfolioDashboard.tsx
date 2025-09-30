@@ -19,6 +19,7 @@ import {
   BarChart3,
   Target,
 } from 'lucide-react'
+import { capitalize } from '@/lib/utils'
 
 interface Farm {
   id: string
@@ -229,7 +230,8 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
                   {portfolioData.metrics.criticalIssues} Critical Issues
                 </h3>
                 <p className="text-xs text-red-600 leading-relaxed">
-                  {criticalFarms.map((farm) => farm.name).join(', ')} need immediate action
+                  {criticalFarms.map((farm) => capitalize(farm.name)).join(', ')} need immediate
+                  action
                 </p>
               </div>
             </div>
@@ -308,7 +310,7 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="min-w-0 flex-1 pr-3">
-                    <h3 className="font-semibold text-base truncate">{farm.name}</h3>
+                    <h3 className="font-semibold text-base truncate">{capitalize(farm.name)}</h3>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="h-3 w-3 flex-shrink-0" />
                       <span className="truncate">{farm.location}</span>

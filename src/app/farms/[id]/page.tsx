@@ -32,6 +32,7 @@ import { PestPredictionService } from '@/lib/pest-prediction-service'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Farm } from '@/types/types'
+import { capitalize } from '@/lib/utils'
 
 interface DashboardData {
   farm: Farm | null
@@ -202,7 +203,10 @@ export default function FarmDetailsPage() {
             // Check if new water level needs alert
             const { NotificationService } = await import('@/lib/notification-service')
             const notificationService = NotificationService.getInstance()
-            notificationService.checkWaterLevelAndAlert(dashboardData.farm.name, newWaterLevel)
+            notificationService.checkWaterLevelAndAlert(
+              capitalize(dashboardData.farm.name),
+              newWaterLevel,
+            )
           }
         }
         break
