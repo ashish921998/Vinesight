@@ -287,9 +287,6 @@ export function BottomNavigation() {
             weather: 'Not specified',
             operator: 'Not specified',
             notes: formData.notes || '',
-            quantity_amount: formData.quantity_amount,
-            quantity_unit: formData.quantity_unit,
-            water_volume: formData.water_volume,
           })
           break
 

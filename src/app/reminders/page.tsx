@@ -25,7 +25,6 @@ import { TaskTemplateSelector } from '@/components/reminders/TaskTemplateSelecto
 import { NotificationSettings } from '@/components/reminders/NotificationSettings'
 import { NotificationService } from '@/lib/notification-service'
 import { getCurrentSeasonTemplates } from '@/lib/task-templates'
-import { capitalize } from '@/lib/utils'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 
 export default function RemindersPage() {

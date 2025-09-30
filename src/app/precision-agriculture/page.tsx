@@ -4,18 +4,7 @@ import { SEOSchema } from '@/components/SEOSchema'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  Satellite,
-  Database,
-  Bot,
-  Zap,
-  BarChart3,
-  MapPin,
-  Cpu,
-  Wifi,
-  Gauge,
-  TrendingUp,
-} from 'lucide-react'
+import { Satellite, Database, Bot, Zap, MapPin, Wifi, Gauge, TrendingUp } from 'lucide-react'
 
 export default function PrecisionAgriculture() {
   const technologies = [
