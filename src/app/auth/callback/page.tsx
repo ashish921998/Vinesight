@@ -10,13 +10,12 @@ function AuthCallbackContent() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Check if we have tokens in the URL fragment
-        const hashFragment = window.location.hash.substring(1)
-        const searchParams = new URLSearchParams(hashFragment)
+        const supabase = createClient()
 
-        const accessToken = searchParams.get('access_token')
-        const refreshToken = searchParams.get('refresh_token')
-        const error = searchParams.get('error')
+        // Check if we have a code in the URL (OAuth callback)
+        const currentUrl = new URL(window.location.href)
+        const code = currentUrl.searchParams.get('code')
+        const error = currentUrl.searchParams.get('error')
 
         // Handle errors
         if (error) {
@@ -24,51 +23,50 @@ function AuthCallbackContent() {
           return
         }
 
-        // If we have tokens in fragment, set the session directly
-        if (accessToken && refreshToken) {
-          const supabase = createClient()
-
-          const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          })
-
-          if (error) {
-            router.push(`/auth/auth-code-error?error=session_failed`)
-            return
-          }
-
-          if (data?.session) {
-            // Clear the fragment from URL and redirect to home
-            window.history.replaceState({}, document.title, window.location.pathname)
-            router.push('/')
-            return
-          }
-        }
-
-        // If no tokens in fragment, check for authorization code in query params
-        const currentUrl = new URL(window.location.href)
-        const code = currentUrl.searchParams.get('code')
-
+        // If we have a code, exchange it for a session
         if (code) {
-          const supabase = createClient()
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-
-          if (error) {
-            router.push(`/auth/auth-code-error?error=code_exchange_failed`)
+          if (exchangeError) {
+            router.push(
+              `/auth/auth-code-error?error=code_exchange_failed&message=${encodeURIComponent(exchangeError.message)}`,
+            )
             return
           }
 
           if (data?.session) {
-            router.push('/')
+            // Successfully exchanged code for session
+            // Add a small delay to ensure the auth state is properly set
+            setTimeout(() => {
+              router.push('/dashboard')
+            }, 500)
             return
           }
         }
 
-        // No tokens found anywhere
+        // If no code, check if we already have a session
+        const { data, error: sessionError } = await supabase.auth.getSession()
+
+        if (sessionError) {
+          router.push(
+            `/auth/auth-code-error?error=session_failed&message=${encodeURIComponent(sessionError.message)}`,
+          )
+          return
+        }
+
+        if (data?.session) {
+          // User is authenticated, redirect to dashboard
+          // Add a small delay to ensure the auth state is properly set
+          setTimeout(() => {
+            router.push('/dashboard')
+          }, 500)
+          return
+        }
+
+        // If we get here, there's no session and no code
         router.push(`/auth/auth-code-error?error=no_tokens`)
       } catch (error) {
+        console.error('Auth callback error:', error)
         router.push(`/auth/auth-code-error?error=unexpected`)
       }
     }

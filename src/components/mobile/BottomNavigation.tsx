@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, memo, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   Home,
@@ -40,7 +40,7 @@ import { type Farm } from '@/types/types'
 const navigationItems = [
   {
     name: 'Dashboard',
-    href: '/',
+    href: '/dashboard',
     icon: Home,
     color: 'text-primary',
   },
@@ -221,13 +221,20 @@ export function BottomNavigation() {
   useEffect(() => {
     loadFarms()
     setMounted(true)
+
+    // Cleanup function
+    return () => {
+      // Any cleanup code can go here if needed in the future
+    }
   }, [])
 
   const loadFarms = async () => {
     try {
       const farmsList = await SupabaseService.getAllFarms()
       setFarms(farmsList)
-    } catch (error) {}
+    } catch (error) {
+      console.error('Error loading farms:', error)
+    }
   }
 
   const handleFormDataChange = (fieldName: string, value: string) => {
@@ -271,9 +278,11 @@ export function BottomNavigation() {
           await SupabaseService.addSprayRecord({
             farm_id: farmId,
             date: currentDate,
-            pest_disease: 'Not specified',
             chemical: formData.product || '',
             dose: 'Not specified',
+            quantity_amount: 0,
+            quantity_unit: 'Not specified',
+            water_volume: 0,
             area: 0,
             weather: 'Not specified',
             operator: 'Not specified',
@@ -319,6 +328,7 @@ export function BottomNavigation() {
 
       resetModal()
     } catch (error) {
+      console.error('Error submitting farm log:', error)
     } finally {
       setIsSubmitting(false)
     }

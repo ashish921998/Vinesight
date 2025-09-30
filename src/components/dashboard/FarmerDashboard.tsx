@@ -5,7 +5,6 @@ import { AlertsSection } from './AlertsSection'
 import { TodaysTasksSection } from './TodaysTasksSection'
 import { LiveFarmStatus } from './LiveFarmStatus'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -13,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { MapPin, AlertTriangle, Plus } from 'lucide-react'
+import { MapPin, AlertTriangle } from 'lucide-react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { SupabaseService } from '@/lib/supabase-service'
 import { WeatherService, type WeatherData } from '@/lib/weather-service'

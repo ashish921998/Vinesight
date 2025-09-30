@@ -25,6 +25,7 @@ import { TaskTemplateSelector } from '@/components/reminders/TaskTemplateSelecto
 import { NotificationSettings } from '@/components/reminders/NotificationSettings'
 import { NotificationService } from '@/lib/notification-service'
 import { getCurrentSeasonTemplates } from '@/lib/task-templates'
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 
 export default function RemindersPage() {
   const [farms, setFarms] = useState<Farm[]>([])
@@ -273,418 +274,425 @@ export default function RemindersPage() {
   const overdueTasks = tasks.filter((t) => !t.completed && isOverdue(t.dueDate))
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
-            <Bell className="h-8 w-8" />
-            Reminders & Tasks
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Manage farming schedules and get notified about important activities
-          </p>
+    <ProtectedRoute>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
+              <Bell className="h-8 w-8" />
+              Reminders & Tasks
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Manage farming schedules and get notified about important activities
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowNotificationSettings(true)}
+              className="flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Notifications
+            </Button>
+            <Button
+              onClick={() => setShowTemplateSelector(true)}
+              className="flex items-center gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Smart Templates
+            </Button>
+            <Button onClick={() => setShowAddForm(true)} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Custom Task
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setShowNotificationSettings(true)}
-            className="flex items-center gap-2"
-          >
-            <Settings className="h-4 w-4" />
-            Notifications
-          </Button>
-          <Button onClick={() => setShowTemplateSelector(true)} className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4" />
-            Smart Templates
-          </Button>
-          <Button onClick={() => setShowAddForm(true)} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Custom Task
-          </Button>
-        </div>
-      </div>
 
-      {/* Seasonal Suggestions */}
-      {farms.length > 0 && showSeasonalSuggestions && (
-        <Card className="mb-6 border-primary/20 bg-primary/5">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Seasonal Task Recommendations
-              </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => setShowSeasonalSuggestions(false)}>
-                ✕
-              </Button>
-            </div>
-            <CardDescription>Important farming tasks for the current season</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {getCurrentSeasonTemplates()
-                .slice(0, 6)
-                .map((template) => (
-                  <div
-                    key={template.id}
-                    className="flex items-center gap-3 p-3 bg-white rounded-lg border border-primary/10"
-                  >
-                    <span className="text-2xl">
-                      {template.type === 'irrigation'
-                        ? '💧'
-                        : template.type === 'spray'
-                          ? '🌿'
-                          : template.type === 'training'
-                            ? '✂️'
-                            : template.type === 'harvest'
-                              ? '🍇'
-                              : '📋'}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm truncate">{template.title}</h4>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {template.description}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setShowTemplateSelector(true)
-                        setShowSeasonalSuggestions(false)
-                      }}
-                      className="shrink-0"
-                    >
-                      Add
-                    </Button>
-                  </div>
-                ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Stats Cards */}
-      {farms.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Tasks</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingTasks.length}</div>
-              <p className="text-xs text-muted-foreground">{overdueTasks.length} overdue</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{tasks.filter((t) => t.completed).length}</div>
-              <p className="text-xs text-muted-foreground">This month</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-              <AlertCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{overdueTasks.length}</div>
-              <p className="text-xs text-muted-foreground">Need attention</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Farm Selection */}
-      {farms.length > 0 && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Select Farm</CardTitle>
-            <CardDescription>Choose a farm to view and manage tasks</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {farms.map((farm) => (
-                <Button
-                  key={farm.id}
-                  variant={selectedFarm?.id === farm.id ? 'default' : 'outline'}
-                  onClick={() => setSelectedFarm(farm)}
-                >
-                  {farm.name}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {selectedFarm && (
-        <>
-          {/* Add/Edit Task Form */}
-          {showAddForm && (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>{editingTask ? 'Edit Task' : 'Add New Task'}</CardTitle>
-                <CardDescription>Create a reminder for {selectedFarm.name}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="title">Task Title</Label>
-                      <Input
-                        id="title"
-                        value={formData.title}
-                        onChange={(e) => handleInputChange('title', e.target.value)}
-                        placeholder="e.g., Winter Pruning"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="dueDate">Due Date</Label>
-                      <Input
-                        id="dueDate"
-                        type="date"
-                        value={formData.dueDate}
-                        onChange={(e) => handleInputChange('dueDate', e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="type">Task Type</Label>
-                      <select
-                        id="type"
-                        value={formData.type}
-                        onChange={(e) => handleInputChange('type', e.target.value)}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <option value="irrigation">Irrigation</option>
-                        <option value="spray">Spray Treatment</option>
-                        <option value="fertigation">Fertigation</option>
-                        <option value="training">Training/Pruning</option>
-                        <option value="harvest">Harvest</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-                    <div>
-                      <Label htmlFor="priority">Priority</Label>
-                      <select
-                        id="priority"
-                        value={formData.priority}
-                        onChange={(e) => handleInputChange('priority', e.target.value)}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="description">Description (optional)</Label>
-                    <Input
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
-                      placeholder="Additional details about this task"
-                    />
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button type="submit">{editingTask ? 'Update Task' : 'Add Task'}</Button>
-                    <Button type="button" variant="outline" onClick={resetForm}>
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Filter Controls */}
-          <Card className="mb-6">
+        {/* Seasonal Suggestions */}
+        {farms.length > 0 && showSeasonalSuggestions && (
+          <Card className="mb-6 border-primary/20 bg-primary/5">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                Filter Tasks
-              </CardTitle>
+              <div className="flex justify-between items-center">
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Seasonal Task Recommendations
+                </CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setShowSeasonalSuggestions(false)}>
+                  ✕
+                </Button>
+              </div>
+              <CardDescription>Important farming tasks for the current season</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={filter === 'all' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilter('all')}
-                >
-                  All ({tasks.length})
-                </Button>
-                <Button
-                  variant={filter === 'pending' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilter('pending')}
-                >
-                  Pending ({pendingTasks.length})
-                </Button>
-                <Button
-                  variant={filter === 'overdue' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilter('overdue')}
-                >
-                  Overdue ({overdueTasks.length})
-                </Button>
-                <Button
-                  variant={filter === 'completed' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilter('completed')}
-                >
-                  Completed ({tasks.filter((t) => t.completed).length})
-                </Button>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {getCurrentSeasonTemplates()
+                  .slice(0, 6)
+                  .map((template) => (
+                    <div
+                      key={template.id}
+                      className="flex items-center gap-3 p-3 bg-white rounded-lg border border-primary/10"
+                    >
+                      <span className="text-2xl">
+                        {template.type === 'irrigation'
+                          ? '💧'
+                          : template.type === 'spray'
+                            ? '🌿'
+                            : template.type === 'training'
+                              ? '✂️'
+                              : template.type === 'harvest'
+                                ? '🍇'
+                                : '📋'}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm truncate">{template.title}</h4>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {template.description}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setShowTemplateSelector(true)
+                          setShowSeasonalSuggestions(false)
+                        }}
+                        className="shrink-0"
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  ))}
               </div>
             </CardContent>
           </Card>
+        )}
 
-          {/* Tasks List */}
-          <Card>
+        {/* Stats Cards */}
+        {farms.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pending Tasks</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{pendingTasks.length}</div>
+                <p className="text-xs text-muted-foreground">{overdueTasks.length} overdue</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Completed</CardTitle>
+                <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{tasks.filter((t) => t.completed).length}</div>
+                <p className="text-xs text-muted-foreground">This month</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Overdue</CardTitle>
+                <AlertCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">{overdueTasks.length}</div>
+                <p className="text-xs text-muted-foreground">Need attention</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Farm Selection */}
+        {farms.length > 0 && (
+          <Card className="mb-6">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Tasks for {selectedFarm.name}
-              </CardTitle>
-              <CardDescription>{filteredTasks.length} tasks shown</CardDescription>
+              <CardTitle className="text-lg">Select Farm</CardTitle>
+              <CardDescription>Choose a farm to view and manage tasks</CardDescription>
             </CardHeader>
             <CardContent>
-              {filteredTasks.length > 0 ? (
-                <div className="space-y-4">
-                  {filteredTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className={`border rounded-lg p-4 ${
-                        task.completed
-                          ? 'bg-gray-50 opacity-75'
-                          : isOverdue(task.dueDate)
-                            ? 'bg-red-50 border-red-200'
-                            : 'bg-white'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-lg">{getTaskTypeIcon(task.type)}</span>
-                            <h3
-                              className={`font-semibold ${task.completed ? 'line-through text-gray-500' : ''}`}
-                            >
-                              {task.title}
-                            </h3>
-                            <Badge variant="outline" className={getPriorityColor(task.priority)}>
-                              {task.priority} priority
-                            </Badge>
-                            {isOverdue(task.dueDate) && !task.completed && (
-                              <Badge
-                                variant="outline"
-                                className="text-red-600 bg-red-50 border-red-200"
+              <div className="flex flex-wrap gap-2">
+                {farms.map((farm) => (
+                  <Button
+                    key={farm.id}
+                    variant={selectedFarm?.id === farm.id ? 'default' : 'outline'}
+                    onClick={() => setSelectedFarm(farm)}
+                  >
+                    {farm.name}
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {selectedFarm && (
+          <>
+            {/* Add/Edit Task Form */}
+            {showAddForm && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>{editingTask ? 'Edit Task' : 'Add New Task'}</CardTitle>
+                  <CardDescription>Create a reminder for {selectedFarm.name}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="title">Task Title</Label>
+                        <Input
+                          id="title"
+                          value={formData.title}
+                          onChange={(e) => handleInputChange('title', e.target.value)}
+                          placeholder="e.g., Winter Pruning"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="dueDate">Due Date</Label>
+                        <Input
+                          id="dueDate"
+                          type="date"
+                          value={formData.dueDate}
+                          onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="type">Task Type</Label>
+                        <select
+                          id="type"
+                          value={formData.type}
+                          onChange={(e) => handleInputChange('type', e.target.value)}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="irrigation">Irrigation</option>
+                          <option value="spray">Spray Treatment</option>
+                          <option value="fertigation">Fertigation</option>
+                          <option value="training">Training/Pruning</option>
+                          <option value="harvest">Harvest</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label htmlFor="priority">Priority</Label>
+                        <select
+                          id="priority"
+                          value={formData.priority}
+                          onChange={(e) => handleInputChange('priority', e.target.value)}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="description">Description (optional)</Label>
+                      <Input
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => handleInputChange('description', e.target.value)}
+                        placeholder="Additional details about this task"
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button type="submit">{editingTask ? 'Update Task' : 'Add Task'}</Button>
+                      <Button type="button" variant="outline" onClick={resetForm}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Filter Controls */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Filter className="h-5 w-5" />
+                  Filter Tasks
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant={filter === 'all' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilter('all')}
+                  >
+                    All ({tasks.length})
+                  </Button>
+                  <Button
+                    variant={filter === 'pending' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilter('pending')}
+                  >
+                    Pending ({pendingTasks.length})
+                  </Button>
+                  <Button
+                    variant={filter === 'overdue' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilter('overdue')}
+                  >
+                    Overdue ({overdueTasks.length})
+                  </Button>
+                  <Button
+                    variant={filter === 'completed' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilter('completed')}
+                  >
+                    Completed ({tasks.filter((t) => t.completed).length})
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Tasks List */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Tasks for {selectedFarm.name}
+                </CardTitle>
+                <CardDescription>{filteredTasks.length} tasks shown</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {filteredTasks.length > 0 ? (
+                  <div className="space-y-4">
+                    {filteredTasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className={`border rounded-lg p-4 ${
+                          task.completed
+                            ? 'bg-gray-50 opacity-75'
+                            : isOverdue(task.dueDate)
+                              ? 'bg-red-50 border-red-200'
+                              : 'bg-white'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-lg">{getTaskTypeIcon(task.type)}</span>
+                              <h3
+                                className={`font-semibold ${task.completed ? 'line-through text-gray-500' : ''}`}
                               >
-                                Overdue
+                                {task.title}
+                              </h3>
+                              <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                                {task.priority} priority
+                              </Badge>
+                              {isOverdue(task.dueDate) && !task.completed && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-red-600 bg-red-50 border-red-200"
+                                >
+                                  Overdue
+                                </Badge>
+                              )}
+                            </div>
+
+                            {task.description && (
+                              <p className="text-sm text-muted-foreground mb-2">
+                                {task.description}
+                              </p>
+                            )}
+
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                              <Badge variant="outline">{task.type}</Badge>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {!task.completed && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleComplete(task.id!)}
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {task.completed && (
+                              <Badge className="text-green-600 bg-green-50 border-green-200">
+                                ✓ Completed
                               </Badge>
                             )}
                           </div>
-
-                          {task.description && (
-                            <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
-                          )}
-
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
-                            <Badge variant="outline">{task.type}</Badge>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          {!task.completed && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleComplete(task.id!)}
-                            >
-                              <CheckCircle2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {task.completed && (
-                            <Badge className="text-green-600 bg-green-50 border-green-200">
-                              ✓ Completed
-                            </Badge>
-                          )}
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No tasks found</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Add your first farming task to get organized
-                  </p>
-                  <Button onClick={() => setShowAddForm(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add First Task
-                  </Button>
-                </div>
-              )}
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No tasks found</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Add your first farming task to get organized
+                    </p>
+                    <Button onClick={() => setShowAddForm(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add First Task
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {farmsLoading ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <div className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <span>Loading farms...</span>
+              </div>
             </CardContent>
           </Card>
-        </>
-      )}
+        ) : farms.length === 0 ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No farms found</h3>
+              <p className="text-muted-foreground mb-4">
+                Add a farm first to start managing tasks and reminders
+              </p>
+              <Button onClick={() => (window.location.href = '/farms')}>Add Your First Farm</Button>
+            </CardContent>
+          </Card>
+        ) : null}
 
-      {farmsLoading ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <div className="flex items-center justify-center gap-2">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <span>Loading farms...</span>
+        {/* Template Selector Modal */}
+        {showTemplateSelector && selectedFarm && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-auto">
+              <TaskTemplateSelector
+                selectedFarmName={selectedFarm.name}
+                onSelectTemplate={handleTemplateSelect}
+                onCancel={() => setShowTemplateSelector(false)}
+              />
             </div>
-          </CardContent>
-        </Card>
-      ) : farms.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No farms found</h3>
-            <p className="text-muted-foreground mb-4">
-              Add a farm first to start managing tasks and reminders
-            </p>
-            <Button onClick={() => (window.location.href = '/farms')}>Add Your First Farm</Button>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {/* Template Selector Modal */}
-      {showTemplateSelector && selectedFarm && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-auto">
-            <TaskTemplateSelector
-              selectedFarmName={selectedFarm.name}
-              onSelectTemplate={handleTemplateSelect}
-              onCancel={() => setShowTemplateSelector(false)}
-            />
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Notification Settings Modal */}
-      {showNotificationSettings && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <NotificationSettings onClose={() => setShowNotificationSettings(false)} />
-        </div>
-      )}
-    </div>
+        {/* Notification Settings Modal */}
+        {showNotificationSettings && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <NotificationSettings onClose={() => setShowNotificationSettings(false)} />
+          </div>
+        )}
+      </div>
+    </ProtectedRoute>
   )
 }

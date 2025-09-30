@@ -107,7 +107,6 @@ export function SimpleWeatherCard({ farm }: SimpleWeatherCardProps) {
           <div className="flex items-center justify-between mb-3">
             <span className="text-3xl font-light">{Math.round(weatherData.temperatureMean)}°C</span>
           </div>
-          {/* Weather Metrics - Mobile Optimized Grid */}
           <div className="grid grid-cols-2 gap-2 text-gray-600">
             <div className="flex items-center gap-1">
               <Droplets className="h-4 w-4" />

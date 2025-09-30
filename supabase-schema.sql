@@ -38,7 +38,6 @@ CREATE TABLE spray_records (
   id BIGSERIAL PRIMARY KEY,
   farm_id BIGINT REFERENCES farms(id) ON DELETE CASCADE,
   date DATE NOT NULL,
-  pest_disease VARCHAR(255) NOT NULL,
   chemical VARCHAR(255) NOT NULL,
   dose VARCHAR(100) NOT NULL,
   area DECIMAL(10,2) NOT NULL, -- in hectares

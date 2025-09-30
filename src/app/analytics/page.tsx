@@ -151,10 +151,10 @@ export default function AnalyticsPage() {
         .map(([month, data]) => ({ month, ...data }))
         .slice(-6) // Last 6 months
 
-      // Group sprays by pest/disease type
+      // Group sprays by chemical type
       const spraysByType = new Map<string, number>()
       allSprays.forEach((record) => {
-        const type = record.pest_disease
+        const type = record.chemical
         spraysByType.set(type, (spraysByType.get(type) || 0) + 1)
       })
 
@@ -180,7 +180,7 @@ export default function AnalyticsPage() {
           type: 'spray' as const,
           farmName: (record as any).farmName,
           date: record.date,
-          details: `${record.pest_disease} treatment with ${record.chemical}`,
+          details: `${record.chemical} treatment`,
         })
       })
 
