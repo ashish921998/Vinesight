@@ -12,9 +12,9 @@ function AuthPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated and email is confirmed
   useEffect(() => {
-    if (user) {
+    if (user && user.email_confirmed_at) {
       const returnUrl = searchParams.get('return') || '/'
       router.push(returnUrl)
     }

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Sprout, Menu, X, Calculator, BookOpen, ArrowRight } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { LoginButton } from '@/components/auth/LoginButton'
 import { useRouter } from 'next/navigation'
 
@@ -10,9 +11,10 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const router = useRouter()
 
-  const navigation = [
-    { name: 'Features', href: '#features' },
-    { name: 'About', href: '#about' },
+  type NavItem = { name: string; href: string; icon?: LucideIcon }
+  const navigation: NavItem[] = [
+    { name: 'Features', href: '#features', icon: Calculator },
+    { name: 'About', href: '#about', icon: BookOpen },
   ]
 
   const scrollToSection = (href: string) => {

@@ -40,7 +40,7 @@ import { capitalize } from '@/lib/utils'
 const navigationItems = [
   {
     name: 'Dashboard',
-    href: '/',
+    href: '/dashboard',
     icon: Home,
     color: 'text-primary',
   },
@@ -221,13 +221,20 @@ export function BottomNavigation() {
   useEffect(() => {
     loadFarms()
     setMounted(true)
+
+    // Cleanup function
+    return () => {
+      // Any cleanup code can go here if needed in the future
+    }
   }, [])
 
   const loadFarms = async () => {
     try {
       const farmsList = await SupabaseService.getAllFarms()
       setFarms(farmsList)
-    } catch (error) {}
+    } catch (error) {
+      console.error('Error loading farms:', error)
+    }
   }
 
   const handleFormDataChange = (fieldName: string, value: string) => {
@@ -273,6 +280,9 @@ export function BottomNavigation() {
             date: currentDate,
             chemical: formData.product || '',
             dose: 'Not specified',
+            quantity_amount: 0,
+            quantity_unit: 'Not specified',
+            water_volume: 0,
             area: 0,
             weather: 'Not specified',
             operator: 'Not specified',
@@ -321,6 +331,7 @@ export function BottomNavigation() {
 
       resetModal()
     } catch (error) {
+      console.error('Error submitting farm log:', error)
     } finally {
       setIsSubmitting(false)
     }

@@ -2,33 +2,15 @@ import { supabase } from './supabase'
 import { PestPredictionService } from './pest-prediction-service'
 import { SmartTaskGenerator } from './smart-task-generator'
 import { WeatherService } from './weather-service'
-
-export interface AIInsight {
-  id: string
-  type:
-    | 'pest_prediction'
-    | 'task_recommendation'
-    | 'profitability_insight'
-    | 'weather_alert'
-    | 'general_advice'
-  priority: 'critical' | 'high' | 'medium' | 'low'
-  title: string
-  subtitle: string
-  description?: string
-  icon: string
-  actionLabel: string
-  actionType: 'navigate' | 'execute'
-  actionData?: any
-  confidence: number
-  timeRelevant: boolean
-  expiresAt?: Date
-  tags?: string[]
-  data?: any
-}
+import { AIInsight } from '../types/ai'
 
 export class AIInsightsService {
   // Simple in-memory cache for insights (5 minute TTL)
-  private static cache = new Map<string, { data: AIInsight[]; timestamp: number }>()
+  private static insightsCache = new Map<string, { data: AIInsight[]; timestamp: number }>()
+  private static categoriesCache = new Map<
+    string,
+    { data: Record<string, AIInsight[]>; timestamp: number }
+  >()
   private static CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
   /**
@@ -36,7 +18,7 @@ export class AIInsightsService {
    */
   private static getCachedInsights(farmId: number, userId: string): AIInsight[] | null {
     const cacheKey = `${farmId}_${userId}`
-    const cached = this.cache.get(cacheKey)
+    const cached = this.insightsCache.get(cacheKey)
 
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
       return cached.data
@@ -50,7 +32,7 @@ export class AIInsightsService {
    */
   private static setCachedInsights(farmId: number, userId: string, insights: AIInsight[]): void {
     const cacheKey = `${farmId}_${userId}`
-    this.cache.set(cacheKey, {
+    this.insightsCache.set(cacheKey, {
       data: insights,
       timestamp: Date.now(),
     })
@@ -98,12 +80,14 @@ export class AIInsightsService {
           icon: 'AlertTriangle',
           actionLabel: pest.riskLevel === 'critical' ? 'Apply Treatment' : 'View Prevention',
           actionType: 'navigate',
-          actionData: { route: `/farms/${farmId}/pest-alerts`, pestId: pest.id },
+          actionData: {
+            route: `/farms/${farmId}/pest-alerts`,
+            pestId: pest.id,
+            expiresAt: pest.predictedOnsetDate,
+          },
           confidence: pest.probabilityScore,
           timeRelevant: daysUntil <= 7,
-          expiresAt: pest.predictedOnsetDate,
           tags: ['pest', 'disease', 'prevention'],
-          data: pest,
         })
       })
 
@@ -122,12 +106,14 @@ export class AIInsightsService {
           icon: this.getTaskIcon(task.taskType),
           actionLabel: task.weatherDependent ? 'Check Weather & Execute' : 'Execute Now',
           actionType: 'execute',
-          actionData: { taskId: task.id, taskType: task.taskType },
+          actionData: {
+            taskId: task.id,
+            taskType: task.taskType,
+            expiresAt: task.expiresAt ? new Date(task.expiresAt) : undefined,
+          },
           confidence: task.confidenceScore,
           timeRelevant: true,
-          expiresAt: task.expiresAt ? new Date(task.expiresAt) : undefined,
           tags: ['task', 'recommendation', task.taskType],
-          data: task,
         })
       })
 
@@ -324,7 +310,6 @@ export class AIInsightsService {
           confidence: aiAnalysis.confidence,
           timeRelevant: true,
           tags: ['finance', 'ai', aiAnalysis.trend, 'analysis'],
-          data: aiAnalysis,
         })
       }
 
@@ -457,11 +442,11 @@ export class AIInsightsService {
           actionData: {
             route: `/farms/${farmId}/growth-guide`,
             recommendations: growthAnalysis.recommendations,
+            analysis: growthAnalysis,
           },
           confidence: growthAnalysis.confidence,
           timeRelevant: growthAnalysis.timeRelevant,
           tags: ['growth', 'ai', growthAnalysis.stage, 'optimization'],
-          data: growthAnalysis,
         })
       }
     } catch (error) {
@@ -561,7 +546,7 @@ export class AIInsightsService {
             id: record.id,
             activity_type: 'spray',
             date: record.date,
-            notes: record.notes || `${record.chemical} for ${record.pest_disease}`,
+            notes: record.notes || `${record.chemical}`,
             created_at: record.created_at,
           })
         })
@@ -631,10 +616,10 @@ export class AIInsightsService {
   ): Promise<Record<string, AIInsight[]>> {
     // Check cache for category data
     const cacheKey = `${farmId}_${userId}_categories`
-    const cached = this.cache.get(cacheKey)
+    const cached = this.categoriesCache.get(cacheKey)
 
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
-      return cached.data as any
+      return cached.data
     }
 
     const allInsights = await this.getInsightsForFarm(farmId, userId || 'anonymous', 50)
@@ -651,7 +636,7 @@ export class AIInsightsService {
     )
 
     // Cache the category results
-    this.cache.set(cacheKey, {
+    this.categoriesCache.set(cacheKey, {
       data: categories,
       timestamp: Date.now(),
     })
@@ -669,7 +654,11 @@ export class AIInsightsService {
       switch (insight.actionType) {
         case 'execute':
           // Handle task execution
-          if (insight.type === 'task_recommendation' && insight.data) {
+          if (
+            insight.type === 'task_recommendation' &&
+            insight.actionData &&
+            'taskId' in insight.actionData
+          ) {
             // Mark task as executed or create a pending task
             return { success: true, message: 'Task scheduled for execution' }
           }

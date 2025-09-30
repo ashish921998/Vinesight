@@ -1,6 +1,6 @@
-import withPWA from 'next-pwa';
+import withPWA from 'next-pwa'
 
-const isProd = process.env.NODE_ENV === 'production';
+const isProd = process.env.NODE_ENV === 'production'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -8,29 +8,30 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: isProd,
   },
-  
+
   // Performance optimizations from next.config.ts
   experimental: {
     optimizePackageImports: [
       'lucide-react',
-      '@radix-ui/react-select', 
+      '@radix-ui/react-select',
       '@radix-ui/react-progress',
-      'jspdf'
+      'jspdf',
     ],
   },
-  
+
   // Compiler optimizations
   compiler: {
     removeConsole: isProd,
   },
-  
+
   // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    domains: ['images.unsplash.com', 'plus.unsplash.com'],
   },
-  
+
   turbopack: {
     rules: {
       '*.svg': {
@@ -45,25 +46,25 @@ const nextConfig = {
     const securityHeaders = [
       {
         key: 'X-DNS-Prefetch-Control',
-        value: 'on'
+        value: 'on',
       },
       {
         key: 'X-XSS-Protection',
-        value: '1; mode=block'
+        value: '1; mode=block',
       },
       {
         key: 'X-Frame-Options',
-        value: 'SAMEORIGIN'
+        value: 'SAMEORIGIN',
       },
       {
         key: 'X-Content-Type-Options',
-        value: 'nosniff'
+        value: 'nosniff',
       },
       {
         key: 'Referrer-Policy',
-        value: 'strict-origin-when-cross-origin'
-      }
-    ];
+        value: 'strict-origin-when-cross-origin',
+      },
+    ]
 
     // Mobile-compatible CSP policy
     if (isProd) {
@@ -79,8 +80,8 @@ const nextConfig = {
           "frame-src 'self' https://accounts.google.com",
           "worker-src 'self' blob:",
           "manifest-src 'self'",
-        ].join('; ')
-      });
+        ].join('; '),
+      })
     }
 
     return [
@@ -104,12 +105,11 @@ const nextConfig = {
       },
       {
         source: '/(.*)',
-        headers: securityHeaders
-      }
-    ];
+        headers: securityHeaders,
+      },
+    ]
   },
-
-};
+}
 
 // PWA configuration - online-only (no offline caching)
 const pwaConfig = withPWA({
@@ -124,7 +124,7 @@ const pwaConfig = withPWA({
   // No precaching of static assets
   publicExcludes: ['!**/*'],
   // No runtime caching strategies
-  runtimeCaching: []
-});
+  runtimeCaching: [],
+})
 
-export default pwaConfig(nextConfig);
+export default pwaConfig(nextConfig)

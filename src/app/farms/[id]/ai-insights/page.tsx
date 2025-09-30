@@ -31,7 +31,8 @@ import {
   Users,
   Activity,
 } from 'lucide-react'
-import { AIInsightsService, type AIInsight } from '@/lib/ai-insights-service'
+import { AIInsightsService } from '@/lib/ai-insights-service'
+import { type AIInsight } from '@/types/ai'
 import { SupabaseService } from '@/lib/supabase-service'
 import { PestPredictionService } from '@/lib/pest-prediction-service'
 import { farmerLearningService } from '@/lib/farmer-learning-service'

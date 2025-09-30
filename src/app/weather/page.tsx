@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { WeatherDashboard } from '@/components/weather/WeatherDashboard'
 import { SupabaseService } from '@/lib/supabase-service'
 import type { Farm } from '@/types/types'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
   Select,

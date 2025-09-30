@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { User as UserIcon, LogOut, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,12 +17,16 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 export function UserMenu() {
   const { user, signOut } = useSupabaseAuth()
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
 
   const handleSignOut = async () => {
     try {
       setLoading(true)
-      await signOut()
+      const result = await signOut()
+      if (result.success) {
+        router.push('/')
+      }
     } catch (error) {
       console.error('Error signing out:', error)
     } finally {

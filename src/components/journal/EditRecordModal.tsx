@@ -67,7 +67,6 @@ export function EditRecordModal({
         const sprayRecord = record as SprayRecord
         setFormData({
           date: sprayRecord.date,
-          pest_disease: sprayRecord.pest_disease || '',
           chemical: sprayRecord.chemical || '',
           dose: sprayRecord.dose || '',
           area: sprayRecord.area?.toString() || '',
@@ -135,7 +134,6 @@ export function EditRecordModal({
       } else if (recordType === 'spray') {
         await SupabaseService.updateSprayRecord(record.id!, {
           date: formData.date,
-          pest_disease: formData.pest_disease,
           chemical: formData.chemical,
           dose: formData.dose,
           area: parseFloat(formData.area),
