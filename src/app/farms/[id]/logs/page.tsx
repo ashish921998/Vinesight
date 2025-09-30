@@ -35,7 +35,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { EditRecordModal } from '@/components/journal/EditRecordModal'
-import { cn } from '@/lib/utils'
+import { cn, capitalize } from '@/lib/utils'
 import {
   ArrowLeft,
   Calendar as CalendarIcon,
@@ -503,7 +503,7 @@ export default function FarmLogsPage() {
                   <SelectItem key={farm.id} value={farm.id?.toString() || ''}>
                     <div className="flex items-center gap-2">
                       <div>
-                        <div className="font-medium text-sm">{farm.name}</div>
+                        <div className="font-medium text-sm">{capitalize(farm.name)}</div>
                         <div className="text-xs text-gray-500">{farm.region}</div>
                       </div>
                     </div>
@@ -705,7 +705,7 @@ export default function FarmLogsPage() {
                 Activity Logs
                 {currentFarm && (
                   <Badge variant="outline" className="text-xs">
-                    {currentFarm.name}
+                    {capitalize(currentFarm.name)}
                   </Badge>
                 )}
               </CardTitle>

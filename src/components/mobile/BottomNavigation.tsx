@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, memo, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   Home,
@@ -8,7 +8,6 @@ import {
   Calculator,
   User,
   Brain,
-  X,
   FileText,
   Droplets,
   SprayCan,
@@ -36,6 +35,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { SupabaseService } from '@/lib/supabase-service'
 import { type Farm } from '@/types/types'
+import { capitalize } from '@/lib/utils'
 
 const navigationItems = [
   {
@@ -214,7 +214,7 @@ export function BottomNavigation() {
   const [farms, setFarms] = useState<Farm[]>([])
   const [selectedFarm, setSelectedFarm] = useState<string>('')
   const [selectedLogType, setSelectedLogType] = useState<string>('')
-  const [formData, setFormData] = useState<Record<string, string>>({})
+  const [formData, setFormData] = useState<Record<string, any>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -271,13 +271,15 @@ export function BottomNavigation() {
           await SupabaseService.addSprayRecord({
             farm_id: farmId,
             date: currentDate,
-            pest_disease: 'Not specified',
             chemical: formData.product || '',
             dose: 'Not specified',
             area: 0,
             weather: 'Not specified',
             operator: 'Not specified',
             notes: formData.notes || '',
+            quantity_amount: formData.quantity_amount,
+            quantity_unit: formData.quantity_unit,
+            water_volume: formData.water_volume,
           })
           break
 
@@ -356,7 +358,7 @@ export function BottomNavigation() {
                       <div className="flex items-center gap-2">
                         <Sprout className="h-4 w-4 text-primary" />
                         <div>
-                          <div className="font-medium">{farm.name}</div>
+                          <div className="font-medium">{capitalize(farm.name)}</div>
                           <div className="text-xs text-gray-500">{farm.region}</div>
                         </div>
                       </div>

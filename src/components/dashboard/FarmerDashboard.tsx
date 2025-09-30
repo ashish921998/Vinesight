@@ -18,6 +18,7 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { SupabaseService } from '@/lib/supabase-service'
 import { WeatherService, type WeatherData } from '@/lib/weather-service'
 import { type Farm } from '@/types/types'
+import { capitalize } from '@/lib/utils'
 
 // Helper function to calculate farm health status based on real data
 const calculateFarmStatus = (
@@ -61,7 +62,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   const farmInfo = selectedFarm
     ? {
         id: selectedFarm.id?.toString() || '',
-        name: selectedFarm.name,
+        name: capitalize(selectedFarm.name),
         location: selectedFarm.locationName || selectedFarm.region,
         cropType: selectedFarm.grapeVariety,
         totalAcres: selectedFarm.area,
@@ -274,7 +275,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                                 : 'bg-red-500'
                           }`}
                         />
-                        <span>{farm.name}</span>
+                        <span>{capitalize(farm.name)}</span>
                       </div>
                     </SelectItem>
                   )
@@ -300,7 +301,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                 }`}
               />
               <div className="flex-1 min-w-0">
-                <h2 className="font-bold text-base truncate">{farmInfo.name}</h2>
+                <h2 className="font-bold text-base truncate">{capitalize(farmInfo.name)}</h2>
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="h-3 w-3 flex-shrink-0" />
                   <span className="truncate">{farmInfo.location}</span>
@@ -418,7 +419,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                       minute: '2-digit',
                     })
                   : undefined,
-                farmBlock: task.location || selectedFarm?.name,
+                farmBlock: task.location || (selectedFarm ? capitalize(selectedFarm.name) : ''),
                 estimatedDuration: task.estimated_duration || 60,
                 completed: task.completed || false,
                 description: task.description,

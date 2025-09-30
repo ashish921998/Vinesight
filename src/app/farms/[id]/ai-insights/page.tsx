@@ -39,6 +39,7 @@ import { CriticalAlertsBanner } from '@/components/farm/CriticalAlertsBanner'
 import { type Farm } from '@/types/types'
 import { type CriticalAlert, type PestDiseasePrediction, type FarmerAIProfile } from '@/types/ai'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { capitalize } from '@/lib/utils'
 
 export default function AIInsightsPage() {
   const params = useParams()
@@ -472,7 +473,7 @@ export default function AIInsightsPage() {
                 AI Intelligence Center
               </h1>
               <p className="text-sm text-gray-600">
-                {farm?.name || `Farm ${farmId}`} • Phase 3A Advanced AI
+                {farm?.name ? capitalize(farm.name) : `Farm ${farmId}`} • Phase 3A Advanced AI
               </p>
             </div>
             <div className="flex items-center gap-2">

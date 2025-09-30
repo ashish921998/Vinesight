@@ -25,6 +25,7 @@ import { TaskTemplateSelector } from '@/components/reminders/TaskTemplateSelecto
 import { NotificationSettings } from '@/components/reminders/NotificationSettings'
 import { NotificationService } from '@/lib/notification-service'
 import { getCurrentSeasonTemplates } from '@/lib/task-templates'
+import { capitalize } from '@/lib/utils'
 
 export default function RemindersPage() {
   const [farms, setFarms] = useState<Farm[]>([])
@@ -432,7 +433,9 @@ export default function RemindersPage() {
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle>{editingTask ? 'Edit Task' : 'Add New Task'}</CardTitle>
-                <CardDescription>Create a reminder for {selectedFarm.name}</CardDescription>
+                <CardDescription>
+                  Create a reminder for {capitalize(selectedFarm.name)}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -556,7 +559,7 @@ export default function RemindersPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Tasks for {selectedFarm.name}
+                Tasks for {capitalize(selectedFarm.name)}
               </CardTitle>
               <CardDescription>{filteredTasks.length} tasks shown</CardDescription>
             </CardHeader>
@@ -671,7 +674,7 @@ export default function RemindersPage() {
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-auto">
             <TaskTemplateSelector
-              selectedFarmName={selectedFarm.name}
+              selectedFarmName={capitalize(selectedFarm.name)}
               onSelectTemplate={handleTemplateSelect}
               onCancel={() => setShowTemplateSelector(false)}
             />

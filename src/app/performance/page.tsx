@@ -30,6 +30,7 @@ import {
 } from 'lucide-react'
 import { CloudDataService } from '@/lib/cloud-data-service'
 import { Farm } from '@/types/types'
+import { capitalize } from '@/lib/utils'
 
 interface FarmEfficiencyMetric {
   name: string
@@ -402,7 +403,7 @@ export default function FarmEfficiencyPage() {
                   {farms.map((farm) => (
                     <SelectItem key={farm.id} value={farm.id!.toString()}>
                       <div>
-                        <div className="font-medium">{farm.name}</div>
+                        <div className="font-medium">{capitalize(farm.name)}</div>
                         <div className="text-sm text-muted-foreground">
                           {farm.area} acres • {farm.region} • {farm.grapeVariety}
                         </div>
@@ -437,7 +438,7 @@ export default function FarmEfficiencyPage() {
               </CardTitle>
               <CardDescription>
                 Based on yield, water efficiency, cost management, and quality metrics for{' '}
-                {selectedFarm.name}
+                {capitalize(selectedFarm.name)}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -651,7 +652,7 @@ export default function FarmEfficiencyPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sun className="h-5 w-5" />
-                Efficiency Best Practices for {selectedFarm.grapeVariety} Grapes
+                Efficiency Best Practices for {capitalize(selectedFarm.grapeVariety)} Grapes
               </CardTitle>
               <CardDescription>
                 Recommended practices to improve farm efficiency and yield quality

@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { capitalize } from '@/lib/utils'
 
 export default function FarmsPage() {
   const [farms, setFarms] = useState<Farm[]>([])
@@ -166,7 +167,7 @@ export default function FarmsPage() {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <h3 className="font-semibold text-gray-900 truncate">
-                                  {farm.name}
+                                  {capitalize(farm.name)}
                                 </h3>
                                 <div className="flex items-center gap-1 text-sm text-gray-500 mt-0.5">
                                   <MapPin className="h-3 w-3 flex-shrink-0" />
@@ -232,7 +233,7 @@ export default function FarmsPage() {
                               </div>
                               <div>
                                 <div className="text-lg font-semibold text-gray-900">
-                                  {farm.grapeVariety}
+                                  {capitalize(farm.grapeVariety)}
                                 </div>
                                 <div className="text-xs text-gray-500">variety</div>
                               </div>

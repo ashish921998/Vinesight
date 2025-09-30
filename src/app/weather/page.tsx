@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { CloudSun, MapPin, Sprout, Mountain } from 'lucide-react'
+import { capitalize } from '@/lib/utils'
 
 export default function WeatherPage() {
   const [farms, setFarms] = useState<Farm[]>([])
@@ -111,7 +112,7 @@ export default function WeatherPage() {
                   {farms.map((farm) => (
                     <SelectItem key={farm.id} value={farm.id!.toString()}>
                       <div>
-                        <div className="font-medium">{farm.name}</div>
+                        <div className="font-medium">{capitalize(farm.name)}</div>
                         <div className="text-sm text-muted-foreground">
                           {farm.area} acres • {farm.region}
                         </div>

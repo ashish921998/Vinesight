@@ -32,6 +32,7 @@ import {
 import { LAICalculator, type LAICalculationInputs, type LAIResults } from '@/lib/lai-calculator'
 import { SupabaseService } from '@/lib/supabase-service'
 import type { Farm } from '@/types/types'
+import { capitalize } from '@/lib/utils'
 
 export function LAICalculatorComponent() {
   const [farms, setFarms] = useState<Farm[]>([])
@@ -203,7 +204,7 @@ export function LAICalculatorComponent() {
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <h4 className="font-medium text-gray-900 text-sm">{farm.name}</h4>
+                      <h4 className="font-medium text-gray-900 text-sm">{capitalize(farm.name)}</h4>
                       <p className="text-xs text-gray-500">
                         {farm.area}ha • {farm.vineSpacing}×{farm.rowSpacing}m
                       </p>

@@ -30,6 +30,7 @@ import {
 } from '@/lib/cloud-data-service'
 import { AnalyticsService, AdvancedAnalytics } from '@/lib/analytics-service'
 import { Farm } from '@/types/types'
+import { capitalize } from '@/lib/utils'
 
 interface AnalyticsData {
   totalFarms: number
@@ -102,13 +103,13 @@ export default function AnalyticsPage() {
 
           // Add farm name to records
           irrigations.forEach((record) => {
-            allIrrigations.push({ ...record, farmName: farm.name })
+            allIrrigations.push({ ...record, farmName: capitalize(farm.name) })
           })
           sprays.forEach((record) => {
-            allSprays.push({ ...record, farmName: farm.name })
+            allSprays.push({ ...record, farmName: capitalize(farm.name) })
           })
           harvests.forEach((record) => {
-            allHarvests.push({ ...record, farmName: farm.name })
+            allHarvests.push({ ...record, farmName: capitalize(farm.name) })
           })
 
           // Calculate farm-specific harvest totals
@@ -117,13 +118,13 @@ export default function AnalyticsPage() {
 
           if (farmHarvestQuantity > 0) {
             analyticsData.harvestsByFarm.push({
-              farmName: farm.name,
+              farmName: capitalize(farm.name),
               quantity: farmHarvestQuantity,
               value: farmHarvestValue,
             })
           }
         } catch (farmError) {
-          console.error(`Error loading data for farm ${farm.name}:`, farmError)
+          console.error(`Error loading data for farm ${capitalize(farm.name)}:`, farmError)
         }
       }
 
@@ -154,7 +155,7 @@ export default function AnalyticsPage() {
       // Group sprays by pest/disease type
       const spraysByType = new Map<string, number>()
       allSprays.forEach((record) => {
-        const type = record.pest_disease
+        const type = (record as any).pest_disease
         spraysByType.set(type, (spraysByType.get(type) || 0) + 1)
       })
 
@@ -180,7 +181,7 @@ export default function AnalyticsPage() {
           type: 'spray' as const,
           farmName: (record as any).farmName,
           date: record.date,
-          details: `${record.pest_disease} treatment with ${record.chemical}`,
+          details: `${(record as any).pest_disease} treatment with ${(record as any).chemical}`,
         })
       })
 

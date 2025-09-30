@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { type Farm } from '@/types/types'
+import { capitalize } from '@/lib/utils'
 
 interface FarmHeaderProps {
   farm: Farm
@@ -47,7 +48,7 @@ export function FarmHeader({ farm, loading, onEdit, onDelete }: FarmHeaderProps)
           </div>
 
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{farm.name}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">{capitalize(farm.name)}</h1>
 
             <div className="flex flex-wrap gap-3 mb-3">
               <div className="flex items-center gap-1 text-sm text-gray-600">

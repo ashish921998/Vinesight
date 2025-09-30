@@ -37,6 +37,7 @@ import {
 import { CloudDataService } from '@/lib/cloud-data-service'
 import { ExportService, type ExportOptions } from '@/lib/export-service'
 import type { Farm } from '@/types/types'
+import { capitalize } from '@/lib/utils'
 
 interface RecordData {
   irrigation: any[]
@@ -250,7 +251,7 @@ export default function UnifiedReportsPage() {
     const csvRows: string[] = []
 
     // Add header with farm info
-    csvRows.push(`Farm Report - ${farm.name}`)
+    csvRows.push(`Farm Report - ${capitalize(farm.name)}`)
     csvRows.push(`Date Range: ${data.summary.dateRange}`)
     csvRows.push('')
 
@@ -317,7 +318,7 @@ export default function UnifiedReportsPage() {
 
       // Add title
       pdf.setFontSize(16)
-      pdf.text(`Farm Report - ${farm.name}`, 20, 20)
+      pdf.text(`Farm Report - ${capitalize(farm.name)}`, 20, 20)
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
         console.log('Title added')
@@ -577,7 +578,7 @@ export default function UnifiedReportsPage() {
                 <SelectContent>
                   {farms.map((farm) => (
                     <SelectItem key={farm.id} value={farm.id!.toString()}>
-                      {farm.name} ({farm.area} acres)
+                      {capitalize(farm.name)} ({farm.area} acres)
                     </SelectItem>
                   ))}
                 </SelectContent>

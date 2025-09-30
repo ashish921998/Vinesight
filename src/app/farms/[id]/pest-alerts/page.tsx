@@ -7,6 +7,7 @@ import { ArrowLeft } from 'lucide-react'
 import { PestAlertDashboard } from '@/components/ai/PestAlertDashboard'
 import { SupabaseService } from '@/lib/supabase-service'
 import { type Farm } from '@/types/types'
+import { capitalize } from '@/lib/utils'
 
 export default function PestAlertsPage() {
   const params = useParams()
@@ -70,7 +71,7 @@ export default function PestAlertsPage() {
             <div>
               <h1 className="text-lg font-semibold text-gray-900">Pest & Disease Alerts</h1>
               <p className="text-sm text-gray-600">
-                {farm?.name || `Farm ${farmId}`} • AI Monitoring
+                {farm?.name ? capitalize(farm.name) : `Farm ${farmId}`} • AI Monitoring
               </p>
             </div>
           </div>
