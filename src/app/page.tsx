@@ -244,9 +244,10 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="self-stretch border-t border-[#E0DEDB] border-b border-[#E0DEDB] flex justify-center items-start">
+              {/* Feature Cards Section - Hidden on mobile */}
+              <div className="hidden sm:block self-stretch border-t border-[#E0DEDB] border-b border-[#E0DEDB] flex justify-center items-start">
+                {/* Left decorative pattern */}
                 <div className="w-4 sm:w-6 md:w-8 lg:w-12 self-stretch relative overflow-hidden">
-                  {/* Left decorative pattern */}
                   <div className="w-[120px] sm:w-[140px] md:w-[162px] left-[-40px] sm:left-[-50px] md:left-[-58px] top-[-120px] absolute flex flex-col justify-start items-start">
                     {Array.from({ length: 50 }).map((_, i) => (
                       <div
@@ -282,8 +283,8 @@ export default function LandingPage() {
                   />
                 </div>
 
+                {/* Right decorative pattern */}
                 <div className="w-4 sm:w-6 md:w-8 lg:w-12 self-stretch relative overflow-hidden">
-                  {/* Right decorative pattern */}
                   <div className="w-[120px] sm:w-[140px] md:w-[162px] left-[-40px] sm:left-[-50px] md:left-[-58px] top-[-120px] absolute flex flex-col justify-start items-start">
                     {Array.from({ length: 50 }).map((_, i) => (
                       <div
@@ -522,7 +523,7 @@ function FeatureCard({
 }) {
   return (
     <div
-      className={`w-full md:flex-1 self-stretch px-6 py-5 overflow-hidden flex flex-col justify-start items-start gap-2 cursor-pointer relative border-b md:border-b-0 last:border-b-0 ${
+      className={`w-full md:flex-1 self-stretch px-4 sm:px-6 py-4 sm:py-5 overflow-hidden flex flex-col justify-start items-start gap-2 cursor-pointer relative border-b md:border-b-0 last:border-b-0 ${
         isActive
           ? 'bg-white shadow-[0px_0px_0px_0.75px_#E0DEDB_inset]'
           : 'border-l-0 border-r-0 md:border border-[#E0DEDB]/80'
@@ -538,10 +539,10 @@ function FeatureCard({
         </div>
       )}
 
-      <div className="self-stretch flex justify-center flex-col text-[#49423D] text-sm md:text-sm font-semibold leading-6 md:leading-6 font-sans">
+      <div className="self-stretch flex justify-center flex-col text-[#49423D] text-sm sm:text-sm md:text-sm font-semibold leading-5 sm:leading-6 md:leading-6 font-sans">
         {title}
       </div>
-      <div className="self-stretch text-[#605A57] text-[13px] md:text-[13px] font-normal leading-[22px] md:leading-[22px] font-sans">
+      <div className="self-stretch text-[#605A57] text-xs sm:text-[13px] md:text-[13px] font-normal leading-5 sm:leading-[22px] md:leading-[22px] font-sans">
         {description}
       </div>
     </div>
