@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import {
   Select,
   SelectContent,
@@ -17,15 +16,11 @@ import {
 import {
   Leaf,
   TreePine,
-  Sun,
-  Wind,
   Eye,
   Target,
-  TrendingUp,
   AlertTriangle,
   CheckCircle,
   Info,
-  Calendar,
   BarChart3,
   Calculator,
 } from 'lucide-react'

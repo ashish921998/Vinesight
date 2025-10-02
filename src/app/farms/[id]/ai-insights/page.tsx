@@ -9,7 +9,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 import {
   ArrowLeft,
-  MessageCircle,
   AlertTriangle,
   CheckCircle,
   TrendingUp,
@@ -18,21 +17,15 @@ import {
   CloudRain,
   Calendar,
   Target,
-  Filter,
   Zap,
   Bug,
   Brain,
-  Shield,
   Eye,
   BarChart3,
   RefreshCw,
-  Download,
-  Settings,
-  Users,
   Activity,
 } from 'lucide-react'
-import { AIInsightsService } from '@/lib/ai-insights-service'
-import { type AIInsight } from '@/types/ai'
+import { AIInsightsService, type AIInsight } from '@/lib/ai-insights-service'
 import { SupabaseService } from '@/lib/supabase-service'
 import { PestPredictionService } from '@/lib/pest-prediction-service'
 import { farmerLearningService } from '@/lib/farmer-learning-service'

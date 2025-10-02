@@ -1,5 +1,3 @@
-import withPWA from 'next-pwa'
-
 const isProd = process.env.NODE_ENV === 'production'
 
 /** @type {import('next').NextConfig} */
@@ -41,7 +39,7 @@ const nextConfig = {
     },
   },
 
-  // Security headers
+  // Security headers and PWA settings
   async headers() {
     const securityHeaders = [
       {
@@ -86,6 +84,15 @@ const nextConfig = {
 
     return [
       {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+      {
         source: '/manifest.json',
         headers: [
           {
@@ -111,20 +118,4 @@ const nextConfig = {
   },
 }
 
-// PWA configuration - online-only (no offline caching)
-const pwaConfig = withPWA({
-  dest: 'public',
-  register: true,
-  skipWaiting: true,
-  disable: !isProd, // Disable PWA in development
-  // Custom service worker that doesn't cache anything for offline use
-  sw: 'sw.js',
-  // Disable workbox completely to prevent offline caching
-  disableDevLogs: true,
-  // No precaching of static assets
-  publicExcludes: ['!**/*'],
-  // No runtime caching strategies
-  runtimeCaching: [],
-})
-
-export default pwaConfig(nextConfig)
+export default nextConfig
