@@ -15,7 +15,7 @@ import {
   Copy,
   Check,
   ArrowRight,
-  Trash2,
+  Trash2
 } from 'lucide-react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -31,7 +31,7 @@ import { Textarea } from '../ui/textarea'
 import {
   supabaseConversationStorage,
   type Message,
-  type Conversation,
+  type Conversation
 } from '@/lib/supabase-conversation-storage'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
@@ -52,7 +52,7 @@ export function AIAssistant({
   isOpen = false,
   onToggle,
   className,
-  isMobile: propIsMobile,
+  isMobile: propIsMobile
 }: AIAssistantProps) {
   const { t, i18n } = useTranslation()
   const { user, loading: authLoading } = useSupabaseAuth()
@@ -92,7 +92,7 @@ export function AIAssistant({
           // Reload conversations after migration
           const migratedConversations = await supabaseConversationStorage.loadConversations(
             user?.id,
-            farmData?.id,
+            farmData?.id
           )
           setConversations(migratedConversations)
         } catch (error) {
@@ -190,7 +190,7 @@ export function AIAssistant({
         content: getWelcomeMessage(),
         role: 'assistant',
         timestamp: new Date(),
-        language: i18n.language,
+        language: i18n.language
       }
       setMessages([welcomeMessage])
     } else if (
@@ -202,7 +202,7 @@ export function AIAssistant({
       const updatedWelcomeMessage: Message = {
         ...messages[0],
         content: getWelcomeMessage(),
-        language: i18n.language,
+        language: i18n.language
       }
       setMessages([updatedWelcomeMessage])
     }
@@ -218,21 +218,21 @@ export function AIAssistant({
     const queryTypes = [
       {
         type: 'disease',
-        keywords: ['disease', 'sick', 'spots', 'fungus', 'mold', 'rot', 'बीमारी', 'रोग', 'आजार'],
+        keywords: ['disease', 'sick', 'spots', 'fungus', 'mold', 'rot', 'बीमारी', 'रोग', 'आजार']
       },
       {
         type: 'irrigation',
-        keywords: ['water', 'irrigation', 'dry', 'drought', 'सिंचाई', 'पानी', 'पाणी'],
+        keywords: ['water', 'irrigation', 'dry', 'drought', 'सिंचाई', 'पानी', 'पाणी']
       },
       {
         type: 'fertilizer',
-        keywords: ['fertilizer', 'nutrition', 'feed', 'nutrient', 'उर्वरक', 'खाद', 'खत'],
+        keywords: ['fertilizer', 'nutrition', 'feed', 'nutrient', 'उर्वरक', 'खाद', 'खत']
       },
       { type: 'harvest', keywords: ['harvest', 'pick', 'ripe', 'maturity', 'कटाई', 'कापणी'] },
       { type: 'pruning', keywords: ['pruning', 'trim', 'cut', 'canopy', 'छंटाई', 'छाटणी'] },
       { type: 'pest', keywords: ['pest', 'insect', 'bug', 'कीट', 'कीड़े'] },
       { type: 'weather', keywords: ['weather', 'rain', 'temperature', 'मौसम', 'बारिश'] },
-      { type: 'soil', keywords: ['soil', 'ph', 'organic', 'मिट्टी', 'माती'] },
+      { type: 'soil', keywords: ['soil', 'ph', 'organic', 'मिट्टी', 'माती'] }
     ]
 
     for (const queryType of queryTypes) {
@@ -241,7 +241,7 @@ export function AIAssistant({
         return {
           queryType: queryType.type,
           confidence: Math.min(matchCount / queryType.keywords.length + 0.5, 1),
-          relatedTopics: queryType.keywords.filter((keyword) => lowerText.includes(keyword)),
+          relatedTopics: queryType.keywords.filter((keyword) => lowerText.includes(keyword))
         }
       }
     }
@@ -265,12 +265,12 @@ export function AIAssistant({
         conversationHistory: recentMessages.map((msg) => ({
           role: msg.role,
           content: msg.content,
-          queryType: msg.context?.queryType,
+          queryType: msg.context?.queryType
         })),
-        recentTopics: [...new Set(conversationTopics)],
+        recentTopics: [...new Set(conversationTopics)]
       }
     },
-    [messages, farmData, recentAnalysis, i18n.language],
+    [messages, farmData, recentAnalysis, i18n.language]
   )
 
   // Atomic function to get or create conversation ID
@@ -306,14 +306,14 @@ export function AIAssistant({
         farmId: farmData?.id,
         userId: user?.id,
         lastMessageAt: new Date(),
-        messageCount: allMessages.length,
+        messageCount: allMessages.length
       }
 
       try {
         savingInProgressRef.current = true // Mark saving in progress
         const savedConversation = await supabaseConversationStorage.saveConversation(
           conversation,
-          user?.id,
+          user?.id
         )
 
         if (savedConversation) {
@@ -342,7 +342,7 @@ export function AIAssistant({
         savingInProgressRef.current = false // Always reset saving flag
       }
     },
-    [getOrCreateConversationId, conversations, user?.id, farmData?.id],
+    [getOrCreateConversationId, conversations, user?.id, farmData?.id]
   )
 
   const handleSendMessage = useCallback(
@@ -360,7 +360,7 @@ export function AIAssistant({
         role: 'user',
         timestamp: new Date(),
         attachments: pendingAttachments.length > 0 ? [...pendingAttachments] : undefined,
-        context: queryAnalysis,
+        context: queryAnalysis
       }
 
       const updatedMessages = [...messages, userMessage]
@@ -394,8 +394,8 @@ export function AIAssistant({
         language: i18n.language,
         context: {
           queryType: queryAnalysis.queryType,
-          confidence: queryAnalysis.confidence,
-        },
+          confidence: queryAnalysis.confidence
+        }
       }
 
       setMessages((prev) => [...prev, streamingMessage])
@@ -408,14 +408,14 @@ export function AIAssistant({
         const response = await fetch('/api/ai/chat', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             message: messageText,
             context: conversationContext,
             attachments: pendingAttachments,
-            stream: true,
-          }),
+            stream: true
+          })
         })
 
         if (!response.ok) {
@@ -458,8 +458,8 @@ export function AIAssistant({
             // Update the streaming message in real-time
             setMessages((prev) =>
               prev.map((msg) =>
-                msg.id === assistantMessageId ? { ...msg, content: fullResponse } : msg,
-              ),
+                msg.id === assistantMessageId ? { ...msg, content: fullResponse } : msg
+              )
             )
           }
         }
@@ -467,7 +467,7 @@ export function AIAssistant({
         // Immediately save the completed AI response
         const completedAssistantMessage: Message = {
           ...streamingMessage,
-          content: fullResponse,
+          content: fullResponse
         }
         const completedMessages = [...updatedMessages, completedAssistantMessage]
 
@@ -506,7 +506,7 @@ export function AIAssistant({
 
           toast.error(toastMessage, {
             duration: 5000,
-            position: 'top-center',
+            position: 'top-center'
           })
 
           errorContent =
@@ -528,12 +528,12 @@ export function AIAssistant({
           id: (Date.now() + 1).toString(),
           content: errorContent,
           role: 'assistant',
-          timestamp: new Date(),
+          timestamp: new Date()
         }
 
         // Replace the streaming message with error
         setMessages((prev) =>
-          prev.map((msg) => (msg.id === assistantMessageId ? errorMessage : msg)),
+          prev.map((msg) => (msg.id === assistantMessageId ? errorMessage : msg))
         )
 
         // Immediately save the error message
@@ -562,8 +562,8 @@ export function AIAssistant({
       buildConversationContext,
       pendingAttachments,
       saveMessageImmediately,
-      user?.id,
-    ],
+      user?.id
+    ]
   )
 
   // Store current handleSendMessage in ref for speech recognition
@@ -604,7 +604,7 @@ export function AIAssistant({
           type: 'image' as const,
           name: file.name,
           url: imageUrl,
-          size: file.size,
+          size: file.size
         }
 
         setPendingAttachments((prev) => [...prev, attachment])
@@ -708,7 +708,7 @@ export function AIAssistant({
               <blockquote className="border-l-2 border-gray-300 pl-3 ml-2 my-2 text-gray-700">
                 {children}
               </blockquote>
-            ),
+            )
           }}
         >
           {content}
@@ -728,13 +728,13 @@ export function AIAssistant({
     {
       en: 'How to prevent grape diseases?',
       hi: 'अंगूर के रोगों से कैसे बचाव करें?',
-      mr: 'द्राक्षाच्या आजारांपासून कसे बचाव करावा?',
+      mr: 'द्राक्षाच्या आजारांपासून कसे बचाव करावा?'
     },
     {
       en: 'Harvest time indicators',
       hi: 'कटाई के समय के संकेत',
-      mr: 'कापणीच्या वेळेचे संकेत',
-    },
+      mr: 'कापणीच्या वेळेचे संकेत'
+    }
   ]
 
   // Mobile floating chat button
@@ -756,7 +756,7 @@ export function AIAssistant({
         'flex flex-col rounded-none',
         isMobile ? 'h-screen' : 'h-[calc(100vh)]',
         isMobile && isOpen && 'fixed inset-0 z-50 rounded-none pb-16',
-        className,
+        className
       )}
     >
       <CardHeader className="flex-shrink-0 pb-3 border-b">
@@ -789,7 +789,7 @@ export function AIAssistant({
                   ? 'bg-red-100 text-red-600'
                   : quotaStatus.remaining <= 1
                     ? 'bg-yellow-100 text-yellow-600'
-                    : 'bg-green-100 text-green-600',
+                    : 'bg-green-100 text-green-600'
               )}
             >
               {quotaStatus.remaining}/{quotaStatus.limit}
@@ -829,7 +829,7 @@ export function AIAssistant({
                       key={conv.id}
                       className={cn(
                         'group flex items-center justify-between p-2 rounded cursor-pointer text-xs hover:bg-gray-200',
-                        currentConversationId === conv.id && 'bg-blue-100',
+                        currentConversationId === conv.id && 'bg-blue-100'
                       )}
                     >
                       <div onClick={() => loadConversation(conv.id)} className="flex-1 min-w-0">
@@ -868,7 +868,7 @@ export function AIAssistant({
                 <div
                   className={cn(
                     'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
-                    message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-green-500 text-white',
+                    message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-green-500 text-white'
                   )}
                 >
                   {message.role === 'user' ? (
@@ -881,7 +881,7 @@ export function AIAssistant({
                 <div
                   className={cn(
                     'flex-1 max-w-[85%] space-y-2',
-                    message.role === 'user' && 'flex-col items-end',
+                    message.role === 'user' && 'flex-col items-end'
                   )}
                 >
                   {/* Message content */}
@@ -890,7 +890,7 @@ export function AIAssistant({
                       'relative group p-3 rounded-2xl text-sm break-words',
                       message.role === 'user'
                         ? 'bg-blue-500 text-white'
-                        : 'bg-gray-100 text-gray-900',
+                        : 'bg-gray-100 text-gray-900'
                     )}
                   >
                     {formatMessage(message.content, message.role === 'assistant')}
@@ -903,7 +903,7 @@ export function AIAssistant({
                         size="sm"
                         className={cn(
                           'absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity',
-                          'bg-white/80 hover:bg-white text-gray-600 hover:text-gray-900',
+                          'bg-white/80 hover:bg-white text-gray-600 hover:text-gray-900'
                         )}
                       >
                         {copiedMessageId === message.id ? (
@@ -923,7 +923,7 @@ export function AIAssistant({
                           key={index}
                           className={cn(
                             'max-w-xs rounded-lg overflow-hidden border',
-                            message.role === 'user' ? 'border-blue-200' : 'border-gray-200',
+                            message.role === 'user' ? 'border-blue-200' : 'border-gray-200'
                           )}
                         >
                           {attachment.type === 'image' && (
@@ -1029,7 +1029,7 @@ export function AIAssistant({
           {/* Input Area - Fixed at bottom - Perplexity.ai style */}
           <div
             className={cn(
-              'flex-shrink-0 p-4 bg-white border-t',
+              'flex-shrink-0 p-4 bg-white border-t'
               // Extra bottom padding for mobile to avoid bottom navigation
             )}
           >
@@ -1053,7 +1053,7 @@ export function AIAssistant({
                       style={{
                         resize: 'none',
                         minHeight: '28px',
-                        maxHeight: '120px',
+                        maxHeight: '120px'
                       }}
                       rows={1}
                       ref={inputRef}
@@ -1087,7 +1087,7 @@ export function AIAssistant({
                       className={cn(
                         'w-full bg-transparent border-0 resize-none text-base leading-7 p-0',
                         'focus:outline-none placeholder-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0',
-                        'scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300',
+                        'scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300'
                       )}
                     />
 
@@ -1117,7 +1117,7 @@ export function AIAssistant({
                               'p-0 h-5 w-6',
                               isListening
                                 ? 'bg-red-50 text-red-500 hover:bg-red-100'
-                                : 'hover:bg-gray-100 text-gray-500',
+                                : 'hover:bg-gray-100 text-gray-500'
                             )}
                           >
                             {isListening ? (
@@ -1143,7 +1143,7 @@ export function AIAssistant({
                               isLoading ||
                               quotaStatus.isExceeded
                               ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
-                              : 'bg-primary hover:bg-teal-700 text-white',
+                              : 'bg-primary hover:bg-teal-700 text-white'
                           )}
                         >
                           {isLoading ? (
@@ -1164,7 +1164,7 @@ export function AIAssistant({
                     style={{
                       resize: 'none',
                       minHeight: '28px',
-                      maxHeight: '120px',
+                      maxHeight: '120px'
                     }}
                     rows={1}
                     ref={inputRef}
@@ -1199,7 +1199,7 @@ export function AIAssistant({
                     className={cn(
                       'w-full bg-transparent border-0 resize-none text-base leading-7 p-0',
                       'focus:outline-none focus:ring-0 placeholder-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0',
-                      'scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300',
+                      'scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300'
                     )}
                   />
 
@@ -1229,7 +1229,7 @@ export function AIAssistant({
                             'p-0 h-7 w-7 hover:bg-gray-100',
                             isListening
                               ? 'bg-red-50 text-red-500 hover:bg-red-100'
-                              : 'text-gray-500',
+                              : 'text-gray-500'
                           )}
                         >
                           {isListening ? (
@@ -1255,7 +1255,7 @@ export function AIAssistant({
                             isLoading ||
                             quotaStatus.isExceeded
                             ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
-                            : 'bg-primary hover:bg-teal-700 text-white',
+                            : 'bg-primary hover:bg-teal-700 text-white'
                         )}
                       >
                         {isLoading ? (
