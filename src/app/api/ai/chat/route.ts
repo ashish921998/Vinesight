@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 import {
   hasServerExceededQuota,
   incrementServerQuestionCount,
-  getServerQuotaStatus,
+  getServerQuotaStatus
 } from '@/lib/server-quota-service'
 
 export async function POST(request: NextRequest) {
@@ -30,26 +30,26 @@ export async function POST(request: NextRequest) {
               // This can be ignored if you have middleware refreshing
               // user sessions.
             }
-          },
-        },
-      },
+          }
+        }
+      }
     )
 
     const {
       data: { user },
-      error: sessionError,
+      error: sessionError
     } = await supabase.auth.getUser()
 
     if (sessionError || !user) {
       return new Response(
         JSON.stringify({
           error: 'Authentication required',
-          code: 'UNAUTHORIZED',
+          code: 'UNAUTHORIZED'
         }),
         {
           status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        },
+          headers: { 'Content-Type': 'application/json' }
+        }
       )
     }
 
@@ -62,12 +62,12 @@ export async function POST(request: NextRequest) {
         JSON.stringify({
           error: 'Daily question limit exceeded',
           code: 'QUOTA_EXCEEDED',
-          quotaStatus,
+          quotaStatus
         }),
         {
           status: 429, // Too Many Requests
-          headers: { 'Content-Type': 'application/json' },
-        },
+          headers: { 'Content-Type': 'application/json' }
+        }
       )
     }
 
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     if (!message) {
       return new Response(JSON.stringify({ error: 'Message is required' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }
       })
     }
 
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     const systemPrompt = buildSystemPrompt(context)
     const userContent: ({ type: 'text'; text: string } | { type: 'image'; image: URL })[] = [
-      { type: 'text', text: message },
+      { type: 'text', text: message }
     ]
 
     if (Array.isArray(attachments)) {
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     const messages = [
       { role: 'system' as const, content: systemPrompt },
       ...(context.conversationHistory?.slice(-5) || []),
-      { role: 'user' as const, content: userContent },
+      { role: 'user' as const, content: userContent }
     ]
 
     // Use streaming for better UX
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       const result = streamText({
         model: 'google/gemini-2.0-flash-lite',
         messages,
-        temperature: 0.7,
+        temperature: 0.7
       })
 
       return result.toTextStreamResponse()
@@ -120,11 +120,11 @@ export async function POST(request: NextRequest) {
     const result = await generateText({
       model: 'google/gemini-2.0-flash-lite',
       messages,
-      temperature: 0.7,
+      temperature: 0.7
     })
 
     return new Response(result.text, {
-      headers: { 'Content-Type': 'text/plain' },
+      headers: { 'Content-Type': 'text/plain' }
     })
   } catch (error) {
     // Handle authentication errors
@@ -137,12 +137,12 @@ export async function POST(request: NextRequest) {
       return new Response(
         JSON.stringify({
           error: 'Authentication required',
-          code: 'UNAUTHORIZED',
+          code: 'UNAUTHORIZED'
         }),
         {
           status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        },
+          headers: { 'Content-Type': 'application/json' }
+        }
       )
     }
 
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
       .catch(() => ({}))
 
     return new Response(generateFallbackResponse(errorMessage, errorContext), {
-      headers: { 'Content-Type': 'text/plain' },
+      headers: { 'Content-Type': 'text/plain' }
     })
   }
 }
