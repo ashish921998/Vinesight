@@ -35,8 +35,6 @@ import {
 } from '@/lib/supabase-conversation-storage'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
-// Message and Conversation interfaces now imported from conversation-storage
-
 interface AIAssistantProps {
   farmData?: any
   recentAnalysis?: ImageAnalysisResult[]
@@ -65,8 +63,8 @@ export function AIAssistant({
   const [showHistory, setShowHistory] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
-  const currentConversationIdRef = useRef<string | null>(null) // Synchronous reference to prevent race conditions
-  const savingInProgressRef = useRef<boolean>(false) // Prevent concurrent saves
+  const currentConversationIdRef = useRef<string | null>(null)
+  const savingInProgressRef = useRef<boolean>(false)
   const [pendingAttachments, setPendingAttachments] = useState<
     Array<{ type: 'image'; name: string; url: string; size?: number }>
   >([])
@@ -77,26 +75,22 @@ export function AIAssistant({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const handleSendMessageRef = useRef<((message?: string) => Promise<void>) | null>(null)
 
-  // Load conversations from storage on mount
   useEffect(() => {
     const loadConversations = async () => {
-      if (authLoading) return // Wait for auth to load
+      if (authLoading) return
 
       const stored = await supabaseConversationStorage.loadConversations(user?.id, farmData?.id)
       setConversations(stored)
 
-      // Auto-migrate localStorage data if user is authenticated and no conversations exist
       if (user && stored.length === 0) {
         try {
           await supabaseConversationStorage.migrateFromLocalStorage(user.id)
-          // Reload conversations after migration
           const migratedConversations = await supabaseConversationStorage.loadConversations(
             user?.id,
             farmData?.id
           )
           setConversations(migratedConversations)
         } catch (error) {
-          // Log error for debugging in development only
           if (process.env.NODE_ENV === 'development') {
             // eslint-disable-next-line no-console
             console.error('Migration error:', error)
@@ -107,14 +101,12 @@ export function AIAssistant({
     loadConversations()
   }, [user, authLoading, farmData?.id])
 
-  // Update quota status when user authentication changes
   useEffect(() => {
     if (!authLoading) {
       setQuotaStatus(getQuotaStatus(user?.id))
     }
   }, [user?.id, authLoading])
 
-  // Check if device is mobile (only if not provided as prop)
   useEffect(() => {
     if (propIsMobile === undefined) {
       const checkMobile = () => {
@@ -128,7 +120,6 @@ export function AIAssistant({
     }
   }, [propIsMobile])
 
-  // Initialize speech recognition (once on mount)
   useEffect(() => {
     if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
       const SpeechRecognition = window.webkitSpeechRecognition
@@ -136,7 +127,7 @@ export function AIAssistant({
 
       recognition.continuous = false
       recognition.interimResults = false
-      recognition.lang = 'en-IN' // Default language, will be updated by separate effect
+      recognition.lang = 'en-IN'
 
       recognition.onstart = () => setIsListening(true)
       recognition.onend = () => setIsListening(false)
@@ -145,7 +136,6 @@ export function AIAssistant({
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript
         setInputValue(transcript)
-        // Use ref to avoid memory leaks and get current handler
         if (handleSendMessageRef.current) {
           handleSendMessageRef.current(transcript)
         }
@@ -153,7 +143,6 @@ export function AIAssistant({
 
       recognitionRef.current = recognition
 
-      // Cleanup function
       return () => {
         if (recognitionRef.current) {
           recognitionRef.current.abort()
@@ -161,9 +150,8 @@ export function AIAssistant({
         }
       }
     }
-  }, []) // Only run once on mount
+  }, [])
 
-  // Update speech recognition language when language changes
   useEffect(() => {
     if (recognitionRef.current) {
       recognitionRef.current.lang =
@@ -182,7 +170,6 @@ export function AIAssistant({
     }
   }, [i18n.language])
 
-  // Handle welcome message
   useEffect(() => {
     if (messages.length === 0) {
       const welcomeMessage: Message = {
@@ -198,7 +185,6 @@ export function AIAssistant({
       messages[0].role === 'assistant' &&
       messages[0].language !== i18n.language
     ) {
-      // Update welcome message language if it's the only message and language changed
       const updatedWelcomeMessage: Message = {
         ...messages[0],
         content: getWelcomeMessage(),
@@ -208,7 +194,6 @@ export function AIAssistant({
     }
   }, [messages, i18n.language, getWelcomeMessage])
 
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
@@ -273,7 +258,6 @@ export function AIAssistant({
     [messages, farmData, recentAnalysis, i18n.language]
   )
 
-  // Atomic function to get or create conversation ID
   const getOrCreateConversationId = useCallback(() => {
     let conversationId = currentConversationIdRef.current
     if (!conversationId) {
@@ -284,13 +268,11 @@ export function AIAssistant({
     return conversationId
   }, [])
 
-  // Immediately save individual messages to prevent data loss
   const saveMessageImmediately = useCallback(
     async (allMessages: Message[]) => {
-      if (allMessages.length <= 1) return // Don't save if only welcome message + new message
-      if (savingInProgressRef.current) return // Prevent concurrent saves
+      if (allMessages.length <= 1) return
+      if (savingInProgressRef.current) return
 
-      // Use atomic function to prevent race conditions
       const conversationId = getOrCreateConversationId()
 
       const title = supabaseConversationStorage.generateTitle(allMessages)
@@ -310,14 +292,13 @@ export function AIAssistant({
       }
 
       try {
-        savingInProgressRef.current = true // Mark saving in progress
+        savingInProgressRef.current = true
         const savedConversation = await supabaseConversationStorage.saveConversation(
           conversation,
           user?.id
         )
 
         if (savedConversation) {
-          // Update local state with saved conversation
           setConversations((prev) => {
             const existing = prev.find((c) => c.id === conversationId)
             if (existing) {
@@ -326,20 +307,18 @@ export function AIAssistant({
             return [savedConversation, ...prev]
           })
 
-          // Update conversation ID if it changed (timestamp -> database ID)
           if (savedConversation.id !== conversationId) {
-            currentConversationIdRef.current = savedConversation.id // Update ref immediately
+            currentConversationIdRef.current = savedConversation.id
             setCurrentConversationId(savedConversation.id)
           }
         }
       } catch (error) {
-        // Log error for debugging in development only
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
           console.error('Error saving message immediately:', error)
         }
       } finally {
-        savingInProgressRef.current = false // Always reset saving flag
+        savingInProgressRef.current = false
       }
     },
     [getOrCreateConversationId, conversations, user?.id, farmData?.id]
@@ -350,10 +329,8 @@ export function AIAssistant({
       const messageText = text || inputValue.trim()
       if ((!messageText && pendingAttachments.length === 0) || isLoading) return
 
-      // Analyze the query
       const queryAnalysis = analyzeQuery(messageText)
 
-      // Add user message with context and attachments
       const userMessage: Message = {
         id: Date.now().toString(),
         content: messageText || 'Shared an image',
@@ -366,17 +343,14 @@ export function AIAssistant({
       const updatedMessages = [...messages, userMessage]
       setMessages(updatedMessages)
       setInputValue('')
-      setPendingAttachments([]) // Clear pending attachments
+      setPendingAttachments([])
       setIsLoading(true)
 
-      // Increment quota count since user is sending a question
       incrementQuestionCount(user?.id)
 
-      // Immediately save the user message to ensure no data loss
       try {
         await saveMessageImmediately(updatedMessages)
       } catch (error) {
-        // Log error for debugging in development only
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
           console.error('Failed to save user message:', error)
@@ -384,7 +358,6 @@ export function AIAssistant({
         toast.error('Failed to save your message. Please try again.')
       }
 
-      // Create streaming assistant message
       const assistantMessageId = (Date.now() + 1).toString()
       const streamingMessage: Message = {
         id: assistantMessageId,
@@ -401,10 +374,8 @@ export function AIAssistant({
       setMessages((prev) => [...prev, streamingMessage])
 
       try {
-        // Build enhanced context for AI response with updated messages
         const conversationContext = buildConversationContext(updatedMessages)
 
-        // Call the AI chat API directly
         const response = await fetch('/api/ai/chat', {
           method: 'POST',
           headers: {
@@ -420,7 +391,6 @@ export function AIAssistant({
 
         if (!response.ok) {
           if (response.status === 401) {
-            // Handle authentication error
             const errorData = await response.json().catch(() => ({}))
             if (errorData.code === 'UNAUTHORIZED') {
               throw new Error('AUTHENTICATION_REQUIRED')
@@ -428,7 +398,6 @@ export function AIAssistant({
           }
 
           if (response.status === 429) {
-            // Handle quota exceeded error
             const errorData = await response.json().catch(() => ({}))
             if (errorData.code === 'QUOTA_EXCEEDED') {
               throw new Error('QUOTA_EXCEEDED')
@@ -455,7 +424,6 @@ export function AIAssistant({
             const chunk = decoder.decode(value)
             fullResponse += chunk
 
-            // Update the streaming message in real-time
             setMessages((prev) =>
               prev.map((msg) =>
                 msg.id === assistantMessageId ? { ...msg, content: fullResponse } : msg
@@ -464,7 +432,6 @@ export function AIAssistant({
           }
         }
 
-        // Immediately save the completed AI response
         const completedAssistantMessage: Message = {
           ...streamingMessage,
           content: fullResponse
@@ -474,7 +441,6 @@ export function AIAssistant({
         try {
           await saveMessageImmediately(completedMessages)
         } catch (error) {
-          // Log error for debugging in development only
           if (process.env.NODE_ENV === 'development') {
             // eslint-disable-next-line no-console
             console.error('Failed to save assistant message:', error)
@@ -566,7 +532,6 @@ export function AIAssistant({
     ]
   )
 
-  // Store current handleSendMessage in ref for speech recognition
   useEffect(() => {
     handleSendMessageRef.current = handleSendMessage
   }, [handleSendMessage])
@@ -583,7 +548,6 @@ export function AIAssistant({
     }
   }
 
-  // Simple attachment handlers
   const handleAttachClick = () => {
     fileInputRef.current?.click()
   }
@@ -591,7 +555,6 @@ export function AIAssistant({
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file && file.type.startsWith('image/')) {
-      // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error('Image size must be less than 5MB')
         return
@@ -614,38 +577,33 @@ export function AIAssistant({
       toast.error('Only image files are supported')
     }
 
-    // Reset the input
     if (event.target) {
       event.target.value = ''
     }
   }
 
-  // Copy message to clipboard
   const copyToClipboard = async (text: string, messageId: string) => {
     try {
       await navigator.clipboard.writeText(text)
       setCopiedMessageId(messageId)
       toast.success('Message copied to clipboard')
 
-      // Reset the copied state after 2 seconds
       setTimeout(() => setCopiedMessageId(null), 2000)
     } catch (err) {
       toast.error('Failed to copy message')
     }
   }
 
-  // Remove attachment from pending list
   const removeAttachment = (index: number) => {
     setPendingAttachments((prev) => prev.filter((_, i) => i !== index))
   }
 
-  // Conversation management with persistent storage
   const startNewConversation = () => {
     setMessages([])
     setCurrentConversationId(null)
-    currentConversationIdRef.current = null // Sync ref
+    currentConversationIdRef.current = null
     setShowHistory(false)
-    setPendingAttachments([]) // Clear any pending attachments
+    setPendingAttachments([])
   }
 
   const loadConversation = (conversationId: string) => {
@@ -653,19 +611,16 @@ export function AIAssistant({
     if (conversation) {
       setMessages(conversation.messages)
       setCurrentConversationId(conversationId)
-      currentConversationIdRef.current = conversationId // Sync ref
+      currentConversationIdRef.current = conversationId
       setShowHistory(false)
     }
   }
 
   const deleteConversation = async (conversationId: string) => {
-    // Delete from persistent storage
     await supabaseConversationStorage.deleteConversation(conversationId, user?.id)
 
-    // Update local state
     setConversations((prev) => prev.filter((c) => c.id !== conversationId))
 
-    // If we're deleting the current conversation, start a new one
     if (currentConversationId === conversationId) {
       startNewConversation()
     }
@@ -673,7 +628,6 @@ export function AIAssistant({
 
   const formatMessage = (content: string, isAssistant: boolean = false) => {
     if (isAssistant) {
-      // Use markdown for AI responses
       return (
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
@@ -737,7 +691,6 @@ export function AIAssistant({
     }
   ]
 
-  // Mobile floating chat button
   if (!isOpen && isMobile) {
     return (
       <Button
@@ -766,7 +719,6 @@ export function AIAssistant({
             <span className="text-base sm:text-lg">{t('ai_assistant', 'AI Assistant')}</span>
           </div>
           <div className="flex items-center gap-2">
-            {/* History button */}
             <Button
               variant="ghost"
               size="sm"
@@ -776,12 +728,10 @@ export function AIAssistant({
               <History className="w-4 h-4" />
             </Button>
 
-            {/* New conversation button */}
             <Button variant="ghost" size="sm" onClick={startNewConversation} className="h-8">
               <Plus className="w-4 h-4" />
             </Button>
 
-            {/* Quota indicator */}
             <div
               className={cn(
                 'text-xs px-2 py-1 rounded-full',
@@ -804,7 +754,6 @@ export function AIAssistant({
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col min-h-0 p-0">
-        {/* Conversation History Sidebar */}
         {showHistory && (
           <div className="flex-shrink-0 border-b bg-gray-50 p-4 max-h-60 overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
@@ -857,7 +806,6 @@ export function AIAssistant({
           </div>
         )}
 
-        {/* Messages Container with proper flex layout */}
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
@@ -884,7 +832,6 @@ export function AIAssistant({
                     message.role === 'user' && 'flex-col items-end'
                   )}
                 >
-                  {/* Message content */}
                   <div
                     className={cn(
                       'relative group p-3 rounded-2xl text-sm break-words',
@@ -895,7 +842,6 @@ export function AIAssistant({
                   >
                     {formatMessage(message.content, message.role === 'assistant')}
 
-                    {/* Copy button for assistant messages */}
                     {message.role === 'assistant' && (
                       <Button
                         onClick={() => copyToClipboard(message.content, message.id)}
@@ -915,7 +861,6 @@ export function AIAssistant({
                     )}
                   </div>
 
-                  {/* Attachments */}
                   {message.attachments && message.attachments.length > 0 && (
                     <div className="space-y-2">
                       {message.attachments.map((attachment, index) => (
@@ -971,7 +916,6 @@ export function AIAssistant({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Questions - Above input */}
           {messages.length <= 1 && !isLoading && !isMobile && (
             <div className="flex-shrink-0 p-4 border-t border-b">
               <p className="text-xs text-gray-500 mb-2">
@@ -995,7 +939,6 @@ export function AIAssistant({
             </div>
           )}
 
-          {/* Pending Attachments Preview */}
           {pendingAttachments.length > 0 && (
             <div className="flex-shrink-0 p-4 border-t bg-gray-50/50">
               <div className="flex flex-wrap gap-2">
@@ -1026,14 +969,7 @@ export function AIAssistant({
             </div>
           )}
 
-          {/* Input Area - Fixed at bottom - Perplexity.ai style */}
-          <div
-            className={cn(
-              'flex-shrink-0 p-4 bg-white border-t'
-              // Extra bottom padding for mobile to avoid bottom navigation
-            )}
-          >
-            {/* Hidden file input */}
+          <div className={cn('flex-shrink-0 p-4 bg-white border-t')}>
             <input
               ref={fileInputRef}
               type="file"
@@ -1042,12 +978,9 @@ export function AIAssistant({
               className="hidden"
             />
 
-            {/* Main input container with responsive design */}
             <div className="relative w-full max-w-4xl mx-auto">
               {isMobile ? (
-                /* Mobile layout - matches the image */
                 <div className="space-y-3">
-                  {/* Main textarea container */}
                   <div className="relative bg-white border border-gray-300 rounded-xl px-4 py-3 shadow-sm">
                     <Textarea
                       style={{
@@ -1091,9 +1024,7 @@ export function AIAssistant({
                       )}
                     />
 
-                    {/* Buttons row below textarea */}
                     <div className="flex items-center justify-between">
-                      {/* Attach button - left side */}
                       <Button
                         onClick={handleAttachClick}
                         disabled={isLoading || quotaStatus.isExceeded}
@@ -1104,9 +1035,7 @@ export function AIAssistant({
                         <Paperclip className="w-6 h-5" />
                       </Button>
 
-                      {/* Right side buttons */}
                       <div className="flex items-center gap-4 flex-shrink-0">
-                        {/* Mic button */}
                         {recognitionRef.current && (
                           <Button
                             type="button"
@@ -1128,7 +1057,6 @@ export function AIAssistant({
                           </Button>
                         )}
 
-                        {/* Send button - teal circular button */}
                         <Button
                           onClick={() => handleSendMessage()}
                           disabled={
@@ -1157,9 +1085,7 @@ export function AIAssistant({
                   </div>
                 </div>
               ) : (
-                /* Desktop layout - similar to screenshot */
                 <div className="relative bg-white border border-gray-300 rounded-xl px-4 py-3 shadow-sm max-w-4xl mx-auto">
-                  {/* Textarea */}
                   <Textarea
                     style={{
                       resize: 'none',
@@ -1171,7 +1097,6 @@ export function AIAssistant({
                     value={inputValue}
                     onChange={(e) => {
                       setInputValue(e.target.value)
-                      // Auto-resize textarea
                       const textarea = e.target
                       textarea.style.height = 'auto'
                       textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px'
@@ -1203,9 +1128,7 @@ export function AIAssistant({
                     )}
                   />
 
-                  {/* Buttons row below textarea */}
                   <div className="flex items-center justify-between pt-3">
-                    {/* Left side - empty for desktop, or could add attach */}
                     <Button
                       onClick={handleAttachClick}
                       disabled={isLoading || quotaStatus.isExceeded}
@@ -1216,9 +1139,7 @@ export function AIAssistant({
                       <Paperclip className="w-5 h-5" />
                     </Button>
 
-                    {/* Right side buttons */}
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      {/* Mic button */}
                       {recognitionRef.current && (
                         <Button
                           type="button"
@@ -1240,7 +1161,6 @@ export function AIAssistant({
                         </Button>
                       )}
 
-                      {/* Send button */}
                       <Button
                         onClick={() => handleSendMessage()}
                         disabled={
@@ -1269,7 +1189,6 @@ export function AIAssistant({
                 </div>
               )}
 
-              {/* Listening indicator */}
               {isListening && (
                 <div className="absolute -top-8 left-3 flex items-center gap-2 px-2 py-1 bg-red-50 border border-red-200 rounded-lg">
                   <div className="flex space-x-1">
@@ -1290,7 +1209,6 @@ export function AIAssistant({
   )
 }
 
-// Declare global type for WebKit Speech Recognition
 declare global {
   interface Window {
     webkitSpeechRecognition: any
