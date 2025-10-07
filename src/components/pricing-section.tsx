@@ -2,24 +2,62 @@
 
 import { useEffect, useState } from 'react'
 
-export default function PricingSection() {
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annually'>('annually')
-  const [isIndia, setIsIndia] = useState(false)
+type PricingSectionProps = {
+  regionFromServer?: string | null
+}
 
+export default function PricingSection({ regionFromServer = null }: PricingSectionProps) {
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annually'>('annually')
+
+  // Authoritative region from server/API. Never derived from client heuristics.
+  const [serverRegion, setServerRegion] = useState<string | null>(regionFromServer)
+
+  // Cosmetic-only heuristic used ONLY if serverRegion is not available
+  const [heuristicIndia, setHeuristicIndia] = useState(false)
+
+  // Fetch validated region from server API if not provided via props
   useEffect(() => {
+    let cancelled = false
+    if (!regionFromServer) {
+      ;(async () => {
+        try {
+          const res = await fetch('/api/region', { cache: 'no-store' })
+          if (!res.ok) return
+          const data = (await res.json()) as { region?: string | null }
+          const region = (data?.region || '').toString().trim().toUpperCase()
+          const valid = /^[A-Z]{2}$/.test(region) ? region : null
+          if (!cancelled) setServerRegion(valid)
+        } catch {
+          // ignore
+        }
+      })()
+    } else {
+      setServerRegion(regionFromServer?.toUpperCase() || null)
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [regionFromServer])
+
+  // Heuristic detection is cosmetic-only when serverRegion is absent
+  useEffect(() => {
+    if (serverRegion) return // server value takes precedence; do not drive pricing with heuristics
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
       const langMatch = Array.isArray(navigator.languages)
         ? navigator.languages.some((l) => l?.toLowerCase().includes('-in'))
         : (navigator.language || '').toLowerCase().includes('-in')
       const tzMatch = tz === 'Asia/Kolkata'
-      if (langMatch || tzMatch) setIsIndia(true)
+      if (langMatch || tzMatch) setHeuristicIndia(true)
     } catch {
-      // no-op: default remains false
+      // no-op
     }
-  }, [])
+  }, [serverRegion])
 
   // Compute pricing dynamically based on region
+  const effectiveRegion = serverRegion
+  const isIndia = effectiveRegion ? effectiveRegion === 'IN' : heuristicIndia
+
   const basePricing = isIndia
     ? {
         starter: { monthly: 0 },
