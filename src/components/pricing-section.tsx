@@ -1,23 +1,55 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function PricingSection() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annually'>('annually')
+  const [isIndia, setIsIndia] = useState(false)
+
+  useEffect(() => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+      const langMatch = Array.isArray(navigator.languages)
+        ? navigator.languages.some((l) => l?.toLowerCase().includes('-in'))
+        : (navigator.language || '').toLowerCase().includes('-in')
+      const tzMatch = tz === 'Asia/Kolkata'
+      if (langMatch || tzMatch) setIsIndia(true)
+    } catch {
+      // no-op: default remains false
+    }
+  }, [])
+
+  // Compute pricing dynamically based on region
+  const basePricing = isIndia
+    ? {
+        starter: { monthly: 0 },
+        professional: { monthly: 500 },
+        enterprise: { monthly: 1000 },
+      }
+    : {
+        starter: { monthly: 0 },
+        professional: { monthly: 20 },
+        enterprise: { monthly: 200 },
+      }
 
   const pricing = {
     starter: {
-      monthly: 0,
-      annually: 0,
+      monthly: basePricing.starter.monthly,
+      annually: Math.round(basePricing.starter.monthly * 0.8),
     },
     professional: {
-      monthly: 20,
-      annually: 16, // 20% discount for annual
+      monthly: basePricing.professional.monthly,
+      annually: Math.round(basePricing.professional.monthly * 0.8), // 20% discount for annual
     },
     enterprise: {
-      monthly: 200,
-      annually: 160, // 20% discount for annual
+      monthly: basePricing.enterprise.monthly,
+      annually: Math.round(basePricing.enterprise.monthly * 0.8), // 20% discount for annual
     },
+  }
+
+  const formatPrice = (value: number) => {
+    if (isIndia) return `${value} ₹`
+    return `$${value}`
   }
 
   return (
@@ -153,7 +185,7 @@ export default function PricingSection() {
                         }}
                         aria-hidden={billingPeriod !== 'annually'}
                       >
-                        ${pricing.starter.annually}
+                        {formatPrice(pricing.starter.annually)}
                       </span>
                       <span
                         className="absolute inset-0 flex items-center transition-all duration-500"
@@ -164,7 +196,7 @@ export default function PricingSection() {
                         }}
                         aria-hidden={billingPeriod !== 'monthly'}
                       >
-                        ${pricing.starter.monthly}
+                        {formatPrice(pricing.starter.monthly)}
                       </span>
                     </div>
                     <div className="text-[#847971] text-sm font-medium font-sans">
@@ -183,11 +215,11 @@ export default function PricingSection() {
 
               <div className="self-stretch flex flex-col justify-start items-start gap-2">
                 {[
-                  'Up to 3 projects',
-                  'Basic documentation tools',
+                  'Monitor up to 5 fields',
+                  'Basic crop health alerts',
+                  '7‑day weather forecast',
+                  'Task tracking and notes',
                   'Community support',
-                  'Standard templates',
-                  'Basic analytics',
                 ].map((feature, index) => (
                   <div
                     key={index}
@@ -244,7 +276,7 @@ export default function PricingSection() {
                         }}
                         aria-hidden={billingPeriod !== 'annually'}
                       >
-                        ${pricing.professional.annually}
+                        {formatPrice(pricing.professional.annually)}
                       </span>
                       <span
                         className="absolute inset-0 flex items-center transition-all duration-500"
@@ -255,7 +287,7 @@ export default function PricingSection() {
                         }}
                         aria-hidden={billingPeriod !== 'monthly'}
                       >
-                        ${pricing.professional.monthly}
+                        {formatPrice(pricing.professional.monthly)}
                       </span>
                     </div>
                     <div className="text-[#D2C6BF] text-sm font-medium font-sans">
@@ -275,14 +307,14 @@ export default function PricingSection() {
 
               <div className="self-stretch flex flex-col justify-start items-start gap-2">
                 {[
-                  'Unlimited projects',
-                  'Advanced documentation tools',
+                  'Unlimited fields and farms',
+                  'AI yield predictions & insights',
+                  'Equipment & sensor integration',
+                  'Team collaboration & RBAC',
+                  'Offline-capable mobile app',
+                  'Advanced field analytics & reports',
+                  'API access & webhooks',
                   'Priority support',
-                  'Custom templates',
-                  'Advanced analytics',
-                  'Team collaboration',
-                  'API access',
-                  'Custom integrations',
                 ].map((feature, index) => (
                   <div
                     key={index}
@@ -339,7 +371,7 @@ export default function PricingSection() {
                         }}
                         aria-hidden={billingPeriod !== 'annually'}
                       >
-                        ${pricing.enterprise.annually}
+                        {formatPrice(pricing.enterprise.annually)}
                       </span>
                       <span
                         className="absolute inset-0 flex items-center transition-all duration-500"
@@ -350,7 +382,7 @@ export default function PricingSection() {
                         }}
                         aria-hidden={billingPeriod !== 'monthly'}
                       >
-                        ${pricing.enterprise.monthly}
+                        {formatPrice(pricing.enterprise.monthly)}
                       </span>
                     </div>
                     <div className="text-[#847971] text-sm font-medium font-sans">
@@ -370,13 +402,13 @@ export default function PricingSection() {
               <div className="self-stretch flex flex-col justify-start items-start gap-2">
                 {[
                   'Everything in Professional',
-                  'Dedicated account manager',
-                  '24/7 phone support',
-                  'Custom onboarding',
-                  'Advanced security features',
-                  'SSO integration',
-                  'Custom contracts',
-                  'White-label options',
+                  'Dedicated success manager',
+                  '24/7 phone support & SLA',
+                  'Custom onboarding & training',
+                  'SSO/SAML and audit logs',
+                  'Custom integrations & data pipelines',
+                  'Regional compliance & data residency',
+                  'White‑label & custom contracts',
                 ].map((feature, index) => (
                   <div
                     key={index}
