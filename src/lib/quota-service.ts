@@ -5,7 +5,7 @@ export interface QuotaData {
 }
 
 const QUOTA_KEY = 'ai_chat_quota'
-const DAILY_LIMIT = 500
+const DAILY_LIMIT = 50
 
 function getTodayKey(): string {
   return new Date().toISOString().split('T')[0]
