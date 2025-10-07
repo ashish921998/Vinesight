@@ -48,8 +48,12 @@ export default function PricingSection() {
   }
 
   const formatPrice = (value: number) => {
-    if (isIndia) return `${value} ₹`
-    return `$${value}`
+    return new Intl.NumberFormat(isIndia ? 'en-IN' : 'en-US', {
+      style: 'currency',
+      currency: isIndia ? 'INR' : 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value)
   }
 
   return (
