@@ -12,7 +12,7 @@ interface ServerQuotaData {
 // In-memory storage (in production, use Redis/database)
 const userQuotas = new Map<string, ServerQuotaData>()
 
-const DAILY_LIMIT = 50
+const DAILY_LIMIT = 5000
 const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000 // 24 hours
 
 /**
@@ -49,7 +49,7 @@ export function getServerQuotaData(userId: string): ServerQuotaData {
     const newData: ServerQuotaData = {
       date: today,
       count: 0,
-      lastUpdated: Date.now(),
+      lastUpdated: Date.now()
     }
     userQuotas.set(userId, newData)
 
@@ -81,7 +81,7 @@ export function incrementServerQuestionCount(userId: string): ServerQuotaData {
   const updatedQuota: ServerQuotaData = {
     ...quota,
     count: quota.count + 1,
-    lastUpdated: Date.now(),
+    lastUpdated: Date.now()
   }
 
   userQuotas.set(userId, updatedQuota)
@@ -112,6 +112,6 @@ export function getServerQuotaStatus(userId: string): {
     used: quota.count,
     remaining,
     limit: DAILY_LIMIT,
-    isExceeded: hasServerExceededQuota(userId),
+    isExceeded: hasServerExceededQuota(userId)
   }
 }

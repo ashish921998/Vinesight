@@ -1,8 +1,3 @@
-/**
- * Daily quota service for AI chatbot questions
- * Tracks user question counts per day with localStorage persistence
- */
-
 export interface QuotaData {
   date: string
   count: number
@@ -10,18 +5,12 @@ export interface QuotaData {
 }
 
 const QUOTA_KEY = 'ai_chat_quota'
-const DAILY_LIMIT = 5
+const DAILY_LIMIT = 500
 
-/**
- * Get today's date in YYYY-MM-DD format
- */
 function getTodayKey(): string {
   return new Date().toISOString().split('T')[0]
 }
 
-/**
- * Get current quota data for today
- */
 export function getQuotaData(userId?: string): QuotaData {
   if (typeof window === 'undefined') {
     return { date: getTodayKey(), count: 0, userId }
@@ -78,7 +67,7 @@ export function incrementQuestionCount(userId?: string): QuotaData {
   const updatedQuota = {
     ...quota,
     count: quota.count + 1,
-    userId,
+    userId
   }
 
   try {
@@ -125,6 +114,6 @@ export function getQuotaStatus(userId?: string): {
     remaining,
     limit: DAILY_LIMIT,
     isExceeded: hasExceededQuota(userId),
-    resetsAt: tomorrow.toISOString(),
+    resetsAt: tomorrow.toISOString()
   }
 }
