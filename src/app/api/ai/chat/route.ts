@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { generateText, streamText } from 'ai'
+import { convertToModelMessages, streamText, validateUIMessages } from 'ai'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import {
@@ -7,6 +7,8 @@ import {
   incrementServerQuestionCount,
   getServerQuotaStatus
 } from '@/lib/server-quota-service'
+import { supermemoryTools } from '@supermemory/tools/ai-sdk'
+import { openai } from '@ai-sdk/openai'
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,8 +55,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // user is already available from above
-
     // Check daily quota limit
     if (hasServerExceededQuota(user.id)) {
       const quotaStatus = getServerQuotaStatus(user.id)
@@ -71,10 +71,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { message, attachments, context = {}, stream = false } = await request.json()
-    if (!message) {
-      return new Response(JSON.stringify({ error: 'Message is required' }), {
+    const body = await request.json()
+    const { messages: rawMessages, data = {} } = body ?? {}
+
+    if (!Array.isArray(rawMessages)) {
+      return new Response(JSON.stringify({ error: 'messages array is required' }), {
         status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    let validatedMessages: Awaited<ReturnType<typeof validateUIMessages>>
+    try {
+      validatedMessages = await validateUIMessages({ messages: rawMessages })
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid message payload' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    const apiKey = process.env.SUPERMEMORY_API_KEY
+
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: 'Supermemory API key missing' }), {
+        status: 500,
         headers: { 'Content-Type': 'application/json' }
       })
     }
@@ -82,50 +103,49 @@ export async function POST(request: NextRequest) {
     // Increment question count for this user
     incrementServerQuestionCount(user.id)
 
-    const systemPrompt = buildSystemPrompt(context)
-    const userContent: ({ type: 'text'; text: string } | { type: 'image'; image: URL })[] = [
-      { type: 'text', text: message }
-    ]
+    const systemPrompt = buildSystemPrompt(data?.context)
+    const modelMessages = convertToModelMessages(validatedMessages)
 
-    if (Array.isArray(attachments)) {
-      attachments.forEach((attachment) => {
-        if (attachment && attachment.url) {
-          try {
-            userContent.push({ type: 'image', image: new URL(attachment.url) })
-          } catch (error) {
-            console.error('Invalid attachment URL:', attachment.url)
-          }
-        }
-      })
-    }
-
-    const messages = [
-      { role: 'system' as const, content: systemPrompt },
-      ...(context.conversationHistory?.slice(-5) || []),
-      { role: 'user' as const, content: userContent }
-    ]
-
-    // Use streaming for better UX
-    if (stream) {
-      const result = streamText({
-        model: 'google/gemini-2.0-flash-lite',
-        messages,
-        temperature: 0.7
-      })
-
-      return result.toTextStreamResponse()
-    }
-
-    // Non-streaming response for compatibility
-    const result = await generateText({
-      model: 'google/gemini-2.0-flash-lite',
-      messages,
-      temperature: 0.7
+    const result = streamText({
+      model: openai('gpt-4o-mini'),
+      system: `You are a highly personalized Agriculture and farming AI assistant. Your primary goal is to learn about the user and provide increasingly personalized help over time.
+      MEMORY MANAGEMENT:
+      1. When users share personal information, preferences, or context, immediately use addMemory to store it
+      2. Before responding to requests, search your memories for relevant context about the user
+      3. Use past conversations to inform current responses
+      4. Remember user's communication style, preferences, and frequently discussed topics
+      
+      PERSONALITY:
+      - Adapt your communication style to match the user's preferences
+      - Reference past conversations naturally when relevant
+      - Proactively offer help based on learned patterns
+      - Be genuinely helpful while respecting privacy
+      
+      EXAMPLES OF WHAT TO REMEMBER:
+      - Work schedule and role
+      - Dietary preferences/restrictions
+      - Communication preferences (formal/casual)
+      - Frequent topics of interest
+      - Goals and projects they're working on
+      - Family/personal context they share
+      - Preferred tools and workflows
+      - Time zone and availability
+      
+      Always search memories before responding to provide personalized, contextual help.`,
+      messages: modelMessages,
+      tools: {
+        ...supermemoryTools(apiKey, {
+          containerTags: [user.id]
+        })
+      },
+      stopWhen: ({ steps }) => {
+        if (steps.length === 0) return false
+        const lastStep = steps[steps.length - 1]
+        return lastStep.finishReason !== 'tool-calls'
+      }
     })
 
-    return new Response(result.text, {
-      headers: { 'Content-Type': 'text/plain' }
-    })
+    return result.toUIMessageStreamResponse()
   } catch (error) {
     // Handle authentication errors
     const errorMsg = error instanceof Error ? error.message : String(error)
@@ -151,11 +171,7 @@ export async function POST(request: NextRequest) {
       console.error('AI Provider error:', error)
     }
 
-    const { message: errorMessage = '', context: errorContext = {} } = await request
-      .json()
-      .catch(() => ({}))
-
-    return new Response(generateFallbackResponse(errorMessage, errorContext), {
+    return new Response(generateFallbackResponse('', {}), {
       headers: { 'Content-Type': 'text/plain' }
     })
   }
@@ -206,21 +222,9 @@ ${
 
 function generateFallbackResponse(message: string, context: any): string {
   const language = context?.language || 'en'
-
-  // Simple keyword-based responses
-  if (message.toLowerCase().includes('disease') || message.toLowerCase().includes('pest')) {
-    return language === 'hi'
-      ? 'रोग नियंत्रण के लिए पहले प्रभावित पत्तियों को हटाएं और उचित स्प्रे का उपयोग करें। अधिक जानकारी के लिए स्थानीय कृषि विशेषज्ञ से सलाह लें।'
-      : 'For disease control, first remove affected leaves and apply appropriate fungicide spray. Consider consulting your local agricultural extension officer for specific treatment recommendations.'
-  }
-
-  if (message.toLowerCase().includes('water') || message.toLowerCase().includes('irrigation')) {
-    return language === 'hi'
-      ? 'सिंचाई मिट्टी की नमी के आधार पर करें। सुबह या शाम को पानी देना बेहतर होता है।'
-      : 'Water based on soil moisture levels. Early morning or evening irrigation is most effective to reduce water loss.'
-  }
-
   return language === 'hi'
     ? 'मैं आपकी सहायता करने के लिए यहाँ हूँ। कृपया अपना प्रश्न स्पष्ट रूप से बताएं।'
-    : "I'm here to help with your farming questions. Please provide more specific details about what you need assistance with."
+    : language === 'mr'
+      ? 'मी तुमची मदत करण्यासाठी येथे आहे. कृपया तुमचा प्रश्न स्पष्टपणे लिहा.'
+      : "I'm here to help with your farming questions. Please provide more specific details about what you need assistance with."
 }

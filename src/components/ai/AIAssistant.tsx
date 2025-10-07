@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import {
   MessageCircle,
   Mic,
@@ -34,6 +34,9 @@ import {
   type Conversation
 } from '@/lib/supabase-conversation-storage'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useChat } from '@ai-sdk/react'
+import { DefaultChatTransport } from 'ai'
+import type { UIMessage, FileUIPart, TextUIPart } from 'ai'
 
 interface AIAssistantProps {
   farmData?: any
@@ -54,9 +57,20 @@ export function AIAssistant({
 }: AIAssistantProps) {
   const { t, i18n } = useTranslation()
   const { user, loading: authLoading } = useSupabaseAuth()
+  const transport = useMemo(() => new DefaultChatTransport({ api: '/api/ai/chat' }), [])
+  const {
+    messages: chatMessages,
+    setMessages: setChatMessages,
+    sendMessage: sendChatMessage,
+    status,
+    error: chatError,
+    clearError: clearChatError
+  } = useChat({
+    id: 'vinesight-ai-assistant',
+    transport
+  })
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [isMobile, setIsMobile] = useState(propIsMobile || false)
   const [quotaStatus, setQuotaStatus] = useState(() => getQuotaStatus())
@@ -65,6 +79,7 @@ export function AIAssistant({
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const currentConversationIdRef = useRef<string | null>(null)
   const savingInProgressRef = useRef<boolean>(false)
+  const lastSavedSnapshotRef = useRef<string | null>(null)
   const [pendingAttachments, setPendingAttachments] = useState<
     Array<{ type: 'image'; name: string; url: string; size?: number }>
   >([])
@@ -74,6 +89,101 @@ export function AIAssistant({
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const handleSendMessageRef = useRef<((message?: string) => Promise<void>) | null>(null)
+  const isAssistantProcessing = status === 'submitted' || status === 'streaming'
+
+  const attachmentFromFilePart = useCallback((part: FileUIPart) => {
+    const name = part.filename || 'Attachment'
+    const url = part.url
+    return {
+      type: 'image' as const,
+      name,
+      url
+    }
+  }, [])
+
+  const uiMessageToAppMessage = useCallback(
+    (uiMessage: UIMessage): Message | null => {
+      if (uiMessage.role !== 'user' && uiMessage.role !== 'assistant') {
+        return null
+      }
+
+      const textParts = uiMessage.parts.filter(
+        (part): part is TextUIPart => part.type === 'text'
+      )
+      const content = textParts.map((part) => part.text).join('\n').trim()
+
+      const fileParts = uiMessage.parts.filter(
+        (part): part is FileUIPart => part.type === 'file'
+      )
+      const attachments = fileParts.map(attachmentFromFilePart)
+
+      const metadata = (uiMessage.metadata || {}) as Record<string, any>
+      const timestampValue = metadata.timestamp || metadata.createdAt
+      const timestamp = timestampValue ? new Date(timestampValue) : new Date()
+      const context = metadata.queryType
+        ? {
+            queryType: metadata.queryType,
+            confidence: metadata.confidence
+          }
+        : undefined
+
+      const effectiveContent =
+        content || (attachments.length > 0 && uiMessage.role === 'user' ? 'Shared an image' : content)
+
+      if (!effectiveContent && attachments.length === 0 && uiMessage.role === 'assistant') {
+        return null
+      }
+
+      return {
+        id: uiMessage.id,
+        content: effectiveContent,
+        role: uiMessage.role,
+        timestamp,
+        attachments: attachments.length > 0 ? attachments : undefined,
+        language: metadata.language || i18n.language,
+        context
+      }
+    },
+    [attachmentFromFilePart, i18n.language]
+  )
+
+  const messageToUIMessage = useCallback(
+    (message: Message): UIMessage => {
+      const parts: Array<TextUIPart | FileUIPart> = []
+
+      if (message.content) {
+        parts.push({ type: 'text', text: message.content })
+      }
+
+      if (message.attachments) {
+        message.attachments.forEach((attachment) => {
+          const mediaType = attachment.url.startsWith('data:')
+            ? attachment.url.slice(5, attachment.url.indexOf(';'))
+            : 'image/png'
+
+          parts.push({
+            type: 'file',
+            url: attachment.url,
+            filename: attachment.name,
+            mediaType
+          })
+        })
+      }
+
+      return {
+        id: message.id,
+        role: message.role,
+        parts,
+        metadata: {
+          language: message.language || i18n.language,
+          queryType: message.context?.queryType,
+          confidence: message.context?.confidence,
+          timestamp: (message.timestamp || new Date()).toISOString()
+        }
+      }
+    },
+    [i18n.language]
+  )
 
   useEffect(() => {
     const loadConversations = async () => {
@@ -158,6 +268,22 @@ export function AIAssistant({
     }
   }, [i18n.language])
 
+  useEffect(() => {
+    if (!chatError) {
+      return
+    }
+
+    const message =
+      i18n.language === 'hi'
+        ? 'क्षमा करें, कुछ गलत हुआ। कृपया फिर से कोशिश करें।'
+        : i18n.language === 'mr'
+          ? 'माफ करा, काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.'
+          : 'Sorry, something went wrong. Please try again.'
+
+    toast.error(message)
+    clearChatError()
+  }, [chatError, clearChatError, i18n.language])
+
   const getWelcomeMessage = useCallback(() => {
     switch (i18n.language) {
       case 'hi':
@@ -170,34 +296,44 @@ export function AIAssistant({
   }, [i18n.language])
 
   useEffect(() => {
-    if (messages.length === 0) {
-      const welcomeMessage: Message = {
-        id: Date.now().toString(),
-        content: getWelcomeMessage(),
-        role: 'assistant',
-        timestamp: new Date(),
-        language: i18n.language
-      }
-      setMessages([welcomeMessage])
-    } else if (
-      messages.length === 1 &&
-      messages[0].role === 'assistant' &&
-      messages[0].language !== i18n.language
-    ) {
-      const updatedWelcomeMessage: Message = {
-        ...messages[0],
-        content: getWelcomeMessage(),
-        language: i18n.language
-      }
-      setMessages([updatedWelcomeMessage])
+    if (chatMessages.length === 0) {
+      setMessages([
+        {
+          id: 'welcome',
+          content: getWelcomeMessage(),
+          role: 'assistant',
+          timestamp: new Date(),
+          language: i18n.language
+        }
+      ])
+      return
     }
-  }, [messages, i18n.language, getWelcomeMessage])
+
+    const mapped = chatMessages
+      .map(uiMessageToAppMessage)
+      .filter((msg): msg is Message => msg !== null)
+
+    if (mapped.length === 0) {
+      setMessages([
+        {
+          id: 'welcome',
+          content: getWelcomeMessage(),
+          role: 'assistant',
+          timestamp: new Date(),
+          language: i18n.language
+        }
+      ])
+      return
+    }
+
+    setMessages(mapped)
+  }, [chatMessages, uiMessageToAppMessage, getWelcomeMessage, i18n.language])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const analyzeQuery = (text: string) => {
+  const analyzeQuery = useCallback((text: string) => {
     const lowerText = text.toLowerCase()
     const queryTypes = [
       {
@@ -231,11 +367,11 @@ export function AIAssistant({
     }
 
     return { queryType: 'general', confidence: 0.5, relatedTopics: [] }
-  }
+  }, [])
 
   const buildConversationContext = useCallback(
     (currentMessages?: Message[]) => {
-      const messagesToUse = currentMessages || messages
+      const messagesToUse = (currentMessages || messages).filter((msg) => msg.id !== 'welcome')
       const recentMessages = messagesToUse.slice(-5) // Last 5 messages for context
       const conversationTopics = recentMessages
         .filter((msg) => msg.context?.queryType)
@@ -322,32 +458,79 @@ export function AIAssistant({
     [getOrCreateConversationId, conversations, user?.id, farmData?.id]
   )
 
+  useEffect(() => {
+    if (status !== 'ready') {
+      return
+    }
+
+    const filteredMessages = messages.filter((msg) => msg.id !== 'welcome')
+    if (filteredMessages.length <= 1) {
+      return
+    }
+
+    const lastMessage = filteredMessages[filteredMessages.length - 1]
+    if (lastMessage.role !== 'assistant' || !lastMessage.content) {
+      return
+    }
+
+    const signature = `${filteredMessages.length}:${lastMessage.id}:${lastMessage.content.length}`
+    if (lastSavedSnapshotRef.current === signature) {
+      return
+    }
+
+    lastSavedSnapshotRef.current = signature
+
+    void (async () => {
+      try {
+        await saveMessageImmediately(filteredMessages)
+      } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to save assistant message:', error)
+        }
+      }
+    })()
+  }, [messages, saveMessageImmediately, status])
+
   const handleSendMessage = useCallback(
     async (text?: string) => {
       const messageText = text || inputValue.trim()
-      if ((!messageText && pendingAttachments.length === 0) || isLoading) return
+      if ((!messageText && pendingAttachments.length === 0) || isAssistantProcessing) {
+        return
+      }
 
       const queryAnalysis = analyzeQuery(messageText)
+      const now = new Date()
 
-      const userMessage: Message = {
-        id: Date.now().toString(),
+      const userMessageForContext: Message = {
+        id: `user-${now.getTime()}`,
         content: messageText || 'Shared an image',
         role: 'user',
-        timestamp: new Date(),
+        timestamp: now,
         attachments: pendingAttachments.length > 0 ? [...pendingAttachments] : undefined,
+        language: i18n.language,
         context: queryAnalysis
       }
 
-      const updatedMessages = [...messages, userMessage]
-      setMessages(updatedMessages)
+      const contextMessages = [...messages.filter((msg) => msg.id !== 'welcome'), userMessageForContext]
+
+      const fileParts: FileUIPart[] = pendingAttachments.map((attachment) => {
+        const mediaMatch = attachment.url.match(/^data:(.*?);/)
+        const mediaType = mediaMatch?.[1] || 'image/png'
+        return {
+          type: 'file',
+          url: attachment.url,
+          filename: attachment.name,
+          mediaType
+        }
+      })
+
       setInputValue('')
       setPendingAttachments([])
-      setIsLoading(true)
 
       incrementQuestionCount(user?.id)
 
       try {
-        await saveMessageImmediately(updatedMessages)
+        await saveMessageImmediately(contextMessages)
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
           console.error('Failed to save user message:', error)
@@ -355,167 +538,55 @@ export function AIAssistant({
         toast.error('Failed to save your message. Please try again.')
       }
 
-      const assistantMessageId = (Date.now() + 1).toString()
-      const streamingMessage: Message = {
-        id: assistantMessageId,
-        content: '',
-        role: 'assistant',
-        timestamp: new Date(),
-        language: i18n.language,
-        context: {
-          queryType: queryAnalysis.queryType,
-          confidence: queryAnalysis.confidence
-        }
-      }
-
-      setMessages((prev) => [...prev, streamingMessage])
-
       try {
-        const conversationContext = buildConversationContext(updatedMessages)
-
-        const response = await fetch('/api/ai/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
+        await sendChatMessage(
+          {
+            id: userMessageForContext.id,
+            role: 'user',
+            parts: [
+              { type: 'text', text: messageText },
+              ...fileParts
+            ],
+            metadata: {
+              queryType: queryAnalysis.queryType,
+              confidence: queryAnalysis.confidence,
+              language: i18n.language,
+              timestamp: now.toISOString()
+            }
           },
-          body: JSON.stringify({
-            message: messageText,
-            context: conversationContext,
-            attachments: pendingAttachments,
-            stream: true
-          })
-        })
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            const errorData = await response.json().catch(() => ({}))
-            if (errorData.code === 'UNAUTHORIZED') {
-              throw new Error('AUTHENTICATION_REQUIRED')
+          {
+            body: {
+              context: buildConversationContext(contextMessages)
             }
           }
-
-          if (response.status === 429) {
-            const errorData = await response.json().catch(() => ({}))
-            if (errorData.code === 'QUOTA_EXCEEDED') {
-              throw new Error('QUOTA_EXCEEDED')
-            }
-          }
-
-          throw new Error(`Failed to get AI response: ${response.status}`)
-        }
-
-        const reader = response.body?.getReader()
-        if (!reader) {
-          throw new Error('No response body')
-        }
-
-        const decoder = new TextDecoder()
-        let done = false
-        let fullResponse = ''
-
-        while (!done) {
-          const { value, done: doneReading } = await reader.read()
-          done = doneReading
-
-          if (value) {
-            const chunk = decoder.decode(value)
-            fullResponse += chunk
-
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === assistantMessageId ? { ...msg, content: fullResponse } : msg
-              )
-            )
-          }
-        }
-
-        const completedAssistantMessage: Message = {
-          ...streamingMessage,
-          content: fullResponse
-        }
-        const completedMessages = [...updatedMessages, completedAssistantMessage]
-
-        try {
-          await saveMessageImmediately(completedMessages)
-        } catch (error) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('Failed to save assistant message:', error)
-          }
-          toast.error('Failed to save conversation. Your message was sent but may not be saved.')
-        }
+        )
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
           console.error('Chat error:', error)
         }
 
-        let errorContent = ''
-        if (error instanceof Error && error.message === 'AUTHENTICATION_REQUIRED') {
-          errorContent =
-            i18n.language === 'hi'
-              ? 'कृपया AI सहायक का उपयोग करने के लिए साइन इन करें।'
-              : i18n.language === 'mr'
-                ? 'कृपया AI सहाय्यक वापरण्यासाठी साइन इन करा.'
-                : 'Please sign in to use the AI Assistant.'
-        } else if (error instanceof Error && error.message === 'QUOTA_EXCEEDED') {
-          const toastMessage =
-            i18n.language === 'hi'
-              ? 'दैनिक प्रश्न सीमा (5) पूर्ण हो गई। कल फिर कोशिश करें।'
-              : i18n.language === 'mr'
-                ? 'दैनिक प्रश्न मर्यादा (5) संपली. उद्या पुन्हा प्रयत्न करा.'
-                : 'Daily question limit (5) reached. Try again tomorrow.'
+        const errorMessage =
+          i18n.language === 'hi'
+            ? 'क्षमा करें, कुछ गलत हुआ। कृपया फिर से कोशिश करें।'
+            : i18n.language === 'mr'
+              ? 'माफ करा, काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.'
+              : 'Sorry, something went wrong. Please try again.'
 
-          toast.error(toastMessage, {
-            duration: 5000,
-            position: 'top-center'
-          })
-
-          errorContent =
-            i18n.language === 'hi'
-              ? 'दैनिक प्रश्न सीमा पूर्ण हो गई (5/5)। कल वापस आएं।'
-              : i18n.language === 'mr'
-                ? 'दैनिक प्रश्न मर्यादा संपली (5/5). उद्या परत या.'
-                : 'Daily question limit reached (5/5). Come back tomorrow.'
-        } else {
-          errorContent =
-            i18n.language === 'hi'
-              ? 'क्षमा करें, कुछ गलत हुआ। कृपया फिर से कोशिश करें।'
-              : i18n.language === 'mr'
-                ? 'माफ करा, काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.'
-                : 'Sorry, something went wrong. Please try again.'
-        }
-
-        const errorMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          content: errorContent,
-          role: 'assistant',
-          timestamp: new Date()
-        }
-
-        setMessages((prev) =>
-          prev.map((msg) => (msg.id === assistantMessageId ? errorMessage : msg))
-        )
-
-        const errorMessages = [...updatedMessages, errorMessage]
-        try {
-          await saveMessageImmediately(errorMessages)
-        } catch (saveError) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('Failed to save error message:', saveError)
-          }
-        }
+        toast.error(errorMessage)
       } finally {
-        setIsLoading(false)
         setQuotaStatus(getQuotaStatus(user?.id))
       }
     },
     [
       inputValue,
-      isLoading,
+      pendingAttachments,
+      isAssistantProcessing,
+      analyzeQuery,
       messages,
       i18n.language,
       buildConversationContext,
-      pendingAttachments,
       saveMessageImmediately,
+      sendChatMessage,
       user?.id
     ]
   )
@@ -587,20 +658,24 @@ export function AIAssistant({
   }
 
   const startNewConversation = () => {
+    setChatMessages([])
     setMessages([])
     setCurrentConversationId(null)
     currentConversationIdRef.current = null
     setShowHistory(false)
     setPendingAttachments([])
+    lastSavedSnapshotRef.current = null
   }
 
   const loadConversation = (conversationId: string) => {
     const conversation = conversations.find((c) => c.id === conversationId)
     if (conversation) {
+      setChatMessages(conversation.messages.map(messageToUIMessage))
       setMessages(conversation.messages)
       setCurrentConversationId(conversationId)
       currentConversationIdRef.current = conversationId
       setShowHistory(false)
+      lastSavedSnapshotRef.current = null
     }
   }
 
@@ -883,7 +958,7 @@ export function AIAssistant({
               </div>
             ))}
 
-            {isLoading && (
+            {isAssistantProcessing && (
               <div className="flex gap-3">
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center">
                   <Bot className="w-4 h-4" />
@@ -902,7 +977,7 @@ export function AIAssistant({
             <div ref={messagesEndRef} />
           </div>
 
-          {messages.length <= 1 && !isLoading && !isMobile && (
+          {messages.length <= 1 && !isAssistantProcessing && !isMobile && (
             <div className="flex-shrink-0 p-4 border-t border-b">
               <p className="text-xs text-gray-500 mb-2">
                 {t('quick_questions', 'Quick questions:')}
@@ -1002,7 +1077,7 @@ export function AIAssistant({
                               ? 'काहीही विचारा...'
                               : 'Ask anything'
                       }
-                      disabled={isLoading || quotaStatus.isExceeded}
+                      disabled={isAssistantProcessing || quotaStatus.isExceeded}
                       className={cn(
                         'w-full bg-transparent border-0 resize-none text-base leading-7 p-0',
                         'focus:outline-none placeholder-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0',
@@ -1013,7 +1088,7 @@ export function AIAssistant({
                     <div className="flex items-center justify-between">
                       <Button
                         onClick={handleAttachClick}
-                        disabled={isLoading || quotaStatus.isExceeded}
+                        disabled={isAssistantProcessing || quotaStatus.isExceeded}
                         variant="ghost"
                         size="sm"
                         className="p-0 h-5 w-6 hover:bg-gray-100 text-gray-500 flex-shrink-0"
@@ -1047,20 +1122,20 @@ export function AIAssistant({
                           onClick={() => handleSendMessage()}
                           disabled={
                             (!inputValue.trim() && pendingAttachments.length === 0) ||
-                            isLoading ||
+                            isAssistantProcessing ||
                             quotaStatus.isExceeded
                           }
                           size="sm"
                           className={cn(
                             'p-0 h-5 w-8 rounded-lg flex items-center justify-center',
                             (!inputValue.trim() && pendingAttachments.length === 0) ||
-                              isLoading ||
+                              isAssistantProcessing ||
                               quotaStatus.isExceeded
                               ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
                               : 'bg-primary hover:bg-teal-700 text-white'
                           )}
                         >
-                          {isLoading ? (
+                          {isAssistantProcessing ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
                             <ArrowRight className="w-4 h-4" />
@@ -1106,7 +1181,7 @@ export function AIAssistant({
                             ? 'काहीही विचारा...'
                             : 'Ask anything'
                     }
-                    disabled={isLoading || quotaStatus.isExceeded}
+                    disabled={isAssistantProcessing || quotaStatus.isExceeded}
                     className={cn(
                       'w-full bg-transparent border-0 resize-none text-base leading-7 p-0',
                       'focus:outline-none focus:ring-0 placeholder-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0',
@@ -1117,7 +1192,7 @@ export function AIAssistant({
                   <div className="flex items-center justify-between pt-3">
                     <Button
                       onClick={handleAttachClick}
-                      disabled={isLoading || quotaStatus.isExceeded}
+                      disabled={isAssistantProcessing || quotaStatus.isExceeded}
                       variant="ghost"
                       size="sm"
                       className="p-0 h-7 w-7 hover:bg-gray-100 text-gray-500 flex-shrink-0"
@@ -1151,20 +1226,20 @@ export function AIAssistant({
                         onClick={() => handleSendMessage()}
                         disabled={
                           (!inputValue.trim() && pendingAttachments.length === 0) ||
-                          isLoading ||
+                          isAssistantProcessing ||
                           quotaStatus.isExceeded
                         }
                         size="sm"
                         className={cn(
                           'p-0 h-8 w-8 rounded-lg flex items-center justify-center',
                           (!inputValue.trim() && pendingAttachments.length === 0) ||
-                            isLoading ||
+                            isAssistantProcessing ||
                             quotaStatus.isExceeded
                             ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
                             : 'bg-primary hover:bg-teal-700 text-white'
                         )}
                       >
-                        {isLoading ? (
+                        {isAssistantProcessing ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                           <ArrowRight className="w-4 h-4" />
