@@ -92,7 +92,6 @@ export function AIAssistant({
           setConversations(migratedConversations)
         } catch (error) {
           if (process.env.NODE_ENV === 'development') {
-            // eslint-disable-next-line no-console
             console.error('Migration error:', error)
           }
         }
@@ -314,7 +313,6 @@ export function AIAssistant({
         }
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
           console.error('Error saving message immediately:', error)
         }
       } finally {
@@ -352,7 +350,6 @@ export function AIAssistant({
         await saveMessageImmediately(updatedMessages)
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
           console.error('Failed to save user message:', error)
         }
         toast.error('Failed to save your message. Please try again.')
@@ -442,14 +439,12 @@ export function AIAssistant({
           await saveMessageImmediately(completedMessages)
         } catch (error) {
           if (process.env.NODE_ENV === 'development') {
-            // eslint-disable-next-line no-console
             console.error('Failed to save assistant message:', error)
           }
           toast.error('Failed to save conversation. Your message was sent but may not be saved.')
         }
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
           console.error('Chat error:', error)
         }
 
@@ -462,7 +457,6 @@ export function AIAssistant({
                 ? 'कृपया AI सहाय्यक वापरण्यासाठी साइन इन करा.'
                 : 'Please sign in to use the AI Assistant.'
         } else if (error instanceof Error && error.message === 'QUOTA_EXCEEDED') {
-          // Show toast notification for quota exceeded
           const toastMessage =
             i18n.language === 'hi'
               ? 'दैनिक प्रश्न सीमा (5) पूर्ण हो गई। कल फिर कोशिश करें।'
@@ -497,26 +491,20 @@ export function AIAssistant({
           timestamp: new Date()
         }
 
-        // Replace the streaming message with error
         setMessages((prev) =>
           prev.map((msg) => (msg.id === assistantMessageId ? errorMessage : msg))
         )
 
-        // Immediately save the error message
         const errorMessages = [...updatedMessages, errorMessage]
         try {
           await saveMessageImmediately(errorMessages)
         } catch (saveError) {
-          // Log error for debugging in development only
           if (process.env.NODE_ENV === 'development') {
-            // eslint-disable-next-line no-console
             console.error('Failed to save error message:', saveError)
           }
-          // Don't show another toast here as user already sees the error response
         }
       } finally {
         setIsLoading(false)
-        // Update quota status after message attempt
         setQuotaStatus(getQuotaStatus(user?.id))
       }
     },
@@ -632,7 +620,6 @@ export function AIAssistant({
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
-            // Customize rendering for chat bubbles
             p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
             ul: ({ children }) => (
               <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>
@@ -669,7 +656,6 @@ export function AIAssistant({
         </ReactMarkdown>
       )
     } else {
-      // Simple formatting for user messages
       return content.split('\n').map((line, index) => (
         <p key={index} className="mb-2 last:mb-0">
           {line}
