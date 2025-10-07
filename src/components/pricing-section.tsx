@@ -215,10 +215,10 @@ export default function PricingSection() {
 
               <div className="self-stretch flex flex-col justify-start items-start gap-2">
                 {[
-                  'Monitor up to 5 fields',
+                  '1 field',
+                  'Up to 100 tasks',
+                  'AI assistance (limited)',
                   'Basic crop health alerts',
-                  '7‑day weather forecast',
-                  'Task tracking and notes',
                   'Community support',
                 ].map((feature, index) => (
                   <div
@@ -307,14 +307,12 @@ export default function PricingSection() {
 
               <div className="self-stretch flex flex-col justify-start items-start gap-2">
                 {[
-                  'Unlimited fields and farms',
-                  'AI yield predictions & insights',
-                  'Equipment & sensor integration',
-                  'Team collaboration & RBAC',
-                  'Offline-capable mobile app',
-                  'Advanced field analytics & reports',
-                  'API access & webhooks',
-                  'Priority support',
+                  'Unlimited fields',
+                  'Unlimited tasks',
+                  'Daily weather forecasts',
+                  'Enhanced AI limits',
+                  'AI farm insights',
+                  'Access to all calculators',
                 ].map((feature, index) => (
                   <div
                     key={index}
