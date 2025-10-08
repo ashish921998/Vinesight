@@ -51,12 +51,12 @@ export const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Form
       icon,
       ...props
     },
-    ref,
+    ref
   ) => {
     const hasError = Boolean(error)
 
     const handleChange = (
-      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
       const newValue = type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value
       onChange(newValue)
@@ -65,7 +65,7 @@ export const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Form
     const inputClassName = cn(
       'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
       hasError && 'border-red-500 focus-visible:ring-red-500',
-      className,
+      className
     )
 
     const renderInput = () => {
@@ -145,7 +145,7 @@ export const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Form
           htmlFor={id}
           className={cn(
             'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
-            required && "after:content-['*'] after:text-red-500 after:ml-1",
+            required && "after:content-['*'] after:text-red-500 after:ml-1"
           )}
         >
           {label}
@@ -160,7 +160,7 @@ export const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Form
         )}
       </div>
     )
-  },
+  }
 )
 
 FormField.displayName = 'FormField'

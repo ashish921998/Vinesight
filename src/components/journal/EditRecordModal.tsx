@@ -11,7 +11,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { Droplets, SprayCan, Scissors, Loader2, DollarSign, Beaker, TestTube } from 'lucide-react'
 import { SupabaseService } from '@/lib/supabase-service'
@@ -21,7 +21,7 @@ import type {
   HarvestRecord,
   FertigationRecord,
   ExpenseRecord,
-  SoilTestRecord,
+  SoilTestRecord
 } from '@/lib/supabase'
 
 interface EditRecordModalProps {
@@ -44,7 +44,7 @@ export function EditRecordModal({
   onClose,
   onSave,
   record,
-  recordType,
+  recordType
 }: EditRecordModalProps) {
   const [formData, setFormData] = useState<any>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -61,7 +61,7 @@ export function EditRecordModal({
           growth_stage: irrigationRecord.growth_stage || '',
           moisture_status: irrigationRecord.moisture_status || '',
           system_discharge: irrigationRecord.system_discharge?.toString() || '',
-          notes: irrigationRecord.notes || '',
+          notes: irrigationRecord.notes || ''
         })
       } else if (recordType === 'spray') {
         const sprayRecord = record as SprayRecord
@@ -72,7 +72,7 @@ export function EditRecordModal({
           area: sprayRecord.area?.toString() || '',
           weather: sprayRecord.weather || '',
           operator: sprayRecord.operator || '',
-          notes: sprayRecord.notes || '',
+          notes: sprayRecord.notes || ''
         })
       } else if (recordType === 'harvest') {
         const harvestRecord = record as HarvestRecord
@@ -82,7 +82,7 @@ export function EditRecordModal({
           grade: harvestRecord.grade || '',
           price: harvestRecord.price?.toString() || '',
           buyer: harvestRecord.buyer || '',
-          notes: harvestRecord.notes || '',
+          notes: harvestRecord.notes || ''
         })
       } else if (recordType === 'fertigation') {
         const fertigationRecord = record as FertigationRecord
@@ -92,7 +92,7 @@ export function EditRecordModal({
           dose: fertigationRecord.dose || '',
           purpose: fertigationRecord.purpose || '',
           area: fertigationRecord.area?.toString() || '',
-          notes: fertigationRecord.notes || '',
+          notes: fertigationRecord.notes || ''
         })
       } else if (recordType === 'expense') {
         const expenseRecord = record as ExpenseRecord
@@ -101,7 +101,7 @@ export function EditRecordModal({
           type: expenseRecord.type || '',
           description: expenseRecord.description || '',
           cost: expenseRecord.cost?.toString() || '',
-          remarks: expenseRecord.remarks || '',
+          remarks: expenseRecord.remarks || ''
         })
       } else if (recordType === 'soil_test') {
         const soilTestRecord = record as SoilTestRecord
@@ -109,7 +109,7 @@ export function EditRecordModal({
           date: soilTestRecord.date,
           parameters: soilTestRecord.parameters || {},
           recommendations: soilTestRecord.recommendations || '',
-          notes: soilTestRecord.notes || '',
+          notes: soilTestRecord.notes || ''
         })
       }
     }
@@ -129,7 +129,7 @@ export function EditRecordModal({
           growth_stage: formData.growth_stage,
           moisture_status: formData.moisture_status,
           system_discharge: parseFloat(formData.system_discharge),
-          notes: formData.notes,
+          notes: formData.notes
         })
       } else if (recordType === 'spray') {
         await SupabaseService.updateSprayRecord(record.id!, {
@@ -139,7 +139,7 @@ export function EditRecordModal({
           area: parseFloat(formData.area),
           weather: formData.weather,
           operator: formData.operator,
-          notes: formData.notes,
+          notes: formData.notes
         })
       } else if (recordType === 'harvest') {
         await SupabaseService.updateHarvestRecord(record.id!, {
@@ -148,7 +148,7 @@ export function EditRecordModal({
           grade: formData.grade,
           price: formData.price ? parseFloat(formData.price) : undefined,
           buyer: formData.buyer || undefined,
-          notes: formData.notes,
+          notes: formData.notes
         })
       } else if (recordType === 'fertigation') {
         await SupabaseService.updateFertigationRecord(record.id!, {
@@ -157,7 +157,7 @@ export function EditRecordModal({
           dose: formData.dose,
           purpose: formData.purpose,
           area: parseFloat(formData.area),
-          notes: formData.notes,
+          notes: formData.notes
         })
       } else if (recordType === 'expense') {
         await SupabaseService.updateExpenseRecord(record.id!, {
@@ -165,14 +165,14 @@ export function EditRecordModal({
           type: formData.type,
           description: formData.description,
           cost: parseFloat(formData.cost),
-          remarks: formData.remarks,
+          remarks: formData.remarks
         })
       } else if (recordType === 'soil_test') {
         await SupabaseService.updateSoilTestRecord(record.id!, {
           date: formData.date,
           parameters: formData.parameters,
           recommendations: formData.recommendations,
-          notes: formData.notes,
+          notes: formData.notes
         })
       }
 
@@ -600,7 +600,7 @@ export function EditRecordModal({
                     onChange={(e) =>
                       setFormData((prev: any) => ({
                         ...prev,
-                        parameters: { ...prev.parameters, pH: parseFloat(e.target.value) || 0 },
+                        parameters: { ...prev.parameters, pH: parseFloat(e.target.value) || 0 }
                       }))
                     }
                     className="mt-1"
@@ -621,8 +621,8 @@ export function EditRecordModal({
                         ...prev,
                         parameters: {
                           ...prev.parameters,
-                          nitrogen: parseFloat(e.target.value) || 0,
-                        },
+                          nitrogen: parseFloat(e.target.value) || 0
+                        }
                       }))
                     }
                     className="mt-1"
@@ -645,8 +645,8 @@ export function EditRecordModal({
                         ...prev,
                         parameters: {
                           ...prev.parameters,
-                          phosphorus: parseFloat(e.target.value) || 0,
-                        },
+                          phosphorus: parseFloat(e.target.value) || 0
+                        }
                       }))
                     }
                     className="mt-1"
@@ -667,8 +667,8 @@ export function EditRecordModal({
                         ...prev,
                         parameters: {
                           ...prev.parameters,
-                          potassium: parseFloat(e.target.value) || 0,
-                        },
+                          potassium: parseFloat(e.target.value) || 0
+                        }
                       }))
                     }
                     className="mt-1"
@@ -703,7 +703,7 @@ export function EditRecordModal({
               onChange={(e) =>
                 setFormData((prev: any) => ({
                   ...prev,
-                  [recordType === 'expense' ? 'remarks' : 'notes']: e.target.value,
+                  [recordType === 'expense' ? 'remarks' : 'notes']: e.target.value
                 }))
               }
               placeholder="Any additional notes..."

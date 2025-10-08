@@ -7,7 +7,7 @@ import type {
   FarmerAIProfile,
   AIServiceResponse,
   RecommendationRequest,
-  RecommendationResponse,
+  RecommendationResponse
 } from './types/ai-types'
 import { AIProfileService } from './ai-profile-service'
 import { PestPredictionService } from './pest-prediction-service'
@@ -19,7 +19,7 @@ export class SmartTaskGenerator {
    * Generate personalized task recommendations for a farmer
    */
   static async generateSmartTasks(
-    request: RecommendationRequest,
+    request: RecommendationRequest
   ): Promise<AIServiceResponse<RecommendationResponse>> {
     try {
       // Get farmer profile for personalization
@@ -59,8 +59,8 @@ export class SmartTaskGenerator {
         riskAssessment: {
           overall: 0.5,
           categories: { weather: 0.4, pest: 0.6, disease: 0.5, market: 0.3, resource: 0.4 },
-          recommendations: [],
-        },
+          recommendations: []
+        }
       }
 
       // Generate task recommendations
@@ -73,10 +73,10 @@ export class SmartTaskGenerator {
             (pending) =>
               pending.task_type === task.taskType &&
               Math.abs(
-                new Date(pending.recommended_date).getTime() - task.recommendedDate.getTime(),
+                new Date(pending.recommended_date).getTime() - task.recommendedDate.getTime()
               ) <
-                24 * 60 * 60 * 1000,
-          ),
+                24 * 60 * 60 * 1000
+          )
       )
 
       // Save recommendations to database
@@ -92,7 +92,7 @@ export class SmartTaskGenerator {
         taskRecommendations: filteredTasks,
         riskAssessments: riskAssessment,
         insights,
-        personalizedNotes: this.generatePersonalizedNotes(farmerProfile, context),
+        personalizedNotes: this.generatePersonalizedNotes(farmerProfile, context)
       }
 
       return {
@@ -103,9 +103,9 @@ export class SmartTaskGenerator {
           tasksGenerated: filteredTasks.length,
           weatherDays: weatherForecast.length,
           pestAlerts: pestPredictions.filter(
-            (p) => p.riskLevel === 'high' || p.riskLevel === 'critical',
-          ).length,
-        },
+            (p) => p.riskLevel === 'high' || p.riskLevel === 'critical'
+          ).length
+        }
       }
     } catch (error) {
       console.error('Error generating smart tasks:', error)
@@ -118,7 +118,7 @@ export class SmartTaskGenerator {
    */
   private static async generateTaskRecommendations(
     context: TaskGenerationContext,
-    pestPredictions: any[],
+    pestPredictions: any[]
   ): Promise<AITaskRecommendation[]> {
     const recommendations: AITaskRecommendation[] = []
     const { weather, farm, farmerProfile } = context
@@ -128,7 +128,7 @@ export class SmartTaskGenerator {
       weather,
       farm,
       farmerProfile,
-      context.recentTasks,
+      context.recentTasks
     )
     recommendations.push(...irrigationTasks)
 
@@ -163,7 +163,7 @@ export class SmartTaskGenerator {
     weather: WeatherData[],
     farm: any,
     farmerProfile: FarmerAIProfile,
-    recentTasks: any[],
+    recentTasks: any[]
   ): AITaskRecommendation[] {
     const tasks: AITaskRecommendation[] = []
 
@@ -202,10 +202,10 @@ export class SmartTaskGenerator {
           duration: 120, // 2 hours default
           resources: ['irrigation system', 'water tank'],
           conditions: ['avoid windy conditions (>15 km/h)', 'skip if rain >10mm predicted'],
-          alternatives: ['early morning (6-8 AM)', 'evening (6-8 PM)'],
+          alternatives: ['early morning (6-8 AM)', 'evening (6-8 PM)']
         },
         createdAt: new Date(),
-        expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
+        expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 days
       })
     }
 
@@ -228,10 +228,10 @@ export class SmartTaskGenerator {
           duration: 90,
           resources: ['irrigation system'],
           conditions: ['check soil moisture first'],
-          alternatives: ['adjust based on soil moisture levels'],
+          alternatives: ['adjust based on soil moisture levels']
         },
         createdAt: new Date(),
-        expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
       })
     }
 
@@ -244,13 +244,13 @@ export class SmartTaskGenerator {
   private static generateSprayTasks(
     pestPredictions: any[],
     weather: WeatherData[],
-    farmerProfile: FarmerAIProfile,
+    farmerProfile: FarmerAIProfile
   ): AITaskRecommendation[] {
     const tasks: AITaskRecommendation[] = []
 
     // High-risk pest/disease treatments
     const criticalPests = pestPredictions.filter(
-      (p) => p.riskLevel === 'critical' || p.riskLevel === 'high',
+      (p) => p.riskLevel === 'critical' || p.riskLevel === 'high'
     )
 
     criticalPests.forEach((pest) => {
@@ -259,7 +259,7 @@ export class SmartTaskGenerator {
         (day) =>
           day.windSpeed < 10 &&
           day.precipitation < 2 &&
-          new Date(day.date) <= new Date(pest.preventionWindow.endDate),
+          new Date(day.date) <= new Date(pest.preventionWindow.endDate)
       )
 
       if (sprayWindow) {
@@ -284,10 +284,10 @@ export class SmartTaskGenerator {
             duration: 60,
             resources: [treatment?.product || treatment?.method, 'spraying equipment'],
             conditions: ['wind speed <10 km/h', 'no rain for 4 hours after application'],
-            alternatives: pest.recommendedTreatments.organic.map((o) => o.method),
+            alternatives: pest.recommendedTreatments.organic.map((o) => o.method)
           },
           createdAt: new Date(),
-          expiresAt: new Date(pest.preventionWindow.endDate),
+          expiresAt: new Date(pest.preventionWindow.endDate)
         })
       }
     })
@@ -310,7 +310,7 @@ export class SmartTaskGenerator {
 
       const now = new Date()
       const daysUntilHarvest = Math.floor(
-        (estimatedHarvestStart.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+        (estimatedHarvestStart.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
       )
 
       // Recommend harvest preparation if within 30 days
@@ -335,10 +335,10 @@ export class SmartTaskGenerator {
               duration: 480, // 8 hours
               resources: ['harvest containers', 'labor', 'transportation'],
               conditions: ['dry weather', 'morning harvest preferred'],
-              alternatives: ['test berry sugar levels first', 'coordinate with buyer'],
+              alternatives: ['test berry sugar levels first', 'coordinate with buyer']
             },
             createdAt: new Date(),
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
           })
         }
       }
@@ -382,10 +382,10 @@ export class SmartTaskGenerator {
           duration: 45,
           resources: [fertilizer.type, 'fertigation system'],
           conditions: ['ensure soil moisture', 'avoid extreme temperatures'],
-          alternatives: [fertilizer.alternative],
+          alternatives: [fertilizer.alternative]
         },
         createdAt: new Date(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       })
     }
 
@@ -423,10 +423,10 @@ export class SmartTaskGenerator {
             duration: 240, // 4 hours
             resources: ['pruning shears', 'loppers', 'gloves'],
             conditions: ['dry weather preferred', 'avoid extremely cold days'],
-            alternatives: ['gradual pruning over multiple sessions'],
+            alternatives: ['gradual pruning over multiple sessions']
           },
           createdAt: new Date(),
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         })
       }
     }
@@ -445,7 +445,7 @@ export class SmartTaskGenerator {
     const lastSoilTest = recentTasks.find((task) => task.type === 'soil_test')
     const monthsSinceSoilTest = lastSoilTest
       ? Math.floor(
-          (Date.now() - new Date(lastSoilTest.date).getTime()) / (1000 * 60 * 60 * 24 * 30),
+          (Date.now() - new Date(lastSoilTest.date).getTime()) / (1000 * 60 * 60 * 24 * 30)
         )
       : 12
 
@@ -468,10 +468,10 @@ export class SmartTaskGenerator {
           duration: 30,
           resources: ['soil sampling tools', 'sample containers'],
           conditions: ['avoid recently fertilized areas', 'representative sampling'],
-          alternatives: ['professional soil testing service', 'DIY soil test kits'],
+          alternatives: ['professional soil testing service', 'DIY soil test kits']
         },
         createdAt: new Date(),
-        expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
       })
     }
 
@@ -483,7 +483,7 @@ export class SmartTaskGenerator {
    */
   private static async getWeatherForecast(
     latitude: number,
-    longitude: number,
+    longitude: number
   ): Promise<WeatherData[] | null> {
     try {
       const today = new Date()
@@ -494,7 +494,7 @@ export class SmartTaskGenerator {
         latitude,
         longitude,
         today.toISOString().split('T')[0],
-        endDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0]
       )
 
       return weatherArray.map((day) => ({
@@ -502,17 +502,17 @@ export class SmartTaskGenerator {
         temperature: {
           min: day.temperatureMin,
           max: day.temperatureMax,
-          avg: day.temperatureMean,
+          avg: day.temperatureMean
         },
         humidity: {
           min: day.relativeHumidityMin || day.relativeHumidityMean,
           max: day.relativeHumidityMax || day.relativeHumidityMean,
-          avg: day.relativeHumidityMean,
+          avg: day.relativeHumidityMean
         },
         precipitation: day.precipitationSum,
         windSpeed: day.windSpeed10m,
         pressure: 1013,
-        cloudCover: 50,
+        cloudCover: 50
       }))
     } catch (error) {
       console.error('Error fetching weather forecast:', error)
@@ -540,13 +540,13 @@ export class SmartTaskGenerator {
           .from('fertigation_records')
           .select('*')
           .eq('farm_id', farmId)
-          .gte('date', thirtyDaysAgo.toISOString().split('T')[0]),
+          .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
       ])
 
       const activities = [
         ...(irrigations.data || []).map((r) => ({ ...r, type: 'irrigation' })),
         ...(sprays.data || []).map((r) => ({ ...r, type: 'spray' })),
-        ...(fertigations.data || []).map((r) => ({ ...r, type: 'fertigation' })),
+        ...(fertigations.data || []).map((r) => ({ ...r, type: 'fertigation' }))
       ]
 
       return activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -607,7 +607,7 @@ export class SmartTaskGenerator {
       'Fruit Development': { type: 'Potassium-rich (NPK 10-10-20)', alternative: 'Organic potash' },
       Ripening: { type: 'Low Nitrogen (NPK 5-10-20)', alternative: 'Wood ash for potassium' },
       Dormant: { type: 'Organic compost', alternative: 'Well-aged manure' },
-      'Post-Harvest': { type: 'Recovery blend (NPK 12-12-12)', alternative: 'Organic fertilizer' },
+      'Post-Harvest': { type: 'Recovery blend (NPK 12-12-12)', alternative: 'Organic fertilizer' }
     }
 
     return (
@@ -633,7 +633,7 @@ export class SmartTaskGenerator {
         title: 'High Temperature Alert',
         description: `Average temperature of ${avgTemp.toFixed(1)}°C expected. Consider adjusting irrigation schedule.`,
         confidence: 0.8,
-        actionRequired: true,
+        actionRequired: true
       })
     }
 
@@ -643,13 +643,13 @@ export class SmartTaskGenerator {
         title: 'Dry Period Ahead',
         description: `Only ${totalRain.toFixed(1)}mm rain forecasted. Plan irrigation carefully.`,
         confidence: 0.9,
-        actionRequired: true,
+        actionRequired: true
       })
     }
 
     // Pest insights
     const highRiskPests = pestPredictions.filter(
-      (p) => p.riskLevel === 'high' || p.riskLevel === 'critical',
+      (p) => p.riskLevel === 'high' || p.riskLevel === 'critical'
     )
     if (highRiskPests.length > 0) {
       insights.push({
@@ -657,7 +657,7 @@ export class SmartTaskGenerator {
         title: 'Pest Alert',
         description: `${highRiskPests.length} high-risk pest/disease condition(s) detected. Early action recommended.`,
         confidence: 0.85,
-        actionRequired: true,
+        actionRequired: true
       })
     }
 
@@ -666,7 +666,7 @@ export class SmartTaskGenerator {
 
   private static generateRiskAssessment(
     context: TaskGenerationContext,
-    pestPredictions: any[],
+    pestPredictions: any[]
   ): any {
     const { weather } = context
 
@@ -686,7 +686,7 @@ export class SmartTaskGenerator {
         pest: pestRisk,
         disease: pestRisk * 0.8,
         market: 0.3, // Default market risk
-        resource: 0.2, // Default resource risk
+        resource: 0.2 // Default resource risk
       },
       recommendations: [
         {
@@ -694,15 +694,15 @@ export class SmartTaskGenerator {
           priority: 'high' as const,
           action: 'Monitor weather conditions closely',
           timing: 'next 48 hours',
-          confidence: 0.9,
-        },
-      ],
+          confidence: 0.9
+        }
+      ]
     }
   }
 
   private static generatePersonalizedNotes(
     farmerProfile: FarmerAIProfile,
-    context: TaskGenerationContext,
+    context: TaskGenerationContext
   ): string[] {
     const notes = []
 
@@ -716,7 +716,7 @@ export class SmartTaskGenerator {
     // Based on success metrics
     if (farmerProfile.successMetrics.averageYield > 0) {
       notes.push(
-        `Your average yield performance: ${farmerProfile.successMetrics.averageYield.toFixed(1)} kg/acre`,
+        `Your average yield performance: ${farmerProfile.successMetrics.averageYield.toFixed(1)} kg/acre`
       )
     }
 
@@ -742,7 +742,7 @@ export class SmartTaskGenerator {
         status: task.status,
         outcome_tracked: task.outcomeTracked,
         task_details: task.taskDetails,
-        expires_at: task.expiresAt.toISOString(),
+        expires_at: task.expiresAt.toISOString()
       }))
 
       const { error } = await supabase.from('ai_task_recommendations').insert(insertData)
@@ -786,14 +786,14 @@ export class SmartTaskGenerator {
   static async updateTaskStatus(
     taskId: string,
     status: 'accepted' | 'rejected' | 'completed',
-    feedback?: string,
+    feedback?: string
   ): Promise<void> {
     try {
       const { error } = await supabase
         .from('ai_task_recommendations')
         .update({
           status,
-          farmer_feedback: feedback,
+          farmer_feedback: feedback
         })
         .eq('id', taskId)
 
@@ -821,7 +821,7 @@ export class SmartTaskGenerator {
       outcomeTracked: data.outcome_tracked,
       taskDetails: data.task_details,
       createdAt: new Date(data.created_at),
-      expiresAt: new Date(data.expires_at),
+      expiresAt: new Date(data.expires_at)
     }
   }
 }

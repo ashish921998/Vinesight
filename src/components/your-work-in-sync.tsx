@@ -20,7 +20,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
   width = 482,
   height = 300,
   className = '',
-  theme = 'dark',
+  theme = 'dark'
 }) => {
   // Design tokens (derived from Figma local variables)
   const themeVars =
@@ -33,7 +33,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
           '--yws-bubble-dark': '#37322f',
           '--yws-bubble-white': '#ffffff',
           '--yws-border': 'rgba(0,0,0,0.08)',
-          '--yws-shadow': 'rgba(0,0,0,0.08)',
+          '--yws-shadow': 'rgba(0,0,0,0.08)'
         }
       : ({
           '--yws-surface': '#1f2937',
@@ -43,7 +43,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
           '--yws-bubble-dark': '#111827',
           '--yws-bubble-white': '#ffffff',
           '--yws-border': 'rgba(255,255,255,0.12)',
-          '--yws-shadow': 'rgba(0,0,0,0.24)',
+          '--yws-shadow': 'rgba(0,0,0,0.24)'
         } as React.CSSProperties)
 
   // Figma-exported assets
@@ -62,7 +62,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
           height,
           position: 'relative',
           background: 'transparent',
-          ...themeVars,
+          ...themeVars
         } as React.CSSProperties
       }
       role="img"
@@ -76,7 +76,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
           top: '50%',
           transform: 'translate(-50%, -50%)',
           width: '356px',
-          height: '216px',
+          height: '216px'
         }}
       >
         {/* Remove the flip transformation and position messages normally */}
@@ -93,7 +93,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
               gap: '10px',
               alignItems: 'flex-start',
               width: '356px',
-              height: '36px',
+              height: '36px'
             }}
           >
             {/* Avatar */}
@@ -106,7 +106,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 border: '1px solid var(--yws-border)',
-                flexShrink: 0,
+                flexShrink: 0
               }}
             />
             {/* Message bubble */}
@@ -118,7 +118,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
                 height: '36px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'center'
               }}
             >
               <span
@@ -129,7 +129,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
                   lineHeight: '16px',
                   letterSpacing: '-0.4px',
                   color: theme === 'light' ? '#37322f' : 'var(--yws-text-primary)',
-                  whiteSpace: 'nowrap',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 Field data syncs perfectly
@@ -146,7 +146,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
               display: 'flex',
               gap: '10px',
               alignItems: 'flex-start',
-              justifyContent: 'flex-end',
+              justifyContent: 'flex-end'
             }}
           >
             {/* Message bubble */}
@@ -158,7 +158,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
                 height: '36px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'center'
               }}
             >
               <span
@@ -169,7 +169,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
                   lineHeight: '16px',
                   letterSpacing: '-0.4px',
                   color: '#ffffff',
-                  whiteSpace: 'nowrap',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 Morning team!
@@ -185,7 +185,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 border: '1px solid var(--yws-border)',
-                flexShrink: 0,
+                flexShrink: 0
               }}
             />
           </div>
@@ -200,7 +200,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
               gap: '10px',
               alignItems: 'flex-start',
               width: '210px',
-              height: '36px',
+              height: '36px'
             }}
           >
             {/* Avatar */}
@@ -213,7 +213,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 border: '1px solid var(--yws-border)',
-                flexShrink: 0,
+                flexShrink: 0
               }}
             />
             {/* Message bubble */}
@@ -225,7 +225,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
                 height: '36px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'center'
               }}
             >
               <span
@@ -236,7 +236,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
                   lineHeight: '16px',
                   letterSpacing: '-0.4px',
                   color: theme === 'light' ? '#37322f' : 'var(--yws-text-primary)',
-                  whiteSpace: 'nowrap',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 Soil moisture looks good
@@ -253,7 +253,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
               display: 'flex',
               gap: '10px',
               alignItems: 'center',
-              height: '36px',
+              height: '36px'
             }}
           >
             {/* Message bubble */}
@@ -267,7 +267,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: '0px 0px 0px 1px rgba(0,0,0,0.08), 0px 1px 2px -0.4px rgba(0,0,0,0.08)',
-                overflow: 'hidden',
+                overflow: 'hidden'
               }}
             >
               <span
@@ -277,7 +277,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
                   fontSize: '14px',
                   lineHeight: '20px',
                   color: '#030712',
-                  whiteSpace: 'nowrap',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 Ready for harvest season!
@@ -295,7 +295,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
                 justifyContent: 'center',
                 boxShadow: '0px 1px 2px 0px rgba(0,0,0,0.08)',
                 cursor: 'pointer',
-                flexShrink: 0,
+                flexShrink: 0
               }}
             >
               <img
@@ -304,7 +304,7 @@ const YourWorkInSync: React.FC<YourWorkInSyncProps> = ({
                 style={{
                   width: '20px',
                   height: '20px',
-                  filter: 'brightness(0) invert(1)',
+                  filter: 'brightness(0) invert(1)'
                 }}
               />
             </div>

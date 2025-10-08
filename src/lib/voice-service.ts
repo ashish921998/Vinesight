@@ -71,7 +71,7 @@ export class VoiceService {
     language: 'en' | 'hi' | 'mr' = 'en',
     onResult?: (result: VoiceRecognitionResult) => void,
     onError?: (error: string) => void,
-    onEnd?: () => void,
+    onEnd?: () => void
   ): boolean {
     if (!this.recognition || this.isListening) return false
 
@@ -79,7 +79,7 @@ export class VoiceService {
     const languageMap = {
       en: 'en-IN',
       hi: 'hi-IN',
-      mr: 'mr-IN',
+      mr: 'mr-IN'
     }
     this.recognition.lang = languageMap[language]
 
@@ -95,7 +95,7 @@ export class VoiceService {
           transcript: result[0].transcript,
           confidence: result[0].confidence,
           isFinal: result.isFinal,
-          language,
+          language
         })
       }
     }
@@ -189,11 +189,11 @@ export class VoiceService {
     const languageMap = {
       en: ['en-IN', 'en-US', 'en-GB', 'en'],
       hi: ['hi-IN', 'hi'],
-      mr: ['mr-IN', 'mr'],
+      mr: ['mr-IN', 'mr']
     }
 
     return this.voices.filter((voice) =>
-      languageMap[language].some((lang) => voice.lang.toLowerCase().startsWith(lang.toLowerCase())),
+      languageMap[language].some((lang) => voice.lang.toLowerCase().startsWith(lang.toLowerCase()))
     )
   }
 
@@ -221,23 +221,23 @@ export class VoiceService {
       'no-speech': {
         en: 'No speech detected. Please try speaking clearly.',
         hi: 'कोई आवाज़ नहीं सुनाई दी। कृपया स्पष्ट रूप से बोलें।',
-        mr: 'कोणतीही आवाज ऐकू आली नाही. कृपया स्पष्टपणे बोला.',
+        mr: 'कोणतीही आवाज ऐकू आली नाही. कृपया स्पष्टपणे बोला.'
       },
       'audio-capture': {
         en: 'Audio capture failed. Please check your microphone.',
         hi: 'ऑडियो कैप्चर असफल। कृपया अपना माइक्रोफोन जांचें।',
-        mr: 'ऑडिओ कॅप्चर अयशस्वी. कृपया तुमचा मायक्रोफोन तपासा.',
+        mr: 'ऑडिओ कॅप्चर अयशस्वी. कृपया तुमचा मायक्रोफोन तपासा.'
       },
       'not-allowed': {
         en: 'Microphone access denied. Please allow microphone permissions.',
         hi: 'माइक्रोफोन का उपयोग नकारा गया। कृपया माइक्रोफोन की अनुमति दें।',
-        mr: 'मायक्रोफोनचा वापर नाकारला. कृपया मायक्रोफोनची परवानगी द्या.',
+        mr: 'मायक्रोफोनचा वापर नाकारला. कृपया मायक्रोफोनची परवानगी द्या.'
       },
       network: {
         en: 'Network error. Please check your internet connection.',
         hi: 'नेटवर्क त्रुटि। कृपया अपना इंटरनेट कनेक्शन जांचें।',
-        mr: 'नेटवर्क त्रुटी. कृपया तुमचे इंटरनेट कनेक्शन तपासा.',
-      },
+        mr: 'नेटवर्क त्रुटी. कृपया तुमचे इंटरनेट कनेक्शन तपासा.'
+      }
     }
 
     return messages[errorCode as keyof typeof messages]?.[language] || messages['network'][language]
@@ -246,7 +246,7 @@ export class VoiceService {
   // Voice command processing for farming
   static processFarmingCommand(
     transcript: string,
-    language: 'en' | 'hi' | 'mr',
+    language: 'en' | 'hi' | 'mr'
   ): { intent: string; entities: any; confidence: number } {
     const lowerTranscript = transcript.toLowerCase()
 
@@ -259,7 +259,7 @@ export class VoiceService {
         harvest: /harvest|pick|collect|cut/i,
         weather: /weather|rain|temperature|climate/i,
         calculation: /calculat|compute|measure/i,
-        record: /record|log|note|save/i,
+        record: /record|log|note|save/i
       },
       hi: {
         irrigation: /पानी|सिंचाई|स्प्रे/i,
@@ -268,7 +268,7 @@ export class VoiceService {
         harvest: /फसल|कटाई/i,
         weather: /मौसम|बारिश|तापमान/i,
         calculation: /गणना|हिसाब/i,
-        record: /रिकॉर्ड|लिख/i,
+        record: /रिकॉर्ड|लिख/i
       },
       mr: {
         irrigation: /पाणी|सिंचन|फवारणी/i,
@@ -277,8 +277,8 @@ export class VoiceService {
         harvest: /कापणी|पिक/i,
         weather: /हवामान|पाऊस|तापमान/i,
         calculation: /गणना|हिशेब/i,
-        record: /नोंद|लिहा/i,
-      },
+        record: /नोंद|लिहा/i
+      }
     }
 
     const langPatterns = patterns[language]
@@ -313,7 +313,7 @@ export class VoiceService {
     const timePatterns = {
       en: /today|tomorrow|yesterday|morning|evening|afternoon/i,
       hi: /आज|कल|कुल|सुबह|शाम|दोपहर/i,
-      mr: /आज|उद्या|काल|सकाळ|संध्याकाळ|दुपार/i,
+      mr: /आज|उद्या|काल|सकाळ|संध्याकाळ|दुपार/i
     }
 
     const timeMatch = transcript.match(timePatterns[language])
@@ -327,7 +327,7 @@ export class VoiceService {
   // Convert speech to farming actions
   static speechToAction(
     transcript: string,
-    language: 'en' | 'hi' | 'mr',
+    language: 'en' | 'hi' | 'mr'
   ): { action: string; params: any } | null {
     const command = this.processFarmingCommand(transcript, language)
 
@@ -335,43 +335,43 @@ export class VoiceService {
       case 'irrigation':
         return {
           action: 'navigate',
-          params: { route: '/calculators', section: 'irrigation' },
+          params: { route: '/calculators', section: 'irrigation' }
         }
 
       case 'disease':
         return {
           action: 'navigate',
-          params: { route: '/ai-assistant', section: 'detection' },
+          params: { route: '/ai-assistant', section: 'detection' }
         }
 
       case 'calculation':
         return {
           action: 'navigate',
-          params: { route: '/calculators' },
+          params: { route: '/calculators' }
         }
 
       case 'record':
         return {
           action: 'navigate',
-          params: { route: '/journal' },
+          params: { route: '/journal' }
         }
 
       case 'weather':
         return {
           action: 'navigate',
-          params: { route: '/weather' },
+          params: { route: '/weather' }
         }
 
       case 'harvest':
         return {
           action: 'navigate',
-          params: { route: '/journal', section: 'harvest' },
+          params: { route: '/journal', section: 'harvest' }
         }
 
       default:
         return {
           action: 'chat',
-          params: { message: transcript },
+          params: { message: transcript }
         }
     }
   }

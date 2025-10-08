@@ -10,7 +10,7 @@ export const FAO56_EXAMPLE_DATA = {
   location: {
     latitude: 16.22, // degrees (Thailand example)
     longitude: 0,
-    elevation: 2, // meters
+    elevation: 2 // meters
   },
   weather: {
     date: '2024-06-01',
@@ -19,9 +19,9 @@ export const FAO56_EXAMPLE_DATA = {
     humidity: 65, // %
     windSpeed: 2.3, // m/s
     rainfall: 0, // mm
-    solarRadiation: 22.7, // MJ/m²/day
+    solarRadiation: 22.7 // MJ/m²/day
   },
-  expectedETo: 6.14, // mm/day (FAO-56 reference result)
+  expectedETo: 6.14 // mm/day (FAO-56 reference result)
 }
 
 // Test function to validate our implementation
@@ -33,7 +33,7 @@ export function validateEToCalculation(testData = FAO56_EXAMPLE_DATA) {
     plantingDate: '2024-01-01',
     location: testData.location,
     irrigationMethod: 'drip',
-    soilType: 'loamy',
+    soilType: 'loamy'
   }
 
   const result = ETcCalculator.calculateETc(inputs)
@@ -44,7 +44,7 @@ export function validateEToCalculation(testData = FAO56_EXAMPLE_DATA) {
   console.log('Difference:', (result.eto - testData.expectedETo).toFixed(2), 'mm/day')
   console.log(
     'Percentage Error:',
-    (((result.eto - testData.expectedETo) / testData.expectedETo) * 100).toFixed(1) + '%',
+    (((result.eto - testData.expectedETo) / testData.expectedETo) * 100).toFixed(1) + '%'
   )
   console.log('============================')
 
@@ -52,7 +52,7 @@ export function validateEToCalculation(testData = FAO56_EXAMPLE_DATA) {
     expected: testData.expectedETo,
     calculated: result.eto,
     difference: result.eto - testData.expectedETo,
-    percentageError: ((result.eto - testData.expectedETo) / testData.expectedETo) * 100,
+    percentageError: ((result.eto - testData.expectedETo) / testData.expectedETo) * 100
   }
 }
 
@@ -61,7 +61,7 @@ export const INDIA_TEST_DATA = {
   location: {
     latitude: 19.076, // Mumbai area
     longitude: 72.8777,
-    elevation: 14,
+    elevation: 14
   },
   weather: {
     date: '2024-06-01',
@@ -70,9 +70,9 @@ export const INDIA_TEST_DATA = {
     humidity: 75,
     windSpeed: 3.2,
     rainfall: 0,
-    solarRadiation: 26.5,
+    solarRadiation: 26.5
   },
-  expectedETo: 7.2, // Estimated for validation
+  expectedETo: 7.2 // Estimated for validation
 }
 
 // Fyllo test data from August 31, 2025
@@ -80,7 +80,7 @@ export const FYLLO_TEST_DATA = {
   location: {
     latitude: 19.5, // Estimated for Mantra region (need exact coordinates)
     longitude: 73.0,
-    elevation: 500, // Estimated
+    elevation: 500 // Estimated
   },
   weather: {
     date: '2025-08-31',
@@ -91,9 +91,9 @@ export const FYLLO_TEST_DATA = {
     rainfall: 0.26,
     // Testing both assumptions for solar radiation:
     solarRadiation: undefined, // Will test lux conversion
-    solarRadiationLux: 26530, // Assuming this is in lux
+    solarRadiationLux: 26530 // Assuming this is in lux
   },
-  expectedETo: 3.99,
+  expectedETo: 3.99
 }
 
 // Create test with your friend's Fyllo data
@@ -107,7 +107,7 @@ export function testWithFylloData(
   latitude: number,
   longitude: number,
   elevation: number,
-  fylloETo: number,
+  fylloETo: number
 ) {
   const testData = {
     location: { latitude, longitude, elevation },
@@ -118,9 +118,9 @@ export function testWithFylloData(
       humidity,
       windSpeed,
       rainfall,
-      solarRadiation,
+      solarRadiation
     },
-    expectedETo: fylloETo,
+    expectedETo: fylloETo
   }
 
   return validateEToCalculation(testData)
@@ -138,7 +138,7 @@ export function testFylloData() {
     plantingDate: '2024-01-01',
     location: FYLLO_TEST_DATA.location,
     irrigationMethod: 'drip',
-    soilType: 'loamy',
+    soilType: 'loamy'
   }
 
   const result = ETcCalculator.calculateETc(inputs)
@@ -151,7 +151,7 @@ export function testFylloData() {
   console.log(
     'Percentage Error:',
     (((result.eto - FYLLO_TEST_DATA.expectedETo) / FYLLO_TEST_DATA.expectedETo) * 100).toFixed(1) +
-      '%',
+      '%'
   )
 
   return {
@@ -159,6 +159,6 @@ export function testFylloData() {
     calculated: result.eto,
     difference: result.eto - FYLLO_TEST_DATA.expectedETo,
     percentageError:
-      ((result.eto - FYLLO_TEST_DATA.expectedETo) / FYLLO_TEST_DATA.expectedETo) * 100,
+      ((result.eto - FYLLO_TEST_DATA.expectedETo) / FYLLO_TEST_DATA.expectedETo) * 100
   }
 }

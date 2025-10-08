@@ -17,7 +17,7 @@ export default function CTASection() {
                 style={{
                   top: `${i * 16 - 120}px`,
                   left: '-100%',
-                  width: '300%',
+                  width: '300%'
                 }}
               ></div>
             ))}

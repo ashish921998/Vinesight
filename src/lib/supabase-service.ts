@@ -7,7 +7,7 @@ import {
   type ExpenseRecord,
   type CalculationHistory,
   type SoilTestRecord,
-  type PetioleTestRecord,
+  type PetioleTestRecord
 } from './supabase'
 import { type Farm, type TaskReminder } from '@/types/types'
 import {
@@ -39,7 +39,7 @@ import {
   toDatabaseSoilTestUpdate,
   toApplicationPetioleTestRecord,
   toDatabasePetioleTestInsert,
-  toDatabasePetioleTestUpdate,
+  toDatabasePetioleTestUpdate
 } from './supabase-types'
 
 export class SupabaseService {
@@ -67,14 +67,14 @@ export class SupabaseService {
   }
 
   static async createFarm(
-    farm: Omit<Farm, 'id' | 'created_at' | 'updated_at' | 'user_id'>,
+    farm: Omit<Farm, 'id' | 'created_at' | 'updated_at' | 'user_id'>
   ): Promise<Farm> {
     const supabase = getTypedSupabaseClient()
 
     // Get the current authenticated user
     const {
       data: { user },
-      error: userError,
+      error: userError
     } = await supabase.auth.getUser()
     if (userError) throw userError
     if (!user) throw new Error('User must be authenticated to create a farm')
@@ -135,7 +135,7 @@ export class SupabaseService {
   }
 
   static async addIrrigationRecord(
-    record: Omit<IrrigationRecord, 'id' | 'created_at'>,
+    record: Omit<IrrigationRecord, 'id' | 'created_at'>
   ): Promise<IrrigationRecord> {
     const supabase = getTypedSupabaseClient()
     const dbRecord = toDatabaseIrrigationInsert(record)
@@ -152,7 +152,7 @@ export class SupabaseService {
 
   static async updateIrrigationRecord(
     id: number,
-    updates: Partial<IrrigationRecord>,
+    updates: Partial<IrrigationRecord>
   ): Promise<IrrigationRecord> {
     const supabase = getTypedSupabaseClient()
     const dbUpdates = toDatabaseIrrigationUpdate(updates)
@@ -189,7 +189,7 @@ export class SupabaseService {
   }
 
   static async addSprayRecord(
-    record: Omit<SprayRecord, 'id' | 'created_at'>,
+    record: Omit<SprayRecord, 'id' | 'created_at'>
   ): Promise<SprayRecord> {
     const supabase = getTypedSupabaseClient()
     const dbRecord = toDatabaseSprayInsert(record)
@@ -240,7 +240,7 @@ export class SupabaseService {
   }
 
   static async addFertigationRecord(
-    record: Omit<FertigationRecord, 'id' | 'created_at'>,
+    record: Omit<FertigationRecord, 'id' | 'created_at'>
   ): Promise<FertigationRecord> {
     const supabase = getTypedSupabaseClient()
     const dbRecord = toDatabaseFertigationInsert(record)
@@ -257,7 +257,7 @@ export class SupabaseService {
 
   static async updateFertigationRecord(
     id: number,
-    updates: Partial<FertigationRecord>,
+    updates: Partial<FertigationRecord>
   ): Promise<FertigationRecord> {
     const supabase = getTypedSupabaseClient()
     const dbUpdates = toDatabaseFertigationUpdate(updates)
@@ -294,7 +294,7 @@ export class SupabaseService {
   }
 
   static async addHarvestRecord(
-    record: Omit<HarvestRecord, 'id' | 'created_at'>,
+    record: Omit<HarvestRecord, 'id' | 'created_at'>
   ): Promise<HarvestRecord> {
     const supabase = getTypedSupabaseClient()
     const dbRecord = toDatabaseHarvestInsert(record)
@@ -311,7 +311,7 @@ export class SupabaseService {
 
   static async updateHarvestRecord(
     id: number,
-    updates: Partial<HarvestRecord>,
+    updates: Partial<HarvestRecord>
   ): Promise<HarvestRecord> {
     const supabase = getTypedSupabaseClient()
     const dbUpdates = toDatabaseHarvestUpdate(updates)
@@ -348,7 +348,7 @@ export class SupabaseService {
   }
 
   static async addExpenseRecord(
-    record: Omit<ExpenseRecord, 'id' | 'created_at'>,
+    record: Omit<ExpenseRecord, 'id' | 'created_at'>
   ): Promise<ExpenseRecord> {
     const supabase = getTypedSupabaseClient()
     const dbRecord = toDatabaseExpenseInsert(record)
@@ -365,7 +365,7 @@ export class SupabaseService {
 
   static async updateExpenseRecord(
     id: number,
-    updates: Partial<ExpenseRecord>,
+    updates: Partial<ExpenseRecord>
   ): Promise<ExpenseRecord> {
     const supabase = getTypedSupabaseClient()
     const dbUpdates = toDatabaseExpenseUpdate(updates)
@@ -402,7 +402,7 @@ export class SupabaseService {
   }
 
   static async addCalculationHistory(
-    record: Omit<CalculationHistory, 'id' | 'created_at'>,
+    record: Omit<CalculationHistory, 'id' | 'created_at'>
   ): Promise<CalculationHistory> {
     const supabase = getTypedSupabaseClient()
     const dbRecord = toDatabaseCalculationHistoryInsert(record)
@@ -444,7 +444,7 @@ export class SupabaseService {
   }
 
   static async addTaskReminder(
-    task: Omit<TaskReminder, 'id' | 'createdAt'>,
+    task: Omit<TaskReminder, 'id' | 'createdAt'>
   ): Promise<TaskReminder> {
     const supabase = getTypedSupabaseClient()
     const dbTask = toDatabaseTaskReminderInsert(task)
@@ -463,7 +463,7 @@ export class SupabaseService {
     const supabase = getTypedSupabaseClient()
     const dbUpdates = toDatabaseTaskReminderUpdate({
       completed: true,
-      completedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString()
     })
 
     const { data, error } = await supabase
@@ -491,7 +491,7 @@ export class SupabaseService {
   }
 
   static async addSoilTestRecord(
-    record: Omit<SoilTestRecord, 'id' | 'created_at'>,
+    record: Omit<SoilTestRecord, 'id' | 'created_at'>
   ): Promise<SoilTestRecord> {
     const supabase = getTypedSupabaseClient()
     const dbRecord = toDatabaseSoilTestInsert(record)
@@ -508,7 +508,7 @@ export class SupabaseService {
 
   static async updateSoilTestRecord(
     id: number,
-    updates: Partial<SoilTestRecord>,
+    updates: Partial<SoilTestRecord>
   ): Promise<SoilTestRecord> {
     const supabase = getTypedSupabaseClient()
     const dbUpdates = toDatabaseSoilTestUpdate(updates)
@@ -545,7 +545,7 @@ export class SupabaseService {
   }
 
   static async addPetioleTestRecord(
-    record: Omit<PetioleTestRecord, 'id' | 'created_at'>,
+    record: Omit<PetioleTestRecord, 'id' | 'created_at'>
   ): Promise<PetioleTestRecord> {
     const supabase = getTypedSupabaseClient()
     const dbRecord = toDatabasePetioleTestInsert(record)
@@ -567,7 +567,7 @@ export class SupabaseService {
 
   static async updatePetioleTestRecord(
     id: number,
-    updates: Partial<PetioleTestRecord>,
+    updates: Partial<PetioleTestRecord>
   ): Promise<PetioleTestRecord> {
     const supabase = getTypedSupabaseClient()
     const dbUpdates = toDatabasePetioleTestUpdate(updates)
@@ -602,7 +602,7 @@ export class SupabaseService {
       this.getIrrigationRecords(farmId),
       this.getSprayRecords(farmId),
       this.getHarvestRecords(farmId),
-      this.getExpenseRecords(farmId),
+      this.getExpenseRecords(farmId)
     ])
 
     return {
@@ -610,7 +610,7 @@ export class SupabaseService {
       irrigation,
       sprays,
       harvests,
-      expenses,
+      expenses
     }
   }
 
@@ -625,7 +625,7 @@ export class SupabaseService {
       harvestRecords,
       expenseRecords,
       soilTestRecords,
-      petioleTestRecords,
+      petioleTestRecords
     ] = await Promise.all([
       this.getFarmById(farmId),
       this.getPendingTasks(farmId),
@@ -635,7 +635,7 @@ export class SupabaseService {
       this.getHarvestRecords(farmId),
       this.getExpenseRecords(farmId),
       this.getSoilTestRecords(farmId),
-      this.getPetioleTestRecords(farmId),
+      this.getPetioleTestRecords(farmId)
     ])
 
     const totalHarvest = harvestRecords.reduce((sum, record) => sum + record.quantity, 0)
@@ -654,12 +654,12 @@ export class SupabaseService {
       ...harvestRecords.slice(0, 3).map((record) => ({ ...record, type: 'harvest' })),
       ...expenseRecords.slice(0, 3).map((record) => ({ ...record, type: 'expense' })),
       ...soilTestRecords.slice(0, 3).map((record) => ({ ...record, type: 'soil_test' })),
-      ...petioleTestRecords.slice(0, 3).map((record) => ({ ...record, type: 'petiole_test' })),
+      ...petioleTestRecords.slice(0, 3).map((record) => ({ ...record, type: 'petiole_test' }))
     ]
       .sort(
         (a, b) =>
           new Date(b.date || b.created_at || '').getTime() -
-          new Date(a.date || a.created_at || '').getTime(),
+          new Date(a.date || a.created_at || '').getTime()
       )
       .slice(0, 10)
 
@@ -678,8 +678,8 @@ export class SupabaseService {
         harvest: harvestRecords.length,
         expense: expenseRecords.length,
         soilTest: soilTestRecords.length,
-        petioleTest: petioleTestRecords.length,
-      },
+        petioleTest: petioleTestRecords.length
+      }
     }
   }
 
@@ -688,7 +688,7 @@ export class SupabaseService {
     const supabase = getTypedSupabaseClient()
     const {
       data: { user },
-      error,
+      error
     } = await supabase.auth.getUser()
     if (error) throw error
     return user
@@ -698,7 +698,7 @@ export class SupabaseService {
     const supabase = getTypedSupabaseClient()
     const { data, error } = await supabase.auth.signUp({
       email,
-      password,
+      password
     })
     if (error) throw error
     return data
@@ -708,7 +708,7 @@ export class SupabaseService {
     const supabase = getTypedSupabaseClient()
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password,
+      password
     })
     if (error) throw error
     return data
@@ -731,9 +731,9 @@ export class SupabaseService {
           event: '*',
           schema: 'public',
           table: 'farms',
-          filter: `id=eq.${farmId}`,
+          filter: `id=eq.${farmId}`
         },
-        callback,
+        callback
       )
       .subscribe()
   }
@@ -748,9 +748,9 @@ export class SupabaseService {
           event: '*',
           schema: 'public',
           table: 'task_reminders',
-          filter: `farm_id=eq.${farmId}`,
+          filter: `farm_id=eq.${farmId}`
         },
-        callback,
+        callback
       )
       .subscribe()
   }

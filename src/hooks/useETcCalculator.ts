@@ -6,7 +6,7 @@ import {
   type ETcCalculationInputs,
   type ETcResults,
   type GrapeGrowthStage,
-  type WeatherData,
+  type WeatherData
 } from '@/lib/etc-calculator'
 import type { Farm } from '@/types/types'
 
@@ -30,13 +30,13 @@ export function useETcCalculator() {
     longitude: '',
     elevation: '',
     irrigationMethod: 'drip' as 'drip' | 'sprinkler' | 'surface',
-    soilType: 'loamy' as 'sandy' | 'loamy' | 'clay',
+    soilType: 'loamy' as 'sandy' | 'loamy' | 'clay'
   })
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: value
     }))
   }
 
@@ -56,7 +56,7 @@ export function useETcCalculator() {
       formData.rainfall === ''
     ) {
       setError(
-        'Please fill in all required weather data fields (temperature, humidity, wind speed, rainfall)',
+        'Please fill in all required weather data fields (temperature, humidity, wind speed, rainfall)'
       )
       return
     }
@@ -66,7 +66,7 @@ export function useETcCalculator() {
       formData.solarRadiation || formData.solarRadiationLux || formData.sunshineHours
     if (!hasSolarData) {
       setError(
-        'Please provide at least one form of solar radiation data (solar radiation, lux, or sunshine hours)',
+        'Please provide at least one form of solar radiation data (solar radiation, lux, or sunshine hours)'
       )
       return
     }
@@ -85,7 +85,7 @@ export function useETcCalculator() {
         solarRadiationLux: formData.solarRadiationLux
           ? parseFloat(formData.solarRadiationLux)
           : undefined,
-        sunshineHours: formData.sunshineHours ? parseFloat(formData.sunshineHours) : undefined,
+        sunshineHours: formData.sunshineHours ? parseFloat(formData.sunshineHours) : undefined
       }
 
       const inputs: ETcCalculationInputs = {
@@ -100,10 +100,10 @@ export function useETcCalculator() {
           longitude: formData.longitude
             ? parseFloat(formData.longitude)
             : selectedFarm?.longitude || 72.8777,
-          elevation: formData.elevation ? parseFloat(formData.elevation) : 500,
+          elevation: formData.elevation ? parseFloat(formData.elevation) : 500
         },
         irrigationMethod: formData.irrigationMethod,
-        soilType: formData.soilType,
+        soilType: formData.soilType
       }
 
       const calculationResults = ETcCalculator.calculateETc(inputs)
@@ -136,7 +136,7 @@ export function useETcCalculator() {
       longitude: '',
       elevation: '',
       irrigationMethod: 'drip',
-      soilType: 'loamy',
+      soilType: 'loamy'
     })
     setResults(null)
     setError(null)
@@ -149,6 +149,6 @@ export function useETcCalculator() {
     loading,
     handleInputChange,
     handleCalculate,
-    resetForm,
+    resetForm
   }
 }

@@ -10,7 +10,7 @@ export class AIInitializationService {
    */
   static async initializeAIForFarm(
     farmId: number,
-    userId: string,
+    userId: string
   ): Promise<{
     success: boolean
     predictions?: any[]
@@ -48,8 +48,8 @@ export class AIInitializationService {
           growthStage: undefined, // Will be determined by the service
           recentActivities: [], // Will be fetched by the service
           availableResources: [],
-          farmConditions: {},
-        },
+          farmConditions: {}
+        }
       }
 
       const recommendationResult = await SmartTaskGenerator.generateSmartTasks(taskRequest)
@@ -60,13 +60,13 @@ export class AIInitializationService {
         recommendations: recommendationResult.success
           ? recommendationResult.data?.taskRecommendations
           : [],
-        profile,
+        profile
       }
     } catch (error) {
       console.error('Error initializing AI services:', error)
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error'
       }
     }
   }
@@ -76,7 +76,7 @@ export class AIInitializationService {
    */
   static async testAIServices(
     farmId: number,
-    userId: string,
+    userId: string
   ): Promise<{
     success: boolean
     results: Record<string, any>
@@ -92,7 +92,7 @@ export class AIInitializationService {
       results.profile = {
         exists: !!profile,
         riskTolerance: profile?.riskTolerance,
-        adoptionSpeed: profile?.decisionPatterns?.adoptionSpeed,
+        adoptionSpeed: profile?.decisionPatterns?.adoptionSpeed
       }
 
       // Test 2: Pest Prediction Service
@@ -101,8 +101,8 @@ export class AIInitializationService {
       results.pestPredictions = {
         count: activePredictions.length,
         highRiskAlerts: activePredictions.filter(
-          (p) => p.riskLevel === 'high' || p.riskLevel === 'critical',
-        ).length,
+          (p) => p.riskLevel === 'high' || p.riskLevel === 'critical'
+        ).length
       }
 
       // Test 3: Smart Task Generator
@@ -110,7 +110,7 @@ export class AIInitializationService {
       const activeRecommendations = await SmartTaskGenerator.getActiveRecommendations(farmId)
       results.taskRecommendations = {
         count: activeRecommendations.length,
-        highPriorityTasks: activeRecommendations.filter((r) => r.priorityScore >= 0.7).length,
+        highPriorityTasks: activeRecommendations.filter((r) => r.priorityScore >= 0.7).length
       }
 
       // Test 4: Database connectivity
@@ -124,7 +124,7 @@ export class AIInitializationService {
       results.database = {
         connected: !error,
         farmFound: !!farmData,
-        farmName: (farmData as any)?.name,
+        farmName: (farmData as any)?.name
       }
 
       console.log('✅ AI Services Test Results:', results)
@@ -134,7 +134,7 @@ export class AIInitializationService {
       console.error('❌ AI Services Test Failed:', error)
       return {
         success: false,
-        results: { error: error instanceof Error ? error.message : 'Unknown error' },
+        results: { error: error instanceof Error ? error.message : 'Unknown error' }
       }
     }
   }
@@ -154,7 +154,7 @@ export class AIInitializationService {
       'profitability_analyses',
       'market_intelligence',
       'community_insights',
-      'ai_conversation_context',
+      'ai_conversation_context'
     ] as const
 
     const tablesFound: string[] = []
@@ -182,7 +182,7 @@ export class AIInitializationService {
     return {
       success: missing.length === 0,
       tablesFound,
-      missing,
+      missing
     }
   }
 
@@ -191,7 +191,7 @@ export class AIInitializationService {
    */
   static async seedDemoData(
     farmId: number,
-    userId: string,
+    userId: string
   ): Promise<{ success: boolean; message: string }> {
     try {
       console.log('🌱 Seeding demo data for AI features...')
@@ -212,28 +212,28 @@ export class AIInitializationService {
         weather_triggers: {
           temperature: { min: 20, max: 25 },
           humidity: { threshold: 85 },
-          rainfall: { days: 3, amount: 15 },
+          rainfall: { days: 3, amount: 15 }
         },
         prevention_window: {
           startDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
           endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-          optimalTiming: '2 days before predicted onset',
+          optimalTiming: '2 days before predicted onset'
         },
         recommended_treatments: {
           chemical: [
-            { product: 'Metalaxyl + Mancozeb', dosage: '2g/L', cost: 150, effectiveness: 0.9 },
+            { product: 'Metalaxyl + Mancozeb', dosage: '2g/L', cost: 150, effectiveness: 0.9 }
           ],
           organic: [
             {
               method: 'Bordeaux mixture',
               description: 'Copper-based fungicide',
-              effectiveness: 0.7,
-            },
+              effectiveness: 0.7
+            }
           ],
-          cultural: ['Improve air circulation', 'Avoid overhead irrigation'],
+          cultural: ['Improve air circulation', 'Avoid overhead irrigation']
         },
         community_reports: 2,
-        status: 'active',
+        status: 'active'
       }
 
       await supabase.from('pest_disease_predictions').insert([demoPrediction as any])
@@ -253,9 +253,9 @@ export class AIInitializationService {
         task_details: {
           duration: 120,
           resources: ['irrigation system', 'water tank'],
-          conditions: ['avoid windy conditions', 'check soil moisture first'],
+          conditions: ['avoid windy conditions', 'check soil moisture first']
         },
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       }
 
       await supabase.from('ai_task_recommendations').insert([demoTask as any])
@@ -265,7 +265,7 @@ export class AIInitializationService {
       console.error('Error seeding demo data:', error)
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: error instanceof Error ? error.message : 'Unknown error'
       }
     }
   }

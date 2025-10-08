@@ -159,7 +159,7 @@ export default function FooterSection() {
                   left: `${i * 300 - 600}px`,
                   top: '-120px',
                   transform: 'rotate(-45deg)',
-                  transformOrigin: 'top left',
+                  transformOrigin: 'top left'
                 }}
               />
             ))}

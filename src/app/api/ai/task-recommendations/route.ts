@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     if (!farmContext) {
       return new Response(JSON.stringify({ error: 'Farm context is required' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }
       })
     }
 
@@ -52,11 +52,11 @@ Return ONLY valid JSON array:
         messages: [
           {
             role: 'system' as const,
-            content: 'You are an AI agricultural advisor specializing in grape farming in India.',
+            content: 'You are an AI agricultural advisor specializing in grape farming in India.'
           },
-          { role: 'user' as const, content: prompt },
+          { role: 'user' as const, content: prompt }
         ],
-        temperature: 0.5,
+        temperature: 0.5
       })
 
       const parsed = JSON.parse(result.text)
@@ -72,7 +72,7 @@ Return ONLY valid JSON array:
           'fertigation',
           'pruning',
           'monitoring',
-          'harvesting',
+          'harvesting'
         ].includes(task.taskType)
           ? task.taskType
           : 'monitoring',
@@ -81,11 +81,11 @@ Return ONLY valid JSON array:
         confidence: Math.min(Math.max(task.confidence || 0.7, 0), 1),
         weatherDependent: Boolean(task.weatherDependent),
         estimatedDuration: task.estimatedDuration || '30-60 minutes',
-        expiresAt: task.expiresAt || undefined,
+        expiresAt: task.expiresAt || undefined
       }))
 
       return new Response(JSON.stringify({ success: true, data: tasks }), {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }
       })
     } catch (aiError) {
       // AI service failed, return empty array as fallback
@@ -93,11 +93,11 @@ Return ONLY valid JSON array:
         JSON.stringify({
           success: true,
           data: [],
-          fallback: true,
+          fallback: true
         }),
         {
-          headers: { 'Content-Type': 'application/json' },
-        },
+          headers: { 'Content-Type': 'application/json' }
+        }
       )
     }
   } catch (error) {
@@ -111,12 +111,12 @@ Return ONLY valid JSON array:
       JSON.stringify({
         success: false,
         error: 'Failed to generate task recommendations',
-        data: [],
+        data: []
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      },
+        headers: { 'Content-Type': 'application/json' }
+      }
     )
   }
 }

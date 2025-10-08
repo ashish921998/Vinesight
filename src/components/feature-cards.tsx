@@ -3,18 +3,18 @@ export function FeatureCards() {
     {
       title: 'Plan your schedules',
       description: 'Explore your data, build your dashboard,\nbring your team together.',
-      highlighted: true,
+      highlighted: true
     },
     {
       title: 'Data to insights in the minutes',
       description: 'Explore your data, build your dashboard,\nbring your team together.',
-      highlighted: false,
+      highlighted: false
     },
     {
       title: 'Data to insights in the minutes',
       description: 'Explore your data, build your dashboard,\nbring your team together.',
-      highlighted: false,
-    },
+      highlighted: false
+    }
   ]
 
   return (

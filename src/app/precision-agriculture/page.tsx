@@ -16,10 +16,10 @@ export default function PrecisionAgriculture() {
         'Field mapping accuracy',
         'Variable rate applications',
         'Yield monitoring',
-        'Boundary management',
+        'Boundary management'
       ],
       adoption: '95%',
-      roi: '20-30%',
+      roi: '20-30%'
     },
     {
       icon: Database,
@@ -29,10 +29,10 @@ export default function PrecisionAgriculture() {
         'Predictive analytics',
         'Historical comparisons',
         'Performance benchmarking',
-        'Decision support',
+        'Decision support'
       ],
       adoption: '78%',
-      roi: '15-25%',
+      roi: '15-25%'
     },
     {
       icon: Bot,
@@ -42,10 +42,10 @@ export default function PrecisionAgriculture() {
         'Precision planting',
         'Autonomous harvesting',
         'Selective spraying',
-        '24/7 monitoring',
+        '24/7 monitoring'
       ],
       adoption: '35%',
-      roi: '40-60%',
+      roi: '40-60%'
     },
     {
       icon: Wifi,
@@ -55,11 +55,11 @@ export default function PrecisionAgriculture() {
         'Soil moisture tracking',
         'Weather monitoring',
         'Pest detection',
-        'Equipment status',
+        'Equipment status'
       ],
       adoption: '65%',
-      roi: '25-35%',
-    },
+      roi: '25-35%'
+    }
   ]
 
   const precisionTechniques = [
@@ -70,9 +70,9 @@ export default function PrecisionAgriculture() {
         'Grid soil sampling',
         'Variable rate fertilization',
         'pH management zones',
-        'Organic matter mapping',
+        'Organic matter mapping'
       ],
-      impact: '30% reduction in fertilizer costs',
+      impact: '30% reduction in fertilizer costs'
     },
     {
       category: 'Crop Monitoring',
@@ -81,9 +81,9 @@ export default function PrecisionAgriculture() {
         'NDVI vegetation indices',
         'Thermal imaging',
         'Growth stage tracking',
-        'Stress detection',
+        'Stress detection'
       ],
-      impact: '20% increase in early problem detection',
+      impact: '20% increase in early problem detection'
     },
     {
       category: 'Water Management',
@@ -92,9 +92,9 @@ export default function PrecisionAgriculture() {
         'Smart irrigation systems',
         'Soil moisture optimization',
         'Weather-based scheduling',
-        'Deficit irrigation strategies',
+        'Deficit irrigation strategies'
       ],
-      impact: '40% water usage reduction',
+      impact: '40% water usage reduction'
     },
     {
       category: 'Yield Optimization',
@@ -103,10 +103,10 @@ export default function PrecisionAgriculture() {
         'Yield mapping',
         'Prescription seeding',
         'Harvest optimization',
-        'Quality prediction',
+        'Quality prediction'
       ],
-      impact: '15-25% yield improvement',
-    },
+      impact: '15-25% yield improvement'
+    }
   ]
 
   const implementationSteps = [
@@ -115,7 +115,7 @@ export default function PrecisionAgriculture() {
       title: 'Assessment & Planning',
       description: 'Evaluate current operations and set precision agriculture goals',
       duration: '2-4 weeks',
-      actions: ['Farm audit', 'Technology needs analysis', 'Budget planning', 'ROI projections'],
+      actions: ['Farm audit', 'Technology needs analysis', 'Budget planning', 'ROI projections']
     },
     {
       step: 2,
@@ -126,15 +126,15 @@ export default function PrecisionAgriculture() {
         'GPS base stations',
         'IoT sensor deployment',
         'Communication networks',
-        'Data storage systems',
-      ],
+        'Data storage systems'
+      ]
     },
     {
       step: 3,
       title: 'Data Collection',
       description: 'Begin gathering field and operational data',
       duration: '1-2 seasons',
-      actions: ['Soil sampling', 'Yield monitoring', 'Weather tracking', 'Equipment data logging'],
+      actions: ['Soil sampling', 'Yield monitoring', 'Weather tracking', 'Equipment data logging']
     },
     {
       step: 4,
@@ -145,9 +145,9 @@ export default function PrecisionAgriculture() {
         'Prescription maps',
         'Variable rate applications',
         'Performance monitoring',
-        'Continuous improvement',
-      ],
-    },
+        'Continuous improvement'
+      ]
+    }
   ]
 
   return (

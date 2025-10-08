@@ -12,11 +12,10 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   Command,
@@ -24,7 +23,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList,
+  CommandList
 } from '@/components/ui/command'
 import {
   Dialog,
@@ -32,7 +31,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
 import { EditRecordModal } from '@/components/journal/EditRecordModal'
 import { cn, capitalize } from '@/lib/utils'
@@ -53,7 +52,7 @@ import {
   Filter,
   X,
   Check,
-  ChevronsUpDown,
+  ChevronsUpDown
 } from 'lucide-react'
 
 interface ActivityLog {
@@ -135,7 +134,7 @@ export default function FarmLogsPage() {
           SupabaseService.getExpenseRecords(farmIdNum),
           SupabaseService.getFertigationRecords(farmIdNum),
           SupabaseService.getSoilTestRecords(farmIdNum),
-          SupabaseService.getPetioleTestRecords(farmIdNum),
+          SupabaseService.getPetioleTestRecords(farmIdNum)
         ])
 
       // Combine and format all logs, filtering out records without valid IDs
@@ -148,7 +147,7 @@ export default function FarmLogsPage() {
             date: log.date,
             notes: log.notes,
             duration: log.duration,
-            created_at: log.created_at || log.date,
+            created_at: log.created_at || log.date
           })),
         ...spray
           .filter((log) => log.id != null)
@@ -158,7 +157,7 @@ export default function FarmLogsPage() {
             date: log.date,
             notes: log.notes,
             chemical: log.chemical,
-            created_at: log.created_at || log.date,
+            created_at: log.created_at || log.date
           })),
         ...harvest
           .filter((log) => log.id != null)
@@ -168,7 +167,7 @@ export default function FarmLogsPage() {
             date: log.date,
             notes: log.notes,
             quantity: log.quantity,
-            created_at: log.created_at || log.date,
+            created_at: log.created_at || log.date
           })),
         ...expenses
           .filter((log) => log.id != null)
@@ -178,7 +177,7 @@ export default function FarmLogsPage() {
             date: log.date,
             notes: log.remarks,
             cost: log.cost,
-            created_at: log.created_at || log.date,
+            created_at: log.created_at || log.date
           })),
         ...fertigation
           .filter((log) => log.id != null)
@@ -188,7 +187,7 @@ export default function FarmLogsPage() {
             date: log.date,
             notes: log.notes,
             fertilizer: log.fertilizer,
-            created_at: log.created_at || log.date,
+            created_at: log.created_at || log.date
           })),
         ...soilTests
           .filter((log) => log.id != null)
@@ -197,7 +196,7 @@ export default function FarmLogsPage() {
             type: 'soil_test',
             date: log.date,
             notes: log.notes,
-            created_at: log.created_at || log.date,
+            created_at: log.created_at || log.date
           })),
         ...petioleTests
           .filter((log) => log.id != null)
@@ -206,13 +205,13 @@ export default function FarmLogsPage() {
             type: 'petiole_test',
             date: log.date,
             notes: log.notes,
-            created_at: log.created_at || log.date,
-          })),
+            created_at: log.created_at || log.date
+          }))
       ]
 
       // Sort by date (newest first)
       const sortedLogs = combinedLogs.sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )
 
       setAllLogs(sortedLogs)
@@ -236,7 +235,7 @@ export default function FarmLogsPage() {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim()
       filtered = filtered.filter(
-        (log) => log.notes?.toLowerCase().includes(query) || log.type.toLowerCase().includes(query),
+        (log) => log.notes?.toLowerCase().includes(query) || log.type.toLowerCase().includes(query)
       )
     }
 
@@ -292,7 +291,7 @@ export default function FarmLogsPage() {
     { value: 'expense', label: 'Expense' },
     { value: 'fertigation', label: 'Fertigation' },
     { value: 'soil_test', label: 'Soil Test' },
-    { value: 'petiole_test', label: 'Petiole Test' },
+    { value: 'petiole_test', label: 'Petiole Test' }
   ]
 
   // Handle activity type checkbox toggle
@@ -591,7 +590,7 @@ export default function FarmLogsPage() {
                                 value={activityType.value}
                                 onSelect={() => {
                                   const isSelected = selectedActivityTypes.includes(
-                                    activityType.value,
+                                    activityType.value
                                   )
                                   handleActivityTypeToggle(activityType.value, !isSelected)
                                 }}
@@ -602,7 +601,7 @@ export default function FarmLogsPage() {
                                     'mr-2 h-4 w-4 border border-gray-300 rounded flex items-center justify-center',
                                     selectedActivityTypes.includes(activityType.value)
                                       ? 'bg-primary border-primary'
-                                      : 'bg-white',
+                                      : 'bg-white'
                                   )}
                                 >
                                   <Check
@@ -610,7 +609,7 @@ export default function FarmLogsPage() {
                                       'h-3 w-3 text-white',
                                       selectedActivityTypes.includes(activityType.value)
                                         ? 'opacity-100'
-                                        : 'opacity-0',
+                                        : 'opacity-0'
                                     )}
                                   />
                                 </div>

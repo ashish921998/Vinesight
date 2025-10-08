@@ -87,27 +87,27 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
     ? {
         starter: { monthly: 0 },
         professional: { monthly: 500 },
-        enterprise: { monthly: 1000 },
+        enterprise: { monthly: 1000 }
       }
     : {
         starter: { monthly: 0 },
         professional: { monthly: 10 },
-        enterprise: { monthly: 100 },
+        enterprise: { monthly: 100 }
       }
 
   const pricing = {
     starter: {
       monthly: basePricing.starter.monthly,
-      annually: Math.round(basePricing.starter.monthly * 12 * 0.8),
+      annually: Math.round(basePricing.starter.monthly * 12 * 0.8)
     },
     professional: {
       monthly: basePricing.professional.monthly,
-      annually: basePricing.professional.monthly * 10,
+      annually: basePricing.professional.monthly * 10
     },
     enterprise: {
       monthly: basePricing.enterprise.monthly,
-      annually: basePricing.enterprise.monthly * 10,
-    },
+      annually: basePricing.enterprise.monthly * 10
+    }
   }
 
   const formatPrice = (value: number) => {
@@ -115,7 +115,7 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
       style: 'currency',
       currency: isIndia ? 'INR' : 'USD',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(value)
   }
 
@@ -248,7 +248,7 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
                         style={{
                           opacity: billingPeriod === 'annually' ? 1 : 0,
                           transform: `scale(${billingPeriod === 'annually' ? 1 : 0.8})`,
-                          filter: `blur(${billingPeriod === 'annually' ? 0 : 4}px)`,
+                          filter: `blur(${billingPeriod === 'annually' ? 0 : 4}px)`
                         }}
                         aria-hidden={billingPeriod !== 'annually'}
                       >
@@ -259,7 +259,7 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
                         style={{
                           opacity: billingPeriod === 'monthly' ? 1 : 0,
                           transform: `scale(${billingPeriod === 'monthly' ? 1 : 0.8})`,
-                          filter: `blur(${billingPeriod === 'monthly' ? 0 : 4}px)`,
+                          filter: `blur(${billingPeriod === 'monthly' ? 0 : 4}px)`
                         }}
                         aria-hidden={billingPeriod !== 'monthly'}
                       >
@@ -286,7 +286,7 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
                   'Up to 100 tasks',
                   'AI assistance (limited)',
                   'Basic crop health alerts',
-                  'Community support',
+                  'Community support'
                 ].map((feature, index) => (
                   <div
                     key={index}
@@ -339,7 +339,7 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
                         style={{
                           opacity: billingPeriod === 'annually' ? 1 : 0,
                           transform: `scale(${billingPeriod === 'annually' ? 1 : 0.8})`,
-                          filter: `blur(${billingPeriod === 'annually' ? 0 : 4}px)`,
+                          filter: `blur(${billingPeriod === 'annually' ? 0 : 4}px)`
                         }}
                         aria-hidden={billingPeriod !== 'annually'}
                       >
@@ -350,7 +350,7 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
                         style={{
                           opacity: billingPeriod === 'monthly' ? 1 : 0,
                           transform: `scale(${billingPeriod === 'monthly' ? 1 : 0.8})`,
-                          filter: `blur(${billingPeriod === 'monthly' ? 0 : 4}px)`,
+                          filter: `blur(${billingPeriod === 'monthly' ? 0 : 4}px)`
                         }}
                         aria-hidden={billingPeriod !== 'monthly'}
                       >
@@ -379,7 +379,7 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
                   'Daily weather forecasts',
                   'Enhanced AI limits',
                   'AI farm insights',
-                  'Access to all calculators',
+                  'Access to all calculators'
                 ].map((feature, index) => (
                   <div
                     key={index}
@@ -432,7 +432,7 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
                         style={{
                           opacity: billingPeriod === 'annually' ? 1 : 0,
                           transform: `scale(${billingPeriod === 'annually' ? 1 : 0.8})`,
-                          filter: `blur(${billingPeriod === 'annually' ? 0 : 4}px)`,
+                          filter: `blur(${billingPeriod === 'annually' ? 0 : 4}px)`
                         }}
                         aria-hidden={billingPeriod !== 'annually'}
                       >
@@ -443,7 +443,7 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
                         style={{
                           opacity: billingPeriod === 'monthly' ? 1 : 0,
                           transform: `scale(${billingPeriod === 'monthly' ? 1 : 0.8})`,
-                          filter: `blur(${billingPeriod === 'monthly' ? 0 : 4}px)`,
+                          filter: `blur(${billingPeriod === 'monthly' ? 0 : 4}px)`
                         }}
                         aria-hidden={billingPeriod !== 'monthly'}
                       >
@@ -473,7 +473,7 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
                   'SSO/SAML and audit logs',
                   'Custom integrations & data pipelines',
                   'Regional compliance & data residency',
-                  'White‑label & custom contracts',
+                  'White‑label & custom contracts'
                 ].map((feature, index) => (
                   <div
                     key={index}

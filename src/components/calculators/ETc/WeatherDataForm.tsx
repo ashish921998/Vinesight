@@ -8,7 +8,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { ThermometerSun, CloudSun, Download, Loader2 } from 'lucide-react'
 import { useState, useCallback } from 'react'
@@ -39,7 +39,7 @@ export function WeatherDataForm({
   formData,
   locationData,
   onInputChange,
-  onOpenMeteoDataLoad,
+  onOpenMeteoDataLoad
 }: WeatherDataFormProps) {
   const [solarRadiationType, setSolarRadiationType] = useState<'MJ' | 'lux'>('MJ')
   const [isLoadingWeatherData, setIsLoadingWeatherData] = useState(false)
@@ -59,7 +59,7 @@ export function WeatherDataForm({
         lat,
         lon,
         formData.date,
-        formData.date,
+        formData.date
       )
 
       if (weatherData.length > 0) {

@@ -20,7 +20,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
   width = 482,
   height = 300,
   className = '',
-  theme = 'dark',
+  theme = 'dark'
 }) => {
   // Design tokens (derived from Figma local variables)
   const themeVars =
@@ -28,12 +28,12 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
       ? {
           '--ei-background': '#f8f9fa',
           '--ei-center-bg': '#37322f',
-          '--ei-center-text': '#ffffff',
+          '--ei-center-text': '#ffffff'
         }
       : ({
           '--ei-background': '#1f2937',
           '--ei-center-bg': '#37322f',
-          '--ei-center-text': '#ffffff',
+          '--ei-center-text': '#ffffff'
         } as React.CSSProperties)
 
   const imgFrame2147223198 = '/placeholder.svg?height=300&width=482'
@@ -60,7 +60,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
           height,
           position: 'relative',
           background: 'transparent',
-          ...themeVars,
+          ...themeVars
         } as React.CSSProperties
       }
       role="img"

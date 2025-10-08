@@ -17,7 +17,7 @@ export function LayoutContent({ children }: LayoutContentProps) {
   // Routes that should never show the sidebar (public pages)
   const publicRoutes = [
     '/', // Homepage
-    '/auth',
+    '/auth'
   ]
 
   // Check if current route is public

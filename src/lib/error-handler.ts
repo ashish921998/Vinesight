@@ -23,14 +23,14 @@ export class ErrorHandler {
     code: string,
     message: string,
     details?: any,
-    userFriendly: boolean = true,
+    userFriendly: boolean = true
   ): AppError {
     const error: AppError = {
       code,
       message,
       details,
       timestamp: Date.now(),
-      userFriendly,
+      userFriendly
     }
 
     // Store in history (keep only last 100)
@@ -58,7 +58,7 @@ export class ErrorHandler {
       return this.createError(
         'FOREIGN_KEY_VIOLATION',
         'Cannot complete this operation due to related data',
-        error,
+        error
       )
     }
 
@@ -66,7 +66,7 @@ export class ErrorHandler {
       'DATABASE_ERROR',
       'A database error occurred. Please try again.',
       error,
-      true,
+      true
     )
   }
 
@@ -86,7 +86,7 @@ export class ErrorHandler {
       return this.createError(
         'FORBIDDEN',
         'You do not have permission to perform this action',
-        error,
+        error
       )
     }
 
@@ -94,7 +94,7 @@ export class ErrorHandler {
       return this.createError(
         'RATE_LIMITED',
         'Too many requests. Please wait a moment and try again.',
-        error,
+        error
       )
     }
 
@@ -105,7 +105,7 @@ export class ErrorHandler {
     return this.createError(
       'UNKNOWN_ERROR',
       'An unexpected error occurred. Please try again.',
-      error,
+      error
     )
   }
 
@@ -138,7 +138,7 @@ export class RetryHandler {
   static async withRetry<T>(
     operation: () => Promise<T>,
     maxRetries: number = 3,
-    delay: number = 1000,
+    delay: number = 1000
   ): Promise<T> {
     let lastError: any
 
@@ -175,7 +175,7 @@ export function useErrorHandler() {
         onSuccess?: (result: T) => void
         onError?: (error: AppError) => void
         showLoader?: boolean
-      },
+      }
     ): Promise<T | null> => {
       if (options?.showLoader !== false) {
         setIsLoading(true)
@@ -197,7 +197,7 @@ export function useErrorHandler() {
         }
       }
     },
-    [errorHandler],
+    [errorHandler]
   )
 
   const clearError = useCallback(() => {
@@ -209,7 +209,7 @@ export function useErrorHandler() {
     isLoading,
     handleAsync,
     clearError,
-    getUserMessage: (err: AppError) => errorHandler.getUserMessage(err),
+    getUserMessage: (err: AppError) => errorHandler.getUserMessage(err)
   }
 }
 

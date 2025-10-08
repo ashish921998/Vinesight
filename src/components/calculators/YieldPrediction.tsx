@@ -10,7 +10,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -30,13 +30,13 @@ import {
   Leaf,
   Grape,
   CloudRain,
-  Thermometer,
+  Thermometer
 } from 'lucide-react'
 import {
   YieldPredictionEngine,
   type YieldPredictionInputs,
   type YieldPredictionResults,
-  type HistoricalYieldData,
+  type HistoricalYieldData
 } from '@/lib/yield-prediction'
 
 export function YieldPredictionComponent() {
@@ -52,25 +52,25 @@ export function YieldPredictionComponent() {
           averageTemp: 22.5,
           totalRainfall: 450,
           sunlightHours: 2800,
-          extremeWeatherEvents: 2,
+          extremeWeatherEvents: 2
         },
         floweringPeriod: {
           averageTemp: 18.5,
           rainfall: 45,
-          windSpeed: 3.2,
+          windSpeed: 3.2
         },
         ripening: {
           averageTemp: 26.8,
           rainfall: 28,
-          heatWavesDays: 8,
-        },
+          heatWavesDays: 8
+        }
       },
       plannedManagement: {
         pruningIntensity: 'moderate',
         irrigationAmount: 350,
         fertilizationProgram: 'standard',
         canopyManagement: 'standard',
-        pestControl: 4,
+        pestControl: 4
       },
       currentSoil: {
         organicMatter: 3.2,
@@ -78,11 +78,11 @@ export function YieldPredictionComponent() {
         phosphorus: 45,
         potassium: 180,
         pH: 6.3,
-        drainage: 'good',
+        drainage: 'good'
       },
       budBreakDate: new Date('2024-03-15'),
       floweringDate: new Date('2024-05-10'),
-      veraison: null,
+      veraison: null
     },
     economicFactors: {
       targetPrice: 8.5,
@@ -91,9 +91,9 @@ export function YieldPredictionComponent() {
       inputCosts: {
         fertilizer: 800,
         pesticides: 600,
-        water: 400,
-      },
-    },
+        water: 400
+      }
+    }
   })
 
   const [historicalInput, setHistoricalInput] = useState<Partial<HistoricalYieldData>>({
@@ -111,25 +111,25 @@ export function YieldPredictionComponent() {
         averageTemp: 21.8,
         totalRainfall: 380,
         sunlightHours: 2650,
-        extremeWeatherEvents: 1,
+        extremeWeatherEvents: 1
       },
       floweringPeriod: {
         averageTemp: 17.2,
         rainfall: 32,
-        windSpeed: 2.8,
+        windSpeed: 2.8
       },
       ripening: {
         averageTemp: 25.4,
         rainfall: 15,
-        heatWavesDays: 5,
-      },
+        heatWavesDays: 5
+      }
     },
     managementPractices: {
       pruningIntensity: 'moderate',
       irrigationAmount: 320,
       fertilizationProgram: 'standard',
       canopyManagement: 'standard',
-      pestControl: 3,
+      pestControl: 3
     },
     soilConditions: {
       organicMatter: 3.0,
@@ -137,8 +137,8 @@ export function YieldPredictionComponent() {
       phosphorus: 42,
       potassium: 175,
       pH: 6.2,
-      drainage: 'good',
-    },
+      drainage: 'good'
+    }
   })
 
   const [results, setResults] = useState<YieldPredictionResults | null>(null)
@@ -163,17 +163,17 @@ export function YieldPredictionComponent() {
             averageTemp: 21.5,
             totalRainfall: 390,
             sunlightHours: 2680,
-            extremeWeatherEvents: 1,
+            extremeWeatherEvents: 1
           },
           floweringPeriod: { averageTemp: 17.8, rainfall: 35, windSpeed: 2.9 },
-          ripening: { averageTemp: 25.2, rainfall: 18, heatWavesDays: 6 },
+          ripening: { averageTemp: 25.2, rainfall: 18, heatWavesDays: 6 }
         },
         managementPractices: {
           pruningIntensity: 'moderate',
           irrigationAmount: 315,
           fertilizationProgram: 'standard',
           canopyManagement: 'standard',
-          pestControl: 3,
+          pestControl: 3
         },
         soilConditions: {
           organicMatter: 2.9,
@@ -181,8 +181,8 @@ export function YieldPredictionComponent() {
           phosphorus: 41,
           potassium: 172,
           pH: 6.1,
-          drainage: 'good',
-        },
+          drainage: 'good'
+        }
       },
       {
         year: 2022,
@@ -199,17 +199,17 @@ export function YieldPredictionComponent() {
             averageTemp: 20.2,
             totalRainfall: 520,
             sunlightHours: 2420,
-            extremeWeatherEvents: 3,
+            extremeWeatherEvents: 3
           },
           floweringPeriod: { averageTemp: 16.5, rainfall: 85, windSpeed: 4.2 },
-          ripening: { averageTemp: 23.8, rainfall: 45, heatWavesDays: 3 },
+          ripening: { averageTemp: 23.8, rainfall: 45, heatWavesDays: 3 }
         },
         managementPractices: {
           pruningIntensity: 'moderate',
           irrigationAmount: 280,
           fertilizationProgram: 'standard',
           canopyManagement: 'minimal',
-          pestControl: 4,
+          pestControl: 4
         },
         soilConditions: {
           organicMatter: 2.7,
@@ -217,8 +217,8 @@ export function YieldPredictionComponent() {
           phosphorus: 38,
           potassium: 165,
           pH: 6.0,
-          drainage: 'moderate',
-        },
+          drainage: 'moderate'
+        }
       },
       {
         year: 2021,
@@ -235,17 +235,17 @@ export function YieldPredictionComponent() {
             averageTemp: 23.1,
             totalRainfall: 285,
             sunlightHours: 2890,
-            extremeWeatherEvents: 0,
+            extremeWeatherEvents: 0
           },
           floweringPeriod: { averageTemp: 19.2, rainfall: 12, windSpeed: 2.1 },
-          ripening: { averageTemp: 27.5, rainfall: 8, heatWavesDays: 12 },
+          ripening: { averageTemp: 27.5, rainfall: 8, heatWavesDays: 12 }
         },
         managementPractices: {
           pruningIntensity: 'light',
           irrigationAmount: 420,
           fertilizationProgram: 'intensive',
           canopyManagement: 'intensive',
-          pestControl: 5,
+          pestControl: 5
         },
         soilConditions: {
           organicMatter: 3.4,
@@ -253,9 +253,9 @@ export function YieldPredictionComponent() {
           phosphorus: 52,
           potassium: 195,
           pH: 6.4,
-          drainage: 'good',
-        },
-      },
+          drainage: 'good'
+        }
+      }
     ]
 
     setInputs((prev) => ({ ...prev, historicalData: sampleData }))
@@ -266,7 +266,7 @@ export function YieldPredictionComponent() {
       const newData: HistoricalYieldData = historicalInput as HistoricalYieldData
       setInputs((prev) => ({
         ...prev,
-        historicalData: [...prev.historicalData, newData].sort((a, b) => b.year - a.year),
+        historicalData: [...prev.historicalData, newData].sort((a, b) => b.year - a.year)
       }))
 
       // Reset form
@@ -278,7 +278,7 @@ export function YieldPredictionComponent() {
         berrySize: 'medium',
         sugarContent: 24.2,
         acidity: 6.5,
-        pH: 3.6,
+        pH: 3.6
       })
     }
   }
@@ -334,7 +334,7 @@ export function YieldPredictionComponent() {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 0,
+      minimumFractionDigits: 0
     }).format(value)
   }
 
@@ -379,7 +379,7 @@ export function YieldPredictionComponent() {
                     onValueChange={(value: any) =>
                       setInputs((prev) => ({
                         ...prev,
-                        currentSeasonData: { ...prev.currentSeasonData, grapeVariety: value },
+                        currentSeasonData: { ...prev.currentSeasonData, grapeVariety: value }
                       }))
                     }
                   >
@@ -408,8 +408,8 @@ export function YieldPredictionComponent() {
                           ...prev,
                           currentSeasonData: {
                             ...prev.currentSeasonData,
-                            vineAge: parseInt(e.target.value),
-                          },
+                            vineAge: parseInt(e.target.value)
+                          }
                         }))
                       }
                     />
@@ -425,8 +425,8 @@ export function YieldPredictionComponent() {
                           ...prev,
                           currentSeasonData: {
                             ...prev.currentSeasonData,
-                            plantingDensity: parseInt(e.target.value),
-                          },
+                            plantingDensity: parseInt(e.target.value)
+                          }
                         }))
                       }
                     />
@@ -440,7 +440,7 @@ export function YieldPredictionComponent() {
                     onValueChange={(value: any) =>
                       setInputs((prev) => ({
                         ...prev,
-                        currentSeasonData: { ...prev.currentSeasonData, targetQuality: value },
+                        currentSeasonData: { ...prev.currentSeasonData, targetQuality: value }
                       }))
                     }
                   >
@@ -477,8 +477,8 @@ export function YieldPredictionComponent() {
                           ...prev,
                           economicFactors: {
                             ...prev.economicFactors,
-                            targetPrice: parseFloat(e.target.value),
-                          },
+                            targetPrice: parseFloat(e.target.value)
+                          }
                         }))
                       }
                     />
@@ -494,8 +494,8 @@ export function YieldPredictionComponent() {
                           ...prev,
                           economicFactors: {
                             ...prev.economicFactors,
-                            productionCost: parseFloat(e.target.value),
-                          },
+                            productionCost: parseFloat(e.target.value)
+                          }
                         }))
                       }
                     />
@@ -513,8 +513,8 @@ export function YieldPredictionComponent() {
                           ...prev,
                           economicFactors: {
                             ...prev.economicFactors,
-                            laborCost: parseFloat(e.target.value),
-                          },
+                            laborCost: parseFloat(e.target.value)
+                          }
                         }))
                       }
                     />
@@ -532,9 +532,9 @@ export function YieldPredictionComponent() {
                             ...prev.economicFactors,
                             inputCosts: {
                               ...prev.economicFactors.inputCosts,
-                              fertilizer: parseFloat(e.target.value),
-                            },
-                          },
+                              fertilizer: parseFloat(e.target.value)
+                            }
+                          }
                         }))
                       }
                     />
@@ -554,9 +554,9 @@ export function YieldPredictionComponent() {
                             ...prev.economicFactors,
                             inputCosts: {
                               ...prev.economicFactors.inputCosts,
-                              pesticides: parseFloat(e.target.value),
-                            },
-                          },
+                              pesticides: parseFloat(e.target.value)
+                            }
+                          }
                         }))
                       }
                     />
@@ -574,9 +574,9 @@ export function YieldPredictionComponent() {
                             ...prev.economicFactors,
                             inputCosts: {
                               ...prev.economicFactors.inputCosts,
-                              water: parseFloat(e.target.value),
-                            },
-                          },
+                              water: parseFloat(e.target.value)
+                            }
+                          }
                         }))
                       }
                     />
@@ -620,7 +620,7 @@ export function YieldPredictionComponent() {
                       onChange={(e) =>
                         setHistoricalInput((prev) => ({
                           ...prev,
-                          yieldPerAcre: parseFloat(e.target.value),
+                          yieldPerAcre: parseFloat(e.target.value)
                         }))
                       }
                     />
@@ -637,7 +637,7 @@ export function YieldPredictionComponent() {
                       onChange={(e) =>
                         setHistoricalInput((prev) => ({
                           ...prev,
-                          sugarContent: parseFloat(e.target.value),
+                          sugarContent: parseFloat(e.target.value)
                         }))
                       }
                     />
@@ -652,7 +652,7 @@ export function YieldPredictionComponent() {
                       onChange={(e) =>
                         setHistoricalInput((prev) => ({
                           ...prev,
-                          acidity: parseFloat(e.target.value),
+                          acidity: parseFloat(e.target.value)
                         }))
                       }
                     />
@@ -738,10 +738,10 @@ export function YieldPredictionComponent() {
                               ...prev.currentSeasonData.currentWeather,
                               growingSeason: {
                                 ...prev.currentSeasonData.currentWeather.growingSeason,
-                                averageTemp: parseFloat(e.target.value),
-                              },
-                            },
-                          },
+                                averageTemp: parseFloat(e.target.value)
+                              }
+                            }
+                          }
                         }))
                       }
                     />
@@ -761,10 +761,10 @@ export function YieldPredictionComponent() {
                               ...prev.currentSeasonData.currentWeather,
                               growingSeason: {
                                 ...prev.currentSeasonData.currentWeather.growingSeason,
-                                totalRainfall: parseFloat(e.target.value),
-                              },
-                            },
-                          },
+                                totalRainfall: parseFloat(e.target.value)
+                              }
+                            }
+                          }
                         }))
                       }
                     />
@@ -786,10 +786,10 @@ export function YieldPredictionComponent() {
                               ...prev.currentSeasonData.currentWeather,
                               growingSeason: {
                                 ...prev.currentSeasonData.currentWeather.growingSeason,
-                                sunlightHours: parseFloat(e.target.value),
-                              },
-                            },
-                          },
+                                sunlightHours: parseFloat(e.target.value)
+                              }
+                            }
+                          }
                         }))
                       }
                     />
@@ -811,10 +811,10 @@ export function YieldPredictionComponent() {
                               ...prev.currentSeasonData.currentWeather,
                               growingSeason: {
                                 ...prev.currentSeasonData.currentWeather.growingSeason,
-                                extremeWeatherEvents: parseInt(e.target.value),
-                              },
-                            },
-                          },
+                                extremeWeatherEvents: parseInt(e.target.value)
+                              }
+                            }
+                          }
                         }))
                       }
                     />
@@ -842,9 +842,9 @@ export function YieldPredictionComponent() {
                           ...prev.currentSeasonData,
                           plannedManagement: {
                             ...prev.currentSeasonData.plannedManagement,
-                            pruningIntensity: value,
-                          },
-                        },
+                            pruningIntensity: value
+                          }
+                        }
                       }))
                     }
                   >
@@ -872,9 +872,9 @@ export function YieldPredictionComponent() {
                             ...prev.currentSeasonData,
                             plannedManagement: {
                               ...prev.currentSeasonData.plannedManagement,
-                              irrigationAmount: parseFloat(e.target.value),
-                            },
-                          },
+                              irrigationAmount: parseFloat(e.target.value)
+                            }
+                          }
                         }))
                       }
                     />
@@ -892,9 +892,9 @@ export function YieldPredictionComponent() {
                             ...prev.currentSeasonData,
                             plannedManagement: {
                               ...prev.currentSeasonData.plannedManagement,
-                              pestControl: parseInt(e.target.value),
-                            },
-                          },
+                              pestControl: parseInt(e.target.value)
+                            }
+                          }
                         }))
                       }
                     />
@@ -941,7 +941,7 @@ export function YieldPredictionComponent() {
                           ? '#16a34a'
                           : scenario === 'realistic'
                             ? '#2563eb'
-                            : '#ea580c',
+                            : '#ea580c'
                     }}
                   >
                     <CardHeader>

@@ -65,7 +65,7 @@ const GRAPE_KC_VALUES: Record<GrapeGrowthStage, { kc: number; description: strin
   fruit_set: { kc: 0.95, description: 'Fruit development - peak water needs' },
   veraison: { kc: 0.85, description: 'Ripening stage - reducing water stress' },
   harvest: { kc: 0.45, description: 'Harvest time - controlled irrigation' },
-  post_harvest: { kc: 0.6, description: 'Post-harvest recovery and storage' },
+  post_harvest: { kc: 0.6, description: 'Post-harvest recovery and storage' }
 }
 
 export class ETcCalculator {
@@ -127,7 +127,7 @@ export class ETcCalculator {
         rn,
         numerator,
         denominator,
-        eto: Math.max(0, eto),
+        eto: Math.max(0, eto)
       })
     }
 
@@ -158,7 +158,7 @@ export class ETcCalculator {
   private static calculateNetRadiation(
     weather: WeatherData,
     location: ETcCalculationInputs['location'],
-    dayOfYear: number,
+    dayOfYear: number
   ): number {
     const { temperatureMax, temperatureMin, solarRadiation, solarRadiationLux, sunshineHours } =
       weather
@@ -231,7 +231,7 @@ export class ETcCalculator {
   private static calculateActualVaporPressure(
     tmax: number,
     tmin: number,
-    humidity: number,
+    humidity: number
   ): number {
     const es_tmax = 0.6108 * Math.exp((17.27 * tmax) / (tmax + 237.3))
     const es_tmin = 0.6108 * Math.exp((17.27 * tmin) / (tmin + 237.3))
@@ -287,7 +287,7 @@ export class ETcCalculator {
 
     if (!hasSolarData) {
       throw new Error(
-        'At least one form of solar radiation data is required (solar radiation in MJ/m²/day, lux, or sunshine hours)',
+        'At least one form of solar radiation data is required (solar radiation in MJ/m²/day, lux, or sunshine hours)'
       )
     }
 
@@ -360,7 +360,7 @@ export class ETcCalculator {
       growthStage,
       irrigationMethod,
       soilType,
-      weatherData,
+      weatherData
     )
 
     // Determine confidence level
@@ -374,7 +374,7 @@ export class ETcCalculator {
       irrigationNeed,
       irrigationRecommendation,
       growthStage,
-      confidence,
+      confidence
     }
   }
 
@@ -386,7 +386,7 @@ export class ETcCalculator {
     growthStage: GrapeGrowthStage,
     irrigationMethod: string,
     soilType: string,
-    weather: WeatherData,
+    weather: WeatherData
   ): IrrigationRecommendation {
     const notes: string[] = []
     let shouldIrrigate = irrigationNeed > 2 // Basic threshold
@@ -456,7 +456,7 @@ export class ETcCalculator {
       shouldIrrigate,
       duration: Math.round(duration * 100) / 100,
       frequency,
-      notes,
+      notes
     }
   }
 
@@ -465,7 +465,7 @@ export class ETcCalculator {
    */
   private static calculateConfidence(
     weather: WeatherData,
-    inputs: ETcCalculationInputs,
+    inputs: ETcCalculationInputs
   ): 'high' | 'medium' | 'low' {
     let score = 0
 
@@ -489,7 +489,7 @@ export class ETcCalculator {
    */
   static determineGrowthStage(
     plantingDate: string,
-    currentDate: string = new Date().toISOString(),
+    currentDate: string = new Date().toISOString()
   ): GrapeGrowthStage {
     const planting = new Date(plantingDate)
     const current = new Date(currentDate)
@@ -515,7 +515,7 @@ export class ETcCalculator {
   static calculateSeasonalRequirements(
     plantingDate: string,
     location: ETcCalculationInputs['location'],
-    averageWeather: Partial<WeatherData>,
+    averageWeather: Partial<WeatherData>
   ): { stage: GrapeGrowthStage; days: number; totalETc: number; description: string }[] {
     const stages = [
       { stage: 'dormant' as GrapeGrowthStage, days: 90 },
@@ -524,7 +524,7 @@ export class ETcCalculator {
       { stage: 'fruit_set' as GrapeGrowthStage, days: 60 },
       { stage: 'veraison' as GrapeGrowthStage, days: 60 },
       { stage: 'harvest' as GrapeGrowthStage, days: 30 },
-      { stage: 'post_harvest' as GrapeGrowthStage, days: 60 },
+      { stage: 'post_harvest' as GrapeGrowthStage, days: 60 }
     ]
 
     return stages.map(({ stage, days }) => {

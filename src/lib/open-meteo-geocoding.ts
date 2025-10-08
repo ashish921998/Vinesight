@@ -44,7 +44,7 @@ export class OpenMeteoGeocodingService {
       name: params.name,
       count: (params.count || 10).toString(),
       language: params.language || 'en',
-      format: params.format || 'json',
+      format: params.format || 'json'
     })
 
     const url = `${this.BASE_URL}?${searchParams}`
@@ -69,7 +69,7 @@ export class OpenMeteoGeocodingService {
    */
   static async getLocationSuggestions(
     query: string,
-    maxResults: number = 5,
+    maxResults: number = 5
   ): Promise<LocationResult[]> {
     if (query.length < 2) {
       return []
@@ -78,7 +78,7 @@ export class OpenMeteoGeocodingService {
     try {
       const results = await this.searchLocations({
         name: query,
-        count: maxResults,
+        count: maxResults
       })
 
       // Filter and sort results for better UX
@@ -90,7 +90,7 @@ export class OpenMeteoGeocodingService {
             result.feature_code === 'PPLA' || // First-order admin division seats
             result.feature_code === 'PPLA2' || // Second-order admin division seats
             result.feature_code === 'PPLA3' || // Third-order admin division seats
-            result.feature_code === 'PPLA4', // Fourth-order admin division seats
+            result.feature_code === 'PPLA4' // Fourth-order admin division seats
         )
         .sort((a, b) => {
           // Prioritize by population (if available)
@@ -104,7 +104,7 @@ export class OpenMeteoGeocodingService {
             PPLA2: 3,
             PPLA3: 2,
             PPL: 1,
-            PPLA4: 1,
+            PPLA4: 1
           }
           return (
             (importance[b.feature_code as keyof typeof importance] || 0) -
@@ -144,7 +144,7 @@ export class OpenMeteoGeocodingService {
       const searchRadius = 0.1 // degrees (roughly 11km)
       const results = await this.searchLocations({
         name: `${latitude.toFixed(4)},${longitude.toFixed(4)}`,
-        count: 1,
+        count: 1
       })
 
       if (results.length > 0) {
@@ -154,7 +154,7 @@ export class OpenMeteoGeocodingService {
           latitude,
           longitude,
           result.latitude,
-          result.longitude,
+          result.longitude
         )
         if (distance < 50) {
           // Within 50km
@@ -207,7 +207,7 @@ export class OpenMeteoGeocodingService {
         (position) => {
           resolve({
             latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
+            longitude: position.coords.longitude
           })
         },
         (error) => {
@@ -217,8 +217,8 @@ export class OpenMeteoGeocodingService {
         {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 300000, // 5 minutes
-        },
+          maximumAge: 300000 // 5 minutes
+        }
       )
     })
   }
@@ -239,7 +239,7 @@ export class OpenMeteoGeocodingService {
         country: 'India',
         admin1: 'Maharashtra',
         timezone: 'Asia/Kolkata',
-        population: 1486053,
+        population: 1486053
       },
       {
         id: 2,
@@ -252,7 +252,7 @@ export class OpenMeteoGeocodingService {
         country: 'India',
         admin1: 'Maharashtra',
         timezone: 'Asia/Kolkata',
-        population: 2935744,
+        population: 2935744
       },
       {
         id: 3,
@@ -265,7 +265,7 @@ export class OpenMeteoGeocodingService {
         country: 'India',
         admin1: 'Maharashtra',
         timezone: 'Asia/Kolkata',
-        population: 502697,
+        population: 502697
       },
       {
         id: 4,
@@ -278,7 +278,7 @@ export class OpenMeteoGeocodingService {
         country: 'India',
         admin1: 'Maharashtra',
         timezone: 'Asia/Kolkata',
-        population: 951118,
+        population: 951118
       },
       {
         id: 5,
@@ -291,8 +291,8 @@ export class OpenMeteoGeocodingService {
         country: 'India',
         admin1: 'Karnataka',
         timezone: 'Asia/Kolkata',
-        population: 8443675,
-      },
+        population: 8443675
+      }
     ]
   }
 
@@ -323,7 +323,7 @@ export class OpenMeteoGeocodingService {
       displayName: this.formatLocationDisplay(location),
       coordinates: `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`,
       elevation: `${location.elevation}m`,
-      timezone: location.timezone,
+      timezone: location.timezone
     }
   }
 }

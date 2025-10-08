@@ -8,7 +8,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
 import {
   Droplets,
@@ -23,7 +23,7 @@ import {
   TestTube,
   MapPin,
   Clock,
-  CheckCircle,
+  CheckCircle
 } from 'lucide-react'
 
 interface QuickAction {
@@ -50,7 +50,7 @@ export function EnhancedQuickActions({
   onAction,
   onVoiceRecord,
   onCameraCapture,
-  loading,
+  loading
 }: EnhancedQuickActionsProps) {
   const [showVoiceDialog, setShowVoiceDialog] = useState<string | null>(null)
   const [isRecording, setIsRecording] = useState(false)
@@ -66,7 +66,7 @@ export function EnhancedQuickActions({
       oneTap: true,
       voiceEnabled: true,
       cameraEnabled: true,
-      priority: 1,
+      priority: 1
     },
     {
       id: 'spray',
@@ -78,7 +78,7 @@ export function EnhancedQuickActions({
       oneTap: true,
       voiceEnabled: true,
       cameraEnabled: true,
-      priority: 2,
+      priority: 2
     },
     {
       id: 'harvest',
@@ -89,7 +89,7 @@ export function EnhancedQuickActions({
       bgGradient: 'from-primary/10 to-primary/20',
       oneTap: true,
       voiceEnabled: true,
-      priority: 3,
+      priority: 3
     },
     {
       id: 'expense',
@@ -100,7 +100,7 @@ export function EnhancedQuickActions({
       bgGradient: 'from-primary/10 to-primary/20',
       oneTap: false,
       voiceEnabled: true,
-      priority: 4,
+      priority: 4
     },
     {
       id: 'fertigation',
@@ -111,7 +111,7 @@ export function EnhancedQuickActions({
       bgGradient: 'from-primary/10 to-primary/20',
       oneTap: true,
       voiceEnabled: true,
-      priority: 5,
+      priority: 5
     },
     {
       id: 'soil_test',
@@ -123,7 +123,7 @@ export function EnhancedQuickActions({
       oneTap: false,
       voiceEnabled: true,
       cameraEnabled: true,
-      priority: 6,
+      priority: 6
     },
     {
       id: 'field_photo',
@@ -134,7 +134,7 @@ export function EnhancedQuickActions({
       bgGradient: 'from-accent/10 to-accent/20',
       oneTap: true,
       cameraEnabled: true,
-      priority: 7,
+      priority: 7
     },
     {
       id: 'voice_note',
@@ -145,8 +145,8 @@ export function EnhancedQuickActions({
       bgGradient: 'from-secondary/10 to-secondary/20',
       oneTap: true,
       voiceEnabled: true,
-      priority: 8,
-    },
+      priority: 8
+    }
   ]
 
   const handleActionClick = (action: QuickAction) => {
@@ -154,7 +154,7 @@ export function EnhancedQuickActions({
       onAction(action.id, {
         timestamp: new Date(),
         location: 'current', // GPS would be added here
-        oneTap: true,
+        oneTap: true
       })
       return
     }

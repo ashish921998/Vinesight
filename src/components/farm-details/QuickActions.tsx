@@ -21,7 +21,7 @@ export function QuickActions({ onDataLogsClick }: QuickActionsProps) {
       icon: Plus,
       color: 'bg-green-100 text-green-600 hover:bg-green-200',
       onClick: onDataLogsClick,
-      featured: true,
+      featured: true
     },
     {
       title: 'AI Intelligence',
@@ -29,15 +29,15 @@ export function QuickActions({ onDataLogsClick }: QuickActionsProps) {
       icon: Brain,
       color: 'bg-purple-100 text-purple-600 hover:bg-purple-200',
       onClick: () => router.push(`/farms/${farmId}/ai-insights`),
-      badge: 'NEW',
+      badge: 'NEW'
     },
     {
       title: 'View Reports',
       description: 'Generate & export reports',
       icon: BarChart3,
       color: 'bg-blue-100 text-blue-600 hover:bg-blue-200',
-      onClick: () => router.push('/reports'),
-    },
+      onClick: () => router.push('/reports')
+    }
   ]
 
   return (

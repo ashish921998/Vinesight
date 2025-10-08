@@ -12,7 +12,7 @@ import {
   Mail,
   FileText,
   AlertTriangle,
-  CheckCircle,
+  CheckCircle
 } from 'lucide-react'
 import { SEOSchema } from '@/components/SEOSchema'
 import Link from 'next/link'

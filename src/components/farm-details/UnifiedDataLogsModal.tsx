@@ -11,7 +11,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -29,7 +29,7 @@ import {
   Edit2,
   Trash2,
   Calendar,
-  CheckCircle,
+  CheckCircle
 } from 'lucide-react'
 
 export type LogType =
@@ -89,9 +89,9 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         label: 'Duration (hours)',
         required: true,
         min: 0,
-        step: 0.1,
-      },
-    ],
+        step: 0.1
+      }
+    ]
   },
   spray: {
     icon: SprayCan,
@@ -105,7 +105,7 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         label: 'Chemical Used',
         required: true,
         placeholder: 'e.g., Sulfur fungicide',
-        maxLength: 10,
+        maxLength: 10
       },
       {
         name: 'quantity_amount',
@@ -114,14 +114,14 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         required: false,
         min: 0,
         step: 0.1,
-        placeholder: 'e.g., 500',
+        placeholder: 'e.g., 500'
       },
       {
         name: 'quantity_unit',
         type: 'select',
         label: 'Unit',
         required: false,
-        options: ['gm/L', 'ml/L'],
+        options: ['gm/L', 'ml/L']
       },
       {
         name: 'water_volume',
@@ -130,9 +130,9 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         required: false,
         min: 0,
         step: 0.1,
-        placeholder: 'Total water used',
-      },
-    ],
+        placeholder: 'Total water used'
+      }
+    ]
   },
   harvest: {
     icon: Scissors,
@@ -146,16 +146,16 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         label: 'Quantity (kg)',
         required: true,
         min: 0,
-        step: 0.1,
+        step: 0.1
       },
       {
         name: 'grade',
         type: 'select',
         label: 'Grade',
         required: true,
-        options: ['Premium', 'Standard', 'Below Standard'],
-      },
-    ],
+        options: ['Premium', 'Standard', 'Below Standard']
+      }
+    ]
   },
   expense: {
     icon: DollarSign,
@@ -168,14 +168,14 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         type: 'select',
         label: 'Category',
         required: true,
-        options: ['labor', 'materials', 'equipment', 'other'],
+        options: ['labor', 'materials', 'equipment', 'other']
       },
       {
         name: 'description',
         type: 'text',
         label: 'Description',
         required: true,
-        placeholder: 'Brief description',
+        placeholder: 'Brief description'
       },
       {
         name: 'cost',
@@ -183,16 +183,16 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         label: 'Amount (₹)',
         required: true,
         min: 0,
-        step: 0.01,
+        step: 0.01
       },
       {
         name: 'vendor',
         type: 'text',
         label: 'Vendor',
         required: false,
-        placeholder: 'Vendor name (optional)',
-      },
-    ],
+        placeholder: 'Vendor name (optional)'
+      }
+    ]
   },
   fertigation: {
     icon: Beaker,
@@ -205,7 +205,7 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         type: 'text',
         label: 'Fertilizer Type',
         required: true,
-        placeholder: 'e.g., NPK 19:19:19',
+        placeholder: 'e.g., NPK 19:19:19'
       },
       {
         name: 'quantity',
@@ -213,16 +213,16 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         label: 'Quantity',
         required: false,
         min: 0,
-        step: 0.1,
+        step: 0.1
       },
       {
         name: 'unit',
         type: 'select',
         label: 'Unit',
         required: false,
-        options: ['kg/acre', 'liter/acre'],
-      },
-    ],
+        options: ['kg/acre', 'liter/acre']
+      }
+    ]
   },
   petiole_test: {
     icon: TestTube,
@@ -235,128 +235,128 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         type: 'number',
         label: 'Total Nitrogen (%)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'nitrate_nitrogen',
         type: 'number',
         label: 'Nitrate Nitrogen (PPM)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'ammonical_nitrogen',
         type: 'number',
         label: 'Ammonical Nitrogen (PPM)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'phosphorus',
         type: 'number',
         label: 'Phosphorus (%)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'potassium',
         type: 'number',
         label: 'Potassium (%)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'calcium',
         type: 'number',
         label: 'Calcium (%)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'magnesium',
         type: 'number',
         label: 'Magnesium (%)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'sulphur',
         type: 'number',
         label: 'Sulphur (%)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'ferrous',
         type: 'number',
         label: 'Ferrous (PPM)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'manganese',
         type: 'number',
         label: 'Manganese (PPM)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'zinc',
         type: 'number',
         label: 'Zinc (PPM)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'copper',
         type: 'number',
         label: 'Copper (PPM)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'boron',
         type: 'number',
         label: 'Boron (PPM)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'molybdenum',
         type: 'number',
         label: 'Molybdenum (PPM)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'sodium',
         type: 'number',
         label: 'Sodium (%)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'chloride',
         type: 'number',
         label: 'Chloride (%)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'carbonate',
         type: 'number',
         label: 'Carbonate (PPM)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'bicarbonate',
         type: 'number',
         label: 'Bicarbonate (PPM)',
         required: false,
-        min: 0,
-      },
-    ],
+        min: 0
+      }
+    ]
   },
   soil_test: {
     icon: TestTube,
@@ -371,31 +371,31 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         required: true,
         min: 0,
         max: 14,
-        step: 0.1,
+        step: 0.1
       },
       {
         name: 'nitrogen',
         type: 'number',
         label: 'Nitrogen (ppm)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'phosphorus',
         type: 'number',
         label: 'Phosphorus (ppm)',
         required: false,
-        min: 0,
+        min: 0
       },
       {
         name: 'potassium',
         type: 'number',
         label: 'Potassium (ppm)',
         required: false,
-        min: 0,
-      },
-    ],
-  },
+        min: 0
+      }
+    ]
+  }
 }
 
 const logTypeLabels: Record<LogType, string> = {
@@ -405,14 +405,14 @@ const logTypeLabels: Record<LogType, string> = {
   soil_test: 'Soil Test',
   harvest: 'Harvest',
   expense: 'Expense',
-  petiole_test: 'Petiole Test',
+  petiole_test: 'Petiole Test'
 }
 
 export function UnifiedDataLogsModal({
   isOpen,
   onClose,
   onSubmit,
-  isSubmitting,
+  isSubmitting
 }: UnifiedDataLogsModalProps) {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [currentLogType, setCurrentLogType] = useState<LogType | null>(null)
@@ -512,7 +512,7 @@ export function UnifiedDataLogsModal({
     const newEntry = {
       id: Date.now().toString(),
       data: {},
-      isValid: false,
+      isValid: false
     }
     setSprayEntries((prev) => [...prev, newEntry])
   }
@@ -530,11 +530,11 @@ export function UnifiedDataLogsModal({
           return {
             ...entry,
             data: newData,
-            isValid: validateSprayEntry(newData),
+            isValid: validateSprayEntry(newData)
           }
         }
         return entry
-      }),
+      })
     )
   }
 
@@ -554,7 +554,7 @@ export function UnifiedDataLogsModal({
     const newEntry = {
       id: Date.now().toString(),
       data: {},
-      isValid: false,
+      isValid: false
     }
     setFertigationEntries((prev) => [...prev, newEntry])
   }
@@ -572,11 +572,11 @@ export function UnifiedDataLogsModal({
           return {
             ...entry,
             data: newData,
-            isValid: validateFertigationEntry(newData),
+            isValid: validateFertigationEntry(newData)
           }
         }
         return entry
-      }),
+      })
     )
   }
 
@@ -591,7 +591,7 @@ export function UnifiedDataLogsModal({
         id: entry.id + '_spray',
         type: 'spray',
         data: { ...entry.data },
-        isValid: true,
+        isValid: true
       }))
 
       setSessionLogs((prev) => [...prev, ...newSprayLogs])
@@ -611,7 +611,7 @@ export function UnifiedDataLogsModal({
         id: entry.id + '_fertigation',
         type: 'fertigation',
         data: { ...entry.data },
-        isValid: true,
+        isValid: true
       }))
 
       setSessionLogs((prev) => [...prev, ...newFertigationLogs])
@@ -627,9 +627,9 @@ export function UnifiedDataLogsModal({
       id: editingLogId || Date.now().toString(),
       type: currentLogType,
       data: {
-        ...currentFormData,
+        ...currentFormData
       },
-      isValid: true,
+      isValid: true
     }
 
     if (editingLogId) {
@@ -675,7 +675,7 @@ export function UnifiedDataLogsModal({
 
   const renderSprayEntryField = (
     entry: { id: string; data: Record<string, any>; isValid: boolean },
-    field: FormField,
+    field: FormField
   ) => {
     const value = entry.data[field.name] || ''
 
@@ -747,7 +747,7 @@ export function UnifiedDataLogsModal({
 
   const renderFertigationEntryField = (
     entry: { id: string; data: Record<string, any>; isValid: boolean },
-    field: FormField,
+    field: FormField
   ) => {
     const value = entry.data[field.name] || ''
 
@@ -835,7 +835,7 @@ export function UnifiedDataLogsModal({
               onValueChange={(newValue) =>
                 setCurrentFormData((prev) => ({
                   ...prev,
-                  [field.name]: newValue,
+                  [field.name]: newValue
                 }))
               }
             >
@@ -866,7 +866,7 @@ export function UnifiedDataLogsModal({
               onChange={(e) =>
                 setCurrentFormData((prev) => ({
                   ...prev,
-                  [field.name]: e.target.value,
+                  [field.name]: e.target.value
                 }))
               }
               placeholder={field.placeholder}
@@ -890,7 +890,7 @@ export function UnifiedDataLogsModal({
               onChange={(e) =>
                 setCurrentFormData((prev) => ({
                   ...prev,
-                  [field.name]: e.target.value,
+                  [field.name]: e.target.value
                 }))
               }
               placeholder={field.placeholder}
@@ -912,7 +912,7 @@ export function UnifiedDataLogsModal({
               onChange={(e) =>
                 setCurrentFormData((prev) => ({
                   ...prev,
-                  [field.name]: e.target.value,
+                  [field.name]: e.target.value
                 }))
               }
               placeholder={field.placeholder}
@@ -1088,7 +1088,7 @@ export function UnifiedDataLogsModal({
                         </CardHeader>
                         <CardContent className="space-y-2">
                           {logTypeConfigs[currentLogType].fields.map((field) =>
-                            renderSprayEntryField(entry, field),
+                            renderSprayEntryField(entry, field)
                           )}
 
                           {/* Add button after water volume field */}
@@ -1144,7 +1144,7 @@ export function UnifiedDataLogsModal({
                         </CardHeader>
                         <CardContent className="space-y-2">
                           {logTypeConfigs[currentLogType].fields.map((field) =>
-                            renderFertigationEntryField(entry, field),
+                            renderFertigationEntryField(entry, field)
                           )}
 
                           {/* Add button after last field */}

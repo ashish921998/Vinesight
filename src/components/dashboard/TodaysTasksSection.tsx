@@ -13,7 +13,7 @@ import {
   Clock,
   MapPin,
   CheckCircle2,
-  Plus,
+  Plus
 } from 'lucide-react'
 
 interface Task {
@@ -45,7 +45,7 @@ export function TodaysTasksSection({
   onTaskAction,
   onAddTask,
   loading,
-  farmName,
+  farmName
 }: TodaysTasksSectionProps) {
   const getTaskIcon = (type: string) => {
     switch (type) {

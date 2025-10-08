@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 
 export default function GlobalError({
   error,
-  reset,
+  reset
 }: {
   error: Error & { digest?: string }
   reset: () => void

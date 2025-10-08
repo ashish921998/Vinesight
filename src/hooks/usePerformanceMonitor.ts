@@ -29,7 +29,7 @@ export function usePerformanceMonitor(componentName: string) {
       loadTime,
       renderTime: 0, // Will be updated on render
       componentName,
-      memoryUsage,
+      memoryUsage
     }
 
     metricsRef.current.push(metrics)
@@ -38,7 +38,7 @@ export function usePerformanceMonitor(componentName: string) {
     if (process.env.NODE_ENV === 'development') {
       console.log(`🔍 Performance [${componentName}]:`, {
         loadTime: `${loadTime}ms`,
-        memoryUsage: memoryUsage ? `${(memoryUsage / 1024 / 1024).toFixed(2)}MB` : 'N/A',
+        memoryUsage: memoryUsage ? `${(memoryUsage / 1024 / 1024).toFixed(2)}MB` : 'N/A'
       })
     }
 
@@ -66,7 +66,7 @@ export function usePerformanceMonitor(componentName: string) {
         console.log(`⚡ Event [${componentName}/${eventName}]:`, `${eventDuration}ms`)
       }
     },
-    [componentName],
+    [componentName]
   )
 
   // Function to get current metrics
@@ -102,7 +102,7 @@ export function useAsyncPerformance() {
         throw error
       }
     },
-    [],
+    []
   )
 
   return { measureAsync }
@@ -123,7 +123,7 @@ export function useBundleAnalyzer() {
             navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
           transferSize: navigation.transferSize,
           encodedBodySize: navigation.encodedBodySize,
-          decodedBodySize: navigation.decodedBodySize,
+          decodedBodySize: navigation.decodedBodySize
         }
 
         if (process.env.NODE_ENV === 'development') {
@@ -131,7 +131,7 @@ export function useBundleAnalyzer() {
             loadTime: `${metrics.loadTime.toFixed(2)}ms`,
             transferSize: `${(metrics.transferSize / 1024).toFixed(2)}KB`,
             encodedSize: `${(metrics.encodedBodySize / 1024).toFixed(2)}KB`,
-            decodedSize: `${(metrics.decodedBodySize / 1024).toFixed(2)}KB`,
+            decodedSize: `${(metrics.decodedBodySize / 1024).toFixed(2)}KB`
           })
         }
 

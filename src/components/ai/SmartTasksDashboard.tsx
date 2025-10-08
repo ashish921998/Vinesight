@@ -20,7 +20,7 @@ import {
   ThumbsDown,
   Brain,
   Zap,
-  CloudRain,
+  CloudRain
 } from 'lucide-react'
 import { SmartTaskGenerator } from '@/lib/smart-task-generator'
 import type { AITaskRecommendation, RecommendationRequest } from '@/types/ai'
@@ -68,8 +68,8 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
           growthStage: undefined, // Will be determined by the service
           recentActivities: [], // Will be fetched by the service
           availableResources: [],
-          farmConditions: {},
-        },
+          farmConditions: {}
+        }
       }
 
       const result = await SmartTaskGenerator.generateSmartTasks(request)
@@ -94,7 +94,7 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
   const handleTaskAction = async (
     taskId: string,
     action: 'accepted' | 'rejected' | 'completed',
-    feedback?: string,
+    feedback?: string
   ) => {
     try {
       await SmartTaskGenerator.updateTaskStatus(taskId, action, feedback)
@@ -325,7 +325,7 @@ interface TaskCardProps {
   onAction: (
     taskId: string,
     action: 'accepted' | 'rejected' | 'completed',
-    feedback?: string,
+    feedback?: string
   ) => void
   isToday: boolean
 }

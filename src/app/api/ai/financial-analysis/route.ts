@@ -17,14 +17,14 @@ export async function POST(request: NextRequest) {
     if (!expenses && !historicalData) {
       return new Response(JSON.stringify({ error: 'Expense data is required' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }
       })
     }
 
     const context = {
       recentExpenses: expenses?.slice(0, 10) || [],
       totalCurrentSpend: expenses?.reduce((sum: number, exp: any) => sum + (exp.cost || 0), 0) || 0,
-      historicalData: historicalData?.slice(0, 20) || [],
+      historicalData: historicalData?.slice(0, 20) || []
     }
 
     const prompt = `
@@ -56,11 +56,11 @@ Return ONLY valid JSON:
           {
             role: 'system' as const,
             content:
-              'You are a financial analyst specializing in agricultural expenses for grape farming.',
+              'You are a financial analyst specializing in agricultural expenses for grape farming.'
           },
-          { role: 'user' as const, content: prompt },
+          { role: 'user' as const, content: prompt }
         ],
-        temperature: 0.3,
+        temperature: 0.3
       })
 
       const parsed = JSON.parse(result.text)
@@ -75,11 +75,11 @@ Return ONLY valid JSON:
         nextReviewDate:
           parsed.nextReviewDate ||
           new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        riskFactors: Array.isArray(parsed.riskFactors) ? parsed.riskFactors : [],
+        riskFactors: Array.isArray(parsed.riskFactors) ? parsed.riskFactors : []
       }
 
       return new Response(JSON.stringify({ success: true, data: analysis }), {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }
       })
     } catch (aiError) {
       // AI service failed, use fallback analysis
@@ -89,18 +89,18 @@ Return ONLY valid JSON:
         recommendation: 'Monitor expenses regularly for better insights',
         confidence: 0.5,
         nextReviewDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        riskFactors: [],
+        riskFactors: []
       }
 
       return new Response(
         JSON.stringify({
           success: true,
           data: fallbackAnalysis,
-          fallback: true,
+          fallback: true
         }),
         {
-          headers: { 'Content-Type': 'application/json' },
-        },
+          headers: { 'Content-Type': 'application/json' }
+        }
       )
     }
   } catch (error) {
@@ -113,12 +113,12 @@ Return ONLY valid JSON:
     return new Response(
       JSON.stringify({
         success: false,
-        error: 'Failed to analyze financial data',
+        error: 'Failed to analyze financial data'
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      },
+        headers: { 'Content-Type': 'application/json' }
+      }
     )
   }
 }

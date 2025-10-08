@@ -217,15 +217,15 @@ export const SOIL_STANDARDS = {
     // Physical properties
     bulkDensity: { min: 1.0, max: 1.6, optimal: 1.3 }, // g/cm³
     porosity: { min: 35, max: 60, optimal: 50 }, // %
-    waterHoldingCapacity: { min: 20, max: 40, optimal: 30 }, // %
+    waterHoldingCapacity: { min: 20, max: 40, optimal: 30 } // %
   },
 
   // Critical thresholds
   critical_levels: {
     pH: { very_low: 4.5, low: 5.5, high: 8.0, very_high: 8.5 },
     salinity: { low: 2, moderate: 4, high: 8, very_high: 16 }, // dS/m
-    organicMatter: { very_low: 0.5, low: 1.0, moderate: 1.5 }, // %
-  },
+    organicMatter: { very_low: 0.5, low: 1.0, moderate: 1.5 } // %
+  }
 }
 
 export class SoilHealthAnalyzer {
@@ -270,25 +270,25 @@ export class SoilHealthAnalyzer {
         subscores: {
           physical: {
             score: Math.round(physicalScore),
-            indicators: this.getPhysicalIndicators(testData.physical),
+            indicators: this.getPhysicalIndicators(testData.physical)
           },
           chemical: {
             score: Math.round(chemicalScore),
-            indicators: this.getChemicalIndicators(testData.chemical),
+            indicators: this.getChemicalIndicators(testData.chemical)
           },
           biological: {
             score: Math.round(biologicalScore),
-            indicators: this.getBiologicalIndicators(testData.biological),
-          },
+            indicators: this.getBiologicalIndicators(testData.biological)
+          }
         },
         limitations,
-        trends,
+        trends
       },
       recommendations,
       alerts,
       projections,
       integrations,
-      confidence,
+      confidence
     }
   }
 
@@ -327,7 +327,7 @@ export class SoilHealthAnalyzer {
       physical.waterHoldingCapacity <= standards.waterHoldingCapacity.max
     ) {
       const optimalDistance = Math.abs(
-        physical.waterHoldingCapacity - standards.waterHoldingCapacity.optimal,
+        physical.waterHoldingCapacity - standards.waterHoldingCapacity.optimal
       )
       score += Math.max(0, 100 - (optimalDistance / 5) * 100)
     } else {
@@ -347,7 +347,7 @@ export class SoilHealthAnalyzer {
       silty_clay_loam: 70,
       sandy_clay: 50,
       silty_clay: 45,
-      clay: 40,
+      clay: 40
     }
     score += textureScores[physical.soilTexture] || 50
     components++
@@ -365,7 +365,7 @@ export class SoilHealthAnalyzer {
       chemical.pH,
       standards.pH.min,
       standards.pH.max,
-      standards.pH.optimal,
+      standards.pH.optimal
     )
     score += pHScore * 2 // Weight pH heavily
     components += 2
@@ -375,7 +375,7 @@ export class SoilHealthAnalyzer {
       chemical.organicMatter,
       standards.organicMatter.min,
       standards.organicMatter.max,
-      standards.organicMatter.optimal,
+      standards.organicMatter.optimal
     )
     score += omScore * 1.5 // Weight organic matter heavily
     components += 1.5
@@ -393,19 +393,19 @@ export class SoilHealthAnalyzer {
       chemical.nitrogen.available,
       standards.nitrogen.min,
       standards.nitrogen.max,
-      standards.nitrogen.optimal,
+      standards.nitrogen.optimal
     )
     score += this.calculateParameterScore(
       chemical.phosphorus.available,
       standards.phosphorus.min,
       standards.phosphorus.max,
-      standards.phosphorus.optimal,
+      standards.phosphorus.optimal
     )
     score += this.calculateParameterScore(
       chemical.potassium.available,
       standards.potassium.min,
       standards.potassium.max,
-      standards.potassium.optimal,
+      standards.potassium.optimal
     )
     components += 3
 
@@ -415,21 +415,21 @@ export class SoilHealthAnalyzer {
         chemical.calcium,
         standards.calcium.min,
         standards.calcium.max,
-        standards.calcium.optimal,
+        standards.calcium.optimal
       ) * 0.5
     score +=
       this.calculateParameterScore(
         chemical.magnesium,
         standards.magnesium.min,
         standards.magnesium.max,
-        standards.magnesium.optimal,
+        standards.magnesium.optimal
       ) * 0.5
     score +=
       this.calculateParameterScore(
         chemical.sulfur,
         standards.sulfur.min,
         standards.sulfur.max,
-        standards.sulfur.optimal,
+        standards.sulfur.optimal
       ) * 0.5
     components += 1.5
 
@@ -444,7 +444,7 @@ export class SoilHealthAnalyzer {
           nutrientValue,
           nutrientStandard.min,
           nutrientStandard.max,
-          nutrientStandard.optimal,
+          nutrientStandard.optimal
         )
       }
     })
@@ -503,7 +503,7 @@ export class SoilHealthAnalyzer {
     value: number,
     min: number,
     max: number,
-    optimal: number,
+    optimal: number
   ): number {
     if (value >= min && value <= max) {
       const optimalDistance = Math.abs(value - optimal)
@@ -535,7 +535,7 @@ export class SoilHealthAnalyzer {
 
   private static identifyLimitations(
     testData: SoilTestData,
-    standards: any,
+    standards: any
   ): SoilHealthMetrics['limitations'] {
     const limitations: SoilHealthMetrics['limitations'] = []
 
@@ -545,14 +545,14 @@ export class SoilHealthAnalyzer {
         factor: 'Soil Acidity',
         severity: testData.chemical.pH < 5.0 ? 'severe' : 'high',
         impact: 'Reduced nutrient availability, aluminum toxicity risk',
-        recommendation: 'Apply agricultural lime 2-3 tons/ha, monitor pH quarterly',
+        recommendation: 'Apply agricultural lime 2-3 tons/ha, monitor pH quarterly'
       })
     } else if (testData.chemical.pH > 8.0) {
       limitations.push({
         factor: 'Soil Alkalinity',
         severity: testData.chemical.pH > 8.5 ? 'severe' : 'high',
         impact: 'Iron, zinc, and manganese deficiency, poor nutrient uptake',
-        recommendation: 'Apply sulfur 200-500 kg/ha, use acidifying fertilizers',
+        recommendation: 'Apply sulfur 200-500 kg/ha, use acidifying fertilizers'
       })
     }
 
@@ -562,7 +562,7 @@ export class SoilHealthAnalyzer {
         factor: 'Soil Salinity',
         severity: testData.chemical.electricalConductivity > 4.0 ? 'severe' : 'high',
         impact: 'Reduced water uptake, stunted growth, yield reduction',
-        recommendation: 'Improve drainage, apply gypsum, use salt-tolerant rootstocks',
+        recommendation: 'Improve drainage, apply gypsum, use salt-tolerant rootstocks'
       })
     }
 
@@ -572,7 +572,7 @@ export class SoilHealthAnalyzer {
         factor: 'Low Organic Matter',
         severity: testData.chemical.organicMatter < 0.5 ? 'severe' : 'high',
         impact: 'Poor soil structure, low water retention, reduced microbial activity',
-        recommendation: 'Apply compost 5-10 t/ha, grow cover crops, reduce tillage',
+        recommendation: 'Apply compost 5-10 t/ha, grow cover crops, reduce tillage'
       })
     }
 
@@ -582,7 +582,7 @@ export class SoilHealthAnalyzer {
         factor: 'Nitrogen Deficiency',
         severity: testData.chemical.nitrogen.available < 100 ? 'high' : 'moderate',
         impact: 'Reduced vegetative growth, poor fruit set, low yields',
-        recommendation: 'Apply nitrogen fertilizer 150-200 kg N/ha in split doses',
+        recommendation: 'Apply nitrogen fertilizer 150-200 kg N/ha in split doses'
       })
     }
 
@@ -591,7 +591,7 @@ export class SoilHealthAnalyzer {
         factor: 'Phosphorus Deficiency',
         severity: testData.chemical.phosphorus.available < 10 ? 'high' : 'moderate',
         impact: 'Poor root development, delayed maturity, reduced fruit quality',
-        recommendation: 'Apply phosphorus fertilizer 40-60 kg P2O5/ha before planting',
+        recommendation: 'Apply phosphorus fertilizer 40-60 kg P2O5/ha before planting'
       })
     }
 
@@ -600,7 +600,7 @@ export class SoilHealthAnalyzer {
         factor: 'Potassium Deficiency',
         severity: testData.chemical.potassium.available < 100 ? 'high' : 'moderate',
         impact: 'Poor fruit quality, reduced sugar content, disease susceptibility',
-        recommendation: 'Apply potassium fertilizer 100-150 kg K2O/ha during fruit development',
+        recommendation: 'Apply potassium fertilizer 100-150 kg K2O/ha during fruit development'
       })
     }
 
@@ -609,7 +609,7 @@ export class SoilHealthAnalyzer {
 
   private static generateAlerts(
     testData: SoilTestData,
-    standards: any,
+    standards: any
   ): SoilHealthResults['alerts'] {
     const alerts: SoilHealthResults['alerts'] = []
 
@@ -621,7 +621,7 @@ export class SoilHealthAnalyzer {
         currentValue: testData.chemical.pH,
         optimalRange: [standards.pH.min, standards.pH.max],
         message: `Extreme pH level detected. Immediate soil amendment required.`,
-        actionRequired: true,
+        actionRequired: true
       })
     }
 
@@ -633,7 +633,7 @@ export class SoilHealthAnalyzer {
         currentValue: testData.chemical.electricalConductivity,
         optimalRange: [0, 2.0],
         message: `High salinity levels may affect grape yield and quality.`,
-        actionRequired: testData.chemical.electricalConductivity > 4.0,
+        actionRequired: testData.chemical.electricalConductivity > 4.0
       })
     }
 
@@ -645,7 +645,7 @@ export class SoilHealthAnalyzer {
         currentValue: testData.chemical.organicMatter,
         optimalRange: [standards.organicMatter.min, standards.organicMatter.max],
         message: `Low organic matter affects soil health and water retention.`,
-        actionRequired: testData.chemical.organicMatter < 0.5,
+        actionRequired: testData.chemical.organicMatter < 0.5
       })
     }
 
@@ -659,27 +659,27 @@ export class SoilHealthAnalyzer {
         parameter: 'Soil pH',
         direction: 'stable',
         rate: 0.1,
-        significance: 'not_significant',
+        significance: 'not_significant'
       },
       {
         parameter: 'Organic Matter',
         direction: 'improving',
         rate: 2.3,
-        significance: 'significant',
+        significance: 'significant'
       },
       {
         parameter: 'Available Phosphorus',
         direction: 'declining',
         rate: -1.8,
-        significance: 'significant',
-      },
+        significance: 'significant'
+      }
     ]
   }
 
   private static generateRecommendations(
     testData: SoilTestData,
     farmContext: any,
-    limitations: any,
+    limitations: any
   ): SoilRecommendations {
     const immediate: SoilRecommendations['immediate'] = []
     const seasonal: SoilRecommendations['seasonal'] = []
@@ -697,7 +697,7 @@ export class SoilHealthAnalyzer {
         priority,
         timeframe: priority === 'urgent' ? 'Within 2 weeks' : 'Within 2 months',
         expectedCost: this.estimateCost(limitation.factor),
-        expectedBenefit: limitation.impact,
+        expectedBenefit: limitation.impact
       })
     })
 
@@ -708,24 +708,24 @@ export class SoilHealthAnalyzer {
         actions: ['Apply organic matter', 'Soil testing', 'Drainage improvement'],
         materials: [
           { name: 'Compost', quantity: '5-8 t/ha', cost: 15000 },
-          { name: 'Lime (if needed)', quantity: '2-3 t/ha', cost: 8000 },
-        ],
+          { name: 'Lime (if needed)', quantity: '2-3 t/ha', cost: 8000 }
+        ]
       },
       {
         season: 'monsoon',
         actions: ['Monitor drainage', 'Cover crop establishment', 'Erosion control'],
-        materials: [{ name: 'Cover crop seeds', quantity: '20-30 kg/ha', cost: 3000 }],
+        materials: [{ name: 'Cover crop seeds', quantity: '20-30 kg/ha', cost: 3000 }]
       },
       {
         season: 'post_monsoon',
         actions: ['Soil compaction assessment', 'Micronutrient application'],
-        materials: [{ name: 'Micronutrient mix', quantity: '25 kg/ha', cost: 5000 }],
+        materials: [{ name: 'Micronutrient mix', quantity: '25 kg/ha', cost: 5000 }]
       },
       {
         season: 'winter',
         actions: ['Deep tillage (if needed)', 'Organic matter incorporation'],
-        materials: [{ name: 'Farm yard manure', quantity: '10-15 t/ha', cost: 20000 }],
-      },
+        materials: [{ name: 'Farm yard manure', quantity: '10-15 t/ha', cost: 20000 }]
+      }
     )
 
     // Generate long-term strategies
@@ -736,8 +736,8 @@ export class SoilHealthAnalyzer {
       milestones: [
         { year: 1, target: '1.8%', metric: 'Organic matter content' },
         { year: 2, target: '2.1%', metric: 'Organic matter content' },
-        { year: 3, target: '2.4%', metric: 'Organic matter content' },
-      ],
+        { year: 3, target: '2.4%', metric: 'Organic matter content' }
+      ]
     })
 
     // Generate fertilizer recommendations
@@ -749,11 +749,11 @@ export class SoilHealthAnalyzer {
           organic: {
             source: 'Compost + Green manure',
             quantity: '8-10 t/ha',
-            timing: 'Pre-monsoon',
+            timing: 'Pre-monsoon'
           },
-          inorganic: { fertilizer: 'Urea', quantity: '150-200 kg/ha', timing: 'Split application' },
+          inorganic: { fertilizer: 'Urea', quantity: '150-200 kg/ha', timing: 'Split application' }
         },
-        costBenefit: { investment: 12000, expectedReturn: 25000 },
+        costBenefit: { investment: 12000, expectedReturn: 25000 }
       })
     }
 
@@ -762,7 +762,7 @@ export class SoilHealthAnalyzer {
 
   private static calculateProjections(
     testData: SoilTestData,
-    recommendations: SoilRecommendations,
+    recommendations: SoilRecommendations
   ): SoilHealthResults['projections'] {
     const currentScore = 65 // Would be calculated from actual analysis
 
@@ -772,25 +772,25 @@ export class SoilHealthAnalyzer {
         no_action: {
           soilScore: Math.max(30, currentScore - 5),
           productivity: 70,
-          sustainability: 45,
+          sustainability: 45
         },
         recommended_action: {
           soilScore: Math.min(85, currentScore + 15),
           productivity: 85,
-          sustainability: 80,
+          sustainability: 80
         },
         intensive_improvement: {
           soilScore: Math.min(95, currentScore + 25),
           productivity: 95,
-          sustainability: 90,
-        },
-      },
+          sustainability: 90
+        }
+      }
     }
   }
 
   private static generateIntegrations(
     testData: SoilTestData,
-    overallScore: number,
+    overallScore: number
   ): SoilHealthResults['integrations'] {
     return {
       nutrientCalculator: {
@@ -798,8 +798,8 @@ export class SoilHealthAnalyzer {
           nitrogenAdjustment: testData.chemical.nitrogen.available < 200 ? 1.2 : 0.9,
           phosphorusAdjustment: testData.chemical.phosphorus.available < 15 ? 1.3 : 0.9,
           potassiumAdjustment: testData.chemical.potassium.available < 150 ? 1.2 : 0.9,
-          organicMatterBonus: testData.chemical.organicMatter > 2.0 ? 0.85 : 1.0,
-        },
+          organicMatterBonus: testData.chemical.organicMatter > 2.0 ? 0.85 : 1.0
+        }
       },
       diseaseRisk: {
         soilRelatedRisks: [
@@ -811,12 +811,12 @@ export class SoilHealthAnalyzer {
             : null,
           testData.chemical.organicMatter < 1.0
             ? 'Low organic matter reduces beneficial microorganisms'
-            : null,
-        ].filter((risk): risk is string => risk !== null),
+            : null
+        ].filter((risk): risk is string => risk !== null)
       },
       yieldPrediction: {
-        soilHealthFactor: overallScore / 100, // 0.0-1.0 multiplier for yield predictions
-      },
+        soilHealthFactor: overallScore / 100 // 0.0-1.0 multiplier for yield predictions
+      }
     }
   }
 
@@ -846,7 +846,7 @@ export class SoilHealthAnalyzer {
       'Low Organic Matter': 20000, // Compost application
       'Nitrogen Deficiency': 8000, // Fertilizer cost
       'Phosphorus Deficiency': 6000, // P fertilizer cost
-      'Potassium Deficiency': 7000, // K fertilizer cost
+      'Potassium Deficiency': 7000 // K fertilizer cost
     }
 
     return costs[factor] || 10000

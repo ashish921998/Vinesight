@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
   NotificationService,
-  NotificationSettings as INotificationSettings,
+  NotificationSettings as INotificationSettings
 } from '@/lib/notification-service'
 import { Bell, Clock, AlertTriangle, Calendar, Settings, CheckCircle2 } from 'lucide-react'
 
@@ -23,7 +23,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     overdueTasks: true,
     upcomingTasks: true,
     reminderTime: '09:00',
-    daysAdvance: 1,
+    daysAdvance: 1
   })
   const [permission, setPermission] = useState<NotificationPermission>('default')
   const [saved, setSaved] = useState(false)
@@ -48,11 +48,11 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
 
   const handleSettingChange = (
     key: keyof INotificationSettings,
-    value: boolean | string | number,
+    value: boolean | string | number
   ) => {
     setSettings((prev) => ({
       ...prev,
-      [key]: value,
+      [key]: value
     }))
     setSaved(false)
   }
@@ -66,7 +66,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   const testNotification = () => {
     notificationService.sendNotification('🍇 Test Notification', {
       body: 'VineSight notifications are working correctly!',
-      tag: 'test-notification',
+      tag: 'test-notification'
     })
   }
 
@@ -76,19 +76,19 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         return {
           color: 'text-green-600',
           icon: <CheckCircle2 className="h-4 w-4" />,
-          text: 'Notifications Enabled',
+          text: 'Notifications Enabled'
         }
       case 'denied':
         return {
           color: 'text-red-600',
           icon: <AlertTriangle className="h-4 w-4" />,
-          text: 'Notifications Blocked',
+          text: 'Notifications Blocked'
         }
       default:
         return {
           color: 'text-orange-600',
           icon: <Bell className="h-4 w-4" />,
-          text: 'Permission Required',
+          text: 'Permission Required'
         }
     }
   }

@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     if (!farmData) {
       return new Response(JSON.stringify({ error: 'Farm data is required' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }
       })
     }
 
@@ -53,11 +53,11 @@ Return ONLY valid JSON:
         messages: [
           {
             role: 'system' as const,
-            content: 'You are an expert viticulturist analyzing grape growth stages in India.',
+            content: 'You are an expert viticulturist analyzing grape growth stages in India.'
           },
-          { role: 'user' as const, content: prompt },
+          { role: 'user' as const, content: prompt }
         ],
-        temperature: 0.3,
+        temperature: 0.3
       })
 
       const parsed = JSON.parse(result.text)
@@ -75,11 +75,11 @@ Return ONLY valid JSON:
         nextStageDate:
           parsed.nextStageDate ||
           new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        description: parsed.description || 'AI analysis of current growth stage',
+        description: parsed.description || 'AI analysis of current growth stage'
       }
 
       return new Response(JSON.stringify({ success: true, data: analysis }), {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }
       })
     } catch (aiError) {
       // AI service failed, use fallback
@@ -95,7 +95,7 @@ Return ONLY valid JSON:
           nextStageDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split('T')[0],
-          description: 'Fallback analysis - flowering season',
+          description: 'Fallback analysis - flowering season'
         }
       } else {
         fallbackAnalysis = {
@@ -106,7 +106,7 @@ Return ONLY valid JSON:
           nextStageDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split('T')[0],
-          description: 'Fallback analysis - general growth',
+          description: 'Fallback analysis - general growth'
         }
       }
 
@@ -114,11 +114,11 @@ Return ONLY valid JSON:
         JSON.stringify({
           success: true,
           data: fallbackAnalysis,
-          fallback: true,
+          fallback: true
         }),
         {
-          headers: { 'Content-Type': 'application/json' },
-        },
+          headers: { 'Content-Type': 'application/json' }
+        }
       )
     }
   } catch (error) {
@@ -131,12 +131,12 @@ Return ONLY valid JSON:
     return new Response(
       JSON.stringify({
         success: false,
-        error: 'Failed to analyze growth stage',
+        error: 'Failed to analyze growth stage'
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      },
+        headers: { 'Content-Type': 'application/json' }
+      }
     )
   }
 }

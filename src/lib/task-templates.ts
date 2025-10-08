@@ -22,7 +22,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     estimatedDuration: '30 minutes',
     frequency: 'weekly',
     growthStage: ['flowering', 'fruit_set', 'veraison'],
-    instructions: 'Inspect drippers, clean filters, check pressure gauges, verify timer settings',
+    instructions: 'Inspect drippers, clean filters, check pressure gauges, verify timer settings'
   },
   {
     id: 'irrigation_summer_schedule',
@@ -34,7 +34,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     frequency: 'weekly',
     season: 'summer',
     instructions:
-      'Water early morning (5-8 AM) and evening (6-8 PM). Check soil moisture at 30cm depth.',
+      'Water early morning (5-8 AM) and evening (6-8 PM). Check soil moisture at 30cm depth.'
   },
 
   // Spray Tasks
@@ -48,7 +48,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     frequency: 'biweekly',
     growthStage: ['bud_break', 'flowering', 'fruit_set'],
     instructions:
-      'Use sulfur-based fungicide. Apply in early morning or evening. Ensure complete canopy coverage.',
+      'Use sulfur-based fungicide. Apply in early morning or evening. Ensure complete canopy coverage.'
   },
   {
     id: 'insecticide_spray_thrips',
@@ -60,7 +60,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     frequency: 'monthly',
     growthStage: ['bud_break', 'flowering'],
     instructions:
-      'Use imidacloprid or spinosad. Check weather conditions - avoid spraying before rain.',
+      'Use imidacloprid or spinosad. Check weather conditions - avoid spraying before rain.'
   },
 
   // Training & Pruning Tasks
@@ -75,7 +75,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     season: 'winter',
     growthStage: ['dormant'],
     instructions:
-      'Remove 80-90% of previous year growth. Maintain 2 canes per arm. Prune when vines are fully dormant.',
+      'Remove 80-90% of previous year growth. Maintain 2 canes per arm. Prune when vines are fully dormant.'
   },
   {
     id: 'summer_topping',
@@ -88,7 +88,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     season: 'summer',
     growthStage: ['fruit_set', 'veraison'],
     instructions:
-      'Remove 6-8 inches from shoot tips. Do after fruit set. Avoid during water stress.',
+      'Remove 6-8 inches from shoot tips. Do after fruit set. Avoid during water stress.'
   },
 
   // Fertigation Tasks
@@ -102,7 +102,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     frequency: 'weekly',
     growthStage: ['bud_break', 'flowering', 'fruit_set'],
     instructions:
-      'Mix 19:19:19 NPK at 0.5% concentration. Apply for 30-45 minutes. Check EC levels.',
+      'Mix 19:19:19 NPK at 0.5% concentration. Apply for 30-45 minutes. Check EC levels.'
   },
   {
     id: 'calcium_spray_application',
@@ -114,7 +114,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     frequency: 'biweekly',
     growthStage: ['fruit_set', 'veraison'],
     instructions:
-      'Use calcium chloride at 0.5% concentration. Apply in evening hours. Avoid during flowering.',
+      'Use calcium chloride at 0.5% concentration. Apply in evening hours. Avoid during flowering.'
   },
 
   // Harvest Tasks
@@ -128,7 +128,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     frequency: 'weekly',
     growthStage: ['veraison', 'harvest'],
     instructions:
-      'Sample from multiple blocks. Target: Brix 18-22°, pH 3.2-3.8. Check seed color and berry taste.',
+      'Sample from multiple blocks. Target: Brix 18-22°, pH 3.2-3.8. Check seed color and berry taste.'
   },
   {
     id: 'pre_harvest_preparation',
@@ -140,7 +140,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     frequency: 'once',
     growthStage: ['veraison'],
     instructions:
-      'Clean and sanitize crates, arrange transport, coordinate with workers, check grape crusher.',
+      'Clean and sanitize crates, arrange transport, coordinate with workers, check grape crusher.'
   },
 
   // Soil & Plant Health
@@ -153,7 +153,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     estimatedDuration: '1 hour',
     frequency: 'weekly',
     instructions:
-      'Use soil moisture meter at 15cm, 30cm, and 60cm depths. Record readings for irrigation scheduling.',
+      'Use soil moisture meter at 15cm, 30cm, and 60cm depths. Record readings for irrigation scheduling.'
   },
   {
     id: 'leaf_analysis_sampling',
@@ -165,7 +165,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     frequency: 'seasonal',
     growthStage: ['flowering', 'fruit_set'],
     instructions:
-      'Collect 100 petioles from 5th-6th leaf from shoot tip. Sample from multiple blocks.',
+      'Collect 100 petioles from 5th-6th leaf from shoot tip. Sample from multiple blocks.'
   },
 
   // Canopy Management
@@ -179,7 +179,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     frequency: 'once',
     growthStage: ['veraison'],
     instructions:
-      'Remove 4-6 basal leaves per shoot. Maintain cluster exposure to morning sun. Avoid over-exposure.',
+      'Remove 4-6 basal leaves per shoot. Maintain cluster exposure to morning sun. Avoid over-exposure.'
   },
 
   // Disease Monitoring
@@ -192,8 +192,8 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     estimatedDuration: '2 hours',
     frequency: 'weekly',
     instructions:
-      'Check for powdery mildew, downy mildew, black rot. Record disease pressure levels. Take photos if needed.',
-  },
+      'Check for powdery mildew, downy mildew, black rot. Record disease pressure levels. Take photos if needed.'
+  }
 ]
 
 export const getTemplatesByType = (type: TaskTemplate['type']): TaskTemplate[] => {

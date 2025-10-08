@@ -34,7 +34,7 @@ export function useSupabaseAuth() {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     loading: true,
-    error: null,
+    error: null
   })
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export function useSupabaseAuth() {
       try {
         const {
           data: { session },
-          error,
+          error
         } = await supabase.auth.getSession()
 
         if (error) {
@@ -56,7 +56,7 @@ export function useSupabaseAuth() {
       } catch (err) {
         setAuthState((prev) => ({
           ...prev,
-          error: err instanceof Error ? err.message : 'An unexpected error occurred',
+          error: err instanceof Error ? err.message : 'An unexpected error occurred'
         }))
       } finally {
         setAuthState((prev) => ({ ...prev, loading: false }))
@@ -65,13 +65,13 @@ export function useSupabaseAuth() {
 
     // Listen for auth changes
     const {
-      data: { subscription },
+      data: { subscription }
     } = supabase.auth.onAuthStateChange((event, session) => {
       // Only update the user state, don't change loading state here
       // to avoid interfering with the loading states from auth operations
       setAuthState((prev) => ({
         ...prev,
-        user: session?.user ?? null,
+        user: session?.user ?? null
       }))
     })
 
@@ -89,7 +89,7 @@ export function useSupabaseAuth() {
       const supabase = createClient()
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password
       })
 
       if (error) {
@@ -101,7 +101,7 @@ export function useSupabaseAuth() {
       setAuthState((prev) => ({
         ...prev,
         user: data.user ?? null,
-        loading: false,
+        loading: false
       }))
 
       toast.success('Login successful!')
@@ -130,8 +130,8 @@ export function useSupabaseAuth() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
       })
 
       if (error) {
@@ -143,7 +143,7 @@ export function useSupabaseAuth() {
       setAuthState((prev) => ({
         ...prev,
         user: data.user ?? null,
-        loading: false,
+        loading: false
       }))
 
       const needsEmailConfirmation = !data.user?.email_confirmed_at
@@ -156,7 +156,7 @@ export function useSupabaseAuth() {
       return {
         success: true,
         user: data.user,
-        needsEmailConfirmation,
+        needsEmailConfirmation
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
@@ -175,7 +175,7 @@ export function useSupabaseAuth() {
       // Check if user exists first
       const {
         data: { user },
-        error: userError,
+        error: userError
       } = await supabase.auth.getUser()
 
       if (userError) {
@@ -189,8 +189,8 @@ export function useSupabaseAuth() {
           type: 'signup',
           email,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
+            emailRedirectTo: `${window.location.origin}/auth/callback`
+          }
         })
 
         if (error) {
@@ -204,8 +204,8 @@ export function useSupabaseAuth() {
           email,
           password: 'temp-password-for-resend',
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
+            emailRedirectTo: `${window.location.origin}/auth/callback`
+          }
         })
 
         if (error) {
@@ -229,7 +229,7 @@ export function useSupabaseAuth() {
     try {
       const supabase = createClient()
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: `${window.location.origin}/auth/reset-password`
       })
 
       if (error) {
@@ -250,7 +250,7 @@ export function useSupabaseAuth() {
   }
 
   const signInWithGoogle = async ({
-    redirectTo = `${window.location.origin}/auth/callback`,
+    redirectTo = `${window.location.origin}/auth/callback`
   }: SignInWithGoogleParams = {}) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
 
@@ -262,9 +262,9 @@ export function useSupabaseAuth() {
           redirectTo,
           queryParams: {
             access_type: 'online',
-            prompt: 'consent',
-          },
-        },
+            prompt: 'consent'
+          }
+        }
       })
 
       if (error) {
@@ -294,7 +294,7 @@ export function useSupabaseAuth() {
       setAuthState((prev) => ({
         user: null,
         loading: false,
-        error: null,
+        error: null
       }))
       toast.success('Signed out successfully')
       return { success: true }
@@ -320,6 +320,6 @@ export function useSupabaseAuth() {
     resendVerificationEmail,
     resetPassword,
     signOut,
-    clearError,
+    clearError
   }
 }

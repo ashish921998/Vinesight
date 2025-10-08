@@ -11,7 +11,7 @@ import {
   TASK_TEMPLATES,
   TaskTemplate,
   getTemplatesByType,
-  getCurrentSeasonTemplates,
+  getCurrentSeasonTemplates
 } from '@/lib/task-templates'
 import {
   Search,
@@ -24,7 +24,7 @@ import {
   Grape,
   TestTube,
   AlertCircle,
-  CheckCircle2,
+  CheckCircle2
 } from 'lucide-react'
 
 interface TaskTemplateFormData {
@@ -48,7 +48,7 @@ interface TaskTemplateSelectorProps {
 export function TaskTemplateSelector({
   onSelectTemplate,
   onCancel,
-  selectedFarmName,
+  selectedFarmName
 }: TaskTemplateSelectorProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -62,7 +62,7 @@ export function TaskTemplateSelector({
     type: 'other',
     priority: 'medium',
     isRecurring: false,
-    customInstructions: '',
+    customInstructions: ''
   })
 
   const getTaskTypeIcon = (type: string) => {
@@ -120,14 +120,14 @@ export function TaskTemplateSelector({
       priority: template.priority,
       isRecurring: template.frequency !== 'once',
       frequency: template.frequency,
-      customInstructions: template.instructions || '',
+      customInstructions: template.instructions || ''
     })
   }
 
   const handleInputChange = (field: keyof TaskTemplateFormData, value: string | boolean) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: value
     }))
   }
 
@@ -143,7 +143,7 @@ export function TaskTemplateSelector({
     { value: 'fertigation', label: 'Fertigation', icon: <TestTube className="h-4 w-4" /> },
     { value: 'training', label: 'Training', icon: <Scissors className="h-4 w-4" /> },
     { value: 'harvest', label: 'Harvest', icon: <Grape className="h-4 w-4" /> },
-    { value: 'soil_test', label: 'Soil Test', icon: <TestTube className="h-4 w-4" /> },
+    { value: 'soil_test', label: 'Soil Test', icon: <TestTube className="h-4 w-4" /> }
   ]
 
   return (

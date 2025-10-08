@@ -18,13 +18,13 @@ export class SecurityService {
       allowedMethods?: string[]
       maxPayloadSize?: number
       requireCSRF?: boolean
-    } = {},
+    } = {}
   ): SecurityCheckResult {
     const {
       requireAuth = false,
       allowedMethods = ['GET', 'POST', 'PUT', 'DELETE'],
       maxPayloadSize = 10000, // 10KB
-      requireCSRF = false,
+      requireCSRF = false
     } = options
 
     // Method validation
@@ -32,7 +32,7 @@ export class SecurityService {
       return {
         allowed: false,
         error: 'Method not allowed',
-        status: 405,
+        status: 405
       }
     }
 
@@ -46,7 +46,7 @@ export class SecurityService {
       return {
         allowed: false,
         error: rateLimitResult.reason || 'Rate limit exceeded',
-        status: 429,
+        status: 429
       }
     }
 
@@ -55,7 +55,7 @@ export class SecurityService {
       return {
         allowed: false,
         error: 'Authentication required',
-        status: 401,
+        status: 401
       }
     }
 
@@ -66,7 +66,7 @@ export class SecurityService {
         return {
           allowed: false,
           error: 'Invalid content type. Expected application/json',
-          status: 400,
+          status: 400
         }
       }
     }
@@ -80,7 +80,7 @@ export class SecurityService {
         return {
           allowed: false,
           error: 'CSRF token validation failed',
-          status: 403,
+          status: 403
         }
       }
     }
@@ -92,7 +92,7 @@ export class SecurityService {
       return {
         allowed: false,
         error: 'Invalid request',
-        status: 400,
+        status: 400
       }
     }
 
@@ -104,7 +104,7 @@ export class SecurityService {
    */
   static async validatePayload(
     request: NextRequest,
-    maxSize: number = 10000,
+    maxSize: number = 10000
   ): Promise<{
     success: boolean
     data?: any
@@ -120,7 +120,7 @@ export class SecurityService {
         return {
           success: false,
           error: 'Payload too large',
-          status: 413,
+          status: 413
         }
       }
 
@@ -129,7 +129,7 @@ export class SecurityService {
         return {
           success: false,
           error: 'Suspicious content detected',
-          status: 400,
+          status: 400
         }
       }
 
@@ -141,7 +141,7 @@ export class SecurityService {
         return {
           success: false,
           error: 'Invalid payload structure',
-          status: 400,
+          status: 400
         }
       }
 
@@ -150,7 +150,7 @@ export class SecurityService {
       return {
         success: false,
         error: 'Invalid JSON payload',
-        status: 400,
+        status: 400
       }
     }
   }
@@ -178,7 +178,7 @@ export class SecurityService {
       /data:text\/html/i,
       /(union|select|insert|update|delete|drop)\s+/i,
       /(\$\{|\$\(|\{\{)/, // Template injection patterns
-      /__proto__|constructor\.prototype|prototype\.constructor/i,
+      /__proto__|constructor\.prototype|prototype\.constructor/i
     ]
 
     return suspiciousPatterns.some((pattern) => pattern.test(text))
@@ -211,7 +211,7 @@ export class SecurityService {
       'X-XSS-Protection': '1; mode=block',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Cache-Control': 'no-store, must-revalidate',
-      Pragma: 'no-cache',
+      Pragma: 'no-cache'
     }
   }
 
@@ -222,7 +222,7 @@ export class SecurityService {
     const headers = this.getSecureHeaders()
     return NextResponse.json(
       { error: message, timestamp: new Date().toISOString() },
-      { status, headers },
+      { status, headers }
     )
   }
 

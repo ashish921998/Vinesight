@@ -18,7 +18,7 @@ const farms = [
     status: 'healthy' as const,
     healthScore: 92,
     criticalAlerts: 0,
-    profitMargin: 45.2,
+    profitMargin: 45.2
   },
   {
     id: 'farm2',
@@ -27,7 +27,7 @@ const farms = [
     status: 'attention' as const,
     healthScore: 76,
     criticalAlerts: 1,
-    profitMargin: 32.1,
+    profitMargin: 32.1
   },
   {
     id: 'farm3',
@@ -36,7 +36,7 @@ const farms = [
     status: 'critical' as const,
     healthScore: 58,
     criticalAlerts: 3,
-    profitMargin: 18.7,
+    profitMargin: 18.7
   },
   {
     id: 'farm4',
@@ -45,8 +45,8 @@ const farms = [
     status: 'healthy' as const,
     healthScore: 88,
     criticalAlerts: 0,
-    profitMargin: 52.4,
-  },
+    profitMargin: 52.4
+  }
 ]
 
 export default function PortfolioPage() {

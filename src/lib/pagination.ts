@@ -24,7 +24,7 @@ export class PaginationHelper {
   static createResult<T>(
     data: T[],
     totalCount: number,
-    params: PaginationParams,
+    params: PaginationParams
   ): PaginatedResult<T> {
     const totalPages = Math.ceil(totalCount / params.pageSize)
 
@@ -35,7 +35,7 @@ export class PaginationHelper {
       currentPage: params.page,
       pageSize: params.pageSize,
       hasNextPage: params.page < totalPages,
-      hasPrevPage: params.page > 1,
+      hasPrevPage: params.page > 1
     }
   }
 
@@ -44,7 +44,7 @@ export class PaginationHelper {
       page: Math.max(1, params.page || 1),
       pageSize: Math.min(100, Math.max(1, params.pageSize || 25)),
       sortBy: params.sortBy || 'created_at',
-      sortOrder: params.sortOrder || 'desc',
+      sortOrder: params.sortOrder || 'desc'
     }
   }
 }
@@ -54,7 +54,7 @@ import { useState, useMemo } from 'react'
 
 export function usePagination(initialParams?: Partial<PaginationParams>) {
   const [params, setParams] = useState<PaginationParams>(() =>
-    PaginationHelper.validateParams(initialParams || {}),
+    PaginationHelper.validateParams(initialParams || {})
   )
 
   const updatePage = (page: number) => {
@@ -65,7 +65,7 @@ export function usePagination(initialParams?: Partial<PaginationParams>) {
     setParams((prev) => ({
       ...prev,
       pageSize: Math.min(100, Math.max(1, pageSize)),
-      page: 1, // Reset to first page when page size changes
+      page: 1 // Reset to first page when page size changes
     }))
   }
 
@@ -74,7 +74,7 @@ export function usePagination(initialParams?: Partial<PaginationParams>) {
       ...prev,
       sortBy,
       sortOrder: sortOrder || (prev.sortBy === sortBy && prev.sortOrder === 'asc' ? 'desc' : 'asc'),
-      page: 1, // Reset to first page when sort changes
+      page: 1 // Reset to first page when sort changes
     }))
   }
 
@@ -97,7 +97,7 @@ export function usePagination(initialParams?: Partial<PaginationParams>) {
     updatePage,
     updatePageSize,
     updateSort,
-    reset,
+    reset
   }
 }
 
@@ -106,7 +106,7 @@ export class PaginatedQueries {
   static async getFarms(
     supabase: any,
     params: PaginationParams,
-    userId?: string,
+    userId?: string
   ): Promise<PaginatedResult<any>> {
     let query = supabase.from('farms').select('*', { count: 'exact' })
 
@@ -116,7 +116,7 @@ export class PaginatedQueries {
 
     // Add sorting
     query = query.order(params.sortBy || 'created_at', {
-      ascending: params.sortOrder === 'asc',
+      ascending: params.sortOrder === 'asc'
     })
 
     // Add pagination
@@ -133,7 +133,7 @@ export class PaginatedQueries {
   static async getIrrigationRecords(
     supabase: any,
     farmId: number,
-    params: PaginationParams,
+    params: PaginationParams
   ): Promise<PaginatedResult<any>> {
     let query = supabase
       .from('irrigation_records')
@@ -142,7 +142,7 @@ export class PaginatedQueries {
 
     // Add sorting
     query = query.order(params.sortBy || 'date', {
-      ascending: params.sortOrder === 'asc',
+      ascending: params.sortOrder === 'asc'
     })
 
     // Add pagination
@@ -159,12 +159,12 @@ export class PaginatedQueries {
   static async getSprayRecords(
     supabase: any,
     farmId: number,
-    params: PaginationParams,
+    params: PaginationParams
   ): Promise<PaginatedResult<any>> {
     let query = supabase.from('spray_records').select('*', { count: 'exact' }).eq('farm_id', farmId)
 
     query = query.order(params.sortBy || 'date', {
-      ascending: params.sortOrder === 'asc',
+      ascending: params.sortOrder === 'asc'
     })
 
     const offset = PaginationHelper.getOffset(params.page, params.pageSize)
@@ -180,7 +180,7 @@ export class PaginatedQueries {
   static async getHarvestRecords(
     supabase: any,
     farmId: number,
-    params: PaginationParams,
+    params: PaginationParams
   ): Promise<PaginatedResult<any>> {
     let query = supabase
       .from('harvest_records')
@@ -188,7 +188,7 @@ export class PaginatedQueries {
       .eq('farm_id', farmId)
 
     query = query.order(params.sortBy || 'date', {
-      ascending: params.sortOrder === 'asc',
+      ascending: params.sortOrder === 'asc'
     })
 
     const offset = PaginationHelper.getOffset(params.page, params.pageSize)
@@ -209,7 +209,7 @@ export class PaginatedQueries {
       completed?: boolean
       priority?: 'low' | 'medium' | 'high'
       type?: string
-    },
+    }
   ): Promise<PaginatedResult<any>> {
     let query = supabase
       .from('task_reminders')
@@ -228,7 +228,7 @@ export class PaginatedQueries {
     }
 
     query = query.order(params.sortBy || 'due_date', {
-      ascending: params.sortOrder === 'asc',
+      ascending: params.sortOrder === 'asc'
     })
 
     const offset = PaginationHelper.getOffset(params.page, params.pageSize)

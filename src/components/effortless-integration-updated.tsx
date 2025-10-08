@@ -16,19 +16,19 @@ interface EffortlessIntegrationProps {
 const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
   width = 482,
   height = 300,
-  className = '',
+  className = ''
 }) => {
   const centerX = 250
   const centerY = 179
   const rings = [
     { radius: 80, logos: 2 }, // Inner ring - 2 logos
     { radius: 120, logos: 3 }, // Middle ring - 3 logos
-    { radius: 160, logos: 2 }, // Outer ring - 2 logos
+    { radius: 160, logos: 2 } // Outer ring - 2 logos
   ]
 
   const getPositionOnRing = (ringRadius: number, angle: number) => ({
     x: centerX + ringRadius * Math.cos(angle),
-    y: centerY + ringRadius * Math.sin(angle),
+    y: centerY + ringRadius * Math.sin(angle)
   })
 
   return (
@@ -42,7 +42,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
         maskImage:
           'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
         WebkitMaskImage:
-          'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+          'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)'
       }}
     >
       <div
@@ -55,7 +55,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
           background:
             'linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, transparent 20%, transparent 80%, rgba(255,255,255,0.1) 100%)',
           pointerEvents: 'none',
-          zIndex: 10,
+          zIndex: 10
         }}
       />
 
@@ -70,7 +70,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
           height: '320px',
           borderRadius: '50%',
           border: '1px solid rgba(55, 50, 47, 0.2)',
-          opacity: 0.8,
+          opacity: 0.8
         }}
       />
       {/* Middle ring */}
@@ -84,7 +84,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
           height: '240px',
           borderRadius: '50%',
           border: '1px solid rgba(55, 50, 47, 0.25)',
-          opacity: 0.7,
+          opacity: 0.7
         }}
       />
       {/* Inner ring */}
@@ -98,7 +98,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
           height: '160px',
           borderRadius: '50%',
           border: '1px solid rgba(55, 50, 47, 0.3)',
-          opacity: 0.6,
+          opacity: 0.6
         }}
       />
 
@@ -110,7 +110,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
           left: '50%',
           top: '50%',
           transform: 'translate(-50%, -50%)',
-          position: 'absolute',
+          position: 'absolute'
         }}
       >
         <div
@@ -129,7 +129,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
             fontFamily: "'Inter', sans-serif",
             fontWeight: 700,
             fontSize: '32px',
-            color: '#ffffff',
+            color: '#ffffff'
           }}
         >
           🌾
@@ -147,7 +147,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'center'
           }}
         >
           <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#FFDE00' }}>JD</span>
@@ -165,7 +165,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'center'
           }}
         >
           <span style={{ fontSize: '16px' }}>☁️</span>
@@ -183,7 +183,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'center'
           }}
         >
           <span style={{ fontSize: '14px', color: '#ffffff' }}>📊</span>
@@ -201,7 +201,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'center'
           }}
         >
           <span style={{ fontSize: '16px' }}>💧</span>
@@ -219,7 +219,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'center'
           }}
         >
           <span style={{ fontSize: '14px' }}>🚁</span>
@@ -237,7 +237,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'center'
           }}
         >
           <span style={{ fontSize: '16px' }}>🛰️</span>
@@ -255,7 +255,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'center'
           }}
         >
           <span style={{ fontSize: '16px' }}>📈</span>
@@ -267,7 +267,7 @@ const EffortlessIntegration: React.FC<EffortlessIntegrationProps> = ({
             inset: 0,
             width: '100%',
             height: '100%',
-            pointerEvents: 'none',
+            pointerEvents: 'none'
           }}
         >
           <defs>

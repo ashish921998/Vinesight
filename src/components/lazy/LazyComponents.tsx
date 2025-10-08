@@ -19,20 +19,20 @@ const LoadingSpinner = ({ text = 'Loading...' }: { text?: string }) => (
 // Lazy load heavy components
 export const LazyWeatherDashboard = lazy(() =>
   import('@/components/weather/WeatherDashboard').then((module) => ({
-    default: module.WeatherDashboard,
-  })),
+    default: module.WeatherDashboard
+  }))
 )
 
 export const LazyFinancialChart = lazy(() =>
   import('@/components/reports/FinancialChart').then((module) => ({
-    default: module.FinancialChart,
-  })),
+    default: module.FinancialChart
+  }))
 )
 
 export const LazyComplianceStatus = lazy(() =>
   import('@/components/reports/ComplianceStatus').then((module) => ({
-    default: module.ComplianceStatus,
-  })),
+    default: module.ComplianceStatus
+  }))
 )
 
 // Wrapper components with Suspense
@@ -57,20 +57,20 @@ export const ComplianceStatusWithSuspense = (props: any) => (
 // Route-level lazy loading
 export const LazyReportsPage = lazy(() =>
   import('@/app/reports/page').then((module) => ({
-    default: module.default,
-  })),
+    default: module.default
+  }))
 )
 
 export const LazyAnalyticsPage = lazy(() =>
   import('@/app/analytics/page').then((module) => ({
-    default: module.default,
-  })),
+    default: module.default
+  }))
 )
 
 export const LazyWeatherPage = lazy(() =>
   import('@/app/weather/page').then((module) => ({
-    default: module.default,
-  })),
+    default: module.default
+  }))
 )
 
 // Page-level wrappers with Suspense

@@ -21,7 +21,7 @@ export function FinancialChart({
   totalRevenue,
   totalCosts,
   netProfit,
-  profitMargin,
+  profitMargin
 }: FinancialChartProps) {
   const profitStatus = useMemo(() => {
     if (netProfit > 0) return { icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' }
@@ -36,7 +36,7 @@ export function FinancialChart({
       style: 'currency',
       currency: 'INR',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount)
   }
 
@@ -130,7 +130,7 @@ export function FinancialChart({
                     'bg-green-500',
                     'bg-blue-500',
                     'bg-indigo-500',
-                    'bg-purple-500',
+                    'bg-purple-500'
                   ]
                   const colorClass = colors[index % colors.length]
 
@@ -187,7 +187,7 @@ export function FinancialChart({
                     'bg-cyan-500',
                     'bg-sky-500',
                     'bg-blue-500',
-                    'bg-indigo-500',
+                    'bg-indigo-500'
                   ]
                   const colorClass = colors[index % colors.length]
 

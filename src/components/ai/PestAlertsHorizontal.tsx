@@ -15,7 +15,7 @@ import {
   Zap,
   Calendar,
   MapPin,
-  CheckCircle,
+  CheckCircle
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { PestPredictionService } from '@/lib/pest-prediction-service'

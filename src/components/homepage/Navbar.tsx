@@ -14,7 +14,7 @@ export function Navbar() {
   type NavItem = { name: string; href: string; icon?: LucideIcon }
   const navigation: NavItem[] = [
     { name: 'Features', href: '#features', icon: Calculator },
-    { name: 'About', href: '#about', icon: BookOpen },
+    { name: 'About', href: '#about', icon: BookOpen }
   ]
 
   const scrollToSection = (href: string) => {

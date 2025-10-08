@@ -47,7 +47,7 @@ export class NotificationService {
       overdueTasks: true,
       upcomingTasks: true,
       reminderTime: '09:00',
-      daysAdvance: 1,
+      daysAdvance: 1
     }
   }
 
@@ -90,7 +90,7 @@ export class NotificationService {
     const notification = new Notification(title, {
       icon: '/icon-192x192.png',
       badge: '/icon-192x192.png',
-      ...options,
+      ...options
     })
 
     // Auto-close after 10 seconds
@@ -117,7 +117,7 @@ export class NotificationService {
         break
       case 'upcoming':
         const daysUntil = Math.ceil(
-          (new Date(task.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+          (new Date(task.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
         )
         title = `Upcoming Task: ${task.title}`
         body = `Task "${task.title}" is due in ${daysUntil} day${daysUntil === 1 ? '' : 's'}.`
@@ -128,7 +128,7 @@ export class NotificationService {
     this.sendNotification(`${icon} ${title}`, {
       body,
       tag: `task-${task.id}`,
-      data: { taskId: task.id, type },
+      data: { taskId: task.id, type }
     })
   }
 
@@ -204,7 +204,7 @@ export class NotificationService {
       if (pendingTasksCount > 0) {
         this.sendNotification('🍇 VineSight Daily Reminder', {
           body: `You have ${pendingTasksCount} pending farming task${pendingTasksCount === 1 ? '' : 's'}.`,
-          tag: 'daily-reminder',
+          tag: 'daily-reminder'
         })
       }
     }, reminderTime.getTime() - now.getTime())
@@ -226,13 +226,13 @@ export class NotificationService {
     const icons = {
       low: '🌤️',
       medium: '⛈️',
-      high: '🚨',
+      high: '🚨'
     }
 
     this.sendNotification(`${icons[priority]} Weather Alert`, {
       body: message,
       tag: 'weather-alert',
-      requireInteraction: priority === 'high',
+      requireInteraction: priority === 'high'
     })
   }
 
@@ -242,7 +242,7 @@ export class NotificationService {
 
     this.sendNotification('🎉 Task Completed!', {
       body: `Great job completing "${task.title}"!`,
-      tag: 'task-completion',
+      tag: 'task-completion'
     })
   }
 
@@ -252,7 +252,7 @@ export class NotificationService {
 
     this.sendNotification(`🍇 ${season} Season Tasks`, {
       body: `Important ${season.toLowerCase()} tasks: ${tasks.slice(0, 3).join(', ')}${tasks.length > 3 ? '...' : ''}`,
-      tag: 'seasonal-reminder',
+      tag: 'seasonal-reminder'
     })
   }
 
@@ -260,7 +260,7 @@ export class NotificationService {
   sendWaterLevelAlert(
     farmName: string,
     waterLevel: number,
-    alertType: 'critical' | 'low' | 'medium',
+    alertType: 'critical' | 'low' | 'medium'
   ): void {
     if (!this.canSendNotifications()) return
 
@@ -297,8 +297,8 @@ export class NotificationService {
         alertType,
         waterLevel,
         farmName,
-        timestamp: new Date().toISOString(),
-      },
+        timestamp: new Date().toISOString()
+      }
     })
   }
 

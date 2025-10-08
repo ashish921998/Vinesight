@@ -13,7 +13,7 @@ export class PhotoService {
       // Upload to Supabase Storage with upsert to overwrite if exists
       const { data, error } = await supabase.storage.from('farm-photos').upload(fileName, file, {
         cacheControl: '3600',
-        upsert: true,
+        upsert: true
       })
 
       if (error) {

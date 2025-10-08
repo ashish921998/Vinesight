@@ -22,7 +22,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
@@ -86,7 +86,7 @@ export default function FarmDetailsPage() {
       const data = await SupabaseService.getDashboardSummary(parseInt(farmId))
       setDashboardData({
         ...data,
-        farm: data.farm,
+        farm: data.farm
       })
     } catch (error) {
       console.error('Error loading dashboard data:', error)
@@ -131,7 +131,7 @@ export default function FarmDetailsPage() {
     logs: any[],
     date: string,
     dayNotes: string,
-    dayPhotos: File[],
+    dayPhotos: File[]
   ) => {
     setIsSubmitting(true)
     try {
@@ -181,7 +181,7 @@ export default function FarmDetailsPage() {
           growth_stage: 'Active',
           moisture_status: 'Good',
           system_discharge: dashboardData?.farm?.systemDischarge || 100,
-          notes: dayNotes || '',
+          notes: dayNotes || ''
         })
 
         // Update soil water level when irrigation is added
@@ -197,7 +197,7 @@ export default function FarmDetailsPage() {
 
             await SupabaseService.updateFarm(parseInt(farmId), {
               remainingWater: newWaterLevel,
-              waterCalculationUpdatedAt: new Date().toISOString(),
+              waterCalculationUpdatedAt: new Date().toISOString()
             })
 
             // Check if new water level needs alert
@@ -205,7 +205,7 @@ export default function FarmDetailsPage() {
             const notificationService = NotificationService.getInstance()
             notificationService.checkWaterLevelAndAlert(
               capitalize(dashboardData.farm.name),
-              newWaterLevel,
+              newWaterLevel
             )
           }
         }
@@ -226,7 +226,7 @@ export default function FarmDetailsPage() {
           area: dashboardData?.farm?.area || 0,
           weather: 'Clear',
           operator: 'Farm Owner',
-          notes: dayNotes || '',
+          notes: dayNotes || ''
         })
         break
 
@@ -238,7 +238,7 @@ export default function FarmDetailsPage() {
           grade: data.grade || 'Standard',
           price: 0,
           buyer: '',
-          notes: dayNotes || '',
+          notes: dayNotes || ''
         })
         break
 
@@ -249,7 +249,7 @@ export default function FarmDetailsPage() {
           type: data.type || 'other',
           description: data.description || '',
           cost: parseFloat(data.cost || '0'),
-          remarks: dayNotes || '',
+          remarks: dayNotes || ''
         })
         break
 
@@ -261,7 +261,7 @@ export default function FarmDetailsPage() {
           dose: data.quantity ? `${data.quantity} kg/L` : 'As per requirement',
           purpose: 'Nutrient Application',
           area: dashboardData?.farm?.area || 0,
-          notes: dayNotes || '',
+          notes: dayNotes || ''
         })
         break
 
@@ -273,9 +273,9 @@ export default function FarmDetailsPage() {
             pH: parseFloat(data.ph || '7'),
             nitrogen: parseFloat(data.nitrogen || '0'),
             phosphorus: parseFloat(data.phosphorus || '0'),
-            potassium: parseFloat(data.potassium || '0'),
+            potassium: parseFloat(data.potassium || '0')
           },
-          notes: dayNotes || '',
+          notes: dayNotes || ''
         })
         break
 
@@ -329,7 +329,7 @@ export default function FarmDetailsPage() {
           date: date,
           sample_id: data.sample_id || '',
           parameters: parameters,
-          notes: dayNotes || '',
+          notes: dayNotes || ''
         })
         break
     }
@@ -398,7 +398,7 @@ export default function FarmDetailsPage() {
   const handleDeleteFarm = async (farmId: number) => {
     if (
       confirm(
-        'Are you sure you want to delete this farm? This will also delete all associated records.',
+        'Are you sure you want to delete this farm? This will also delete all associated records.'
       )
     ) {
       try {

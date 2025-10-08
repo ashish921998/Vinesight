@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
   let supabaseResponse = NextResponse.next({
-    request: req,
+    request: req
   })
 
   const supabase = createServerClient(
@@ -18,14 +18,14 @@ export async function middleware(req: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => req.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
-            request: req,
+            request: req
           })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
+            supabaseResponse.cookies.set(name, value, options)
           )
-        },
-      },
-    },
+        }
+      }
+    }
   )
 
   // IMPORTANT: Avoid writing any logic between createServerClient and
@@ -33,7 +33,7 @@ export async function middleware(req: NextRequest) {
   // issues with users being randomly logged out.
 
   const {
-    data: { user },
+    data: { user }
   } = await supabase.auth.getUser()
 
   // If user is signed in and the current path is /auth redirect the user to /
@@ -58,6 +58,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * Feel free to modify this pattern to include more paths.
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'
+  ]
 }
