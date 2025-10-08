@@ -87,7 +87,7 @@ export class MarketIntelligenceService {
   // Get current market prices for different grape varieties and qualities
   static getCurrentMarketPrices(
     location?: string,
-    variety?: string,
+    variety?: string
   ): { [key: string]: { price: number; trend: string; date: Date } } {
     const recent = this.marketData
       .filter((data) => {
@@ -105,7 +105,7 @@ export class MarketIntelligenceService {
         prices[key] = {
           price: data.pricePerKg,
           trend: data.trend,
-          date: data.date,
+          date: data.date
         }
       }
     })
@@ -119,7 +119,7 @@ export class MarketIntelligenceService {
     quality: 'premium' | 'standard' | 'low',
     location: string,
     harvestDate: Date,
-    estimatedQuantity: number,
+    estimatedQuantity: number
   ): Promise<PricePrediction> {
     // Analyze historical price patterns
     const historicalAnalysis = this.analyzeHistoricalPrices(variety, quality)
@@ -141,7 +141,7 @@ export class MarketIntelligenceService {
       historicalAnalysis,
       seasonalFactors,
       demandAnalysis,
-      supplyAnalysis,
+      supplyAnalysis
     )
 
     // Apply AI-based adjustments
@@ -151,7 +151,7 @@ export class MarketIntelligenceService {
       location,
       harvestDate,
       quantity: estimatedQuantity,
-      weatherImpact,
+      weatherImpact
     })
 
     const predictedPrice = basePrediction * (1 + aiAdjustment.adjustment)
@@ -161,29 +161,29 @@ export class MarketIntelligenceService {
     const optimalWindow = this.calculateOptimalSellingWindow(
       harvestDate,
       predictedPrice,
-      seasonalFactors,
+      seasonalFactors
     )
 
     return {
       predictedPrice,
       priceRange: {
         min: predictedPrice * 0.85,
-        max: predictedPrice * 1.15,
+        max: predictedPrice * 1.15
       },
       confidence,
       factors: this.compilePriceFactors(
         seasonalFactors,
         demandAnalysis,
         supplyAnalysis,
-        weatherImpact,
+        weatherImpact
       ),
       recommendations: this.generateMarketRecommendations(
         predictedPrice,
         quality,
         optimalWindow,
-        demandAnalysis,
+        demandAnalysis
       ),
-      optimalSellingWindow: optimalWindow,
+      optimalSellingWindow: optimalWindow
     }
   }
 
@@ -200,8 +200,8 @@ export class MarketIntelligenceService {
           'Seasonal demand patterns',
           'Local harvest timing',
           'Weather conditions',
-          'Export demand',
-        ],
+          'Export demand'
+        ]
       },
       mediumTerm: {
         avgPrice: currentPrice * (0.9 + Math.random() * 0.2),
@@ -209,8 +209,8 @@ export class MarketIntelligenceService {
         seasonalFactors: [
           'Festival season increased demand',
           'Processing industry requirements',
-          'International market trends',
-        ],
+          'International market trends'
+        ]
       },
       longTerm: {
         avgPrice: currentPrice * (1.05 + Math.random() * 0.1),
@@ -218,9 +218,9 @@ export class MarketIntelligenceService {
         structuralChanges: [
           'Increased focus on quality over quantity',
           'Direct farmer-to-consumer channels',
-          'Organic and sustainable grape demand growth',
-        ],
-      },
+          'Organic and sustainable grape demand growth'
+        ]
+      }
     }
   }
 
@@ -233,14 +233,14 @@ export class MarketIntelligenceService {
         costs: {
           Production: 60,
           Labor: 25,
-          Materials: 15,
+          Materials: 15
         },
         opportunities: [
           'Direct-to-consumer sales',
           'Value-added processing',
-          'Organic certification premium',
+          'Organic certification premium'
         ],
-        risks: ['Weather dependency', 'Price volatility', 'Input cost inflation'],
+        risks: ['Weather dependency', 'Price volatility', 'Input cost inflation']
       },
       {
         stage: 'wholesale',
@@ -249,14 +249,14 @@ export class MarketIntelligenceService {
           Transportation: 8,
           Storage: 5,
           Packaging: 4,
-          Operations: 3,
+          Operations: 3
         },
         opportunities: [
           'Cold storage facilities',
           'Quality grading systems',
-          'Regional distribution networks',
+          'Regional distribution networks'
         ],
-        risks: ['Inventory management', 'Quality deterioration', 'Payment delays'],
+        risks: ['Inventory management', 'Quality deterioration', 'Payment delays']
       },
       {
         stage: 'retail',
@@ -265,11 +265,11 @@ export class MarketIntelligenceService {
           'Store operations': 15,
           Marketing: 8,
           Wastage: 5,
-          Staff: 2,
+          Staff: 2
         },
         opportunities: ['Premium positioning', 'Brand partnerships', 'Online sales channels'],
-        risks: ['Consumer preference shifts', 'Competition', 'Seasonal demand variations'],
-      },
+        risks: ['Consumer preference shifts', 'Competition', 'Seasonal demand variations']
+      }
     ]
   }
 
@@ -295,7 +295,7 @@ export class MarketIntelligenceService {
         alerts.push({
           type: 'price' as const,
           message: `${variety} (${quality}) price reached ₹${data.price}/kg - Above your target of ₹${threshold}/kg`,
-          priority: 'high' as const,
+          priority: 'high' as const
         })
       }
     })
@@ -304,7 +304,7 @@ export class MarketIntelligenceService {
     alerts.push({
       type: 'opportunity' as const,
       message: 'Premium grape demand increasing by 15% in metropolitan markets',
-      priority: 'medium' as const,
+      priority: 'medium' as const
     })
 
     return alerts
@@ -339,7 +339,7 @@ export class MarketIntelligenceService {
               volume: Math.round(100 + Math.random() * 500), // 100-600 kg
               trend: Math.random() > 0.5 ? 'up' : Math.random() > 0.25 ? 'stable' : 'down',
               demandLevel: Math.random() > 0.6 ? 'high' : Math.random() > 0.3 ? 'medium' : 'low',
-              source: 'agmarknet',
+              source: 'agmarknet'
             })
           })
         })
@@ -356,7 +356,7 @@ export class MarketIntelligenceService {
       sauvignon_blanc: { premium: 75, standard: 45, low: 28 },
       pinot_noir: { premium: 90, standard: 60, low: 40 },
       merlot: { premium: 78, standard: 48, low: 32 },
-      riesling: { premium: 72, standard: 42, low: 25 },
+      riesling: { premium: 72, standard: 42, low: 25 }
     }
 
     return basePrices[variety as keyof typeof basePrices]?.[quality] || 50
@@ -382,7 +382,7 @@ export class MarketIntelligenceService {
 
   private static analyzeHistoricalPrices(variety: string, quality: string) {
     const relevantData = this.marketData.filter(
-      (d) => d.grapeVariety === variety && d.quality === quality,
+      (d) => d.grapeVariety === variety && d.quality === quality
     )
 
     const prices = relevantData.map((d) => d.pricePerKg)
@@ -407,7 +407,7 @@ export class MarketIntelligenceService {
 
     return {
       impact: seasonalImpact,
-      factors: this.getSeasonalFactorsList(month),
+      factors: this.getSeasonalFactorsList(month)
     }
   }
 
@@ -424,7 +424,7 @@ export class MarketIntelligenceService {
       8: ['Post-monsoon', 'Ganesh Chaturthi'],
       9: ['Navratri season', 'Dussehra'],
       10: ['Diwali season', 'Wedding season'],
-      11: ['Post-harvest', 'Christmas season'],
+      11: ['Post-harvest', 'Christmas season']
     }
 
     return factors[month as keyof typeof factors] || ['Regular demand']
@@ -441,8 +441,8 @@ export class MarketIntelligenceService {
         'Urban consumer preference',
         'Wine industry demand',
         'Export opportunities',
-        'Processing industry needs',
-      ],
+        'Processing industry needs'
+      ]
     }
   }
 
@@ -456,8 +456,8 @@ export class MarketIntelligenceService {
         'Regional harvest timing',
         'Weather impact on yield',
         'Planted area changes',
-        'Farmer decisions',
-      ],
+        'Farmer decisions'
+      ]
     }
   }
 
@@ -472,7 +472,7 @@ export class MarketIntelligenceService {
           ? 'Favorable weather conditions'
           : impactScore < -0.1
             ? 'Challenging weather conditions'
-            : 'Normal weather conditions',
+            : 'Normal weather conditions'
     }
   }
 
@@ -480,7 +480,7 @@ export class MarketIntelligenceService {
     historical: any,
     seasonal: any,
     demand: any,
-    supply: any,
+    supply: any
   ): number {
     let prediction = historical.avgPrice
 
@@ -505,7 +505,7 @@ export class MarketIntelligenceService {
   private static calculateOptimalSellingWindow(
     harvestDate: Date,
     predictedPrice: number,
-    seasonalFactors: any,
+    seasonalFactors: any
   ) {
     const start = new Date(harvestDate)
     start.setDate(start.getDate() + 7) // Week after harvest
@@ -516,7 +516,7 @@ export class MarketIntelligenceService {
     return {
       start,
       end,
-      expectedPrice: predictedPrice * 1.02, // Slight premium for timing
+      expectedPrice: predictedPrice * 1.02 // Slight premium for timing
     }
   }
 
@@ -524,33 +524,33 @@ export class MarketIntelligenceService {
     seasonal: any,
     demand: any,
     supply: any,
-    weather: any,
+    weather: any
   ): PriceInfluenceFactor[] {
     return [
       {
         factor: 'Seasonal Demand',
         impact: seasonal.impact * 100,
         description: 'Festival seasons and market cycles affect prices',
-        weight: 0.3,
+        weight: 0.3
       },
       {
         factor: 'Supply Levels',
         impact: (1 - supply.level) * 50,
         description: 'Regional harvest volumes and competing regions',
-        weight: 0.25,
+        weight: 0.25
       },
       {
         factor: 'Market Demand',
         impact: (demand.level - 0.75) * 80,
         description: 'Consumer preference and industrial demand',
-        weight: 0.25,
+        weight: 0.25
       },
       {
         factor: 'Weather Impact',
         impact: weather.impact * 100,
         description: weather.description,
-        weight: 0.2,
-      },
+        weight: 0.2
+      }
     ]
   }
 
@@ -558,7 +558,7 @@ export class MarketIntelligenceService {
     predictedPrice: number,
     quality: string,
     optimalWindow: any,
-    demandAnalysis: any,
+    demandAnalysis: any
   ): MarketRecommendation[] {
     return [
       {
@@ -567,7 +567,7 @@ export class MarketIntelligenceService {
         description: `Best selling period is ${optimalWindow.start.toLocaleDateString()} to ${optimalWindow.end.toLocaleDateString()}`,
         priority: 'high',
         expectedBenefit: 'Up to 5% price premium',
-        timeframe: 'Next 2 months',
+        timeframe: 'Next 2 months'
       },
       {
         type: 'quality',
@@ -578,7 +578,7 @@ export class MarketIntelligenceService {
             : 'Consider quality improvements for better market positioning',
         priority: 'medium',
         expectedBenefit: quality === 'premium' ? 'Maintain premium' : '15-25% price increase',
-        timeframe: 'Current season',
+        timeframe: 'Current season'
       },
       {
         type: 'marketing',
@@ -586,8 +586,8 @@ export class MarketIntelligenceService {
         description: 'Consider direct sales to premium buyers for better margins',
         priority: 'medium',
         expectedBenefit: '10-20% better margins',
-        timeframe: 'Immediate',
-      },
+        timeframe: 'Immediate'
+      }
     ]
   }
 

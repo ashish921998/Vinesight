@@ -10,7 +10,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -33,13 +33,13 @@ import {
   ArrowUp,
   ArrowDown,
   Minus,
-  Sprout,
+  Sprout
 } from 'lucide-react'
 import {
   SoilHealthAnalyzer,
   type SoilHealthInputs,
   type SoilHealthResults,
-  type SoilTestData,
+  type SoilTestData
 } from '@/lib/soil-health'
 
 export function SoilHealthMonitoringComponent() {
@@ -49,14 +49,14 @@ export function SoilHealthMonitoringComponent() {
       farmId: 'demo-farm-001',
       location: {
         fieldName: 'Block A - Main Vineyard',
-        depth: 15,
+        depth: 15
       },
       physical: {
         soilTexture: 'loam',
         bulkDensity: 1.35,
         porosity: 48,
         waterHoldingCapacity: 28,
-        infiltrationRate: 12,
+        infiltrationRate: 12
       },
       chemical: {
         pH: 6.8,
@@ -68,17 +68,17 @@ export function SoilHealthMonitoringComponent() {
           total: 0.12,
           available: 245,
           nitrate: 35,
-          ammonium: 15,
+          ammonium: 15
         },
         phosphorus: {
           total: 450,
           available: 28,
-          organic: 180,
+          organic: 180
         },
         potassium: {
           total: 1800,
           available: 220,
-          exchangeable: 180,
+          exchangeable: 180
         },
         calcium: 1850,
         magnesium: 180,
@@ -88,7 +88,7 @@ export function SoilHealthMonitoringComponent() {
         zinc: 2.1,
         copper: 1.2,
         boron: 0.8,
-        molybdenum: 0.15,
+        molybdenum: 0.15
       },
       biological: {
         microbialBiomassCarbon: 285,
@@ -96,11 +96,11 @@ export function SoilHealthMonitoringComponent() {
         enzymeActivity: {
           dehydrogenase: 35,
           phosphatase: 180,
-          urease: 48,
+          urease: 48
         },
         earthwormCount: 85,
-        nematodeCount: 450,
-      },
+        nematodeCount: 450
+      }
     },
     farmContext: {
       cropType: 'grapes',
@@ -112,15 +112,15 @@ export function SoilHealthMonitoringComponent() {
         organicMatter: true,
         coverCrops: true,
         tillage: 'minimum_till',
-        chemicalInputs: 'medium',
-      },
+        chemicalInputs: 'medium'
+      }
     },
     climateData: {
       averageRainfall: 650,
       temperature: { min: 12, max: 35 },
       humidity: 65,
-      windSpeed: 8,
-    },
+      windSpeed: 8
+    }
   })
 
   const [results, setResults] = useState<SoilHealthResults | null>(null)
@@ -157,7 +157,7 @@ export function SoilHealthMonitoringComponent() {
       excellent: 'bg-green-600 text-white',
       good: 'bg-blue-600 text-white',
       fair: 'bg-orange-600 text-white',
-      poor: 'bg-red-600 text-white',
+      poor: 'bg-red-600 text-white'
     }
     return variants[category as keyof typeof variants] || variants.fair
   }
@@ -228,7 +228,7 @@ export function SoilHealthMonitoringComponent() {
                     onChange={(e) =>
                       setInputs((prev) => ({
                         ...prev,
-                        testData: { ...prev.testData, testDate: new Date(e.target.value) },
+                        testData: { ...prev.testData, testDate: new Date(e.target.value) }
                       }))
                     }
                   />
@@ -243,8 +243,8 @@ export function SoilHealthMonitoringComponent() {
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          location: { ...prev.testData.location, fieldName: e.target.value },
-                        },
+                          location: { ...prev.testData.location, fieldName: e.target.value }
+                        }
                       }))
                     }
                     placeholder="e.g., Block A - Main Vineyard"
@@ -260,8 +260,8 @@ export function SoilHealthMonitoringComponent() {
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          location: { ...prev.testData.location, depth: parseInt(value) },
-                        },
+                          location: { ...prev.testData.location, depth: parseInt(value) }
+                        }
                       }))
                     }
                   >
@@ -293,7 +293,7 @@ export function SoilHealthMonitoringComponent() {
                     onValueChange={(value) =>
                       setInputs((prev) => ({
                         ...prev,
-                        farmContext: { ...prev.farmContext, variety: value },
+                        farmContext: { ...prev.farmContext, variety: value }
                       }))
                     }
                   >
@@ -321,8 +321,8 @@ export function SoilHealthMonitoringComponent() {
                         ...prev,
                         farmContext: {
                           ...prev.farmContext,
-                          plantingYear: parseInt(e.target.value),
-                        },
+                          plantingYear: parseInt(e.target.value)
+                        }
                       }))
                     }
                   />
@@ -335,7 +335,7 @@ export function SoilHealthMonitoringComponent() {
                     onValueChange={(value: any) =>
                       setInputs((prev) => ({
                         ...prev,
-                        farmContext: { ...prev.farmContext, irrigationMethod: value },
+                        farmContext: { ...prev.farmContext, irrigationMethod: value }
                       }))
                     }
                   >
@@ -377,8 +377,8 @@ export function SoilHealthMonitoringComponent() {
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          physical: { ...prev.testData.physical, soilTexture: value },
-                        },
+                          physical: { ...prev.testData.physical, soilTexture: value }
+                        }
                       }))
                     }
                   >
@@ -414,9 +414,9 @@ export function SoilHealthMonitoringComponent() {
                           ...prev.testData,
                           physical: {
                             ...prev.testData.physical,
-                            bulkDensity: parseFloat(e.target.value),
-                          },
-                        },
+                            bulkDensity: parseFloat(e.target.value)
+                          }
+                        }
                       }))
                     }
                   />
@@ -435,9 +435,9 @@ export function SoilHealthMonitoringComponent() {
                           ...prev.testData,
                           physical: {
                             ...prev.testData.physical,
-                            porosity: parseFloat(e.target.value),
-                          },
-                        },
+                            porosity: parseFloat(e.target.value)
+                          }
+                        }
                       }))
                     }
                   />
@@ -458,9 +458,9 @@ export function SoilHealthMonitoringComponent() {
                           ...prev.testData,
                           physical: {
                             ...prev.testData.physical,
-                            waterHoldingCapacity: parseFloat(e.target.value),
-                          },
-                        },
+                            waterHoldingCapacity: parseFloat(e.target.value)
+                          }
+                        }
                       }))
                     }
                   />
@@ -479,9 +479,9 @@ export function SoilHealthMonitoringComponent() {
                           ...prev.testData,
                           physical: {
                             ...prev.testData.physical,
-                            infiltrationRate: parseFloat(e.target.value),
-                          },
-                        },
+                            infiltrationRate: parseFloat(e.target.value)
+                          }
+                        }
                       }))
                     }
                   />
@@ -523,8 +523,8 @@ export function SoilHealthMonitoringComponent() {
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          chemical: { ...prev.testData.chemical, pH: parseFloat(e.target.value) },
-                        },
+                          chemical: { ...prev.testData.chemical, pH: parseFloat(e.target.value) }
+                        }
                       }))
                     }
                   />
@@ -546,9 +546,9 @@ export function SoilHealthMonitoringComponent() {
                           ...prev.testData,
                           chemical: {
                             ...prev.testData.chemical,
-                            electricalConductivity: parseFloat(e.target.value),
-                          },
-                        },
+                            electricalConductivity: parseFloat(e.target.value)
+                          }
+                        }
                       }))
                     }
                   />
@@ -570,9 +570,9 @@ export function SoilHealthMonitoringComponent() {
                           ...prev.testData,
                           chemical: {
                             ...prev.testData.chemical,
-                            organicMatter: parseFloat(e.target.value),
-                          },
-                        },
+                            organicMatter: parseFloat(e.target.value)
+                          }
+                        }
                       }))
                     }
                   />
@@ -592,9 +592,9 @@ export function SoilHealthMonitoringComponent() {
                           ...prev.testData,
                           chemical: {
                             ...prev.testData.chemical,
-                            cationExchangeCapacity: parseFloat(e.target.value),
-                          },
-                        },
+                            cationExchangeCapacity: parseFloat(e.target.value)
+                          }
+                        }
                       }))
                     }
                   />
@@ -622,10 +622,10 @@ export function SoilHealthMonitoringComponent() {
                             ...prev.testData.chemical,
                             nitrogen: {
                               ...prev.testData.chemical.nitrogen,
-                              available: parseFloat(e.target.value),
-                            },
-                          },
-                        },
+                              available: parseFloat(e.target.value)
+                            }
+                          }
+                        }
                       }))
                     }
                   />
@@ -646,10 +646,10 @@ export function SoilHealthMonitoringComponent() {
                             ...prev.testData.chemical,
                             phosphorus: {
                               ...prev.testData.chemical.phosphorus,
-                              available: parseFloat(e.target.value),
-                            },
-                          },
-                        },
+                              available: parseFloat(e.target.value)
+                            }
+                          }
+                        }
                       }))
                     }
                   />
@@ -670,10 +670,10 @@ export function SoilHealthMonitoringComponent() {
                             ...prev.testData.chemical,
                             potassium: {
                               ...prev.testData.chemical.potassium,
-                              available: parseFloat(e.target.value),
-                            },
-                          },
-                        },
+                              available: parseFloat(e.target.value)
+                            }
+                          }
+                        }
                       }))
                     }
                   />
@@ -701,9 +701,9 @@ export function SoilHealthMonitoringComponent() {
                           ...prev.testData,
                           chemical: {
                             ...prev.testData.chemical,
-                            calcium: parseFloat(e.target.value),
-                          },
-                        },
+                            calcium: parseFloat(e.target.value)
+                          }
+                        }
                       }))
                     }
                   />
@@ -721,9 +721,9 @@ export function SoilHealthMonitoringComponent() {
                           ...prev.testData,
                           chemical: {
                             ...prev.testData.chemical,
-                            magnesium: parseFloat(e.target.value),
-                          },
-                        },
+                            magnesium: parseFloat(e.target.value)
+                          }
+                        }
                       }))
                     }
                   />
@@ -740,8 +740,8 @@ export function SoilHealthMonitoringComponent() {
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          chemical: { ...prev.testData.chemical, iron: parseFloat(e.target.value) },
-                        },
+                          chemical: { ...prev.testData.chemical, iron: parseFloat(e.target.value) }
+                        }
                       }))
                     }
                   />
@@ -758,8 +758,8 @@ export function SoilHealthMonitoringComponent() {
                         ...prev,
                         testData: {
                           ...prev.testData,
-                          chemical: { ...prev.testData.chemical, zinc: parseFloat(e.target.value) },
-                        },
+                          chemical: { ...prev.testData.chemical, zinc: parseFloat(e.target.value) }
+                        }
                       }))
                     }
                   />
@@ -795,9 +795,9 @@ export function SoilHealthMonitoringComponent() {
                             ...prev.testData,
                             biological: {
                               ...prev.testData.biological,
-                              microbialBiomassCarbon: parseFloat(e.target.value),
-                            },
-                          },
+                              microbialBiomassCarbon: parseFloat(e.target.value)
+                            }
+                          }
                         }))
                       }
                     />
@@ -816,9 +816,9 @@ export function SoilHealthMonitoringComponent() {
                             ...prev.testData,
                             biological: {
                               ...prev.testData.biological,
-                              soilRespiration: parseFloat(e.target.value),
-                            },
-                          },
+                              soilRespiration: parseFloat(e.target.value)
+                            }
+                          }
                         }))
                       }
                     />
@@ -839,9 +839,9 @@ export function SoilHealthMonitoringComponent() {
                             ...prev.testData,
                             biological: {
                               ...prev.testData.biological,
-                              earthwormCount: parseFloat(e.target.value),
-                            },
-                          },
+                              earthwormCount: parseFloat(e.target.value)
+                            }
+                          }
                         }))
                       }
                     />
@@ -864,10 +864,10 @@ export function SoilHealthMonitoringComponent() {
                               ...prev.testData.biological,
                               enzymeActivity: {
                                 ...prev.testData.biological.enzymeActivity,
-                                dehydrogenase: parseFloat(e.target.value),
-                              },
-                            },
-                          },
+                                dehydrogenase: parseFloat(e.target.value)
+                              }
+                            }
+                          }
                         }))
                       }
                     />
@@ -887,10 +887,10 @@ export function SoilHealthMonitoringComponent() {
                               ...prev.testData.biological,
                               enzymeActivity: {
                                 ...prev.testData.biological.enzymeActivity,
-                                phosphatase: parseFloat(e.target.value),
-                              },
-                            },
-                          },
+                                phosphatase: parseFloat(e.target.value)
+                              }
+                            }
+                          }
                         }))
                       }
                     />

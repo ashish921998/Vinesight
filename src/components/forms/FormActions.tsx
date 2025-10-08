@@ -29,12 +29,12 @@ export function FormActions({
   isSubmitDisabled = false,
   className,
   submitVariant = 'default',
-  layout = 'horizontal',
+  layout = 'horizontal'
 }: FormActionsProps) {
   const containerClassName = cn(
     'flex gap-2',
     layout === 'vertical' ? 'flex-col' : 'flex-row justify-end',
-    className,
+    className
   )
 
   return (

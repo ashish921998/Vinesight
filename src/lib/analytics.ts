@@ -7,7 +7,7 @@ export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G
 export const pageview = (url: string) => {
   if (typeof window !== 'undefined' && window.gtag) {
     window.gtag('config', GA_MEASUREMENT_ID, {
-      page_location: url,
+      page_location: url
     })
   }
 }
@@ -25,14 +25,14 @@ export const event = (
     event_label?: string
     value?: number
     [key: string]: any
-  } = {},
+  } = {}
 ) => {
   if (typeof window !== 'undefined' && window.gtag) {
     window.gtag('event', action, {
       event_category,
       event_label,
       value,
-      ...customParameters,
+      ...customParameters
     })
   }
 }
@@ -44,8 +44,8 @@ export const trackFarmEvent = (eventName: string, farmData?: any) => {
     event_label: farmData?.farmType || 'unknown',
     custom_parameters: {
       farm_size: farmData?.size,
-      crop_type: farmData?.cropType,
-    },
+      crop_type: farmData?.cropType
+    }
   })
 }
 
@@ -55,8 +55,8 @@ export const trackCalculatorUsage = (calculatorType: string, result?: any) => {
     event_label: calculatorType,
     custom_parameters: {
       calculator_type: calculatorType,
-      has_result: !!result,
-    },
+      has_result: !!result
+    }
   })
 }
 
@@ -65,8 +65,8 @@ export const trackAIInteraction = (interactionType: string, queryType?: string) 
     event_category: 'ai_assistant',
     event_label: interactionType,
     custom_parameters: {
-      query_type: queryType,
-    },
+      query_type: queryType
+    }
   })
 }
 
@@ -75,8 +75,8 @@ export const trackUserJourney = (milestone: string, userType: 'authenticated' | 
     event_category: 'engagement',
     event_label: milestone,
     custom_parameters: {
-      user_type: userType,
-    },
+      user_type: userType
+    }
   })
 }
 
@@ -88,8 +88,8 @@ export const trackToolUsage = (toolName: string, success: boolean = true) => {
     value: success ? 1 : 0,
     custom_parameters: {
       tool_name: toolName,
-      success_status: success,
-    },
+      success_status: success
+    }
   })
 }
 

@@ -11,7 +11,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import {
   Leaf,
@@ -22,7 +22,7 @@ import {
   CheckCircle,
   Info,
   BarChart3,
-  Calculator,
+  Calculator
 } from 'lucide-react'
 import { LAICalculator, type LAICalculationInputs, type LAIResults } from '@/lib/lai-calculator'
 import { SupabaseService } from '@/lib/supabase-service'
@@ -35,7 +35,7 @@ export function LAICalculatorComponent() {
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<LAIResults | null>(null)
   const [activeSection, setActiveSection] = useState<'measurement' | 'results' | 'analysis'>(
-    'measurement',
+    'measurement'
   )
 
   const [formData, setFormData] = useState({
@@ -48,7 +48,7 @@ export function LAICalculatorComponent() {
     leafShape: 'heart' as const,
     trellisSystem: 'vsp' as const,
     season: 'summer' as const,
-    productionGoal: 'wine' as const,
+    productionGoal: 'wine' as const
   })
 
   useEffect(() => {
@@ -84,7 +84,7 @@ export function LAICalculatorComponent() {
         canopyWidth: parseFloat(formData.canopyWidth),
         leafShape: formData.leafShape,
         trellisSystem: formData.trellisSystem,
-        season: formData.season,
+        season: formData.season
       }
 
       const calculationResults = LAICalculator.calculateLAI(inputs)
@@ -96,7 +96,7 @@ export function LAICalculatorComponent() {
         calculation_type: 'lai',
         date: new Date().toISOString().split('T')[0],
         inputs: inputs,
-        outputs: calculationResults,
+        outputs: calculationResults
       })
     } catch (error) {
       console.error('Error calculating LAI:', error)
@@ -108,7 +108,7 @@ export function LAICalculatorComponent() {
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: value
     }))
   }
 
@@ -123,7 +123,7 @@ export function LAICalculatorComponent() {
       leafShape: 'heart',
       trellisSystem: 'vsp',
       season: 'summer',
-      productionGoal: 'wine',
+      productionGoal: 'wine'
     })
     setResults(null)
   }
@@ -364,7 +364,7 @@ export function LAICalculatorComponent() {
                             | 'fruit_set'
                             | 'veraison'
                             | 'harvest'
-                            | 'post_harvest',
+                            | 'post_harvest'
                         ) => handleInputChange('season', value)}
                       >
                         <SelectTrigger className="h-12 sm:h-11 text-base sm:text-sm">

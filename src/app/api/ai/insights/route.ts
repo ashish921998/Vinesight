@@ -25,27 +25,27 @@ export async function POST(request: NextRequest) {
               // This can be ignored if you have middleware refreshing
               // user sessions.
             }
-          },
-        },
-      },
+          }
+        }
+      }
     )
 
     // Authenticate the user
     const {
       data: { user },
-      error: sessionError,
+      error: sessionError
     } = await supabase.auth.getUser()
 
     if (sessionError || !user) {
       return new Response(
         JSON.stringify({
           error: 'Authentication required',
-          code: 'UNAUTHORIZED',
+          code: 'UNAUTHORIZED'
         }),
         {
           status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        },
+          headers: { 'Content-Type': 'application/json' }
+        }
       )
     }
 
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     if (!farmId) {
       return new Response(JSON.stringify({ error: 'Farm ID is required' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }
       })
     }
 
@@ -70,12 +70,12 @@ export async function POST(request: NextRequest) {
       return new Response(
         JSON.stringify({
           error: 'Farm not found or access denied',
-          code: 'FORBIDDEN',
+          code: 'FORBIDDEN'
         }),
         {
           status: 403,
-          headers: { 'Content-Type': 'application/json' },
-        },
+          headers: { 'Content-Type': 'application/json' }
+        }
       )
     }
 
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     const insights = await AIInsightsService.getInsightsForFarm(parseInt(farmId), user.id, limit)
 
     return new Response(JSON.stringify({ insights }), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' }
     })
   } catch (error) {
     // Log error for debugging in development only
@@ -94,12 +94,12 @@ export async function POST(request: NextRequest) {
     return new Response(
       JSON.stringify({
         error: 'Failed to generate insights',
-        insights: [], // Return empty array as fallback
+        insights: [] // Return empty array as fallback
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      },
+        headers: { 'Content-Type': 'application/json' }
+      }
     )
   }
 }

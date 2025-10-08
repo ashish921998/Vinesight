@@ -4,7 +4,7 @@ import {
   FarmSchema,
   validateAndSanitize,
   globalRateLimiter,
-  generateCSRFToken,
+  generateCSRFToken
 } from '@/lib/validation'
 
 export async function GET(request: NextRequest) {
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { error: rateLimitResult.reason || 'Too many requests' },
-        { status: 429 },
+        { status: 429 }
       )
     }
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { error: rateLimitResult.reason || 'Too many requests' },
-        { status: 429 },
+        { status: 429 }
       )
     }
 
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     if (!contentType || !contentType.includes('application/json')) {
       return NextResponse.json(
         { error: 'Invalid content type. Expected application/json' },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
@@ -94,9 +94,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Validation failed',
-          details: validation.errors,
+          details: validation.errors
         },
-        { status: 400 },
+        { status: 400 }
       )
     }
 

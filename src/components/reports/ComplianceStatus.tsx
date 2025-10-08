@@ -13,7 +13,7 @@ import {
   FileCheck,
   Calendar,
   Award,
-  ExternalLink,
+  ExternalLink
 } from 'lucide-react'
 import { RegulatoryCompliance, RegulatoryStandard, ComplianceIssue } from '@/lib/reporting-types'
 
@@ -62,7 +62,7 @@ export function ComplianceStatus({ compliance }: ComplianceStatusProps) {
     return new Intl.DateTimeFormat('en-IN', {
       day: 'numeric',
       month: 'short',
-      year: 'numeric',
+      year: 'numeric'
     }).format(date)
   }
 

@@ -16,7 +16,7 @@ export interface TaskReminder {
 
 // Convert database row to TaskReminder
 export function taskReminderFromDB(
-  row: Database['public']['Tables']['task_reminders']['Row'],
+  row: Database['public']['Tables']['task_reminders']['Row']
 ): TaskReminder {
   return {
     id: row.id,
@@ -28,7 +28,7 @@ export function taskReminderFromDB(
     completed: row.completed,
     completedAt: row.completed_at,
     priority: row.priority,
-    createdAt: row.created_at,
+    createdAt: row.created_at
   }
 }
 

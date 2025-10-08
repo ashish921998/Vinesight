@@ -21,7 +21,7 @@ import {
   Info,
   Zap,
   Timer,
-  TrendingUp,
+  TrendingUp
 } from 'lucide-react'
 import { WeatherService, WeatherData, ETc, WeatherAlerts } from '@/lib/weather-service'
 
@@ -34,7 +34,7 @@ interface WeatherDashboardProps {
 export function WeatherDashboard({
   farmLocation,
   growthStage = 'Flowering',
-  soilType = 'medium',
+  soilType = 'medium'
 }: WeatherDashboardProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [etc, setEtc] = useState<ETc | null>(null)
@@ -55,7 +55,7 @@ export function WeatherDashboard({
       setLoading(true)
       const weatherData = await WeatherService.getCurrentWeather(
         farmLocation?.latitude,
-        farmLocation?.longitude,
+        farmLocation?.longitude
       )
 
       const etcData = WeatherService.calculateETc(weatherData, growthStage)

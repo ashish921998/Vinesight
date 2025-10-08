@@ -13,14 +13,14 @@ import {
   SprayCan,
   Scissors,
   DollarSign,
-  Beaker,
+  Beaker
 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,7 +28,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -42,32 +42,32 @@ const navigationItems = [
     name: 'Dashboard',
     href: '/dashboard',
     icon: Home,
-    color: 'text-primary',
+    color: 'text-primary'
   },
   {
     name: 'Farms',
     href: '/farms',
     icon: Sprout,
-    color: 'text-primary',
+    color: 'text-primary'
   },
   {
     name: 'AI',
     href: '/ai-assistant',
     icon: Brain,
-    color: 'text-primary',
+    color: 'text-primary'
   },
   {
     name: 'Calculator',
     href: '/calculators',
     icon: Calculator,
-    color: 'text-primary',
+    color: 'text-primary'
   },
   {
     name: 'Profile',
     href: '/settings',
     icon: User,
-    color: 'text-gray-600',
-  },
+    color: 'text-gray-600'
+  }
 ]
 
 const logTypes = [
@@ -84,15 +84,15 @@ const logTypes = [
         step: '0.5',
         min: '0.5',
         placeholder: '2.5',
-        required: true,
+        required: true
       },
       {
         name: 'notes',
         label: 'Notes (optional)',
         type: 'textarea',
-        placeholder: 'e.g., Drip irrigation, fruit development stage',
-      },
-    ],
+        placeholder: 'e.g., Drip irrigation, fruit development stage'
+      }
+    ]
   },
   {
     id: 'spray',
@@ -105,15 +105,15 @@ const logTypes = [
         label: 'Product/Chemical',
         type: 'text',
         placeholder: 'e.g., Fungicide, Insecticide name',
-        required: true,
+        required: true
       },
       {
         name: 'notes',
         label: 'Notes (optional)',
         type: 'textarea',
-        placeholder: 'e.g., Concentration, weather conditions, target pest/disease',
-      },
-    ],
+        placeholder: 'e.g., Concentration, weather conditions, target pest/disease'
+      }
+    ]
   },
   {
     id: 'fertigation',
@@ -126,7 +126,7 @@ const logTypes = [
         label: 'Fertilizer',
         type: 'text',
         placeholder: 'e.g., NPK 19:19:19',
-        required: true,
+        required: true
       },
       {
         name: 'quantity',
@@ -135,15 +135,15 @@ const logTypes = [
         step: '0.1',
         min: '0',
         placeholder: '10',
-        required: true,
+        required: true
       },
       {
         name: 'notes',
         label: 'Notes (optional)',
         type: 'textarea',
-        placeholder: 'e.g., Growth stage, concentration',
-      },
-    ],
+        placeholder: 'e.g., Growth stage, concentration'
+      }
+    ]
   },
   {
     id: 'harvest',
@@ -158,15 +158,15 @@ const logTypes = [
         step: '0.1',
         min: '0',
         placeholder: '100',
-        required: true,
+        required: true
       },
       {
         name: 'notes',
         label: 'Notes (optional)',
         type: 'textarea',
-        placeholder: 'e.g., Quality grade, market destination, storage location',
-      },
-    ],
+        placeholder: 'e.g., Quality grade, market destination, storage location'
+      }
+    ]
   },
   {
     id: 'expense',
@@ -181,30 +181,30 @@ const logTypes = [
         step: '0.01',
         min: '0',
         placeholder: '1000',
-        required: true,
+        required: true
       },
       {
         name: 'category',
         label: 'Category',
         type: 'text',
         placeholder: 'e.g., Labor, Materials, Fuel',
-        required: true,
+        required: true
       },
       {
         name: 'description',
         label: 'Description',
         type: 'text',
         placeholder: 'e.g., Pruning labor',
-        required: true,
+        required: true
       },
       {
         name: 'notes',
         label: 'Notes (optional)',
         type: 'textarea',
-        placeholder: 'Additional details',
-      },
-    ],
-  },
+        placeholder: 'Additional details'
+      }
+    ]
+  }
 ]
 
 export function BottomNavigation() {
@@ -240,7 +240,7 @@ export function BottomNavigation() {
   const handleFormDataChange = (fieldName: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      [fieldName]: value,
+      [fieldName]: value
     }))
   }
 
@@ -270,7 +270,7 @@ export function BottomNavigation() {
             growth_stage: 'Not specified',
             moisture_status: 'Not specified',
             system_discharge: 0,
-            notes: formData.notes || '',
+            notes: formData.notes || ''
           })
           break
 
@@ -286,7 +286,7 @@ export function BottomNavigation() {
             area: 0,
             weather: 'Not specified',
             operator: 'Not specified',
-            notes: formData.notes || '',
+            notes: formData.notes || ''
           })
           break
 
@@ -298,7 +298,7 @@ export function BottomNavigation() {
             dose: formData.quantity || '0',
             purpose: '', // Default value
             area: 0,
-            notes: formData.notes || '',
+            notes: formData.notes || ''
           })
           break
 
@@ -310,7 +310,7 @@ export function BottomNavigation() {
             grade: 'Not specified',
             price: 0,
             buyer: 'Not specified',
-            notes: formData.notes || '',
+            notes: formData.notes || ''
           })
           break
 
@@ -321,7 +321,7 @@ export function BottomNavigation() {
             type: (formData.category || 'other') as 'labor' | 'materials' | 'equipment' | 'other',
             description: formData.description || '',
             cost: parseFloat(formData.amount || '0'),
-            remarks: formData.notes || '',
+            remarks: formData.notes || ''
           })
           break
       }

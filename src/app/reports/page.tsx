@@ -11,7 +11,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -27,7 +27,7 @@ import {
   Droplets,
   SprayCan,
   Scissors,
-  TrendingUp,
+  TrendingUp
 } from 'lucide-react'
 import { CloudDataService } from '@/lib/cloud-data-service'
 import { ExportService, type ExportOptions } from '@/lib/export-service'
@@ -69,11 +69,11 @@ export default function UnifiedReportsPage() {
   const [exportOptions, setExportOptions] = useState<Partial<ExportOptions>>({
     dateRange: {
       from: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      to: new Date().toISOString().split('T')[0],
+      to: new Date().toISOString().split('T')[0]
     },
     includeTypes: ['irrigation', 'spray', 'harvest', 'expense'],
     format: 'pdf',
-    reportType: 'comprehensive',
+    reportType: 'comprehensive'
   })
 
   const loadFarms = useCallback(async () => {
@@ -139,8 +139,8 @@ export default function UnifiedReportsPage() {
           water_amount: 250.5,
           system_discharge: 2.5,
           notes: 'Morning irrigation cycle',
-          created_at: '2025-08-15T06:00:00Z',
-        },
+          created_at: '2025-08-15T06:00:00Z'
+        }
       ]
 
       spray = [
@@ -153,8 +153,8 @@ export default function UnifiedReportsPage() {
           target: 'Powdery mildew prevention',
           weather_conditions: 'Calm, 22°C',
           notes: 'Preventive treatment',
-          created_at: '2025-08-10T08:00:00Z',
-        },
+          created_at: '2025-08-10T08:00:00Z'
+        }
       ]
 
       harvest = [
@@ -169,8 +169,8 @@ export default function UnifiedReportsPage() {
           brix_level: 22.5,
           price: 4.5,
           notes: 'Excellent quality harvest',
-          created_at: '2025-08-25T10:00:00Z',
-        },
+          created_at: '2025-08-25T10:00:00Z'
+        }
       ]
 
       expense = [
@@ -185,15 +185,15 @@ export default function UnifiedReportsPage() {
           currency: 'USD',
           vendor: 'Farm Supply Co',
           notes: 'Fungicide for preventive treatment',
-          created_at: '2025-08-12T14:00:00Z',
-        },
+          created_at: '2025-08-12T14:00:00Z'
+        }
       ]
     } else {
       ;[irrigation, spray, harvest, expense] = await Promise.all([
         CloudDataService.getIrrigationRecords(farm.id!),
         CloudDataService.getSprayRecords(farm.id!),
         CloudDataService.getHarvestRecords(farm.id!),
-        CloudDataService.getExpenseRecords(farm.id!),
+        CloudDataService.getExpenseRecords(farm.id!)
       ])
     }
 
@@ -209,22 +209,22 @@ export default function UnifiedReportsPage() {
       irrigation: filterByDate(irrigation),
       spray: filterByDate(spray),
       harvest: filterByDate(harvest),
-      expense: filterByDate(expense),
+      expense: filterByDate(expense)
     }
 
     // Calculate summary
     const totalIrrigationHours = filteredData.irrigation.reduce(
       (sum, r) => sum + (r.duration || 0),
-      0,
+      0
     )
     const totalWaterUsage = filteredData.irrigation.reduce(
       (sum, r) => sum + (r.duration || 0) * (r.system_discharge || 0),
-      0,
+      0
     )
     const totalHarvest = filteredData.harvest.reduce((sum, r) => sum + (r.quantity || 0), 0)
     const totalRevenue = filteredData.harvest.reduce(
       (sum, r) => sum + (r.quantity || 0) * (r.price || 0),
-      0,
+      0
     )
     const totalExpenses = filteredData.expense.reduce((sum, r) => sum + (r.cost || 0), 0)
 
@@ -236,7 +236,7 @@ export default function UnifiedReportsPage() {
       totalHarvest: Math.round(totalHarvest * 10) / 10,
       totalRevenue: Math.round(totalRevenue),
       totalExpenses: Math.round(totalExpenses),
-      netProfit: Math.round(totalRevenue - totalExpenses),
+      netProfit: Math.round(totalRevenue - totalExpenses)
     }
 
     return { data: filteredData, summary }
@@ -258,7 +258,7 @@ export default function UnifiedReportsPage() {
 
         // Get headers from first record
         const headers = Object.keys(recordsArray[0]).filter(
-          (key) => key !== 'id' && key !== 'farm_id',
+          (key) => key !== 'id' && key !== 'farm_id'
         )
         csvRows.push(headers.join(','))
 
@@ -360,25 +360,25 @@ export default function UnifiedReportsPage() {
               pdf.text(
                 `${index + 1}. ${record.date} - Duration: ${record.duration}h, Water: ${record.water_amount}L`,
                 25,
-                yPosition,
+                yPosition
               )
             } else if (type === 'harvest') {
               pdf.text(
                 `${index + 1}. ${record.date} - Quantity: ${record.quantity}kg, Value: ₹${((record.quantity || 0) * (record.price || 0)).toLocaleString()}`,
                 25,
-                yPosition,
+                yPosition
               )
             } else if (type === 'expense') {
               pdf.text(
                 `${index + 1}. ${record.date} - ${record.description}: ₹${record.cost}`,
                 25,
-                yPosition,
+                yPosition
               )
             } else {
               pdf.text(
                 `${index + 1}. ${record.date} - ${record.notes || 'Record available'}`,
                 25,
-                yPosition,
+                yPosition
               )
             }
             yPosition += 7
@@ -474,7 +474,7 @@ export default function UnifiedReportsPage() {
           dateRange: exportOptions.dateRange!,
           includeTypes: exportOptions.includeTypes!,
           format,
-          reportType: exportOptions.reportType as any,
+          reportType: exportOptions.reportType as any
         }
 
         await ExportService.exportData(options)
@@ -589,7 +589,7 @@ export default function UnifiedReportsPage() {
                 onChange={(e) =>
                   setExportOptions((prev) => ({
                     ...prev,
-                    dateRange: { ...prev.dateRange!, from: e.target.value },
+                    dateRange: { ...prev.dateRange!, from: e.target.value }
                   }))
                 }
               />
@@ -605,7 +605,7 @@ export default function UnifiedReportsPage() {
                 onChange={(e) =>
                   setExportOptions((prev) => ({
                     ...prev,
-                    dateRange: { ...prev.dateRange!, to: e.target.value },
+                    dateRange: { ...prev.dateRange!, to: e.target.value }
                   }))
                 }
               />

@@ -17,7 +17,7 @@ export function SEOSchema({
   url,
   image,
   calculatorType,
-  guideCategory,
+  guideCategory
 }: SEOSchemaProps) {
   const baseSchema = {
     '@context': 'https://schema.org',
@@ -31,11 +31,11 @@ export function SEOSchema({
           '@type': 'ImageObject',
           url: 'https://farmai.vercel.app/icon-512x512.png',
           width: 512,
-          height: 512,
+          height: 512
         },
         sameAs: ['https://twitter.com/FarmAI', 'https://linkedin.com/company/farmai'],
         description:
-          'AI-powered smart farm management system for precision agriculture and intelligent crop monitoring',
+          'AI-powered smart farm management system for precision agriculture and intelligent crop monitoring'
       },
       {
         '@type': 'WebSite',
@@ -43,15 +43,15 @@ export function SEOSchema({
         url: 'https://farmai.vercel.app',
         name: 'FarmAI - Smart Farm Management System',
         publisher: {
-          '@id': 'https://farmai.vercel.app/#organization',
+          '@id': 'https://farmai.vercel.app/#organization'
         },
         potentialAction: {
           '@type': 'SearchAction',
           target: 'https://farmai.vercel.app/search?q={search_term_string}',
-          'query-input': 'required name=search_term_string',
-        },
-      },
-    ],
+          'query-input': 'required name=search_term_string'
+        }
+      }
+    ]
   }
 
   // Homepage Schema
@@ -65,10 +65,10 @@ export function SEOSchema({
         'Transform your farming operations with AI-driven crop monitoring, yield prediction, disease detection, and automation for modern agriculture.',
       // @ts-ignore
       isPartOf: {
-        '@id': 'https://farmai.vercel.app/#website',
+        '@id': 'https://farmai.vercel.app/#website'
       },
       about: {
-        '@id': 'https://farmai.vercel.app/#organization',
+        '@id': 'https://farmai.vercel.app/#organization'
       },
       mainEntity: {
         '@type': 'SoftwareApplication',
@@ -78,14 +78,14 @@ export function SEOSchema({
         offers: {
           '@type': 'Offer',
           price: '0',
-          priceCurrency: 'USD',
+          priceCurrency: 'USD'
         },
         aggregateRating: {
           '@type': 'AggregateRating',
           ratingValue: '4.8',
           ratingCount: '156',
           bestRating: '5',
-          worstRating: '1',
+          worstRating: '1'
         },
         featureList: [
           'AI Crop Monitoring',
@@ -94,9 +94,9 @@ export function SEOSchema({
           'Weather Analytics',
           'Irrigation Management',
           'Harvest Planning',
-          'Farm Analytics',
-        ],
-      },
+          'Farm Analytics'
+        ]
+      }
     })
   }
 
@@ -110,7 +110,7 @@ export function SEOSchema({
       description: description || 'Scientific agricultural calculator for farming operations',
       // @ts-ignore
       isPartOf: {
-        '@id': 'https://farmai.vercel.app/#website',
+        '@id': 'https://farmai.vercel.app/#website'
       },
       mainEntity: {
         '@type': 'WebApplication',
@@ -123,9 +123,9 @@ export function SEOSchema({
         offers: {
           '@type': 'Offer',
           price: '0',
-          priceCurrency: 'USD',
-        },
-      },
+          priceCurrency: 'USD'
+        }
+      }
     })
   }
 
@@ -141,10 +141,10 @@ export function SEOSchema({
       datePublished: '2025-09-02',
       dateModified: '2025-09-02',
       author: {
-        '@id': 'https://farmai.vercel.app/#organization',
+        '@id': 'https://farmai.vercel.app/#organization'
       },
       publisher: {
-        '@id': 'https://farmai.vercel.app/#organization',
+        '@id': 'https://farmai.vercel.app/#organization'
       },
       articleSection: guideCategory || 'Agriculture',
       keywords: [
@@ -152,18 +152,18 @@ export function SEOSchema({
         'agriculture',
         'farming techniques',
         'crop management',
-        'precision agriculture',
+        'precision agriculture'
       ],
       image: {
         '@type': 'ImageObject',
         url: image || 'https://farmai.vercel.app/og-image.png',
         width: 1200,
-        height: 630,
+        height: 630
       },
       mainEntityOfPage: {
         '@type': 'WebPage',
-        '@id': `https://farmai.vercel.app${url}#webpage`,
-      },
+        '@id': `https://farmai.vercel.app${url}#webpage`
+      }
     })
   }
 
@@ -177,19 +177,19 @@ export function SEOSchema({
       // @ts-ignore
       category: 'Software',
       brand: {
-        '@id': 'https://farmai.vercel.app/#organization',
+        '@id': 'https://farmai.vercel.app/#organization'
       },
       offers: {
         '@type': 'Offer',
         price: '0',
         priceCurrency: 'USD',
-        availability: 'https://schema.org/InStock',
+        availability: 'https://schema.org/InStock'
       },
       aggregateRating: {
         '@type': 'AggregateRating',
         ratingValue: '4.8',
-        ratingCount: '156',
-      },
+        ratingCount: '156'
+      }
     })
   }
 
@@ -197,7 +197,7 @@ export function SEOSchema({
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(baseSchema, null, 2),
+        __html: JSON.stringify(baseSchema, null, 2)
       }}
     />
   )

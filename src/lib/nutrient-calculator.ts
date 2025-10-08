@@ -122,7 +122,7 @@ const NUTRIENT_UPTAKE_FACTORS = {
     fruit_set: 6.0,
     veraison: 3.5,
     harvest: 1.5,
-    post_harvest: 2.0,
+    post_harvest: 2.0
   },
   phosphorus: {
     dormant: 0.1,
@@ -131,7 +131,7 @@ const NUTRIENT_UPTAKE_FACTORS = {
     fruit_set: 1.8,
     veraison: 1.0,
     harvest: 0.5,
-    post_harvest: 0.6,
+    post_harvest: 0.6
   },
   potassium: {
     dormant: 0.3,
@@ -140,8 +140,8 @@ const NUTRIENT_UPTAKE_FACTORS = {
     fruit_set: 8.0,
     veraison: 6.5,
     harvest: 2.5,
-    post_harvest: 3.0,
-  },
+    post_harvest: 3.0
+  }
 }
 
 // Soil test interpretation ranges
@@ -149,7 +149,7 @@ const SOIL_TEST_RANGES = {
   phosphorus: { low: 15, adequate: 30, high: 50 }, // ppm
   potassium: { low: 100, adequate: 200, high: 300 }, // ppm
   organicMatter: { low: 2, adequate: 3.5, high: 6 }, // %
-  ph: { acidic: 6.0, optimal: 6.8, alkaline: 8.0 },
+  ph: { acidic: 6.0, optimal: 6.8, alkaline: 8.0 }
 }
 
 // Fertilizer database with costs (INR per kg)
@@ -162,7 +162,7 @@ const FERTILIZER_DATABASE = {
   'Calcium Nitrate (15.5-0-0)': { n: 15.5, p: 0, k: 0, cost: 40 },
   'Potassium Nitrate (13-0-45)': { n: 13, p: 0, k: 45, cost: 85 },
   'Magnesium Sulfate': { n: 0, p: 0, k: 0, cost: 30 },
-  'Micronutrient Mix': { n: 0, p: 0, k: 0, cost: 150 },
+  'Micronutrient Mix': { n: 0, p: 0, k: 0, cost: 150 }
 }
 
 export class NutrientCalculator {
@@ -171,12 +171,12 @@ export class NutrientCalculator {
    */
   private static calculateNutrientNeeds(
     targetYield: number,
-    stage: GrapeGrowthStage,
+    stage: GrapeGrowthStage
   ): { n: number; p: number; k: number } {
     return {
       n: targetYield * NUTRIENT_UPTAKE_FACTORS.nitrogen[stage],
       p: targetYield * NUTRIENT_UPTAKE_FACTORS.phosphorus[stage],
-      k: targetYield * NUTRIENT_UPTAKE_FACTORS.potassium[stage],
+      k: targetYield * NUTRIENT_UPTAKE_FACTORS.potassium[stage]
     }
   }
 
@@ -196,7 +196,7 @@ export class NutrientCalculator {
     return {
       n: nAvailable,
       p: pAvailable,
-      k: kAvailable,
+      k: kAvailable
     }
   }
 
@@ -288,7 +288,7 @@ export class NutrientCalculator {
       organicMatterStatus,
       cationBalance,
       recommendations,
-      limeRequirement,
+      limeRequirement
     }
   }
 
@@ -300,7 +300,7 @@ export class NutrientCalculator {
     pDeficit: number,
     kDeficit: number,
     stage: GrapeGrowthStage,
-    variety: string,
+    variety: string
   ): FertilizerProgram[] {
     const program: FertilizerProgram[] = []
 
@@ -316,7 +316,7 @@ export class NutrientCalculator {
           costPerKg: FERTILIZER_DATABASE['DAP (18-46-0)'].cost,
           totalCost: 0, // Will be calculated
           method: 'Broadcast and incorporate',
-          notes: 'Apply before budbreak for root uptake',
+          notes: 'Apply before budbreak for root uptake'
         })
       }
 
@@ -329,7 +329,7 @@ export class NutrientCalculator {
           costPerKg: FERTILIZER_DATABASE['Urea (46-0-0)'].cost,
           totalCost: 0,
           method: 'Split application through fertigation',
-          notes: 'Support early vegetative growth',
+          notes: 'Support early vegetative growth'
         })
       }
     }
@@ -344,7 +344,7 @@ export class NutrientCalculator {
         costPerKg: FERTILIZER_DATABASE['Potassium Nitrate (13-0-45)'].cost,
         totalCost: 0,
         method: 'Fertigation',
-        notes: 'Critical for fruit development',
+        notes: 'Critical for fruit development'
       })
     }
 
@@ -373,7 +373,7 @@ export class NutrientCalculator {
       'September',
       'October',
       'November',
-      'December',
+      'December'
     ]
 
     // Group applications by month
@@ -398,7 +398,7 @@ export class NutrientCalculator {
       monthlyApps[month].push({
         fertilizer: item.fertilizer,
         rate: item.rate,
-        method: item.method,
+        method: item.method
       })
     })
 
@@ -409,13 +409,13 @@ export class NutrientCalculator {
         March: 'budbreak',
         May: 'fruit_set',
         June: 'veraison',
-        August: 'harvest',
+        August: 'harvest'
       }
 
       schedule.push({
         month,
         stage: stageMap[month] || 'dormant',
-        applications: monthlyApps[month],
+        applications: monthlyApps[month]
       })
     })
 
@@ -432,7 +432,7 @@ export class NutrientCalculator {
       soilTest,
       grapeVariety,
       previousApplications,
-      farmArea,
+      farmArea
     } = inputs
 
     // Calculate nutrient needs
@@ -455,7 +455,7 @@ export class NutrientCalculator {
       pDeficit,
       kDeficit,
       currentGrowthStage,
-      grapeVariety,
+      grapeVariety
     )
 
     // Calculate total cost
@@ -480,9 +480,9 @@ export class NutrientCalculator {
           nDeficit > 0
             ? [
                 'Split applications to reduce leaching',
-                'Avoid late season N to prevent delayed ripening',
+                'Avoid late season N to prevent delayed ripening'
               ]
-            : ['No additional nitrogen needed'],
+            : ['No additional nitrogen needed']
       },
       phosphorus: {
         required: nutrientNeeds.p,
@@ -494,7 +494,7 @@ export class NutrientCalculator {
         notes:
           pDeficit > 0
             ? ['Apply in fall or early spring', 'Band application near root zone']
-            : ['Adequate phosphorus available'],
+            : ['Adequate phosphorus available']
       },
       potassium: {
         required: nutrientNeeds.k,
@@ -506,7 +506,7 @@ export class NutrientCalculator {
         notes:
           kDeficit > 0
             ? ['Critical for fruit quality', 'Monitor soil K levels regularly']
-            : ['Potassium levels adequate'],
+            : ['Potassium levels adequate']
       },
       secondary: {
         calcium: {
@@ -516,7 +516,7 @@ export class NutrientCalculator {
           timing: ['Annual application'],
           form: ['Gypsum', 'Lime', 'Calcium Chloride'],
           method: 'Broadcast or fertigation',
-          notes: ['Important for cell wall strength', 'Reduces bitter pit in grapes'],
+          notes: ['Important for cell wall strength', 'Reduces bitter pit in grapes']
         },
         magnesium: {
           required: 15,
@@ -525,7 +525,7 @@ export class NutrientCalculator {
           timing: ['Spring application'],
           form: ['Epsom Salt', 'Dolomitic Lime'],
           method: 'Foliar spray or soil application',
-          notes: ['Essential for chlorophyll formation', 'Apply if Mg:K ratio is poor'],
+          notes: ['Essential for chlorophyll formation', 'Apply if Mg:K ratio is poor']
         },
         sulfur: {
           required: 10,
@@ -534,8 +534,8 @@ export class NutrientCalculator {
           timing: ['Spring application'],
           form: ['Elemental Sulfur', 'Gypsum'],
           method: 'Broadcast application',
-          notes: ['Important for protein synthesis', 'Helps lower soil pH if needed'],
-        },
+          notes: ['Important for protein synthesis', 'Helps lower soil pH if needed']
+        }
       },
       micronutrients: {
         boron: {
@@ -545,7 +545,7 @@ export class NutrientCalculator {
           timing: ['Pre-bloom', 'Fruit set'],
           form: ['Boric Acid', 'Borax'],
           method: 'Foliar application preferred',
-          notes: ['Critical for fruit set', 'Apply carefully - narrow safe range'],
+          notes: ['Critical for fruit set', 'Apply carefully - narrow safe range']
         },
         zinc: {
           required: 2,
@@ -554,7 +554,7 @@ export class NutrientCalculator {
           timing: ['Dormant season', 'Early spring'],
           form: ['Zinc Sulfate', 'Chelated Zinc'],
           method: 'Foliar spray or soil application',
-          notes: ['Important for enzyme function', 'Deficiency common in alkaline soils'],
+          notes: ['Important for enzyme function', 'Deficiency common in alkaline soils']
         },
         iron: {
           required: 3,
@@ -563,7 +563,7 @@ export class NutrientCalculator {
           timing: ['Spring application'],
           form: ['Chelated Iron', 'Iron Sulfate'],
           method: 'Foliar application in alkaline soils',
-          notes: ['Essential for chlorophyll', 'Use chelated forms in high pH soils'],
+          notes: ['Essential for chlorophyll', 'Use chelated forms in high pH soils']
         },
         manganese: {
           required: 2,
@@ -572,9 +572,9 @@ export class NutrientCalculator {
           timing: ['Spring application'],
           form: ['Manganese Sulfate', 'Chelated Manganese'],
           method: 'Foliar or soil application',
-          notes: ['Important for photosynthesis', 'Deficiency common in organic soils'],
-        },
-      },
+          notes: ['Important for photosynthesis', 'Deficiency common in organic soils']
+        }
+      }
     }
 
     return {
@@ -582,7 +582,7 @@ export class NutrientCalculator {
       fertilizerProgram,
       totalCost,
       applicationSchedule,
-      soilHealthAssessment,
+      soilHealthAssessment
     }
   }
 
@@ -601,13 +601,13 @@ export class NutrientCalculator {
           'Yellowing of older leaves',
           'Reduced shoot growth',
           'Light green foliage',
-          'Poor fruit set',
+          'Poor fruit set'
         ],
         management: [
           'Apply nitrogen fertilizer',
           'Use foliar urea spray',
-          'Improve soil organic matter',
-        ],
+          'Improve soil organic matter'
+        ]
       },
       {
         nutrient: 'Phosphorus',
@@ -615,13 +615,13 @@ export class NutrientCalculator {
           'Purple or reddish leaf coloration',
           'Delayed maturity',
           'Poor root development',
-          'Reduced flowering',
+          'Reduced flowering'
         ],
         management: [
           'Apply phosphate fertilizers',
           'Improve soil pH if acidic',
-          'Add organic matter',
-        ],
+          'Add organic matter'
+        ]
       },
       {
         nutrient: 'Potassium',
@@ -629,14 +629,14 @@ export class NutrientCalculator {
           'Leaf edge burning',
           'Poor fruit quality',
           'Reduced sugar content',
-          'Increased disease susceptibility',
+          'Increased disease susceptibility'
         ],
         management: [
           'Apply potassium fertilizers',
           'Use potassium sulfate for quality',
-          'Monitor soil K levels',
-        ],
-      },
+          'Monitor soil K levels'
+        ]
+      }
     ]
   }
 }

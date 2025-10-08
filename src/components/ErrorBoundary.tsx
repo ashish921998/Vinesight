@@ -29,7 +29,7 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({
       error,
-      errorInfo,
+      errorInfo
     })
 
     // Log error to monitoring service in production
@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
       // Mobile-specific error logging
       if (typeof window !== 'undefined' && 'navigator' in window) {
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent,
+          navigator.userAgent
         )
         const isChrome = /Chrome/i.test(navigator.userAgent)
 
@@ -48,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
           isChrome,
           userAgent: navigator.userAgent,
           url: window.location.href,
-          timestamp: new Date().toISOString(),
+          timestamp: new Date().toISOString()
         })
       }
 
@@ -153,7 +153,7 @@ export class ErrorBoundary extends Component<Props, State> {
 // HOC for wrapping components with error boundary
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  fallback?: ReactNode,
+  fallback?: ReactNode
 ) {
   return function WrappedComponent(props: P) {
     return (

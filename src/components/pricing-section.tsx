@@ -8,16 +8,16 @@ export default function PricingSection() {
   const pricing = {
     starter: {
       monthly: 0,
-      annually: 0,
+      annually: 0
     },
     professional: {
       monthly: 20,
-      annually: 16, // 20% discount for annual
+      annually: 16 // 20% discount for annual
     },
     enterprise: {
       monthly: 200,
-      annually: 160, // 20% discount for annual
-    },
+      annually: 160 // 20% discount for annual
+    }
   }
 
   return (
@@ -149,7 +149,7 @@ export default function PricingSection() {
                         style={{
                           opacity: billingPeriod === 'annually' ? 1 : 0,
                           transform: `scale(${billingPeriod === 'annually' ? 1 : 0.8})`,
-                          filter: `blur(${billingPeriod === 'annually' ? 0 : 4}px)`,
+                          filter: `blur(${billingPeriod === 'annually' ? 0 : 4}px)`
                         }}
                         aria-hidden={billingPeriod !== 'annually'}
                       >
@@ -160,7 +160,7 @@ export default function PricingSection() {
                         style={{
                           opacity: billingPeriod === 'monthly' ? 1 : 0,
                           transform: `scale(${billingPeriod === 'monthly' ? 1 : 0.8})`,
-                          filter: `blur(${billingPeriod === 'monthly' ? 0 : 4}px)`,
+                          filter: `blur(${billingPeriod === 'monthly' ? 0 : 4}px)`
                         }}
                         aria-hidden={billingPeriod !== 'monthly'}
                       >
@@ -187,7 +187,7 @@ export default function PricingSection() {
                   'Basic documentation tools',
                   'Community support',
                   'Standard templates',
-                  'Basic analytics',
+                  'Basic analytics'
                 ].map((feature, index) => (
                   <div
                     key={index}
@@ -240,7 +240,7 @@ export default function PricingSection() {
                         style={{
                           opacity: billingPeriod === 'annually' ? 1 : 0,
                           transform: `scale(${billingPeriod === 'annually' ? 1 : 0.8})`,
-                          filter: `blur(${billingPeriod === 'annually' ? 0 : 4}px)`,
+                          filter: `blur(${billingPeriod === 'annually' ? 0 : 4}px)`
                         }}
                         aria-hidden={billingPeriod !== 'annually'}
                       >
@@ -251,7 +251,7 @@ export default function PricingSection() {
                         style={{
                           opacity: billingPeriod === 'monthly' ? 1 : 0,
                           transform: `scale(${billingPeriod === 'monthly' ? 1 : 0.8})`,
-                          filter: `blur(${billingPeriod === 'monthly' ? 0 : 4}px)`,
+                          filter: `blur(${billingPeriod === 'monthly' ? 0 : 4}px)`
                         }}
                         aria-hidden={billingPeriod !== 'monthly'}
                       >
@@ -282,7 +282,7 @@ export default function PricingSection() {
                   'Advanced analytics',
                   'Team collaboration',
                   'API access',
-                  'Custom integrations',
+                  'Custom integrations'
                 ].map((feature, index) => (
                   <div
                     key={index}
@@ -335,7 +335,7 @@ export default function PricingSection() {
                         style={{
                           opacity: billingPeriod === 'annually' ? 1 : 0,
                           transform: `scale(${billingPeriod === 'annually' ? 1 : 0.8})`,
-                          filter: `blur(${billingPeriod === 'annually' ? 0 : 4}px)`,
+                          filter: `blur(${billingPeriod === 'annually' ? 0 : 4}px)`
                         }}
                         aria-hidden={billingPeriod !== 'annually'}
                       >
@@ -346,7 +346,7 @@ export default function PricingSection() {
                         style={{
                           opacity: billingPeriod === 'monthly' ? 1 : 0,
                           transform: `scale(${billingPeriod === 'monthly' ? 1 : 0.8})`,
-                          filter: `blur(${billingPeriod === 'monthly' ? 0 : 4}px)`,
+                          filter: `blur(${billingPeriod === 'monthly' ? 0 : 4}px)`
                         }}
                         aria-hidden={billingPeriod !== 'monthly'}
                       >
@@ -376,7 +376,7 @@ export default function PricingSection() {
                   'Advanced security features',
                   'SSO integration',
                   'Custom contracts',
-                  'White-label options',
+                  'White-label options'
                 ].map((feature, index) => (
                   <div
                     key={index}

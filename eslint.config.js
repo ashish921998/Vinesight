@@ -2,20 +2,20 @@ import { FlatCompat } from '@eslint/eslintrc'
 import pluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 
 const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
+  baseDirectory: import.meta.dirname
 })
 
 export default [
   {
-    ignores: ['.next/**', 'node_modules/**'],
+    ignores: ['.next/**', 'node_modules/**']
   },
   ...compat.config({
-    extends: ['next', 'next/core-web-vitals'],
+    extends: ['next', 'next/core-web-vitals']
   }),
-  pluginPrettierRecommended,
   {
     rules: {
-      'no-console': 'warn',
-    },
+      'no-console': 'warn'
+    }
   },
+  pluginPrettierRecommended
 ]

@@ -33,7 +33,7 @@ import {
   Eye,
   AlertCircle,
   Users,
-  Lightbulb,
+  Lightbulb
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { type AIInsight } from '@/types/ai'
@@ -57,12 +57,12 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
       const response = await fetch('/api/ai/insights', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           farmId,
-          limit: 8,
-        }),
+          limit: 8
+        })
       })
 
       if (!response.ok) {
@@ -155,7 +155,7 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
       fungus: Leaf,
       pest: Bug,
       mildew: Sprout,
-      disease: AlertCircle,
+      disease: AlertCircle
     }
     const IconComponent = iconMap[iconName as keyof typeof iconMap] || Target
     return <IconComponent className="h-5 w-5" />

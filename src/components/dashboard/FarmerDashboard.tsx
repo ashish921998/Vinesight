@@ -10,7 +10,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { MapPin, AlertTriangle } from 'lucide-react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
@@ -23,7 +23,7 @@ import { capitalize } from '@/lib/utils'
 const calculateFarmStatus = (
   farm: Farm,
   tasks?: any[],
-  alerts?: any[],
+  alerts?: any[]
 ): 'healthy' | 'attention' | 'critical' => {
   const criticalAlerts = alerts?.filter((alert) => alert.type === 'critical')?.length || 0
   const overdueTasks =
@@ -68,8 +68,8 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
         status: calculateFarmStatus(
           selectedFarm,
           dashboardData?.pendingTasks,
-          dashboardData?.alerts,
-        ) as 'healthy' | 'attention' | 'critical',
+          dashboardData?.alerts
+        ) as 'healthy' | 'attention' | 'critical'
       }
     : null
 
@@ -124,7 +124,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
           soil: null,
           water: null,
           growth: null,
-          financial: null,
+          financial: null
         })
       }
     }
@@ -140,7 +140,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       try {
         const weather = await WeatherService.getCurrentWeather(
           selectedFarm.latitude,
-          selectedFarm.longitude,
+          selectedFarm.longitude
         )
         setWeatherData(weather)
       } catch (err) {
@@ -260,7 +260,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                   const status = calculateFarmStatus(
                     farm,
                     dashboardData?.pendingTasks,
-                    dashboardData?.alerts,
+                    dashboardData?.alerts
                   )
                   return (
                     <SelectItem key={farm.id} value={farm.id!.toString()}>
@@ -345,7 +345,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
         {/* Extra bottom padding for mobile navigation */}
         {/* Critical Alerts Banner - Always visible if present */}
         {dashboardData?.pendingTasks?.filter(
-          (task: any) => !task.completed && new Date(task.due_date) < new Date(),
+          (task: any) => !task.completed && new Date(task.due_date) < new Date()
         ).length > 0 && (
           <div className="bg-red-50 border-l-4 border-l-red-500 px-4 py-3 mx-4 mt-4 rounded-r-lg">
             <div className="flex items-center gap-2">
@@ -353,7 +353,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
               <span className="text-sm font-medium text-red-800">
                 {
                   dashboardData.pendingTasks.filter(
-                    (task: any) => !task.completed && new Date(task.due_date) < new Date(),
+                    (task: any) => !task.completed && new Date(task.due_date) < new Date()
                   ).length
                 }{' '}
                 Overdue Task(s)
@@ -371,7 +371,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                     humidity: weatherData.current.humidity,
                     precipitation: weatherData.current.precipitation,
                     windSpeed: weatherData.current.windSpeed,
-                    condition: weatherData.current.condition,
+                    condition: weatherData.current.condition
                   }
                 : undefined
             }
@@ -382,12 +382,12 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                     currentLevel: Math.round(
                       ((selectedFarm.remainingWater || 0) /
                         (selectedFarm.totalTankCapacity || 1000)) *
-                        100,
+                        100
                     ),
                     dailyUsage: 0, // Calculate from recent irrigation records
                     weeklyTarget: selectedFarm.totalTankCapacity || 0,
                     weeklyUsed: dashboardData?.totalWaterUsage || 0,
-                    efficiency: 85, // Could be calculated from system efficiency
+                    efficiency: 85 // Could be calculated from system efficiency
                   }
                 : undefined
             }
@@ -396,7 +396,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
               progress: 60,
               healthScore: 85,
               expectedHarvest: new Date(new Date().getTime() + 90 * 24 * 60 * 60 * 1000),
-              daysToHarvest: 90,
+              daysToHarvest: 90
             }}
             financial={undefined} // Would be calculated from harvest and expense records
             loading={!dashboardData}
@@ -415,13 +415,13 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                 scheduledTime: task.due_date
                   ? new Date(task.due_date).toLocaleTimeString([], {
                       hour: '2-digit',
-                      minute: '2-digit',
+                      minute: '2-digit'
                     })
                   : undefined,
                 farmBlock: task.location || (selectedFarm ? capitalize(selectedFarm.name) : ''),
                 estimatedDuration: task.estimated_duration || 60,
                 completed: task.completed || false,
-                description: task.description,
+                description: task.description
               })) || []
             }
             onTaskComplete={handleTaskComplete}

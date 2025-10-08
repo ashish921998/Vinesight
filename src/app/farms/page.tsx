@@ -13,7 +13,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { capitalize } from '@/lib/utils'
 
@@ -73,7 +73,7 @@ export default function FarmsPage() {
   const handleDelete = async (id: number) => {
     if (
       confirm(
-        'Are you sure you want to delete this farm? This will also delete all associated records.',
+        'Are you sure you want to delete this farm? This will also delete all associated records.'
       )
     ) {
       try {
@@ -241,7 +241,7 @@ export default function FarmsPage() {
                                 <div className="text-lg font-semibold text-gray-900">
                                   {Math.floor(
                                     (Date.now() - new Date(farm.plantingDate).getTime()) /
-                                      (1000 * 60 * 60 * 24 * 365),
+                                      (1000 * 60 * 60 * 24 * 365)
                                   )}
                                 </div>
                                 <div className="text-xs text-gray-500">years old</div>

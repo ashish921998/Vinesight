@@ -18,7 +18,7 @@ export function CriticalAlertsBanner({
   alerts,
   onAlertAction,
   onDismiss,
-  className = '',
+  className = ''
 }: CriticalAlertsBannerProps) {
   if (!alerts || alerts.length === 0) {
     return null
@@ -52,7 +52,7 @@ export function CriticalAlertsBanner({
         background: 'bg-red-50',
         text: 'text-red-900',
         badge: 'bg-red-100 text-red-800',
-        button: 'bg-red-600 hover:bg-red-700 text-white',
+        button: 'bg-red-600 hover:bg-red-700 text-white'
       }
     } else {
       return {
@@ -60,7 +60,7 @@ export function CriticalAlertsBanner({
         background: 'bg-orange-50',
         text: 'text-orange-900',
         badge: 'bg-orange-100 text-orange-800',
-        button: 'bg-orange-600 hover:bg-orange-700 text-white',
+        button: 'bg-orange-600 hover:bg-orange-700 text-white'
       }
     }
   }

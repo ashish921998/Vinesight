@@ -15,7 +15,7 @@ import {
   CheckCircle,
   Edit,
   Trash2,
-  ArrowRight,
+  ArrowRight
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -36,7 +36,7 @@ export function ActivityFeed({
   onCompleteTask,
   onEditRecord,
   onDeleteRecord,
-  farmId,
+  farmId
 }: ActivityFeedProps) {
   const router = useRouter()
   const getActivityIcon = (type: string) => {

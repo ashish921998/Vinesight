@@ -1,5 +1,3 @@
-
-
 import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist'
 import { Serwist } from 'serwist'
 
@@ -25,9 +23,9 @@ const serwist = new Serwist({
         cacheName: 'google-fonts',
         expiration: {
           maxEntries: 4,
-          maxAgeSeconds: 365 * 24 * 60 * 60, // 365 days
-        },
-      },
+          maxAgeSeconds: 365 * 24 * 60 * 60 // 365 days
+        }
+      }
     },
     {
       urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
@@ -36,9 +34,9 @@ const serwist = new Serwist({
         cacheName: 'google-fonts-static',
         expiration: {
           maxEntries: 4,
-          maxAgeSeconds: 365 * 24 * 60 * 60, // 365 days
-        },
-      },
+          maxAgeSeconds: 365 * 24 * 60 * 60 // 365 days
+        }
+      }
     },
     {
       urlPattern: /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
@@ -47,9 +45,9 @@ const serwist = new Serwist({
         cacheName: 'static-font-assets',
         expiration: {
           maxEntries: 4,
-          maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
-        },
-      },
+          maxAgeSeconds: 7 * 24 * 60 * 60 // 7 days
+        }
+      }
     },
     {
       urlPattern: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
@@ -58,9 +56,9 @@ const serwist = new Serwist({
         cacheName: 'static-image-assets',
         expiration: {
           maxEntries: 64,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
-        },
-      },
+          maxAgeSeconds: 24 * 60 * 60 // 24 hours
+        }
+      }
     },
     {
       urlPattern: /\/_next\/image\?url=.+$/i,
@@ -69,9 +67,9 @@ const serwist = new Serwist({
         cacheName: 'next-image',
         expiration: {
           maxEntries: 64,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
-        },
-      },
+          maxAgeSeconds: 24 * 60 * 60 // 24 hours
+        }
+      }
     },
     {
       urlPattern: /\.(?:mp3|wav|ogg)$/i,
@@ -81,9 +79,9 @@ const serwist = new Serwist({
         cacheName: 'static-audio-assets',
         expiration: {
           maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
-        },
-      },
+          maxAgeSeconds: 24 * 60 * 60 // 24 hours
+        }
+      }
     },
     {
       urlPattern: /\.(?:mp4)$/i,
@@ -93,9 +91,9 @@ const serwist = new Serwist({
         cacheName: 'static-video-assets',
         expiration: {
           maxEntries: 16,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
-        },
-      },
+          maxAgeSeconds: 24 * 60 * 60 // 24 hours
+        }
+      }
     },
     {
       urlPattern: /\.(?:js)$/i,
@@ -104,9 +102,9 @@ const serwist = new Serwist({
         cacheName: 'static-js-assets',
         expiration: {
           maxEntries: 48,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
-        },
-      },
+          maxAgeSeconds: 24 * 60 * 60 // 24 hours
+        }
+      }
     },
     {
       urlPattern: /\.(?:css|less)$/i,
@@ -115,9 +113,9 @@ const serwist = new Serwist({
         cacheName: 'static-style-assets',
         expiration: {
           maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
-        },
-      },
+          maxAgeSeconds: 24 * 60 * 60 // 24 hours
+        }
+      }
     },
     {
       urlPattern: /\/_next\/data\/.+\/.+\.json$/i,
@@ -126,9 +124,9 @@ const serwist = new Serwist({
         cacheName: 'next-data',
         expiration: {
           maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
-        },
-      },
+          maxAgeSeconds: 24 * 60 * 60 // 24 hours
+        }
+      }
     },
     {
       urlPattern: /\.(?:json|xml|csv)$/i,
@@ -137,9 +135,9 @@ const serwist = new Serwist({
         cacheName: 'static-data-assets',
         expiration: {
           maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
-        },
-      },
+          maxAgeSeconds: 24 * 60 * 60 // 24 hours
+        }
+      }
     },
     {
       urlPattern: ({ request, sameOrigin }: { request: Request; sameOrigin: boolean }) => {
@@ -150,9 +148,9 @@ const serwist = new Serwist({
         cacheName: 'scripts',
         expiration: {
           maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
-        },
-      },
+          maxAgeSeconds: 24 * 60 * 60 // 24 hours
+        }
+      }
     },
     {
       urlPattern: ({ request, sameOrigin }: { request: Request; sameOrigin: boolean }) => {
@@ -163,9 +161,9 @@ const serwist = new Serwist({
         cacheName: 'styles',
         expiration: {
           maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
-        },
-      },
+          maxAgeSeconds: 24 * 60 * 60 // 24 hours
+        }
+      }
     },
 
     {
@@ -177,10 +175,10 @@ const serwist = new Serwist({
         cacheName: 'same-origin',
         expiration: {
           maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          maxAgeSeconds: 24 * 60 * 60 // 24 hours
         },
-        networkTimeoutSeconds: 10,
-      },
+        networkTimeoutSeconds: 10
+      }
     },
     {
       urlPattern: ({ request }: { request: Request }) => {
@@ -195,11 +193,11 @@ const serwist = new Serwist({
         cacheName: 'static-assets',
         expiration: {
           maxEntries: 64,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
-        },
-      },
-    },
-  ],
+          maxAgeSeconds: 24 * 60 * 60 // 24 hours
+        }
+      }
+    }
+  ]
 })
 
 serwist.addEventListeners()

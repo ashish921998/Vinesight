@@ -7,7 +7,7 @@ import type {
   FarmerAIProfile,
   AITaskRecommendation,
   PestDiseasePrediction,
-  AIConversationContext,
+  AIConversationContext
 } from '@/types/ai'
 
 interface FarmerAction {
@@ -52,7 +52,7 @@ class FarmerLearningService {
     userId: string,
     farmId: number,
     actionType: FarmerAction['actionType'],
-    contextData: FarmerAction['contextData'],
+    contextData: FarmerAction['contextData']
   ): Promise<void> {
     try {
       const action: Omit<FarmerAction, 'id'> = {
@@ -61,7 +61,7 @@ class FarmerLearningService {
         actionType,
         contextData,
         timestamp: new Date(),
-        seasonalContext: this.getCurrentSeason(),
+        seasonalContext: this.getCurrentSeason()
       }
 
       // Store the action for learning
@@ -126,7 +126,7 @@ class FarmerLearningService {
   async getPersonalizedRecommendations(
     userId: string,
     farmId: number,
-    baseRecommendations: AITaskRecommendation[],
+    baseRecommendations: AITaskRecommendation[]
   ): Promise<AITaskRecommendation[]> {
     try {
       const profile = await this.getFarmerProfile(userId, farmId)
@@ -143,7 +143,7 @@ class FarmerLearningService {
           (insight) =>
             insight.pattern.includes(recommendation.taskType) ||
             insight.pattern.includes('timing_preference') ||
-            insight.pattern.includes('risk_tolerance'),
+            insight.pattern.includes('risk_tolerance')
         )
 
         // Adjust confidence and priority based on farmer's profile
@@ -186,7 +186,7 @@ class FarmerLearningService {
       effectiveness?: number // 0-1 scale
       outbreak_occurred?: boolean
       notes?: string
-    },
+    }
   ): Promise<void> {
     try {
       // Track the feedback action
@@ -200,7 +200,7 @@ class FarmerLearningService {
               ? 'partial'
               : 'failed'
           : 'pending',
-        effectivenessScore: feedback.effectiveness,
+        effectivenessScore: feedback.effectiveness
       })
 
       // Update prediction outcome in database
@@ -209,7 +209,7 @@ class FarmerLearningService {
         .update({
           farmer_action_taken: feedback.treatmentUsed || 'custom_treatment',
           outcome: feedback.outbreak_occurred ? 'outbreak_occurred' : 'prevented',
-          status: 'resolved',
+          status: 'resolved'
         })
         .eq('id', predictionId)
 
@@ -242,7 +242,7 @@ class FarmerLearningService {
         }, {})
 
       const preferredTiming = Object.keys(timingPatterns).reduce((a, b) =>
-        timingPatterns[a] > timingPatterns[b] ? a : b,
+        timingPatterns[a] > timingPatterns[b] ? a : b
       )
 
       if (Object.keys(timingPatterns).length > 0) {
@@ -251,7 +251,7 @@ class FarmerLearningService {
           confidence: timingPatterns[preferredTiming] / recentActions.length,
           recommendation: `Farmer prefers ${preferredTiming} recommendations`,
           evidenceCount: timingPatterns[preferredTiming],
-          lastSeen: new Date(),
+          lastSeen: new Date()
         })
       }
 
@@ -265,7 +265,7 @@ class FarmerLearningService {
           }
           return acc
         },
-        { high: 0, low: 0 },
+        { high: 0, low: 0 }
       )
 
       if (riskPatterns.high + riskPatterns.low > 0) {
@@ -278,7 +278,7 @@ class FarmerLearningService {
               ? 'Farmer accepts high-priority recommendations'
               : 'Farmer prefers conservative recommendations',
           evidenceCount: riskPatterns.high + riskPatterns.low,
-          lastSeen: new Date(),
+          lastSeen: new Date()
         })
       }
 
@@ -287,7 +287,7 @@ class FarmerLearningService {
         .filter(
           (action) =>
             action.actionType === 'implement_treatment' &&
-            action.contextData.outcome === 'successful',
+            action.contextData.outcome === 'successful'
         )
         .reduce((acc: Record<string, number>, action) => {
           const treatment = action.contextData.farmerModification?.treatmentUsed
@@ -303,7 +303,7 @@ class FarmerLearningService {
           confidence: count / recentActions.length,
           recommendation: `Farmer has success with ${treatment}`,
           evidenceCount: count,
-          lastSeen: new Date(),
+          lastSeen: new Date()
         })
       })
 
@@ -327,10 +327,10 @@ class FarmerLearningService {
         context_data: action.contextData,
         timestamp: action.timestamp.toISOString(),
         seasonal_context: action.seasonalContext,
-        weather_conditions: action.weatherConditions,
+        weather_conditions: action.weatherConditions
       },
       relevance_score: 1.0,
-      decay_factor: 0.98, // Slowly decaying relevance
+      decay_factor: 0.98 // Slowly decaying relevance
     })
 
     if (error) {
@@ -341,14 +341,14 @@ class FarmerLearningService {
   private async updateFarmerProfile(
     userId: string,
     farmId: number,
-    action: Omit<FarmerAction, 'id'>,
+    action: Omit<FarmerAction, 'id'>
   ): Promise<void> {
     try {
       const profile = await this.getFarmerProfile(userId, farmId)
       if (!profile) return
 
       const updates: Partial<FarmerAIProfile> = {
-        updatedAt: new Date(),
+        updatedAt: new Date()
       }
 
       // Update risk tolerance based on actions
@@ -374,7 +374,7 @@ class FarmerLearningService {
           averageYield:
             (currentMetrics.averageYield || 0) * 0.9 + action.contextData.effectivenessScore * 0.1,
           profitability:
-            (currentMetrics.profitability || 0) * 0.9 + action.contextData.effectivenessScore * 0.1,
+            (currentMetrics.profitability || 0) * 0.9 + action.contextData.effectivenessScore * 0.1
         }
       }
 
@@ -387,7 +387,7 @@ class FarmerLearningService {
         preferredTiming: timeOfDay,
         riskAversion: updates.riskTolerance
           ? 1 - updates.riskTolerance
-          : profile.decisionPatterns?.riskAversion || 0.5,
+          : profile.decisionPatterns?.riskAversion || 0.5
       }
 
       // Save updates
@@ -397,7 +397,7 @@ class FarmerLearningService {
           risk_tolerance: updates.riskTolerance,
           success_metrics: updates.successMetrics,
           decision_patterns: updates.decisionPatterns,
-          updated_at: updates.updatedAt?.toISOString(),
+          updated_at: updates.updatedAt?.toISOString()
         })
         .eq('user_id', userId)
         .eq('farm_id', farmId)
@@ -420,27 +420,27 @@ class FarmerLearningService {
         preferredTiming: 'afternoon',
         riskAversion: 0.4,
         adoptionSpeed: 'moderate',
-        communicationStyle: 'detailed',
+        communicationStyle: 'detailed'
       },
       successMetrics: {
         averageYield: 75, // Mock success metrics
         costEfficiency: 80,
         profitability: 70,
-        waterUseEfficiency: 85,
+        waterUseEfficiency: 85
       },
       learningPreferences: {
         preferredChannels: ['text', 'visual'],
         bestResponseTimes: ['09:00', '15:00'],
-        languagePreference: 'en',
+        languagePreference: 'en'
       },
       seasonalPatterns: {
         spring: 'high_activity',
         summer: 'irrigation_focus',
         autumn: 'harvest_period',
-        winter: 'planning_phase',
+        winter: 'planning_phase'
       },
       createdAt: new Date(),
-      updatedAt: new Date(),
+      updatedAt: new Date()
     }
   }
 
@@ -453,22 +453,22 @@ class FarmerLearningService {
         preferredTiming: 'afternoon',
         riskAversion: 0.5,
         adoptionSpeed: 'moderate',
-        communicationStyle: 'detailed',
+        communicationStyle: 'detailed'
       },
       successMetrics: {
         averageYield: 0,
         costEfficiency: 0,
         profitability: 0,
-        waterUseEfficiency: 0,
+        waterUseEfficiency: 0
       },
       learningPreferences: {
         preferredChannels: ['text', 'visual'],
         bestResponseTimes: ['09:00', '15:00'],
-        languagePreference: 'en',
+        languagePreference: 'en'
       },
       seasonalPatterns: {},
       createdAt: new Date(),
-      updatedAt: new Date(),
+      updatedAt: new Date()
     }
 
     const { data, error } = await this.supabase
@@ -480,7 +480,7 @@ class FarmerLearningService {
         decision_patterns: defaultProfile.decisionPatterns,
         success_metrics: defaultProfile.successMetrics,
         learning_preferences: defaultProfile.learningPreferences,
-        seasonal_patterns: defaultProfile.seasonalPatterns,
+        seasonal_patterns: defaultProfile.seasonalPatterns
       })
       .select()
       .single()
@@ -491,14 +491,14 @@ class FarmerLearningService {
 
     return {
       ...defaultProfile,
-      id: data.id.toString(),
+      id: data.id.toString()
     }
   }
 
   private async getRecentActions(
     userId: string,
     farmId: number,
-    days: number,
+    days: number
   ): Promise<FarmerAction[]> {
     const since = new Date()
     since.setDate(since.getDate() - days)
@@ -523,7 +523,7 @@ class FarmerLearningService {
       contextData: record.context_data.context_data,
       timestamp: new Date(record.context_data.timestamp),
       weatherConditions: record.context_data.weather_conditions,
-      seasonalContext: record.context_data.seasonal_context,
+      seasonalContext: record.context_data.seasonal_context
     }))
   }
 
@@ -543,7 +543,7 @@ class FarmerLearningService {
         context_type: 'learning_insight',
         context_data: insight,
         relevance_score: insight.confidence,
-        decay_factor: 0.95,
+        decay_factor: 0.95
       })
     }
   }
@@ -567,7 +567,7 @@ class FarmerLearningService {
       learningPreferences: data.learning_preferences,
       seasonalPatterns: data.seasonal_patterns,
       createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
+      updatedAt: new Date(data.updated_at)
     }
   }
 }

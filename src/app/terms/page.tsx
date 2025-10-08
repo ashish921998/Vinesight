@@ -14,7 +14,7 @@ import {
   Mail,
   Globe,
   Calendar,
-  CreditCard,
+  CreditCard
 } from 'lucide-react'
 import { SEOSchema } from '@/components/SEOSchema'
 import Link from 'next/link'

@@ -10,7 +10,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -31,13 +31,13 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Leaf,
+  Leaf
 } from 'lucide-react'
 import {
   DiseasePredictionModel,
   type DiseaseRiskInputs,
   type DiseasePredictionResults,
-  type WeatherData,
+  type WeatherData
 } from '@/lib/disease-prediction'
 
 export function DiseasePredictionComponent() {
@@ -48,18 +48,18 @@ export function DiseasePredictionComponent() {
     previousTreatments: {
       fungicide: null,
       bactericide: null,
-      insecticide: null,
+      insecticide: null
     },
     vineyardConditions: {
       canopyDensity: 'moderate',
       airCirculation: 'moderate',
-      drainageQuality: 'moderate',
+      drainageQuality: 'moderate'
     },
     location: {
       latitude: 38.5,
       longitude: -122.5,
-      elevation: 100,
-    },
+      elevation: 100
+    }
   })
 
   const [weatherInput, setWeatherInput] = useState({
@@ -68,7 +68,7 @@ export function DiseasePredictionComponent() {
     rainfall: 0,
     windSpeed: 2.5,
     leafWetnessDuration: 4,
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split('T')[0]
   })
 
   const [results, setResults] = useState<DiseasePredictionResults | null>(null)
@@ -82,7 +82,7 @@ export function DiseasePredictionComponent() {
       rainfall: Math.random() > 0.7 ? Math.random() * 15 : 0,
       windSpeed: 1 + Math.random() * 4,
       leafWetnessDuration: Math.random() * 12,
-      date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000),
+      date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000)
     }))
 
     setInputs((prev) => ({ ...prev, weatherData: sampleWeatherData }))
@@ -91,12 +91,12 @@ export function DiseasePredictionComponent() {
   const addWeatherData = () => {
     const newWeatherData: WeatherData = {
       ...weatherInput,
-      date: new Date(weatherInput.date),
+      date: new Date(weatherInput.date)
     }
 
     setInputs((prev) => ({
       ...prev,
-      weatherData: [...prev.weatherData, newWeatherData].slice(-14), // Keep last 14 days
+      weatherData: [...prev.weatherData, newWeatherData].slice(-14) // Keep last 14 days
     }))
 
     // Reset form
@@ -106,7 +106,7 @@ export function DiseasePredictionComponent() {
       rainfall: 0,
       windSpeed: 2.5,
       leafWetnessDuration: 4,
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString().split('T')[0]
     })
   }
 
@@ -239,7 +239,7 @@ export function DiseasePredictionComponent() {
                     onValueChange={(value: any) =>
                       setInputs((prev) => ({
                         ...prev,
-                        vineyardConditions: { ...prev.vineyardConditions, canopyDensity: value },
+                        vineyardConditions: { ...prev.vineyardConditions, canopyDensity: value }
                       }))
                     }
                   >
@@ -261,7 +261,7 @@ export function DiseasePredictionComponent() {
                     onValueChange={(value: any) =>
                       setInputs((prev) => ({
                         ...prev,
-                        vineyardConditions: { ...prev.vineyardConditions, airCirculation: value },
+                        vineyardConditions: { ...prev.vineyardConditions, airCirculation: value }
                       }))
                     }
                   >
@@ -283,7 +283,7 @@ export function DiseasePredictionComponent() {
                     onValueChange={(value: any) =>
                       setInputs((prev) => ({
                         ...prev,
-                        vineyardConditions: { ...prev.vineyardConditions, drainageQuality: value },
+                        vineyardConditions: { ...prev.vineyardConditions, drainageQuality: value }
                       }))
                     }
                   >
@@ -322,8 +322,8 @@ export function DiseasePredictionComponent() {
                       ...prev,
                       previousTreatments: {
                         ...prev.previousTreatments,
-                        fungicide: e.target.value ? new Date(e.target.value) : null,
-                      },
+                        fungicide: e.target.value ? new Date(e.target.value) : null
+                      }
                     }))
                   }
                 />
@@ -339,8 +339,8 @@ export function DiseasePredictionComponent() {
                       ...prev,
                       previousTreatments: {
                         ...prev.previousTreatments,
-                        bactericide: e.target.value ? new Date(e.target.value) : null,
-                      },
+                        bactericide: e.target.value ? new Date(e.target.value) : null
+                      }
                     }))
                   }
                 />
@@ -356,8 +356,8 @@ export function DiseasePredictionComponent() {
                       ...prev,
                       previousTreatments: {
                         ...prev.previousTreatments,
-                        insecticide: e.target.value ? new Date(e.target.value) : null,
-                      },
+                        insecticide: e.target.value ? new Date(e.target.value) : null
+                      }
                     }))
                   }
                 />
@@ -399,7 +399,7 @@ export function DiseasePredictionComponent() {
                       onChange={(e) =>
                         setWeatherInput((prev) => ({
                           ...prev,
-                          temperature: parseFloat(e.target.value),
+                          temperature: parseFloat(e.target.value)
                         }))
                       }
                       step="0.1"
@@ -416,7 +416,7 @@ export function DiseasePredictionComponent() {
                       onChange={(e) =>
                         setWeatherInput((prev) => ({
                           ...prev,
-                          humidity: parseFloat(e.target.value),
+                          humidity: parseFloat(e.target.value)
                         }))
                       }
                       min="0"
@@ -432,7 +432,7 @@ export function DiseasePredictionComponent() {
                       onChange={(e) =>
                         setWeatherInput((prev) => ({
                           ...prev,
-                          rainfall: parseFloat(e.target.value),
+                          rainfall: parseFloat(e.target.value)
                         }))
                       }
                       min="0"
@@ -450,7 +450,7 @@ export function DiseasePredictionComponent() {
                       onChange={(e) =>
                         setWeatherInput((prev) => ({
                           ...prev,
-                          windSpeed: parseFloat(e.target.value),
+                          windSpeed: parseFloat(e.target.value)
                         }))
                       }
                       min="0"
@@ -466,7 +466,7 @@ export function DiseasePredictionComponent() {
                       onChange={(e) =>
                         setWeatherInput((prev) => ({
                           ...prev,
-                          leafWetnessDuration: parseFloat(e.target.value),
+                          leafWetnessDuration: parseFloat(e.target.value)
                         }))
                       }
                       min="0"
@@ -635,7 +635,7 @@ export function DiseasePredictionComponent() {
                             ? '#ea580c'
                             : disease.riskLevel === 'moderate'
                               ? '#ca8a04'
-                              : '#16a34a',
+                              : '#16a34a'
                     }}
                   >
                     <CardHeader>
@@ -719,7 +719,7 @@ export function DiseasePredictionComponent() {
                         <div className="text-sm font-medium">
                           {entry.date.toLocaleDateString('en-US', {
                             month: 'short',
-                            day: 'numeric',
+                            day: 'numeric'
                           })}
                         </div>
                         <div className="text-xs text-muted-foreground">

@@ -18,7 +18,7 @@ export function DataSourceSelector({
   selectedFarm,
   useCustomData,
   onFarmSelect,
-  onDataSourceChange,
+  onDataSourceChange
 }: DataSourceSelectorProps) {
   return (
     <Card className="mx-4">

@@ -18,7 +18,7 @@
       "form_factor": "wide"
     },
     {
-      "src": "/screenshot-narrow.png", 
+      "src": "/screenshot-narrow.png",
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow"
@@ -26,7 +26,7 @@
   ],
   "features": [
     "Farm Management",
-    "Scientific Calculators", 
+    "Scientific Calculators",
     "Operations Journal",
     "Offline Support",
     "Multi-language"
@@ -39,21 +39,21 @@
       "purpose": "any"
     },
     {
-      "src": "/icon-256x256.png", 
+      "src": "/icon-256x256.png",
       "sizes": "256x256",
       "type": "image/png",
       "purpose": "any"
     },
     {
       "src": "/icon-384x384.png",
-      "sizes": "384x384", 
+      "sizes": "384x384",
       "type": "image/png",
       "purpose": "any"
     },
     {
       "src": "/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png", 
+      "type": "image/png",
       "purpose": "any"
     },
     {

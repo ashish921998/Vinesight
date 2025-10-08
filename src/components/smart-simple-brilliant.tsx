@@ -20,7 +20,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
   width = 482,
   height = 300,
   className = '',
-  theme = 'dark',
+  theme = 'dark'
 }) => {
   // Design tokens (derived from Figma local variables)
   const themeVars =
@@ -30,14 +30,14 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
           '--ssb-text': '#1b1919',
           '--ssb-border': 'rgba(0,0,0,0.08)',
           '--ssb-inner-border': 'rgba(0,0,0,0.12)',
-          '--ssb-shadow': 'rgba(0,0,0,0.12)',
+          '--ssb-shadow': 'rgba(0,0,0,0.12)'
         }
       : ({
           '--ssb-surface': '#333937',
           '--ssb-text': '#f8f8f8',
           '--ssb-border': 'rgba(255,255,255,0.16)',
           '--ssb-inner-border': 'rgba(255,255,255,0.12)',
-          '--ssb-shadow': 'rgba(0,0,0,0.28)',
+          '--ssb-shadow': 'rgba(0,0,0,0.28)'
         } as React.CSSProperties)
 
   const img =
@@ -61,7 +61,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          ...themeVars,
+          ...themeVars
         } as React.CSSProperties
       }
       role="img"
@@ -72,7 +72,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
           position: 'relative',
           width: '295.297px',
           height: '212.272px',
-          transform: 'scale(1.2)', // Added 1.2x scale transform
+          transform: 'scale(1.2)' // Added 1.2x scale transform
         }}
       >
         {/* Left tilted card group */}
@@ -84,7 +84,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                 background: '#ffffff',
                 borderRadius: '9px',
                 padding: '6px',
-                boxShadow: '0px 0px 0px 1px rgba(0,0,0,0.08), 0px 2px 4px rgba(0,0,0,0.07)',
+                boxShadow: '0px 0px 0px 1px rgba(0,0,0,0.08), 0px 2px 4px rgba(0,0,0,0.07)'
               }}
             >
               <div
@@ -94,7 +94,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                   borderRadius: '4px',
                   overflow: 'hidden',
                   background: 'rgba(34,197,94,0.1)',
-                  display: 'flex',
+                  display: 'flex'
                 }}
               >
                 <div style={{ width: '2.25px', background: '#22C55E' }} />
@@ -105,7 +105,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
                         fontSize: '9px',
-                        color: '#15803D',
+                        color: '#15803D'
                       }}
                     >
                       8:00
@@ -115,7 +115,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
                         fontSize: '9px',
-                        color: '#15803D',
+                        color: '#15803D'
                       }}
                     >
                       AM
@@ -126,7 +126,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                           width: '8px',
                           height: '8px',
                           overflow: 'hidden',
-                          position: 'relative',
+                          position: 'relative'
                         }}
                       >
                         <img
@@ -142,7 +142,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 600,
                       fontSize: '9px',
-                      color: '#15803D',
+                      color: '#15803D'
                     }}
                   >
                     Crop Health Check
@@ -158,7 +158,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                   overflow: 'hidden',
                   background: 'rgba(59,130,246,0.1)',
                   marginTop: '3px',
-                  display: 'flex',
+                  display: 'flex'
                 }}
               >
                 <div style={{ width: '2.25px', background: '#3B82F6' }} />
@@ -169,7 +169,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
                         fontSize: '9px',
-                        color: '#1E40AF',
+                        color: '#1E40AF'
                       }}
                     >
                       10:00
@@ -179,7 +179,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
                         fontSize: '9px',
-                        color: '#1E40AF',
+                        color: '#1E40AF'
                       }}
                     >
                       AM
@@ -190,7 +190,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                           width: '8px',
                           height: '8px',
                           overflow: 'hidden',
-                          position: 'relative',
+                          position: 'relative'
                         }}
                       >
                         <img
@@ -206,7 +206,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 600,
                       fontSize: '9px',
-                      color: '#1E40AF',
+                      color: '#1E40AF'
                     }}
                   >
                     Irrigation System Check
@@ -222,7 +222,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                   overflow: 'hidden',
                   background: 'rgba(168,85,247,0.1)',
                   marginTop: '3px',
-                  display: 'flex',
+                  display: 'flex'
                 }}
               >
                 <div style={{ width: '2.25px', background: '#A855F7' }} />
@@ -233,7 +233,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
                         fontSize: '9px',
-                        color: '#7C3AED',
+                        color: '#7C3AED'
                       }}
                     >
                       2:00
@@ -243,7 +243,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
                         fontSize: '9px',
-                        color: '#7C3AED',
+                        color: '#7C3AED'
                       }}
                     >
                       PM
@@ -254,7 +254,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 600,
                       fontSize: '9px',
-                      color: '#7C3AED',
+                      color: '#7C3AED'
                     }}
                   >
                     Soil Analysis Report
@@ -275,7 +275,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                 borderRadius: '9px',
                 padding: '6px',
                 boxShadow:
-                  '-8px 6px 11.3px rgba(0,0,0,0.12), 0px 0px 0px 1px rgba(0,0,0,0.08), 0px 2px 4px rgba(0,0,0,0.06)',
+                  '-8px 6px 11.3px rgba(0,0,0,0.12), 0px 0px 0px 1px rgba(0,0,0,0.08), 0px 2px 4px rgba(0,0,0,0.06)'
               }}
             >
               <div
@@ -285,7 +285,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                   borderRadius: '4px',
                   overflow: 'hidden',
                   background: 'rgba(245,158,11,0.1)',
-                  display: 'flex',
+                  display: 'flex'
                 }}
               >
                 <div style={{ width: '2.25px', background: '#F59E0B' }} />
@@ -296,7 +296,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
                         fontSize: '9px',
-                        color: '#92400E',
+                        color: '#92400E'
                       }}
                     >
                       9:00
@@ -306,7 +306,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
                         fontSize: '9px',
-                        color: '#92400E',
+                        color: '#92400E'
                       }}
                     >
                       AM
@@ -317,7 +317,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                           width: '8px',
                           height: '8px',
                           overflow: 'hidden',
-                          position: 'relative',
+                          position: 'relative'
                         }}
                       >
                         <img
@@ -333,7 +333,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 600,
                       fontSize: '9px',
-                      color: '#92400E',
+                      color: '#92400E'
                     }}
                   >
                     Tractor Maintenance
@@ -349,7 +349,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                   overflow: 'hidden',
                   background: '#FFE4E6',
                   display: 'flex',
-                  marginTop: '3px',
+                  marginTop: '3px'
                 }}
               >
                 <div style={{ width: '2.25px', background: '#F43F5E' }} />
@@ -360,7 +360,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
                         fontSize: '9px',
-                        color: '#BE123C',
+                        color: '#BE123C'
                       }}
                     >
                       4:00
@@ -370,7 +370,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
                         fontSize: '9px',
-                        color: '#BE123C',
+                        color: '#BE123C'
                       }}
                     >
                       PM
@@ -381,7 +381,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                           width: '8px',
                           height: '8px',
                           overflow: 'hidden',
-                          position: 'relative',
+                          position: 'relative'
                         }}
                       >
                         <img
@@ -397,7 +397,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 600,
                       fontSize: '9px',
-                      color: '#BE123C',
+                      color: '#BE123C'
                     }}
                   >
                     🌾 Harvest Planning
@@ -413,7 +413,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                   overflow: 'hidden',
                   background: 'rgba(34,197,94,0.1)',
                   display: 'flex',
-                  marginTop: '3px',
+                  marginTop: '3px'
                 }}
               >
                 <div style={{ width: '2.25px', background: '#22C55E' }} />
@@ -424,7 +424,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
                         fontSize: '9px',
-                        color: '#15803D',
+                        color: '#15803D'
                       }}
                     >
                       6:00
@@ -434,7 +434,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
                         fontSize: '9px',
-                        color: '#15803D',
+                        color: '#15803D'
                       }}
                     >
                       PM
@@ -445,7 +445,7 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 600,
                       fontSize: '9px',
-                      color: '#15803D',
+                      color: '#15803D'
                     }}
                   >
                     🚜 Field Inspection Walk

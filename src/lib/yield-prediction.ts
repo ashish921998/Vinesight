@@ -162,7 +162,7 @@ const VARIETY_PARAMETERS = {
     optimalPH: 3.65,
     heatTolerance: 0.8,
     droughtTolerance: 0.9,
-    diseaseResistance: 0.7,
+    diseaseResistance: 0.7
   },
   chardonnay: {
     baseYield: 14000,
@@ -172,7 +172,7 @@ const VARIETY_PARAMETERS = {
     optimalPH: 3.35,
     heatTolerance: 0.6,
     droughtTolerance: 0.7,
-    diseaseResistance: 0.5,
+    diseaseResistance: 0.5
   },
   pinot_noir: {
     baseYield: 10000,
@@ -182,7 +182,7 @@ const VARIETY_PARAMETERS = {
     optimalPH: 3.55,
     heatTolerance: 0.4,
     droughtTolerance: 0.5,
-    diseaseResistance: 0.3,
+    diseaseResistance: 0.3
   },
   merlot: {
     baseYield: 13000,
@@ -192,7 +192,7 @@ const VARIETY_PARAMETERS = {
     optimalPH: 3.7,
     heatTolerance: 0.7,
     droughtTolerance: 0.8,
-    diseaseResistance: 0.6,
+    diseaseResistance: 0.6
   },
   sauvignon_blanc: {
     baseYield: 15000,
@@ -202,7 +202,7 @@ const VARIETY_PARAMETERS = {
     optimalPH: 3.25,
     heatTolerance: 0.5,
     droughtTolerance: 0.6,
-    diseaseResistance: 0.6,
+    diseaseResistance: 0.6
   },
   riesling: {
     baseYield: 16000,
@@ -212,8 +212,8 @@ const VARIETY_PARAMETERS = {
     optimalPH: 3.15,
     heatTolerance: 0.3,
     droughtTolerance: 0.4,
-    diseaseResistance: 0.8,
-  },
+    diseaseResistance: 0.8
+  }
 }
 
 export class YieldPredictionEngine {
@@ -250,14 +250,14 @@ export class YieldPredictionEngine {
       prediction: {
         baseYield,
         adjustments,
-        scenarios,
+        scenarios
       },
       quality,
       economics,
       riskFactors,
       recommendations,
       confidence,
-      dataQuality,
+      dataQuality
     }
   }
 
@@ -281,7 +281,7 @@ export class YieldPredictionEngine {
 
   private static calculateAdjustments(
     inputs: YieldPredictionInputs,
-    varietyParams: any,
+    varietyParams: any
   ): YieldPredictionModel['adjustments'] {
     const current = inputs.currentSeasonData
 
@@ -292,7 +292,7 @@ export class YieldPredictionEngine {
     // Management adjustment
     const managementFactor = this.calculateManagementFactor(
       current.plannedManagement,
-      varietyParams,
+      varietyParams
     )
     const managementImpact = (managementFactor - 1) * 100
 
@@ -312,34 +312,34 @@ export class YieldPredictionEngine {
       weather: {
         factor: weatherFactor,
         impact: weatherImpact,
-        description: this.getWeatherDescription(weatherImpact),
+        description: this.getWeatherDescription(weatherImpact)
       },
       management: {
         factor: managementFactor,
         impact: managementImpact,
-        description: this.getManagementDescription(managementImpact),
+        description: this.getManagementDescription(managementImpact)
       },
       soil: {
         factor: soilFactor,
         impact: soilImpact,
-        description: this.getSoilDescription(soilImpact),
+        description: this.getSoilDescription(soilImpact)
       },
       variety: {
         factor: varietyFactor,
         impact: varietyImpact,
-        description: this.getVarietyDescription(current.grapeVariety, current.targetQuality),
+        description: this.getVarietyDescription(current.grapeVariety, current.targetQuality)
       },
       vineAge: {
         factor: ageAdjustment.factor,
         impact: ageImpact,
-        description: ageAdjustment.description,
-      },
+        description: ageAdjustment.description
+      }
     }
   }
 
   private static calculateWeatherFactor(
     weather: HistoricalYieldData['weatherConditions'],
-    varietyParams: any,
+    varietyParams: any
   ): number {
     let factor = 1.0
 
@@ -376,7 +376,7 @@ export class YieldPredictionEngine {
 
   private static calculateManagementFactor(
     management: HistoricalYieldData['managementPractices'],
-    varietyParams: any,
+    varietyParams: any
   ): number {
     let factor = 1.0
 
@@ -433,7 +433,7 @@ export class YieldPredictionEngine {
     const qualityFactors = {
       premium: varietyParams.qualityYieldTradeoff * 0.8, // Reduce yield for premium quality
       standard: varietyParams.qualityYieldTradeoff,
-      bulk: varietyParams.qualityYieldTradeoff * 1.2, // Increase yield for bulk
+      bulk: varietyParams.qualityYieldTradeoff * 1.2 // Increase yield for bulk
     }
 
     return qualityFactors[targetQuality as keyof typeof qualityFactors] || 1.0
@@ -455,7 +455,7 @@ export class YieldPredictionEngine {
 
   private static generateScenarios(
     baseYield: number,
-    adjustments: YieldPredictionModel['adjustments'],
+    adjustments: YieldPredictionModel['adjustments']
   ): YieldPredictionModel['scenarios'] {
     const totalFactor = Object.values(adjustments).reduce((acc, adj) => acc * adj.factor, 1)
     const adjustedYield = baseYield * totalFactor
@@ -463,22 +463,22 @@ export class YieldPredictionEngine {
     return {
       optimistic: {
         yield: Math.round(adjustedYield * 1.15),
-        probability: 25,
+        probability: 25
       },
       realistic: {
         yield: Math.round(adjustedYield),
-        probability: 50,
+        probability: 50
       },
       pessimistic: {
         yield: Math.round(adjustedYield * 0.8),
-        probability: 25,
-      },
+        probability: 25
+      }
     }
   }
 
   private static predictQuality(
     inputs: YieldPredictionInputs,
-    varietyParams: any,
+    varietyParams: any
   ): QualityPrediction {
     const weather = inputs.currentSeasonData.currentWeather
 
@@ -513,7 +513,7 @@ export class YieldPredictionEngine {
       predictedBrix,
       predictedAcidity,
       predictedPH,
-      varietyParams,
+      varietyParams
     )
     const overallQuality = this.getQualityGrade(qualityScore)
 
@@ -526,7 +526,7 @@ export class YieldPredictionEngine {
       pH: { predicted: predictedPH, range: pHRange },
       overallQuality,
       qualityScore,
-      harvestWindow,
+      harvestWindow
     }
   }
 
@@ -534,7 +534,7 @@ export class YieldPredictionEngine {
     brix: number,
     acidity: number,
     pH: number,
-    varietyParams: any,
+    varietyParams: any
   ): number {
     let score = 100
 
@@ -554,7 +554,7 @@ export class YieldPredictionEngine {
   }
 
   private static getQualityGrade(
-    score: number,
+    score: number
   ): 'excellent' | 'good' | 'average' | 'below_average' {
     if (score >= 90) return 'excellent'
     if (score >= 75) return 'good'
@@ -564,7 +564,7 @@ export class YieldPredictionEngine {
 
   private static calculateHarvestWindow(
     currentSeason: YieldPredictionInputs['currentSeasonData'],
-    targetBrix: number,
+    targetBrix: number
   ): QualityPrediction['harvestWindow'] {
     const budBreak = currentSeason.budBreakDate
     const daysToHarvest = this.calculateDaysToHarvest(currentSeason.grapeVariety, targetBrix)
@@ -588,7 +588,7 @@ export class YieldPredictionEngine {
       pinot_noir: 130,
       merlot: 140,
       sauvignon_blanc: 100,
-      riesling: 120,
+      riesling: 120
     }
 
     const baseForVariety = baseDays[variety as keyof typeof baseDays] || 130
@@ -600,13 +600,13 @@ export class YieldPredictionEngine {
   private static calculateEconomics(
     scenarios: YieldPredictionModel['scenarios'],
     quality: QualityPrediction,
-    economicFactors: YieldPredictionInputs['economicFactors'],
+    economicFactors: YieldPredictionInputs['economicFactors']
   ): EconomicAnalysis {
     const priceMultipliers = {
       excellent: 1.3,
       good: 1.1,
       average: 1.0,
-      below_average: 0.8,
+      below_average: 0.8
     }
 
     const adjustedPrice = economicFactors.targetPrice * priceMultipliers[quality.overallQuality]
@@ -615,7 +615,7 @@ export class YieldPredictionEngine {
     const revenue = {
       optimistic: scenarios.optimistic.yield * adjustedPrice,
       realistic: scenarios.realistic.yield * adjustedPrice,
-      pessimistic: scenarios.pessimistic.yield * adjustedPrice,
+      pessimistic: scenarios.pessimistic.yield * adjustedPrice
     }
 
     // Cost calculations
@@ -632,24 +632,24 @@ export class YieldPredictionEngine {
         labor: economicFactors.laborCost * 40, // Estimated 40 hours per acre
         materials: economicFactors.inputCosts.fertilizer + economicFactors.inputCosts.pesticides,
         equipment: economicFactors.productionCost * 0.3, // 30% for equipment
-        overhead: economicFactors.productionCost * 0.2, // 20% overhead
-      },
+        overhead: economicFactors.productionCost * 0.2 // 20% overhead
+      }
     }
 
     // Profitability calculations
     const profitability = {
       optimistic: {
         profit: revenue.optimistic - totalCosts,
-        margin: ((revenue.optimistic - totalCosts) / revenue.optimistic) * 100,
+        margin: ((revenue.optimistic - totalCosts) / revenue.optimistic) * 100
       },
       realistic: {
         profit: revenue.realistic - totalCosts,
-        margin: ((revenue.realistic - totalCosts) / revenue.realistic) * 100,
+        margin: ((revenue.realistic - totalCosts) / revenue.realistic) * 100
       },
       pessimistic: {
         profit: revenue.pessimistic - totalCosts,
-        margin: ((revenue.pessimistic - totalCosts) / revenue.pessimistic) * 100,
-      },
+        margin: ((revenue.pessimistic - totalCosts) / revenue.pessimistic) * 100
+      }
     }
 
     const breakEvenYield = totalCosts / adjustedPrice
@@ -660,13 +660,13 @@ export class YieldPredictionEngine {
       costs,
       profitability,
       breakEvenYield,
-      roi,
+      roi
     }
   }
 
   private static identifyRiskFactors(
     inputs: YieldPredictionInputs,
-    adjustments: YieldPredictionModel['adjustments'],
+    adjustments: YieldPredictionModel['adjustments']
   ): YieldPredictionResults['riskFactors'] {
     const risks: YieldPredictionResults['riskFactors'] = []
 
@@ -675,7 +675,7 @@ export class YieldPredictionEngine {
       risks.push({
         factor: 'Adverse Weather Conditions',
         impact: adjustments.weather.factor < 0.7 ? 'high' : 'medium',
-        mitigation: 'Consider protective measures such as netting or adjusted irrigation schedules',
+        mitigation: 'Consider protective measures such as netting or adjusted irrigation schedules'
       })
     }
 
@@ -684,8 +684,7 @@ export class YieldPredictionEngine {
       risks.push({
         factor: 'Suboptimal Management Practices',
         impact: 'medium',
-        mitigation:
-          'Review and optimize canopy management, fertilization, and irrigation practices',
+        mitigation: 'Review and optimize canopy management, fertilization, and irrigation practices'
       })
     }
 
@@ -694,7 +693,7 @@ export class YieldPredictionEngine {
       risks.push({
         factor: 'Soil Fertility Issues',
         impact: adjustments.soil.factor < 0.8 ? 'high' : 'medium',
-        mitigation: 'Implement soil improvement program with organic matter and targeted nutrition',
+        mitigation: 'Implement soil improvement program with organic matter and targeted nutrition'
       })
     }
 
@@ -706,7 +705,7 @@ export class YieldPredictionEngine {
         mitigation:
           inputs.currentSeasonData.vineAge < 5
             ? 'Allow young vines to establish; focus on canopy development'
-            : 'Consider replanting sections with declining productivity',
+            : 'Consider replanting sections with declining productivity'
       })
     }
 
@@ -716,7 +715,7 @@ export class YieldPredictionEngine {
   private static generateRecommendations(
     inputs: YieldPredictionInputs,
     adjustments: YieldPredictionModel['adjustments'],
-    risks: YieldPredictionResults['riskFactors'],
+    risks: YieldPredictionResults['riskFactors']
   ): YieldPredictionResults['recommendations'] {
     const recommendations: YieldPredictionResults['recommendations'] = []
 
@@ -726,7 +725,7 @@ export class YieldPredictionEngine {
         category: 'irrigation',
         action: 'Increase irrigation frequency during dry periods',
         timing: 'Throughout growing season',
-        impact: 'Could improve yield by 10-15%',
+        impact: 'Could improve yield by 10-15%'
       })
     }
 
@@ -736,7 +735,7 @@ export class YieldPredictionEngine {
         category: 'nutrition',
         action: 'Apply targeted fertilizer based on soil test results',
         timing: 'Early spring before budbreak',
-        impact: 'Could improve yield by 8-12%',
+        impact: 'Could improve yield by 8-12%'
       })
     }
 
@@ -746,7 +745,7 @@ export class YieldPredictionEngine {
         category: 'canopy',
         action: 'Implement strategic leaf removal and shoot thinning',
         timing: 'Pre-flowering and post-fruit set',
-        impact: 'Could improve both yield and quality',
+        impact: 'Could improve both yield and quality'
       })
     }
 
@@ -755,7 +754,7 @@ export class YieldPredictionEngine {
       category: 'harvest',
       action: 'Monitor sugar and acid levels closely for optimal harvest timing',
       timing: '2 weeks before projected harvest date',
-      impact: 'Ensures optimal quality and market price',
+      impact: 'Ensures optimal quality and market price'
     })
 
     return recommendations
@@ -763,7 +762,7 @@ export class YieldPredictionEngine {
 
   private static calculateConfidence(
     historicalData: HistoricalYieldData[],
-    currentSeason: YieldPredictionInputs['currentSeasonData'],
+    currentSeason: YieldPredictionInputs['currentSeasonData']
   ): number {
     let confidence = 100
 
@@ -784,7 +783,7 @@ export class YieldPredictionEngine {
   }
 
   private static assessDataQuality(
-    historicalData: HistoricalYieldData[],
+    historicalData: HistoricalYieldData[]
   ): YieldPredictionResults['dataQuality'] {
     const years = historicalData.length
 
@@ -799,7 +798,7 @@ export class YieldPredictionEngine {
         'clustersPerVine',
         'sugarContent',
         'acidity',
-        'pH',
+        'pH'
       ]
 
       fields.forEach((field) => {
@@ -823,7 +822,7 @@ export class YieldPredictionEngine {
     return {
       historicalYears: years,
       completeness: Math.round(completeness),
-      relevance: Math.round(relevance),
+      relevance: Math.round(relevance)
     }
   }
 

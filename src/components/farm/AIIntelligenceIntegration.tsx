@@ -20,7 +20,7 @@ interface AIIntelligenceIntegrationProps {
 export function AIIntelligenceIntegration({
   farmId,
   farmData,
-  className = '',
+  className = ''
 }: AIIntelligenceIntegrationProps) {
   const [criticalAlerts, setCriticalAlerts] = useState<CriticalAlert[]>([])
   const [loading, setLoading] = useState(true)
@@ -41,7 +41,7 @@ export function AIIntelligenceIntegration({
       if (pestPredictions.success && pestPredictions.data) {
         // Get critical alerts from predictions
         const criticalPredictions = pestPredictions.data.filter(
-          (p) => p.riskLevel === 'critical' || p.riskLevel === 'high',
+          (p) => p.riskLevel === 'critical' || p.riskLevel === 'high'
         )
 
         // Convert to critical alerts
@@ -56,7 +56,7 @@ export function AIIntelligenceIntegration({
           timeWindow: {
             start: prediction.preventionWindow.startDate,
             end: prediction.preventionWindow.endDate,
-            urgency: prediction.preventionWindow.optimalTiming,
+            urgency: prediction.preventionWindow.optimalTiming
           },
           actions: [
             {
@@ -66,8 +66,8 @@ export function AIIntelligenceIntegration({
               actionData: {
                 route: `/farms/${farmId}/pest-management?prediction=${prediction.id}`,
                 pestType: prediction.pestDiseaseType,
-                riskLevel: prediction.riskLevel,
-              },
+                riskLevel: prediction.riskLevel
+              }
             },
             {
               label: 'Acknowledge Alert',
@@ -75,12 +75,12 @@ export function AIIntelligenceIntegration({
               action: 'execute' as const,
               actionData: {
                 action: 'acknowledge',
-                predictionId: prediction.id,
-              },
-            },
+                predictionId: prediction.id
+              }
+            }
           ],
           farmId,
-          createdAt: prediction.createdAt,
+          createdAt: prediction.createdAt
         }))
 
         setCriticalAlerts(alerts)
@@ -96,7 +96,7 @@ export function AIIntelligenceIntegration({
   const handleAlertAction = async (
     alertId: string,
     action: string,
-    actionData?: Record<string, any>,
+    actionData?: Record<string, any>
   ) => {
     try {
       if (action === 'navigate' && actionData?.route) {
@@ -108,7 +108,7 @@ export function AIIntelligenceIntegration({
         await PestPredictionService.updatePredictionOutcome(
           predictionId,
           'acknowledged',
-          'farmer_acknowledged',
+          'farmer_acknowledged'
         )
 
         // Remove from critical alerts
@@ -136,7 +136,7 @@ export function AIIntelligenceIntegration({
         await PestPredictionService.updatePredictionOutcome(
           predictionId,
           'dismissed',
-          'farmer_dismissed',
+          'farmer_dismissed'
         )
       }
     } catch (error) {

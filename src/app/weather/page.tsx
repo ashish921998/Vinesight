@@ -11,7 +11,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { CloudSun, MapPin, Sprout, Mountain } from 'lucide-react'
 import { capitalize } from '@/lib/utils'
@@ -49,13 +49,13 @@ export default function WeatherPage() {
     { value: 'Veraison', label: 'Veraison', description: 'Berry color change' },
     { value: 'Harvest', label: 'Harvest', description: 'Ready for picking' },
     { value: 'Post-harvest', label: 'Post-harvest', description: 'After harvest' },
-    { value: 'Dormant', label: 'Dormant', description: 'Winter dormancy' },
+    { value: 'Dormant', label: 'Dormant', description: 'Winter dormancy' }
   ]
 
   const soilTypes = [
     { value: 'sandy', label: 'Sandy Soil', description: 'Well-draining, low water holding' },
     { value: 'medium', label: 'Loamy Soil', description: 'Balanced drainage and retention' },
-    { value: 'clay', label: 'Clay Soil', description: 'High water holding capacity' },
+    { value: 'clay', label: 'Clay Soil', description: 'High water holding capacity' }
   ]
 
   if (loading) {
@@ -198,7 +198,7 @@ export default function WeatherPage() {
           farmLocation={{
             latitude: selectedFarm.latitude || 19.0825, // Use farm coordinates or default to Nashik
             longitude: selectedFarm.longitude || 73.1963,
-            name: selectedFarm.locationName || selectedFarm.region,
+            name: selectedFarm.locationName || selectedFarm.region
           }}
           growthStage={selectedGrowthStage}
           soilType={selectedSoilType}

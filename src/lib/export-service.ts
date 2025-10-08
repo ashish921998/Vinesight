@@ -87,7 +87,7 @@ export class ExportService {
       expenses: [],
       calculations: [],
       soilTests: [],
-      tasks: [],
+      tasks: []
     }
 
     // Fetch data based on included types
@@ -286,7 +286,7 @@ export class ExportService {
       ['Grape Variety', data.farm.grapeVariety || 'Not specified'],
       ['Planting Date', data.farm.plantingDate || 'Not specified'],
       ['Vine Spacing', data.farm.vineSpacing ? `${data.farm.vineSpacing}m` : 'Not specified'],
-      ['Row Spacing', data.farm.rowSpacing ? `${data.farm.rowSpacing}m` : 'Not specified'],
+      ['Row Spacing', data.farm.rowSpacing ? `${data.farm.rowSpacing}m` : 'Not specified']
     ]
 
     await this.ensureAutoTable(pdf)
@@ -296,7 +296,7 @@ export class ExportService {
       body: farmDetails,
       theme: 'grid',
       headStyles: { fillColor: [71, 85, 105] },
-      margin: { left: 20, right: 20 },
+      margin: { left: 20, right: 20 }
     })
 
     yPosition = (pdf as any).lastAutoTable.finalY + 15
@@ -328,7 +328,7 @@ export class ExportService {
   private static async addOperationalDataToPDF(
     pdf: jsPDF,
     data: ExportData,
-    startY: number,
+    startY: number
   ): Promise<number> {
     let yPosition = startY
 
@@ -347,7 +347,7 @@ export class ExportService {
         `${record.area}ha`,
         record.growth_stage,
         record.moisture_status,
-        `${record.system_discharge}L/h`,
+        `${record.system_discharge}L/h`
       ])
 
       await this.ensureAutoTable(pdf)
@@ -358,7 +358,7 @@ export class ExportService {
         theme: 'striped',
         headStyles: { fillColor: [59, 130, 246] },
         margin: { left: 20, right: 20 },
-        styles: { fontSize: 8 },
+        styles: { fontSize: 8 }
       })
 
       yPosition = (pdf as any).lastAutoTable.finalY + 15
@@ -379,7 +379,7 @@ export class ExportService {
         record.chemical,
         record.dose,
         `${record.area}ha`,
-        record.operator,
+        record.operator
       ])
 
       await this.ensureAutoTable(pdf)
@@ -390,7 +390,7 @@ export class ExportService {
         theme: 'striped',
         headStyles: { fillColor: [34, 197, 94] },
         margin: { left: 20, right: 20 },
-        styles: { fontSize: 8 },
+        styles: { fontSize: 8 }
       })
 
       yPosition = (pdf as any).lastAutoTable.finalY + 15
@@ -410,9 +410,7 @@ export class ExportService {
         `${record.quantity}kg`,
         record.grade,
         record.price_per_kg ? `₹${record.price_per_kg}` : 'N/A',
-        record.price_per_kg
-          ? `₹${(record.quantity * record.price_per_kg).toLocaleString()}`
-          : 'N/A',
+        record.price_per_kg ? `₹${(record.quantity * record.price_per_kg).toLocaleString()}` : 'N/A'
       ])
 
       await this.ensureAutoTable(pdf)
@@ -423,7 +421,7 @@ export class ExportService {
         theme: 'striped',
         headStyles: { fillColor: [249, 115, 22] },
         margin: { left: 20, right: 20 },
-        styles: { fontSize: 8 },
+        styles: { fontSize: 8 }
       })
 
       yPosition = (pdf as any).lastAutoTable.finalY + 15
@@ -438,7 +436,7 @@ export class ExportService {
   private static async addFinancialDataToPDF(
     pdf: jsPDF,
     data: ExportData,
-    startY: number,
+    startY: number
   ): Promise<number> {
     let yPosition = startY
 
@@ -455,7 +453,7 @@ export class ExportService {
         record.category,
         record.description,
         `₹${record.amount.toLocaleString()}`,
-        record.vendor || 'N/A',
+        record.vendor || 'N/A'
       ])
 
       await this.ensureAutoTable(pdf)
@@ -466,7 +464,7 @@ export class ExportService {
         theme: 'striped',
         headStyles: { fillColor: [239, 68, 68] },
         margin: { left: 20, right: 20 },
-        styles: { fontSize: 8 },
+        styles: { fontSize: 8 }
       })
 
       yPosition = (pdf as any).lastAutoTable.finalY + 15
@@ -478,7 +476,7 @@ export class ExportService {
           acc[record.category] = (acc[record.category] || 0) + record.amount
           return acc
         },
-        {} as Record<string, number>,
+        {} as Record<string, number>
       )
 
       yPosition = this.checkPageBreak(pdf, yPosition, 30)
@@ -512,7 +510,7 @@ export class ExportService {
   private static async addComplianceDataToPDF(
     pdf: jsPDF,
     data: ExportData,
-    startY: number,
+    startY: number
   ): Promise<number> {
     let yPosition = startY
 
@@ -531,7 +529,7 @@ export class ExportService {
         record.organic_matter?.toFixed(1) + '%' || 'N/A',
         record.nitrogen + ' ppm' || 'N/A',
         record.phosphorus + ' ppm' || 'N/A',
-        record.potassium + ' ppm' || 'N/A',
+        record.potassium + ' ppm' || 'N/A'
       ])
 
       await this.ensureAutoTable(pdf)
@@ -542,7 +540,7 @@ export class ExportService {
         theme: 'striped',
         headStyles: { fillColor: [168, 85, 247] },
         margin: { left: 20, right: 20 },
-        styles: { fontSize: 8 },
+        styles: { fontSize: 8 }
       })
 
       yPosition = (pdf as any).lastAutoTable.finalY + 15
@@ -557,7 +555,7 @@ export class ExportService {
   private static async addSummaryStatistics(
     pdf: jsPDF,
     data: ExportData,
-    startY: number,
+    startY: number
   ): Promise<number> {
     let yPosition = startY
 
@@ -573,7 +571,7 @@ export class ExportService {
       ['Total Spray Applications', data.spray.length.toString()],
       ['Total Fertigation Events', data.fertigation.length.toString()],
       ['Total Harvest Records', data.harvest.length.toString()],
-      ['Total Expense Entries', data.expenses.length.toString()],
+      ['Total Expense Entries', data.expenses.length.toString()]
     ]
 
     // Calculate totals
@@ -581,7 +579,7 @@ export class ExportService {
     const totalExpenses = data.expenses.reduce((sum, record) => sum + record.amount, 0)
     const totalRevenue = data.harvest.reduce(
       (sum, record) => sum + (record.price_per_kg ? record.quantity * record.price_per_kg : 0),
-      0,
+      0
     )
 
     if (totalHarvest > 0) {
@@ -604,7 +602,7 @@ export class ExportService {
       body: stats,
       theme: 'grid',
       headStyles: { fillColor: [71, 85, 105] },
-      margin: { left: 20, right: 20 },
+      margin: { left: 20, right: 20 }
     })
 
     return (pdf as any).lastAutoTable.finalY + 20
@@ -673,7 +671,7 @@ export class ExportService {
           SupabaseService.getExpenseRecords(farmId),
           SupabaseService.getCalculationHistory(farmId),
           SupabaseService.getSoilTestRecords(farmId),
-          SupabaseService.getTaskReminders(farmId),
+          SupabaseService.getTaskReminders(farmId)
         ])
 
       if (irrigation.length > 0) availableTypes.push('irrigation')

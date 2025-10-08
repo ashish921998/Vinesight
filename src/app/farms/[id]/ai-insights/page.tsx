@@ -23,7 +23,7 @@ import {
   Eye,
   BarChart3,
   RefreshCw,
-  Activity,
+  Activity
 } from 'lucide-react'
 import { AIInsightsService, type AIInsight } from '@/lib/ai-insights-service'
 import { SupabaseService } from '@/lib/supabase-service'
@@ -53,7 +53,7 @@ export default function AIInsightsPage() {
     try {
       const insights = await AIInsightsService.getInsightsByCategory(
         parseInt(farmId),
-        user?.id || null,
+        user?.id || null
       )
       setInsightsByCategory(insights)
     } catch (error) {
@@ -71,7 +71,7 @@ export default function AIInsightsPage() {
       // Generate critical alerts from pest predictions
       const predictions = await PestPredictionService.getActivePredictions(parseInt(farmId))
       const criticalPredictions = predictions.filter(
-        (p) => p.riskLevel === 'critical' || p.riskLevel === 'high',
+        (p) => p.riskLevel === 'critical' || p.riskLevel === 'high'
       )
 
       const alerts: CriticalAlert[] = criticalPredictions.map((prediction) => ({
@@ -85,7 +85,7 @@ export default function AIInsightsPage() {
         timeWindow: {
           start: prediction.preventionWindow.startDate,
           end: prediction.preventionWindow.endDate,
-          urgency: prediction.preventionWindow.optimalTiming,
+          urgency: prediction.preventionWindow.optimalTiming
         },
         actions: [
           {
@@ -94,18 +94,18 @@ export default function AIInsightsPage() {
             action: 'navigate' as const,
             actionData: {
               route: `/farms/${farmId}/pest-management/${prediction.pestDiseaseType}`,
-              predictionId: prediction.id,
-            },
+              predictionId: prediction.id
+            }
           },
           {
             label: 'Acknowledge Alert',
             type: 'secondary' as const,
             action: 'execute' as const,
-            actionData: { action: 'acknowledge', predictionId: prediction.id },
-          },
+            actionData: { action: 'acknowledge', predictionId: prediction.id }
+          }
         ],
         farmId: parseInt(farmId),
-        createdAt: prediction.createdAt,
+        createdAt: prediction.createdAt
       }))
 
       setCriticalAlerts(alerts)
@@ -133,7 +133,7 @@ export default function AIInsightsPage() {
     try {
       const profile = await farmerLearningService.getFarmerProfile(
         user?.id || null,
-        parseInt(farmId),
+        parseInt(farmId)
       )
       setFarmerProfile(profile)
     } catch (error) {
@@ -203,8 +203,8 @@ export default function AIInsightsPage() {
           'accept_recommendation',
           {
             originalSuggestion: insight,
-            reasoning: 'User clicked on insight action',
-          },
+            reasoning: 'User clicked on insight action'
+          }
         )
       }
     } catch (error) {
@@ -218,7 +218,7 @@ export default function AIInsightsPage() {
   const handleAlertAction = async (
     alertId: string,
     action: string,
-    actionData?: Record<string, any>,
+    actionData?: Record<string, any>
   ) => {
     try {
       if (action === 'navigate' && actionData?.route) {
@@ -230,7 +230,7 @@ export default function AIInsightsPage() {
           await PestPredictionService.updatePredictionOutcome(
             predictionId,
             'acknowledged',
-            'farmer_acknowledged',
+            'farmer_acknowledged'
           )
 
           // Remove from critical alerts
@@ -244,7 +244,7 @@ export default function AIInsightsPage() {
           user.id,
           parseInt(farmId),
           action === 'acknowledge' ? 'accept_recommendation' : 'reject_recommendation',
-          actionData || {},
+          actionData || {}
         )
       }
     } catch (error) {
@@ -263,28 +263,28 @@ export default function AIInsightsPage() {
         icon: Bug,
         color: 'text-red-600',
         bgColor: 'bg-red-50',
-        borderColor: 'border-red-200',
+        borderColor: 'border-red-200'
       },
       task_recommendation: {
         name: 'Smart Tasks',
         icon: CheckCircle,
         color: 'text-blue-600',
         bgColor: 'bg-blue-50',
-        borderColor: 'border-blue-200',
+        borderColor: 'border-blue-200'
       },
       profitability_insight: {
         name: 'Profitability',
         icon: BarChart3,
         color: 'text-emerald-600',
         bgColor: 'bg-emerald-50',
-        borderColor: 'border-emerald-200',
+        borderColor: 'border-emerald-200'
       },
       weather_alert: {
         name: 'Weather Alerts',
         icon: CloudRain,
         color: 'text-sky-600',
         bgColor: 'bg-sky-50',
-        borderColor: 'border-sky-200',
+        borderColor: 'border-sky-200'
       },
       // Legacy Categories
       pest_alert: {
@@ -292,36 +292,36 @@ export default function AIInsightsPage() {
         icon: AlertTriangle,
         color: 'text-red-600',
         bgColor: 'bg-red-50',
-        borderColor: 'border-red-200',
+        borderColor: 'border-red-200'
       },
       weather_advisory: {
         name: 'Weather Alerts',
         icon: CloudRain,
         color: 'text-sky-600',
         bgColor: 'bg-sky-50',
-        borderColor: 'border-sky-200',
+        borderColor: 'border-sky-200'
       },
       financial_insight: {
         name: 'Financial',
         icon: DollarSign,
         color: 'text-emerald-600',
         bgColor: 'bg-emerald-50',
-        borderColor: 'border-emerald-200',
+        borderColor: 'border-emerald-200'
       },
       growth_optimization: {
         name: 'Growth Tips',
         icon: Sprout,
         color: 'text-purple-600',
         bgColor: 'bg-purple-50',
-        borderColor: 'border-purple-200',
+        borderColor: 'border-purple-200'
       },
       market_intelligence: {
         name: 'Market Intel',
         icon: TrendingUp,
         color: 'text-orange-600',
         bgColor: 'bg-orange-50',
-        borderColor: 'border-orange-200',
-      },
+        borderColor: 'border-orange-200'
+      }
     }
 
     return (
@@ -330,7 +330,7 @@ export default function AIInsightsPage() {
         icon: Target,
         color: 'text-gray-600',
         bgColor: 'bg-gray-50',
-        borderColor: 'border-gray-200',
+        borderColor: 'border-gray-200'
       }
     )
   }

@@ -68,7 +68,7 @@ class SupabaseConversationStorage {
           `
           *,
           ai_messages (*)
-        `,
+        `
         )
         .eq('user_id', userId)
         .order('updated_at', { ascending: false })
@@ -97,7 +97,7 @@ class SupabaseConversationStorage {
    */
   async saveConversation(
     conversation: Conversation,
-    userId?: string,
+    userId?: string
   ): Promise<Conversation | null> {
     if (!userId) {
       // Fallback to localStorage if no user
@@ -115,7 +115,7 @@ class SupabaseConversationStorage {
         last_message_at: conversation.lastMessageAt?.toISOString() || new Date().toISOString(),
         message_count: conversation.messages.length,
         context_tags: conversation.contextTags || null,
-        updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
 
       // Check if conversation exists (ignore timestamp-based IDs like 1756710035015)
@@ -151,7 +151,7 @@ class SupabaseConversationStorage {
       // Return the conversation with the correct database ID
       return {
         ...conversation,
-        id: conversationId.toString(),
+        id: conversationId.toString()
       }
     } catch (error) {
       console.error('Error saving conversation:', error)
@@ -204,7 +204,7 @@ class SupabaseConversationStorage {
           `
           *,
           ai_messages (*)
-        `,
+        `
         )
         .eq('id', id)
         .eq('user_id', userId)
@@ -263,7 +263,7 @@ class SupabaseConversationStorage {
   async searchConversations(
     query: string,
     userId?: string,
-    farmId?: number,
+    farmId?: number
   ): Promise<Conversation[]> {
     if (!userId) return []
 
@@ -274,7 +274,7 @@ class SupabaseConversationStorage {
           `
           *,
           ai_messages (*)
-        `,
+        `
         )
         .eq('user_id', userId)
         .or(`title.ilike.%${query}%,summary.ilike.%${query}%`)
@@ -310,7 +310,7 @@ class SupabaseConversationStorage {
     if (process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
       console.log(
-        `Migrating ${localConversations.length} conversations from localStorage to Supabase...`,
+        `Migrating ${localConversations.length} conversations from localStorage to Supabase...`
       )
     }
 
@@ -348,13 +348,13 @@ class SupabaseConversationStorage {
         attachments: msg.attachments,
         queryType: msg.context?.queryType,
         confidence: msg.context?.confidence,
-        relatedTopics: msg.context?.relatedTopics,
+        relatedTopics: msg.context?.relatedTopics
       },
       farm_references: msg.context?.farmReferences,
       confidence_score: msg.context?.confidence,
       token_count: msg.context?.tokenCount,
       processing_time: msg.context?.processingTime,
-      created_at: msg.timestamp.toISOString(),
+      created_at: msg.timestamp.toISOString()
     }))
 
     if (messageInserts.length > 0) {
@@ -378,8 +378,8 @@ class SupabaseConversationStorage {
         relatedTopics: msg.context_data?.relatedTopics,
         farmReferences: msg.farm_references,
         tokenCount: msg.token_count,
-        processingTime: msg.processing_time,
-      },
+        processingTime: msg.processing_time
+      }
     }))
 
     return {
@@ -394,7 +394,7 @@ class SupabaseConversationStorage {
       summary: data.summary,
       lastMessageAt: data.last_message_at ? new Date(data.last_message_at) : undefined,
       messageCount: data.message_count,
-      contextTags: data.context_tags,
+      contextTags: data.context_tags
     }
   }
 
@@ -413,8 +413,8 @@ class SupabaseConversationStorage {
         updatedAt: new Date(conv.updatedAt),
         messages: conv.messages.map((msg: any) => ({
           ...msg,
-          timestamp: new Date(msg.timestamp),
-        })),
+          timestamp: new Date(msg.timestamp)
+        }))
       }))
     } catch (error) {
       console.error('Error loading from localStorage:', error)
@@ -431,7 +431,7 @@ class SupabaseConversationStorage {
 
       const updatedConversation = {
         ...conversation,
-        updatedAt: new Date(),
+        updatedAt: new Date()
       }
 
       if (existingIndex >= 0) {

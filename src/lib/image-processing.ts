@@ -43,14 +43,14 @@ export class ImageProcessingService {
   // Process image for AI analysis
   static async processImageForAI(
     imageFile: File | Blob | string,
-    options: ImageProcessingOptions = {},
+    options: ImageProcessingOptions = {}
   ): Promise<ProcessedImage> {
     const {
       maxWidth = 224,
       maxHeight = 224,
       quality = 0.9,
       format = 'jpeg',
-      enablePreprocessing = true,
+      enablePreprocessing = true
     } = options
 
     // Load image
@@ -66,7 +66,7 @@ export class ImageProcessingService {
       image.width,
       image.height,
       maxWidth,
-      maxHeight,
+      maxHeight
     )
 
     this.canvas.width = width
@@ -75,7 +75,7 @@ export class ImageProcessingService {
     const preprocessingApplied = {
       resized: false,
       enhanced: false,
-      normalized: false,
+      normalized: false
     }
 
     // Draw and process image
@@ -102,7 +102,7 @@ export class ImageProcessingService {
       originalImage: image,
       processedImage: this.canvas,
       metadata,
-      preprocessing: preprocessingApplied,
+      preprocessing: preprocessingApplied
     }
   }
 
@@ -130,14 +130,14 @@ export class ImageProcessingService {
   // Extract metadata from image
   private static extractMetadata(
     image: HTMLImageElement,
-    source: File | Blob | string,
+    source: File | Blob | string
   ): ImageMetadata {
     return {
       width: image.width,
       height: image.height,
       size: source instanceof File ? source.size : 0,
       format: source instanceof File ? source.type : 'unknown',
-      timestamp: new Date(),
+      timestamp: new Date()
       // Note: Location would need EXIF data extraction in production
     }
   }
@@ -147,7 +147,7 @@ export class ImageProcessingService {
     originalWidth: number,
     originalHeight: number,
     maxWidth: number,
-    maxHeight: number,
+    maxHeight: number
   ): { width: number; height: number } {
     const aspectRatio = originalWidth / originalHeight
 
@@ -172,7 +172,7 @@ export class ImageProcessingService {
 
     return {
       width: Math.round(width),
-      height: Math.round(height),
+      height: Math.round(height)
     }
   }
 
@@ -180,7 +180,7 @@ export class ImageProcessingService {
   private static needsEnhancement(
     context: CanvasRenderingContext2D,
     width: number,
-    height: number,
+    height: number
   ): boolean {
     const imageData = context.getImageData(0, 0, width, height)
     const data = imageData.data
@@ -204,7 +204,7 @@ export class ImageProcessingService {
   private static async enhanceImage(
     context: CanvasRenderingContext2D,
     width: number,
-    height: number,
+    height: number
   ): Promise<void> {
     const imageData = context.getImageData(0, 0, width, height)
     const data = imageData.data
@@ -230,7 +230,7 @@ export class ImageProcessingService {
   private static async normalizeForAI(
     context: CanvasRenderingContext2D,
     width: number,
-    height: number,
+    height: number
   ): Promise<void> {
     const imageData = context.getImageData(0, 0, width, height)
     const data = imageData.data
@@ -249,7 +249,7 @@ export class ImageProcessingService {
   // Create thumbnail
   static createThumbnail(
     image: HTMLImageElement | HTMLCanvasElement,
-    size: number = 150,
+    size: number = 150
   ): HTMLCanvasElement {
     const canvas = document.createElement('canvas')
     const context = canvas.getContext('2d')!
@@ -341,11 +341,11 @@ export class ImageProcessingService {
       averageRGB: {
         r: totalR / totalPixels,
         g: totalG / totalPixels,
-        b: totalB / totalPixels,
+        b: totalB / totalPixels
       },
       greenHealthIndex: Math.round((greenPixels / totalPixels) * 100),
       browningIndex: Math.round((brownPixels / totalPixels) * 100),
-      yellowingIndex: Math.round((yellowPixels / totalPixels) * 100),
+      yellowingIndex: Math.round((yellowPixels / totalPixels) * 100)
     }
   }
 
@@ -364,7 +364,7 @@ export class ImageProcessingService {
         const pixel = [
           data[index] / 255, // R
           data[index + 1] / 255, // G
-          data[index + 2] / 255, // B
+          data[index + 2] / 255 // B
         ]
         row.push(pixel)
       }
@@ -430,7 +430,7 @@ export class ImageProcessingService {
         0,
         0,
         cropWidth,
-        cropHeight,
+        cropHeight
       )
     } else {
       // If no plant area detected, return original

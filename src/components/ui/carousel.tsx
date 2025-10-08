@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import * as React from 'react'
 import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react'
@@ -35,7 +35,7 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
   ({ opts, orientation = 'horizontal', setApi, className, children, ...props }, ref) => {
     const [carouselRef, api] = useEmblaCarousel({
       ...opts,
-      axis: orientation === 'horizontal' ? 'x' : 'y',
+      axis: orientation === 'horizontal' ? 'x' : 'y'
     })
 
     React.useEffect(() => {
@@ -63,11 +63,7 @@ const CarouselContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HT
     return (
       <div
         ref={ref}
-        className={cn(
-          'flex',
-          orientation === 'horizontal' ? '-ml-4' : '-mt-4 flex-col',
-          className
-        )}
+        className={cn('flex', orientation === 'horizontal' ? '-ml-4' : '-mt-4 flex-col', className)}
         {...props}
       >
         {children}

@@ -15,7 +15,7 @@ import {
   MapPin,
   Zap,
   CheckCircle,
-  XCircle,
+  XCircle
 } from 'lucide-react'
 import { PestPredictionService } from '@/lib/pest-prediction-service'
 import type { PestDiseasePrediction } from '@/types/ai'

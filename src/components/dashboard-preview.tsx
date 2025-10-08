@@ -33,7 +33,7 @@ export function DashboardPreview() {
                     >
                       {item}
                     </div>
-                  ),
+                  )
                 )}
               </nav>
             </div>

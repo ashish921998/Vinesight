@@ -28,7 +28,7 @@ export function ETcCalculatorComponent() {
     latitude: '',
     longitude: '',
     elevation: '',
-    locationName: '',
+    locationName: ''
   })
   const [openMeteoValidationData, setOpenMeteoValidationData] =
     useState<OpenMeteoWeatherData | null>(null)
@@ -49,7 +49,7 @@ export function ETcCalculatorComponent() {
         latitude: selectedFarm.latitude?.toString() || '',
         longitude: selectedFarm.longitude?.toString() || '',
         elevation: selectedFarm.elevation?.toString() || '',
-        locationName: selectedFarm.locationName || '',
+        locationName: selectedFarm.locationName || ''
       })
     }
   }, [selectedFarm, useCustomData])
@@ -91,7 +91,7 @@ export function ETcCalculatorComponent() {
       latitude: '',
       longitude: '',
       elevation: '',
-      locationName: '',
+      locationName: ''
     })
     setOpenMeteoValidationData(null)
   }
@@ -99,7 +99,7 @@ export function ETcCalculatorComponent() {
   const handleLocationChange = (field: string, value: string) => {
     setLocationData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: value
     }))
   }
 
@@ -108,7 +108,7 @@ export function ETcCalculatorComponent() {
       latitude: location.latitude.toString(),
       longitude: location.longitude.toString(),
       elevation: location.elevation.toString(),
-      locationName: `${location.name}, ${location.admin1 || ''} ${location.country}`.trim(),
+      locationName: `${location.name}, ${location.admin1 || ''} ${location.country}`.trim()
     })
   }
 

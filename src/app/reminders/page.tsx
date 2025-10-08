@@ -16,7 +16,7 @@ import {
   Filter,
   Settings,
   Sparkles,
-  Target,
+  Target
 } from 'lucide-react'
 import { CloudDataService, TaskReminder } from '@/lib/cloud-data-service'
 import type { Farm } from '@/types/types'
@@ -46,7 +46,7 @@ export default function RemindersPage() {
     description: '',
     dueDate: '',
     type: 'other' as const,
-    priority: 'medium' as const,
+    priority: 'medium' as const
   })
 
   const loadFarms = useCallback(async () => {
@@ -133,7 +133,7 @@ export default function RemindersPage() {
           type: formData.type,
           priority: formData.priority,
           completed: false,
-          completedAt: null,
+          completedAt: null
         })
       }
 
@@ -175,7 +175,7 @@ export default function RemindersPage() {
         type: templateData.type,
         priority: templateData.priority,
         completed: false,
-        completedAt: null,
+        completedAt: null
       })
 
       setShowTemplateSelector(false)
@@ -184,7 +184,7 @@ export default function RemindersPage() {
       if (notificationServiceRef.current) {
         notificationServiceRef.current.sendNotification('✅ Task Created!', {
           body: `"${templateData.title}" has been added to your farm tasks.`,
-          tag: 'task-created',
+          tag: 'task-created'
         })
       }
     } catch (error) {
@@ -201,7 +201,7 @@ export default function RemindersPage() {
       description: '',
       dueDate: '',
       type: 'other',
-      priority: 'medium',
+      priority: 'medium'
     })
     setShowAddForm(false)
     setEditingTask(null)
@@ -210,7 +210,7 @@ export default function RemindersPage() {
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: value
     }))
   }
 

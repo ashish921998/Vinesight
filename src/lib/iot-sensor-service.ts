@@ -138,7 +138,7 @@ export class IoTSensorService {
   // Get recent readings for a sensor
   static getSensorReadings(
     sensorId: string,
-    timeRange: '1h' | '6h' | '24h' | '7d' = '24h',
+    timeRange: '1h' | '6h' | '24h' | '7d' = '24h'
   ): SensorReading[] {
     const readings = this.readings.get(sensorId) || []
     const now = new Date()
@@ -182,7 +182,7 @@ export class IoTSensorService {
   // Get sensor analytics
   static getSensorAnalytics(
     sensorId: string,
-    timeRange: '24h' | '7d' | '30d' | '90d' = '7d',
+    timeRange: '24h' | '7d' | '30d' | '90d' = '7d'
   ): SensorAnalytics {
     const readings = this.getSensorReadings(sensorId, timeRange as any)
     const values = readings.map((r) => r.value)
@@ -196,10 +196,10 @@ export class IoTSensorService {
           minimum: 0,
           maximum: 0,
           standardDeviation: 0,
-          trend: 'stable',
+          trend: 'stable'
         },
         recommendations: ['No data available for analysis'],
-        anomalies: [],
+        anomalies: []
       }
     }
 
@@ -213,7 +213,7 @@ export class IoTSensorService {
       timeRange,
       statistics: { ...statistics, trend },
       recommendations,
-      anomalies,
+      anomalies
     }
   }
 
@@ -250,7 +250,7 @@ export class IoTSensorService {
           zone: sensor.location.description,
           flowRate: 20, // L/min
           reason: `Soil moisture ${currentReading.value}% below optimal range`,
-          triggeredBy: [sensor.id],
+          triggeredBy: [sensor.id]
         })
       }
     })
@@ -276,7 +276,7 @@ export class IoTSensorService {
           duration: 30,
           zone: sensor.location.description,
           reason: `Nutrient levels ${currentReading.value} ppm below optimal`,
-          urgency: currentReading.value < sensor.thresholds.min ? 'high' : 'medium',
+          urgency: currentReading.value < sensor.thresholds.min ? 'high' : 'medium'
         })
       }
     })
@@ -304,7 +304,7 @@ export class IoTSensorService {
 
     const soilMoisture = {
       average: this.averageCurrentValue(moistureSensors, currentReadings),
-      zones: {} as { [key: string]: number },
+      zones: {} as { [key: string]: number }
     }
 
     moistureSensors.forEach((sensor) => {
@@ -321,19 +321,19 @@ export class IoTSensorService {
       temperature: {
         current: avgTemp,
         trend: 'stable', // Simplified
-        status: avgTemp > 35 ? 'high' : avgTemp < 15 ? 'low' : 'normal',
+        status: avgTemp > 35 ? 'high' : avgTemp < 15 ? 'low' : 'normal'
       },
       humidity: {
         current: avgHumidity,
         trend: 'stable',
-        status: avgHumidity > 80 ? 'high' : avgHumidity < 40 ? 'low' : 'normal',
+        status: avgHumidity > 80 ? 'high' : avgHumidity < 40 ? 'low' : 'normal'
       },
       soilMoisture,
       alerts: activeAlerts.length,
       batteryLevels: {
         low: batteryAlerts.filter((a) => a.severity === 'medium').length,
-        critical: batteryAlerts.filter((a) => a.severity === 'high').length,
-      },
+        critical: batteryAlerts.filter((a) => a.severity === 'high').length
+      }
     }
   }
 
@@ -388,16 +388,16 @@ export class IoTSensorService {
           latitude: 18.5204,
           longitude: 73.8567,
           depth: 20,
-          description: 'Zone A - Block 1',
+          description: 'Zone A - Block 1'
         },
         thresholds: {
           min: 20,
           max: 80,
-          optimal: { min: 40, max: 70 },
+          optimal: { min: 40, max: 70 }
         },
         alertsEnabled: true,
         dataInterval: 15,
-        farmId,
+        farmId
       },
       {
         id: 'air_temp_01',
@@ -412,16 +412,16 @@ export class IoTSensorService {
           latitude: 18.5204,
           longitude: 73.8567,
           height: 2,
-          description: 'Central Weather Station',
+          description: 'Central Weather Station'
         },
         thresholds: {
           min: 10,
           max: 45,
-          optimal: { min: 20, max: 35 },
+          optimal: { min: 20, max: 35 }
         },
         alertsEnabled: true,
         dataInterval: 10,
-        farmId,
+        farmId
       },
       {
         id: 'ph_sensor_01',
@@ -436,17 +436,17 @@ export class IoTSensorService {
           latitude: 18.5204,
           longitude: 73.8567,
           depth: 15,
-          description: 'Zone B - Testing Point',
+          description: 'Zone B - Testing Point'
         },
         thresholds: {
           min: 5.5,
           max: 8.5,
-          optimal: { min: 6.0, max: 7.5 },
+          optimal: { min: 6.0, max: 7.5 }
         },
         alertsEnabled: true,
         dataInterval: 60,
-        farmId,
-      },
+        farmId
+      }
     ]
 
     sampleSensors.forEach((sensor) => {
@@ -510,11 +510,11 @@ export class IoTSensorService {
       location: {
         latitude: sensor.location.latitude,
         longitude: sensor.location.longitude,
-        description: sensor.location.description,
+        description: sensor.location.description
       },
       batteryLevel: 80 + Math.random() * 20,
       signalStrength: 70 + Math.random() * 30,
-      status: 'active',
+      status: 'active'
     }
   }
 
@@ -544,7 +544,7 @@ export class IoTSensorService {
             : 'high',
         message: `${sensor.name}: ${reading.value}${reading.unit} is ${reading.value < sensor.thresholds.min ? 'below minimum' : 'above maximum'} threshold`,
         timestamp: reading.timestamp,
-        acknowledged: false,
+        acknowledged: false
       }
 
       this.alerts.push(alert)
@@ -559,7 +559,7 @@ export class IoTSensorService {
         severity: reading.batteryLevel < 10 ? 'high' : 'medium',
         message: `${sensor.name}: Low battery level (${reading.batteryLevel}%)`,
         timestamp: reading.timestamp,
-        acknowledged: false,
+        acknowledged: false
       }
 
       this.alerts.push(alert)
@@ -613,7 +613,7 @@ export class IoTSensorService {
           timestamp: reading.timestamp,
           value: reading.value,
           type: reading.value > stats.average ? 'spike' : 'drop',
-          severity: zScore > 3 ? 'critical' : zScore > 2.8 ? 'major' : 'minor',
+          severity: zScore > 3 ? 'critical' : zScore > 2.8 ? 'major' : 'minor'
         })
       }
     })
@@ -624,7 +624,7 @@ export class IoTSensorService {
   private static generateSensorRecommendations(
     sensorId: string,
     statistics: any,
-    readings: SensorReading[],
+    readings: SensorReading[]
   ): string[] {
     const sensor = this.sensors.get(sensorId)
     if (!sensor) return []
@@ -671,7 +671,7 @@ export class IoTSensorService {
 
   private static averageCurrentValue(
     sensors: SensorDevice[],
-    readings: { [key: string]: SensorReading },
+    readings: { [key: string]: SensorReading }
   ): number {
     const values = sensors
       .map((sensor) => readings[sensor.id]?.value)

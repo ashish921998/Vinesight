@@ -36,7 +36,7 @@ export const MobileInput = forwardRef<HTMLInputElement, MobileInputProps>(
               !isLarge && 'h-11 text-base',
               unit && 'pr-16',
               error && 'border-red-500 focus:border-red-500 focus:ring-red-500',
-              className,
+              className
             )}
             {...props}
           />
@@ -50,7 +50,7 @@ export const MobileInput = forwardRef<HTMLInputElement, MobileInputProps>(
         {helper && !error && <p className="text-sm text-gray-500 mt-1">{helper}</p>}
       </div>
     )
-  },
+  }
 )
 
 MobileInput.displayName = 'MobileInput'

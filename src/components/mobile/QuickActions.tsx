@@ -10,7 +10,7 @@ import {
   SprayCan,
   Grape,
   IndianRupee,
-  FileText,
+  FileText
 } from 'lucide-react'
 
 const quickActions = [
@@ -20,7 +20,7 @@ const quickActions = [
     href: '/farms',
     icon: Plus,
     color: 'bg-secondary text-secondary-foreground',
-    bgGradient: 'from-secondary/50 to-secondary',
+    bgGradient: 'from-secondary/50 to-secondary'
   },
   {
     title: 'Calculator',
@@ -28,7 +28,7 @@ const quickActions = [
     href: '/calculators',
     icon: Calculator,
     color: 'bg-secondary text-secondary-foreground',
-    bgGradient: 'from-secondary/50 to-secondary',
+    bgGradient: 'from-secondary/50 to-secondary'
   },
   {
     title: 'Irrigation',
@@ -36,7 +36,7 @@ const quickActions = [
     href: '/farms',
     icon: Droplets,
     color: 'bg-secondary text-secondary-foreground',
-    bgGradient: 'from-secondary/50 to-secondary',
+    bgGradient: 'from-secondary/50 to-secondary'
   },
   {
     title: 'Spray Log',
@@ -44,7 +44,7 @@ const quickActions = [
     href: '/farms',
     icon: SprayCan,
     color: 'bg-secondary text-secondary-foreground',
-    bgGradient: 'from-secondary/50 to-secondary',
+    bgGradient: 'from-secondary/50 to-secondary'
   },
   {
     title: 'Harvest',
@@ -52,7 +52,7 @@ const quickActions = [
     href: '/farms',
     icon: Grape,
     color: 'bg-secondary text-secondary-foreground',
-    bgGradient: 'from-secondary/50 to-secondary',
+    bgGradient: 'from-secondary/50 to-secondary'
   },
   {
     title: 'Expenses',
@@ -60,8 +60,8 @@ const quickActions = [
     href: '/farms',
     icon: IndianRupee,
     color: 'bg-secondary text-secondary-foreground',
-    bgGradient: 'from-secondary/50 to-secondary',
-  },
+    bgGradient: 'from-secondary/50 to-secondary'
+  }
 ]
 
 export function QuickActions() {

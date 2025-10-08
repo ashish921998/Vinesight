@@ -10,7 +10,7 @@ import {
   toApplicationIrrigationRecord,
   toApplicationSprayRecord,
   toApplicationHarvestRecord,
-  toApplicationExpenseRecord,
+  toApplicationExpenseRecord
 } from './supabase-types'
 
 // Re-export types for easier importing
@@ -25,7 +25,7 @@ export class CloudDataService {
   static async getAllFarms(): Promise<Farm[]> {
     const supabase = getSupabaseClient()
     const {
-      data: { user },
+      data: { user }
     } = await supabase.auth.getUser()
 
     if (!user) {
@@ -46,11 +46,11 @@ export class CloudDataService {
   }
 
   static async createFarm(
-    farmData: Omit<Farm, 'id' | 'created_at' | 'updated_at' | 'user_id'>,
+    farmData: Omit<Farm, 'id' | 'created_at' | 'updated_at' | 'user_id'>
   ): Promise<Farm> {
     const supabase = getSupabaseClient()
     const {
-      data: { user },
+      data: { user }
     } = await supabase.auth.getUser()
 
     if (!user) {
@@ -73,7 +73,7 @@ export class CloudDataService {
   static async updateFarm(id: number, farmData: Partial<Farm>): Promise<Farm> {
     const supabase = getSupabaseClient()
     const {
-      data: { user },
+      data: { user }
     } = await supabase.auth.getUser()
 
     if (!user) {
@@ -98,7 +98,7 @@ export class CloudDataService {
   static async deleteFarm(id: number): Promise<void> {
     const supabase = getSupabaseClient()
     const {
-      data: { user },
+      data: { user }
     } = await supabase.auth.getUser()
 
     if (!user) {
@@ -115,7 +115,7 @@ export class CloudDataService {
   static async getFarm(id: number): Promise<Farm | null> {
     const supabase = getSupabaseClient()
     const {
-      data: { user },
+      data: { user }
     } = await supabase.auth.getUser()
 
     if (!user) {
@@ -143,7 +143,7 @@ export class CloudDataService {
   static async getIrrigationRecords(farmId: number): Promise<IrrigationRecord[]> {
     const supabase = getSupabaseClient()
     const {
-      data: { user },
+      data: { user }
     } = await supabase.auth.getUser()
 
     if (!user) {
@@ -166,7 +166,7 @@ export class CloudDataService {
   static async getSprayRecords(farmId: number): Promise<SprayRecord[]> {
     const supabase = getSupabaseClient()
     const {
-      data: { user },
+      data: { user }
     } = await supabase.auth.getUser()
 
     if (!user) {
@@ -189,7 +189,7 @@ export class CloudDataService {
   static async getHarvestRecords(farmId: number): Promise<HarvestRecord[]> {
     const supabase = getSupabaseClient()
     const {
-      data: { user },
+      data: { user }
     } = await supabase.auth.getUser()
 
     if (!user) {
@@ -212,7 +212,7 @@ export class CloudDataService {
   static async getExpenseRecords(farmId: number): Promise<ExpenseRecord[]> {
     const supabase = getSupabaseClient()
     const {
-      data: { user },
+      data: { user }
     } = await supabase.auth.getUser()
 
     if (!user) {
@@ -235,7 +235,7 @@ export class CloudDataService {
   static async getFertigationRecords(farmId: number): Promise<any[]> {
     const supabase = getSupabaseClient()
     const {
-      data: { user },
+      data: { user }
     } = await supabase.auth.getUser()
 
     if (!user) {

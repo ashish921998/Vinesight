@@ -30,7 +30,7 @@ export function FarmSelector({
   selectedFarmId,
   showPortfolio = false,
   onFarmSelect,
-  onPortfolioSelect,
+  onPortfolioSelect
 }: FarmSelectorProps) {
   const [isOpen, setIsOpen] = useState(false)
 
@@ -181,7 +181,7 @@ export function FarmTabs({
   farms,
   selectedFarmId,
   onFarmSelect,
-  maxTabs = 3,
+  maxTabs = 3
 }: {
   farms: Farm[]
   selectedFarmId?: string

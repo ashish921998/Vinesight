@@ -107,14 +107,13 @@ export function AIAssistant({
         return null
       }
 
-      const textParts = uiMessage.parts.filter(
-        (part): part is TextUIPart => part.type === 'text'
-      )
-      const content = textParts.map((part) => part.text).join('\n').trim()
+      const textParts = uiMessage.parts.filter((part): part is TextUIPart => part.type === 'text')
+      const content = textParts
+        .map((part) => part.text)
+        .join('\n')
+        .trim()
 
-      const fileParts = uiMessage.parts.filter(
-        (part): part is FileUIPart => part.type === 'file'
-      )
+      const fileParts = uiMessage.parts.filter((part): part is FileUIPart => part.type === 'file')
       const attachments = fileParts.map(attachmentFromFilePart)
 
       const metadata = (uiMessage.metadata || {}) as Record<string, any>
@@ -128,7 +127,8 @@ export function AIAssistant({
         : undefined
 
       const effectiveContent =
-        content || (attachments.length > 0 && uiMessage.role === 'user' ? 'Shared an image' : content)
+        content ||
+        (attachments.length > 0 && uiMessage.role === 'user' ? 'Shared an image' : content)
 
       if (!effectiveContent && attachments.length === 0 && uiMessage.role === 'assistant') {
         return null
@@ -374,13 +374,7 @@ export function AIAssistant({
       }
       return mapped
     })
-  }, [
-    chatMessages,
-    uiMessageToAppMessage,
-    getWelcomeMessage,
-    i18n.language,
-    areMessagesEqual
-  ])
+  }, [chatMessages, uiMessageToAppMessage, getWelcomeMessage, i18n.language, areMessagesEqual])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -564,7 +558,10 @@ export function AIAssistant({
         context: queryAnalysis
       }
 
-      const contextMessages = [...messages.filter((msg) => msg.id !== 'welcome'), userMessageForContext]
+      const contextMessages = [
+        ...messages.filter((msg) => msg.id !== 'welcome'),
+        userMessageForContext
+      ]
 
       const fileParts: FileUIPart[] = pendingAttachments.map((attachment) => {
         const mediaMatch = attachment.url.match(/^data:(.*?);/)
@@ -596,10 +593,7 @@ export function AIAssistant({
           {
             id: userMessageForContext.id,
             role: 'user',
-            parts: [
-              { type: 'text', text: messageText },
-              ...fileParts
-            ],
+            parts: [{ type: 'text', text: messageText }, ...fileParts],
             metadata: {
               queryType: queryAnalysis.queryType,
               confidence: queryAnalysis.confidence,

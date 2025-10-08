@@ -17,7 +17,7 @@ export function ResultsDisplay({ results, date, openMeteoValidationData }: Resul
   const validation = openMeteoValidationData
     ? OpenMeteoWeatherService.validateEToDifference(
         results.eto,
-        openMeteoValidationData.et0FaoEvapotranspiration,
+        openMeteoValidationData.et0FaoEvapotranspiration
       )
     : null
   return (
@@ -139,7 +139,7 @@ export function ResultsDisplay({ results, date, openMeteoValidationData }: Resul
                   className="mt-3 p-3 rounded-lg"
                   style={{
                     backgroundColor: validation.isAccurate ? '#f0f9f0' : '#fef3f2',
-                    border: `1px solid ${validation.isAccurate ? '#d1f2d1' : '#feddc7'}`,
+                    border: `1px solid ${validation.isAccurate ? '#d1f2d1' : '#feddc7'}`
                   }}
                 >
                   <div className="flex items-center justify-between">
@@ -153,7 +153,7 @@ export function ResultsDisplay({ results, date, openMeteoValidationData }: Resul
                       <p
                         className="text-xs mt-1"
                         style={{
-                          color: validation.isAccurate ? '#22c55e' : '#ef4444',
+                          color: validation.isAccurate ? '#22c55e' : '#ef4444'
                         }}
                       >
                         Difference: {validation.difference > 0 ? '+' : ''}
@@ -164,7 +164,7 @@ export function ResultsDisplay({ results, date, openMeteoValidationData }: Resul
                       <p
                         className="text-lg font-bold"
                         style={{
-                          color: validation.isAccurate ? '#22c55e' : '#ef4444',
+                          color: validation.isAccurate ? '#22c55e' : '#ef4444'
                         }}
                       >
                         {validation.percentageError > 0 ? '+' : ''}

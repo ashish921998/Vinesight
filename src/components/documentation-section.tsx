@@ -26,20 +26,20 @@ export default function DocumentationSection() {
       title: 'Plan your schedules',
       description:
         'Schedule crop rotations, irrigation cycles,\nand harvest planning with AI optimization.',
-      image: '/modern-dashboard-interface-with-data-visualization.jpg',
+      image: '/modern-dashboard-interface-with-data-visualization.jpg'
     },
     {
       title: 'Data to insights in minutes',
       description:
         'Transform sensor data into actionable insights\nwith powerful agricultural analytics.',
-      image: '/analytics-dashboard.png',
+      image: '/analytics-dashboard.png'
     },
     {
       title: 'Collaborate seamlessly',
       description:
         'Coordinate with your farm team in real-time\nand share field reports instantly.',
-      image: '/team-collaboration-interface-with-shared-workspace.jpg',
-    },
+      image: '/team-collaboration-interface-with-shared-workspace.jpg'
+    }
   ]
 
   useEffect(() => {
