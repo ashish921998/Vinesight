@@ -73,15 +73,15 @@ export default function PricingSection({ regionFromServer = null }: PricingSecti
   const pricing = {
     starter: {
       monthly: basePricing.starter.monthly,
-      annually: Math.round(basePricing.starter.monthly * 0.8),
+      annually: Math.round(basePricing.starter.monthly * 12 * 0.8),
     },
     professional: {
       monthly: basePricing.professional.monthly,
-      annually: Math.round(basePricing.professional.monthly * 0.8), // 20% discount for annual
+      annually: Math.round(basePricing.professional.monthly * 12 * 0.8), // 20% discount for annual
     },
     enterprise: {
       monthly: basePricing.enterprise.monthly,
-      annually: Math.round(basePricing.enterprise.monthly * 0.8), // 20% discount for annual
+      annually: Math.round(basePricing.enterprise.monthly * 12 * 0.8), // 20% discount for annual
     },
   }
 
