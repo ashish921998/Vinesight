@@ -17,7 +17,10 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
 
   // Fetch validated region from server API if not provided via props
   useEffect(() => {
+    if (serverRegion) return
+
     let cancelled = false
+
     if (!regionFromServer) {
       const controller = new AbortController()
       ;(async () => {
@@ -27,7 +30,7 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
           const data = (await res.json()) as { region?: string | null }
           const region = (data?.region || '').toString().trim().toUpperCase()
           const valid = /^[A-Z]{2}$/.test(region) ? region : null
-          if (!cancelled && valid !== (serverRegion || null)) setServerRegion(valid)
+          if (!cancelled) setServerRegion(valid)
         } catch {
           // ignore
         }
@@ -37,8 +40,7 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
         controller.abort()
       }
     } else {
-      const upper = regionFromServer?.toUpperCase() || null
-      if (upper !== (serverRegion || null)) setServerRegion(upper)
+      setServerRegion(regionFromServer?.toUpperCase() || null)
     }
   }, [regionFromServer, serverRegion])
 
