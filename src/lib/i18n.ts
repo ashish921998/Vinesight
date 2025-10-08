@@ -17,7 +17,7 @@ const resources = {
         weather: 'Weather',
         reminders: 'Reminders',
         reports: 'Reports',
-        settings: 'Settings',
+        settings: 'Settings'
       },
       // Common UI elements
       common: {
@@ -51,8 +51,8 @@ const resources = {
         yes: 'Yes',
         no: 'No',
         buttons: {
-          openModule: 'Open Module',
-        },
+          openModule: 'Open Module'
+        }
       },
       // Homepage
       home: {
@@ -63,49 +63,49 @@ const resources = {
         features: {
           farmManagement: {
             title: 'Farm Management',
-            description: 'Add and manage multiple farms with grape varieties and planting details',
+            description: 'Add and manage multiple farms with grape varieties and planting details'
           },
           calculators: {
             title: 'Scientific Calculators',
-            description: 'ETc calculator, nutrient planning, and LAI calculations',
+            description: 'ETc calculator, nutrient planning, and LAI calculations'
           },
           diseasePredict: {
             title: 'Disease Prediction',
-            description: 'AI-powered disease risk assessment and treatment scheduling',
+            description: 'AI-powered disease risk assessment and treatment scheduling'
           },
           yieldPredict: {
             title: 'Yield Prediction',
-            description: 'AI-powered yield forecasting using historical data and conditions',
+            description: 'AI-powered yield forecasting using historical data and conditions'
           },
           journal: {
             title: 'Operations Journal',
-            description: 'Record irrigation, spraying, fertigation, and harvest activities',
+            description: 'Record irrigation, spraying, fertigation, and harvest activities'
           },
           analytics: {
             title: 'Data Analytics',
-            description: 'Track trends, yield patterns, and input-outcome correlations',
+            description: 'Track trends, yield patterns, and input-outcome correlations'
           },
           reminders: {
             title: 'Reminders & Tasks',
-            description: 'Get notified about irrigation schedules and farming tasks',
+            description: 'Get notified about irrigation schedules and farming tasks'
           },
           settings: {
             title: 'Settings',
-            description: 'Language preferences, data export, and app configuration',
-          },
+            description: 'Language preferences, data export, and app configuration'
+          }
         },
         gettingStarted: {
           title: 'Getting Started',
           description:
             'Begin by adding your farm details and start using our scientific calculators',
-          button: 'Add Your First Farm',
+          button: 'Add Your First Farm'
         },
         joinToday: {
           title: 'Join VineSight Today',
           description:
             'Sign in with Google to start managing your vineyard operations scientifically',
-          button: 'Sign in with Google',
-        },
+          button: 'Sign in with Google'
+        }
       },
       // Farm Management
       farm: {
@@ -123,7 +123,7 @@ const resources = {
         addFirstFarm: 'Add Your First Farm',
         farmAdded: 'Farm added successfully',
         farmUpdated: 'Farm updated successfully',
-        farmDeleted: 'Farm deleted successfully',
+        farmDeleted: 'Farm deleted successfully'
       },
       // Calculators
       calculators: {
@@ -144,7 +144,7 @@ const resources = {
           kc: 'Crop Coefficient',
           etc: 'Crop Evapotranspiration',
           irrigationNeed: 'Irrigation Need',
-          recommendation: 'Irrigation Recommendation',
+          recommendation: 'Irrigation Recommendation'
         },
         lai: {
           title: 'LAI Calculator',
@@ -158,7 +158,7 @@ const resources = {
           lai: 'Leaf Area Index',
           canopyStatus: 'Canopy Status',
           leafAreaRatio: 'Leaf Area to Ground Ratio',
-          recommendations: 'Management Recommendations',
+          recommendations: 'Management Recommendations'
         },
         nutrient: {
           title: 'Nutrient Calculator',
@@ -173,7 +173,7 @@ const resources = {
           potassium: 'Potassium (ppm)',
           results: 'Nutrient Recommendations',
           fertilizerProgram: 'Fertilizer Program',
-          applicationSchedule: 'Application Schedule',
+          applicationSchedule: 'Application Schedule'
         },
         discharge: {
           title: 'System Discharge Calculator',
@@ -186,8 +186,8 @@ const resources = {
           results: 'System Design Results',
           flowRate: 'System Flow Rate',
           pumpCapacity: 'Pump Capacity',
-          economics: 'Cost Analysis',
-        },
+          economics: 'Cost Analysis'
+        }
       },
       // Journal/Operations
       journal: {
@@ -198,7 +198,7 @@ const resources = {
           duration: 'Duration (hours)',
           moistureStatus: 'Moisture Status',
           systemDischarge: 'System Discharge (L/h)',
-          addRecord: 'Add Irrigation Record',
+          addRecord: 'Add Irrigation Record'
         },
         spray: {
           title: 'Spray Records',
@@ -207,7 +207,7 @@ const resources = {
           dose: 'Dose',
           weather: 'Weather Conditions',
           operator: 'Operator',
-          addRecord: 'Add Spray Record',
+          addRecord: 'Add Spray Record'
         },
         fertigation: {
           title: 'Fertigation Records',
@@ -215,7 +215,7 @@ const resources = {
           concentration: 'Concentration',
           phLevel: 'pH Level',
           ecLevel: 'EC Level',
-          addRecord: 'Add Fertigation Record',
+          addRecord: 'Add Fertigation Record'
         },
         harvest: {
           title: 'Harvest Records',
@@ -223,7 +223,7 @@ const resources = {
           buyer: 'Buyer',
           pricePerKg: 'Price per kg',
           totalValue: 'Total Value',
-          addRecord: 'Add Harvest Record',
+          addRecord: 'Add Harvest Record'
         },
         expense: {
           title: 'Expense Records',
@@ -232,8 +232,8 @@ const resources = {
           amount: 'Amount',
           vendor: 'Vendor',
           paymentMethod: 'Payment Method',
-          addRecord: 'Add Expense Record',
-        },
+          addRecord: 'Add Expense Record'
+        }
       },
       // Export
       export: {
@@ -256,7 +256,7 @@ const resources = {
         clearAll: 'Clear All',
         generateExport: 'Generate Export',
         noData: 'No data',
-        exportSummary: 'Export Summary',
+        exportSummary: 'Export Summary'
       },
       // Growth Stages
       growthStages: {
@@ -266,19 +266,19 @@ const resources = {
         fruitSet: 'Fruit Set',
         veraison: 'Veraison',
         harvest: 'Harvest',
-        postHarvest: 'Post Harvest',
+        postHarvest: 'Post Harvest'
       },
       // Irrigation Methods
       irrigationMethods: {
         drip: 'Drip Irrigation',
         sprinkler: 'Sprinkler',
-        surface: 'Surface Irrigation',
+        surface: 'Surface Irrigation'
       },
       // Soil Types
       soilTypes: {
         sandy: 'Sandy',
         loamy: 'Loamy',
-        clay: 'Clay',
+        clay: 'Clay'
       },
       // Units
       units: {
@@ -294,9 +294,9 @@ const resources = {
         days: 'days',
         kg: 'kg',
         tons: 'tons',
-        rupees: '₹',
-      },
-    },
+        rupees: '₹'
+      }
+    }
   },
   hi: {
     translation: {
@@ -312,7 +312,7 @@ const resources = {
         weather: 'मौसम',
         reminders: 'रिमाइंडर',
         reports: 'रिपोर्ट',
-        settings: 'सेटिंग्स',
+        settings: 'सेटिंग्स'
       },
       // Common UI elements - Hindi
       common: {
@@ -346,8 +346,8 @@ const resources = {
         yes: 'हां',
         no: 'नहीं',
         buttons: {
-          openModule: 'मॉड्यूल खोलें',
-        },
+          openModule: 'मॉड्यूल खोलें'
+        }
       },
       // Homepage - Hindi
       home: {
@@ -358,49 +358,49 @@ const resources = {
         features: {
           farmManagement: {
             title: 'फार्म प्रबंधन',
-            description: 'अंगूर किस्मों और रोपण विवरणों के साथ कई फार्म जोड़ें और प्रबंधित करें',
+            description: 'अंगूर किस्मों और रोपण विवरणों के साथ कई फार्म जोड़ें और प्रबंधित करें'
           },
           calculators: {
             title: 'वैज्ञानिक कैलकुलेटर',
-            description: 'ETc कैलकुलेटर, पोषक तत्व योजना, और LAI गणना',
+            description: 'ETc कैलकुलेटर, पोषक तत्व योजना, और LAI गणना'
           },
           diseasePredict: {
             title: 'बीमारी की भविष्यवाणी',
-            description: 'AI-संचालित बीमारी जोखिम मूल्यांकन और उपचार शेड्यूलिंग',
+            description: 'AI-संचालित बीमारी जोखिम मूल्यांकन और उपचार शेड्यूलिंग'
           },
           yieldPredict: {
             title: 'उत्पादन भविष्यवाणी',
-            description: 'ऐतिहासिक डेटा और स्थितियों का उपयोग करके AI-संचालित उत्पादन पूर्वानुमान',
+            description: 'ऐतिहासिक डेटा और स्थितियों का उपयोग करके AI-संचालित उत्पादन पूर्वानुमान'
           },
           journal: {
             title: 'संचालन डायरी',
-            description: 'सिंचाई, छिड़काव, फर्टिगेशन और कटाई गतिविधियों को रिकॉर्ड करें',
+            description: 'सिंचाई, छिड़काव, फर्टिगेशन और कटाई गतिविधियों को रिकॉर्ड करें'
           },
           analytics: {
             title: 'डेटा एनालिटिक्स',
-            description: 'रुझानों, उत्पादन पैटर्न और इनपुट-परिणाम सहसंबंधों को ट्रैक करें',
+            description: 'रुझानों, उत्पादन पैटर्न और इनपुट-परिणाम सहसंबंधों को ट्रैक करें'
           },
           reminders: {
             title: 'रिमाइंडर और कार्य',
-            description: 'सिंचाई कार्यक्रम और खेती के कार्यों के बारे में सूचना प्राप्त करें',
+            description: 'सिंचाई कार्यक्रम और खेती के कार्यों के बारे में सूचना प्राप्त करें'
           },
           settings: {
             title: 'सेटिंग्स',
-            description: 'भाषा प्राथमिकताएं, डेटा निर्यात, और ऐप कॉन्फ़िगरेशन',
-          },
+            description: 'भाषा प्राथमिकताएं, डेटा निर्यात, और ऐप कॉन्फ़िगरेशन'
+          }
         },
         gettingStarted: {
           title: 'शुरुआत करें',
           description:
             'अपने फार्म विवरण जोड़कर शुरुआत करें और हमारे वैज्ञानिक कैलकुलेटर का उपयोग करें',
-          button: 'अपना पहला फार्म जोड़ें',
+          button: 'अपना पहला फार्म जोड़ें'
         },
         joinToday: {
           title: 'आज ही वाइनसाइट में शामिल हों',
           description:
             'अपने अंगूर बाग संचालन को वैज्ञानिक रूप से प्रबंधित करने के लिए Google के साथ साइन इन करें',
-          button: 'Google के साथ साइन इन करें',
-        },
+          button: 'Google के साथ साइन इन करें'
+        }
       },
       // Farm Management - Hindi
       farm: {
@@ -418,7 +418,7 @@ const resources = {
         addFirstFarm: 'अपना पहला फार्म जोड़ें',
         farmAdded: 'फार्म सफलतापूर्वक जोड़ा गया',
         farmUpdated: 'फार्म सफलतापूर्वक अपडेट किया गया',
-        farmDeleted: 'फार्म सफलतापूर्वक हटाया गया',
+        farmDeleted: 'फार्म सफलतापूर्वक हटाया गया'
       },
       // Calculators - Hindi
       calculators: {
@@ -439,7 +439,7 @@ const resources = {
           kc: 'फसल गुणांक',
           etc: 'फसल वाष्पोत्सर्जन',
           irrigationNeed: 'सिंचाई की आवश्यकता',
-          recommendation: 'सिंचाई सिफारिश',
+          recommendation: 'सिंचाई सिफारिश'
         },
         lai: {
           title: 'LAI कैलकुलेटर',
@@ -453,7 +453,7 @@ const resources = {
           lai: 'पत्ती क्षेत्र सूचकांक',
           canopyStatus: 'कैनोपी स्थिति',
           leafAreaRatio: 'पत्ती क्षेत्र से जमीन अनुपात',
-          recommendations: 'प्रबंधन सिफारिशें',
+          recommendations: 'प्रबंधन सिफारिशें'
         },
         nutrient: {
           title: 'पोषक तत्व कैलकुलेटर',
@@ -468,7 +468,7 @@ const resources = {
           potassium: 'पोटाशियम (ppm)',
           results: 'पोषक तत्व सिफारिशें',
           fertilizerProgram: 'उर्वरक कार्यक्रम',
-          applicationSchedule: 'अनुप्रयोग अनुसूची',
+          applicationSchedule: 'अनुप्रयोग अनुसूची'
         },
         discharge: {
           title: 'सिस्टम डिस्चार्ज कैलकुलेटर',
@@ -481,8 +481,8 @@ const resources = {
           results: 'सिस्टम डिजाइन परिणाम',
           flowRate: 'सिस्टम प्रवाह दर',
           pumpCapacity: 'पंप क्षमता',
-          economics: 'लागत विश्लेषण',
-        },
+          economics: 'लागत विश्लेषण'
+        }
       },
       // Journal/Operations - Hindi
       journal: {
@@ -493,7 +493,7 @@ const resources = {
           duration: 'अवधि (घंटे)',
           moistureStatus: 'नमी की स्थिति',
           systemDischarge: 'सिस्टम डिस्चार्ज (L/h)',
-          addRecord: 'सिंचाई रिकॉर्ड जोड़ें',
+          addRecord: 'सिंचाई रिकॉर्ड जोड़ें'
         },
         spray: {
           title: 'छिड़काव रिकॉर्ड',
@@ -502,7 +502,7 @@ const resources = {
           dose: 'खुराक',
           weather: 'मौसम की स्थिति',
           operator: 'संचालक',
-          addRecord: 'छिड़काव रिकॉर्ड जोड़ें',
+          addRecord: 'छिड़काव रिकॉर्ड जोड़ें'
         },
         fertigation: {
           title: 'फर्टिगेशन रिकॉर्ड',
@@ -510,7 +510,7 @@ const resources = {
           concentration: 'सांद्रता',
           phLevel: 'pH स्तर',
           ecLevel: 'EC स्तर',
-          addRecord: 'फर्टिगेशन रिकॉर्ड जोड़ें',
+          addRecord: 'फर्टिगेशन रिकॉर्ड जोड़ें'
         },
         harvest: {
           title: 'फसल रिकॉर्ड',
@@ -518,7 +518,7 @@ const resources = {
           buyer: 'खरीदार',
           pricePerKg: 'प्रति किलो मूल्य',
           totalValue: 'कुल मूल्य',
-          addRecord: 'फसल रिकॉर्ड जोड़ें',
+          addRecord: 'फसल रिकॉर्ड जोड़ें'
         },
         expense: {
           title: 'व्यय रिकॉर्ड',
@@ -527,8 +527,8 @@ const resources = {
           amount: 'राशि',
           vendor: 'विक्रेता',
           paymentMethod: 'भुगतान विधि',
-          addRecord: 'व्यय रिकॉर्ड जोड़ें',
-        },
+          addRecord: 'व्यय रिकॉर्ड जोड़ें'
+        }
       },
       // Export - Hindi
       export: {
@@ -552,7 +552,7 @@ const resources = {
         clearAll: 'सभी साफ करें',
         generateExport: 'निर्यात जेनरेट करें',
         noData: 'कोई डेटा नहीं',
-        exportSummary: 'निर्यात सारांश',
+        exportSummary: 'निर्यात सारांश'
       },
       // Growth Stages - Hindi
       growthStages: {
@@ -562,19 +562,19 @@ const resources = {
         fruitSet: 'फल लगना',
         veraison: 'फल पकना',
         harvest: 'कटाई',
-        postHarvest: 'कटाई के बाद',
+        postHarvest: 'कटाई के बाद'
       },
       // Irrigation Methods - Hindi
       irrigationMethods: {
         drip: 'ड्रिप सिंचाई',
         sprinkler: 'स्प्रिंकलर',
-        surface: 'सतही सिंचाई',
+        surface: 'सतही सिंचाई'
       },
       // Soil Types - Hindi
       soilTypes: {
         sandy: 'बलुई',
         loamy: 'दोमट',
-        clay: 'चिकनी',
+        clay: 'चिकनी'
       },
       // Units - Hindi
       units: {
@@ -590,9 +590,9 @@ const resources = {
         days: 'दिन',
         kg: 'किलो',
         tons: 'टन',
-        rupees: '₹',
-      },
-    },
+        rupees: '₹'
+      }
+    }
   },
   mr: {
     translation: {
@@ -608,7 +608,7 @@ const resources = {
         weather: 'हवामान',
         reminders: 'स्मरणपत्र',
         reports: 'अहवाल',
-        settings: 'सेटिंग्ज',
+        settings: 'सेटिंग्ज'
       },
       // Common UI elements - Marathi
       common: {
@@ -642,8 +642,8 @@ const resources = {
         yes: 'होय',
         no: 'नाही',
         buttons: {
-          openModule: 'मॉड्यूल उघडा',
-        },
+          openModule: 'मॉड्यूल उघडा'
+        }
       },
       // Homepage - Marathi
       home: {
@@ -654,48 +654,48 @@ const resources = {
         features: {
           farmManagement: {
             title: 'शेत व्यवस्थापन',
-            description: 'द्राक्ष जाती आणि लागवड तपशीलांसह अनेक शेत जोडा आणि व्यवस्थापित करा',
+            description: 'द्राक्ष जाती आणि लागवड तपशीलांसह अनेक शेत जोडा आणि व्यवस्थापित करा'
           },
           calculators: {
             title: 'वैज्ञानिक कॅल्क्युलेटर',
-            description: 'ETc कॅल्क्युलेटर, पोषक तत्व नियोजन आणि LAI गणना',
+            description: 'ETc कॅल्क्युलेटर, पोषक तत्व नियोजन आणि LAI गणना'
           },
           diseasePredict: {
             title: 'रोग अंदाज',
-            description: 'AI-संचालित रोग जोखीम मूल्यांकन आणि उपचार शेड्यूलिंग',
+            description: 'AI-संचालित रोग जोखीम मूल्यांकन आणि उपचार शेड्यूलिंग'
           },
           yieldPredict: {
             title: 'उत्पादन अंदाज',
-            description: 'ऐतिहासिक डेटा आणि परिस्थितींचा वापर करून AI-संचालित उत्पादन अंदाज',
+            description: 'ऐतिहासिक डेटा आणि परिस्थितींचा वापर करून AI-संचालित उत्पादन अंदाज'
           },
           journal: {
             title: 'संचालन नोंदवही',
-            description: 'सिंचन, फवारणी, फर्टिगेशन आणि कापणी क्रियाकलाप नोंदवा',
+            description: 'सिंचन, फवारणी, फर्टिगेशन आणि कापणी क्रियाकलाप नोंदवा'
           },
           analytics: {
             title: 'डेटा एनालिटिक्स',
-            description: 'ट्रेंड, उत्पादन पॅटर्न आणि इनपुट-परिणाम सहसंबंध ट्रॅक करा',
+            description: 'ट्रेंड, उत्पादन पॅटर्न आणि इनपुट-परिणाम सहसंबंध ट्रॅक करा'
           },
           reminders: {
             title: 'स्मरणपत्र आणि कार्य',
-            description: 'सिंचन शेड्यूल आणि शेती कार्यांची सूचना मिळवा',
+            description: 'सिंचन शेड्यूल आणि शेती कार्यांची सूचना मिळवा'
           },
           settings: {
             title: 'सेटिंग्स',
-            description: 'भाषा प्राधान्य, डेटा निर्यात आणि अॅप कॉन्फिगरेशन',
-          },
+            description: 'भाषा प्राधान्य, डेटा निर्यात आणि अॅप कॉन्फिगरेशन'
+          }
         },
         gettingStarted: {
           title: 'सुरुवात करा',
           description: 'तुमचे शेत तपशील जोडून सुरुवात करा आणि आमचे वैज्ञानिक कॅल्क्युलेटर वापरा',
-          button: 'तुमचे पहिले शेत जोडा',
+          button: 'तुमचे पहिले शेत जोडा'
         },
         joinToday: {
           title: 'आज वाइनसाइटमध्ये सामील व्हा',
           description:
             'तुमच्या द्राक्षबाग संचालनाचे वैज्ञानिक व्यवस्थापन करण्यासाठी Google सह साइन इन करा',
-          button: 'Google सह साइन इन करा',
-        },
+          button: 'Google सह साइन इन करा'
+        }
       },
       // Farm Management - Marathi
       farm: {
@@ -713,7 +713,7 @@ const resources = {
         addFirstFarm: 'तुमचे पहिले शेत जोडा',
         farmAdded: 'शेत यशस्वीरीत्या जोडले गेले',
         farmUpdated: 'शेत यशस्वीरीत्या अपडेट केले गेले',
-        farmDeleted: 'शेत यशस्वीरीत्या हटवले गेले',
+        farmDeleted: 'शेत यशस्वीरीत्या हटवले गेले'
       },
       // Calculators - Marathi
       calculators: {
@@ -734,7 +734,7 @@ const resources = {
           kc: 'पीक गुणांक',
           etc: 'पीक बाष्पोत्सर्जन',
           irrigationNeed: 'पाणी पुरवठा आवश्यकता',
-          recommendation: 'पाणी पुरवठा शिफारस',
+          recommendation: 'पाणी पुरवठा शिफारस'
         },
         lai: {
           title: 'LAI कॅल्क्युलेटर',
@@ -748,7 +748,7 @@ const resources = {
           lai: 'पान क्षेत्र निर्देशांक',
           canopyStatus: 'छताची स्थिती',
           leafAreaRatio: 'पान क्षेत्र ते जमीन गुणोत्तर',
-          recommendations: 'व्यवस्थापन शिफारसी',
+          recommendations: 'व्यवस्थापन शिफारसी'
         },
         nutrient: {
           title: 'पोषक तत्व कॅल्क्युलेटर',
@@ -763,7 +763,7 @@ const resources = {
           potassium: 'पोटॅशियम (ppm)',
           results: 'पोषक तत्व शिफारसी',
           fertilizerProgram: 'खत कार्यक्रम',
-          applicationSchedule: 'वापर वेळापत्रक',
+          applicationSchedule: 'वापर वेळापत्रक'
         },
         discharge: {
           title: 'सिस्टम डिस्चार्ज कॅल्क्युलेटर',
@@ -776,8 +776,8 @@ const resources = {
           results: 'सिस्टम डिझाइन परिणाम',
           flowRate: 'सिस्टम प्रवाह दर',
           pumpCapacity: 'पंप क्षमता',
-          economics: 'खर्च विश्लेषण',
-        },
+          economics: 'खर्च विश्लेषण'
+        }
       },
       // Journal/Operations - Marathi
       journal: {
@@ -788,7 +788,7 @@ const resources = {
           duration: 'कालावधी (तास)',
           moistureStatus: 'आर्द्रता स्थिती',
           systemDischarge: 'सिस्टम डिस्चार्ज (L/h)',
-          addRecord: 'पाणी पुरवठा नोंद जोडा',
+          addRecord: 'पाणी पुरवठा नोंद जोडा'
         },
         spray: {
           title: 'फवारणी नोंदी',
@@ -797,7 +797,7 @@ const resources = {
           dose: 'डोस',
           weather: 'हवामान स्थिती',
           operator: 'संचालक',
-          addRecord: 'फवारणी नोंद जोडा',
+          addRecord: 'फवारणी नोंद जोडा'
         },
         fertigation: {
           title: 'फर्टिगेशन नोंदी',
@@ -805,7 +805,7 @@ const resources = {
           concentration: 'एकाग्रता',
           phLevel: 'pH पातळी',
           ecLevel: 'EC पातळी',
-          addRecord: 'फर्टिगेशन नोंद जोडा',
+          addRecord: 'फर्टिगेशन नोंद जोडा'
         },
         harvest: {
           title: 'कापणी नोंदी',
@@ -813,7 +813,7 @@ const resources = {
           buyer: 'खरेदीदार',
           pricePerKg: 'प्रति किलो किंमत',
           totalValue: 'एकूण मूल्य',
-          addRecord: 'कापणी नोंद जोडा',
+          addRecord: 'कापणी नोंद जोडा'
         },
         expense: {
           title: 'खर्च नोंदी',
@@ -822,8 +822,8 @@ const resources = {
           amount: 'रक्कम',
           vendor: 'विक्रेता',
           paymentMethod: 'पेमेंट पद्धत',
-          addRecord: 'खर्च नोंद जोडा',
-        },
+          addRecord: 'खर्च नोंद जोडा'
+        }
       },
       // Export - Marathi
       export: {
@@ -847,7 +847,7 @@ const resources = {
         clearAll: 'सर्व साफ करा',
         generateExport: 'निर्यात तयार करा',
         noData: 'डेटा नाही',
-        exportSummary: 'निर्यात सारांश',
+        exportSummary: 'निर्यात सारांश'
       },
       // Growth Stages - Marathi
       growthStages: {
@@ -857,19 +857,19 @@ const resources = {
         fruitSet: 'फळ बांधणे',
         veraison: 'फळ पिकणे',
         harvest: 'कापणी',
-        postHarvest: 'कापणी नंतर',
+        postHarvest: 'कापणी नंतर'
       },
       // Irrigation Methods - Marathi
       irrigationMethods: {
         drip: 'ठिबक सिंचन',
         sprinkler: 'फवारणी',
-        surface: 'भूपृष्ठीय सिंचन',
+        surface: 'भूपृष्ठीय सिंचन'
       },
       // Soil Types - Marathi
       soilTypes: {
         sandy: 'वाळूमय',
         loamy: 'दोमट',
-        clay: 'चिकणमाती',
+        clay: 'चिकणमाती'
       },
       // Units - Marathi
       units: {
@@ -885,10 +885,10 @@ const resources = {
         days: 'दिवस',
         kg: 'किलो',
         tons: 'टन',
-        rupees: '₹',
-      },
-    },
-  },
+        rupees: '₹'
+      }
+    }
+  }
 }
 
 i18n.use(initReactI18next).init({
@@ -897,8 +897,8 @@ i18n.use(initReactI18next).init({
   fallbackLng: 'en',
   debug: false,
   interpolation: {
-    escapeValue: false,
-  },
+    escapeValue: false
+  }
 })
 
 export default i18n

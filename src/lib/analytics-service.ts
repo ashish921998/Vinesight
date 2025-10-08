@@ -69,7 +69,7 @@ export class AnalyticsService {
       costAnalysis,
       yieldAnalysis,
       performanceMetrics,
-      lastUpdated: new Date(),
+      lastUpdated: new Date()
     }
   }
 
@@ -94,7 +94,7 @@ export class AnalyticsService {
           // Monthly tracking
           const monthYear = new Date(expense.date).toLocaleDateString('en-US', {
             month: 'short',
-            year: '2-digit',
+            year: '2-digit'
           })
           const monthData = monthlyData.get(monthYear) || { costs: 0, revenue: 0 }
           monthData.costs += expense.cost
@@ -109,7 +109,7 @@ export class AnalyticsService {
 
           const monthYear = new Date(harvest.date).toLocaleDateString('en-US', {
             month: 'short',
-            year: '2-digit',
+            year: '2-digit'
           })
           const monthData = monthlyData.get(monthYear) || { costs: 0, revenue: 0 }
           monthData.revenue += revenue
@@ -125,7 +125,7 @@ export class AnalyticsService {
       .map(([category, amount]) => ({
         category,
         amount,
-        percentage: (amount / totalCosts) * 100,
+        percentage: (amount / totalCosts) * 100
       }))
       .sort((a, b) => b.amount - a.amount)
 
@@ -135,7 +135,7 @@ export class AnalyticsService {
         month,
         costs: data.costs,
         revenue: data.revenue,
-        profit: data.revenue - data.costs,
+        profit: data.revenue - data.costs
       }))
       .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime())
       .slice(-12)
@@ -149,7 +149,7 @@ export class AnalyticsService {
       profitMargin,
       costBreakdown,
       monthlyTrends,
-      roi,
+      roi
     }
   }
 
@@ -186,7 +186,7 @@ export class AnalyticsService {
           yieldTrends.push({
             year,
             yield: data.yield,
-            quality: avgQuality,
+            quality: avgQuality
           })
         })
       } catch (error) {
@@ -210,8 +210,8 @@ export class AnalyticsService {
       benchmarkComparison: {
         your: currentYieldPerHa,
         regional: REGIONAL_BENCHMARK,
-        optimal: OPTIMAL_BENCHMARK,
-      },
+        optimal: OPTIMAL_BENCHMARK
+      }
     }
   }
 
@@ -221,7 +221,7 @@ export class AnalyticsService {
       'Grade A': 4,
       'Grade B': 3,
       'Grade C': 2,
-      'Below Grade': 1,
+      'Below Grade': 1
     }
 
     const totalScore = grades.reduce((sum, grade) => sum + (gradeScores[grade] || 2), 0)
@@ -236,7 +236,7 @@ export class AnalyticsService {
 
   private static calculateYieldProjection(
     trends: { year: string; yield: number }[],
-    current: number,
+    current: number
   ): number {
     if (trends.length < 2) return current * 1.05 // Conservative 5% growth
 
@@ -315,7 +315,7 @@ export class AnalyticsService {
       alerts.push({
         type: 'warning',
         message: 'Irrigation efficiency could be improved',
-        action: 'Review ETc calculations and adjust schedules',
+        action: 'Review ETc calculations and adjust schedules'
       })
     }
 
@@ -324,7 +324,7 @@ export class AnalyticsService {
       alerts.push({
         type: 'info',
         message: 'Nutrition management needs attention',
-        action: 'Schedule soil analysis and adjust fertilizer program',
+        action: 'Schedule soil analysis and adjust fertilizer program'
       })
     }
 
@@ -335,7 +335,7 @@ export class AnalyticsService {
     if (overallScore > 85) {
       alerts.push({
         type: 'success',
-        message: 'Excellent farm performance! Keep up the great work.',
+        message: 'Excellent farm performance! Keep up the great work.'
       })
     }
 
@@ -345,10 +345,10 @@ export class AnalyticsService {
         irrigation: { score: irrigationScore, trend: 'stable' },
         nutrition: { score: nutritionScore, trend: 'stable' },
         pestManagement: { score: pestScore, trend: 'stable' },
-        yieldQuality: { score: yieldScore, trend: 'stable' },
+        yieldQuality: { score: yieldScore, trend: 'stable' }
       },
       recommendations,
-      alerts,
+      alerts
     }
   }
 
@@ -399,7 +399,7 @@ export class AnalyticsService {
     const preventiveCount = sprays.filter(
       (s) =>
         s.pestDisease?.toLowerCase().includes('preventive') ||
-        s.pestDisease?.toLowerCase().includes('prophylactic'),
+        s.pestDisease?.toLowerCase().includes('prophylactic')
     ).length
 
     const preventiveRatio = preventiveCount / sprays.length
@@ -430,7 +430,7 @@ export class AnalyticsService {
       'Grade A': 10,
       'Grade B': 5,
       'Grade C': 0,
-      'Below Grade': -5,
+      'Below Grade': -5
     }
 
     const avgGradeScore =

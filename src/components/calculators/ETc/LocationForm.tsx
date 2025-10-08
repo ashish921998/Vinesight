@@ -96,7 +96,7 @@ export function LocationForm({ formData, onInputChange, onLocationSelect }: Loca
         // Try to get location name
         const locationInfo = await OpenMeteoGeocodingService.reverseGeocode(
           coords.latitude,
-          coords.longitude,
+          coords.longitude
         )
         if (locationInfo) {
           setSearchQuery(OpenMeteoGeocodingService.formatLocationDisplay(locationInfo))

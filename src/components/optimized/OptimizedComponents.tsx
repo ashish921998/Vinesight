@@ -24,20 +24,20 @@ export const OptimizedFinancialSummary = memo<FinancialSummaryProps>(
           icon: TrendingUp,
           color: 'text-green-600',
           bg: 'bg-green-50',
-          label: 'Profitable',
+          label: 'Profitable'
         }
       if (netProfit < 0)
         return {
           icon: TrendingDown,
           color: 'text-red-600',
           bg: 'bg-red-50',
-          label: 'Loss',
+          label: 'Loss'
         }
       return {
         icon: BarChart3,
         color: 'text-gray-600',
         bg: 'bg-gray-50',
-        label: 'Break-even',
+        label: 'Break-even'
       }
     }, [netProfit])
 
@@ -46,13 +46,13 @@ export const OptimizedFinancialSummary = memo<FinancialSummaryProps>(
         style: 'currency',
         currency: 'INR',
         minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        maximumFractionDigits: 0
       })
 
       return {
         revenue: formatter.format(totalRevenue),
         costs: formatter.format(totalCosts),
-        profit: formatter.format(netProfit),
+        profit: formatter.format(netProfit)
       }
     }, [totalRevenue, totalCosts, netProfit])
 
@@ -135,7 +135,7 @@ export const OptimizedFinancialSummary = memo<FinancialSummaryProps>(
         </Card>
       </div>
     )
-  },
+  }
 )
 
 OptimizedFinancialSummary.displayName = 'OptimizedFinancialSummary'
@@ -187,14 +187,14 @@ export const OptimizedDataTable = memo<OptimizedDataTableProps>(
       (item: DataItem) => {
         onItemClick?.(item)
       },
-      [onItemClick],
+      [onItemClick]
     )
 
     const formatValue = useCallback((value: number) => {
       return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
-        minimumFractionDigits: 0,
+        minimumFractionDigits: 0
       }).format(value)
     }, [])
 
@@ -202,7 +202,7 @@ export const OptimizedDataTable = memo<OptimizedDataTableProps>(
       return new Date(dateStr).toLocaleDateString('en-IN', {
         day: 'numeric',
         month: 'short',
-        year: 'numeric',
+        year: 'numeric'
       })
     }, [])
 
@@ -266,7 +266,7 @@ export const OptimizedDataTable = memo<OptimizedDataTableProps>(
         </CardContent>
       </Card>
     )
-  },
+  }
 )
 
 OptimizedDataTable.displayName = 'OptimizedDataTable'
@@ -287,7 +287,7 @@ export const OptimizedChartContainer = memo<OptimizedChartContainerProps>(
       return data.map((item) => ({
         ...item,
         formattedValue:
-          typeof item.value === 'number' ? item.value.toLocaleString('en-IN') : item.value,
+          typeof item.value === 'number' ? item.value.toLocaleString('en-IN') : item.value
       }))
     }, [data])
 
@@ -363,7 +363,7 @@ export const OptimizedChartContainer = memo<OptimizedChartContainerProps>(
         </CardContent>
       </Card>
     )
-  },
+  }
 )
 
 OptimizedChartContainer.displayName = 'OptimizedChartContainer'

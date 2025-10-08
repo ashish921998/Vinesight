@@ -182,7 +182,7 @@ export default function LandingPage() {
                   alt=""
                   className="w-[936px] sm:w-[1404px] md:w-[2106px] lg:w-[2808px] h-auto opacity-30 sm:opacity-40 md:opacity-50 mix-blend-multiply"
                   style={{
-                    filter: 'hue-rotate(15deg) saturate(0.7) brightness(1.2)',
+                    filter: 'hue-rotate(15deg) saturate(0.7) brightness(1.2)'
                   }}
                 />
               </div>
@@ -513,7 +513,7 @@ function FeatureCard({
   description,
   isActive,
   progress,
-  onClick,
+  onClick
 }: {
   title: string
   description: string

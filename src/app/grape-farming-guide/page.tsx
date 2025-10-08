@@ -11,7 +11,7 @@ import {
   TrendingUp,
   Thermometer,
   Users,
-  Award,
+  Award
 } from 'lucide-react'
 
 export default function GrapeFarmingGuide() {
@@ -24,8 +24,8 @@ export default function GrapeFarmingGuide() {
         'Selecting the right grape varieties for your climate',
         'Site selection and soil preparation',
         'Planning your vineyard layout',
-        'Understanding trellis systems',
-      ],
+        'Understanding trellis systems'
+      ]
     },
     {
       icon: Calendar,
@@ -35,8 +35,8 @@ export default function GrapeFarmingGuide() {
         'Spring: Pruning and canopy management',
         'Summer: Disease prevention and irrigation',
         'Fall: Harvest timing and techniques',
-        'Winter: Dormant season care',
-      ],
+        'Winter: Dormant season care'
+      ]
     },
     {
       icon: Droplets,
@@ -46,8 +46,8 @@ export default function GrapeFarmingGuide() {
         'Drip irrigation system setup',
         'Calculating water requirements',
         'Deficit irrigation strategies',
-        'Monitoring soil moisture',
-      ],
+        'Monitoring soil moisture'
+      ]
     },
     {
       icon: Bug,
@@ -57,32 +57,32 @@ export default function GrapeFarmingGuide() {
         'Common grape diseases identification',
         'Integrated pest management (IPM)',
         'Organic treatment options',
-        'Preventive spray schedules',
-      ],
-    },
+        'Preventive spray schedules'
+      ]
+    }
   ]
 
   const benefits = [
     {
       icon: TrendingUp,
       title: 'Increased Yields',
-      description: 'Scientific approach can boost production by 30-40%',
+      description: 'Scientific approach can boost production by 30-40%'
     },
     {
       icon: Thermometer,
       title: 'Climate Resilience',
-      description: 'Adaptive techniques for changing weather patterns',
+      description: 'Adaptive techniques for changing weather patterns'
     },
     {
       icon: Users,
       title: 'Community Support',
-      description: 'Connect with experienced grape farmers',
+      description: 'Connect with experienced grape farmers'
     },
     {
       icon: Award,
       title: 'Quality Improvement',
-      description: 'Better grape quality leads to premium pricing',
-    },
+      description: 'Better grape quality leads to premium pricing'
+    }
   ]
 
   return (

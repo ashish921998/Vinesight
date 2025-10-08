@@ -20,21 +20,21 @@ const calculatorCategories = [
         id: 'etc',
         title: 'Water Needs Calculator',
         description: 'Calculate daily water requirements for optimal irrigation',
-        component: ETcCalculatorComponent,
+        component: ETcCalculatorComponent
       },
       {
         id: 'mad',
         title: 'MAD (Maximum Allowable Deficit)',
         description: 'Calculate maximum allowable water deficit and refill tank requirements',
-        component: MADCalculatorComponent,
+        component: MADCalculatorComponent
       },
       {
         id: 'system-discharge',
         title: 'System Discharge Calculator',
         description: 'Calculate system discharge rates for irrigation planning',
-        component: SystemDischargeCalculatorComponent,
-      },
-    ],
+        component: SystemDischargeCalculatorComponent
+      }
+    ]
   },
   {
     title: 'Crop & Growth Analysis',
@@ -45,9 +45,9 @@ const calculatorCategories = [
         id: 'lai',
         title: 'Leaf Area Index',
         description: 'Calculate leaf coverage and canopy development',
-        component: LAICalculatorComponent,
-      },
-    ],
+        component: LAICalculatorComponent
+      }
+    ]
   },
   {
     title: 'Nutrition Management',
@@ -58,10 +58,10 @@ const calculatorCategories = [
         id: 'nutrient',
         title: 'Fertilizer Calculator',
         description: 'NPK and micronutrient recommendations by growth stage',
-        component: NutrientCalculatorComponent,
-      },
-    ],
-  },
+        component: NutrientCalculatorComponent
+      }
+    ]
+  }
 ]
 
 export default function CalculatorsPage() {

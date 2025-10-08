@@ -22,7 +22,7 @@ import {
   ArrowLeft,
   Phone,
   Clock,
-  Users,
+  Users
 } from 'lucide-react'
 import { SEOSchema } from '@/components/SEOSchema'
 import Link from 'next/link'
@@ -51,21 +51,21 @@ const helpCategories: HelpCategory[] = [
     description: 'Learn the basics of VineSight and set up your first farm',
     icon: BookOpen,
     articles: 8,
-    popular: true,
+    popular: true
   },
   {
     id: 'calculators',
     title: 'Scientific Calculators',
     description: 'Using ETc, MAD, Nutrient, and other farming calculators',
     icon: Calculator,
-    articles: 12,
+    articles: 12
   },
   {
     id: 'data-logging',
     title: 'Data Logging',
     description: 'Recording irrigation, spray, harvest, and expense data',
     icon: Droplets,
-    articles: 15,
+    articles: 15
   },
   {
     id: 'ai-features',
@@ -73,36 +73,36 @@ const helpCategories: HelpCategory[] = [
     description: 'Leveraging AI recommendations and predictions',
     icon: Brain,
     articles: 10,
-    popular: true,
+    popular: true
   },
   {
     id: 'analytics',
     title: 'Analytics & Reports',
     description: 'Understanding your farm performance data',
     icon: BarChart3,
-    articles: 9,
+    articles: 9
   },
   {
     id: 'mobile-app',
     title: 'Mobile App',
     description: 'Using VineSight on your smartphone',
     icon: Smartphone,
-    articles: 6,
+    articles: 6
   },
   {
     id: 'automation',
     title: 'IoT & Automation',
     description: 'Connecting sensors and automating tasks',
     icon: Zap,
-    articles: 7,
+    articles: 7
   },
   {
     id: 'account',
     title: 'Account & Security',
     description: 'Managing your account and data security',
     icon: Shield,
-    articles: 5,
-  },
+    articles: 5
+  }
 ]
 
 const popularFAQs: FAQItem[] = [
@@ -112,7 +112,7 @@ const popularFAQs: FAQItem[] = [
     answer:
       'To set up your first farm: 1) Sign in to your VineSight account, 2) Click "Add Farm" on the dashboard, 3) Enter your farm details including location, area, and crop type, 4) Set up your irrigation system parameters, and 5) Start logging your first activities.',
     category: 'getting-started',
-    tags: ['setup', 'farm', 'beginner'],
+    tags: ['setup', 'farm', 'beginner']
   },
   {
     id: 'etc-calculator',
@@ -120,7 +120,7 @@ const popularFAQs: FAQItem[] = [
     answer:
       "The ETc (Crop Evapotranspiration) calculator helps determine your crop's water requirements. Enter your crop type, growth stage, weather data, and soil conditions to get precise irrigation recommendations based on FAO-56 methodology.",
     category: 'calculators',
-    tags: ['ETc', 'irrigation', 'water', 'calculator'],
+    tags: ['ETc', 'irrigation', 'water', 'calculator']
   },
   {
     id: 'ai-recommendations',
@@ -128,7 +128,7 @@ const popularFAQs: FAQItem[] = [
     answer:
       "Our AI recommendations are based on scientific models, weather data, and your farm's historical performance. They achieve 85%+ accuracy for pest predictions and 90%+ for irrigation timing, continuously improving with more data.",
     category: 'ai-features',
-    tags: ['AI', 'accuracy', 'predictions'],
+    tags: ['AI', 'accuracy', 'predictions']
   },
   {
     id: 'data-export',
@@ -136,7 +136,7 @@ const popularFAQs: FAQItem[] = [
     answer:
       'Yes! VineSight supports exporting your data in multiple formats including CSV, PDF reports, and Excel. Go to Analytics > Export Data to download your records for any date range.',
     category: 'analytics',
-    tags: ['export', 'data', 'CSV', 'reports'],
+    tags: ['export', 'data', 'CSV', 'reports']
   },
   {
     id: 'mobile-offline',
@@ -144,7 +144,7 @@ const popularFAQs: FAQItem[] = [
     answer:
       'The mobile app supports offline data entry for critical operations like logging irrigation and spray records. Data syncs automatically when you regain internet connection.',
     category: 'mobile-app',
-    tags: ['mobile', 'offline', 'sync'],
+    tags: ['mobile', 'offline', 'sync']
   },
   {
     id: 'pest-alerts',
@@ -152,8 +152,8 @@ const popularFAQs: FAQItem[] = [
     answer:
       "Our AI analyzes weather patterns, historical data, and regional pest reports to predict disease/pest outbreaks 24-72 hours in advance. You'll receive notifications with prevention recommendations.",
     category: 'ai-features',
-    tags: ['pest', 'alerts', 'prediction', 'weather'],
-  },
+    tags: ['pest', 'alerts', 'prediction', 'weather']
+  }
 ]
 
 export default function HelpCenter() {
@@ -165,13 +165,13 @@ export default function HelpCenter() {
     (faq) =>
       faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
       faq.answer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      faq.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())),
+      faq.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
   const filteredCategories = helpCategories.filter(
     (category) =>
       category.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      category.description.toLowerCase().includes(searchQuery.toLowerCase()),
+      category.description.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (

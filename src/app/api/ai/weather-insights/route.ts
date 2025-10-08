@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     if (!weatherData) {
       return new Response(JSON.stringify({ error: 'Weather data is required' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }
       })
     }
 
@@ -27,10 +27,10 @@ export async function POST(request: NextRequest) {
         temperature: weatherData?.temperature,
         humidity: weatherData?.humidity,
         wind_speed: weatherData?.wind_speed,
-        precipitation: weatherData?.precipitation,
+        precipitation: weatherData?.precipitation
       },
       farmLocation: farmData?.region,
-      recentActivities: history?.slice(0, 5) || [],
+      recentActivities: history?.slice(0, 5) || []
     }
 
     const prompt = `
@@ -61,11 +61,11 @@ Return ONLY valid JSON array:
         messages: [
           {
             role: 'system' as const,
-            content: 'You are an agricultural AI expert specializing in grape farming in India.',
+            content: 'You are an agricultural AI expert specializing in grape farming in India.'
           },
-          { role: 'user' as const, content: prompt },
+          { role: 'user' as const, content: prompt }
         ],
-        temperature: 0.4,
+        temperature: 0.4
       })
 
       const parsed = JSON.parse(result.text)
@@ -83,11 +83,11 @@ Return ONLY valid JSON array:
         subtitle: insight.subtitle || 'Check current conditions',
         confidence: Math.min(Math.max(insight.confidence || 0.5, 0), 1),
         timeRelevant: Boolean(insight.timeRelevant),
-        actionLabel: insight.actionLabel || 'View Details',
+        actionLabel: insight.actionLabel || 'View Details'
       }))
 
       return new Response(JSON.stringify({ success: true, data: insights }), {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }
       })
     } catch (aiError) {
       // AI service failed, return empty array as fallback
@@ -95,11 +95,11 @@ Return ONLY valid JSON array:
         JSON.stringify({
           success: true,
           data: [],
-          fallback: true,
+          fallback: true
         }),
         {
-          headers: { 'Content-Type': 'application/json' },
-        },
+          headers: { 'Content-Type': 'application/json' }
+        }
       )
     }
   } catch (error) {
@@ -113,12 +113,12 @@ Return ONLY valid JSON array:
       JSON.stringify({
         success: false,
         error: 'Failed to generate weather insights',
-        data: [],
+        data: []
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      },
+        headers: { 'Content-Type': 'application/json' }
+      }
     )
   }
 }

@@ -94,7 +94,7 @@ export class OpenMeteoWeatherService {
     latitude: number,
     longitude: number,
     startDate?: string,
-    endDate?: string,
+    endDate?: string
   ): Promise<OpenMeteoWeatherData[]> {
     // Default to today if no dates provided
     const today = new Date().toISOString().split('T')[0]
@@ -116,11 +116,11 @@ export class OpenMeteoWeatherService {
         'precipitation_sum',
         'shortwave_radiation_sum',
         'sunshine_duration',
-        'et0_fao_evapotranspiration',
+        'et0_fao_evapotranspiration'
       ].join(','),
       timezone: 'auto',
       start_date: start,
-      end_date: end,
+      end_date: end
     })
 
     const url = `${this.BASE_URL}?${params}`
@@ -145,7 +145,7 @@ export class OpenMeteoWeatherService {
    */
   static async getCurrentWeatherData(
     latitude: number,
-    longitude: number,
+    longitude: number
   ): Promise<OpenMeteoWeatherData> {
     const weatherData = await this.getWeatherData(latitude, longitude)
     return weatherData[0] // Return today's data
@@ -197,7 +197,7 @@ export class OpenMeteoWeatherService {
         latitude: data.latitude,
         longitude: data.longitude,
         elevation: data.elevation,
-        timezone: data.timezone,
+        timezone: data.timezone
       })
     }
 
@@ -241,7 +241,7 @@ export class OpenMeteoWeatherService {
       windSpeed: openMeteoData.windSpeed10m,
       rainfall: openMeteoData.precipitationSum,
       solarRadiation: openMeteoData.shortwaveRadiationSum,
-      sunshineHours: openMeteoData.sunshineDuration,
+      sunshineHours: openMeteoData.sunshineDuration
     }
   }
 
@@ -251,7 +251,7 @@ export class OpenMeteoWeatherService {
   static async getWeatherForecast(
     latitude: number,
     longitude: number,
-    days: number = 7,
+    days: number = 7
   ): Promise<OpenMeteoWeatherData[]> {
     const today = new Date()
     const endDate = new Date(today)
@@ -269,7 +269,7 @@ export class OpenMeteoWeatherService {
   static async getHourlySolarRadiation(
     latitude: number,
     longitude: number,
-    date?: string,
+    date?: string
   ): Promise<{
     minLux: number
     maxLux: number
@@ -284,7 +284,7 @@ export class OpenMeteoWeatherService {
       hourly: 'shortwave_radiation',
       timezone: 'auto',
       start_date: targetDate,
-      end_date: targetDate,
+      end_date: targetDate
     })
 
     const url = `${this.BASE_URL}?${params}`
@@ -304,7 +304,7 @@ export class OpenMeteoWeatherService {
 
       // Convert W/m² to lux (approximate conversion: 1 W/m² ≈ 110 lux for solar radiation)
       const hourlyLux = data.hourly.shortwave_radiation.map(
-        (wPerSqM: number) => wPerSqM * 110, // Standard conversion factor for solar radiation
+        (wPerSqM: number) => wPerSqM * 110 // Standard conversion factor for solar radiation
       )
 
       // Filter out nighttime values (0 lux) for average calculation
@@ -317,7 +317,7 @@ export class OpenMeteoWeatherService {
           daylightLux.length > 0
             ? daylightLux.reduce((sum: number, lux: number) => sum + lux, 0) / daylightLux.length
             : 0,
-        hourlyLux,
+        hourlyLux
       }
     } catch (error) {
       console.error('Error fetching hourly solar radiation:', error)
@@ -330,7 +330,7 @@ export class OpenMeteoWeatherService {
    */
   static validateEToDifference(
     ourETo: number,
-    openMeteoETo: number,
+    openMeteoETo: number
   ): {
     difference: number
     percentageError: number
@@ -343,7 +343,7 @@ export class OpenMeteoWeatherService {
     return {
       difference: Number(difference.toFixed(2)),
       percentageError: Number(percentageError.toFixed(1)),
-      isAccurate,
+      isAccurate
     }
   }
 }

@@ -6,7 +6,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +16,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { Droplets, Calculator, Loader2 } from 'lucide-react'
 import { SupabaseService } from '@/lib/supabase-service'
@@ -35,11 +35,11 @@ export function WaterCalculationModal({
   isOpen,
   onClose,
   farm,
-  onCalculationComplete,
+  onCalculationComplete
 }: WaterCalculationModalProps) {
   const [formData, setFormData] = useState({
     cropCoefficient: '',
-    evapotranspiration: '',
+    evapotranspiration: ''
   })
   const [isCalculating, setIsCalculating] = useState(false)
   const [calculationResult, setCalculationResult] = useState<number | null>(null)
@@ -72,7 +72,7 @@ export function WaterCalculationModal({
       // Update farm with calculated remaining water and timestamp
       await SupabaseService.updateFarm(farm.id, {
         remainingWater: calculationResult,
-        waterCalculationUpdatedAt: new Date().toISOString(),
+        waterCalculationUpdatedAt: new Date().toISOString()
       })
 
       // Check water level and send notification if needed
@@ -95,7 +95,7 @@ export function WaterCalculationModal({
   const handleClose = () => {
     setFormData({
       cropCoefficient: '',
-      evapotranspiration: '',
+      evapotranspiration: ''
     })
     setCalculationResult(null)
     onClose()

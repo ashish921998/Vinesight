@@ -6,7 +6,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { Droplets } from 'lucide-react'
 import type { GrapeGrowthStage } from '@/lib/etc-calculator'
@@ -27,7 +27,7 @@ const growthStages = [
   { value: 'fruit_set', label: 'Fruit Set', period: 'May-Jun' },
   { value: 'veraison', label: 'Veraison', period: 'Jul-Aug' },
   { value: 'harvest', label: 'Harvest', period: 'Aug-Oct' },
-  { value: 'post_harvest', label: 'Post Harvest', period: 'Oct-Nov' },
+  { value: 'post_harvest', label: 'Post Harvest', period: 'Oct-Nov' }
 ]
 
 export function CropInformationForm({ formData, onInputChange }: CropInformationFormProps) {

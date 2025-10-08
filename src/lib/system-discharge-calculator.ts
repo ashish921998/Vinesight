@@ -105,7 +105,7 @@ const COMPONENT_COSTS = {
     mainline: 85, // per meter
     filter: 15000, // basic filter system
     pump: 25000, // per HP
-    fertigation: 35000, // basic system
+    fertigation: 35000 // basic system
   },
   sprinkler: {
     sprinkler: 150, // per piece
@@ -114,15 +114,15 @@ const COMPONENT_COSTS = {
     mainline: 95, // per meter
     filter: 8000, // basic filter
     pump: 30000, // per HP
-    fertigation: 25000,
+    fertigation: 25000
   },
   surface: {
     gates: 200, // per gate
     channels: 50, // per meter
     structures: 5000, // per acre
     pump: 20000, // per HP
-    leveling: 15000, // per acre
-  },
+    leveling: 15000 // per acre
+  }
 }
 
 // Emitter specifications database
@@ -131,7 +131,7 @@ const EMITTER_DATABASE = {
   'Standard Drip (4 L/hr)': { flowRate: 4, spacing: 40, pressure: 1.0, wetDiameter: 60 },
   'Pressure Compensating (2 L/hr)': { flowRate: 2, spacing: 30, pressure: 1.5, wetDiameter: 45 },
   'Micro-sprinkler (20 L/hr)': { flowRate: 20, spacing: 200, pressure: 1.5, wetDiameter: 300 },
-  'Micro-sprinkler (40 L/hr)': { flowRate: 40, spacing: 300, pressure: 2.0, wetDiameter: 400 },
+  'Micro-sprinkler (40 L/hr)': { flowRate: 40, spacing: 300, pressure: 2.0, wetDiameter: 400 }
 }
 
 export class SystemDischargeCalculator {
@@ -141,7 +141,7 @@ export class SystemDischargeCalculator {
   private static calculatePlantDensity(
     vineSpacing: number,
     rowSpacing: number,
-    farmArea: number,
+    farmArea: number
   ): {
     vinesPerHa: number
     totalVines: number
@@ -157,7 +157,7 @@ export class SystemDischargeCalculator {
   private static calculateSystemFlow(
     totalEmitters: number,
     emitterFlowRate: number,
-    systemType: string,
+    systemType: string
   ): number {
     let simultaneityFactor = 1.0
 
@@ -182,7 +182,7 @@ export class SystemDischargeCalculator {
    */
   private static calculatePumpCapacity(
     systemFlowRate: number,
-    totalHead: number,
+    totalHead: number
   ): { capacity: number; head: number; powerRequired: number; efficiency: number } {
     // Add safety factor
     const capacity = systemFlowRate * 1.1
@@ -195,7 +195,7 @@ export class SystemDischargeCalculator {
       capacity,
       head: totalHead,
       powerRequired: Math.ceil(powerRequired),
-      efficiency,
+      efficiency
     }
   }
 
@@ -219,7 +219,7 @@ export class SystemDischargeCalculator {
   private static calculateEfficiency(
     irrigationMethod: string,
     soilType: string,
-    systemDesign: any,
+    systemDesign: any
   ): { distributionUniformity: number; applicationEfficiency: number; waterUseEfficiency: number } {
     let distributionUniformity: number
     let applicationEfficiency: number
@@ -256,7 +256,7 @@ export class SystemDischargeCalculator {
   private static calculateCosts(
     designParams: any,
     irrigationMethod: string,
-    farmArea: number,
+    farmArea: number
   ): {
     initialCost: number
     annualOperatingCost: number
@@ -316,7 +316,7 @@ export class SystemDischargeCalculator {
       initialCost: Math.round(initialCost),
       annualOperatingCost: Math.round(annualOperatingCost),
       costPerAcre: Math.round(costPerAcre),
-      paybackPeriod: Math.round(paybackPeriod * 10) / 10,
+      paybackPeriod: Math.round(paybackPeriod * 10) / 10
     }
   }
 
@@ -325,7 +325,7 @@ export class SystemDischargeCalculator {
    */
   private static generateRecommendations(
     inputs: SystemDesignInputs,
-    results: any,
+    results: any
   ): { systemDesign: string[]; maintenance: string[]; optimization: string[] } {
     const systemDesign: string[] = []
     const maintenance: string[] = []
@@ -388,7 +388,7 @@ export class SystemDischargeCalculator {
       soilType,
       availablePressure,
       peakETc,
-      dailyIrrigationHours,
+      dailyIrrigationHours
     } = inputs
 
     // Calculate plant density
@@ -407,7 +407,7 @@ export class SystemDischargeCalculator {
     const systemFlowRate = this.calculateSystemFlow(
       totalEmitters,
       emitterFlowRate,
-      irrigationMethod,
+      irrigationMethod
     )
 
     // Calculate daily water requirement
@@ -433,7 +433,7 @@ export class SystemDischargeCalculator {
       dailyWaterRequirement: Math.round(dailyWaterRequirement),
       pumpCapacity: pumpSpecs.powerRequired,
       mainlineSize,
-      lateralSize,
+      lateralSize
     }
 
     // Calculate costs
@@ -451,33 +451,33 @@ export class SystemDischargeCalculator {
           material: 'HDPE',
           pressure: 6,
           length: farmArea * 50,
-          cost: 85,
+          cost: 85
         },
         submain: {
           diameter: Math.ceil(mainlineSize * 0.8),
           material: 'HDPE',
           pressure: 4,
           length: farmArea * 200,
-          cost: 45,
+          cost: 45
         },
         lateral: {
           diameter: 16,
           material: 'LDPE',
           pressure: 2.5,
           length: totalVines * 3.5,
-          cost: 8,
-        },
+          cost: 8
+        }
       },
       filtrationSystem: {
         type: 'Screen + Disc Filter',
         capacity: systemFlowRate,
-        cost: irrigationMethod === 'drip' ? 15000 : 8000,
+        cost: irrigationMethod === 'drip' ? 15000 : 8000
       },
       fertigation: {
         tankCapacity: 1000,
         injectionRate: systemFlowRate * 0.001,
-        cost: 35000,
-      },
+        cost: 35000
+      }
     }
 
     return {
@@ -485,7 +485,7 @@ export class SystemDischargeCalculator {
       efficiency,
       economics,
       recommendations,
-      technicalSpecs,
+      technicalSpecs
     }
   }
 
@@ -495,7 +495,7 @@ export class SystemDischargeCalculator {
   static getEmitterRecommendations(
     soilType: string,
     vineSpacing: number,
-    slope: number,
+    slope: number
   ): { recommended: string; alternatives: string[]; reasoning: string } {
     let recommended: string
     let alternatives: string[] = []
@@ -548,9 +548,8 @@ export class SystemDischargeCalculator {
             ? 'Drip'
             : 'Sprinkler',
         difference: Math.abs(
-          dripResults.efficiency.waterUseEfficiency -
-            sprinklerResults.efficiency.waterUseEfficiency,
-        ),
+          dripResults.efficiency.waterUseEfficiency - sprinklerResults.efficiency.waterUseEfficiency
+        )
       },
       cost: {
         winner:
@@ -558,13 +557,13 @@ export class SystemDischargeCalculator {
             ? 'Drip'
             : 'Sprinkler',
         difference: Math.abs(
-          dripResults.economics.initialCost - sprinklerResults.economics.initialCost,
-        ),
+          dripResults.economics.initialCost - sprinklerResults.economics.initialCost
+        )
       },
       maintenance: {
         winner: 'Sprinkler',
         reasoning:
-          'Sprinkler systems generally require less frequent maintenance and are less prone to clogging',
+          'Sprinkler systems generally require less frequent maintenance and are less prone to clogging'
       },
       suitability: {
         winner: inputs.soilType === 'sandy' ? 'Drip' : inputs.farmArea > 10 ? 'Sprinkler' : 'Drip',
@@ -573,14 +572,14 @@ export class SystemDischargeCalculator {
             ? 'Drip irrigation prevents deep percolation in sandy soils'
             : inputs.farmArea > 10
               ? 'Sprinkler systems are more cost-effective for larger areas'
-              : 'Drip irrigation provides better water use efficiency for smaller areas',
-      },
+              : 'Drip irrigation provides better water use efficiency for smaller areas'
+      }
     }
 
     return {
       drip: dripResults,
       sprinkler: sprinklerResults,
-      comparison,
+      comparison
     }
   }
 }

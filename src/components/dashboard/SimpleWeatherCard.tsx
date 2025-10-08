@@ -36,7 +36,7 @@ export function SimpleWeatherCard({ farm }: SimpleWeatherCardProps) {
         farm.latitude!,
         farm.longitude!,
         todayStr,
-        threeDaysLaterStr,
+        threeDaysLaterStr
       )
 
       if (weatherDataArray.length > 0) {

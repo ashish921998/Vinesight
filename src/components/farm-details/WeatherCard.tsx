@@ -15,7 +15,7 @@ import {
   RefreshCw,
   AlertCircle,
   Calendar,
-  MapPin,
+  MapPin
 } from 'lucide-react'
 import { OpenMeteoWeatherService, type OpenMeteoWeatherData } from '@/lib/open-meteo-weather'
 import type { Farm } from '@/types/types'
@@ -58,8 +58,8 @@ export function WeatherCard({ farm }: WeatherCardProps) {
           farm.latitude!,
           farm.longitude!,
           weekAgoStr,
-          todayStr,
-        ),
+          todayStr
+        )
       ])
 
       if (todayData.length > 0) {
@@ -72,7 +72,7 @@ export function WeatherCard({ farm }: WeatherCardProps) {
           const luxData = await OpenMeteoWeatherService.getHourlySolarRadiation(
             farm.latitude!,
             farm.longitude!,
-            todayData[0].date,
+            todayData[0].date
           )
           setSolarLuxData(luxData)
         } catch (luxError) {
@@ -107,7 +107,7 @@ export function WeatherCard({ farm }: WeatherCardProps) {
     return new Intl.DateTimeFormat('en-US', {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true,
+      hour12: true
     }).format(date)
   }
 
@@ -127,7 +127,7 @@ export function WeatherCard({ farm }: WeatherCardProps) {
       const luxData = await OpenMeteoWeatherService.getHourlySolarRadiation(
         farm.latitude!,
         farm.longitude!,
-        weatherData.date,
+        weatherData.date
       )
       setSolarLuxData(luxData)
     } catch (error) {

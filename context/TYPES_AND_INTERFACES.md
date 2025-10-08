@@ -7,54 +7,54 @@
 ```typescript
 // Core Farm interface (Application Layer)
 export interface Farm {
-  id?: number;
-  name: string;
-  region: string;
-  area: number;
-  grapeVariety: string;
-  plantingDate: string;
-  vineSpacing?: number;
-  rowSpacing?: number;
-  totalTankCapacity?: number;
-  systemDischarge?: number;
-  remainingWater?: number;
-  waterCalculationUpdatedAt?: string;
-  latitude?: number;
-  longitude?: number;
-  elevation?: number;
-  locationName?: string;
-  timezone?: string;
-  locationSource?: 'manual' | 'search' | 'gps';
-  locationUpdatedAt?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  userId?: string;
+  id?: number
+  name: string
+  region: string
+  area: number
+  grapeVariety: string
+  plantingDate: string
+  vineSpacing?: number
+  rowSpacing?: number
+  totalTankCapacity?: number
+  systemDischarge?: number
+  remainingWater?: number
+  waterCalculationUpdatedAt?: string
+  latitude?: number
+  longitude?: number
+  elevation?: number
+  locationName?: string
+  timezone?: string
+  locationSource?: 'manual' | 'search' | 'gps'
+  locationUpdatedAt?: string
+  createdAt?: string
+  updatedAt?: string
+  userId?: string
 }
 
 // Database Farm interface (Supabase Layer)
 export interface DatabaseFarm {
-  id?: number;
-  user_id: string;
-  name: string;
-  region: string;
-  area: number;
-  grape_variety: string;
-  planting_date: string;
-  vine_spacing?: number;
-  row_spacing?: number;
-  total_tank_capacity?: number;
-  system_discharge?: number;
-  remaining_water?: number;
-  water_calculation_updated_at?: string;
-  latitude?: number;
-  longitude?: number;
-  elevation?: number;
-  location_name?: string;
-  timezone?: string;
-  location_source?: 'manual' | 'search' | 'gps';
-  location_updated_at?: string;
-  created_at?: string;
-  updated_at?: string;
+  id?: number
+  user_id: string
+  name: string
+  region: string
+  area: number
+  grape_variety: string
+  planting_date: string
+  vine_spacing?: number
+  row_spacing?: number
+  total_tank_capacity?: number
+  system_discharge?: number
+  remaining_water?: number
+  water_calculation_updated_at?: string
+  latitude?: number
+  longitude?: number
+  elevation?: number
+  location_name?: string
+  timezone?: string
+  location_source?: 'manual' | 'search' | 'gps'
+  location_updated_at?: string
+  created_at?: string
+  updated_at?: string
 }
 ```
 
@@ -62,36 +62,44 @@ export interface DatabaseFarm {
 
 ```typescript
 export interface Activity {
-  id?: number;
-  farmId: number;
-  activityType: 'irrigation' | 'spray' | 'harvest' | 'fertigation' | 'pruning' | 'soil_test' | 'maintenance' | 'monitoring';
-  date: string;
-  notes?: string;
-  createdAt?: string;
+  id?: number
+  farmId: number
+  activityType:
+    | 'irrigation'
+    | 'spray'
+    | 'harvest'
+    | 'fertigation'
+    | 'pruning'
+    | 'soil_test'
+    | 'maintenance'
+    | 'monitoring'
+  date: string
+  notes?: string
+  createdAt?: string
 }
 
 export interface Expense {
-  id?: number;
-  farmId: number;
-  category: 'pesticides' | 'fertilizers' | 'equipment' | 'labor' | 'seeds' | 'utilities' | 'other';
-  itemName: string;
-  cost: number;
-  date: string;
-  quantity?: number;
-  unit?: string;
-  notes?: string;
-  createdAt?: string;
+  id?: number
+  farmId: number
+  category: 'pesticides' | 'fertilizers' | 'equipment' | 'labor' | 'seeds' | 'utilities' | 'other'
+  itemName: string
+  cost: number
+  date: string
+  quantity?: number
+  unit?: string
+  notes?: string
+  createdAt?: string
 }
 
 export interface TaskReminder {
-  id?: number;
-  farmId: number;
-  taskType: string;
-  description: string;
-  dueDate: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'pending' | 'completed' | 'overdue';
-  createdAt?: string;
+  id?: number
+  farmId: number
+  taskType: string
+  description: string
+  dueDate: string
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  status: 'pending' | 'completed' | 'overdue'
+  createdAt?: string
 }
 ```
 
@@ -99,67 +107,67 @@ export interface TaskReminder {
 
 ```typescript
 export interface ETcCalculationInputs {
-  farmId: number;
-  weatherData: WeatherData;
-  growthStage: GrapeGrowthStage;
-  plantingDate: string;
+  farmId: number
+  weatherData: WeatherData
+  growthStage: GrapeGrowthStage
+  plantingDate: string
   location: {
-    latitude: number;
-    longitude: number;
-    elevation: number;
-  };
-  irrigationMethod: 'drip' | 'sprinkler' | 'surface';
-  soilType: 'sandy' | 'loamy' | 'clay';
+    latitude: number
+    longitude: number
+    elevation: number
+  }
+  irrigationMethod: 'drip' | 'sprinkler' | 'surface'
+  soilType: 'sandy' | 'loamy' | 'clay'
 }
 
 export interface ETcResults {
-  etc: number; // mm/day
-  eto: number; // mm/day
-  kc: number; // crop coefficient
-  dailyWaterNeed: number; // liters/day
-  weeklyWaterNeed: number; // liters/week
-  irrigationFrequency: number; // days
-  irrigationDuration: number; // hours
-  recommendations: string[];
-  calculationDate: string;
+  etc: number // mm/day
+  eto: number // mm/day
+  kc: number // crop coefficient
+  dailyWaterNeed: number // liters/day
+  weeklyWaterNeed: number // liters/week
+  irrigationFrequency: number // days
+  irrigationDuration: number // hours
+  recommendations: string[]
+  calculationDate: string
 }
 
-export type GrapeGrowthStage = 
+export type GrapeGrowthStage =
   | 'dormant'
   | 'bud_break'
   | 'flowering'
   | 'fruit_set'
   | 'veraison'
   | 'harvest'
-  | 'post_harvest';
+  | 'post_harvest'
 
 export interface WeatherData {
-  date: string;
-  temperatureMax: number;
-  temperatureMin: number;
-  humidity: number;
-  windSpeed: number;
-  rainfall: number;
-  solarRadiation?: number;
-  solarRadiationLux?: number;
-  sunshineHours?: number;
+  date: string
+  temperatureMax: number
+  temperatureMin: number
+  humidity: number
+  windSpeed: number
+  rainfall: number
+  solarRadiation?: number
+  solarRadiationLux?: number
+  sunshineHours?: number
 }
 
 export interface NutrientRecommendation {
-  stage: string;
-  nitrogen: number;
-  phosphorus: number;
-  potassium: number;
+  stage: string
+  nitrogen: number
+  phosphorus: number
+  potassium: number
   micronutrients: {
-    zinc: number;
-    boron: number;
-    iron: number;
-    manganese: number;
-    copper: number;
-    molybdenum: number;
-  };
-  applicationTiming: string;
-  splitApplication: boolean;
+    zinc: number
+    boron: number
+    iron: number
+    manganese: number
+    copper: number
+    molybdenum: number
+  }
+  applicationTiming: string
+  splitApplication: boolean
 }
 ```
 
@@ -167,41 +175,41 @@ export interface NutrientRecommendation {
 
 ```typescript
 export interface LocationResult {
-  name: string;
-  latitude: number;
-  longitude: number;
-  elevation: number;
-  country: string;
-  admin1?: string; // state/province
-  admin2?: string; // district/county
-  timezone?: string;
+  name: string
+  latitude: number
+  longitude: number
+  elevation: number
+  country: string
+  admin1?: string // state/province
+  admin2?: string // district/county
+  timezone?: string
 }
 
 export interface OpenMeteoGeocoding {
-  results?: LocationResult[];
-  generationtime_ms: number;
+  results?: LocationResult[]
+  generationtime_ms: number
 }
 
 export interface OpenMeteoWeatherData {
   daily: {
-    time: string[];
-    temperature_2m_max: number[];
-    temperature_2m_min: number[];
-    relative_humidity_2m_max: number[];
-    wind_speed_10m_max: number[];
-    precipitation_sum: number[];
-    shortwave_radiation_sum?: number[];
-    sunshine_duration?: number[];
-  };
+    time: string[]
+    temperature_2m_max: number[]
+    temperature_2m_min: number[]
+    relative_humidity_2m_max: number[]
+    wind_speed_10m_max: number[]
+    precipitation_sum: number[]
+    shortwave_radiation_sum?: number[]
+    sunshine_duration?: number[]
+  }
   daily_units: {
-    temperature_2m_max: string;
-    temperature_2m_min: string;
-    relative_humidity_2m_max: string;
-    wind_speed_10m_max: string;
-    precipitation_sum: string;
-    shortwave_radiation_sum?: string;
-    sunshine_duration?: string;
-  };
+    temperature_2m_max: string
+    temperature_2m_min: string
+    relative_humidity_2m_max: string
+    wind_speed_10m_max: string
+    precipitation_sum: string
+    shortwave_radiation_sum?: string
+    sunshine_duration?: string
+  }
 }
 ```
 
@@ -212,56 +220,56 @@ export interface OpenMeteoWeatherData {
 ```typescript
 // Enhanced Farmer AI Profile
 export interface FarmerAIProfile {
-  id: string;
-  userId: string;
-  farmId: number;
-  riskTolerance: number; // 0-1 scale
+  id: string
+  userId: string
+  farmId: number
+  riskTolerance: number // 0-1 scale
   decisionPatterns: {
-    preferredTiming: string; // early_morning, afternoon, evening
-    riskAversion: number;
-    adoptionSpeed: 'conservative' | 'moderate' | 'early_adopter';
-    communicationStyle: 'direct' | 'detailed' | 'visual';
-  };
+    preferredTiming: string // early_morning, afternoon, evening
+    riskAversion: number
+    adoptionSpeed: 'conservative' | 'moderate' | 'early_adopter'
+    communicationStyle: 'direct' | 'detailed' | 'visual'
+  }
   successMetrics: {
-    averageYield: number;
-    costEfficiency: number;
-    profitability: number;
-    waterUseEfficiency: number;
-  };
+    averageYield: number
+    costEfficiency: number
+    profitability: number
+    waterUseEfficiency: number
+  }
   learningPreferences: {
-    preferredChannels: ('voice' | 'text' | 'visual')[];
-    bestResponseTimes: string[];
-    languagePreference: 'en' | 'hi' | 'mr';
-  };
-  seasonalPatterns: Record<string, any>; // Month-wise activity patterns
-  createdAt: Date;
-  updatedAt: Date;
+    preferredChannels: ('voice' | 'text' | 'visual')[]
+    bestResponseTimes: string[]
+    languagePreference: 'en' | 'hi' | 'mr'
+  }
+  seasonalPatterns: Record<string, any> // Month-wise activity patterns
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Smart Task Recommendation
 export interface AITaskRecommendation {
-  id: string;
-  farmId: number;
-  userId: string;
-  taskType: 'irrigation' | 'spray' | 'harvest' | 'fertigation' | 'pruning' | 'soil_test';
-  recommendedDate: Date;
-  priorityScore: number; // 0-1
-  weatherDependent: boolean;
-  reasoning: string; // AI explanation
-  confidenceScore: number; // 0-1
-  status: 'pending' | 'accepted' | 'rejected' | 'completed';
-  farmerFeedback?: string;
-  outcomeTracked: boolean;
-  
+  id: string
+  farmId: number
+  userId: string
+  taskType: 'irrigation' | 'spray' | 'harvest' | 'fertigation' | 'pruning' | 'soil_test'
+  recommendedDate: Date
+  priorityScore: number // 0-1
+  weatherDependent: boolean
+  reasoning: string // AI explanation
+  confidenceScore: number // 0-1
+  status: 'pending' | 'accepted' | 'rejected' | 'completed'
+  farmerFeedback?: string
+  outcomeTracked: boolean
+
   // Detailed task parameters
   taskDetails: {
-    duration?: number; // minutes
-    resources?: string[];
-    conditions?: string[];
-    alternatives?: string[];
-  };
-  
-  createdAt: Date;
+    duration?: number // minutes
+    resources?: string[]
+    conditions?: string[]
+    alternatives?: string[]
+  }
+
+  createdAt: Date
 }
 ```
 
@@ -270,46 +278,46 @@ export interface AITaskRecommendation {
 ```typescript
 // Pest & Disease Prediction
 export interface PestDiseasePrediction {
-  id: string;
-  farmId: number;
-  region: string;
-  pestDiseaseType: string;
-  riskLevel: 'low' | 'medium' | 'high' | 'critical';
-  probabilityScore: number; // 0-1
-  predictedOnsetDate: Date;
-  
+  id: string
+  farmId: number
+  region: string
+  pestDiseaseType: string
+  riskLevel: 'low' | 'medium' | 'high' | 'critical'
+  probabilityScore: number // 0-1
+  predictedOnsetDate: Date
+
   weatherTriggers: {
-    temperature: { min: number; max: number };
-    humidity: { threshold: number };
-    rainfall: { days: number; amount: number };
-  };
-  
+    temperature: { min: number; max: number }
+    humidity: { threshold: number }
+    rainfall: { days: number; amount: number }
+  }
+
   preventionWindow: {
-    startDate: Date;
-    endDate: Date;
-    optimalTiming: string;
-  };
-  
+    startDate: Date
+    endDate: Date
+    optimalTiming: string
+  }
+
   recommendedTreatments: {
     chemical: Array<{
-      product: string;
-      dosage: string;
-      cost: number;
-      effectiveness: number;
-    }>;
+      product: string
+      dosage: string
+      cost: number
+      effectiveness: number
+    }>
     organic: Array<{
-      method: string;
-      description: string;
-      effectiveness: number;
-    }>;
-    cultural: string[];
-  };
-  
-  communityReports: number;
-  status: 'active' | 'resolved' | 'false_alarm';
-  farmerActionTaken?: string;
-  outcome?: string;
-  createdAt: Date;
+      method: string
+      description: string
+      effectiveness: number
+    }>
+    cultural: string[]
+  }
+
+  communityReports: number
+  status: 'active' | 'resolved' | 'false_alarm'
+  farmerActionTaken?: string
+  outcome?: string
+  createdAt: Date
 }
 ```
 
@@ -318,93 +326,93 @@ export interface PestDiseasePrediction {
 ```typescript
 // Profitability Analysis
 export interface ProfitabilityAnalysis {
-  id: string;
-  farmId: number;
-  userId: string;
-  analysisPeriodStart: Date;
-  analysisPeriodEnd: Date;
-  totalExpenses: number;
-  
+  id: string
+  farmId: number
+  userId: string
+  analysisPeriodStart: Date
+  analysisPeriodEnd: Date
+  totalExpenses: number
+
   expenseBreakdown: {
-    labor: number;
-    materials: number;
-    equipment: number;
-    utilities: number;
-    other: number;
-  };
-  
+    labor: number
+    materials: number
+    equipment: number
+    utilities: number
+    other: number
+  }
+
   efficiencyScores: {
-    waterUse: number; // liters per kg yield
-    laborProductivity: number; // hours per kg yield
-    inputCostRatio: number; // cost per kg yield
-    overallEfficiency: number; // 0-100 score
-  };
-  
-  roiCalculation: number; // percentage
-  
+    waterUse: number // liters per kg yield
+    laborProductivity: number // hours per kg yield
+    inputCostRatio: number // cost per kg yield
+    overallEfficiency: number // 0-100 score
+  }
+
+  roiCalculation: number // percentage
+
   benchmarkComparison: {
-    regionalAverage: number;
-    topPerformers: number;
-    yourRanking: number; // percentile
-  };
-  
+    regionalAverage: number
+    topPerformers: number
+    yourRanking: number // percentile
+  }
+
   improvementOpportunities: Array<{
-    category: string;
-    currentCost: number;
-    potentialSavings: number;
-    implementationEffort: 'low' | 'medium' | 'high';
-    recommendations: string[];
-  }>;
-  
+    category: string
+    currentCost: number
+    potentialSavings: number
+    implementationEffort: 'low' | 'medium' | 'high'
+    recommendations: string[]
+  }>
+
   predictedImpact: {
-    costSavings: number;
-    yieldIncrease: number;
-    profitabilityImprovement: number;
-  };
-  
-  farmerImplemented: string[];
-  actualOutcomes?: Record<string, any>;
-  createdAt: Date;
+    costSavings: number
+    yieldIncrease: number
+    profitabilityImprovement: number
+  }
+
+  farmerImplemented: string[]
+  actualOutcomes?: Record<string, any>
+  createdAt: Date
 }
 
 // Market Intelligence
 export interface MarketIntelligence {
-  id: string;
-  region: string;
-  grapeVariety?: string;
-  
+  id: string
+  region: string
+  grapeVariety?: string
+
   priceData: {
-    current: number;
+    current: number
     historical: Array<{
-      date: Date;
-      price: number;
-      volume: number;
-    }>;
+      date: Date
+      price: number
+      volume: number
+    }>
     forecast: Array<{
-      date: Date;
-      predictedPrice: number;
-      confidence: number;
-    }>;
-  };
-  
-  qualityPremiums: Record<string, number>; // grade -> premium%
-  demandForecast: Record<string, number>; // month -> demand_index
-  seasonalTrends: Record<string, any>;
-  
+      date: Date
+      predictedPrice: number
+      confidence: number
+    }>
+  }
+
+  qualityPremiums: Record<string, number> // grade -> premium%
+  demandForecast: Record<string, number> // month -> demand_index
+  seasonalTrends: Record<string, any>
+
   supplyChainInsights: {
-    buyerPreferences: string[];
-    logisticsCosts: number;
+    buyerPreferences: string[]
+    logisticsCosts: number
     contractOpportunities: Array<{
-      buyer: string;
-      terms: string;
-      priceOffer: number;
-    }>;
-  };
-  
-  predictionDate: Date;
-  confidenceInterval: { lower: number; upper: number };
-  dataSources: string[];
-  createdAt: Date;
+      buyer: string
+      terms: string
+      priceOffer: number
+    }>
+  }
+
+  predictionDate: Date
+  confidenceInterval: { lower: number; upper: number }
+  dataSources: string[]
+  createdAt: Date
 }
 ```
 
@@ -413,45 +421,45 @@ export interface MarketIntelligence {
 ```typescript
 // Community Insights
 export interface CommunityInsight {
-  id: string;
-  insightType: 'practice' | 'outcome' | 'lesson';
-  
+  id: string
+  insightType: 'practice' | 'outcome' | 'lesson'
+
   farmCharacteristics: {
-    region: string;
-    farmSize: 'small' | 'medium' | 'large';
-    grapeVariety: string;
-    soilType: string;
-    climaticConditions: string;
-  };
-  
-  practiceDescription: string;
-  
+    region: string
+    farmSize: 'small' | 'medium' | 'large'
+    grapeVariety: string
+    soilType: string
+    climaticConditions: string
+  }
+
+  practiceDescription: string
+
   outcomeMetrics: {
-    yieldIncrease?: number; // percentage
-    costReduction?: number; // percentage
-    qualityImprovement?: number; // grade improvement
-    timesSaved?: number; // hours per season
-  };
-  
-  seasonalTiming: string;
-  regionalRelevance: string[];
-  successScore: number; // 0-1
-  adoptionCount: number;
-  validationStatus: 'pending' | 'expert_verified' | 'community_validated';
-  anonymizedDetails: Record<string, any>;
-  createdAt: Date;
+    yieldIncrease?: number // percentage
+    costReduction?: number // percentage
+    qualityImprovement?: number // grade improvement
+    timesSaved?: number // hours per season
+  }
+
+  seasonalTiming: string
+  regionalRelevance: string[]
+  successScore: number // 0-1
+  adoptionCount: number
+  validationStatus: 'pending' | 'expert_verified' | 'community_validated'
+  anonymizedDetails: Record<string, any>
+  createdAt: Date
 }
 
 // Enhanced AI Conversation Context
 export interface AIConversationContext {
-  id: string;
-  conversationId: string;
-  contextType: 'farm_state' | 'decision_history' | 'preference' | 'outcome';
-  contextData: Record<string, any>;
-  relevanceScore: number; // 0-1
-  decayFactor: number; // How quickly context loses relevance
-  createdAt: Date;
-  lastReferenced: Date;
+  id: string
+  conversationId: string
+  contextType: 'farm_state' | 'decision_history' | 'preference' | 'outcome'
+  contextData: Record<string, any>
+  relevanceScore: number // 0-1
+  decayFactor: number // How quickly context loses relevance
+  createdAt: Date
+  lastReferenced: Date
 }
 ```
 
@@ -460,68 +468,68 @@ export interface AIConversationContext {
 ```typescript
 // AI Disease Detection
 export interface DiseaseDetectionResult {
-  disease: string;
-  confidence: number;
-  severity: 'low' | 'medium' | 'high';
+  disease: string
+  confidence: number
+  severity: 'low' | 'medium' | 'high'
   treatmentRecommendations: Array<{
-    type: 'chemical' | 'organic' | 'cultural';
-    treatment: string;
-    effectiveness: number;
-    cost?: number;
-  }>;
-  preventionMeasures: string[];
+    type: 'chemical' | 'organic' | 'cultural'
+    treatment: string
+    effectiveness: number
+    cost?: number
+  }>
+  preventionMeasures: string[]
 }
 
 // AI Chat Types
 export interface AIConversation {
-  id: string;
-  userId: string;
-  farmId?: number;
-  messages: AIMessage[];
-  context?: Record<string, any>;
-  createdAt: Date;
-  updatedAt: Date;
+  id: string
+  userId: string
+  farmId?: number
+  messages: AIMessage[]
+  context?: Record<string, any>
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface AIMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  language: 'en' | 'hi' | 'mr';
-  timestamp: Date;
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  language: 'en' | 'hi' | 'mr'
+  timestamp: Date
   metadata?: {
-    confidence?: number;
-    sources?: string[];
-    actionItems?: string[];
-  };
+    confidence?: number
+    sources?: string[]
+    actionItems?: string[]
+  }
 }
 
 // Analytics Types
 export interface FarmAnalytics {
-  farmId: number;
-  healthScore: number; // 0-100
+  farmId: number
+  healthScore: number // 0-100
   yieldPrediction: {
-    estimated: number;
-    confidence: number;
-    factors: string[];
-  };
+    estimated: number
+    confidence: number
+    factors: string[]
+  }
   riskAssessment: {
-    disease: number;
-    weather: number;
-    market: number;
-    overall: number;
-  };
+    disease: number
+    weather: number
+    market: number
+    overall: number
+  }
   recommendations: Array<{
-    type: string;
-    priority: number;
-    description: string;
-    expectedImpact: string;
-  }>;
+    type: string
+    priority: number
+    description: string
+    expectedImpact: string
+  }>
   trends: {
-    yield: Array<{ date: string; value: number }>;
-    costs: Array<{ date: string; value: number }>;
-    efficiency: Array<{ date: string; value: number }>;
-  };
+    yield: Array<{ date: string; value: number }>
+    costs: Array<{ date: string; value: number }>
+    efficiency: Array<{ date: string; value: number }>
+  }
 }
 ```
 
@@ -530,52 +538,52 @@ export interface FarmAnalytics {
 ```typescript
 // API Response Types
 export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  timestamp: string;
+  success: boolean
+  data?: T
+  error?: string
+  timestamp: string
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
+  data: T[]
   pagination: {
-    page: number;
-    pageSize: number;
-    totalPages: number;
-    totalCount: number;
-  };
+    page: number
+    pageSize: number
+    totalPages: number
+    totalCount: number
+  }
 }
 
 // Form Data Types
 export interface FormValidation {
-  isValid: boolean;
-  errors: Record<string, string>;
+  isValid: boolean
+  errors: Record<string, string>
 }
 
 export interface SelectOption {
-  value: string | number;
-  label: string;
-  disabled?: boolean;
+  value: string | number
+  label: string
+  disabled?: boolean
 }
 
 // Language & Localization
-export type SupportedLanguage = 'en' | 'hi' | 'mr';
+export type SupportedLanguage = 'en' | 'hi' | 'mr'
 
 export interface LocalizedContent {
-  en: string;
-  hi: string;
-  mr: string;
+  en: string
+  hi: string
+  mr: string
 }
 
 // Export Types
 export interface ExportConfig {
-  format: 'csv' | 'pdf';
+  format: 'csv' | 'pdf'
   dateRange: {
-    start: string;
-    end: string;
-  };
-  includeImages?: boolean;
-  sections: string[];
+    start: string
+    end: string
+  }
+  includeImages?: boolean
+  sections: string[]
 }
 ```
 

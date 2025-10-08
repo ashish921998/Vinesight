@@ -53,7 +53,7 @@ export class AIProfileService {
    */
   static async createDefaultProfile(
     userId: string,
-    farmId: number,
+    farmId: number
   ): Promise<FarmerAIProfile | null> {
     try {
       const defaultProfile = {
@@ -64,20 +64,20 @@ export class AIProfileService {
           preferredTiming: 'early_morning',
           riskAversion: 0.5,
           adoptionSpeed: 'moderate',
-          communicationStyle: 'detailed',
+          communicationStyle: 'detailed'
         },
         success_metrics: {
           averageYield: 0,
           costEfficiency: 0,
           profitability: 0,
-          waterUseEfficiency: 0,
+          waterUseEfficiency: 0
         },
         learning_preferences: {
           preferredChannels: ['text', 'voice'],
           bestResponseTimes: ['06:00-09:00', '18:00-21:00'],
-          languagePreference: 'en',
+          languagePreference: 'en'
         },
-        seasonal_patterns: {},
+        seasonal_patterns: {}
       }
 
       const { data, error } = await supabase
@@ -104,7 +104,7 @@ export class AIProfileService {
   static async updateProfileFromDecision(
     userId: string,
     farmId: number,
-    decisionOutcome: DecisionOutcome,
+    decisionOutcome: DecisionOutcome
   ): Promise<void> {
     try {
       const profile = await this.getFarmerProfile(userId, farmId)
@@ -163,7 +163,7 @@ export class AIProfileService {
         ...profile,
         riskTolerance: newRiskTolerance,
         decisionPatterns: updatedPatterns,
-        successMetrics: updatedMetrics,
+        successMetrics: updatedMetrics
       })
     } catch (error) {
       console.error('Error updating profile from decision:', error)
@@ -181,7 +181,7 @@ export class AIProfileService {
         success_metrics: profile.successMetrics,
         learning_preferences: profile.learningPreferences,
         seasonal_patterns: profile.seasonalPatterns,
-        updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
 
       const { error } = await supabase
@@ -204,7 +204,7 @@ export class AIProfileService {
   static getRecommendationWeight(
     profile: FarmerAIProfile,
     recommendationType: string,
-    riskLevel: number,
+    riskLevel: number
   ): number {
     // Base weight starts at 1.0
     let weight = 1.0
@@ -223,7 +223,7 @@ export class AIProfileService {
     const adoptionMultiplier = {
       conservative: 0.7,
       moderate: 1.0,
-      early_adopter: 1.3,
+      early_adopter: 1.3
     }
     weight *= adoptionMultiplier[profile.decisionPatterns.adoptionSpeed] || 1.0
 
@@ -238,7 +238,7 @@ export class AIProfileService {
     farmId: number,
     month: string,
     activityType: string,
-    timing: string,
+    timing: string
   ): Promise<void> {
     try {
       const profile = await this.getFarmerProfile(userId, farmId)
@@ -261,7 +261,7 @@ export class AIProfileService {
 
       await this.updateProfile({
         ...profile,
-        seasonalPatterns,
+        seasonalPatterns
       })
     } catch (error) {
       console.error('Error updating seasonal pattern:', error)
@@ -281,7 +281,7 @@ export class AIProfileService {
       preferredChannels: profile.learningPreferences.preferredChannels,
       bestTimes: profile.learningPreferences.bestResponseTimes,
       language: profile.learningPreferences.languagePreference,
-      style: profile.decisionPatterns.communicationStyle,
+      style: profile.decisionPatterns.communicationStyle
     }
   }
 
@@ -306,11 +306,11 @@ export class AIProfileService {
     // Success metrics similarity
     if (profile1.successMetrics.averageYield > 0 && profile2.successMetrics.averageYield > 0) {
       const yieldDiff = Math.abs(
-        profile1.successMetrics.averageYield - profile2.successMetrics.averageYield,
+        profile1.successMetrics.averageYield - profile2.successMetrics.averageYield
       )
       const maxYield = Math.max(
         profile1.successMetrics.averageYield,
-        profile2.successMetrics.averageYield,
+        profile2.successMetrics.averageYield
       )
       const yieldSimilarity = 1 - yieldDiff / maxYield
       similarity += yieldSimilarity * 0.3
@@ -342,7 +342,7 @@ export class AIProfileService {
       learningPreferences: data.learning_preferences,
       seasonalPatterns: data.seasonal_patterns,
       createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
+      updatedAt: new Date(data.updated_at)
     }
   }
 

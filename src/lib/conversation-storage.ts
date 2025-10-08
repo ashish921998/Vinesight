@@ -53,8 +53,8 @@ class ConversationStorage {
         updatedAt: new Date(conv.updatedAt),
         messages: conv.messages.map((msg: any) => ({
           ...msg,
-          timestamp: new Date(msg.timestamp),
-        })),
+          timestamp: new Date(msg.timestamp)
+        }))
       }))
     } catch (error) {
       console.error('Error loading conversations:', error)
@@ -93,7 +93,7 @@ class ConversationStorage {
 
     const updatedConversation = {
       ...conversation,
-      updatedAt: new Date(),
+      updatedAt: new Date()
     }
 
     if (existingIndex >= 0) {

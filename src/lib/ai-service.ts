@@ -41,14 +41,14 @@ export const GRAPE_DISEASES = {
       'Apply sulfur-based fungicide',
       'Improve air circulation',
       'Remove affected leaves',
-      'Apply preventive copper spray',
+      'Apply preventive copper spray'
     ],
     prevention: [
       'Maintain good canopy management',
       'Ensure adequate spacing between vines',
       'Monitor humidity levels',
-      'Apply preventive treatments during susceptible periods',
-    ],
+      'Apply preventive treatments during susceptible periods'
+    ]
   },
   downy_mildew: {
     name: 'Downy Mildew',
@@ -57,14 +57,14 @@ export const GRAPE_DISEASES = {
       'Apply copper-based fungicide',
       'Improve drainage',
       'Remove infected plant material',
-      'Use systemic fungicides if severe',
+      'Use systemic fungicides if severe'
     ],
     prevention: [
       'Ensure good air circulation',
       'Avoid overhead irrigation',
       'Plant resistant varieties',
-      'Monitor weather conditions closely',
-    ],
+      'Monitor weather conditions closely'
+    ]
   },
   botrytis: {
     name: 'Botrytis Bunch Rot',
@@ -73,14 +73,14 @@ export const GRAPE_DISEASES = {
       'Remove affected clusters immediately',
       'Apply specific anti-botrytis fungicide',
       'Improve air circulation around clusters',
-      'Reduce humidity in vineyard',
+      'Reduce humidity in vineyard'
     ],
     prevention: [
       'Manage canopy for good air flow',
       'Avoid wounding berries',
       'Harvest at optimal time',
-      'Monitor weather conditions during ripening',
-    ],
+      'Monitor weather conditions during ripening'
+    ]
   },
   black_rot: {
     name: 'Black Rot',
@@ -89,14 +89,14 @@ export const GRAPE_DISEASES = {
       'Apply broad-spectrum fungicide',
       'Remove infected berries and leaves',
       'Prune for better air circulation',
-      'Apply lime sulfur treatment',
+      'Apply lime sulfur treatment'
     ],
     prevention: [
       'Remove mummified berries from previous season',
       'Maintain good sanitation practices',
       'Apply preventive fungicide treatments',
-      'Monitor during wet weather periods',
-    ],
+      'Monitor during wet weather periods'
+    ]
   },
   anthracnose: {
     name: 'Anthracnose',
@@ -105,14 +105,14 @@ export const GRAPE_DISEASES = {
       'Apply copper-based fungicide',
       'Remove infected plant parts',
       'Improve drainage',
-      'Use resistant rootstock',
+      'Use resistant rootstock'
     ],
     prevention: [
       'Plant resistant varieties',
       'Maintain good sanitation',
       'Avoid overhead irrigation',
-      'Apply preventive treatments in spring',
-    ],
+      'Apply preventive treatments in spring'
+    ]
   },
   healthy: {
     name: 'Healthy Plant',
@@ -122,9 +122,9 @@ export const GRAPE_DISEASES = {
       'Continue regular monitoring',
       'Maintain good cultural practices',
       'Apply preventive treatments as scheduled',
-      'Keep records of plant health status',
-    ],
-  },
+      'Keep records of plant health status'
+    ]
+  }
 }
 
 export class AIService {
@@ -151,7 +151,7 @@ export class AIService {
             inputShape: [224, 224, 3],
             filters: 32,
             kernelSize: 3,
-            activation: 'relu',
+            activation: 'relu'
           }),
           tf.layers.maxPooling2d({ poolSize: 2 }),
           tf.layers.conv2d({ filters: 64, kernelSize: 3, activation: 'relu' }),
@@ -159,8 +159,8 @@ export class AIService {
           tf.layers.flatten(),
           tf.layers.dense({ units: 128, activation: 'relu' }),
           tf.layers.dropout({ rate: 0.5 }),
-          tf.layers.dense({ units: Object.keys(GRAPE_DISEASES).length, activation: 'softmax' }),
-        ],
+          tf.layers.dense({ units: Object.keys(GRAPE_DISEASES).length, activation: 'softmax' })
+        ]
       })
 
       this.diseaseModel = model
@@ -169,7 +169,7 @@ export class AIService {
 
   // Analyze image for disease detection
   static async analyzeImage(
-    imageElement: HTMLImageElement | HTMLCanvasElement,
+    imageElement: HTMLImageElement | HTMLCanvasElement
   ): Promise<ImageAnalysisResult> {
     try {
       // Preprocess image for model input
@@ -190,7 +190,7 @@ export class AIService {
         plantHealth: predictions.plantHealth,
         grapeClusterCount: predictions.grapeClusterCount,
         berrySize: predictions.berrySize,
-        ripeness: predictions.ripeness,
+        ripeness: predictions.ripeness
       }
     } catch (error) {
       throw new Error('Failed to analyze image')
@@ -221,14 +221,14 @@ export class AIService {
         severity,
         treatment: diseaseInfo.treatments,
         description: diseaseInfo.description,
-        preventionTips: diseaseInfo.prevention,
+        preventionTips: diseaseInfo.prevention
       },
       plantHealth: {
         overallHealth:
           randomDisease === 'healthy' ? 85 + Math.random() * 15 : 40 + Math.random() * 30,
         leafColor:
           randomDisease === 'healthy' ? 'healthy' : Math.random() > 0.5 ? 'yellowing' : 'spotted',
-        leafDamage: randomDisease === 'healthy' ? Math.random() * 5 : 10 + Math.random() * 40,
+        leafDamage: randomDisease === 'healthy' ? Math.random() * 5 : 10 + Math.random() * 40
       },
       grapeClusterCount: Math.floor(3 + Math.random() * 8),
       berrySize: ['small', 'medium', 'large'][Math.floor(Math.random() * 3)] as
@@ -239,7 +239,7 @@ export class AIService {
         | 'unripe'
         | 'veraison'
         | 'ripe'
-        | 'overripe',
+        | 'overripe'
     }
   }
 
@@ -247,7 +247,7 @@ export class AIService {
   static async generateRecommendations(
     farmData: any,
     weatherData?: any,
-    diseaseData?: DiseaseDetectionResult[],
+    diseaseData?: DiseaseDetectionResult[]
   ): Promise<AIRecommendation[]> {
     const recommendations: AIRecommendation[] = []
 
@@ -262,7 +262,7 @@ export class AIService {
             description: `${disease.disease} detected with ${(disease.confidence * 100).toFixed(1)}% confidence`,
             actions: disease.treatment,
             timing: disease.severity === 'critical' ? 'Immediate' : 'Within 24-48 hours',
-            expectedImpact: 'Prevent further crop damage and yield loss',
+            expectedImpact: 'Prevent further crop damage and yield loss'
           })
         }
       })
@@ -278,10 +278,10 @@ export class AIService {
         actions: [
           'Increase irrigation frequency by 25%',
           'Monitor soil moisture levels daily',
-          'Consider early morning irrigation to reduce evaporation',
+          'Consider early morning irrigation to reduce evaporation'
         ],
         timing: 'Next irrigation cycle',
-        expectedImpact: 'Maintain optimal plant water status',
+        expectedImpact: 'Maintain optimal plant water status'
       })
     }
 
@@ -297,10 +297,10 @@ export class AIService {
         actions: [
           'Apply NPK fertilizer according to soil test results',
           'Monitor new shoot growth',
-          'Consider organic matter application',
+          'Consider organic matter application'
         ],
         timing: 'Early spring, before bud break',
-        expectedImpact: 'Promote healthy vine growth and fruit development',
+        expectedImpact: 'Promote healthy vine growth and fruit development'
       })
     }
 
@@ -317,7 +317,7 @@ export class AIService {
       conversationHistory?: Array<{ role: string; content: string; queryType?: string }>
       recentTopics?: string[]
     },
-    onStreamUpdate?: (chunk: string) => void,
+    onStreamUpdate?: (chunk: string) => void
   ): Promise<string> {
     try {
       // Development mode: Use mock streaming for testing mobile UI (always use mock for now)
@@ -334,13 +334,13 @@ export class AIService {
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           message,
           context,
-          stream: false,
-        }),
+          stream: false
+        })
       })
 
       if (!response.ok) {
@@ -365,20 +365,20 @@ export class AIService {
       conversationHistory?: Array<{ role: string; content: string; queryType?: string }>
       recentTopics?: string[]
     },
-    onStreamUpdate: (chunk: string) => void,
+    onStreamUpdate: (chunk: string) => void
   ): Promise<string> {
     try {
       // Use the main chat route with streaming enabled
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           message,
           context,
-          stream: true, // Enable streaming
-        }),
+          stream: true // Enable streaming
+        })
       })
 
       if (!response.ok) {
@@ -429,7 +429,7 @@ export class AIService {
       conversationHistory?: Array<{ role: string; content: string; queryType?: string }>
       recentTopics?: string[]
     },
-    onStreamUpdate: (chunk: string) => void,
+    onStreamUpdate: (chunk: string) => void
   ): Promise<string> {
     // Generate a contextual response based on the message
     let mockResponse = this.generateFallbackResponse(message, context)
@@ -553,13 +553,13 @@ export class AIService {
           'pathogen',
           'बीमारी',
           'रोग',
-          'आजार',
+          'आजार'
         ],
         responses: {
           en: this.getDiseaseResponse(lowerMessage, context),
           hi: 'बीमारी की समस्या के लिए, मैं प्रभावित पत्तियों या अंगूरों की स्पष्ट तस्वीर लेने की सलाह देता हूं। सामान्य अंगूर रोगों में पाउडरी मिल्ड्यू, डाउनी मिल्ड्यू और बोट्राइटिस शामिल हैं। अच्छी हवा का संचार सुनिश्चित करें और निवारक कवकनाशी का उपयोग करें।',
-          mr: 'आजाराच्या समस्येसाठी, मी प्रभावित पाने किंवा द्राक्षांचे स्पष्ट फोटो घेण्याची शिफारस करतो. सामान्य द्राक्ष रोगांमध्ये पावडरी मिल्ड्यू, डाऊनी मिल्ड्यू आणि बॉट्रायटिस समाविष्ट आहेत.',
-        },
+          mr: 'आजाराच्या समस्येसाठी, मी प्रभावित पाने किंवा द्राक्षांचे स्पष्ट फोटो घेण्याची शिफारस करतो. सामान्य द्राक्ष रोगांमध्ये पावडरी मिल्ड्यू, डाऊनी मिल्ड्यू आणि बॉट्रायटिस समाविष्ट आहेत.'
+        }
       },
       {
         keywords: [
@@ -571,13 +571,13 @@ export class AIService {
           'सिंचाई',
           'पानी',
           'सूखा',
-          'पाणी',
+          'पाणी'
         ],
         responses: {
           en: this.getIrrigationResponse(lowerMessage, context),
           hi: 'सिंचाई प्रबंधन के लिए, मिट्टी की नमी नियमित रूप से जांचें। अंगूर को निरंतर लेकिन अधिक पानी की आवश्यकता होती है। सुबह जल्दी पानी दें ताकि वाष्पीकरण कम हो और रोग का दबाव कम रहे।',
-          mr: 'सिंचनाच्या व्यवस्थापनासाठी, मातीतील ओलावा नियमितपणे तपासा. द्राक्षांना सातत्यपूर्ण पण जास्त पाणी नको असते. लवकर सकाळी पाणी द्या.',
-        },
+          mr: 'सिंचनाच्या व्यवस्थापनासाठी, मातीतील ओलावा नियमितपणे तपासा. द्राक्षांना सातत्यपूर्ण पण जास्त पाणी नको असते. लवकर सकाळी पाणी द्या.'
+        }
       },
       {
         keywords: [
@@ -589,61 +589,61 @@ export class AIService {
           'उर्वरक',
           'खाद',
           'पोषण',
-          'खत',
+          'खत'
         ],
         responses: {
           en: this.getFertilizerResponse(lowerMessage, context),
           hi: 'मिट्टी परीक्षण के परिणामों के आधार पर उर्वरक की आवश्यकता निर्धारित करने के लिए हमारे न्यूट्रिएंट कैलकुलेटर का उपयोग करें। वसंत में संतुलित NPK लगाएं, कटाई से पहले नाइट्रोजन कम करें।',
-          mr: 'मातीच्या चाचणीच्या निकालांवर आधारित खताची गरज ठरवण्यासाठी आमचे न्यूट्रिएंट कॅल्क्युलेटर वापरा. वसंतात संतुलित NPK लावा.',
-        },
+          mr: 'मातीच्या चाचणीच्या निकालांवर आधारित खताची गरज ठरवण्यासाठी आमचे न्यूट्रिएंट कॅल्क्युलेटर वापरा. वसंतात संतुलित NPK लावा.'
+        }
       },
       {
         keywords: ['harvest', 'pick', 'ripe', 'maturity', 'brix', 'कटाई', 'तुड़ाई', 'पक', 'कापणी'],
         responses: {
           en: this.getHarvestResponse(lowerMessage, context),
           hi: 'कटाई का समय निर्धारित करने के लिए चीनी के स्तर (ब्रिक्स) और अम्लता की निगरानी करें। सर्वोत्तम गुणवत्ता के लिए ठंडे तापमान में सुबह जल्दी कटाई करें।',
-          mr: 'कापणीची वेळ ठरवण्यासाठी साखरेची पातळी (ब्रिक्स) आणि आम्लता यांचे निरीक्षण करा. सर्वोत्तम गुणवत्तेसाठी थंड तापमानात लवकर सकाळी कापणी करा.',
-        },
+          mr: 'कापणीची वेळ ठरवण्यासाठी साखरेची पातळी (ब्रिक्स) आणि आम्लता यांचे निरीक्षण करा. सर्वोत्तम गुणवत्तेसाठी थंड तापमानात लवकर सकाळी कापणी करा.'
+        }
       },
       {
         keywords: ['pruning', 'trim', 'cut', 'canopy', 'shoots', 'छंटाई', 'काटना', 'छाँटाई'],
         responses: {
           en: this.getPruningResponse(lowerMessage, context),
           hi: 'छंटाई सर्दियों के दौरान सुप्त अवस्था में करें। पुरानी और रोगग्रस्त लकड़ी हटाएं। अच्छे वायु संचार के लिए कैनोपी का प्रबंधन करें।',
-          mr: 'छाटणी हिवाळ्यात निष्क्रिय अवस्थेत करा. जुने आणि आजारी लाकूड काढून टाका.',
-        },
+          mr: 'छाटणी हिवाळ्यात निष्क्रिय अवस्थेत करा. जुने आणि आजारी लाकूड काढून टाका.'
+        }
       },
       {
         keywords: ['pest', 'insect', 'bug', 'aphid', 'thrips', 'कीट', 'कीड़े', 'किड'],
         responses: {
           en: this.getPestResponse(lowerMessage, context),
           hi: 'कीट नियंत्रण के लिए नियमित निगरानी करें। जैविक नियंत्रण विधियों को प्राथमिकता दें। आवश्यक होने पर ही कीटनाशक का उपयोग करें।',
-          mr: 'किडीच्या नियंत्रणासाठी नियमित निरीक्षण करा. जैविक नियंत्रण पद्धतींना प्राधान्य द्या.',
-        },
+          mr: 'किडीच्या नियंत्रणासाठी नियमित निरीक्षण करा. जैविक नियंत्रण पद्धतींना प्राधान्य द्या.'
+        }
       },
       {
         keywords: ['weather', 'rain', 'temperature', 'humidity', 'wind', 'मौसम', 'बारिश', 'तापमान'],
         responses: {
           en: this.getWeatherResponse(lowerMessage, context),
           hi: 'मौसम की निगरानी करें और तदनुसार खेती की गतिविधियों को समायोजित करें। बारिश से पहले छिड़काव से बचें।',
-          mr: 'हवामानाचे निरीक्षण करा आणि त्यानुसार शेतीच्या क्रियाकलापांना जुळवून घ्या.',
-        },
+          mr: 'हवामानाचे निरीक्षण करा आणि त्यानुसार शेतीच्या क्रियाकलापांना जुळवून घ्या.'
+        }
       },
       {
         keywords: ['soil', 'ph', 'organic', 'compost', 'मिट्टी', 'भूमि', 'जमीन', 'माती'],
         responses: {
           en: this.getSoilResponse(lowerMessage, context),
           hi: 'मिट्टी के स्वास्थ्य के लिए नियमित मिट्टी परीक्षण कराएं। pH स्तर को 6.0-7.5 के बीच बनाए रखें। जैविक पदार्थों को शामिल करें।',
-          mr: 'मातीच्या आरोग्यासाठी नियमित माती चाचणी करा. pH पातळी 6.0-7.5 दरम्यान ठेवा.',
-        },
+          mr: 'मातीच्या आरोग्यासाठी नियमित माती चाचणी करा. pH पातळी 6.0-7.5 दरम्यान ठेवा.'
+        }
       },
       {
         keywords: ['grape', 'vine', 'vineyard', 'cluster', 'berry', 'अंगूर', 'बेल', 'द्राक्ष'],
         responses: {
           en: this.getGrapeResponse(lowerMessage, context),
           hi: 'अंगूर की खेती के लिए उचित जलवायु, मिट्टी और देखभाल आवश्यक है। नियमित निगरानी और समय पर हस्तक्षेप महत्वपूर्ण है।',
-          mr: 'द्राक्ष शेतीसाठी योग्य हवामान, माती आणि काळजी आवश्यक आहे. नियमित निरीक्षण आणि वेळेवर हस्तक्षेप महत्त्वपूर्ण आहे.',
-        },
+          mr: 'द्राक्ष शेतीसाठी योग्य हवामान, माती आणि काळजी आवश्यक आहे. नियमित निरीक्षण आणि वेळेवर हस्तक्षेप महत्त्वपूर्ण आहे.'
+        }
       },
       {
         keywords: [
@@ -658,14 +658,14 @@ export class AIService {
           'सहायता',
           'कैसे',
           'क्या',
-          'कब',
+          'कब'
         ],
         responses: {
           en: this.getHelpResponse(lowerMessage, context),
           hi: 'मैं आपका AI कृषि सहायक हूं। मैं अंगूर की खेती के बारे में सभी प्रश्नों में आपकी मदद कर सकता हूं - रोग, सिंचाई, उर्वरक, छंटाई, कटाई और बहुत कुछ।',
-          mr: 'मी तुमचा AI कृषी सहाय्यक आहे. मी द्राक्ष शेतीबाबतच्या सर्व प्रश्नांमध्ये तुम्हाला मदत करू शकतो.',
-        },
-      },
+          mr: 'मी तुमचा AI कृषी सहाय्यक आहे. मी द्राक्ष शेतीबाबतच्या सर्व प्रश्नांमध्ये तुम्हाला मदत करू शकतो.'
+        }
+      }
     ]
 
     // Find matching pattern
@@ -679,7 +679,7 @@ export class AIService {
     const defaultResponses = {
       en: "I'm here to help with your grape farming questions! You can ask about diseases, irrigation, fertilization, pruning, harvest timing, pest control, soil management, or weather-related concerns. Feel free to take photos of your vines for disease detection too!",
       hi: 'मैं आपके अंगूर की खेती के प्रश्नों में मदद के लिए यहाँ हूँ! आप रोग, सिंचाई, उर्वरक, छंटाई, कटाई का समय, कीट नियंत्रण, मिट्टी प्रबंधन, या मौसम संबंधी चिंताओं के बारे में पूछ सकते हैं।',
-      mr: 'मी तुमच्या द्राक्ष शेतीच्या प्रश्नांसाठी मदत करण्यासाठी येथे आहे! तुम्ही रोग, सिंचन, खत, छाटणी, कापणीची वेळ, किडी नियंत्रण, माती व्यवस्थापन किंवा हवामानाशी संबंधित चिंता बद्दल विचारू शकता.',
+      mr: 'मी तुमच्या द्राक्ष शेतीच्या प्रश्नांसाठी मदत करण्यासाठी येथे आहे! तुम्ही रोग, सिंचन, खत, छाटणी, कापणीची वेळ, किडी नियंत्रण, माती व्यवस्थापन किंवा हवामानाशी संबंधित चिंता बद्दल विचारू शकता.'
     }
 
     return defaultResponses[language as keyof typeof defaultResponses] || defaultResponses.en
@@ -904,7 +904,7 @@ export class AIService {
         const responses = {
           en: 'For powdery mildew treatment: Apply sulfur-based fungicide every 7-10 days during active disease period. For prevention, spray every 14-21 days starting in early spring. Always follow label instructions and avoid spraying during bloom to protect pollinators.',
           hi: 'पाउडरी मिल्ड्यू के उपचार के लिए: सक्रिय रोग काल के दौरान हर 7-10 दिन में सल्फर आधारित कवकनाशी लगाएं। रोकथाम के लिए, वसंत की शुरुआत से हर 14-21 दिन में छिड़काव करें।',
-          mr: 'पावडरी मिल्ड्यूच्या उपचारासाठी: सक्रिय रोगाच्या काळात दर 7-10 दिवसांनी सल्फर आधारित बुरशीनाशक वापरा. प्रतिबंधासाठी, वसंत ऋतूच्या सुरुवातीपासून दर 14-21 दिवसांनी फवारणी करा.',
+          mr: 'पावडरी मिल्ड्यूच्या उपचारासाठी: सक्रिय रोगाच्या काळात दर 7-10 दिवसांनी सल्फर आधारित बुरशीनाशक वापरा. प्रतिबंधासाठी, वसंत ऋतूच्या सुरुवातीपासून दर 14-21 दिवसांनी फवारणी करा.'
         }
         return responses[language as keyof typeof responses] || responses.en
 
@@ -912,7 +912,7 @@ export class AIService {
         const preventionResponses = {
           en: 'To prevent powdery mildew: Ensure good air circulation through proper pruning, avoid overhead watering, plant resistant varieties, and apply preventive fungicides before symptoms appear. Remove infected leaves promptly.',
           hi: 'पाउडरी मिल्ड्यू से बचाव के लिए: उचित छंटाई के द्वारा अच्छी हवा का संचार सुनिश्चित करें, ऊपर से पानी देने से बचें, प्रतिरोधी किस्में लगाएं।',
-          mr: 'पावडरी मिल्ड्यूपासून बचावासाठी: योग्य छाटणीद्वारे चांगली हवेची वळण सुनिश्चित करा, वरून पाणी देणे टाळा, प्रतिरोधक जाती लावा.',
+          mr: 'पावडरी मिल्ड्यूपासून बचावासाठी: योग्य छाटणीद्वारे चांगली हवेची वळण सुनिश्चित करा, वरून पाणी देणे टाळा, प्रतिरोधक जाती लावा.'
         }
         return (
           preventionResponses[language as keyof typeof preventionResponses] ||
@@ -923,7 +923,7 @@ export class AIService {
         const organicResponses = {
           en: 'Organic treatments for powdery mildew: Baking soda solution (1 tsp per quart water), neem oil, horticultural oils, or compost tea. Milk solution (1:10 ratio) can also be effective. Apply early morning or evening to avoid leaf burn.',
           hi: 'पाउडरी मिल्ड्यू के लिए जैविक उपचार: बेकिंग सोडा घोल, नीम तेल, बागवानी तेल, या खाद चाय का उपयोग करें। दूध का घोल (1:10 अनुपात) भी प्रभावी हो सकता है।',
-          mr: 'पावडरी मिल्ड्यूसाठी सेंद्रिय उपचार: बेकिंग सोडा द्रावण, कडुनिंब तेल, बागायती तेल किंवा खत चहा वापरा. दुधाचे द्रावण (1:10 प्रमाण) देखील प्रभावी असू शकते.',
+          mr: 'पावडरी मिल्ड्यूसाठी सेंद्रिय उपचार: बेकिंग सोडा द्रावण, कडुनिंब तेल, बागायती तेल किंवा खत चहा वापरा. दुधाचे द्रावण (1:10 प्रमाण) देखील प्रभावी असू शकते.'
         }
         return organicResponses[language as keyof typeof organicResponses] || organicResponses.en
 
@@ -939,7 +939,7 @@ export class AIService {
     const scheduleResponse = {
       en: `For ${season} irrigation schedule: Water deeply 2-3 times per week rather than daily shallow watering. Best times are 6-8 AM or evening after 6 PM. Monitor soil moisture at 6-inch depth - irrigate when dry.`,
       hi: `${season} सिंचाई कार्यक्रम के लिए: दैनिक उथली सिंचाई के बजाय सप्ताह में 2-3 बार गहरी सिंचाई करें। सबसे अच्छा समय सुबह 6-8 बजे या शाम 6 बजे के बाद है।`,
-      mr: `${season} सिंचन वेळापत्रकासाठी: दैनंदिन उथळ पाणी देण्याऐवजी आठवड्यातून 2-3 वेळा खोल पाणी द्या. सर्वोत्तम वेळ सकाळी 6-8 किंवा संध्याकाळी 6 नंतर आहे.`,
+      mr: `${season} सिंचन वेळापत्रकासाठी: दैनंदिन उथळ पाणी देण्याऐवजी आठवड्यातून 2-3 वेळा खोल पाणी द्या. सर्वोत्तम वेळ सकाळी 6-8 किंवा संध्याकाळी 6 नंतर आहे.`
     }
 
     return scheduleResponse[language as keyof typeof scheduleResponse] || scheduleResponse.en
@@ -951,7 +951,7 @@ export class AIService {
     const amountResponse = {
       en: 'Fertilizer application amounts: For mature vines, apply 1-2 lbs of 10-10-10 fertilizer per vine in early spring. Young vines need less - about 0.5-1 lb. Split applications: 60% in early spring, 40% after fruit set. Always water after application.',
       hi: 'उर्वरक लगाने की मात्रा: परिपक्व बेलों के लिए वसंत की शुरुआत में प्रति बेल 1-2 पाउंड 10-10-10 उर्वरक लगाएं। युवा बेलों को कम चाहिए - लगभग 0.5-1 पाउंड।',
-      mr: 'खत लावण्याचे प्रमाण: प्रौढ वेलींसाठी वसंत ऋतूच्या सुरुवातीला प्रति वेल 1-2 पौंड 10-10-10 खत लावा. तरुण वेलींना कमी लागते - सुमारे 0.5-1 पौंड.',
+      mr: 'खत लावण्याचे प्रमाण: प्रौढ वेलींसाठी वसंत ऋतूच्या सुरुवातीला प्रति वेल 1-2 पौंड 10-10-10 खत लावा. तरुण वेलींना कमी लागते - सुमारे 0.5-1 पौंड.'
     }
 
     return amountResponse[language as keyof typeof amountResponse] || amountResponse.en
@@ -989,15 +989,15 @@ export class AIService {
             ? [
                 'Apply agricultural lime',
                 'Test pH monthly after application',
-                'Consider organic matter addition',
+                'Consider organic matter addition'
               ]
             : [
                 'Apply sulfur or acidifying fertilizer',
                 'Avoid alkaline fertilizers',
-                'Monitor pH regularly',
+                'Monitor pH regularly'
               ],
         timing: 'Before next growing season',
-        expectedImpact: 'Improve nutrient availability and root health',
+        expectedImpact: 'Improve nutrient availability and root health'
       })
     }
 
@@ -1011,10 +1011,10 @@ export class AIService {
         actions: [
           'Apply nitrogen-rich fertilizer',
           'Consider organic compost application',
-          'Monitor leaf color for nitrogen deficiency signs',
+          'Monitor leaf color for nitrogen deficiency signs'
         ],
         timing: 'Early spring before bud break',
-        expectedImpact: 'Promote healthy vine growth and leaf development',
+        expectedImpact: 'Promote healthy vine growth and leaf development'
       })
     }
 

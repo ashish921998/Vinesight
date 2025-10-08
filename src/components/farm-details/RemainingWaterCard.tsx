@@ -18,7 +18,7 @@ export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCar
       day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit',
+      minute: '2-digit'
     }).format(date)
   }
 

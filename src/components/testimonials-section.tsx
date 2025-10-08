@@ -13,22 +13,22 @@ export default function TestimonialsSection() {
         'Vinesight increased our corn yield by 23% in the first season. The AI predictions helped us optimize irrigation and catch pest issues before they became problems.',
       name: 'Sarah Martinez',
       company: 'Owner, Martinez Family Farms',
-      image: '/professional-female-farmer-in-her-40s-wearing-a-pl.jpg',
+      image: '/professional-female-farmer-in-her-40s-wearing-a-pl.jpg'
     },
     {
       quote:
         'The crop health monitoring saved us thousands in potential losses. We spotted disease patterns three weeks earlier than we would have with traditional scouting.',
       name: 'David Thompson',
       company: 'Operations Manager, GreenValley Agriculture',
-      image: '/middle-aged-male-farmer-wearing-a-baseball-cap-and.jpg',
+      image: '/middle-aged-male-farmer-wearing-a-baseball-cap-and.jpg'
     },
     {
       quote:
         "Our farm efficiency improved dramatically with Vinesight's equipment integration. Task scheduling and field management became completely automated and precise.",
       name: 'Emily Chen',
       company: 'Farm Director, Sustainable Acres Co-op',
-      image: '/young-asian-female-agricultural-engineer-wearing-s.jpg',
-    },
+      image: '/young-asian-female-agricultural-engineer-wearing-s.jpg'
+    }
   ]
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export default function TestimonialsSection() {
               style={{
                 opacity: isTransitioning ? 0.6 : 1,
                 transform: isTransitioning ? 'scale(0.95)' : 'scale(1)',
-                transition: 'opacity 0.7s ease-in-out, transform 0.7s ease-in-out',
+                transition: 'opacity 0.7s ease-in-out, transform 0.7s ease-in-out'
               }}
               src={testimonials[activeTestimonial].image || '/placeholder.svg'}
               alt={testimonials[activeTestimonial].name}
@@ -78,7 +78,7 @@ export default function TestimonialsSection() {
                 className="self-stretch justify-start flex flex-col text-[#49423D] text-2xl md:text-[32px] font-medium leading-10 md:leading-[42px] font-sans h-[200px] md:h-[210px] overflow-hidden line-clamp-5 transition-all duration-700 ease-in-out tracking-tight"
                 style={{
                   filter: isTransitioning ? 'blur(4px)' : 'blur(0px)',
-                  transition: 'filter 0.7s ease-in-out',
+                  transition: 'filter 0.7s ease-in-out'
                 }}
               >
                 {testimonials[activeTestimonial].quote}
@@ -87,7 +87,7 @@ export default function TestimonialsSection() {
                 className="self-stretch flex flex-col justify-start items-start gap-1 transition-all duration-700 ease-in-out"
                 style={{
                   filter: isTransitioning ? 'blur(4px)' : 'blur(0px)',
-                  transition: 'filter 0.7s ease-in-out',
+                  transition: 'filter 0.7s ease-in-out'
                 }}
               >
                 <div className="self-stretch justify-center flex flex-col text-[rgba(73,66,61,0.90)] text-lg font-medium leading-[26px] font-sans">
@@ -105,7 +105,7 @@ export default function TestimonialsSection() {
             <button
               onClick={() =>
                 handleNavigationClick(
-                  (activeTestimonial - 1 + testimonials.length) % testimonials.length,
+                  (activeTestimonial - 1 + testimonials.length) % testimonials.length
                 )
               }
               className="w-9 h-9 shadow-[0px_1px_2px_rgba(0,0,0,0.08)] overflow-hidden rounded-full border border-[rgba(0,0,0,0.15)] justify-center items-center gap-2 flex hover:bg-gray-50 transition-colors"

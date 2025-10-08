@@ -29,7 +29,7 @@ function AuthCallbackContent() {
 
           if (exchangeError) {
             router.push(
-              `/auth/auth-code-error?error=code_exchange_failed&message=${encodeURIComponent(exchangeError.message)}`,
+              `/auth/auth-code-error?error=code_exchange_failed&message=${encodeURIComponent(exchangeError.message)}`
             )
             return
           }
@@ -49,7 +49,7 @@ function AuthCallbackContent() {
 
         if (sessionError) {
           router.push(
-            `/auth/auth-code-error?error=session_failed&message=${encodeURIComponent(sessionError.message)}`,
+            `/auth/auth-code-error?error=session_failed&message=${encodeURIComponent(sessionError.message)}`
           )
           return
         }

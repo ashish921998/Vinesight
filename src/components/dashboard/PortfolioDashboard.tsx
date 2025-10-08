@@ -3,13 +3,10 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import {
   TrendingUp,
-  TrendingDown,
   AlertTriangle,
-  Droplets,
   DollarSign,
   Activity,
   MapPin,
@@ -17,7 +14,7 @@ import {
   Users,
   Tractor,
   BarChart3,
-  Target,
+  Target
 } from 'lucide-react'
 import { capitalize } from '@/lib/utils'
 
@@ -74,7 +71,7 @@ const generatePortfolioData = (): { farms: Farm[]; metrics: PortfolioMetrics } =
       expenses: 134000,
       soilMoisture: 68,
       weatherRisk: 'low',
-      harvestDays: 45,
+      harvestDays: 45
     },
     {
       id: 'farm2',
@@ -94,7 +91,7 @@ const generatePortfolioData = (): { farms: Farm[]; metrics: PortfolioMetrics } =
       expenses: 126000,
       soilMoisture: 45,
       weatherRisk: 'medium',
-      harvestDays: 62,
+      harvestDays: 62
     },
     {
       id: 'farm3',
@@ -114,7 +111,7 @@ const generatePortfolioData = (): { farms: Farm[]; metrics: PortfolioMetrics } =
       expenses: 127000,
       soilMoisture: 28,
       weatherRisk: 'high',
-      harvestDays: 88,
+      harvestDays: 88
     },
     {
       id: 'farm4',
@@ -134,8 +131,8 @@ const generatePortfolioData = (): { farms: Farm[]; metrics: PortfolioMetrics } =
       expenses: 94000,
       soilMoisture: 72,
       weatherRisk: 'low',
-      harvestDays: 28,
-    },
+      harvestDays: 28
+    }
   ]
 
   const metrics: PortfolioMetrics = {
@@ -146,7 +143,7 @@ const generatePortfolioData = (): { farms: Farm[]; metrics: PortfolioMetrics } =
     totalFarms: farms.length,
     criticalIssues: farms.reduce((sum, farm) => sum + farm.criticalAlerts, 0),
     resourceUtilization: farms.reduce((sum, farm) => sum + farm.waterUsage, 0) / farms.length,
-    overallHealthScore: farms.reduce((sum, farm) => sum + farm.healthScore, 0) / farms.length,
+    overallHealthScore: farms.reduce((sum, farm) => sum + farm.healthScore, 0) / farms.length
   }
 
   return { farms, metrics }

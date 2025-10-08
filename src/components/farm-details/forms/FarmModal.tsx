@@ -6,7 +6,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -49,7 +49,7 @@ export function FarmModal({
   onClose,
   onSubmit,
   editingFarm = null,
-  isSubmitting = false,
+  isSubmitting = false
 }: FarmModalProps) {
   const [formData, setFormData] = useState<FormData>(() => ({
     name: editingFarm?.name || '',
@@ -61,14 +61,14 @@ export function FarmModal({
     rowSpacing: editingFarm?.rowSpacing?.toString() || '',
     totalTankCapacity: editingFarm?.totalTankCapacity?.toString() || '',
     systemDischarge: editingFarm?.systemDischarge?.toString() || '',
-    dateOfPruning: editingFarm?.dateOfPruning || '',
+    dateOfPruning: editingFarm?.dateOfPruning || ''
   }))
 
   const [locationData, setLocationData] = useState<LocationData>(() => ({
     latitude: editingFarm?.latitude?.toString() || '',
     longitude: editingFarm?.longitude?.toString() || '',
     elevation: editingFarm?.elevation?.toString() || '',
-    locationName: editingFarm?.locationName || '',
+    locationName: editingFarm?.locationName || ''
   }))
 
   // Update form data when editingFarm prop changes
@@ -84,14 +84,14 @@ export function FarmModal({
         rowSpacing: editingFarm.rowSpacing?.toString() || '',
         totalTankCapacity: editingFarm.totalTankCapacity?.toString() || '',
         systemDischarge: editingFarm.systemDischarge?.toString() || '',
-        dateOfPruning: editingFarm.dateOfPruning || '',
+        dateOfPruning: editingFarm.dateOfPruning || ''
       })
 
       setLocationData({
         latitude: editingFarm.latitude?.toString() || '',
         longitude: editingFarm.longitude?.toString() || '',
         elevation: editingFarm.elevation?.toString() || '',
-        locationName: editingFarm.locationName || '',
+        locationName: editingFarm.locationName || ''
       })
     } else {
       // Reset form when not editing (adding new farm)
@@ -105,14 +105,14 @@ export function FarmModal({
         rowSpacing: '',
         totalTankCapacity: '',
         systemDischarge: '',
-        dateOfPruning: '',
+        dateOfPruning: ''
       })
 
       setLocationData({
         latitude: '',
         longitude: '',
         elevation: '',
-        locationName: '',
+        locationName: ''
       })
     }
   }, [editingFarm])
@@ -120,14 +120,14 @@ export function FarmModal({
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: value
     }))
   }
 
   const handleLocationChange = (field: string, value: string) => {
     setLocationData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: value
     }))
   }
 
@@ -136,7 +136,7 @@ export function FarmModal({
       latitude: location.latitude.toString(),
       longitude: location.longitude.toString(),
       elevation: location.elevation.toString(),
-      locationName: `${location.name}, ${location.admin1 || ''} ${location.country}`.trim(),
+      locationName: `${location.name}, ${location.admin1 || ''} ${location.country}`.trim()
     })
 
     // Also update the region if it's empty
@@ -169,7 +169,7 @@ export function FarmModal({
       location_source:
         locationData.latitude && locationData.longitude ? ('search' as const) : undefined,
       location_updated_at:
-        locationData.latitude && locationData.longitude ? new Date().toISOString() : undefined,
+        locationData.latitude && locationData.longitude ? new Date().toISOString() : undefined
     }
 
     await onSubmit(farmData)

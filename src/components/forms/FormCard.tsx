@@ -18,7 +18,7 @@ const variantStyles = {
   success: 'border-green-200 bg-green-50/50',
   warning: 'border-green-300 bg-green-100/50',
   error: 'border-red-200 bg-red-50/50',
-  info: 'border-green-400 bg-green-200/50',
+  info: 'border-green-400 bg-green-200/50'
 }
 
 const variantTitleStyles = {
@@ -26,7 +26,7 @@ const variantTitleStyles = {
   success: 'text-green-800',
   warning: 'text-green-700',
   error: 'text-red-800',
-  info: 'text-green-600',
+  info: 'text-green-600'
 }
 
 export function FormCard({
@@ -35,7 +35,7 @@ export function FormCard({
   icon,
   children,
   className,
-  variant = 'default',
+  variant = 'default'
 }: FormCardProps) {
   return (
     <Card className={cn(variantStyles[variant], className)}>

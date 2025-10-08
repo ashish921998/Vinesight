@@ -11,7 +11,7 @@ import {
   CostCategory,
   RevenueSource,
   RegulatoryCompliance,
-  ComplianceIssue,
+  ComplianceIssue
 } from './reporting-types'
 import { CloudDataService } from './cloud-data-service'
 import type { Farm } from '@/types/types'
@@ -33,7 +33,7 @@ export class ReportingService {
     farmId: string,
     reportType: ComplianceReport['reportType'],
     periodStart: Date,
-    periodEnd: Date,
+    periodEnd: Date
   ): Promise<ComplianceReport> {
     // Temporarily disabled for deployment
     throw new Error('Compliance report generation temporarily disabled for deployment')
@@ -44,7 +44,7 @@ export class ReportingService {
     farmId: string,
     reportType: FinancialReport['reportType'],
     periodStart: Date,
-    periodEnd: Date,
+    periodEnd: Date
   ): Promise<FinancialReport> {
     // Temporarily disabled for deployment
     throw new Error('Financial report generation temporarily disabled for deployment')
@@ -53,10 +53,10 @@ export class ReportingService {
   // Temporarily disabled for deployment
   private static async generateOrganicComplianceData(
     farm: Farm,
-    operations: any[],
+    operations: any[]
   ): Promise<OrganicComplianceData> {
     const organicOps = operations.filter(
-      (op) => op.type === 'fertilizer' || op.type === 'spray' || op.type === 'soil_treatment',
+      (op) => op.type === 'fertilizer' || op.type === 'spray' || op.type === 'soil_treatment'
     )
 
     return {
@@ -69,20 +69,20 @@ export class ReportingService {
         certificationStatus: 'certified' as const,
         usageAmount: parseFloat(op.notes?.match(/\d+(\.\d+)?/)?.[0] || '0'),
         applicationDate: op.date,
-        purpose: op.type,
+        purpose: op.type
       })),
       prohibitedSubstancesCheck: true,
       bufferZoneCompliance: true,
       recordKeepingCompliance: true,
       inspectionDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
-      nonComplianceIssues: [],
+      nonComplianceIssues: []
     }
   }
 
   // Temporarily disabled for deployment
   private static async generatePesticideUsageData(
     farm: Farm,
-    operations: any[],
+    operations: any[]
   ): Promise<PesticideUsageRecord[]> {
     const sprayOps = operations.filter((op) => op.type === 'spray')
 
@@ -98,14 +98,14 @@ export class ReportingService {
       applicationMethod: 'Foliar Spray',
       weatherConditions: 'Clear, Wind Speed < 10 km/h',
       applicatorName: 'Farm Manager',
-      certificationNumber: 'PST-2024-001',
+      certificationNumber: 'PST-2024-001'
     }))
   }
 
   // Temporarily disabled for deployment
   private static async generateWaterUsageData(
     farm: Farm,
-    operations: any[],
+    operations: any[]
   ): Promise<WaterUsageCompliance> {
     const irrigationOps = operations.filter((op) => op.type === 'irrigation')
     const totalUsage = irrigationOps.reduce((sum, op) => {
@@ -125,7 +125,7 @@ export class ReportingService {
         'Drip irrigation system installed',
         'Soil moisture monitoring',
         'Mulching to reduce evaporation',
-        'Rainwater harvesting',
+        'Rainwater harvesting'
       ],
       qualityTestResults: [
         {
@@ -136,16 +136,16 @@ export class ReportingService {
           phosphates: 5,
           heavyMetals: { lead: 0.01, mercury: 0.001, arsenic: 0.005 },
           bacterialCount: 100,
-          complianceStatus: 'compliant',
-        },
-      ],
+          complianceStatus: 'compliant'
+        }
+      ]
     }
   }
 
   // Temporarily disabled for deployment
   private static async generateSoilHealthData(
     farm: Farm,
-    operations: any[],
+    operations: any[]
   ): Promise<SoilHealthReport> {
     return {
       testDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
@@ -161,24 +161,24 @@ export class ReportingService {
           potassium: 320,
           micronutrients: { zinc: 2.1, iron: 18, manganese: 12, copper: 1.8 },
           heavyMetals: { lead: 15, cadmium: 0.5, chromium: 8 },
-          soilStructure: 'Well-aggregated loamy soil',
-        },
+          soilStructure: 'Well-aggregated loamy soil'
+        }
       ],
       overallRating: 'good',
       recommendations: [
         'Continue organic matter addition',
         'Monitor potassium levels',
         'Consider zinc supplementation',
-        'Maintain current pH levels',
+        'Maintain current pH levels'
       ],
-      complianceNotes: 'Soil quality meets organic certification standards',
+      complianceNotes: 'Soil quality meets organic certification standards'
     }
   }
 
   // Temporarily disabled for deployment
   private static async generateHarvestData(
     farm: Farm,
-    operations: any[],
+    operations: any[]
   ): Promise<HarvestRecord[]> {
     const harvestOps = operations.filter((op) => op.type === 'harvest')
 
@@ -196,7 +196,7 @@ export class ReportingService {
       laborHours: farm.area * 8,
       equipment: ['Harvesting containers', 'Weighing scales', 'Transport vehicle'],
       weatherConditions: 'Clear, Temperature: 22°C, Humidity: 65%',
-      notes: op.notes || 'Premium quality harvest, optimal sugar content',
+      notes: op.notes || 'Premium quality harvest, optimal sugar content'
     }))
   }
 
@@ -206,7 +206,7 @@ export class ReportingService {
 
     operations.forEach((op) => {
       const cost = parseFloat(
-        op.notes?.match(/₹(\d+(?:,\d{3})*(?:\.\d{2})?)/)?.[1]?.replace(/,/g, '') || '0',
+        op.notes?.match(/₹(\d+(?:,\d{3})*(?:\.\d{2})?)/)?.[1]?.replace(/,/g, '') || '0'
       )
       const category = this.mapOperationTypeToCategory(op.type)
       costs.set(category, (costs.get(category) || 0) + cost)
@@ -219,14 +219,14 @@ export class ReportingService {
       subcategory: this.getSubcategory(category),
       amount,
       percentage: totalCosts > 0 ? (amount / totalCosts) * 100 : 0,
-      trend: 'stable' as const,
+      trend: 'stable' as const
     }))
   }
 
   // Temporarily disabled for deployment
   private static async calculateRevenueBreakdown(
     farm: Farm,
-    operations: any[],
+    operations: any[]
   ): Promise<RevenueSource[]> {
     const harvestOps = operations.filter((op) => op.type === 'harvest')
     const totalProduction = harvestOps.length > 0 ? farm.area * 12000 : 0 // 12 tons per hectare
@@ -240,8 +240,8 @@ export class ReportingService {
         amount: totalRevenue,
         percentage: 100,
         quantity: totalProduction,
-        unitPrice: pricePerTon,
-      },
+        unitPrice: pricePerTon
+      }
     ]
   }
 
@@ -253,7 +253,7 @@ export class ReportingService {
       pruning: 'labor',
       harvest: 'labor',
       soil_treatment: 'materials',
-      maintenance: 'equipment',
+      maintenance: 'equipment'
     }
     return mapping[operationType] || 'other'
   }
@@ -266,7 +266,7 @@ export class ReportingService {
       utilities: 'Water & Electricity',
       pesticides: 'Crop Protection',
       fertilizers: 'Plant Nutrition',
-      other: 'Miscellaneous',
+      other: 'Miscellaneous'
     }
     return subcategories[category] || 'General'
   }
@@ -281,7 +281,7 @@ export class ReportingService {
       cost_analysis: 'Cost Analysis Report',
       profit_loss: 'Profit & Loss Statement',
       roi_analysis: 'Return on Investment Analysis',
-      budget_vs_actual: 'Budget vs Actual Performance Report',
+      budget_vs_actual: 'Budget vs Actual Performance Report'
     }
     return titles[reportType] || 'Farm Report'
   }
@@ -292,7 +292,7 @@ export class ReportingService {
       pesticide: 'Insecticides Act, 1968 & Rules 1971 - India',
       water_usage: 'Model Groundwater (Sustainable Management) Act, 2016',
       soil_health: 'Soil Health Card Scheme Guidelines',
-      harvest: 'Food Safety and Standards Act, 2006',
+      harvest: 'Food Safety and Standards Act, 2006'
     }
     return standards[reportType] || 'General Agricultural Standards'
   }
@@ -313,7 +313,7 @@ export class ReportingService {
     doc.text(
       `Period: ${('periodStart' in report ? report.periodStart : new Date()).toLocaleDateString()} - ${('periodEnd' in report ? report.periodEnd : new Date()).toLocaleDateString()}`,
       margin,
-      55,
+      55
     )
 
     let yPosition = 70
@@ -333,7 +333,7 @@ export class ReportingService {
           ['Total Revenue', `₹${finReport.data.totalRevenue.toLocaleString()}`],
           ['Total Costs', `₹${finReport.data.totalCosts.toLocaleString()}`],
           ['Net Profit', `₹${finReport.data.netProfit.toLocaleString()}`],
-          ['Profit Margin', `${finReport.data.profitMargin.toFixed(2)}%`],
+          ['Profit Margin', `${finReport.data.profitMargin.toFixed(2)}%`]
         ]
 
         doc.autoTable({
@@ -341,7 +341,7 @@ export class ReportingService {
           head: [['Metric', 'Value']],
           body: summaryData,
           margin: { left: margin },
-          styles: { fontSize: 10 },
+          styles: { fontSize: 10 }
         })
 
         // Temporarily disabled for deployment
@@ -358,7 +358,7 @@ export class ReportingService {
             cost.category,
             cost.subcategory,
             `₹${cost.amount.toLocaleString()}`,
-            `${cost.percentage.toFixed(1)}%`,
+            `${cost.percentage.toFixed(1)}%`
           ])
 
           doc.autoTable({
@@ -366,7 +366,7 @@ export class ReportingService {
             head: [['Category', 'Subcategory', 'Amount', 'Percentage']],
             body: costData,
             margin: { left: margin },
-            styles: { fontSize: 9 },
+            styles: { fontSize: 9 }
           })
         }
       } else {
@@ -385,13 +385,13 @@ export class ReportingService {
           doc.text(
             `Certification Number: ${compReport.data.certificationNumber}`,
             margin,
-            yPosition,
+            yPosition
           )
           yPosition += 10
           doc.text(
             `Expiry Date: ${new Date(compReport.data.certificationExpiry).toLocaleDateString()}`,
             margin,
-            yPosition,
+            yPosition
           )
           yPosition += 15
 
@@ -400,19 +400,19 @@ export class ReportingService {
           doc.text(
             `✓ Prohibited Substances Check: ${compReport.data.prohibitedSubstancesCheck ? 'Passed' : 'Failed'}`,
             margin + 10,
-            yPosition,
+            yPosition
           )
           yPosition += 8
           doc.text(
             `✓ Buffer Zone Compliance: ${compReport.data.bufferZoneCompliance ? 'Compliant' : 'Non-compliant'}`,
             margin + 10,
-            yPosition,
+            yPosition
           )
           yPosition += 8
           doc.text(
             `✓ Record Keeping: ${compReport.data.recordKeepingCompliance ? 'Compliant' : 'Non-compliant'}`,
             margin + 10,
-            yPosition,
+            yPosition
           )
         }
       }
@@ -443,11 +443,11 @@ export class ReportingService {
             'Use of certified organic inputs only',
             'Maintain buffer zones from conventional farms',
             'Keep detailed records of all operations',
-            'Submit to annual third-party inspections',
+            'Submit to annual third-party inspections'
           ],
           complianceStatus: 'compliant',
           lastChecked: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-          evidence: ['Certification certificate', 'Inspection reports', 'Input purchase records'],
+          evidence: ['Certification certificate', 'Inspection reports', 'Input purchase records']
         },
         {
           name: 'Pesticide Management',
@@ -457,17 +457,17 @@ export class ReportingService {
             'Use only registered pesticides',
             'Follow label instructions for dosage and timing',
             'Maintain pre-harvest interval',
-            'Keep application records',
+            'Keep application records'
           ],
           complianceStatus: 'compliant',
           lastChecked: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-          evidence: ['Pesticide purchase receipts', 'Application logs', 'Training certificates'],
-        },
+          evidence: ['Pesticide purchase receipts', 'Application logs', 'Training certificates']
+        }
       ],
       lastAuditDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
       nextAuditDate: new Date(Date.now() + 275 * 24 * 60 * 60 * 1000),
       complianceScore: 95,
-      issues: [],
+      issues: []
     }
   }
 }

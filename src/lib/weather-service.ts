@@ -86,7 +86,7 @@ export class WeatherService {
   private static readonly DEFAULT_COORDS = {
     latitude: 19.0825,
     longitude: 73.1963,
-    name: 'Nashik',
+    name: 'Nashik'
   }
 
   static async getCurrentWeather(latitude?: number, longitude?: number): Promise<WeatherData> {
@@ -135,7 +135,7 @@ export class WeatherService {
         conditionCode: current.condition.code,
         isDay: current.is_day === 1,
         precipitation: current.precip_mm,
-        feelsLike: current.feelslike_c,
+        feelsLike: current.feelslike_c
       },
       forecast: forecast.map((day: any) => ({
         date: day.date,
@@ -153,7 +153,7 @@ export class WeatherService {
         uvIndex: day.day.uv,
         sunrise: day.astro.sunrise,
         sunset: day.astro.sunset,
-        dayLength: this.calculateDayLength(day.astro.sunrise, day.astro.sunset),
+        dayLength: this.calculateDayLength(day.astro.sunrise, day.astro.sunset)
       })),
       location: {
         name: location.name,
@@ -161,9 +161,9 @@ export class WeatherService {
         country: location.country,
         latitude: location.lat,
         longitude: location.lon,
-        timezone: location.tz_id,
+        timezone: location.tz_id
       },
-      lastUpdated: new Date(),
+      lastUpdated: new Date()
     }
   }
 
@@ -200,7 +200,7 @@ export class WeatherService {
       Veraison: 0.8,
       Harvest: 0.6,
       'Post-harvest': 0.4,
-      Dormant: 0.2,
+      Dormant: 0.2
     }
 
     const kc = cropCoefficients[growthStage] || 0.7
@@ -234,7 +234,7 @@ export class WeatherService {
       monthlyETc: Math.round(monthlyETc * 100) / 100,
       cropCoefficient: kc,
       referenceET: Math.round(et0 * 100) / 100,
-      growthStage,
+      growthStage
     }
   }
 
@@ -263,13 +263,13 @@ export class WeatherService {
     return {
       irrigation: irrigationAlert,
       pest: pestAlert,
-      harvest: harvestAlert,
+      harvest: harvestAlert
     }
   }
 
   private static generateIrrigationAlert(
     weather: WeatherData,
-    etc: ETc,
+    etc: ETc
   ): WeatherAlerts['irrigation'] {
     const current = weather.current
     const forecast = weather.forecast.slice(0, 3)
@@ -311,7 +311,7 @@ export class WeatherService {
       shouldIrrigate,
       reason,
       urgency,
-      recommendations,
+      recommendations
     }
   }
 
@@ -366,7 +366,7 @@ export class WeatherService {
     return {
       riskLevel,
       conditions,
-      precautions,
+      precautions
     }
   }
 
@@ -406,7 +406,7 @@ export class WeatherService {
     return {
       isOptimal,
       conditions,
-      recommendations,
+      recommendations
     }
   }
 
@@ -428,7 +428,7 @@ export class WeatherService {
         conditionCode: 1003,
         isDay: true,
         precipitation: 0,
-        feelsLike: 31,
+        feelsLike: 31
       },
       forecast: [
         {
@@ -447,7 +447,7 @@ export class WeatherService {
           uvIndex: 8,
           sunrise: '06:15 AM',
           sunset: '06:45 PM',
-          dayLength: 12.5,
+          dayLength: 12.5
         },
         {
           date: new Date(now.getTime() + 86400000).toISOString().split('T')[0],
@@ -465,8 +465,8 @@ export class WeatherService {
           uvIndex: 6,
           sunrise: '06:16 AM',
           sunset: '06:44 PM',
-          dayLength: 12.4,
-        },
+          dayLength: 12.4
+        }
       ],
       location: {
         name: 'Nashik',
@@ -474,9 +474,9 @@ export class WeatherService {
         country: 'India',
         latitude: 19.0825,
         longitude: 73.1963,
-        timezone: 'Asia/Kolkata',
+        timezone: 'Asia/Kolkata'
       },
-      lastUpdated: now,
+      lastUpdated: now
     }
   }
 
@@ -484,7 +484,7 @@ export class WeatherService {
   static generateIrrigationSchedule(
     weather: WeatherData,
     etc: ETc,
-    soilType: string = 'medium',
+    soilType: string = 'medium'
   ): {
     schedule: {
       date: string
@@ -502,7 +502,7 @@ export class WeatherService {
     const soilCapacity = {
       sandy: 80,
       medium: 120,
-      clay: 160,
+      clay: 160
     }
 
     const capacity = soilCapacity[soilType as keyof typeof soilCapacity] || 120
@@ -544,7 +544,7 @@ export class WeatherService {
           duration: Math.round(duration * 100) / 100,
           amount: Math.round(irrigationAmount * 100) / 100,
           reason,
-          priority,
+          priority
         })
 
         soilMoisture += irrigationAmount
@@ -554,7 +554,7 @@ export class WeatherService {
 
     return {
       schedule,
-      totalWaterNeed: Math.round(totalWaterNeed * 100) / 100,
+      totalWaterNeed: Math.round(totalWaterNeed * 100) / 100
     }
   }
 }

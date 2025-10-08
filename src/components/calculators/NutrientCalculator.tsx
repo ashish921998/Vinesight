@@ -12,7 +12,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import {
   Beaker,
@@ -28,13 +28,13 @@ import {
   Activity,
   BarChart3,
   Calculator,
-  DollarSign,
+  DollarSign
 } from 'lucide-react'
 import {
   NutrientCalculator,
   type NutrientCalculationInputs,
   type NutrientResults,
-  type SoilTestResults,
+  type SoilTestResults
 } from '@/lib/nutrient-calculator'
 import { SupabaseService } from '@/lib/supabase-service'
 import type { Farm } from '@/types/types'
@@ -46,7 +46,7 @@ export function NutrientCalculatorComponent() {
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<NutrientResults | null>(null)
   const [activeSection, setActiveSection] = useState<'calculator' | 'symptoms' | 'schedule'>(
-    'calculator',
+    'calculator'
   )
 
   const [formData, setFormData] = useState({
@@ -68,7 +68,7 @@ export function NutrientCalculatorComponent() {
     manganese: '',
     iron: '',
     copper: '',
-    cec: '',
+    cec: ''
   })
 
   useEffect(() => {
@@ -106,7 +106,7 @@ export function NutrientCalculatorComponent() {
         manganese: parseFloat(formData.manganese) || 15,
         iron: parseFloat(formData.iron) || 25,
         copper: parseFloat(formData.copper) || 1.5,
-        cec: parseFloat(formData.cec) || 15,
+        cec: parseFloat(formData.cec) || 15
       }
 
       const inputs: NutrientCalculationInputs = {
@@ -117,7 +117,7 @@ export function NutrientCalculatorComponent() {
         irrigationMethod: formData.irrigationMethod,
         soilTest: soilTest,
         previousApplications: [],
-        farmArea: selectedFarm.area,
+        farmArea: selectedFarm.area
       }
 
       const calculationResults = NutrientCalculator.calculateNutrients(inputs)
@@ -129,7 +129,7 @@ export function NutrientCalculatorComponent() {
         calculation_type: 'nutrients',
         date: new Date().toISOString().split('T')[0],
         inputs: inputs,
-        outputs: calculationResults,
+        outputs: calculationResults
       })
     } catch (error) {
       console.error('Error calculating nutrient requirements:', error)
@@ -141,7 +141,7 @@ export function NutrientCalculatorComponent() {
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: value
     }))
   }
 
@@ -164,7 +164,7 @@ export function NutrientCalculatorComponent() {
       manganese: '',
       iron: '',
       copper: '',
-      cec: '',
+      cec: ''
     })
     setResults(null)
   }
@@ -316,7 +316,7 @@ export function NutrientCalculatorComponent() {
                             | 'fruit_set'
                             | 'veraison'
                             | 'harvest'
-                            | 'post_harvest',
+                            | 'post_harvest'
                         ) => handleInputChange('currentGrowthStage', value)}
                       >
                         <SelectTrigger className="h-12 sm:h-11 text-base sm:text-sm">

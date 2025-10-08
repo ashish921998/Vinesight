@@ -11,28 +11,28 @@ import { LayoutContent } from '@/components/layout/LayoutContent'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
-  subsets: ['latin'],
+  subsets: ['latin']
 })
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
-  subsets: ['latin'],
+  subsets: ['latin']
 })
 
 const montserrat = Montserrat({
   variable: '--font-montserrat',
-  subsets: ['latin'],
+  subsets: ['latin']
 })
 
 const merriweather = Merriweather({
   variable: '--font-merriweather',
   subsets: ['latin'],
-  weight: ['300', '400', '700', '900'],
+  weight: ['300', '400', '700', '900']
 })
 
 const sourceCodePro = Source_Code_Pro({
   variable: '--font-source-code-pro',
-  subsets: ['latin'],
+  subsets: ['latin']
 })
 
 export const metadata: Metadata = {
@@ -52,18 +52,18 @@ export const metadata: Metadata = {
       follow: true,
       'max-video-preview': -1,
       'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
+      'max-snippet': -1
+    }
   },
   verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SEARCH_CONSOLE_VERIFICATION,
+    google: process.env.NEXT_PUBLIC_GOOGLE_SEARCH_CONSOLE_VERIFICATION
   },
   category: 'agriculture',
   classification: 'Agriculture Technology',
   manifest: '/manifest.json',
   metadataBase: new URL('https://farmai.vercel.app'),
   alternates: {
-    canonical: '/',
+    canonical: '/'
   },
   openGraph: {
     type: 'website',
@@ -78,9 +78,9 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'FarmAI - Smart Farm Management System',
-      },
-    ],
+        alt: 'FarmAI - Smart Farm Management System'
+      }
+    ]
   },
   twitter: {
     card: 'summary_large_image',
@@ -88,25 +88,25 @@ export const metadata: Metadata = {
     description:
       'Transform farming with AI-driven crop monitoring, yield prediction, and automated management systems.',
     images: ['/og-image.png'],
-    creator: '@FarmAI',
+    creator: '@FarmAI'
   },
   icons: {
     icon: [
       { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' }
     ],
-    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
-  },
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }]
+  }
 }
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#37a765',
+  themeColor: '#37a765'
 }
 
 export default function RootLayout({
-  children,
+  children
 }: Readonly<{
   children: React.ReactNode
 }>) {

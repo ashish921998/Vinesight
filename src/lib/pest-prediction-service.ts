@@ -3,7 +3,7 @@ import type {
   PestDiseasePrediction,
   WeatherData,
   PestRiskFactors,
-  AIServiceResponse,
+  AIServiceResponse
 } from '@/types/ai'
 import { OpenMeteoWeatherService } from './open-meteo-weather'
 
@@ -27,8 +27,8 @@ export class PestPredictionService {
         september: 0.5,
         october: 0.3,
         november: 0.2,
-        december: 0.1,
-      },
+        december: 0.1
+      }
     },
     powdery_mildew: {
       temperature: { optimal: [20, 30], weight: 0.4 },
@@ -47,8 +47,8 @@ export class PestPredictionService {
         september: 0.7,
         october: 0.5,
         november: 0.3,
-        december: 0.1,
-      },
+        december: 0.1
+      }
     },
     black_rot: {
       temperature: { optimal: [24, 32], weight: 0.3 },
@@ -67,8 +67,8 @@ export class PestPredictionService {
         september: 0.6,
         october: 0.4,
         november: 0.2,
-        december: 0.1,
-      },
+        december: 0.1
+      }
     },
     anthracnose: {
       temperature: { optimal: [22, 28], weight: 0.3 },
@@ -87,8 +87,8 @@ export class PestPredictionService {
         september: 0.6,
         october: 0.4,
         november: 0.2,
-        december: 0.1,
-      },
+        december: 0.1
+      }
     },
     thrips: {
       temperature: { optimal: [25, 35], weight: 0.4 },
@@ -107,9 +107,9 @@ export class PestPredictionService {
         september: 0.6,
         october: 0.5,
         november: 0.4,
-        december: 0.3,
-      },
-    },
+        december: 0.3
+      }
+    }
   }
 
   // Treatment recommendations database
@@ -118,37 +118,37 @@ export class PestPredictionService {
       chemical: [
         { product: 'Metalaxyl + Mancozeb', dosage: '2g/L', cost: 150, effectiveness: 0.9 },
         { product: 'Cymoxanil + Famoxadone', dosage: '0.5g/L', cost: 200, effectiveness: 0.85 },
-        { product: 'Fosetyl Aluminium', dosage: '2.5g/L', cost: 180, effectiveness: 0.8 },
+        { product: 'Fosetyl Aluminium', dosage: '2.5g/L', cost: 180, effectiveness: 0.8 }
       ],
       organic: [
         {
           method: 'Bordeaux mixture',
           description: 'Copper-based fungicide spray',
-          effectiveness: 0.7,
+          effectiveness: 0.7
         },
         {
           method: 'Baking soda spray',
           description: 'Potassium bicarbonate solution',
-          effectiveness: 0.6,
+          effectiveness: 0.6
         },
         {
           method: 'Neem oil',
           description: 'Organic oil spray with fungicidal properties',
-          effectiveness: 0.65,
-        },
+          effectiveness: 0.65
+        }
       ],
       cultural: [
         'Improve air circulation by pruning',
         'Avoid overhead irrigation',
         'Remove infected plant debris',
-        'Apply mulch to reduce soil splashing',
-      ],
+        'Apply mulch to reduce soil splashing'
+      ]
     },
     powdery_mildew: {
       chemical: [
         { product: 'Triadimenol', dosage: '0.5ml/L', cost: 160, effectiveness: 0.9 },
         { product: 'Hexaconazole', dosage: '1ml/L', cost: 140, effectiveness: 0.85 },
-        { product: 'Myclobutanil', dosage: '1ml/L', cost: 170, effectiveness: 0.8 },
+        { product: 'Myclobutanil', dosage: '1ml/L', cost: 170, effectiveness: 0.8 }
       ],
       organic: [
         { method: 'Sulfur dust', description: 'Elemental sulfur application', effectiveness: 0.75 },
@@ -156,79 +156,79 @@ export class PestPredictionService {
         {
           method: 'Bicarbonate spray',
           description: 'Sodium/Potassium bicarbonate',
-          effectiveness: 0.65,
-        },
+          effectiveness: 0.65
+        }
       ],
       cultural: [
         'Ensure good air circulation',
         'Avoid excessive nitrogen fertilization',
         'Remove infected shoots and leaves',
-        'Morning watering to allow drying',
-      ],
+        'Morning watering to allow drying'
+      ]
     },
     black_rot: {
       chemical: [
         { product: 'Mancozeb', dosage: '2g/L', cost: 120, effectiveness: 0.85 },
         { product: 'Chlorothalonil', dosage: '2ml/L', cost: 150, effectiveness: 0.8 },
-        { product: 'Captan', dosage: '2g/L', cost: 130, effectiveness: 0.75 },
+        { product: 'Captan', dosage: '2g/L', cost: 130, effectiveness: 0.75 }
       ],
       organic: [
         { method: 'Copper hydroxide', description: 'Organic copper fungicide', effectiveness: 0.7 },
         {
           method: 'Compost tea',
           description: 'Beneficial microorganism spray',
-          effectiveness: 0.5,
-        },
+          effectiveness: 0.5
+        }
       ],
       cultural: [
         'Remove mummified berries',
         'Prune for air circulation',
         'Avoid wounding vines',
-        'Timely harvest to prevent overripening',
-      ],
+        'Timely harvest to prevent overripening'
+      ]
     },
     anthracnose: {
       chemical: [
         { product: 'Mancozeb + Carbendazim', dosage: '2g/L', cost: 140, effectiveness: 0.9 },
-        { product: 'Propineb', dosage: '2.5g/L', cost: 130, effectiveness: 0.8 },
+        { product: 'Propineb', dosage: '2.5g/L', cost: 130, effectiveness: 0.8 }
       ],
       organic: [
         { method: 'Copper oxychloride', description: 'Organic copper spray', effectiveness: 0.7 },
-        { method: 'Trichoderma', description: 'Biological fungicide', effectiveness: 0.65 },
+        { method: 'Trichoderma', description: 'Biological fungicide', effectiveness: 0.65 }
       ],
       cultural: [
         'Remove infected plant parts',
         'Improve drainage',
         'Avoid overhead watering',
-        'Use resistant varieties',
-      ],
+        'Use resistant varieties'
+      ]
     },
     thrips: {
       chemical: [
         { product: 'Imidacloprid', dosage: '0.3ml/L', cost: 180, effectiveness: 0.9 },
         { product: 'Acetamiprid', dosage: '0.4g/L', cost: 160, effectiveness: 0.85 },
-        { product: 'Spinosad', dosage: '0.5ml/L', cost: 200, effectiveness: 0.8 },
+        { product: 'Spinosad', dosage: '0.5ml/L', cost: 200, effectiveness: 0.8 }
       ],
       organic: [
         { method: 'Neem oil', description: 'Organic insecticide spray', effectiveness: 0.7 },
         {
           method: 'Insecticidal soap',
           description: 'Soap-based spray solution',
-          effectiveness: 0.6,
+          effectiveness: 0.6
         },
         {
           method: 'Blue sticky traps',
           description: 'Physical trapping method',
-          effectiveness: 0.5,
-        },
+          effectiveness: 0.5
+        }
       ],
       cultural: [
         'Remove weeds that harbor thrips',
         'Use reflective mulch',
         'Encourage beneficial insects',
-        'Regular monitoring with sticky traps',
-      ],
-    },
+        'Regular monitoring with sticky traps'
+      ]
+    }
   }
 
   /**
@@ -236,7 +236,7 @@ export class PestPredictionService {
    */
   static async generatePredictions(
     farmId: number,
-    farmData: any,
+    farmData: any
   ): Promise<AIServiceResponse<PestDiseasePrediction[]>> {
     try {
       // Get 7-day weather forecast
@@ -261,7 +261,7 @@ export class PestPredictionService {
           factors,
           historicalData[pestType] || [],
           communityRisk[pestType] || 1.0,
-          currentMonth,
+          currentMonth
         )
 
         if (riskScore > 0.3) {
@@ -272,7 +272,7 @@ export class PestPredictionService {
             pestType,
             riskScore,
             weatherData,
-            factors,
+            factors
           )
 
           if (prediction) {
@@ -298,7 +298,7 @@ export class PestPredictionService {
    */
   private static async getWeatherForecast(
     latitude: number,
-    longitude: number,
+    longitude: number
   ): Promise<WeatherData[] | null> {
     try {
       const today = new Date()
@@ -309,7 +309,7 @@ export class PestPredictionService {
         latitude,
         longitude,
         today.toISOString().split('T')[0],
-        endDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0]
       )
 
       return weatherArray.map((day) => ({
@@ -317,17 +317,17 @@ export class PestPredictionService {
         temperature: {
           min: day.temperatureMin,
           max: day.temperatureMax,
-          avg: day.temperatureMean,
+          avg: day.temperatureMean
         },
         humidity: {
           min: day.relativeHumidityMin || day.relativeHumidityMean,
           max: day.relativeHumidityMax || day.relativeHumidityMean,
-          avg: day.relativeHumidityMean,
+          avg: day.relativeHumidityMean
         },
         precipitation: day.precipitationSum,
         windSpeed: day.windSpeed10m,
         pressure: 1013, // Default pressure
-        cloudCover: 50, // Default cloud cover
+        cloudCover: 50 // Default cloud cover
       }))
     } catch (error) {
       console.error('Error fetching weather forecast:', error)
@@ -343,7 +343,7 @@ export class PestPredictionService {
     factors: any,
     historicalOutbreaks: any[],
     communityRisk: number,
-    currentMonth: string,
+    currentMonth: string
   ): number {
     let totalRisk = 0
     let weightSum = 0
@@ -360,7 +360,7 @@ export class PestPredictionService {
       } else {
         const distanceFromOptimal = Math.min(
           Math.abs(avgTemp - minOptimal),
-          Math.abs(avgTemp - maxOptimal),
+          Math.abs(avgTemp - maxOptimal)
         )
         tempRisk = Math.max(0, 1 - distanceFromOptimal / 10)
       }
@@ -383,7 +383,7 @@ export class PestPredictionService {
     // Rainfall risk
     if (factors.rainfall) {
       const rainyDays = weatherData.filter(
-        (day) => day.precipitation >= factors.rainfall.threshold,
+        (day) => day.precipitation >= factors.rainfall.threshold
       ).length
       const rainfallRisk =
         rainyDays >= factors.rainfall.days ? 1.0 : rainyDays / factors.rainfall.days
@@ -449,7 +449,7 @@ export class PestPredictionService {
     pestType: string,
     riskScore: number,
     weatherData: WeatherData[],
-    factors: any,
+    factors: any
   ): Promise<PestDiseasePrediction | null> {
     try {
       const riskLevel = this.getRiskLevel(riskScore)
@@ -471,11 +471,11 @@ export class PestPredictionService {
         ] || {
           chemical: [],
           organic: [],
-          cultural: [],
+          cultural: []
         },
         communityReports: await this.getCommunityReports(region, pestType),
         status: 'active',
-        createdAt: new Date(),
+        createdAt: new Date()
       }
 
       return prediction
@@ -551,7 +551,7 @@ export class PestPredictionService {
     return {
       startDate,
       endDate,
-      optimalTiming: '2 days before predicted onset for maximum effectiveness',
+      optimalTiming: '2 days before predicted onset for maximum effectiveness'
     }
   }
 
@@ -569,10 +569,10 @@ export class PestPredictionService {
     return {
       temperature: {
         min: Math.min(...weatherData.map((d) => d.temperature.min)),
-        max: Math.max(...weatherData.map((d) => d.temperature.max)),
+        max: Math.max(...weatherData.map((d) => d.temperature.max))
       },
       humidity: { threshold: avgHumidity },
-      rainfall: { days: rainyDays, amount: totalRainfall },
+      rainfall: { days: rainyDays, amount: totalRainfall }
     }
   }
 
@@ -587,7 +587,7 @@ export class PestPredictionService {
       powdery_mildew: [],
       black_rot: [],
       anthracnose: [],
-      thrips: [],
+      thrips: []
     }
   }
 
@@ -661,11 +661,11 @@ export class PestPredictionService {
         prevention_window: {
           startDate: prediction.preventionWindow.startDate.toISOString(),
           endDate: prediction.preventionWindow.endDate.toISOString(),
-          optimalTiming: prediction.preventionWindow.optimalTiming,
+          optimalTiming: prediction.preventionWindow.optimalTiming
         },
         recommended_treatments: prediction.recommendedTreatments,
         community_reports: prediction.communityReports,
-        status: prediction.status,
+        status: prediction.status
       }))
 
       const { error } = await supabase.from('pest_disease_predictions').insert(insertData)
@@ -694,7 +694,7 @@ export class PestPredictionService {
         // If table doesn't exist, try to generate real predictions
         if (error.code === '42P01' || error.message?.includes('does not exist')) {
           console.warn(
-            'pest_disease_predictions table not found, attempting to generate real predictions',
+            'pest_disease_predictions table not found, attempting to generate real predictions'
           )
           return await this.generateRealTimePredictions(farmId)
         }
@@ -718,7 +718,7 @@ export class PestPredictionService {
    * Generate real-time predictions when database is empty
    */
   private static async generateRealTimePredictions(
-    farmId: number,
+    farmId: number
   ): Promise<PestDiseasePrediction[]> {
     try {
       // Get farm data for context
@@ -765,7 +765,7 @@ export class PestPredictionService {
       9: { powdery_mildew: 0.4, thrips: 0.3 }, // September
       10: { downy_mildew: 0.3, thrips: 0.2 }, // October
       11: { downy_mildew: 0.2 }, // November
-      12: { downy_mildew: 0.2 }, // December
+      12: { downy_mildew: 0.2 } // December
     }
 
     const monthlyRisks = seasonalRisks[currentMonth as keyof typeof seasonalRisks] || {}
@@ -787,23 +787,23 @@ export class PestPredictionService {
           weatherTriggers: {
             temperature: { min: 20, max: 30 },
             humidity: { threshold: 80 },
-            rainfall: { days: 2, amount: 10 },
+            rainfall: { days: 2, amount: 10 }
           },
           preventionWindow: {
             startDate: new Date(now),
             endDate: new Date(onsetDate.getTime() - 24 * 60 * 60 * 1000),
-            optimalTiming: `Within ${Math.floor((onsetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))} days`,
+            optimalTiming: `Within ${Math.floor((onsetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))} days`
           },
           recommendedTreatments: this.TREATMENT_RECOMMENDATIONS[
             pestType as keyof typeof this.TREATMENT_RECOMMENDATIONS
           ] || {
             chemical: [],
             organic: [],
-            cultural: [],
+            cultural: []
           },
           communityReports: Math.floor(Math.random() * 3),
           status: 'active',
-          createdAt: now,
+          createdAt: now
         })
       }
     })
@@ -817,7 +817,7 @@ export class PestPredictionService {
   static async updatePredictionOutcome(
     predictionId: string,
     farmerAction: string,
-    outcome: string,
+    outcome: string
   ): Promise<void> {
     try {
       const { error } = await supabase
@@ -826,7 +826,7 @@ export class PestPredictionService {
           farmer_action_taken: farmerAction,
           outcome,
           status: outcome === 'prevented' ? 'resolved' : 'false_alarm',
-          resolved_at: new Date().toISOString(),
+          resolved_at: new Date().toISOString()
         })
         .eq('id', parseInt(predictionId))
 
@@ -861,18 +861,18 @@ export class PestPredictionService {
         weatherTriggers: {
           temperature: { min: 18, max: 26 },
           humidity: { threshold: 85 },
-          rainfall: { days: 3, amount: 15 },
+          rainfall: { days: 3, amount: 15 }
         },
         preventionWindow: {
           startDate: now,
           endDate: tomorrow,
-          optimalTiming: 'Act within 24 hours',
+          optimalTiming: 'Act within 24 hours'
         },
         recommendedTreatments: this.TREATMENT_RECOMMENDATIONS.downy_mildew,
         communityReports: 3,
         status: 'active',
         alertPriority: 'high',
-        createdAt: now,
+        createdAt: now
       },
       {
         id: 'mock_thrips',
@@ -885,19 +885,19 @@ export class PestPredictionService {
         weatherTriggers: {
           temperature: { min: 25, max: 32 },
           humidity: { threshold: 60 },
-          rainfall: { days: 0, amount: 0 },
+          rainfall: { days: 0, amount: 0 }
         },
         preventionWindow: {
           startDate: tomorrow,
           endDate: dayAfterTomorrow,
-          optimalTiming: 'Within 48 hours',
+          optimalTiming: 'Within 48 hours'
         },
         recommendedTreatments: this.TREATMENT_RECOMMENDATIONS.thrips,
         communityReports: 1,
         status: 'active',
         alertPriority: 'medium',
-        createdAt: now,
-      },
+        createdAt: now
+      }
     ]
   }
 
@@ -917,7 +917,7 @@ export class PestPredictionService {
       preventionWindow: {
         startDate: new Date(data.prevention_window.startDate),
         endDate: new Date(data.prevention_window.endDate),
-        optimalTiming: data.prevention_window.optimalTiming,
+        optimalTiming: data.prevention_window.optimalTiming
       },
       recommendedTreatments: data.recommended_treatments,
       communityReports: data.community_reports,
@@ -925,7 +925,7 @@ export class PestPredictionService {
       farmerActionTaken: data.farmer_action_taken,
       outcome: data.outcome,
       createdAt: new Date(data.created_at),
-      resolvedAt: data.resolved_at ? new Date(data.resolved_at) : undefined,
+      resolvedAt: data.resolved_at ? new Date(data.resolved_at) : undefined
     }
   }
 }

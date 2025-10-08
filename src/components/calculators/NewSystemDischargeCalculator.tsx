@@ -55,7 +55,7 @@ export function SystemDischargeCalculatorComponent() {
       setResult({
         result: systemDischarge,
         irrigationHours,
-        plantsPerHectare: pH,
+        plantsPerHectare: pH
       })
     }
   }
@@ -76,7 +76,7 @@ export function SystemDischargeCalculatorComponent() {
 
       setResult({
         result: systemDischarge,
-        irrigationHours,
+        irrigationHours
       })
     }
   }

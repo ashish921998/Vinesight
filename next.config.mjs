@@ -1,12 +1,10 @@
-import withPWA from 'next-pwa'
-
 const isProd = process.env.NODE_ENV === 'production'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   typescript: {
-    ignoreBuildErrors: isProd,
+    ignoreBuildErrors: isProd
   },
 
   // Performance optimizations from next.config.ts
@@ -15,13 +13,13 @@ const nextConfig = {
       'lucide-react',
       '@radix-ui/react-select',
       '@radix-ui/react-progress',
-      'jspdf',
-    ],
+      'jspdf'
+    ]
   },
 
   // Compiler optimizations
   compiler: {
-    removeConsole: isProd,
+    removeConsole: isProd
   },
 
   // Image optimization
@@ -29,41 +27,41 @@ const nextConfig = {
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    domains: ['images.unsplash.com', 'plus.unsplash.com'],
+    domains: ['images.unsplash.com', 'plus.unsplash.com']
   },
 
   turbopack: {
     rules: {
       '*.svg': {
         loaders: ['@svgr/webpack'],
-        as: '*.js',
-      },
-    },
+        as: '*.js'
+      }
+    }
   },
 
-  // Security headers
+  // Security headers and PWA settings
   async headers() {
     const securityHeaders = [
       {
         key: 'X-DNS-Prefetch-Control',
-        value: 'on',
+        value: 'on'
       },
       {
         key: 'X-XSS-Protection',
-        value: '1; mode=block',
+        value: '1; mode=block'
       },
       {
         key: 'X-Frame-Options',
-        value: 'SAMEORIGIN',
+        value: 'SAMEORIGIN'
       },
       {
         key: 'X-Content-Type-Options',
-        value: 'nosniff',
+        value: 'nosniff'
       },
       {
         key: 'Referrer-Policy',
-        value: 'strict-origin-when-cross-origin',
-      },
+        value: 'strict-origin-when-cross-origin'
+      }
     ]
 
     // Mobile-compatible CSP policy
@@ -79,52 +77,45 @@ const nextConfig = {
           "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.open-meteo.com",
           "frame-src 'self' https://accounts.google.com",
           "worker-src 'self' blob:",
-          "manifest-src 'self'",
-        ].join('; '),
+          "manifest-src 'self'"
+        ].join('; ')
       })
     }
 
     return [
       {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate'
+          }
+        ]
+      },
+      {
         source: '/manifest.json',
         headers: [
           {
             key: 'Content-Type',
-            value: 'application/manifest+json',
-          },
-        ],
+            value: 'application/manifest+json'
+          }
+        ]
       },
       {
         source: '/static/(.*)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
+            value: 'public, max-age=31536000, immutable'
+          }
+        ]
       },
       {
         source: '/(.*)',
-        headers: securityHeaders,
-      },
+        headers: securityHeaders
+      }
     ]
-  },
+  }
 }
 
-// PWA configuration - online-only (no offline caching)
-const pwaConfig = withPWA({
-  dest: 'public',
-  register: true,
-  skipWaiting: true,
-  disable: !isProd, // Disable PWA in development
-  // Custom service worker that doesn't cache anything for offline use
-  sw: 'sw.js',
-  // Disable workbox completely to prevent offline caching
-  disableDevLogs: true,
-  // No precaching of static assets
-  publicExcludes: ['!**/*'],
-  // No runtime caching strategies
-  runtimeCaching: [],
-})
-
-export default pwaConfig(nextConfig)
+export default nextConfig

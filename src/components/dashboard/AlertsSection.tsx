@@ -12,7 +12,7 @@ import {
   Thermometer,
   Wind,
   CheckCircle,
-  ArrowRight,
+  ArrowRight
 } from 'lucide-react'
 
 interface Alert {
@@ -171,7 +171,7 @@ export function AlertsSection({ alerts, onAlertAction, loading }: AlertsSectionP
                     <span className="text-xs text-muted-foreground">
                       {alert.timestamp.toLocaleTimeString([], {
                         hour: '2-digit',
-                        minute: '2-digit',
+                        minute: '2-digit'
                       })}
                     </span>
 

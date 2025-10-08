@@ -13,7 +13,7 @@ import {
   Minus,
   CloudRain,
   Gauge,
-  Leaf,
+  Leaf
 } from 'lucide-react'
 
 interface WeatherData {
@@ -71,7 +71,7 @@ export function LiveFarmStatus({
   growth,
   financial,
   loading,
-  farmName,
+  farmName
 }: LiveFarmStatusProps) {
   const getStatusColor = (value: number, thresholds: { good: number; warning: number }) => {
     if (value >= thresholds.good) return 'text-primary'
@@ -245,7 +245,7 @@ export function LiveFarmStatus({
                       value={soil.moisture}
                       className="h-2"
                       style={{
-                        backgroundColor: 'var(--muted)',
+                        backgroundColor: 'var(--muted)'
                       }}
                     />
                     {soil.moisture < 30 && (

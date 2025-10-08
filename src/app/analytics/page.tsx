@@ -20,13 +20,13 @@ import {
   AlertTriangle,
   CheckCircle,
   Award,
-  Zap,
+  Zap
 } from 'lucide-react'
 import {
   CloudDataService,
   IrrigationRecord,
   SprayRecord,
-  HarvestRecord,
+  HarvestRecord
 } from '@/lib/cloud-data-service'
 import { AnalyticsService, AdvancedAnalytics } from '@/lib/analytics-service'
 import { Farm } from '@/types/types'
@@ -87,7 +87,7 @@ export default function AnalyticsPage() {
         irrigationsByMonth: [],
         spraysByType: [],
         harvestsByFarm: [],
-        recentActivity: [],
+        recentActivity: []
       }
 
       // Get all records for analysis
@@ -120,7 +120,7 @@ export default function AnalyticsPage() {
             analyticsData.harvestsByFarm.push({
               farmName: capitalize(farm.name),
               quantity: farmHarvestQuantity,
-              value: farmHarvestValue,
+              value: farmHarvestValue
             })
           }
         } catch (farmError) {
@@ -133,7 +133,7 @@ export default function AnalyticsPage() {
       analyticsData.totalHarvestQuantity = allHarvests.reduce((sum, r) => sum + r.quantity, 0)
       analyticsData.totalHarvestValue = allHarvests.reduce(
         (sum, r) => sum + r.quantity * (r.price || 0),
-        0,
+        0
       )
 
       // Group irrigations by month
@@ -144,7 +144,7 @@ export default function AnalyticsPage() {
         const existing = irrigationsByMonth.get(monthYear) || { hours: 0, count: 0 }
         irrigationsByMonth.set(monthYear, {
           hours: existing.hours + record.duration,
-          count: existing.count + 1,
+          count: existing.count + 1
         })
       })
 
@@ -172,7 +172,7 @@ export default function AnalyticsPage() {
           type: 'irrigation' as const,
           farmName: (record as any).farmName,
           date: record.date,
-          details: `${record.duration}h irrigation - ${record.growth_stage}`,
+          details: `${record.duration}h irrigation - ${record.growth_stage}`
         })
       })
 
@@ -181,7 +181,7 @@ export default function AnalyticsPage() {
           type: 'spray' as const,
           farmName: (record as any).farmName,
           date: record.date,
-          details: `${record.chemical} treatment`,
+          details: `${record.chemical} treatment`
         })
       })
 
@@ -190,7 +190,7 @@ export default function AnalyticsPage() {
           type: 'harvest' as const,
           farmName: (record as any).farmName,
           date: record.date,
-          details: `${record.quantity}kg harvested - ${record.grade} grade`,
+          details: `${record.quantity}kg harvested - ${record.grade} grade`
         })
       })
 
@@ -220,7 +220,7 @@ export default function AnalyticsPage() {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(value)
   }
 
@@ -640,7 +640,7 @@ export default function AnalyticsPage() {
                             <div
                               className="bg-green-600 h-2 rounded-full"
                               style={{
-                                width: `${(advancedAnalytics.yieldAnalysis.benchmarkComparison.your / advancedAnalytics.yieldAnalysis.benchmarkComparison.optimal) * 100}%`,
+                                width: `${(advancedAnalytics.yieldAnalysis.benchmarkComparison.your / advancedAnalytics.yieldAnalysis.benchmarkComparison.optimal) * 100}%`
                               }}
                             />
                           </div>
@@ -651,7 +651,7 @@ export default function AnalyticsPage() {
                         <div className="text-right">
                           <span className="font-bold">
                             {advancedAnalytics.yieldAnalysis.benchmarkComparison.regional.toFixed(
-                              1,
+                              1
                             )}{' '}
                             t/ha
                           </span>
@@ -659,7 +659,7 @@ export default function AnalyticsPage() {
                             <div
                               className="bg-green-400 h-2 rounded-full"
                               style={{
-                                width: `${(advancedAnalytics.yieldAnalysis.benchmarkComparison.regional / advancedAnalytics.yieldAnalysis.benchmarkComparison.optimal) * 100}%`,
+                                width: `${(advancedAnalytics.yieldAnalysis.benchmarkComparison.regional / advancedAnalytics.yieldAnalysis.benchmarkComparison.optimal) * 100}%`
                               }}
                             />
                           </div>
@@ -707,7 +707,7 @@ export default function AnalyticsPage() {
                                 <div
                                   className="bg-green-400 h-2 rounded-full"
                                   style={{
-                                    width: `${(trend.yield / Math.max(...advancedAnalytics.yieldAnalysis.yieldTrends.map((t) => t.yield))) * 100}%`,
+                                    width: `${(trend.yield / Math.max(...advancedAnalytics.yieldAnalysis.yieldTrends.map((t) => t.yield))) * 100}%`
                                   }}
                                 />
                               </div>
@@ -839,7 +839,7 @@ export default function AnalyticsPage() {
                       className={`text-2xl font-bold ${advancedAnalytics.performanceMetrics.categories.pestManagement.score > 75 ? 'text-green-600' : advancedAnalytics.performanceMetrics.categories.pestManagement.score > 60 ? 'text-orange-600' : 'text-red-600'}`}
                     >
                       {advancedAnalytics.performanceMetrics.categories.pestManagement.score.toFixed(
-                        0,
+                        0
                       )}
                     </div>
                     <div className="flex items-center gap-1 text-xs">
@@ -869,7 +869,7 @@ export default function AnalyticsPage() {
                       className={`text-2xl font-bold ${advancedAnalytics.performanceMetrics.categories.yieldQuality.score > 75 ? 'text-green-600' : advancedAnalytics.performanceMetrics.categories.yieldQuality.score > 60 ? 'text-orange-600' : 'text-red-600'}`}
                     >
                       {advancedAnalytics.performanceMetrics.categories.yieldQuality.score.toFixed(
-                        0,
+                        0
                       )}
                     </div>
                     <div className="flex items-center gap-1 text-xs">
@@ -1006,7 +1006,7 @@ export default function AnalyticsPage() {
                           <div
                             className="bg-green-600 h-2 rounded-full"
                             style={{
-                              width: `${(data.hours / Math.max(...analytics.irrigationsByMonth.map((d) => d.hours))) * 100}%`,
+                              width: `${(data.hours / Math.max(...analytics.irrigationsByMonth.map((d) => d.hours))) * 100}%`
                             }}
                           />
                         </div>
@@ -1045,7 +1045,7 @@ export default function AnalyticsPage() {
                           <div
                             className="bg-green-600 h-2 rounded-full"
                             style={{
-                              width: `${(data.count / Math.max(...analytics.spraysByType.map((d) => d.count))) * 100}%`,
+                              width: `${(data.count / Math.max(...analytics.spraysByType.map((d) => d.count))) * 100}%`
                             }}
                           />
                         </div>

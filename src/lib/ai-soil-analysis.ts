@@ -150,13 +150,13 @@ export class AISoilAnalysisService {
     macronutrients: {
       nitrogen: { min: 120, max: 180, unit: 'kg/ha' },
       phosphorus: { min: 30, max: 60, unit: 'kg/ha' },
-      potassium: { min: 200, max: 300, unit: 'kg/ha' },
+      potassium: { min: 200, max: 300, unit: 'kg/ha' }
     },
 
     secondaryNutrients: {
       calcium: { min: 1500, max: 3000, unit: 'kg/ha' },
       magnesium: { min: 150, max: 300, unit: 'kg/ha' },
-      sulfur: { min: 20, max: 40, unit: 'kg/ha' },
+      sulfur: { min: 20, max: 40, unit: 'kg/ha' }
     },
 
     micronutrients: {
@@ -165,12 +165,12 @@ export class AISoilAnalysisService {
       iron: { min: 4.5, max: 15, unit: 'ppm' },
       manganese: { min: 5, max: 50, unit: 'ppm' },
       zinc: { min: 0.8, max: 3.0, unit: 'ppm' },
-      molybdenum: { min: 0.1, max: 0.5, unit: 'ppm' },
+      molybdenum: { min: 0.1, max: 0.5, unit: 'ppm' }
     },
 
     pH: { min: 6.0, max: 7.5 },
     organicMatter: { min: 2.5, max: 5.0, unit: '%' },
-    cec: { min: 10, max: 25, unit: 'meq/100g' },
+    cec: { min: 10, max: 25, unit: 'meq/100g' }
   }
 
   static async analyzeSoilData(soilData: SoilTestData): Promise<SoilAnalysisReport> {
@@ -192,7 +192,7 @@ export class AISoilAnalysisService {
       soilData,
       nutrientStatus,
       physicalProperties,
-      chemicalProperties,
+      chemicalProperties
     )
 
     // Create fertilizer plan
@@ -209,21 +209,21 @@ export class AISoilAnalysisService {
           soilData,
           nutrientStatus,
           physicalProperties,
-          chemicalProperties,
+          chemicalProperties
         ),
         strengths: this.identifyStrengths(
           soilData,
           nutrientStatus,
           physicalProperties,
-          chemicalProperties,
-        ),
+          chemicalProperties
+        )
       },
       nutrientStatus,
       physicalProperties,
       chemicalProperties,
       recommendations,
       fertilizerPlan,
-      monitoringSchedule,
+      monitoringSchedule
     }
   }
 
@@ -239,7 +239,7 @@ export class AISoilAnalysisService {
     // Organic matter score (15 points)
     const omScore = this.scoreNutrient(
       soilData.results.organicMatter,
-      this.NUTRIENT_STANDARDS.organicMatter,
+      this.NUTRIENT_STANDARDS.organicMatter
     )
     score += omScore * 0.15
     factors += 0.15
@@ -248,15 +248,15 @@ export class AISoilAnalysisService {
     const macroScore =
       (this.scoreNutrient(
         soilData.results.nitrogen,
-        this.NUTRIENT_STANDARDS.macronutrients.nitrogen,
+        this.NUTRIENT_STANDARDS.macronutrients.nitrogen
       ) +
         this.scoreNutrient(
           soilData.results.phosphorus,
-          this.NUTRIENT_STANDARDS.macronutrients.phosphorus,
+          this.NUTRIENT_STANDARDS.macronutrients.phosphorus
         ) +
         this.scoreNutrient(
           soilData.results.potassium,
-          this.NUTRIENT_STANDARDS.macronutrients.potassium,
+          this.NUTRIENT_STANDARDS.macronutrients.potassium
         )) /
       3
     score += macroScore * 0.3
@@ -265,7 +265,7 @@ export class AISoilAnalysisService {
     // CEC score (10 points)
     const cecScore = this.scoreNutrient(
       soilData.results.cationExchangeCapacity,
-      this.NUTRIENT_STANDARDS.cec,
+      this.NUTRIENT_STANDARDS.cec
     )
     score += cecScore * 0.1
     factors += 0.1
@@ -274,15 +274,15 @@ export class AISoilAnalysisService {
     const secondaryScore =
       (this.scoreNutrient(
         soilData.results.calcium,
-        this.NUTRIENT_STANDARDS.secondaryNutrients.calcium,
+        this.NUTRIENT_STANDARDS.secondaryNutrients.calcium
       ) +
         this.scoreNutrient(
           soilData.results.magnesium,
-          this.NUTRIENT_STANDARDS.secondaryNutrients.magnesium,
+          this.NUTRIENT_STANDARDS.secondaryNutrients.magnesium
         ) +
         this.scoreNutrient(
           soilData.results.sulfur,
-          this.NUTRIENT_STANDARDS.secondaryNutrients.sulfur,
+          this.NUTRIENT_STANDARDS.secondaryNutrients.sulfur
         )) /
       3
     score += secondaryScore * 0.15
@@ -323,7 +323,7 @@ export class AISoilAnalysisService {
   }
 
   private static getHealthStatus(
-    score: number,
+    score: number
   ): 'excellent' | 'good' | 'average' | 'poor' | 'critical' {
     if (score >= 90) return 'excellent'
     if (score >= 75) return 'good'
@@ -335,7 +335,7 @@ export class AISoilAnalysisService {
   private static analyzeNutrients(soilData: SoilTestData) {
     const analyzeNutrientGroup = (
       nutrients: { [key: string]: { min: number; max: number } },
-      category: string,
+      category: string
     ) => {
       return Object.entries(nutrients).map(([nutrient, standard]) => {
         const current = soilData.results[nutrient as keyof typeof soilData.results] as number
@@ -347,7 +347,7 @@ export class AISoilAnalysisService {
           optimal: standard,
           status,
           impact: this.getNutrientImpact(nutrient, status),
-          corrections: this.getNutrientCorrections(nutrient, status),
+          corrections: this.getNutrientCorrections(nutrient, status)
         }
       })
     }
@@ -356,15 +356,15 @@ export class AISoilAnalysisService {
       macronutrients: analyzeNutrientGroup(this.NUTRIENT_STANDARDS.macronutrients, 'macro'),
       secondaryNutrients: analyzeNutrientGroup(
         this.NUTRIENT_STANDARDS.secondaryNutrients,
-        'secondary',
+        'secondary'
       ),
-      micronutrients: analyzeNutrientGroup(this.NUTRIENT_STANDARDS.micronutrients, 'micro'),
+      micronutrients: analyzeNutrientGroup(this.NUTRIENT_STANDARDS.micronutrients, 'micro')
     }
   }
 
   private static getNutrientStatus(
     value: number,
-    standard: { min: number; max: number },
+    standard: { min: number; max: number }
   ): 'deficient' | 'low' | 'adequate' | 'high' | 'excessive' {
     if (value < standard.min * 0.5) return 'deficient'
     if (value < standard.min) return 'low'
@@ -380,22 +380,22 @@ export class AISoilAnalysisService {
         low: 'Slower vine development and reduced yield potential',
         adequate: 'Healthy vine growth and development',
         high: 'Excessive vegetative growth, delayed ripening',
-        excessive: 'Excessive foliage, poor fruit quality, disease susceptibility',
+        excessive: 'Excessive foliage, poor fruit quality, disease susceptibility'
       },
       phosphorus: {
         deficient: 'Poor root development and delayed maturity',
         low: 'Reduced flowering and fruit set',
         adequate: 'Strong root system and good fruit development',
         high: 'May interfere with micronutrient uptake',
-        excessive: 'Micronutrient deficiencies, especially zinc and iron',
+        excessive: 'Micronutrient deficiencies, especially zinc and iron'
       },
       potassium: {
         deficient: 'Poor fruit quality and disease resistance',
         low: 'Reduced sugar content and poor color development',
         adequate: 'Good fruit quality and winter hardiness',
         high: 'May interfere with magnesium and calcium uptake',
-        excessive: 'Magnesium deficiency symptoms',
-      },
+        excessive: 'Magnesium deficiency symptoms'
+      }
       // Add more nutrients as needed
     }
 
@@ -412,24 +412,24 @@ export class AISoilAnalysisService {
         deficient: [
           'Apply nitrogen fertilizer immediately',
           'Consider slow-release nitrogen sources',
-          'Apply organic matter',
+          'Apply organic matter'
         ],
         low: ['Increase nitrogen application rate', 'Split applications for better efficiency'],
         high: ['Reduce nitrogen inputs', 'Avoid late season nitrogen applications'],
-        excessive: ['Stop nitrogen applications', 'Use cover crops to scavenge excess nitrogen'],
+        excessive: ['Stop nitrogen applications', 'Use cover crops to scavenge excess nitrogen']
       },
       phosphorus: {
         deficient: ['Apply phosphorus fertilizer', 'Use mycorrhizal inoculants to improve uptake'],
         low: ['Increase phosphorus application', 'Apply rock phosphate for long-term release'],
         high: ['Reduce phosphorus applications', 'Monitor micronutrient levels'],
-        excessive: ['Stop phosphorus applications', 'Apply zinc and iron if deficient'],
+        excessive: ['Stop phosphorus applications', 'Apply zinc and iron if deficient']
       },
       potassium: {
         deficient: ['Apply potassium fertilizer', 'Use potassium sulfate for quality'],
         low: ['Increase potassium application rate', 'Apply before fruit development'],
         high: ['Reduce potassium inputs', 'Monitor magnesium levels'],
-        excessive: ['Stop potassium applications', 'Apply magnesium to balance'],
-      },
+        excessive: ['Stop potassium applications', 'Apply magnesium to balance']
+      }
     }
 
     return (
@@ -447,9 +447,9 @@ export class AISoilAnalysisService {
         classification: texture.classification,
         drainage: this.assessDrainage(texture),
         waterHoldingCapacity: this.assessWaterHolding(texture),
-        aeration: this.assessAeration(texture),
+        aeration: this.assessAeration(texture)
       },
-      compactionRisk: this.assessCompactionRisk(texture),
+      compactionRisk: this.assessCompactionRisk(texture)
     }
   }
 
@@ -482,7 +482,7 @@ export class AISoilAnalysisService {
   private static analyzeChemicalProperties(soilData: SoilTestData) {
     return {
       pHStatus: this.analyzePH(soilData.results.pH),
-      salinityStatus: this.analyzeSalinity(soilData.results.electricalConductivity),
+      salinityStatus: this.analyzeSalinity(soilData.results.electricalConductivity)
     }
   }
 
@@ -499,7 +499,7 @@ export class AISoilAnalysisService {
     return {
       level,
       impact: this.getPHImpact(level),
-      recommendations: this.getPHRecommendations(level),
+      recommendations: this.getPHRecommendations(level)
     }
   }
 
@@ -511,7 +511,7 @@ export class AISoilAnalysisService {
       neutral: 'Optimal nutrient availability',
       slightly_alkaline: 'Good overall, monitor micronutrients',
       alkaline: 'Reduced iron, zinc, and manganese availability',
-      very_alkaline: 'Severe micronutrient deficiencies',
+      very_alkaline: 'Severe micronutrient deficiencies'
     }
     return impacts[level as keyof typeof impacts] || 'pH effects on nutrient availability'
   }
@@ -521,29 +521,29 @@ export class AISoilAnalysisService {
       very_acidic: [
         'Apply agricultural lime immediately',
         'Test for aluminum toxicity',
-        'Use dolomitic lime if magnesium is low',
+        'Use dolomitic lime if magnesium is low'
       ],
       acidic: [
         'Apply lime to raise pH',
         'Monitor aluminum levels',
-        'Consider gradual pH adjustment',
+        'Consider gradual pH adjustment'
       ],
       slightly_acidic: ['Minor lime application may be beneficial', 'Monitor pH annually'],
       neutral: ['Maintain current pH with proper fertilization'],
       slightly_alkaline: [
         'Monitor micronutrient levels',
-        'Consider acidifying fertilizers if needed',
+        'Consider acidifying fertilizers if needed'
       ],
       alkaline: [
         'Apply sulfur to lower pH',
         'Use chelated micronutrients',
-        'Apply acidifying fertilizers',
+        'Apply acidifying fertilizers'
       ],
       very_alkaline: [
         'Apply elemental sulfur',
         'Use acid-forming fertilizers',
-        'Consider soil amendments',
-      ],
+        'Consider soil amendments'
+      ]
     }
     return recommendations[level as keyof typeof recommendations] || ['Monitor pH regularly']
   }
@@ -558,7 +558,7 @@ export class AISoilAnalysisService {
     return {
       level,
       impact: this.getSalinityImpact(level),
-      management: this.getSalinityManagement(level),
+      management: this.getSalinityManagement(level)
     }
   }
 
@@ -567,7 +567,7 @@ export class AISoilAnalysisService {
       normal: 'No salt stress on plants',
       slight: 'Minor effects on salt-sensitive plants',
       moderate: 'Reduced growth in most crops',
-      high: 'Severe growth restrictions, only salt-tolerant plants survive',
+      high: 'Severe growth restrictions, only salt-tolerant plants survive'
     }
     return impacts[level as keyof typeof impacts] || ''
   }
@@ -581,8 +581,8 @@ export class AISoilAnalysisService {
         'Install drainage system',
         'Apply gypsum',
         'Leach salts with good quality water',
-        'Use salt-tolerant varieties',
-      ],
+        'Use salt-tolerant varieties'
+      ]
     }
     return management[level as keyof typeof management] || []
   }
@@ -591,7 +591,7 @@ export class AISoilAnalysisService {
     soilData: SoilTestData,
     nutrientStatus: any,
     physicalProperties: any,
-    chemicalProperties: any,
+    chemicalProperties: any
   ): Promise<AIRecommendation[]> {
     // Use existing AI service to generate comprehensive recommendations
     return AIService.analyzeSoilData({
@@ -599,7 +599,7 @@ export class AISoilAnalysisService {
       nitrogen: soilData.results.nitrogen,
       phosphorus: soilData.results.phosphorus,
       potassium: soilData.results.potassium,
-      organicMatter: soilData.results.organicMatter,
+      organicMatter: soilData.results.organicMatter
     })
   }
 
@@ -618,8 +618,8 @@ export class AISoilAnalysisService {
           method: 'broadcast and incorporate',
           cost: this.estimateFertilizerCost(nutrient.nutrient),
           nutrients: {
-            [nutrient.nutrient]: this.calculateFertilizerRate(nutrient.nutrient, nutrient.status),
-          },
+            [nutrient.nutrient]: this.calculateFertilizerRate(nutrient.nutrient, nutrient.status)
+          }
         })
       }
     })
@@ -633,10 +633,10 @@ export class AISoilAnalysisService {
         benefits: [
           'Improve soil structure',
           'Increase water retention',
-          'Provide slow-release nutrients',
+          'Provide slow-release nutrients'
         ],
         timing: 'Fall or early spring',
-        cost: 300,
+        cost: 300
       })
     }
 
@@ -648,7 +648,7 @@ export class AISoilAnalysisService {
       season: this.getCurrentSeason(),
       applications,
       organicAmendments: amendments,
-      totalCost,
+      totalCost
     }
   }
 
@@ -657,13 +657,13 @@ export class AISoilAnalysisService {
 
     const nextTestDate = new Date()
     nextTestDate.setMonth(
-      nextTestDate.getMonth() + (frequency === 'quarterly' ? 3 : frequency === 'biannual' ? 6 : 12),
+      nextTestDate.getMonth() + (frequency === 'quarterly' ? 3 : frequency === 'biannual' ? 6 : 12)
     )
 
     return {
       nextTestDate,
       parameters: this.getMonitoringParameters(soilData, overallHealth),
-      frequency,
+      frequency
     }
   }
 
@@ -672,7 +672,7 @@ export class AISoilAnalysisService {
     soilData: SoilTestData,
     nutrientStatus: any,
     physicalProperties: any,
-    chemicalProperties: any,
+    chemicalProperties: any
   ): string[] {
     const concerns: string[] = []
 
@@ -687,7 +687,7 @@ export class AISoilAnalysisService {
         if (nutrient.status === 'deficient') {
           concerns.push(`${nutrient.nutrient} deficiency`)
         }
-      },
+      }
     )
 
     // Physical issues
@@ -702,7 +702,7 @@ export class AISoilAnalysisService {
     soilData: SoilTestData,
     nutrientStatus: any,
     physicalProperties: any,
-    chemicalProperties: any,
+    chemicalProperties: any
   ): string[] {
     const strengths: string[] = []
 
@@ -717,7 +717,7 @@ export class AISoilAnalysisService {
         if (nutrient.status === 'adequate') {
           strengths.push(`Adequate ${nutrient.nutrient.toLowerCase()}`)
         }
-      },
+      }
     )
 
     // Good organic matter
@@ -732,7 +732,7 @@ export class AISoilAnalysisService {
     const timings = {
       nitrogen: 'Early spring before bud break',
       phosphorus: 'Fall or early spring',
-      potassium: 'Fall application preferred',
+      potassium: 'Fall application preferred'
     }
     return timings[nutrient as keyof typeof timings] || 'As recommended'
   }
@@ -741,7 +741,7 @@ export class AISoilAnalysisService {
     const products = {
       nitrogen: 'Urea or ammonium sulfate',
       phosphorus: 'Single superphosphate',
-      potassium: 'Potassium sulfate',
+      potassium: 'Potassium sulfate'
     }
     return products[nutrient as keyof typeof products] || `${nutrient} fertilizer`
   }
@@ -750,7 +750,7 @@ export class AISoilAnalysisService {
     const rates = {
       nitrogen: { deficient: 80, low: 50 },
       phosphorus: { deficient: 40, low: 25 },
-      potassium: { deficient: 100, low: 60 },
+      potassium: { deficient: 100, low: 60 }
     }
     return (
       rates[nutrient as keyof typeof rates]?.[status as keyof (typeof rates)[keyof typeof rates]] ||

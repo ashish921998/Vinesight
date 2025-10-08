@@ -19,7 +19,7 @@ export function CameraCapture({
   onClose,
   title = 'Capture Photo',
   maxWidth = 1024,
-  maxHeight = 768,
+  maxHeight = 768
 }: CameraCaptureProps) {
   const [isStreaming, setIsStreaming] = useState(false)
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
@@ -34,8 +34,8 @@ export function CameraCapture({
         video: {
           facingMode: facingMode,
           width: { ideal: maxWidth },
-          height: { ideal: maxHeight },
-        },
+          height: { ideal: maxHeight }
+        }
       })
 
       if (videoRef.current) {
@@ -80,7 +80,7 @@ export function CameraCapture({
         }
       },
       'image/jpeg',
-      0.8,
+      0.8
     )
   }, [stopCamera])
 
@@ -95,7 +95,7 @@ export function CameraCapture({
         }
       },
       'image/jpeg',
-      0.8,
+      0.8
     )
   }, [capturedPhoto, onPhotoCapture, onClose])
 

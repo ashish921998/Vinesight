@@ -1,12 +1,14 @@
 import { NextRequest } from 'next/server'
-import { generateText, streamText } from 'ai'
+import { convertToModelMessages, streamText, validateUIMessages } from 'ai'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import {
   hasServerExceededQuota,
   incrementServerQuestionCount,
-  getServerQuotaStatus,
+  getServerQuotaStatus
 } from '@/lib/server-quota-service'
+import { supermemoryTools } from '@supermemory/tools/ai-sdk'
+import { openai } from '@ai-sdk/openai'
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,30 +32,28 @@ export async function POST(request: NextRequest) {
               // This can be ignored if you have middleware refreshing
               // user sessions.
             }
-          },
-        },
-      },
+          }
+        }
+      }
     )
 
     const {
       data: { user },
-      error: sessionError,
+      error: sessionError
     } = await supabase.auth.getUser()
 
     if (sessionError || !user) {
       return new Response(
         JSON.stringify({
           error: 'Authentication required',
-          code: 'UNAUTHORIZED',
+          code: 'UNAUTHORIZED'
         }),
         {
           status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        },
+          headers: { 'Content-Type': 'application/json' }
+        }
       )
     }
-
-    // user is already available from above
 
     // Check daily quota limit
     if (hasServerExceededQuota(user.id)) {
@@ -62,70 +62,69 @@ export async function POST(request: NextRequest) {
         JSON.stringify({
           error: 'Daily question limit exceeded',
           code: 'QUOTA_EXCEEDED',
-          quotaStatus,
+          quotaStatus
         }),
         {
           status: 429, // Too Many Requests
-          headers: { 'Content-Type': 'application/json' },
-        },
+          headers: { 'Content-Type': 'application/json' }
+        }
       )
     }
 
-    const { message, attachments, context = {}, stream = false } = await request.json()
-    if (!message) {
-      return new Response(JSON.stringify({ error: 'Message is required' }), {
+    const body = await request.json()
+    const { messages: rawMessages, data = {} } = body ?? {}
+
+    if (!Array.isArray(rawMessages)) {
+      return new Response(JSON.stringify({ error: 'messages array is required' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    let validatedMessages: Awaited<ReturnType<typeof validateUIMessages>>
+    try {
+      validatedMessages = await validateUIMessages({ messages: rawMessages })
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid message payload' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    const apiKey = process.env.SUPERMEMORY_API_KEY
+
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: 'Supermemory API key missing' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
       })
     }
 
     // Increment question count for this user
     incrementServerQuestionCount(user.id)
 
-    const systemPrompt = buildSystemPrompt(context)
-    const userContent: ({ type: 'text'; text: string } | { type: 'image'; image: URL })[] = [
-      { type: 'text', text: message },
-    ]
+    const chatContext = data?.context ?? {}
+    const systemPrompt = buildSystemPrompt(chatContext)
+    const modelMessages = convertToModelMessages(validatedMessages)
 
-    if (Array.isArray(attachments)) {
-      attachments.forEach((attachment) => {
-        if (attachment && attachment.url) {
-          try {
-            userContent.push({ type: 'image', image: new URL(attachment.url) })
-          } catch (error) {
-            console.error('Invalid attachment URL:', attachment.url)
-          }
-        }
-      })
-    }
-
-    const messages = [
-      { role: 'system' as const, content: systemPrompt },
-      ...(context.conversationHistory?.slice(-5) || []),
-      { role: 'user' as const, content: userContent },
-    ]
-
-    // Use streaming for better UX
-    if (stream) {
-      const result = streamText({
-        model: 'google/gemini-2.0-flash-lite',
-        messages,
-        temperature: 0.7,
-      })
-
-      return result.toTextStreamResponse()
-    }
-
-    // Non-streaming response for compatibility
-    const result = await generateText({
-      model: 'google/gemini-2.0-flash-lite',
-      messages,
-      temperature: 0.7,
+    const result = streamText({
+      model: openai('gpt-4o-mini'),
+      system: systemPrompt,
+      messages: modelMessages,
+      temperature: 0.6,
+      tools: {
+        ...supermemoryTools(apiKey, {
+          containerTags: [user.id]
+        })
+      },
+      stopWhen: ({ steps }) => {
+        if (steps.length === 0) return false
+        const lastStep = steps[steps.length - 1]
+        return lastStep.finishReason !== 'tool-calls'
+      }
     })
 
-    return new Response(result.text, {
-      headers: { 'Content-Type': 'text/plain' },
-    })
+    return result.toUIMessageStreamResponse()
   } catch (error) {
     // Handle authentication errors
     const errorMsg = error instanceof Error ? error.message : String(error)
@@ -137,12 +136,12 @@ export async function POST(request: NextRequest) {
       return new Response(
         JSON.stringify({
           error: 'Authentication required',
-          code: 'UNAUTHORIZED',
+          code: 'UNAUTHORIZED'
         }),
         {
           status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        },
+          headers: { 'Content-Type': 'application/json' }
+        }
       )
     }
 
@@ -151,12 +150,8 @@ export async function POST(request: NextRequest) {
       console.error('AI Provider error:', error)
     }
 
-    const { message: errorMessage = '', context: errorContext = {} } = await request
-      .json()
-      .catch(() => ({}))
-
-    return new Response(generateFallbackResponse(errorMessage, errorContext), {
-      headers: { 'Content-Type': 'text/plain' },
+    return new Response(generateFallbackResponse('', {}), {
+      headers: { 'Content-Type': 'text/plain' }
     })
   }
 }
@@ -189,6 +184,12 @@ Guidelines:
 - Use practical measurements and timing recommendations
 - Focus on immediate, actionable solutions
 
+Memory Playbook:
+- Always call searchMemories before drafting a response so you can leverage prior context for this farmer.
+- When a farmer shares a durable fact or preference (e.g., “I prefer organic treatments”, “avoid copper sprays”, irrigation schedules, labour constraints), immediately call addMemory with a concise summary, tagging it with relevant labels such as preference, treatment, language, or the farm ID.
+- Respect stored preferences in every recommendation. For example, if a memory notes that the farmer prefers organic interventions, avoid recommending synthetic chemicals, surface organic options first, and remind them you are honoring their preference.
+- When appropriate, reference the retrieved memories explicitly ("Because you prefer organic control methods...") so the farmer recognises the assistant remembers them.
+
 ${
   context?.recentAnalysis?.length
     ? `Recent vineyard analysis: ${context.recentAnalysis.length} plant health assessments available`
@@ -206,21 +207,9 @@ ${
 
 function generateFallbackResponse(message: string, context: any): string {
   const language = context?.language || 'en'
-
-  // Simple keyword-based responses
-  if (message.toLowerCase().includes('disease') || message.toLowerCase().includes('pest')) {
-    return language === 'hi'
-      ? 'रोग नियंत्रण के लिए पहले प्रभावित पत्तियों को हटाएं और उचित स्प्रे का उपयोग करें। अधिक जानकारी के लिए स्थानीय कृषि विशेषज्ञ से सलाह लें।'
-      : 'For disease control, first remove affected leaves and apply appropriate fungicide spray. Consider consulting your local agricultural extension officer for specific treatment recommendations.'
-  }
-
-  if (message.toLowerCase().includes('water') || message.toLowerCase().includes('irrigation')) {
-    return language === 'hi'
-      ? 'सिंचाई मिट्टी की नमी के आधार पर करें। सुबह या शाम को पानी देना बेहतर होता है।'
-      : 'Water based on soil moisture levels. Early morning or evening irrigation is most effective to reduce water loss.'
-  }
-
   return language === 'hi'
     ? 'मैं आपकी सहायता करने के लिए यहाँ हूँ। कृपया अपना प्रश्न स्पष्ट रूप से बताएं।'
-    : "I'm here to help with your farming questions. Please provide more specific details about what you need assistance with."
+    : language === 'mr'
+      ? 'मी तुमची मदत करण्यासाठी येथे आहे. कृपया तुमचा प्रश्न स्पष्टपणे लिहा.'
+      : "I'm here to help with your farming questions. Please provide more specific details about what you need assistance with."
 }

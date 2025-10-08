@@ -12,7 +12,7 @@ import {
   CloudSun,
   BarChart3,
   TrendingUp,
-  Brain,
+  Brain
 } from 'lucide-react'
 import { LoginButton } from './auth/LoginButton'
 import { UserMenu } from './auth/UserMenu'
@@ -30,7 +30,7 @@ export const getNavigation = (t: any) => [
   { name: t('navigation.reminders'), href: '/reminders', icon: Users },
   { name: t('navigation.reports'), href: '/reports', icon: BarChart3 },
   { name: 'Farm Efficiency', href: '/performance', icon: TrendingUp },
-  { name: t('navigation.settings'), href: '/settings', icon: Settings },
+  { name: t('navigation.settings'), href: '/settings', icon: Settings }
 ]
 
 export default function Navigation() {

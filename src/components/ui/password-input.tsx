@@ -24,7 +24,7 @@ export function PasswordInput({
   placeholder,
   className = '',
   label,
-  error,
+  error
 }: PasswordInputProps) {
   const [showPassword, setShowPassword] = useState(false)
 

@@ -67,7 +67,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       ai_context_cache: {
@@ -105,7 +105,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       ai_conversation_context: {
@@ -146,7 +146,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'ai_conversations'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       ai_conversations: {
@@ -196,7 +196,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       ai_messages: {
@@ -243,7 +243,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'ai_conversations'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       ai_task_recommendations: {
@@ -305,7 +305,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       calculation_history: {
@@ -343,7 +343,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       canopy_analyses: {
@@ -403,7 +403,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       categories: {
@@ -469,7 +469,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'prompts'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       collections: {
@@ -507,7 +507,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'profiles'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       comments: {
@@ -562,7 +562,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'prompts'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       community_insights: {
@@ -663,7 +663,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'image_analyses'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       disease_risk_assessments: {
@@ -713,7 +713,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       expense_records: {
@@ -754,7 +754,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       farmer_ai_profiles: {
@@ -801,7 +801,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       farms: {
@@ -915,7 +915,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'profiles'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       fertigation_records: {
@@ -959,7 +959,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       harvest_records: {
@@ -1003,7 +1003,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       image_analyses: {
@@ -1059,7 +1059,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       irrigation_records: {
@@ -1106,7 +1106,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       market_intelligence: {
@@ -1214,7 +1214,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       pest_disease_predictions: {
@@ -1288,7 +1288,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       profiles: {
@@ -1380,7 +1380,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       soil_test_records: {
@@ -1418,7 +1418,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       petiole_test_records: {
@@ -1456,7 +1456,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       spray_records: {
@@ -1512,7 +1512,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       spray_windows: {
@@ -1565,7 +1565,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       task_reminders: {
@@ -1612,7 +1612,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       weather_data: {
@@ -1678,7 +1678,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'weather_stations'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       weather_forecasts: {
@@ -1734,7 +1734,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'farms'
             referencedColumns: ['id']
-          },
+          }
         ]
       }
       weather_stations: {
@@ -1806,7 +1806,7 @@ export type Tables<
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
-    : never = never,
+    : never = never
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1832,7 +1832,7 @@ export type TablesInsert<
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-    : never = never,
+    : never = never
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1857,7 +1857,7 @@ export type TablesUpdate<
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-    : never = never,
+    : never = never
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1882,7 +1882,7 @@ export type Enums<
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
-    : never = never,
+    : never = never
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1899,7 +1899,7 @@ export type CompositeTypes<
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
-    : never = never,
+    : never = never
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1910,6 +1910,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
-  },
+    Enums: {}
+  }
 } as const

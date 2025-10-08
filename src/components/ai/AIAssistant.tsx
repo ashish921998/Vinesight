@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import {
   MessageCircle,
   Mic,
@@ -15,7 +15,7 @@ import {
   Copy,
   Check,
   ArrowRight,
-  Trash2,
+  Trash2
 } from 'lucide-react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -31,11 +31,12 @@ import { Textarea } from '../ui/textarea'
 import {
   supabaseConversationStorage,
   type Message,
-  type Conversation,
+  type Conversation
 } from '@/lib/supabase-conversation-storage'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
-
-// Message and Conversation interfaces now imported from conversation-storage
+import { useChat } from '@ai-sdk/react'
+import { DefaultChatTransport } from 'ai'
+import type { UIMessage, FileUIPart, TextUIPart } from 'ai'
 
 interface AIAssistantProps {
   farmData?: any
@@ -52,21 +53,33 @@ export function AIAssistant({
   isOpen = false,
   onToggle,
   className,
-  isMobile: propIsMobile,
+  isMobile: propIsMobile
 }: AIAssistantProps) {
   const { t, i18n } = useTranslation()
   const { user, loading: authLoading } = useSupabaseAuth()
+  const transport = useMemo(() => new DefaultChatTransport({ api: '/api/ai/chat' }), [])
+  const {
+    messages: chatMessages,
+    setMessages: setChatMessages,
+    sendMessage: sendChatMessage,
+    status,
+    error: chatError,
+    clearError: clearChatError
+  } = useChat({
+    id: 'vinesight-ai-assistant',
+    transport
+  })
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [isMobile, setIsMobile] = useState(propIsMobile || false)
   const [quotaStatus, setQuotaStatus] = useState(() => getQuotaStatus())
   const [showHistory, setShowHistory] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
-  const currentConversationIdRef = useRef<string | null>(null) // Synchronous reference to prevent race conditions
-  const savingInProgressRef = useRef<boolean>(false) // Prevent concurrent saves
+  const currentConversationIdRef = useRef<string | null>(null)
+  const savingInProgressRef = useRef<boolean>(false)
+  const lastSavedSnapshotRef = useRef<string | null>(null)
   const [pendingAttachments, setPendingAttachments] = useState<
     Array<{ type: 'image'; name: string; url: string; size?: number }>
   >([])
@@ -76,29 +89,119 @@ export function AIAssistant({
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const handleSendMessageRef = useRef<((message?: string) => Promise<void>) | null>(null)
+  const isAssistantProcessing = status === 'submitted' || status === 'streaming'
 
-  // Load conversations from storage on mount
+  const attachmentFromFilePart = useCallback((part: FileUIPart) => {
+    const name = part.filename || 'Attachment'
+    const url = part.url
+    return {
+      type: 'image' as const,
+      name,
+      url
+    }
+  }, [])
+
+  const uiMessageToAppMessage = useCallback(
+    (uiMessage: UIMessage): Message | null => {
+      if (uiMessage.role !== 'user' && uiMessage.role !== 'assistant') {
+        return null
+      }
+
+      const textParts = uiMessage.parts.filter((part): part is TextUIPart => part.type === 'text')
+      const content = textParts
+        .map((part) => part.text)
+        .join('\n')
+        .trim()
+
+      const fileParts = uiMessage.parts.filter((part): part is FileUIPart => part.type === 'file')
+      const attachments = fileParts.map(attachmentFromFilePart)
+
+      const metadata = (uiMessage.metadata || {}) as Record<string, any>
+      const timestampValue = metadata.timestamp || metadata.createdAt
+      const timestamp = timestampValue ? new Date(timestampValue) : new Date()
+      const context = metadata.queryType
+        ? {
+            queryType: metadata.queryType,
+            confidence: metadata.confidence
+          }
+        : undefined
+
+      const effectiveContent =
+        content ||
+        (attachments.length > 0 && uiMessage.role === 'user' ? 'Shared an image' : content)
+
+      if (!effectiveContent && attachments.length === 0 && uiMessage.role === 'assistant') {
+        return null
+      }
+
+      return {
+        id: uiMessage.id,
+        content: effectiveContent,
+        role: uiMessage.role,
+        timestamp,
+        attachments: attachments.length > 0 ? attachments : undefined,
+        language: metadata.language || i18n.language,
+        context
+      }
+    },
+    [attachmentFromFilePart, i18n.language]
+  )
+
+  const messageToUIMessage = useCallback(
+    (message: Message): UIMessage => {
+      const parts: Array<TextUIPart | FileUIPart> = []
+
+      if (message.content) {
+        parts.push({ type: 'text', text: message.content })
+      }
+
+      if (message.attachments) {
+        message.attachments.forEach((attachment) => {
+          const mediaType = attachment.url.startsWith('data:')
+            ? attachment.url.slice(5, attachment.url.indexOf(';'))
+            : 'image/png'
+
+          parts.push({
+            type: 'file',
+            url: attachment.url,
+            filename: attachment.name,
+            mediaType
+          })
+        })
+      }
+
+      return {
+        id: message.id,
+        role: message.role,
+        parts,
+        metadata: {
+          language: message.language || i18n.language,
+          queryType: message.context?.queryType,
+          confidence: message.context?.confidence,
+          timestamp: (message.timestamp || new Date()).toISOString()
+        }
+      }
+    },
+    [i18n.language]
+  )
+
   useEffect(() => {
     const loadConversations = async () => {
-      if (authLoading) return // Wait for auth to load
+      if (authLoading) return
 
       const stored = await supabaseConversationStorage.loadConversations(user?.id, farmData?.id)
       setConversations(stored)
 
-      // Auto-migrate localStorage data if user is authenticated and no conversations exist
       if (user && stored.length === 0) {
         try {
           await supabaseConversationStorage.migrateFromLocalStorage(user.id)
-          // Reload conversations after migration
           const migratedConversations = await supabaseConversationStorage.loadConversations(
             user?.id,
-            farmData?.id,
+            farmData?.id
           )
           setConversations(migratedConversations)
         } catch (error) {
-          // Log error for debugging in development only
           if (process.env.NODE_ENV === 'development') {
-            // eslint-disable-next-line no-console
             console.error('Migration error:', error)
           }
         }
@@ -107,14 +210,12 @@ export function AIAssistant({
     loadConversations()
   }, [user, authLoading, farmData?.id])
 
-  // Update quota status when user authentication changes
   useEffect(() => {
     if (!authLoading) {
       setQuotaStatus(getQuotaStatus(user?.id))
     }
   }, [user?.id, authLoading])
 
-  // Check if device is mobile (only if not provided as prop)
   useEffect(() => {
     if (propIsMobile === undefined) {
       const checkMobile = () => {
@@ -128,7 +229,6 @@ export function AIAssistant({
     }
   }, [propIsMobile])
 
-  // Initialize speech recognition (once on mount)
   useEffect(() => {
     if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
       const SpeechRecognition = window.webkitSpeechRecognition
@@ -136,7 +236,7 @@ export function AIAssistant({
 
       recognition.continuous = false
       recognition.interimResults = false
-      recognition.lang = 'en-IN' // Default language, will be updated by separate effect
+      recognition.lang = 'en-IN'
 
       recognition.onstart = () => setIsListening(true)
       recognition.onend = () => setIsListening(false)
@@ -145,7 +245,6 @@ export function AIAssistant({
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript
         setInputValue(transcript)
-        // Use ref to avoid memory leaks and get current handler
         if (handleSendMessageRef.current) {
           handleSendMessageRef.current(transcript)
         }
@@ -153,7 +252,6 @@ export function AIAssistant({
 
       recognitionRef.current = recognition
 
-      // Cleanup function
       return () => {
         if (recognitionRef.current) {
           recognitionRef.current.abort()
@@ -161,15 +259,30 @@ export function AIAssistant({
         }
       }
     }
-  }, []) // Only run once on mount
+  }, [])
 
-  // Update speech recognition language when language changes
   useEffect(() => {
     if (recognitionRef.current) {
       recognitionRef.current.lang =
         i18n.language === 'hi' ? 'hi-IN' : i18n.language === 'mr' ? 'mr-IN' : 'en-IN'
     }
   }, [i18n.language])
+
+  useEffect(() => {
+    if (!chatError) {
+      return
+    }
+
+    const message =
+      i18n.language === 'hi'
+        ? 'क्षमा करें, कुछ गलत हुआ। कृपया फिर से कोशिश करें।'
+        : i18n.language === 'mr'
+          ? 'माफ करा, काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.'
+          : 'Sorry, something went wrong. Please try again.'
+
+    toast.error(message)
+    clearChatError()
+  }, [chatError, clearChatError, i18n.language])
 
   const getWelcomeMessage = useCallback(() => {
     switch (i18n.language) {
@@ -182,57 +295,111 @@ export function AIAssistant({
     }
   }, [i18n.language])
 
-  // Handle welcome message
-  useEffect(() => {
-    if (messages.length === 0) {
-      const welcomeMessage: Message = {
-        id: Date.now().toString(),
-        content: getWelcomeMessage(),
-        role: 'assistant',
-        timestamp: new Date(),
-        language: i18n.language,
+  const areMessagesEqual = useCallback((a: Message[], b: Message[]) => {
+    if (a.length !== b.length) return false
+    for (let i = 0; i < a.length; i += 1) {
+      const left = a[i]
+      const right = b[i]
+      if (
+        left.id !== right.id ||
+        left.role !== right.role ||
+        left.content !== right.content ||
+        (left.language || '') !== (right.language || '')
+      ) {
+        return false
       }
-      setMessages([welcomeMessage])
-    } else if (
-      messages.length === 1 &&
-      messages[0].role === 'assistant' &&
-      messages[0].language !== i18n.language
-    ) {
-      // Update welcome message language if it's the only message and language changed
-      const updatedWelcomeMessage: Message = {
-        ...messages[0],
-        content: getWelcomeMessage(),
-        language: i18n.language,
-      }
-      setMessages([updatedWelcomeMessage])
-    }
-  }, [messages, i18n.language, getWelcomeMessage])
 
-  // Scroll to bottom when new messages arrive
+      const leftAttachments = left.attachments ?? []
+      const rightAttachments = right.attachments ?? []
+      if (leftAttachments.length !== rightAttachments.length) {
+        return false
+      }
+      for (let j = 0; j < leftAttachments.length; j += 1) {
+        const leftAttachment = leftAttachments[j]
+        const rightAttachment = rightAttachments[j]
+        if (
+          leftAttachment.type !== rightAttachment.type ||
+          leftAttachment.url !== rightAttachment.url ||
+          leftAttachment.name !== rightAttachment.name
+        ) {
+          return false
+        }
+      }
+    }
+    return true
+  }, [])
+
+  useEffect(() => {
+    if (chatMessages.length === 0) {
+      setMessages((prev) => {
+        const welcome: Message = {
+          id: 'welcome',
+          content: getWelcomeMessage(),
+          role: 'assistant',
+          timestamp: new Date(),
+          language: i18n.language
+        }
+        if (prev.length === 1 && prev[0].id === 'welcome' && prev[0].language === i18n.language) {
+          return prev
+        }
+        return [welcome]
+      })
+      return
+    }
+
+    const mapped = chatMessages
+      .map(uiMessageToAppMessage)
+      .filter((msg): msg is Message => msg !== null)
+
+    if (mapped.length === 0) {
+      setMessages((prev) => {
+        const welcome: Message = {
+          id: 'welcome',
+          content: getWelcomeMessage(),
+          role: 'assistant',
+          timestamp: new Date(),
+          language: i18n.language
+        }
+        if (prev.length === 1 && prev[0].id === 'welcome' && prev[0].language === i18n.language) {
+          return prev
+        }
+        return [welcome]
+      })
+      return
+    }
+
+    setMessages((prev) => {
+      if (areMessagesEqual(prev, mapped)) {
+        return prev
+      }
+      return mapped
+    })
+  }, [chatMessages, uiMessageToAppMessage, getWelcomeMessage, i18n.language, areMessagesEqual])
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const analyzeQuery = (text: string) => {
+  const analyzeQuery = useCallback((text: string) => {
     const lowerText = text.toLowerCase()
     const queryTypes = [
       {
         type: 'disease',
-        keywords: ['disease', 'sick', 'spots', 'fungus', 'mold', 'rot', 'बीमारी', 'रोग', 'आजार'],
+        keywords: ['disease', 'sick', 'spots', 'fungus', 'mold', 'rot', 'बीमारी', 'रोग', 'आजार']
       },
       {
         type: 'irrigation',
-        keywords: ['water', 'irrigation', 'dry', 'drought', 'सिंचाई', 'पानी', 'पाणी'],
+        keywords: ['water', 'irrigation', 'dry', 'drought', 'सिंचाई', 'पानी', 'पाणी']
       },
       {
         type: 'fertilizer',
-        keywords: ['fertilizer', 'nutrition', 'feed', 'nutrient', 'उर्वरक', 'खाद', 'खत'],
+        keywords: ['fertilizer', 'nutrition', 'feed', 'nutrient', 'उर्वरक', 'खाद', 'खत']
       },
       { type: 'harvest', keywords: ['harvest', 'pick', 'ripe', 'maturity', 'कटाई', 'कापणी'] },
       { type: 'pruning', keywords: ['pruning', 'trim', 'cut', 'canopy', 'छंटाई', 'छाटणी'] },
       { type: 'pest', keywords: ['pest', 'insect', 'bug', 'कीट', 'कीड़े'] },
       { type: 'weather', keywords: ['weather', 'rain', 'temperature', 'मौसम', 'बारिश'] },
-      { type: 'soil', keywords: ['soil', 'ph', 'organic', 'मिट्टी', 'माती'] },
+      { type: 'soil', keywords: ['soil', 'ph', 'organic', 'मिट्टी', 'माती'] }
     ]
 
     for (const queryType of queryTypes) {
@@ -241,17 +408,17 @@ export function AIAssistant({
         return {
           queryType: queryType.type,
           confidence: Math.min(matchCount / queryType.keywords.length + 0.5, 1),
-          relatedTopics: queryType.keywords.filter((keyword) => lowerText.includes(keyword)),
+          relatedTopics: queryType.keywords.filter((keyword) => lowerText.includes(keyword))
         }
       }
     }
 
     return { queryType: 'general', confidence: 0.5, relatedTopics: [] }
-  }
+  }, [])
 
   const buildConversationContext = useCallback(
     (currentMessages?: Message[]) => {
-      const messagesToUse = currentMessages || messages
+      const messagesToUse = (currentMessages || messages).filter((msg) => msg.id !== 'welcome')
       const recentMessages = messagesToUse.slice(-5) // Last 5 messages for context
       const conversationTopics = recentMessages
         .filter((msg) => msg.context?.queryType)
@@ -265,15 +432,14 @@ export function AIAssistant({
         conversationHistory: recentMessages.map((msg) => ({
           role: msg.role,
           content: msg.content,
-          queryType: msg.context?.queryType,
+          queryType: msg.context?.queryType
         })),
-        recentTopics: [...new Set(conversationTopics)],
+        recentTopics: [...new Set(conversationTopics)]
       }
     },
-    [messages, farmData, recentAnalysis, i18n.language],
+    [messages, farmData, recentAnalysis, i18n.language]
   )
 
-  // Atomic function to get or create conversation ID
   const getOrCreateConversationId = useCallback(() => {
     let conversationId = currentConversationIdRef.current
     if (!conversationId) {
@@ -284,13 +450,11 @@ export function AIAssistant({
     return conversationId
   }, [])
 
-  // Immediately save individual messages to prevent data loss
   const saveMessageImmediately = useCallback(
     async (allMessages: Message[]) => {
-      if (allMessages.length <= 1) return // Don't save if only welcome message + new message
-      if (savingInProgressRef.current) return // Prevent concurrent saves
+      if (allMessages.length <= 1) return
+      if (savingInProgressRef.current) return
 
-      // Use atomic function to prevent race conditions
       const conversationId = getOrCreateConversationId()
 
       const title = supabaseConversationStorage.generateTitle(allMessages)
@@ -306,18 +470,17 @@ export function AIAssistant({
         farmId: farmData?.id,
         userId: user?.id,
         lastMessageAt: new Date(),
-        messageCount: allMessages.length,
+        messageCount: allMessages.length
       }
 
       try {
-        savingInProgressRef.current = true // Mark saving in progress
+        savingInProgressRef.current = true
         const savedConversation = await supabaseConversationStorage.saveConversation(
           conversation,
-          user?.id,
+          user?.id
         )
 
         if (savedConversation) {
-          // Update local state with saved conversation
           setConversations((prev) => {
             const existing = prev.find((c) => c.id === conversationId)
             if (existing) {
@@ -326,247 +489,155 @@ export function AIAssistant({
             return [savedConversation, ...prev]
           })
 
-          // Update conversation ID if it changed (timestamp -> database ID)
           if (savedConversation.id !== conversationId) {
-            currentConversationIdRef.current = savedConversation.id // Update ref immediately
+            currentConversationIdRef.current = savedConversation.id
             setCurrentConversationId(savedConversation.id)
           }
         }
       } catch (error) {
-        // Log error for debugging in development only
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
           console.error('Error saving message immediately:', error)
         }
       } finally {
-        savingInProgressRef.current = false // Always reset saving flag
+        savingInProgressRef.current = false
       }
     },
-    [getOrCreateConversationId, conversations, user?.id, farmData?.id],
+    [getOrCreateConversationId, conversations, user?.id, farmData?.id]
   )
+
+  useEffect(() => {
+    if (status !== 'ready') {
+      return
+    }
+
+    const filteredMessages = messages.filter((msg) => msg.id !== 'welcome')
+    if (filteredMessages.length <= 1) {
+      return
+    }
+
+    const lastMessage = filteredMessages[filteredMessages.length - 1]
+    if (lastMessage.role !== 'assistant' || !lastMessage.content) {
+      return
+    }
+
+    const signature = `${filteredMessages.length}:${lastMessage.id}:${lastMessage.content.length}`
+    if (lastSavedSnapshotRef.current === signature) {
+      return
+    }
+
+    lastSavedSnapshotRef.current = signature
+
+    void (async () => {
+      try {
+        await saveMessageImmediately(filteredMessages)
+      } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to save assistant message:', error)
+        }
+      }
+    })()
+  }, [messages, saveMessageImmediately, status])
 
   const handleSendMessage = useCallback(
     async (text?: string) => {
       const messageText = text || inputValue.trim()
-      if ((!messageText && pendingAttachments.length === 0) || isLoading) return
-
-      // Analyze the query
-      const queryAnalysis = analyzeQuery(messageText)
-
-      // Add user message with context and attachments
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        content: messageText || 'Shared an image',
-        role: 'user',
-        timestamp: new Date(),
-        attachments: pendingAttachments.length > 0 ? [...pendingAttachments] : undefined,
-        context: queryAnalysis,
+      if ((!messageText && pendingAttachments.length === 0) || isAssistantProcessing) {
+        return
       }
 
-      const updatedMessages = [...messages, userMessage]
-      setMessages(updatedMessages)
-      setInputValue('')
-      setPendingAttachments([]) // Clear pending attachments
-      setIsLoading(true)
+      const queryAnalysis = analyzeQuery(messageText)
+      const now = new Date()
 
-      // Increment quota count since user is sending a question
+      const userMessageForContext: Message = {
+        id: `user-${now.getTime()}`,
+        content: messageText || 'Shared an image',
+        role: 'user',
+        timestamp: now,
+        attachments: pendingAttachments.length > 0 ? [...pendingAttachments] : undefined,
+        language: i18n.language,
+        context: queryAnalysis
+      }
+
+      const contextMessages = [
+        ...messages.filter((msg) => msg.id !== 'welcome'),
+        userMessageForContext
+      ]
+
+      const fileParts: FileUIPart[] = pendingAttachments.map((attachment) => {
+        const mediaMatch = attachment.url.match(/^data:(.*?);/)
+        const mediaType = mediaMatch?.[1] || 'image/png'
+        return {
+          type: 'file',
+          url: attachment.url,
+          filename: attachment.name,
+          mediaType
+        }
+      })
+
+      setInputValue('')
+      setPendingAttachments([])
+
       incrementQuestionCount(user?.id)
 
-      // Immediately save the user message to ensure no data loss
       try {
-        await saveMessageImmediately(updatedMessages)
+        await saveMessageImmediately(contextMessages)
       } catch (error) {
-        // Log error for debugging in development only
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
           console.error('Failed to save user message:', error)
         }
         toast.error('Failed to save your message. Please try again.')
       }
 
-      // Create streaming assistant message
-      const assistantMessageId = (Date.now() + 1).toString()
-      const streamingMessage: Message = {
-        id: assistantMessageId,
-        content: '',
-        role: 'assistant',
-        timestamp: new Date(),
-        language: i18n.language,
-        context: {
-          queryType: queryAnalysis.queryType,
-          confidence: queryAnalysis.confidence,
-        },
-      }
-
-      setMessages((prev) => [...prev, streamingMessage])
-
       try {
-        // Build enhanced context for AI response with updated messages
-        const conversationContext = buildConversationContext(updatedMessages)
-
-        // Call the AI chat API directly
-        const response = await fetch('/api/ai/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+        await sendChatMessage(
+          {
+            id: userMessageForContext.id,
+            role: 'user',
+            parts: [{ type: 'text', text: messageText }, ...fileParts],
+            metadata: {
+              queryType: queryAnalysis.queryType,
+              confidence: queryAnalysis.confidence,
+              language: i18n.language,
+              timestamp: now.toISOString()
+            }
           },
-          body: JSON.stringify({
-            message: messageText,
-            context: conversationContext,
-            attachments: pendingAttachments,
-            stream: true,
-          }),
-        })
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            // Handle authentication error
-            const errorData = await response.json().catch(() => ({}))
-            if (errorData.code === 'UNAUTHORIZED') {
-              throw new Error('AUTHENTICATION_REQUIRED')
+          {
+            body: {
+              context: buildConversationContext(contextMessages)
             }
           }
-
-          if (response.status === 429) {
-            // Handle quota exceeded error
-            const errorData = await response.json().catch(() => ({}))
-            if (errorData.code === 'QUOTA_EXCEEDED') {
-              throw new Error('QUOTA_EXCEEDED')
-            }
-          }
-
-          throw new Error(`Failed to get AI response: ${response.status}`)
-        }
-
-        const reader = response.body?.getReader()
-        if (!reader) {
-          throw new Error('No response body')
-        }
-
-        const decoder = new TextDecoder()
-        let done = false
-        let fullResponse = ''
-
-        while (!done) {
-          const { value, done: doneReading } = await reader.read()
-          done = doneReading
-
-          if (value) {
-            const chunk = decoder.decode(value)
-            fullResponse += chunk
-
-            // Update the streaming message in real-time
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === assistantMessageId ? { ...msg, content: fullResponse } : msg,
-              ),
-            )
-          }
-        }
-
-        // Immediately save the completed AI response
-        const completedAssistantMessage: Message = {
-          ...streamingMessage,
-          content: fullResponse,
-        }
-        const completedMessages = [...updatedMessages, completedAssistantMessage]
-
-        try {
-          await saveMessageImmediately(completedMessages)
-        } catch (error) {
-          // Log error for debugging in development only
-          if (process.env.NODE_ENV === 'development') {
-            // eslint-disable-next-line no-console
-            console.error('Failed to save assistant message:', error)
-          }
-          toast.error('Failed to save conversation. Your message was sent but may not be saved.')
-        }
+        )
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
           console.error('Chat error:', error)
         }
 
-        let errorContent = ''
-        if (error instanceof Error && error.message === 'AUTHENTICATION_REQUIRED') {
-          errorContent =
-            i18n.language === 'hi'
-              ? 'कृपया AI सहायक का उपयोग करने के लिए साइन इन करें।'
-              : i18n.language === 'mr'
-                ? 'कृपया AI सहाय्यक वापरण्यासाठी साइन इन करा.'
-                : 'Please sign in to use the AI Assistant.'
-        } else if (error instanceof Error && error.message === 'QUOTA_EXCEEDED') {
-          // Show toast notification for quota exceeded
-          const toastMessage =
-            i18n.language === 'hi'
-              ? 'दैनिक प्रश्न सीमा (5) पूर्ण हो गई। कल फिर कोशिश करें।'
-              : i18n.language === 'mr'
-                ? 'दैनिक प्रश्न मर्यादा (5) संपली. उद्या पुन्हा प्रयत्न करा.'
-                : 'Daily question limit (5) reached. Try again tomorrow.'
+        const errorMessage =
+          i18n.language === 'hi'
+            ? 'क्षमा करें, कुछ गलत हुआ। कृपया फिर से कोशिश करें।'
+            : i18n.language === 'mr'
+              ? 'माफ करा, काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.'
+              : 'Sorry, something went wrong. Please try again.'
 
-          toast.error(toastMessage, {
-            duration: 5000,
-            position: 'top-center',
-          })
-
-          errorContent =
-            i18n.language === 'hi'
-              ? 'दैनिक प्रश्न सीमा पूर्ण हो गई (5/5)। कल वापस आएं।'
-              : i18n.language === 'mr'
-                ? 'दैनिक प्रश्न मर्यादा संपली (5/5). उद्या परत या.'
-                : 'Daily question limit reached (5/5). Come back tomorrow.'
-        } else {
-          errorContent =
-            i18n.language === 'hi'
-              ? 'क्षमा करें, कुछ गलत हुआ। कृपया फिर से कोशिश करें।'
-              : i18n.language === 'mr'
-                ? 'माफ करा, काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.'
-                : 'Sorry, something went wrong. Please try again.'
-        }
-
-        const errorMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          content: errorContent,
-          role: 'assistant',
-          timestamp: new Date(),
-        }
-
-        // Replace the streaming message with error
-        setMessages((prev) =>
-          prev.map((msg) => (msg.id === assistantMessageId ? errorMessage : msg)),
-        )
-
-        // Immediately save the error message
-        const errorMessages = [...updatedMessages, errorMessage]
-        try {
-          await saveMessageImmediately(errorMessages)
-        } catch (saveError) {
-          // Log error for debugging in development only
-          if (process.env.NODE_ENV === 'development') {
-            // eslint-disable-next-line no-console
-            console.error('Failed to save error message:', saveError)
-          }
-          // Don't show another toast here as user already sees the error response
-        }
+        toast.error(errorMessage)
       } finally {
-        setIsLoading(false)
-        // Update quota status after message attempt
         setQuotaStatus(getQuotaStatus(user?.id))
       }
     },
     [
       inputValue,
-      isLoading,
+      pendingAttachments,
+      isAssistantProcessing,
+      analyzeQuery,
       messages,
       i18n.language,
       buildConversationContext,
-      pendingAttachments,
       saveMessageImmediately,
-      user?.id,
-    ],
+      sendChatMessage,
+      user?.id
+    ]
   )
 
-  // Store current handleSendMessage in ref for speech recognition
   useEffect(() => {
     handleSendMessageRef.current = handleSendMessage
   }, [handleSendMessage])
@@ -583,7 +654,6 @@ export function AIAssistant({
     }
   }
 
-  // Simple attachment handlers
   const handleAttachClick = () => {
     fileInputRef.current?.click()
   }
@@ -591,7 +661,6 @@ export function AIAssistant({
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file && file.type.startsWith('image/')) {
-      // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error('Image size must be less than 5MB')
         return
@@ -604,7 +673,7 @@ export function AIAssistant({
           type: 'image' as const,
           name: file.name,
           url: imageUrl,
-          size: file.size,
+          size: file.size
         }
 
         setPendingAttachments((prev) => [...prev, attachment])
@@ -614,58 +683,54 @@ export function AIAssistant({
       toast.error('Only image files are supported')
     }
 
-    // Reset the input
     if (event.target) {
       event.target.value = ''
     }
   }
 
-  // Copy message to clipboard
   const copyToClipboard = async (text: string, messageId: string) => {
     try {
       await navigator.clipboard.writeText(text)
       setCopiedMessageId(messageId)
       toast.success('Message copied to clipboard')
 
-      // Reset the copied state after 2 seconds
       setTimeout(() => setCopiedMessageId(null), 2000)
     } catch (err) {
       toast.error('Failed to copy message')
     }
   }
 
-  // Remove attachment from pending list
   const removeAttachment = (index: number) => {
     setPendingAttachments((prev) => prev.filter((_, i) => i !== index))
   }
 
-  // Conversation management with persistent storage
   const startNewConversation = () => {
+    setChatMessages([])
     setMessages([])
     setCurrentConversationId(null)
-    currentConversationIdRef.current = null // Sync ref
+    currentConversationIdRef.current = null
     setShowHistory(false)
-    setPendingAttachments([]) // Clear any pending attachments
+    setPendingAttachments([])
+    lastSavedSnapshotRef.current = null
   }
 
   const loadConversation = (conversationId: string) => {
     const conversation = conversations.find((c) => c.id === conversationId)
     if (conversation) {
+      setChatMessages(conversation.messages.map(messageToUIMessage))
       setMessages(conversation.messages)
       setCurrentConversationId(conversationId)
-      currentConversationIdRef.current = conversationId // Sync ref
+      currentConversationIdRef.current = conversationId
       setShowHistory(false)
+      lastSavedSnapshotRef.current = null
     }
   }
 
   const deleteConversation = async (conversationId: string) => {
-    // Delete from persistent storage
     await supabaseConversationStorage.deleteConversation(conversationId, user?.id)
 
-    // Update local state
     setConversations((prev) => prev.filter((c) => c.id !== conversationId))
 
-    // If we're deleting the current conversation, start a new one
     if (currentConversationId === conversationId) {
       startNewConversation()
     }
@@ -673,20 +738,32 @@ export function AIAssistant({
 
   const formatMessage = (content: string, isAssistant: boolean = false) => {
     if (isAssistant) {
-      // Use markdown for AI responses
       return (
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
-            // Customize rendering for chat bubbles
             p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-            ul: ({ children }) => (
-              <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>
+            ul: ({ children, ...props }) => (
+              <ul
+                {...props}
+                className={cn('list-disc list-outside pl-5 mb-2 space-y-1', props.className)}
+              >
+                {children}
+              </ul>
             ),
-            ol: ({ children }) => (
-              <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>
+            ol: ({ children, ...props }) => (
+              <ol
+                {...props}
+                className={cn('list-decimal list-outside pl-5 mb-2 space-y-1', props.className)}
+              >
+                {children}
+              </ol>
             ),
-            li: ({ children }) => <li className="ml-0">{children}</li>,
+            li: ({ children, ...props }) => (
+              <li {...props} className={cn('leading-relaxed', props.className)}>
+                {children}
+              </li>
+            ),
             code: ({ children, ...props }) => {
               const isInline = !props.className?.includes('language-')
               return isInline ? (
@@ -708,14 +785,13 @@ export function AIAssistant({
               <blockquote className="border-l-2 border-gray-300 pl-3 ml-2 my-2 text-gray-700">
                 {children}
               </blockquote>
-            ),
+            )
           }}
         >
           {content}
         </ReactMarkdown>
       )
     } else {
-      // Simple formatting for user messages
       return content.split('\n').map((line, index) => (
         <p key={index} className="mb-2 last:mb-0">
           {line}
@@ -728,16 +804,15 @@ export function AIAssistant({
     {
       en: 'How to prevent grape diseases?',
       hi: 'अंगूर के रोगों से कैसे बचाव करें?',
-      mr: 'द्राक्षाच्या आजारांपासून कसे बचाव करावा?',
+      mr: 'द्राक्षाच्या आजारांपासून कसे बचाव करावा?'
     },
     {
       en: 'Harvest time indicators',
       hi: 'कटाई के समय के संकेत',
-      mr: 'कापणीच्या वेळेचे संकेत',
-    },
+      mr: 'कापणीच्या वेळेचे संकेत'
+    }
   ]
 
-  // Mobile floating chat button
   if (!isOpen && isMobile) {
     return (
       <Button
@@ -756,7 +831,7 @@ export function AIAssistant({
         'flex flex-col rounded-none',
         isMobile ? 'h-screen' : 'h-[calc(100vh)]',
         isMobile && isOpen && 'fixed inset-0 z-50 rounded-none pb-16',
-        className,
+        className
       )}
     >
       <CardHeader className="flex-shrink-0 pb-3 border-b">
@@ -766,7 +841,6 @@ export function AIAssistant({
             <span className="text-base sm:text-lg">{t('ai_assistant', 'AI Assistant')}</span>
           </div>
           <div className="flex items-center gap-2">
-            {/* History button */}
             <Button
               variant="ghost"
               size="sm"
@@ -776,12 +850,10 @@ export function AIAssistant({
               <History className="w-4 h-4" />
             </Button>
 
-            {/* New conversation button */}
             <Button variant="ghost" size="sm" onClick={startNewConversation} className="h-8">
               <Plus className="w-4 h-4" />
             </Button>
 
-            {/* Quota indicator */}
             <div
               className={cn(
                 'text-xs px-2 py-1 rounded-full',
@@ -789,7 +861,7 @@ export function AIAssistant({
                   ? 'bg-red-100 text-red-600'
                   : quotaStatus.remaining <= 1
                     ? 'bg-yellow-100 text-yellow-600'
-                    : 'bg-green-100 text-green-600',
+                    : 'bg-green-100 text-green-600'
               )}
             >
               {quotaStatus.remaining}/{quotaStatus.limit}
@@ -804,7 +876,6 @@ export function AIAssistant({
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col min-h-0 p-0">
-        {/* Conversation History Sidebar */}
         {showHistory && (
           <div className="flex-shrink-0 border-b bg-gray-50 p-4 max-h-60 overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
@@ -829,7 +900,7 @@ export function AIAssistant({
                       key={conv.id}
                       className={cn(
                         'group flex items-center justify-between p-2 rounded cursor-pointer text-xs hover:bg-gray-200',
-                        currentConversationId === conv.id && 'bg-blue-100',
+                        currentConversationId === conv.id && 'bg-blue-100'
                       )}
                     >
                       <div onClick={() => loadConversation(conv.id)} className="flex-1 min-w-0">
@@ -857,7 +928,6 @@ export function AIAssistant({
           </div>
         )}
 
-        {/* Messages Container with proper flex layout */}
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
@@ -868,7 +938,7 @@ export function AIAssistant({
                 <div
                   className={cn(
                     'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
-                    message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-green-500 text-white',
+                    message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-green-500 text-white'
                   )}
                 >
                   {message.role === 'user' ? (
@@ -881,21 +951,19 @@ export function AIAssistant({
                 <div
                   className={cn(
                     'flex-1 max-w-[85%] space-y-2',
-                    message.role === 'user' && 'flex-col items-end',
+                    message.role === 'user' && 'flex-col items-end'
                   )}
                 >
-                  {/* Message content */}
                   <div
                     className={cn(
                       'relative group p-3 rounded-2xl text-sm break-words',
                       message.role === 'user'
                         ? 'bg-blue-500 text-white'
-                        : 'bg-gray-100 text-gray-900',
+                        : 'bg-gray-100 text-gray-900'
                     )}
                   >
                     {formatMessage(message.content, message.role === 'assistant')}
 
-                    {/* Copy button for assistant messages */}
                     {message.role === 'assistant' && (
                       <Button
                         onClick={() => copyToClipboard(message.content, message.id)}
@@ -903,7 +971,7 @@ export function AIAssistant({
                         size="sm"
                         className={cn(
                           'absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity',
-                          'bg-white/80 hover:bg-white text-gray-600 hover:text-gray-900',
+                          'bg-white/80 hover:bg-white text-gray-600 hover:text-gray-900'
                         )}
                       >
                         {copiedMessageId === message.id ? (
@@ -915,7 +983,6 @@ export function AIAssistant({
                     )}
                   </div>
 
-                  {/* Attachments */}
                   {message.attachments && message.attachments.length > 0 && (
                     <div className="space-y-2">
                       {message.attachments.map((attachment, index) => (
@@ -923,7 +990,7 @@ export function AIAssistant({
                           key={index}
                           className={cn(
                             'max-w-xs rounded-lg overflow-hidden border',
-                            message.role === 'user' ? 'border-blue-200' : 'border-gray-200',
+                            message.role === 'user' ? 'border-blue-200' : 'border-gray-200'
                           )}
                         >
                           {attachment.type === 'image' && (
@@ -952,7 +1019,7 @@ export function AIAssistant({
               </div>
             ))}
 
-            {isLoading && (
+            {isAssistantProcessing && (
               <div className="flex gap-3">
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center">
                   <Bot className="w-4 h-4" />
@@ -971,8 +1038,7 @@ export function AIAssistant({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Questions - Above input */}
-          {messages.length <= 1 && !isLoading && !isMobile && (
+          {messages.length <= 1 && !isAssistantProcessing && !isMobile && (
             <div className="flex-shrink-0 p-4 border-t border-b">
               <p className="text-xs text-gray-500 mb-2">
                 {t('quick_questions', 'Quick questions:')}
@@ -995,7 +1061,6 @@ export function AIAssistant({
             </div>
           )}
 
-          {/* Pending Attachments Preview */}
           {pendingAttachments.length > 0 && (
             <div className="flex-shrink-0 p-4 border-t bg-gray-50/50">
               <div className="flex flex-wrap gap-2">
@@ -1026,14 +1091,7 @@ export function AIAssistant({
             </div>
           )}
 
-          {/* Input Area - Fixed at bottom - Perplexity.ai style */}
-          <div
-            className={cn(
-              'flex-shrink-0 p-4 bg-white border-t',
-              // Extra bottom padding for mobile to avoid bottom navigation
-            )}
-          >
-            {/* Hidden file input */}
+          <div className={cn('flex-shrink-0 p-4 bg-white border-t')}>
             <input
               ref={fileInputRef}
               type="file"
@@ -1042,18 +1100,15 @@ export function AIAssistant({
               className="hidden"
             />
 
-            {/* Main input container with responsive design */}
             <div className="relative w-full max-w-4xl mx-auto">
               {isMobile ? (
-                /* Mobile layout - matches the image */
                 <div className="space-y-3">
-                  {/* Main textarea container */}
                   <div className="relative bg-white border border-gray-300 rounded-xl px-4 py-3 shadow-sm">
                     <Textarea
                       style={{
                         resize: 'none',
                         minHeight: '28px',
-                        maxHeight: '120px',
+                        maxHeight: '120px'
                       }}
                       rows={1}
                       ref={inputRef}
@@ -1083,20 +1138,18 @@ export function AIAssistant({
                               ? 'काहीही विचारा...'
                               : 'Ask anything'
                       }
-                      disabled={isLoading || quotaStatus.isExceeded}
+                      disabled={isAssistantProcessing || quotaStatus.isExceeded}
                       className={cn(
                         'w-full bg-transparent border-0 resize-none text-base leading-7 p-0',
                         'focus:outline-none placeholder-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0',
-                        'scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300',
+                        'scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300'
                       )}
                     />
 
-                    {/* Buttons row below textarea */}
                     <div className="flex items-center justify-between">
-                      {/* Attach button - left side */}
                       <Button
                         onClick={handleAttachClick}
-                        disabled={isLoading || quotaStatus.isExceeded}
+                        disabled={isAssistantProcessing || quotaStatus.isExceeded}
                         variant="ghost"
                         size="sm"
                         className="p-0 h-5 w-6 hover:bg-gray-100 text-gray-500 flex-shrink-0"
@@ -1104,9 +1157,7 @@ export function AIAssistant({
                         <Paperclip className="w-6 h-5" />
                       </Button>
 
-                      {/* Right side buttons */}
                       <div className="flex items-center gap-4 flex-shrink-0">
-                        {/* Mic button */}
                         {recognitionRef.current && (
                           <Button
                             type="button"
@@ -1117,7 +1168,7 @@ export function AIAssistant({
                               'p-0 h-5 w-6',
                               isListening
                                 ? 'bg-red-50 text-red-500 hover:bg-red-100'
-                                : 'hover:bg-gray-100 text-gray-500',
+                                : 'hover:bg-gray-100 text-gray-500'
                             )}
                           >
                             {isListening ? (
@@ -1128,25 +1179,24 @@ export function AIAssistant({
                           </Button>
                         )}
 
-                        {/* Send button - teal circular button */}
                         <Button
                           onClick={() => handleSendMessage()}
                           disabled={
                             (!inputValue.trim() && pendingAttachments.length === 0) ||
-                            isLoading ||
+                            isAssistantProcessing ||
                             quotaStatus.isExceeded
                           }
                           size="sm"
                           className={cn(
                             'p-0 h-5 w-8 rounded-lg flex items-center justify-center',
                             (!inputValue.trim() && pendingAttachments.length === 0) ||
-                              isLoading ||
+                              isAssistantProcessing ||
                               quotaStatus.isExceeded
                               ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
-                              : 'bg-primary hover:bg-teal-700 text-white',
+                              : 'bg-primary hover:bg-teal-700 text-white'
                           )}
                         >
-                          {isLoading ? (
+                          {isAssistantProcessing ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
                             <ArrowRight className="w-4 h-4" />
@@ -1157,21 +1207,18 @@ export function AIAssistant({
                   </div>
                 </div>
               ) : (
-                /* Desktop layout - similar to screenshot */
                 <div className="relative bg-white border border-gray-300 rounded-xl px-4 py-3 shadow-sm max-w-4xl mx-auto">
-                  {/* Textarea */}
                   <Textarea
                     style={{
                       resize: 'none',
                       minHeight: '28px',
-                      maxHeight: '120px',
+                      maxHeight: '120px'
                     }}
                     rows={1}
                     ref={inputRef}
                     value={inputValue}
                     onChange={(e) => {
                       setInputValue(e.target.value)
-                      // Auto-resize textarea
                       const textarea = e.target
                       textarea.style.height = 'auto'
                       textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px'
@@ -1195,20 +1242,18 @@ export function AIAssistant({
                             ? 'काहीही विचारा...'
                             : 'Ask anything'
                     }
-                    disabled={isLoading || quotaStatus.isExceeded}
+                    disabled={isAssistantProcessing || quotaStatus.isExceeded}
                     className={cn(
                       'w-full bg-transparent border-0 resize-none text-base leading-7 p-0',
                       'focus:outline-none focus:ring-0 placeholder-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0',
-                      'scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300',
+                      'scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300'
                     )}
                   />
 
-                  {/* Buttons row below textarea */}
                   <div className="flex items-center justify-between pt-3">
-                    {/* Left side - empty for desktop, or could add attach */}
                     <Button
                       onClick={handleAttachClick}
-                      disabled={isLoading || quotaStatus.isExceeded}
+                      disabled={isAssistantProcessing || quotaStatus.isExceeded}
                       variant="ghost"
                       size="sm"
                       className="p-0 h-7 w-7 hover:bg-gray-100 text-gray-500 flex-shrink-0"
@@ -1216,9 +1261,7 @@ export function AIAssistant({
                       <Paperclip className="w-5 h-5" />
                     </Button>
 
-                    {/* Right side buttons */}
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      {/* Mic button */}
                       {recognitionRef.current && (
                         <Button
                           type="button"
@@ -1229,7 +1272,7 @@ export function AIAssistant({
                             'p-0 h-7 w-7 hover:bg-gray-100',
                             isListening
                               ? 'bg-red-50 text-red-500 hover:bg-red-100'
-                              : 'text-gray-500',
+                              : 'text-gray-500'
                           )}
                         >
                           {isListening ? (
@@ -1240,25 +1283,24 @@ export function AIAssistant({
                         </Button>
                       )}
 
-                      {/* Send button */}
                       <Button
                         onClick={() => handleSendMessage()}
                         disabled={
                           (!inputValue.trim() && pendingAttachments.length === 0) ||
-                          isLoading ||
+                          isAssistantProcessing ||
                           quotaStatus.isExceeded
                         }
                         size="sm"
                         className={cn(
                           'p-0 h-8 w-8 rounded-lg flex items-center justify-center',
                           (!inputValue.trim() && pendingAttachments.length === 0) ||
-                            isLoading ||
+                            isAssistantProcessing ||
                             quotaStatus.isExceeded
                             ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
-                            : 'bg-primary hover:bg-teal-700 text-white',
+                            : 'bg-primary hover:bg-teal-700 text-white'
                         )}
                       >
-                        {isLoading ? (
+                        {isAssistantProcessing ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                           <ArrowRight className="w-4 h-4" />
@@ -1269,7 +1311,6 @@ export function AIAssistant({
                 </div>
               )}
 
-              {/* Listening indicator */}
               {isListening && (
                 <div className="absolute -top-8 left-3 flex items-center gap-2 px-2 py-1 bg-red-50 border border-red-200 rounded-lg">
                   <div className="flex space-x-1">
@@ -1290,7 +1331,6 @@ export function AIAssistant({
   )
 }
 
-// Declare global type for WebKit Speech Recognition
 declare global {
   interface Window {
     webkitSpeechRecognition: any

@@ -10,7 +10,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import {
   TrendingUp,
@@ -26,7 +26,7 @@ import {
   Target,
   MapPin,
   Leaf,
-  Sun,
+  Sun
 } from 'lucide-react'
 import { CloudDataService } from '@/lib/cloud-data-service'
 import { Farm } from '@/types/types'
@@ -90,7 +90,7 @@ export default function FarmEfficiencyPage() {
       const totalHarvest = harvestRecords.reduce((sum, record) => sum + record.quantity, 0)
       const totalIrrigation = irrigationRecords.reduce(
         (sum, record) => sum + record.duration * record.system_discharge,
-        0,
+        0
       )
       const yieldPerHectare = totalHarvest / selectedFarm.area
       const waterEfficiency = totalHarvest / (totalIrrigation || 1) // kg per liter
@@ -99,7 +99,7 @@ export default function FarmEfficiencyPage() {
         (harvestRecords.length || 1)
       const totalRevenue = harvestRecords.reduce(
         (sum, record) => sum + record.quantity * (record.price || 0),
-        0,
+        0
       )
       const revenuePerHectare = totalRevenue / selectedFarm.area
 
@@ -117,7 +117,7 @@ export default function FarmEfficiencyPage() {
                   ? 'needs-improvement'
                   : 'poor',
           benchmark: 3000,
-          category: 'yield',
+          category: 'yield'
         },
         {
           name: 'Water Use Efficiency',
@@ -132,7 +132,7 @@ export default function FarmEfficiencyPage() {
                   ? 'needs-improvement'
                   : 'poor',
           benchmark: 0.8,
-          category: 'water',
+          category: 'water'
         },
         {
           name: 'Average Grape Price',
@@ -147,7 +147,7 @@ export default function FarmEfficiencyPage() {
                   ? 'needs-improvement'
                   : 'poor',
           benchmark: 80,
-          category: 'cost',
+          category: 'cost'
         },
         {
           name: 'Revenue per Hectare',
@@ -162,7 +162,7 @@ export default function FarmEfficiencyPage() {
                   ? 'needs-improvement'
                   : 'poor',
           benchmark: 200,
-          category: 'cost',
+          category: 'cost'
         },
         {
           name: 'Harvest Frequency',
@@ -177,7 +177,7 @@ export default function FarmEfficiencyPage() {
                   ? 'needs-improvement'
                   : 'poor',
           benchmark: 3,
-          category: 'quality',
+          category: 'quality'
         },
         {
           name: 'Spray Applications',
@@ -190,7 +190,7 @@ export default function FarmEfficiencyPage() {
                 ? 'good'
                 : 'needs-improvement',
           benchmark: 8,
-          category: 'quality',
+          category: 'quality'
         },
         {
           name: 'Irrigation Efficiency',
@@ -203,7 +203,7 @@ export default function FarmEfficiencyPage() {
                 ? 'good'
                 : 'needs-improvement',
           benchmark: 500,
-          category: 'water',
+          category: 'water'
         },
         {
           name: 'Farm Utilization',
@@ -211,8 +211,8 @@ export default function FarmEfficiencyPage() {
           unit: '%',
           status: 'excellent',
           benchmark: 100,
-          category: 'yield',
-        },
+          category: 'yield'
+        }
       ]
 
       setMetrics(efficiencyMetrics)
@@ -229,7 +229,7 @@ export default function FarmEfficiencyPage() {
           unit: 'kg/ha',
           status: 'good',
           benchmark: 3000,
-          category: 'yield',
+          category: 'yield'
         },
         {
           name: 'Water Use Efficiency',
@@ -237,7 +237,7 @@ export default function FarmEfficiencyPage() {
           unit: 'kg/L',
           status: 'good',
           benchmark: 0.8,
-          category: 'water',
+          category: 'water'
         },
         {
           name: 'Average Grape Price',
@@ -245,7 +245,7 @@ export default function FarmEfficiencyPage() {
           unit: '₹/kg',
           status: 'good',
           benchmark: 80,
-          category: 'cost',
+          category: 'cost'
         },
         {
           name: 'Revenue per Hectare',
@@ -253,8 +253,8 @@ export default function FarmEfficiencyPage() {
           unit: '₹000/ha',
           status: 'good',
           benchmark: 200,
-          category: 'cost',
-        },
+          category: 'cost'
+        }
       ]
       setMetrics(defaultMetrics)
     } finally {
@@ -490,8 +490,8 @@ export default function FarmEfficiencyPage() {
                         'Yield per Hectare',
                         'Water Use Efficiency',
                         'Average Grape Price',
-                        'Revenue per Hectare',
-                      ].includes(metric.name),
+                        'Revenue per Hectare'
+                      ].includes(metric.name)
                     )
                     .map((metric, index) => (
                       <Card key={index} className="border-2">
@@ -529,7 +529,7 @@ export default function FarmEfficiencyPage() {
                                       : 'bg-red-500'
                                 }`}
                                 style={{
-                                  width: `${Math.min((metric.value / metric.benchmark) * 100, 100)}%`,
+                                  width: `${Math.min((metric.value / metric.benchmark) * 100, 100)}%`
                                 }}
                               />
                             </div>
@@ -559,7 +559,7 @@ export default function FarmEfficiencyPage() {
                   <div className="space-y-4">
                     {metrics
                       .filter((metric) =>
-                        ['Water Use Efficiency', 'Irrigation Efficiency'].includes(metric.name),
+                        ['Water Use Efficiency', 'Irrigation Efficiency'].includes(metric.name)
                       )
                       .map((metric, index) => (
                         <div
@@ -606,8 +606,8 @@ export default function FarmEfficiencyPage() {
                           'Yield per Hectare',
                           'Harvest Frequency',
                           'Spray Applications',
-                          'Farm Utilization',
-                        ].includes(metric.name),
+                          'Farm Utilization'
+                        ].includes(metric.name)
                       )
                       .map((metric, index) => (
                         <div
@@ -641,7 +641,7 @@ export default function FarmEfficiencyPage() {
                                         : 'bg-red-500'
                                 }`}
                                 style={{
-                                  width: `${Math.min((metric.value / metric.benchmark) * 100, 100)}%`,
+                                  width: `${Math.min((metric.value / metric.benchmark) * 100, 100)}%`
                                 }}
                               />
                             </div>

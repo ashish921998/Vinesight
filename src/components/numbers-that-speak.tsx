@@ -20,7 +20,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
   width = 482,
   height = 300,
   className = '',
-  theme = 'dark',
+  theme = 'dark'
 }) => {
   // Design tokens (derived from Figma local variables)
   const themeVars =
@@ -31,7 +31,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
           '--nts-text-secondary': 'rgba(47,48,55,0.8)',
           '--nts-text-muted': 'rgba(55,50,47,0.7)',
           '--nts-border': 'rgba(47,48,55,0.12)',
-          '--nts-shadow': 'rgba(47,48,55,0.06)',
+          '--nts-shadow': 'rgba(47,48,55,0.06)'
         }
       : ({
           '--nts-surface': '#ffffff',
@@ -39,7 +39,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
           '--nts-text-secondary': 'rgba(47,48,55,0.8)',
           '--nts-text-muted': 'rgba(55,50,47,0.7)',
           '--nts-border': 'rgba(47,48,55,0.12)',
-          '--nts-shadow': 'rgba(47,48,55,0.06)',
+          '--nts-shadow': 'rgba(47,48,55,0.06)'
         } as React.CSSProperties)
 
   return (
@@ -51,7 +51,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
           height,
           position: 'relative',
           background: 'transparent',
-          ...themeVars,
+          ...themeVars
         } as React.CSSProperties
       }
       role="img"
@@ -74,7 +74,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
             '0px 0px 0px 0.783px rgba(47,48,55,0.12), 0px 1.565px 3.13px -0.783px rgba(47,48,55,0.06), 0px 2.348px 4.696px -1.174px rgba(47,48,55,0.06)',
           overflow: 'hidden',
           padding: '18px',
-          boxSizing: 'border-box',
+          boxSizing: 'border-box'
         }}
       >
         {/* Header Section */}
@@ -83,7 +83,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
             display: 'flex',
             flexDirection: 'column',
             gap: '6px',
-            marginBottom: '20px',
+            marginBottom: '20px'
           }}
         >
           <div
@@ -93,7 +93,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
               fontSize: '10px',
               lineHeight: '18px',
               color: 'var(--nts-text-secondary)',
-              whiteSpace: 'pre',
+              whiteSpace: 'pre'
             }}
           >
             Crop Yield (Tons)
@@ -107,7 +107,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
               lineHeight: '20px',
               letterSpacing: '-0.587px',
               color: 'var(--nts-text-primary)',
-              whiteSpace: 'pre',
+              whiteSpace: 'pre'
             }}
           >
             2,847 tons
@@ -119,7 +119,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
           style={{
             height: '156px',
             position: 'relative',
-            width: '100%',
+            width: '100%'
           }}
         >
           {/* Y-Axis Labels */}
@@ -134,7 +134,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
               justifyContent: 'space-between',
               alignItems: 'flex-end',
               paddingRight: '8px',
-              boxSizing: 'border-box',
+              boxSizing: 'border-box'
             }}
           >
             {['3000', '2500', '2000', '1500', '1000'].map((label, index) => (
@@ -146,7 +146,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
                   fontSize: '7px',
                   lineHeight: '14px',
                   color: 'var(--nts-text-muted)',
-                  textAlign: 'right',
+                  textAlign: 'right'
                 }}
               >
                 {label}
@@ -164,7 +164,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
               height: '100%',
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'space-between',
+              justifyContent: 'space-between'
             }}
           >
             {Array.from({ length: 6 }).map((_, index) => (
@@ -173,7 +173,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
                 style={{
                   width: '100%',
                   height: '1px',
-                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  backgroundColor: 'rgba(0,0,0,0.05)'
                 }}
               />
             ))}
@@ -189,7 +189,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
               top: '12px',
               display: 'flex',
               alignItems: 'flex-end',
-              justifyContent: 'space-between',
+              justifyContent: 'space-between'
             }}
           >
             {[
@@ -203,7 +203,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
               { height: '95px', color: '#22C55E' },
               { height: '108px', color: '#22C55E' },
               { height: '76px', color: '#22C55E' },
-              { height: '89px', color: '#22C55E' },
+              { height: '89px', color: '#22C55E' }
             ].map((item, index) => (
               <div
                 key={index}
@@ -211,7 +211,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
                   width: '12px',
                   height: item.height,
                   backgroundColor: item.color,
-                  borderRadius: '2px',
+                  borderRadius: '2px'
                 }}
               />
             ))}
@@ -230,7 +230,7 @@ const NumbersThatSpeak: React.FC<NumbersThatSpeakProps> = ({
               fontWeight: 500,
               fontSize: '7px',
               lineHeight: '14px',
-              color: 'var(--nts-text-muted)',
+              color: 'var(--nts-text-muted)'
             }}
           >
             <div>Spring 2023</div>

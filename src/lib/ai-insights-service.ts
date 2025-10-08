@@ -4,6 +4,8 @@ import { SmartTaskGenerator } from './smart-task-generator'
 import { WeatherService } from './weather-service'
 import { AIInsight } from '../types/ai'
 
+export type { AIInsight }
+
 export class AIInsightsService {
   // Simple in-memory cache for insights (5 minute TTL)
   private static insightsCache = new Map<string, { data: AIInsight[]; timestamp: number }>()
@@ -34,7 +36,7 @@ export class AIInsightsService {
     const cacheKey = `${farmId}_${userId}`
     this.insightsCache.set(cacheKey, {
       data: insights,
-      timestamp: Date.now(),
+      timestamp: Date.now()
     })
   }
 
@@ -44,7 +46,7 @@ export class AIInsightsService {
   static async getInsightsForFarm(
     farmId: number,
     userId: string,
-    limit = 10,
+    limit = 10
   ): Promise<AIInsight[]> {
     try {
       // Check cache first
@@ -63,12 +65,12 @@ export class AIInsightsService {
       // 1. Pest & Disease Alerts
       const pestPredictions = await PestPredictionService.getActivePredictions(farmId)
       const criticalPests = pestPredictions.filter(
-        (p) => p.riskLevel === 'critical' || p.riskLevel === 'high',
+        (p) => p.riskLevel === 'critical' || p.riskLevel === 'high'
       )
 
       criticalPests.forEach((pest) => {
         const daysUntil = Math.ceil(
-          (pest.predictedOnsetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
+          (pest.predictedOnsetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
         )
         insights.push({
           id: `pest_${pest.id}`,
@@ -83,11 +85,11 @@ export class AIInsightsService {
           actionData: {
             route: `/farms/${farmId}/pest-alerts`,
             pestId: pest.id,
-            expiresAt: pest.predictedOnsetDate,
+            expiresAt: pest.predictedOnsetDate
           },
           confidence: pest.probabilityScore,
           timeRelevant: daysUntil <= 7,
-          tags: ['pest', 'disease', 'prevention'],
+          tags: ['pest', 'disease', 'prevention']
         })
       })
 
@@ -109,11 +111,11 @@ export class AIInsightsService {
           actionData: {
             taskId: task.id,
             taskType: task.taskType,
-            expiresAt: task.expiresAt ? new Date(task.expiresAt) : undefined,
+            expiresAt: task.expiresAt ? new Date(task.expiresAt) : undefined
           },
           confidence: task.confidenceScore,
           timeRelevant: true,
-          tags: ['task', 'recommendation', task.taskType],
+          tags: ['task', 'recommendation', task.taskType]
         })
       })
 
@@ -129,8 +131,8 @@ export class AIInsightsService {
           body: JSON.stringify({
             weatherData,
             farmData: farm,
-            history: activities,
-          }),
+            history: activities
+          })
         })
 
         const { success, data: aiWeatherInsights } = await response.json()
@@ -150,7 +152,7 @@ export class AIInsightsService {
             actionData: { route: `/farms/${farmId}/weather` },
             confidence: aiInsight.confidence,
             timeRelevant: aiInsight.timeRelevant,
-            tags: ['weather', 'ai', 'advisory'],
+            tags: ['weather', 'ai', 'advisory']
           })
         })
       } catch (error) {
@@ -221,7 +223,7 @@ export class AIInsightsService {
         actionData: { route: `/farms/${farm.id}/pest-alerts` },
         confidence: 0.85,
         timeRelevant: true,
-        tags: ['weather', 'disease', 'prevention'],
+        tags: ['weather', 'disease', 'prevention']
       })
     }
 
@@ -238,7 +240,7 @@ export class AIInsightsService {
         actionData: { route: `/farms/${farm.id}/weather` },
         confidence: 0.9,
         timeRelevant: true,
-        tags: ['weather', 'spray', 'safety'],
+        tags: ['weather', 'spray', 'safety']
       })
     }
 
@@ -275,8 +277,8 @@ export class AIInsightsService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           expenses: recentExpenses,
-          historicalData: historicalExpenses || [],
-        }),
+          historicalData: historicalExpenses || []
+        })
       })
 
       const { success, data: aiAnalysis } = await response.json()
@@ -305,11 +307,11 @@ export class AIInsightsService {
           actionType: 'navigate',
           actionData: {
             route: `/farms/${farmId}/reports`,
-            analysis: aiAnalysis,
+            analysis: aiAnalysis
           },
           confidence: aiAnalysis.confidence,
           timeRelevant: true,
-          tags: ['finance', 'ai', aiAnalysis.trend, 'analysis'],
+          tags: ['finance', 'ai', aiAnalysis.trend, 'analysis']
         })
       }
 
@@ -328,7 +330,7 @@ export class AIInsightsService {
             actionData: { route: `/farms/${farmId}/reports` },
             confidence: aiAnalysis.confidence,
             timeRelevant: true,
-            tags: ['finance', 'risk', 'ai'],
+            tags: ['finance', 'risk', 'ai']
           })
         })
       }
@@ -366,7 +368,7 @@ export class AIInsightsService {
             actionData: { route: `/farms/${farmId}/reports` },
             confidence: 0.6,
             timeRelevant: true,
-            tags: ['finance', 'expense', 'fallback'],
+            tags: ['finance', 'expense', 'fallback']
           })
         }
 
@@ -406,7 +408,7 @@ export class AIInsightsService {
    */
   private static async getGrowthOptimizationInsights(
     farmId: number,
-    farm: any,
+    farm: any
   ): Promise<AIInsight[]> {
     const insights: AIInsight[] = []
 
@@ -422,8 +424,8 @@ export class AIInsightsService {
         body: JSON.stringify({
           farmData: farm,
           activities,
-          weather: weatherData,
-        }),
+          weather: weatherData
+        })
       })
 
       const { success, data: growthAnalysis } = await response.json()
@@ -442,11 +444,11 @@ export class AIInsightsService {
           actionData: {
             route: `/farms/${farmId}/growth-guide`,
             recommendations: growthAnalysis.recommendations,
-            analysis: growthAnalysis,
+            analysis: growthAnalysis
           },
           confidence: growthAnalysis.confidence,
           timeRelevant: growthAnalysis.timeRelevant,
-          tags: ['growth', 'ai', growthAnalysis.stage, 'optimization'],
+          tags: ['growth', 'ai', growthAnalysis.stage, 'optimization']
         })
       }
     } catch (error) {
@@ -468,7 +470,7 @@ export class AIInsightsService {
           actionData: { route: `/farms/${farmId}/growth-guide` },
           confidence: 0.6,
           timeRelevant: true,
-          tags: ['growth', 'flowering', 'fallback'],
+          tags: ['growth', 'flowering', 'fallback']
         })
       }
     }
@@ -487,7 +489,7 @@ export class AIInsightsService {
       fruit_set: 'Fruit Set Period',
       veraison: 'Veraison Stage',
       harvest: 'Harvest Time',
-      dormancy: 'Dormancy Period',
+      dormancy: 'Dormancy Period'
     }
 
     return (
@@ -522,7 +524,7 @@ export class AIInsightsService {
           .select('*')
           .eq('farm_id', farmId)
           .gte('date', thirtyDaysAgoStr)
-          .limit(5),
+          .limit(5)
       ])
 
       // Combine activities with standardized format
@@ -535,7 +537,7 @@ export class AIInsightsService {
             activity_type: 'irrigation',
             date: record.date,
             notes: record.notes || `${record.duration}h irrigation, ${record.area} area`,
-            created_at: record.created_at,
+            created_at: record.created_at
           })
         })
       }
@@ -547,7 +549,7 @@ export class AIInsightsService {
             activity_type: 'spray',
             date: record.date,
             notes: record.notes || `${record.chemical}`,
-            created_at: record.created_at,
+            created_at: record.created_at
           })
         })
       }
@@ -559,7 +561,7 @@ export class AIInsightsService {
             activity_type: 'fertigation',
             date: record.date,
             notes: record.notes || `${record.fertilizer} application`,
-            created_at: record.created_at,
+            created_at: record.created_at
           })
         })
       }
@@ -612,7 +614,7 @@ export class AIInsightsService {
    */
   static async getInsightsByCategory(
     farmId: number,
-    userId: string | null,
+    userId: string | null
   ): Promise<Record<string, AIInsight[]>> {
     // Check cache for category data
     const cacheKey = `${farmId}_${userId}_categories`
@@ -632,13 +634,13 @@ export class AIInsightsService {
         acc[insight.type].push(insight)
         return acc
       },
-      {} as Record<string, AIInsight[]>,
+      {} as Record<string, AIInsight[]>
     )
 
     // Cache the category results
     this.categoriesCache.set(cacheKey, {
       data: categories,
-      timestamp: Date.now(),
+      timestamp: Date.now()
     })
 
     return categories
@@ -648,7 +650,7 @@ export class AIInsightsService {
    * Execute an AI insight action
    */
   static async executeInsightAction(
-    insight: AIInsight,
+    insight: AIInsight
   ): Promise<{ success: boolean; message: string }> {
     try {
       switch (insight.actionType) {

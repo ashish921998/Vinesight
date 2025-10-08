@@ -83,8 +83,8 @@ const DISEASE_MODELS = {
       pinot_noir: 0.4,
       merlot: 0.6,
       sauvignon_blanc: 0.5,
-      riesling: 0.8,
-    },
+      riesling: 0.8
+    }
   },
   downy_mildew: {
     name: 'Downy Mildew (Plasmopara viticola)',
@@ -99,8 +99,8 @@ const DISEASE_MODELS = {
       pinot_noir: 0.2,
       merlot: 0.5,
       sauvignon_blanc: 0.3,
-      riesling: 0.7,
-    },
+      riesling: 0.7
+    }
   },
   botrytis: {
     name: 'Botrytis Bunch Rot (Botrytis cinerea)',
@@ -115,8 +115,8 @@ const DISEASE_MODELS = {
       pinot_noir: 0.2,
       merlot: 0.6,
       sauvignon_blanc: 0.5,
-      riesling: 0.3,
-    },
+      riesling: 0.3
+    }
   },
   black_rot: {
     name: 'Black Rot (Guignardia bidwellii)',
@@ -131,8 +131,8 @@ const DISEASE_MODELS = {
       pinot_noir: 0.4,
       merlot: 0.7,
       sauvignon_blanc: 0.6,
-      riesling: 0.8,
-    },
+      riesling: 0.8
+    }
   },
   anthracnose: {
     name: 'Anthracnose (Elsinoe ampelina)',
@@ -147,9 +147,9 @@ const DISEASE_MODELS = {
       pinot_noir: 0.5,
       merlot: 0.8,
       sauvignon_blanc: 0.7,
-      riesling: 0.6,
-    },
-  },
+      riesling: 0.6
+    }
+  }
 }
 
 export class DiseasePredictionModel {
@@ -182,14 +182,14 @@ export class DiseasePredictionModel {
       alerts: alerts.sort((a, b) => a.daysUntilAction - b.daysUntilAction),
       weatherScore,
       treatmentCalendar,
-      confidence,
+      confidence
     }
   }
 
   private static calculateDiseaseRisk(
     diseaseKey: string,
     model: any,
-    inputs: DiseaseRiskInputs,
+    inputs: DiseaseRiskInputs
   ): DiseaseRisk {
     const recentWeather = inputs.weatherData.slice(-7) // Last 7 days
     const factors: string[] = []
@@ -250,13 +250,13 @@ export class DiseasePredictionModel {
       peakRiskDate,
       factors,
       recommendations,
-      treatmentWindow,
+      treatmentWindow
     }
   }
 
   private static calculateTemperatureFactor(
     temp: number,
-    optimal: { min: number; max: number },
+    optimal: { min: number; max: number }
   ): number {
     if (temp >= optimal.min && temp <= optimal.max) return 1
     const distanceFromOptimal = Math.min(Math.abs(temp - optimal.min), Math.abs(temp - optimal.max))
@@ -265,7 +265,7 @@ export class DiseasePredictionModel {
 
   private static calculateHumidityFactor(
     humidity: number,
-    optimal: { min: number; max: number },
+    optimal: { min: number; max: number }
   ): number {
     if (humidity >= optimal.min && humidity <= optimal.max) return 1
     if (humidity < optimal.min) return Math.max(0, humidity / optimal.min)
@@ -275,7 +275,7 @@ export class DiseasePredictionModel {
   private static calculateMoistureFactor(
     rainfall: number,
     leafWetness: number,
-    model: any,
+    model: any
   ): number {
     let factor = 0
 
@@ -293,12 +293,12 @@ export class DiseasePredictionModel {
   }
 
   private static calculateVineyardConditionsFactor(
-    conditions: DiseaseRiskInputs['vineyardConditions'],
+    conditions: DiseaseRiskInputs['vineyardConditions']
   ): number {
     const factors = {
       canopyDensity: { light: 0.2, moderate: 0.5, dense: 1 },
       airCirculation: { good: 0.2, moderate: 0.5, poor: 1 },
-      drainageQuality: { good: 0.2, moderate: 0.5, poor: 1 },
+      drainageQuality: { good: 0.2, moderate: 0.5, poor: 1 }
     }
 
     return (
@@ -311,7 +311,7 @@ export class DiseasePredictionModel {
 
   private static calculateTreatmentFactor(
     treatments: DiseaseRiskInputs['previousTreatments'],
-    diseaseKey: string,
+    diseaseKey: string
   ): number {
     const now = new Date()
     const fungicideDate = treatments.fungicide
@@ -355,7 +355,7 @@ export class DiseasePredictionModel {
   private static generateRecommendations(
     diseaseKey: string,
     riskLevel: string,
-    growthStage: string,
+    growthStage: string
   ): string[] {
     const recommendations: string[] = []
 
@@ -391,7 +391,7 @@ export class DiseasePredictionModel {
 
   private static calculateTreatmentWindow(
     peakRiskDate: Date,
-    growthStage: string,
+    growthStage: string
   ): { optimal: Date; latest: Date } {
     const optimal = new Date(peakRiskDate)
     optimal.setDate(optimal.getDate() - 3) // 3 days before peak risk
@@ -405,7 +405,7 @@ export class DiseasePredictionModel {
   private static generateAlert(risk: DiseaseRisk): DiseaseAlert {
     const now = new Date()
     const daysUntilAction = Math.ceil(
-      (risk.treatmentWindow.optimal.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+      (risk.treatmentWindow.optimal.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
     )
 
     return {
@@ -413,12 +413,12 @@ export class DiseasePredictionModel {
       disease: risk.disease,
       message: `${risk.riskLevel.toUpperCase()} risk (${risk.probability.toFixed(0)}%) - Treatment recommended`,
       actionRequired: risk.riskLevel === 'critical' || risk.riskLevel === 'high',
-      daysUntilAction: Math.max(0, daysUntilAction),
+      daysUntilAction: Math.max(0, daysUntilAction)
     }
   }
 
   private static calculateOverallRisk(
-    diseases: DiseaseRisk[],
+    diseases: DiseaseRisk[]
   ): 'low' | 'moderate' | 'high' | 'critical' {
     if (diseases.some((d) => d.riskLevel === 'critical')) return 'critical'
     if (diseases.some((d) => d.riskLevel === 'high')) return 'high'
@@ -443,7 +443,7 @@ export class DiseasePredictionModel {
 
   private static generateTreatmentCalendar(
     diseases: DiseaseRisk[],
-    inputs: DiseaseRiskInputs,
+    inputs: DiseaseRiskInputs
   ): any[] {
     const calendar: any[] = []
 
@@ -452,7 +452,7 @@ export class DiseasePredictionModel {
         calendar.push({
           date: disease.treatmentWindow.optimal,
           treatments: [`Preventive treatment for ${disease.disease}`],
-          priority: disease.riskLevel === 'critical' ? 'high' : 'medium',
+          priority: disease.riskLevel === 'critical' ? 'high' : 'medium'
         })
       }
     })

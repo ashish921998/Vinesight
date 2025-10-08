@@ -89,7 +89,7 @@ export const FarmSchema = z.object({
     .number()
     .min(1, 'Row spacing must be at least 1 meter')
     .max(20, 'Row spacing must be less than 20 meters')
-    .finite('Row spacing must be a valid number'),
+    .finite('Row spacing must be a valid number')
 })
 
 // Irrigation record validation
@@ -108,14 +108,14 @@ export const IrrigationSchema = z.object({
     'fruit_set',
     'veraison',
     'harvest',
-    'post_harvest',
+    'post_harvest'
   ]),
   moisture_status: z.string().min(1, 'Moisture status is required').max(50),
   system_discharge: z
     .number()
     .min(1, 'System discharge must be at least 1 L/h')
     .max(10000, 'System discharge too high'),
-  notes: z.string().max(500, 'Notes too long').optional(),
+  notes: z.string().max(500, 'Notes too long').optional()
 })
 
 // Spray record validation
@@ -134,7 +134,7 @@ export const SpraySchema = z.object({
     .min(1, 'Weather conditions required')
     .max(100, 'Weather description too long'),
   operator: z.string().min(1, 'Operator name required').max(100, 'Operator name too long'),
-  notes: z.string().max(500, 'Notes too long').optional(),
+  notes: z.string().max(500, 'Notes too long').optional()
 })
 
 // Harvest record validation
@@ -148,7 +148,7 @@ export const HarvestSchema = z.object({
   grade: z.string().min(1, 'Grade is required').max(50, 'Grade name too long'),
   price: z.number().min(0, 'Price cannot be negative').max(10000, 'Price too high').optional(),
   buyer: z.string().max(100, 'Buyer name too long').optional(),
-  notes: z.string().max(500, 'Notes too long').optional(),
+  notes: z.string().max(500, 'Notes too long').optional()
 })
 
 // Task reminder validation
@@ -159,7 +159,7 @@ export const TaskReminderSchema = z.object({
   due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
   type: z.enum(['irrigation', 'spray', 'fertigation', 'training', 'harvest', 'other']),
   priority: z.enum(['low', 'medium', 'high']),
-  completed: z.boolean(),
+  completed: z.boolean()
 })
 
 // Expense record validation
@@ -169,7 +169,7 @@ export const ExpenseSchema = z.object({
   type: z.enum(['labor', 'materials', 'equipment', 'other']),
   description: z.string().min(1, 'Description is required').max(200, 'Description too long'),
   cost: z.number().min(0, 'Cost cannot be negative').max(10000000, 'Cost too high'),
-  remarks: z.string().max(500, 'Remarks too long').optional(),
+  remarks: z.string().max(500, 'Remarks too long').optional()
 })
 
 // ETc Calculator input validation
@@ -185,13 +185,13 @@ export const ETcInputSchema = z.object({
     .number()
     .min(0, 'Rainfall cannot be negative')
     .max(1000, 'Rainfall too high')
-    .optional(),
+    .optional()
 })
 
 // Validation helper functions
 export function validateAndSanitize<T>(
   schema: z.ZodSchema<T>,
-  data: unknown,
+  data: unknown
 ): { success: true; data: T } | { success: false; errors: string[] } {
   try {
     // Sanitize string fields if present
@@ -206,7 +206,7 @@ export function validateAndSanitize<T>(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        errors: error.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`),
+        errors: error.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`)
       }
     }
     return { success: false, errors: ['Validation failed'] }
@@ -239,12 +239,12 @@ export class SecurityRateLimiter {
     private maxRequests: number = 50, // Reduced from 100
     private windowMs: number = 60 * 1000, // 1 minute
     private blockDurationMs: number = 15 * 60 * 1000, // 15 minutes
-    private maxSuspiciousActivity: number = 3,
+    private maxSuspiciousActivity: number = 3
   ) {}
 
   checkLimit(
     identifier: string,
-    isAuthenticated: boolean = false,
+    isAuthenticated: boolean = false
   ): { allowed: boolean; reason?: string } {
     const now = Date.now()
 
@@ -319,7 +319,7 @@ export const generateCSRFToken = (): string => {
 // Content validation to prevent dangerous file uploads
 export const validateFileContent = (
   fileName: string,
-  fileSize: number,
+  fileSize: number
 ): { valid: boolean; reason?: string } => {
   const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf', '.csv', '.xlsx']
   const maxFileSize = 10 * 1024 * 1024 // 10MB

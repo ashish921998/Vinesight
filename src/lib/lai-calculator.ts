@@ -41,14 +41,14 @@ export interface LAIResults {
 const LEAF_SHAPE_FACTORS = {
   heart: 0.68, // Heart-shaped grape leaves
   round: 0.79, // More circular leaves
-  lobed: 0.63, // Deeply lobed leaves
+  lobed: 0.63 // Deeply lobed leaves
 }
 
 // Seasonal adjustment factors
 const SEASONAL_FACTORS = {
   spring: 0.6, // New growth, smaller leaves
   summer: 1.0, // Full leaf development
-  autumn: 0.8, // Some leaf drop, yellowing
+  autumn: 0.8 // Some leaf drop, yellowing
 }
 
 // Trellis system efficiency factors
@@ -57,7 +57,7 @@ const TRELLIS_EFFICIENCY = {
   geneva: 1.15, // Geneva Double Curtain
   'scott-henry': 1.25, // Scott Henry divided canopy
   lyre: 1.3, // Lyre system
-  pergola: 0.9, // Pergola system
+  pergola: 0.9 // Pergola system
 }
 
 export class LAICalculator {
@@ -104,7 +104,7 @@ export class LAICalculator {
     lai: number,
     canopyDensity: LAIResults['canopyDensity'],
     trellisSystem: string,
-    lightInterception: number,
+    lightInterception: number
   ): LAIResults['recommendations'] {
     const canopyManagement: string[] = []
     const pruningAdvice: string[] = []
@@ -164,7 +164,7 @@ export class LAICalculator {
       trellisAdjustments:
         trellisAdjustments.length > 0
           ? trellisAdjustments
-          : ['Current trellis system is appropriate'],
+          : ['Current trellis system is appropriate']
     }
   }
 
@@ -173,7 +173,7 @@ export class LAICalculator {
    */
   private static assessQualityMetrics(
     lai: number,
-    lightInterception: number,
+    lightInterception: number
   ): LAIResults['qualityMetrics'] {
     let fruitExposure: LAIResults['qualityMetrics']['fruitExposure'] = 'adequate'
     let airflow: LAIResults['qualityMetrics']['airflow'] = 'adequate'
@@ -219,7 +219,7 @@ export class LAICalculator {
       avgLeafWidth,
       leafShape,
       trellisSystem,
-      season,
+      season
     } = inputs
 
     // Calculate individual leaf area
@@ -251,7 +251,7 @@ export class LAICalculator {
       lai,
       canopyDensity,
       trellisSystem,
-      lightInterception,
+      lightInterception
     )
 
     // Assess quality metrics
@@ -265,7 +265,7 @@ export class LAICalculator {
       canopyDensity,
       lightInterception: Math.round(lightInterception * 10) / 10,
       recommendations,
-      qualityMetrics,
+      qualityMetrics
     }
   }
 
@@ -284,22 +284,22 @@ export class LAICalculator {
         maxLAI: 2.8,
         optimalRange: '2.0 - 2.5',
         reasoning:
-          'Table grapes need excellent fruit exposure for color and size while maintaining adequate leaf area for photosynthesis',
+          'Table grapes need excellent fruit exposure for color and size while maintaining adequate leaf area for photosynthesis'
       },
       wine: {
         minLAI: 2.2,
         maxLAI: 3.5,
         optimalRange: '2.5 - 3.0',
         reasoning:
-          'Wine grapes benefit from moderate shading for flavor development while ensuring sufficient photosynthetic capacity',
+          'Wine grapes benefit from moderate shading for flavor development while ensuring sufficient photosynthetic capacity'
       },
       raisin: {
         minLAI: 2.0,
         maxLAI: 3.2,
         optimalRange: '2.3 - 2.8',
         reasoning:
-          'Raisin grapes require balanced canopy for sugar accumulation and efficient drying conditions',
-      },
+          'Raisin grapes require balanced canopy for sugar accumulation and efficient drying conditions'
+      }
     }
 
     return targets[productionGoal]
@@ -319,26 +319,26 @@ export class LAICalculator {
         season: 'Spring',
         timing: 'Bud break to bloom',
         focus: ['Shoot emergence', 'Initial leaf development', 'Canopy architecture'],
-        actions: ['Shoot thinning', 'Early positioning', 'Sucker removal'],
+        actions: ['Shoot thinning', 'Early positioning', 'Sucker removal']
       },
       {
         season: 'Early Summer',
         timing: 'Post-bloom to véraison',
         focus: ['Peak leaf area development', 'Fruit zone management', 'Light penetration'],
-        actions: ['Leaf removal', 'Shoot positioning', 'Hedging if needed'],
+        actions: ['Leaf removal', 'Shoot positioning', 'Hedging if needed']
       },
       {
         season: 'Late Summer',
         timing: 'Véraison to harvest',
         focus: ['Fruit exposure', 'Sugar accumulation', 'Disease prevention'],
-        actions: ['Selective defoliation', 'Cluster thinning', 'Canopy opening'],
+        actions: ['Selective defoliation', 'Cluster thinning', 'Canopy opening']
       },
       {
         season: 'Autumn',
         timing: 'Post-harvest',
         focus: ['Leaf retention', 'Carbohydrate storage', 'Winter preparation'],
-        actions: ['Minimal intervention', 'Disease control', 'Planning for dormant pruning'],
-      },
+        actions: ['Minimal intervention', 'Disease control', 'Planning for dormant pruning']
+      }
     ]
   }
 }

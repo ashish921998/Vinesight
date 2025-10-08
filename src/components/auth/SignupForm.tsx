@@ -53,7 +53,7 @@ export default function SignupForm() {
     const result = await signUpWithEmail({
       email,
       password,
-      confirmPassword,
+      confirmPassword
     })
 
     if (result.success) {
