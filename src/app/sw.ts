@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 
 import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist'
 import { Serwist } from 'serwist'
@@ -13,7 +13,7 @@ declare global {
 declare const self: ServiceWorkerGlobalScope
 
 const serwist = new Serwist({
-  precacheEntries: self.__SW_MANIFEST,
+  precacheEntries: self.__SW_MANIFEST ?? [],
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
@@ -167,19 +167,7 @@ const serwist = new Serwist({
         },
       },
     },
-    {
-      urlPattern: ({ request, sameOrigin }: { request: Request; sameOrigin: boolean }) => {
-        return sameOrigin && request.headers.get('sec-fetch-dest') === 'empty'
-      },
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'empty',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
-        },
-      },
-    },
+
     {
       urlPattern: ({ sameOrigin }: { sameOrigin: boolean }) => {
         return sameOrigin

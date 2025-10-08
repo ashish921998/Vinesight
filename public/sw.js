@@ -9,17 +9,44 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(urlsToCache)
-    }),
+    })
+    .catch((error) => {
+      console.error('Service Worker installation failed:', error)
+      throw error
+    })
   )
+  self.skipWaiting()  // Activate immediately without waiting
 })
 
 // Fetch event - serve from cache when offline
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((response) => {
-      // Return cached version or fetch from network
-      return response || fetch(event.request)
-    }),
+      if (response) {
+        return response
+      }
+      // Fetch from network and cache for future use
+      return fetch(event.request)
+        .then((networkResponse) => {
+          // Only cache successful GET requests
+          if (
+            networkResponse &&
+            networkResponse.status === 200 &&
+            event.request.method === 'GET'
+          ) {
+            const responseToCache = networkResponse.clone()
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache)
+            })
+          }
+          return networkResponse
+        })
+        .catch((error) => {
+          console.error('Fetch failed:', error)
+          // Optionally return a fallback page or image here
+          throw error
+        })
+    })
   )
 })
 

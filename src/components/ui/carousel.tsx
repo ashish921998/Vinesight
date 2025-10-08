@@ -34,8 +34,8 @@ const useCarouselContext = () => {
 const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
   ({ opts, orientation = 'horizontal', setApi, className, children, ...props }, ref) => {
     const [carouselRef, api] = useEmblaCarousel({
+      ...opts,
       axis: orientation === 'horizontal' ? 'x' : 'y',
-      ...opts
     })
 
     React.useEffect(() => {

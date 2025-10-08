@@ -5,7 +5,7 @@ const nextConfig = {
   reactStrictMode: true,
   typescript: {
     ignoreBuildErrors: isProd
-  }
+  },
 
   // Performance optimizations from next.config.ts
   experimental: {
