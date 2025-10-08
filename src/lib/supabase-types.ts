@@ -502,6 +502,15 @@ export function toApplicationSoilTestRecord(
     parameters: (dbRecord.parameters as Record<string, number>) || {},
     recommendations: dbRecord.recommendations || undefined,
     notes: dbRecord.notes || undefined,
+    report_url: dbRecord.report_url || undefined,
+    report_storage_path: dbRecord.report_storage_path || undefined,
+    report_filename: dbRecord.report_filename || undefined,
+    report_type: dbRecord.report_type || undefined,
+    extraction_status:
+      (dbRecord.extraction_status as 'pending' | 'success' | 'failed' | null) || undefined,
+    extraction_error: dbRecord.extraction_error || undefined,
+    parsed_parameters: (dbRecord.parsed_parameters as Record<string, number>) || undefined,
+    raw_notes: dbRecord.raw_notes || undefined,
     created_at: dbRecord.created_at || undefined
   }
 }
@@ -514,7 +523,15 @@ export function toDatabaseSoilTestInsert(
     date: appRecord.date,
     parameters: appRecord.parameters,
     recommendations: appRecord.recommendations || null,
-    notes: appRecord.notes || null
+    notes: appRecord.notes || null,
+    report_url: appRecord.report_url || null,
+    report_storage_path: appRecord.report_storage_path || null,
+    report_filename: appRecord.report_filename || null,
+    report_type: appRecord.report_type || null,
+    extraction_status: appRecord.extraction_status || null,
+    extraction_error: appRecord.extraction_error || null,
+    parsed_parameters: appRecord.parsed_parameters || null,
+    raw_notes: appRecord.raw_notes || null
   }
 }
 
@@ -529,6 +546,19 @@ export function toDatabaseSoilTestUpdate(
   if (appUpdates.recommendations !== undefined)
     update.recommendations = appUpdates.recommendations || null
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
+  if (appUpdates.report_url !== undefined) update.report_url = appUpdates.report_url || null
+  if (appUpdates.report_storage_path !== undefined)
+    update.report_storage_path = appUpdates.report_storage_path || null
+  if (appUpdates.report_filename !== undefined)
+    update.report_filename = appUpdates.report_filename || null
+  if (appUpdates.report_type !== undefined) update.report_type = appUpdates.report_type || null
+  if (appUpdates.extraction_status !== undefined)
+    update.extraction_status = appUpdates.extraction_status || null
+  if (appUpdates.extraction_error !== undefined)
+    update.extraction_error = appUpdates.extraction_error || null
+  if (appUpdates.parsed_parameters !== undefined)
+    update.parsed_parameters = appUpdates.parsed_parameters || null
+  if (appUpdates.raw_notes !== undefined) update.raw_notes = appUpdates.raw_notes || null
   return update
 }
 
@@ -543,6 +573,15 @@ export function toApplicationPetioleTestRecord(
     parameters: (dbRecord.parameters as Record<string, number>) || {},
     recommendations: dbRecord.recommendations || undefined,
     notes: dbRecord.notes || undefined,
+    report_url: dbRecord.report_url || undefined,
+    report_storage_path: dbRecord.report_storage_path || undefined,
+    report_filename: dbRecord.report_filename || undefined,
+    report_type: dbRecord.report_type || undefined,
+    extraction_status:
+      (dbRecord.extraction_status as 'pending' | 'success' | 'failed' | null) || undefined,
+    extraction_error: dbRecord.extraction_error || undefined,
+    parsed_parameters: (dbRecord.parsed_parameters as Record<string, number>) || undefined,
+    raw_notes: dbRecord.raw_notes || undefined,
     created_at: dbRecord.created_at || undefined
   }
 }
@@ -555,7 +594,15 @@ export function toDatabasePetioleTestInsert(
     date: appRecord.date,
     parameters: appRecord.parameters || {},
     recommendations: appRecord.recommendations || null,
-    notes: appRecord.notes || null
+    notes: appRecord.notes || null,
+    report_url: appRecord.report_url || null,
+    report_storage_path: appRecord.report_storage_path || null,
+    report_filename: appRecord.report_filename || null,
+    report_type: appRecord.report_type || null,
+    extraction_status: appRecord.extraction_status || null,
+    extraction_error: appRecord.extraction_error || null,
+    parsed_parameters: appRecord.parsed_parameters || null,
+    raw_notes: appRecord.raw_notes || null
   }
 }
 
@@ -574,6 +621,19 @@ export function toDatabasePetioleTestUpdate(
   if (appUpdates.recommendations !== undefined)
     update.recommendations = appUpdates.recommendations || null
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
+  if (appUpdates.report_url !== undefined) update.report_url = appUpdates.report_url || null
+  if (appUpdates.report_storage_path !== undefined)
+    update.report_storage_path = appUpdates.report_storage_path || null
+  if (appUpdates.report_filename !== undefined)
+    update.report_filename = appUpdates.report_filename || null
+  if (appUpdates.report_type !== undefined) update.report_type = appUpdates.report_type || null
+  if (appUpdates.extraction_status !== undefined)
+    update.extraction_status = appUpdates.extraction_status || null
+  if (appUpdates.extraction_error !== undefined)
+    update.extraction_error = appUpdates.extraction_error || null
+  if (appUpdates.parsed_parameters !== undefined)
+    update.parsed_parameters = appUpdates.parsed_parameters || null
+  if (appUpdates.raw_notes !== undefined) update.raw_notes = appUpdates.raw_notes || null
 
   return update
 }

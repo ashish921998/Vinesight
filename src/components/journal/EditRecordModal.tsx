@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ChangeEvent } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -13,15 +14,31 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { Droplets, SprayCan, Scissors, Loader2, DollarSign, Beaker, TestTube } from 'lucide-react'
+import {
+  Droplets,
+  SprayCan,
+  Scissors,
+  Loader2,
+  DollarSign,
+  Beaker,
+  TestTube,
+  Upload,
+  Paperclip,
+  FileWarning,
+  RefreshCcw,
+  CheckCircle
+} from 'lucide-react'
 import { SupabaseService } from '@/lib/supabase-service'
+import { toast } from 'sonner'
+import type { ReportAttachmentMeta } from '@/types/reports'
 import type {
   IrrigationRecord,
   SprayRecord,
   HarvestRecord,
   FertigationRecord,
   ExpenseRecord,
-  SoilTestRecord
+  SoilTestRecord,
+  PetioleTestRecord
 } from '@/lib/supabase'
 
 interface EditRecordModalProps {
@@ -48,72 +65,248 @@ export function EditRecordModal({
 }: EditRecordModalProps) {
   const [formData, setFormData] = useState<any>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [reportMeta, setReportMeta] = useState<ReportAttachmentMeta | null>(null)
+  const [isUploadingReport, setIsUploadingReport] = useState(false)
+  const [reportUploadError, setReportUploadError] = useState<string | null>(null)
+  const [isFetchingReportUrl, setIsFetchingReportUrl] = useState(false)
 
   useEffect(() => {
-    if (record) {
-      // Initialize form data based on record type
-      if (recordType === 'irrigation') {
-        const irrigationRecord = record as IrrigationRecord
-        setFormData({
-          date: irrigationRecord.date,
-          duration: irrigationRecord.duration?.toString() || '',
-          area: irrigationRecord.area?.toString() || '',
-          growth_stage: irrigationRecord.growth_stage || '',
-          moisture_status: irrigationRecord.moisture_status || '',
-          system_discharge: irrigationRecord.system_discharge?.toString() || '',
-          notes: irrigationRecord.notes || ''
+    if (!record) {
+      setReportMeta(null)
+      return
+    }
+
+    setReportUploadError(null)
+
+    // Initialize form data based on record type
+    if (recordType === 'irrigation') {
+      const irrigationRecord = record as IrrigationRecord
+      setFormData({
+        date: irrigationRecord.date,
+        duration: irrigationRecord.duration?.toString() || '',
+        area: irrigationRecord.area?.toString() || '',
+        growth_stage: irrigationRecord.growth_stage || '',
+        moisture_status: irrigationRecord.moisture_status || '',
+        system_discharge: irrigationRecord.system_discharge?.toString() || '',
+        notes: irrigationRecord.notes || ''
+      })
+    } else if (recordType === 'spray') {
+      const sprayRecord = record as SprayRecord
+      setFormData({
+        date: sprayRecord.date,
+        chemical: sprayRecord.chemical || '',
+        dose: sprayRecord.dose || '',
+        area: sprayRecord.area?.toString() || '',
+        weather: sprayRecord.weather || '',
+        operator: sprayRecord.operator || '',
+        notes: sprayRecord.notes || ''
+      })
+    } else if (recordType === 'harvest') {
+      const harvestRecord = record as HarvestRecord
+      setFormData({
+        date: harvestRecord.date,
+        quantity: harvestRecord.quantity?.toString() || '',
+        grade: harvestRecord.grade || '',
+        price: harvestRecord.price?.toString() || '',
+        buyer: harvestRecord.buyer || '',
+        notes: harvestRecord.notes || ''
+      })
+    } else if (recordType === 'fertigation') {
+      const fertigationRecord = record as FertigationRecord
+      setFormData({
+        date: fertigationRecord.date,
+        fertilizer: fertigationRecord.fertilizer || '',
+        dose: fertigationRecord.dose || '',
+        purpose: fertigationRecord.purpose || '',
+        area: fertigationRecord.area?.toString() || '',
+        notes: fertigationRecord.notes || ''
+      })
+    } else if (recordType === 'expense') {
+      const expenseRecord = record as ExpenseRecord
+      setFormData({
+        date: expenseRecord.date,
+        type: expenseRecord.type || '',
+        description: expenseRecord.description || '',
+        cost: expenseRecord.cost?.toString() || '',
+        remarks: expenseRecord.remarks || ''
+      })
+    } else if (recordType === 'soil_test') {
+      const soilTestRecord = record as SoilTestRecord
+      setFormData({
+        date: soilTestRecord.date,
+        parameters: soilTestRecord.parameters || {},
+        recommendations: soilTestRecord.recommendations || '',
+        notes: soilTestRecord.notes || ''
+      })
+
+      if (soilTestRecord.report_storage_path) {
+        setReportMeta({
+          storagePath: soilTestRecord.report_storage_path,
+          signedUrl: soilTestRecord.report_url || '',
+          filename: soilTestRecord.report_filename || 'test-report',
+          mimeType:
+            soilTestRecord.report_type === 'image'
+              ? 'image/*'
+              : soilTestRecord.report_type === 'pdf'
+                ? 'application/pdf'
+                : soilTestRecord.report_type || 'application/octet-stream',
+          reportType: (soilTestRecord.report_type as 'image' | 'pdf') || 'pdf',
+          extractionStatus:
+            (soilTestRecord.extraction_status as 'pending' | 'success' | 'failed') || 'pending',
+          extractionError: soilTestRecord.extraction_error || undefined,
+          parsedParameters: soilTestRecord.parsed_parameters || undefined,
+          rawNotes: soilTestRecord.raw_notes || null,
+          summary: soilTestRecord.raw_notes || undefined,
+          confidence: undefined
         })
-      } else if (recordType === 'spray') {
-        const sprayRecord = record as SprayRecord
-        setFormData({
-          date: sprayRecord.date,
-          chemical: sprayRecord.chemical || '',
-          dose: sprayRecord.dose || '',
-          area: sprayRecord.area?.toString() || '',
-          weather: sprayRecord.weather || '',
-          operator: sprayRecord.operator || '',
-          notes: sprayRecord.notes || ''
-        })
-      } else if (recordType === 'harvest') {
-        const harvestRecord = record as HarvestRecord
-        setFormData({
-          date: harvestRecord.date,
-          quantity: harvestRecord.quantity?.toString() || '',
-          grade: harvestRecord.grade || '',
-          price: harvestRecord.price?.toString() || '',
-          buyer: harvestRecord.buyer || '',
-          notes: harvestRecord.notes || ''
-        })
-      } else if (recordType === 'fertigation') {
-        const fertigationRecord = record as FertigationRecord
-        setFormData({
-          date: fertigationRecord.date,
-          fertilizer: fertigationRecord.fertilizer || '',
-          dose: fertigationRecord.dose || '',
-          purpose: fertigationRecord.purpose || '',
-          area: fertigationRecord.area?.toString() || '',
-          notes: fertigationRecord.notes || ''
-        })
-      } else if (recordType === 'expense') {
-        const expenseRecord = record as ExpenseRecord
-        setFormData({
-          date: expenseRecord.date,
-          type: expenseRecord.type || '',
-          description: expenseRecord.description || '',
-          cost: expenseRecord.cost?.toString() || '',
-          remarks: expenseRecord.remarks || ''
-        })
-      } else if (recordType === 'soil_test') {
-        const soilTestRecord = record as SoilTestRecord
-        setFormData({
-          date: soilTestRecord.date,
-          parameters: soilTestRecord.parameters || {},
-          recommendations: soilTestRecord.recommendations || '',
-          notes: soilTestRecord.notes || ''
-        })
+      } else {
+        setReportMeta(null)
       }
+    } else {
+      setReportMeta(null)
     }
   }, [record, recordType])
+
+  const applyParsedParameters = (parameters?: Record<string, number>) => {
+    if (!parameters || recordType !== 'soil_test') return
+
+    const isPetioleRecord = record && 'sample_id' in (record as PetioleTestRecord)
+
+    setFormData((prev: any) => {
+      const nextParameters: Record<string, number> = { ...(prev.parameters || {}) }
+
+      if (isPetioleRecord) {
+        Object.entries(parameters).forEach(([key, value]) => {
+          if (typeof value === 'number' && Number.isFinite(value)) {
+            nextParameters[key] = value
+          }
+        })
+      } else {
+        const mapSoilKey = (key: string) => {
+          const normalized = key.toLowerCase()
+          if (normalized === 'ph' || normalized === 'soilph') return 'pH'
+          if (normalized === 'nitrogen' || normalized === 'n') return 'nitrogen'
+          if (normalized === 'phosphorus' || normalized === 'p') return 'phosphorus'
+          if (normalized === 'potassium' || normalized === 'k') return 'potassium'
+          return key
+        }
+
+        Object.entries(parameters).forEach(([key, value]) => {
+          if (typeof value !== 'number' || Number.isNaN(value)) return
+          const mappedKey = mapSoilKey(key)
+          nextParameters[mappedKey] = value
+        })
+      }
+
+      return {
+        ...prev,
+        parameters: nextParameters
+      }
+    })
+  }
+
+  const handleReportFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || recordType !== 'soil_test') return
+
+    const farmId = (record as SoilTestRecord | PetioleTestRecord | undefined)?.farm_id
+    if (!farmId) {
+      toast.error('Farm ID missing for this record')
+      event.target.value = ''
+      return
+    }
+
+    setIsUploadingReport(true)
+    setReportUploadError(null)
+
+    try {
+      const formDataPayload = new FormData()
+      formDataPayload.append('file', file)
+      formDataPayload.append('testType', record && 'sample_id' in record ? 'petiole' : 'soil')
+      formDataPayload.append('farmId', farmId.toString())
+      if (reportMeta?.storagePath) {
+        formDataPayload.append('existingPath', reportMeta.storagePath)
+      }
+
+      const response = await fetch('/api/test-reports/parse', {
+        method: 'POST',
+        body: formDataPayload
+      })
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}))
+        throw new Error(payload.error || 'Failed to process report')
+      }
+
+      const payload = await response.json()
+      const newMeta: ReportAttachmentMeta = {
+        storagePath: payload.report.storagePath,
+        signedUrl: payload.report.signedUrl,
+        filename: payload.report.filename,
+        mimeType: payload.report.mimeType,
+        reportType: payload.report.reportType,
+        extractionStatus: payload.extraction?.status || 'failed',
+        extractionError: payload.extraction?.error,
+        parsedParameters: payload.extraction?.parameters || undefined,
+        rawNotes: payload.extraction?.rawNotes || null,
+        summary: payload.extraction?.summary || undefined,
+        confidence: payload.extraction?.confidence || null
+      }
+
+      setReportMeta(newMeta)
+      applyParsedParameters(newMeta.parsedParameters)
+
+      if (newMeta.extractionStatus === 'success') {
+        toast.success('Report uploaded and values updated')
+      } else {
+        toast.warning('Report uploaded. Please verify nutrient values manually.')
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to upload report'
+      setReportUploadError(message)
+      toast.error(message)
+    } finally {
+      setIsUploadingReport(false)
+      event.target.value = ''
+    }
+  }
+
+  const handleViewReport = async () => {
+    if (!reportMeta?.storagePath) return
+
+    if (reportMeta.signedUrl) {
+      window.open(reportMeta.signedUrl, '_blank', 'noopener')
+      return
+    }
+
+    setIsFetchingReportUrl(true)
+    try {
+      const response = await fetch('/api/test-reports/signed-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: reportMeta.storagePath })
+      })
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}))
+        throw new Error(payload.error || 'Unable to generate download link')
+      }
+
+      const { signedUrl } = await response.json()
+      setReportMeta((prev) => (prev ? { ...prev, signedUrl } : prev))
+      window.open(signedUrl, '_blank', 'noopener')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to open report'
+      toast.error(message)
+    } finally {
+      setIsFetchingReportUrl(false)
+    }
+  }
+
+  const handleResetReport = () => {
+    setReportMeta(null)
+    setReportUploadError(null)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -168,12 +361,43 @@ export function EditRecordModal({
           remarks: formData.remarks
         })
       } else if (recordType === 'soil_test') {
-        await SupabaseService.updateSoilTestRecord(record.id!, {
+        const isPetiole = record && 'sample_id' in (record as PetioleTestRecord)
+
+        const metadata = reportMeta
+          ? {
+              report_url: reportMeta.signedUrl,
+              report_storage_path: reportMeta.storagePath,
+              report_filename: reportMeta.filename,
+              report_type: reportMeta.reportType,
+              extraction_status: reportMeta.extractionStatus,
+              extraction_error: reportMeta.extractionError,
+              parsed_parameters: reportMeta.parsedParameters,
+              raw_notes: reportMeta.rawNotes
+            }
+          : {
+              report_url: null,
+              report_storage_path: null,
+              report_filename: null,
+              report_type: null,
+              extraction_status: null,
+              extraction_error: null,
+              parsed_parameters: null,
+              raw_notes: null
+            }
+
+        const payload = {
           date: formData.date,
           parameters: formData.parameters,
           recommendations: formData.recommendations,
-          notes: formData.notes
-        })
+          notes: formData.notes,
+          ...metadata
+        }
+
+        if (isPetiole) {
+          await SupabaseService.updatePetioleTestRecord(record.id!, payload)
+        } else {
+          await SupabaseService.updateSoilTestRecord(record.id!, payload)
+        }
       }
 
       onSave()
@@ -675,6 +899,113 @@ export function EditRecordModal({
                   />
                 </div>
               </div>
+              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">
+                      Lab Report Attachment
+                    </Label>
+                    <p className="text-xs text-gray-500">
+                      Upload a PDF or image report to refresh nutrient values.
+                    </p>
+                  </div>
+                  {reportMeta?.extractionStatus === 'success' && (
+                    <Badge
+                      variant="outline"
+                      className="border-emerald-200 bg-emerald-50 text-emerald-700"
+                    >
+                      Auto parsed
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    accept="application/pdf,image/*"
+                    onChange={handleReportFileChange}
+                    disabled={isUploadingReport}
+                    className="h-9"
+                  />
+                  {isUploadingReport ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                  ) : (
+                    <Upload className="h-4 w-4 text-gray-400" />
+                  )}
+                  {reportMeta && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleResetReport}
+                      className="h-8 text-xs"
+                    >
+                      <RefreshCcw className="h-3 w-3 mr-1" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
+
+                {reportMeta && (
+                  <div className="space-y-1 rounded-md bg-white p-2 text-xs text-gray-700">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Paperclip className="h-3 w-3" />
+                      <span className="font-medium truncate max-w-[180px]">
+                        {reportMeta.filename}
+                      </span>
+                      <Badge variant="outline" className="capitalize">
+                        {reportMeta.reportType}
+                      </Badge>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={handleViewReport}
+                        disabled={isFetchingReportUrl}
+                        className="h-auto p-0 text-xs"
+                      >
+                        {isFetchingReportUrl ? (
+                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        ) : null}
+                        View report
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {reportMeta.extractionStatus === 'success' ? (
+                        <>
+                          <CheckCircle className="h-3 w-3 text-emerald-500" />
+                          <span className="text-emerald-700">Parsed successfully</span>
+                          {typeof reportMeta.confidence === 'number' && (
+                            <span className="text-gray-500">
+                              Confidence {(reportMeta.confidence * 100).toFixed(0)}%
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <FileWarning className="h-3 w-3 text-amber-500" />
+                          <span className="text-amber-600">
+                            {reportMeta.extractionError ||
+                              'Automatic parsing failed. Please verify values.'}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    {reportMeta.summary && (
+                      <p className="text-gray-600">Summary: {reportMeta.summary}</p>
+                    )}
+                    {reportMeta.rawNotes && (
+                      <p className="text-gray-500">Notes: {reportMeta.rawNotes}</p>
+                    )}
+                  </div>
+                )}
+
+                {reportUploadError && (
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <FileWarning className="h-3 w-3" />
+                    {reportUploadError}
+                  </p>
+                )}
+              </div>
+
               <div>
                 <Label htmlFor="recommendations" className="text-sm font-medium text-gray-700">
                   Recommendations
