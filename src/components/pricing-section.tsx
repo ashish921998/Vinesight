@@ -1,23 +1,124 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState, memo } from 'react'
 
-export default function PricingSection() {
+type PricingSectionProps = {
+  regionFromServer?: string | null
+}
+
+/**
+ * Render the pricing section with region-aware pricing, billing period toggle, and three plan cards.
+ *
+ * The component determines an authoritative region from the optional `regionFromServer` prop or by fetching `/api/region`. When server region is unavailable it applies cosmetic heuristics to infer India only for display purposes; server-provided region always takes precedence for pricing. Pricing, currency formatting, and annual/monthly calculations are derived from the resolved region.
+ *
+ * @param regionFromServer - Optional server-provided region code (e.g., "IN"). If provided it is normalized to a two-letter uppercase region and used as the authoritative region for pricing.
+ * @returns The JSX element for the pricing section.
+ */
+function PricingSectionComponent({ regionFromServer = null }: PricingSectionProps) {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annually'>('annually')
+
+  // Authoritative region from server/API. Never derived from client heuristics.
+  const [serverRegion, setServerRegion] = useState<string | null>(regionFromServer)
+
+  // Cosmetic-only heuristic used ONLY if serverRegion is not available
+  const [heuristicIndia, setHeuristicIndia] = useState(false)
+
+  // Fetch validated region from server API if not provided via props
+  useEffect(() => {
+    // If we already have a server region or if regionFromServer was provided, normalize it
+    if (regionFromServer) {
+      const normalized = regionFromServer.trim().toUpperCase()
+      const valid = /^[A-Z]{2}$/.test(normalized) ? normalized : null
+      setServerRegion(valid)
+      return
+    }
+
+    // Otherwise, fetch from API if we don't have a region yet
+    if (!serverRegion) {
+      const controller = new AbortController()
+      ;(async () => {
+        try {
+          const res = await fetch('/api/region', { cache: 'no-store', signal: controller.signal })
+          if (!res.ok) return
+          const data = (await res.json()) as { region?: string | null }
+          const region = (data?.region || '').toString().trim().toUpperCase()
+          const valid = /^[A-Z]{2}$/.test(region) ? region : null
+          setServerRegion(valid)
+        } catch {
+          // ignore
+        }
+      })()
+      return () => {
+        controller.abort()
+      }
+    }
+  }, [regionFromServer])
+
+  // Heuristic detection is cosmetic-only when serverRegion is absent
+  useEffect(() => {
+    if (serverRegion) return // server value takes precedence; do not drive pricing with heuristics
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+      const langs =
+        Array.isArray(navigator.languages) && navigator.languages.length
+          ? navigator.languages
+          : [navigator.language || '']
+      const lowerLangs = langs.map((l) => (l || '').toLowerCase())
+      const langMatch = lowerLangs.some((l) => l.includes('-in') || l.endsWith('-in'))
+      const tzMatch = tz === 'Asia/Kolkata' || tz === 'Asia/Calcutta'
+      let localeMatch = false
+      try {
+        const loc =
+          typeof (Intl as any).Locale === 'function'
+            ? new (Intl as any).Locale(navigator.language)
+            : null
+        const region = loc?.region ? String(loc.region).toUpperCase() : ''
+        localeMatch = region === 'IN'
+      } catch {}
+      if (langMatch || tzMatch || localeMatch) setHeuristicIndia(true)
+    } catch {
+      // no-op
+    }
+  }, [serverRegion])
+
+  // Compute pricing dynamically based on region
+  const effectiveRegion = serverRegion
+  const isIndia = effectiveRegion ? effectiveRegion === 'IN' : heuristicIndia
+
+  const basePricing = isIndia
+    ? {
+        starter: { monthly: 0 },
+        professional: { monthly: 500 },
+        enterprise: { monthly: 1000 }
+      }
+    : {
+        starter: { monthly: 0 },
+        professional: { monthly: 10 },
+        enterprise: { monthly: 100 }
+      }
 
   const pricing = {
     starter: {
-      monthly: 0,
-      annually: 0
+      monthly: basePricing.starter.monthly,
+      annually: Math.round(basePricing.starter.monthly * 12 * 0.8)
     },
     professional: {
-      monthly: 20,
-      annually: 16 // 20% discount for annual
+      monthly: basePricing.professional.monthly,
+      annually: basePricing.professional.monthly * 10
     },
     enterprise: {
-      monthly: 200,
-      annually: 160 // 20% discount for annual
+      monthly: basePricing.enterprise.monthly,
+      annually: basePricing.enterprise.monthly * 10
     }
+  }
+
+  const formatPrice = (value: number) => {
+    return new Intl.NumberFormat(isIndia ? 'en-IN' : 'en-US', {
+      style: 'currency',
+      currency: isIndia ? 'INR' : 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value)
   }
 
   return (
@@ -153,7 +254,7 @@ export default function PricingSection() {
                         }}
                         aria-hidden={billingPeriod !== 'annually'}
                       >
-                        ${pricing.starter.annually}
+                        {formatPrice(pricing.starter.annually)}
                       </span>
                       <span
                         className="absolute inset-0 flex items-center transition-all duration-500"
@@ -164,7 +265,7 @@ export default function PricingSection() {
                         }}
                         aria-hidden={billingPeriod !== 'monthly'}
                       >
-                        ${pricing.starter.monthly}
+                        {formatPrice(pricing.starter.monthly)}
                       </span>
                     </div>
                     <div className="text-[#847971] text-sm font-medium font-sans">
@@ -183,11 +284,11 @@ export default function PricingSection() {
 
               <div className="self-stretch flex flex-col justify-start items-start gap-2">
                 {[
-                  'Up to 3 projects',
-                  'Basic documentation tools',
-                  'Community support',
-                  'Standard templates',
-                  'Basic analytics'
+                  '1 field',
+                  'Up to 100 tasks',
+                  'AI assistance (limited)',
+                  'Basic crop health alerts',
+                  'Community support'
                 ].map((feature, index) => (
                   <div
                     key={index}
@@ -244,7 +345,7 @@ export default function PricingSection() {
                         }}
                         aria-hidden={billingPeriod !== 'annually'}
                       >
-                        ${pricing.professional.annually}
+                        {formatPrice(pricing.professional.annually)}
                       </span>
                       <span
                         className="absolute inset-0 flex items-center transition-all duration-500"
@@ -255,7 +356,7 @@ export default function PricingSection() {
                         }}
                         aria-hidden={billingPeriod !== 'monthly'}
                       >
-                        ${pricing.professional.monthly}
+                        {formatPrice(pricing.professional.monthly)}
                       </span>
                     </div>
                     <div className="text-[#D2C6BF] text-sm font-medium font-sans">
@@ -275,14 +376,12 @@ export default function PricingSection() {
 
               <div className="self-stretch flex flex-col justify-start items-start gap-2">
                 {[
-                  'Unlimited projects',
-                  'Advanced documentation tools',
-                  'Priority support',
-                  'Custom templates',
-                  'Advanced analytics',
-                  'Team collaboration',
-                  'API access',
-                  'Custom integrations'
+                  'Unlimited fields',
+                  'Unlimited tasks',
+                  'Daily weather forecasts',
+                  'Enhanced AI limits',
+                  'AI farm insights',
+                  'Access to all calculators'
                 ].map((feature, index) => (
                   <div
                     key={index}
@@ -339,7 +438,7 @@ export default function PricingSection() {
                         }}
                         aria-hidden={billingPeriod !== 'annually'}
                       >
-                        ${pricing.enterprise.annually}
+                        {formatPrice(pricing.enterprise.annually)}
                       </span>
                       <span
                         className="absolute inset-0 flex items-center transition-all duration-500"
@@ -350,7 +449,7 @@ export default function PricingSection() {
                         }}
                         aria-hidden={billingPeriod !== 'monthly'}
                       >
-                        ${pricing.enterprise.monthly}
+                        {formatPrice(pricing.enterprise.monthly)}
                       </span>
                     </div>
                     <div className="text-[#847971] text-sm font-medium font-sans">
@@ -370,13 +469,13 @@ export default function PricingSection() {
               <div className="self-stretch flex flex-col justify-start items-start gap-2">
                 {[
                   'Everything in Professional',
-                  'Dedicated account manager',
-                  '24/7 phone support',
-                  'Custom onboarding',
-                  'Advanced security features',
-                  'SSO integration',
-                  'Custom contracts',
-                  'White-label options'
+                  'Dedicated success manager',
+                  '24/7 phone support & SLA',
+                  'Custom onboarding & training',
+                  'SSO/SAML and audit logs',
+                  'Custom integrations & data pipelines',
+                  'Regional compliance & data residency',
+                  'White‑label & custom contracts'
                 ].map((feature, index) => (
                   <div
                     key={index}
@@ -424,3 +523,5 @@ export default function PricingSection() {
     </div>
   )
 }
+
+export default memo(PricingSectionComponent)
