@@ -7,15 +7,19 @@ const urlsToCache = ['/', '/manifest.json', '/icon-192x192.png', '/icon-512x512.
 // Install event - cache basic resources
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache)
-    })
-    .catch((error) => {
-      console.error('Service Worker installation failed:', error)
-      throw error
-    })
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => {
+        return cache.addAll(urlsToCache)
+      })
+      .catch((error) => {
+        console.error('Service Worker installation failed:', error)
+        throw error
+      })
+      .then(() => {
+        self.skipWaiting()
+      })
   )
-  self.skipWaiting()  // Activate immediately without waiting
 })
 
 // Fetch event - serve from cache when offline
@@ -29,11 +33,7 @@ self.addEventListener('fetch', (event) => {
       return fetch(event.request)
         .then((networkResponse) => {
           // Only cache successful GET requests
-          if (
-            networkResponse &&
-            networkResponse.status === 200 &&
-            event.request.method === 'GET'
-          ) {
+          if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET') {
             const responseToCache = networkResponse.clone()
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache)
@@ -59,9 +59,9 @@ self.addEventListener('activate', (event) => {
           if (cacheName !== CACHE_NAME) {
             return caches.delete(cacheName)
           }
-        }),
+        })
       )
-    }),
+    })
   )
 })
 
