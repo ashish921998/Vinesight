@@ -21,14 +21,22 @@ export default function PricingSection({ regionFromServer = null }: PricingSecti
     if (!regionFromServer) {
       ;(async () => {
         try {
-          const res = await fetch('/api/region', { cache: 'no-store' })
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 5000) // 5s timeout
+          const res = await fetch('/api/region', {
+            cache: 'no-store',
+            signal: controller.signal,
+          })
+          clearTimeout(timeoutId)
           if (!res.ok) return
           const data = (await res.json()) as { region?: string | null }
           const region = (data?.region || '').toString().trim().toUpperCase()
           const valid = /^[A-Z]{2}$/.test(region) ? region : null
           if (!cancelled) setServerRegion(valid)
-        } catch {
-          // ignore
+        } catch (err) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Failed to fetch region from /api/region:', err)
+          }
         }
       })()
     } else {
