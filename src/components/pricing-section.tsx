@@ -6,6 +6,14 @@ type PricingSectionProps = {
   regionFromServer?: string | null
 }
 
+/**
+ * Render the pricing section with region-aware pricing, billing period toggle, and three plan cards.
+ *
+ * The component determines an authoritative region from the optional `regionFromServer` prop or by fetching `/api/region`. When server region is unavailable it applies cosmetic heuristics to infer India only for display purposes; server-provided region always takes precedence for pricing. Pricing, currency formatting, and annual/monthly calculations are derived from the resolved region.
+ *
+ * @param regionFromServer - Optional server-provided region code (e.g., "IN"). If provided it is normalized to a two-letter uppercase region and used as the authoritative region for pricing.
+ * @returns The JSX element for the pricing section.
+ */
 function PricingSectionComponent({ regionFromServer = null }: PricingSectionProps) {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annually'>('annually')
 
