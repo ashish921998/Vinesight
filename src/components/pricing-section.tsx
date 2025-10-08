@@ -81,8 +81,8 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
       }
     : {
         starter: { monthly: 0 },
-        professional: { monthly: 20 },
-        enterprise: { monthly: 200 },
+        professional: { monthly: 10 },
+        enterprise: { monthly: 100 },
       }
 
   const pricing = {
@@ -92,11 +92,11 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
     },
     professional: {
       monthly: basePricing.professional.monthly,
-      annually: Math.round(basePricing.professional.monthly * 12 * 0.8), // 20% discount for annual
+      annually: basePricing.professional.monthly * 10,
     },
     enterprise: {
       monthly: basePricing.enterprise.monthly,
-      annually: Math.round(basePricing.enterprise.monthly * 12 * 0.8), // 20% discount for annual
+      annually: basePricing.enterprise.monthly * 10,
     },
   }
 
