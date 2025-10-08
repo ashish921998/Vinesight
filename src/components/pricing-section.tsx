@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, memo } from 'react'
 
 type PricingSectionProps = {
   regionFromServer?: string | null
 }
 
-export default function PricingSection({ regionFromServer = null }: PricingSectionProps) {
+function PricingSectionComponent({ regionFromServer = null }: PricingSectionProps) {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annually'>('annually')
 
   // Authoritative region from server/API. Never derived from client heuristics.
@@ -19,44 +19,51 @@ export default function PricingSection({ regionFromServer = null }: PricingSecti
   useEffect(() => {
     let cancelled = false
     if (!regionFromServer) {
+      const controller = new AbortController()
       ;(async () => {
         try {
-          const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 5000) // 5s timeout
-          const res = await fetch('/api/region', {
-            cache: 'no-store',
-            signal: controller.signal,
-          })
-          clearTimeout(timeoutId)
+          const res = await fetch('/api/region', { cache: 'no-store', signal: controller.signal })
           if (!res.ok) return
           const data = (await res.json()) as { region?: string | null }
           const region = (data?.region || '').toString().trim().toUpperCase()
           const valid = /^[A-Z]{2}$/.test(region) ? region : null
-          if (!cancelled) setServerRegion(valid)
-        } catch (err) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('Failed to fetch region from /api/region:', err)
-          }
+          if (!cancelled && valid !== (serverRegion || null)) setServerRegion(valid)
+        } catch {
+          // ignore
         }
       })()
+      return () => {
+        cancelled = true
+        controller.abort()
+      }
     } else {
-      setServerRegion(regionFromServer?.toUpperCase() || null)
+      const upper = regionFromServer?.toUpperCase() || null
+      if (upper !== (serverRegion || null)) setServerRegion(upper)
     }
-    return () => {
-      cancelled = true
-    }
-  }, [regionFromServer])
+  }, [regionFromServer, serverRegion])
 
   // Heuristic detection is cosmetic-only when serverRegion is absent
   useEffect(() => {
     if (serverRegion) return // server value takes precedence; do not drive pricing with heuristics
     try {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-      const langMatch = Array.isArray(navigator.languages)
-        ? navigator.languages.some((l) => l?.toLowerCase().includes('-in'))
-        : (navigator.language || '').toLowerCase().includes('-in')
-      const tzMatch = tz === 'Asia/Kolkata'
-      if (langMatch || tzMatch) setHeuristicIndia(true)
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+      const langs =
+        Array.isArray(navigator.languages) && navigator.languages.length
+          ? navigator.languages
+          : [navigator.language || '']
+      const lowerLangs = langs.map((l) => (l || '').toLowerCase())
+      const langMatch = lowerLangs.some((l) => l.includes('-in') || l.endsWith('-in'))
+      const tzMatch = tz === 'Asia/Kolkata' || tz === 'Asia/Calcutta'
+      let localeMatch = false
+      try {
+        const loc =
+          typeof (Intl as any).Locale === 'function'
+            ? new (Intl as any).Locale(navigator.language)
+            : null
+        const region = loc?.region ? String(loc.region).toUpperCase() : ''
+        localeMatch = region === 'IN'
+      } catch {}
+      if (langMatch || tzMatch || localeMatch) setHeuristicIndia(true)
     } catch {
       // no-op
     }
@@ -504,3 +511,5 @@ export default function PricingSection({ regionFromServer = null }: PricingSecti
     </div>
   )
 }
+
+export default memo(PricingSectionComponent)
