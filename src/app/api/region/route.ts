@@ -27,7 +27,9 @@ function normalizeCountry(code: unknown): string | null {
 export async function GET(req: NextRequest) {
   try {
     // Prefer NextRequest.geo when available (Edge runtime)
-    let country = normalizeCountry((req as any)?.geo?.country)
+    // introduce a more specific type instead of `any`
+    type GeoRequest = NextRequest & { geo?: { country?: string } }
+    let country = normalizeCountry((req as GeoRequest).geo?.country)
 
     // Fallback to common provider headers
     if (!country) {

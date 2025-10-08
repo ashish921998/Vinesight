@@ -25,11 +25,16 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
 
   // Fetch validated region from server API if not provided via props
   useEffect(() => {
-    if (serverRegion) return
+    // If we already have a server region or if regionFromServer was provided, normalize it
+    if (regionFromServer) {
+      const normalized = regionFromServer.trim().toUpperCase()
+      const valid = /^[A-Z]{2}$/.test(normalized) ? normalized : null
+      setServerRegion(valid)
+      return
+    }
 
-    let cancelled = false
-
-    if (!regionFromServer) {
+    // Otherwise, fetch from API if we don't have a region yet
+    if (!serverRegion) {
       const controller = new AbortController()
       ;(async () => {
         try {
@@ -38,19 +43,16 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
           const data = (await res.json()) as { region?: string | null }
           const region = (data?.region || '').toString().trim().toUpperCase()
           const valid = /^[A-Z]{2}$/.test(region) ? region : null
-          if (!cancelled) setServerRegion(valid)
+          setServerRegion(valid)
         } catch {
           // ignore
         }
       })()
       return () => {
-        cancelled = true
         controller.abort()
       }
-    } else {
-      setServerRegion(regionFromServer?.toUpperCase() || null)
     }
-  }, [regionFromServer, serverRegion])
+  }, [regionFromServer])
 
   // Heuristic detection is cosmetic-only when serverRegion is absent
   useEffect(() => {
