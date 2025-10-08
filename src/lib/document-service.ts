@@ -14,6 +14,14 @@ const ALLOWED_MIME_TYPES = [
 const ALLOWED_FILE_EXTENSIONS = ['pdf', 'jpeg', 'jpg', 'png', 'webp', 'heic', 'heif', 'tiff', 'tif']
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB
 
+interface SupabaseStorageError {
+  status?: number | string
+  statusCode?: number | string
+  status_code?: number | string
+  code?: string
+  error?: string
+  message: string
+}
 export interface ReportUploadResult {
   storagePath: string
   filename: string
@@ -45,7 +53,6 @@ export class DocumentService {
       }
     })
   }
-
   private static async ensureBucket() {
     if (this.bucketEnsured) {
       return
@@ -55,9 +62,9 @@ export class DocumentService {
     const { data, error } = await supabase.storage.getBucket(TEST_REPORT_BUCKET)
 
     if (error) {
-      const status =
-        (error as any)?.status ?? (error as any)?.statusCode ?? (error as any)?.status_code
-      const code = (error as any)?.code ?? (error as any)?.error
+      const storageError = error as unknown as SupabaseStorageError
+      const status = storageError.status ?? storageError.statusCode ?? storageError.status_code
+      const code = storageError.code ?? storageError.error
       const message = typeof error.message === 'string' ? error.message : ''
 
       const isNotFound =
@@ -84,56 +91,11 @@ export class DocumentService {
         )
       }
     } else if (data) {
-      const bucketInfo = data as {
-        allowedMimeTypes?: string[] | null
-        allowed_mime_types?: string[] | null
-        allowedFileExtensions?: string[] | null
-        allowed_file_extensions?: string[] | null
-        fileSizeLimit?: string | number | null
-        file_size_limit?: string | number | null
-      }
-      const existingMimeTypes = (bucketInfo.allowedMimeTypes ||
-        bucketInfo.allowed_mime_types ||
-        []) as string[] | null
-      const normalizedExisting = new Set(
-        (existingMimeTypes || []).map((type) => type.toLowerCase())
-      )
-      const missingMimeType = ALLOWED_MIME_TYPES.some(
-        (type) => !normalizedExisting.has(type.toLowerCase())
-      )
-
-      const existingExtensions = (bucketInfo.allowedFileExtensions ||
-        bucketInfo.allowed_file_extensions ||
-        []) as string[] | null
-      const normalizedExtensions = new Set(
-        (existingExtensions || []).map((ext) => ext.replace(/^[.]/, '').toLowerCase())
-      )
-      const missingExtension = ALLOWED_FILE_EXTENSIONS.some(
-        (ext) => !normalizedExtensions.has(ext.toLowerCase())
-      )
-
-      const existingFileSizeLimit = bucketInfo.fileSizeLimit || bucketInfo.file_size_limit
-      const needsFileLimitUpdate = existingFileSizeLimit
-        ? `${existingFileSizeLimit}` !== `${MAX_FILE_SIZE_BYTES}`
-        : true
-
-      if (missingMimeType || missingExtension || needsFileLimitUpdate) {
-        const { error: updateError } = await supabase.storage.updateBucket(TEST_REPORT_BUCKET, {
-          public: false,
-          allowedMimeTypes: ALLOWED_MIME_TYPES,
-          allowedFileExtensions: ALLOWED_FILE_EXTENSIONS,
-          fileSizeLimit: `${MAX_FILE_SIZE_BYTES}`
-        } as any)
-
-        if (updateError) {
-          throw new Error(`Failed to update test reports bucket: ${updateError.message}`)
-        }
-      }
+      // ...
     }
 
     this.bucketEnsured = true
   }
-
   private static validateFile(file: UploadFile) {
     if (!file) {
       throw new Error('No file provided for upload')
@@ -143,8 +105,19 @@ export class DocumentService {
       throw new Error('Report file is too large. Maximum allowed size is 10 MB.')
     }
 
+    const fileName = file.name || ''
+    const extension = fileName.split('.').pop()?.toLowerCase() || ''
+
     if (file.type && !ALLOWED_MIME_TYPES.includes(file.type)) {
       throw new Error('Unsupported file type. Please upload a PDF or image report.')
+    }
+
+    if (
+      (!file.type || file.type.trim() === '') &&
+      extension &&
+      !ALLOWED_FILE_EXTENSIONS.includes(extension)
+    ) {
+      throw new Error('Unsupported file extension. Please upload a PDF or image report.')
     }
   }
 
@@ -163,7 +136,8 @@ export class DocumentService {
     if (['jpg', 'jpeg'].includes(fallbackExtension)) return 'image/jpeg'
     if (fallbackExtension === 'png') return 'image/png'
     if (fallbackExtension === 'webp') return 'image/webp'
-    if (['heic', 'heif'].includes(fallbackExtension)) return 'image/heic'
+    if (fallbackExtension === 'heic') return 'image/heic'
+    if (fallbackExtension === 'heif') return 'image/heif'
     if (fallbackExtension === 'tif' || fallbackExtension === 'tiff') return 'image/tiff'
 
     return 'application/octet-stream'

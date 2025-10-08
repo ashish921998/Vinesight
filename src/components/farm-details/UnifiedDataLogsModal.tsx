@@ -556,11 +556,19 @@ export function UnifiedDataLogsModal({
     const file = event.target.files?.[0]
     if (!file) return
 
+    const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('File size exceeds 10 MB limit')
+      event.target.value = ''
+      return
+    }
+
     if (!farmId) {
       toast.error('Select a farm before uploading reports')
       event.target.value = ''
       return
     }
+    // …rest of function…
 
     setIsUploadingReport(true)
     setReportUploadError(null)
@@ -1062,7 +1070,9 @@ export function UnifiedDataLogsModal({
       <div className="rounded-lg border border-dashed border-gray-300 bg-white p-3 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <Label className="text-sm font-medium text-gray-700">Attach Lab Report</Label>
+            <Label htmlFor="lab-report-upload" className="text-sm font-medium text-gray-700">
+              Attach Lab Report
+            </Label>
             <p className="text-xs text-gray-500">
               Upload PDF or image (max 10 MB) to auto-fill nutrient values.
             </p>
@@ -1076,6 +1086,7 @@ export function UnifiedDataLogsModal({
 
         <div className="flex items-center gap-2">
           <Input
+            id="lab-report-upload"
             type="file"
             accept="application/pdf,image/*"
             onChange={handleReportFileChange}

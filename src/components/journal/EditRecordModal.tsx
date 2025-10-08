@@ -184,7 +184,9 @@ export function EditRecordModal({
     } else if (recordType === 'spray') {
       const sprayRecord = record as SprayRecord
       const pestDisease =
-        'pest_disease' in sprayRecord ? ((sprayRecord as any).pest_disease as string) || '' : ''
+        'pest_disease' in sprayRecord && typeof (sprayRecord as Record<string, unknown>).pest_disease === 'string'
+          ? (sprayRecord as Record<string, unknown>).pest_disease
+          : ''
       setFormData({
         recordType: 'spray',
         date: sprayRecord.date,

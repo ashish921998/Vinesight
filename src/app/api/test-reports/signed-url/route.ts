@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Optionally: Validate against allowed prefixes
-    const allowedPrefixes = ['soil/', 'petiole/', 'documents/']
+    const allowedPrefixes = ['soil/', 'petiole/']
     if (!allowedPrefixes.some((prefix) => normalizedPath.startsWith(prefix))) {
       return NextResponse.json({ error: 'Path not in allowed directory' }, { status: 400 })
     }
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (farmError) {
-      if (farmError.code === 'PGRST116' || farmError.code === '404') {
+      if (farmError.code === 'PGRST116') {
         return NextResponse.json({ error: 'Resource not found' }, { status: 404 })
       }
       throw farmError
@@ -81,6 +81,11 @@ export async function POST(request: NextRequest) {
 
     if (!farm || farm.user_id !== user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    // Validate expiresIn type
+    if (expiresIn !== undefined && typeof expiresIn !== 'number') {
+      return NextResponse.json({ error: 'expiresIn must be a number' }, { status: 400 })
     }
 
     // Validate expiresIn range (e.g., between 1 minute and 7 days)
@@ -98,6 +103,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ signedUrl })
   } catch (error) {
+    console.error('Failed to generate signed URL:', error)
     return NextResponse.json({ error: 'Failed to generate signed URL' }, { status: 500 })
   }
 }

@@ -235,7 +235,13 @@ Respond strictly as JSON with the shape:
         if (part?.type === 'output_text' && typeof part.text === 'string') {
           const trimmed = part.text.trim()
           if (trimmed) {
-            return JSON.parse(trimmed) as StructuredReportPayload
+            try {
+              return JSON.parse(trimmed) as StructuredReportPayload
+            } catch (error) {
+              throw new Error(
+                `Failed to parse JSON from output_text: ${error instanceof Error ? error.message : 'Unknown error'}`
+              )
+            }
           }
         }
       }
@@ -243,7 +249,13 @@ Respond strictly as JSON with the shape:
 
     const fallback = typeof response.output_text === 'string' ? response.output_text.trim() : ''
     if (fallback) {
-      return JSON.parse(fallback) as StructuredReportPayload
+      try {
+        return JSON.parse(fallback) as StructuredReportPayload
+      } catch (error) {
+        throw new Error(
+          `Failed to parse JSON from fallback output_text: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
+      }
     }
 
     throw new Error('Parser did not return any data')
