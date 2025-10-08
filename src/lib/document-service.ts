@@ -54,21 +54,44 @@ export class DocumentService {
     const supabase = this.getServiceClient()
     const { data, error } = await supabase.storage.getBucket(TEST_REPORT_BUCKET)
 
-    if (error && error.message?.toLowerCase().includes('not found')) {
-      const { error: createError } = await supabase.storage.createBucket(TEST_REPORT_BUCKET, {
-        public: false,
-        allowedMimeTypes: ALLOWED_MIME_TYPES,
-        allowedFileExtensions: ALLOWED_FILE_EXTENSIONS,
-        fileSizeLimit: `${MAX_FILE_SIZE_BYTES}`
-      })
+    if (error) {
+      const status =
+        (error as any)?.status ?? (error as any)?.statusCode ?? (error as any)?.status_code
+      const code = (error as any)?.code ?? (error as any)?.error
+      const message = typeof error.message === 'string' ? error.message : ''
 
-      if (createError) {
-        throw new Error(`Failed to create test reports bucket: ${createError.message}`)
+      const isNotFound =
+        status === 404 ||
+        status === '404' ||
+        code === 'PGRST404' ||
+        code === '404' ||
+        message.toLowerCase().includes('not found')
+
+      if (isNotFound) {
+        const { error: createError } = await supabase.storage.createBucket(TEST_REPORT_BUCKET, {
+          public: false,
+          allowedMimeTypes: ALLOWED_MIME_TYPES,
+          allowedFileExtensions: ALLOWED_FILE_EXTENSIONS,
+          fileSizeLimit: `${MAX_FILE_SIZE_BYTES}`
+        } as any)
+
+        if (createError) {
+          throw new Error(`Failed to create test reports bucket: ${createError.message}`)
+        }
+      } else {
+        throw new Error(
+          `Failed to verify test reports bucket: ${message || 'Unknown storage error'}`
+        )
       }
-    } else if (error) {
-      throw new Error(`Failed to verify test reports bucket: ${error.message}`)
     } else if (data) {
-      const bucketInfo = data as any
+      const bucketInfo = data as {
+        allowedMimeTypes?: string[] | null
+        allowed_mime_types?: string[] | null
+        allowedFileExtensions?: string[] | null
+        allowed_file_extensions?: string[] | null
+        fileSizeLimit?: string | number | null
+        file_size_limit?: string | number | null
+      }
       const existingMimeTypes = (bucketInfo.allowedMimeTypes ||
         bucketInfo.allowed_mime_types ||
         []) as string[] | null
@@ -100,7 +123,7 @@ export class DocumentService {
           allowedMimeTypes: ALLOWED_MIME_TYPES,
           allowedFileExtensions: ALLOWED_FILE_EXTENSIONS,
           fileSizeLimit: `${MAX_FILE_SIZE_BYTES}`
-        })
+        } as any)
 
         if (updateError) {
           throw new Error(`Failed to update test reports bucket: ${updateError.message}`)

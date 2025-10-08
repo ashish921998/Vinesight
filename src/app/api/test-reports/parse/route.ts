@@ -25,6 +25,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid farm identifier' }, { status: 400 })
     }
 
+    // Validate file size (e.g., 10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File size exceeds 10MB limit' }, { status: 400 })
+    }
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json(
+        { error: 'Invalid file type. Only PDF and image files are allowed' },
+        { status: 400 }
+      )
+    }
+
     const uploadResult = await DocumentService.uploadTestReport(file, {
       farmId,
       testType,
@@ -47,10 +61,9 @@ export async function POST(request: NextRequest) {
       confidence = parsed.confidence
     } catch (error) {
       extractionError = error instanceof Error ? error.message : 'Failed to parse report'
-      extractionStatus = 'failed'
     }
 
-    const reportType = uploadResult.mimeType.startsWith('image/') ? 'image' : 'pdf'
+    const reportType = uploadResult.mimeType?.startsWith('image/') ? 'image' : 'pdf'
 
     return NextResponse.json({
       report: {

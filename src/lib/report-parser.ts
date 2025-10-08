@@ -1,4 +1,5 @@
-import OpenAI from 'openai'
+import OpenAI, { toFile } from 'openai'
+import type { Response as OpenAIResponse } from 'openai/resources/responses/responses.js'
 
 export interface ParsedReportResult {
   parameters: Record<string, number>
@@ -21,30 +22,26 @@ interface StructuredReportPayload {
 
 type TestType = 'soil' | 'petiole'
 
-const DEFAULT_MODEL = process.env.OPENAI_REPORT_PARSER_MODEL || 'gpt-4o-mini'
+const DEFAULT_MODEL = 'gpt-4o-mini'
 
 export class ReportParser {
   private static getClient() {
-    const apiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_VISION
+    const apiKey = process.env.OPENAI_API_KEY
     if (!apiKey) {
       throw new Error('OpenAI API key is not configured')
     }
-
     return new OpenAI({ apiKey })
   }
 
   static async parseTestReport(file: File, testType: TestType): Promise<ParsedReportResult> {
     const client = this.getClient()
     const schema = this.buildSchema()
-
-    const uploaded = await client.files.create({
-      file,
-      purpose: 'assistants'
-    })
+    const uploadedFile = await this.uploadFileForParsing(client, file)
 
     try {
       const response = await client.responses.create({
         model: DEFAULT_MODEL,
+        temperature: 0,
         input: [
           {
             role: 'system',
@@ -60,11 +57,11 @@ export class ReportParser {
             content: [
               {
                 type: 'input_text',
-                text: this.getPrompt(testType)
+                text: `${this.getPrompt(testType)}\n\nAnalyze the attached report file without guessing values.`
               },
               {
                 type: 'input_file',
-                file_id: uploaded.id
+                file_id: uploadedFile.id
               }
             ]
           }
@@ -73,25 +70,16 @@ export class ReportParser {
           format: {
             type: 'json_schema',
             name: 'test_report_extraction',
-            schema
+            schema,
+            strict: true
           }
         }
       })
 
-      const cleanOutput = response.output_text?.replace(/```(?:json)?/g, '').trim()
-      if (!cleanOutput) {
-        throw new Error('Parser did not return any data')
-      }
-
-      const parsed = JSON.parse(cleanOutput) as StructuredReportPayload
+      const parsed = this.extractStructuredPayload(response)
       return this.toParsedResult(parsed)
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('Invalid file format')) {
-        throw new Error(error.message)
-      }
-      throw error
     } finally {
-      await client.files.delete(uploaded.id).catch(() => undefined)
+      void this.safeDeleteUploadedFile(client, uploadedFile.id)
     }
   }
 
@@ -217,5 +205,51 @@ Respond strictly as JSON with the shape:
       required: ['parameters', 'summary', 'rawNotes', 'confidence'],
       additionalProperties: false
     } as const
+  }
+
+  private static async uploadFileForParsing(client: OpenAI, file: File) {
+    const normalized = file.name
+      ? file
+      : await toFile(file, `${Date.now()}-report`, {
+          type: file.type || 'application/octet-stream'
+        })
+
+    return client.files.create({
+      file: normalized,
+      purpose: 'assistants'
+    })
+  }
+
+  private static extractStructuredPayload(response: OpenAIResponse): StructuredReportPayload {
+    const outputItems = Array.isArray(response.output) ? response.output : []
+
+    for (const item of outputItems) {
+      const content = (item as any)?.content
+      if (!Array.isArray(content)) continue
+
+      for (const part of content) {
+        if (part?.type === 'output_json' && part.json) {
+          return part.json as StructuredReportPayload
+        }
+
+        if (part?.type === 'output_text' && typeof part.text === 'string') {
+          const trimmed = part.text.trim()
+          if (trimmed) {
+            return JSON.parse(trimmed) as StructuredReportPayload
+          }
+        }
+      }
+    }
+
+    const fallback = typeof response.output_text === 'string' ? response.output_text.trim() : ''
+    if (fallback) {
+      return JSON.parse(fallback) as StructuredReportPayload
+    }
+
+    throw new Error('Parser did not return any data')
+  }
+
+  private static safeDeleteUploadedFile(client: OpenAI, fileId: string) {
+    return client.files.delete(fileId).catch(() => undefined)
   }
 }
