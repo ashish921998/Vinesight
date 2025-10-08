@@ -676,7 +676,7 @@ export default function AIInsightsPage() {
                       {/* Tags */}
                       {insight.tags && insight.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
-                          {insight.tags.map((tag) => (
+                          {insight.tags.map((tag: string) => (
                             <Badge key={tag} variant="outline" className="text-xs px-2 py-0.5">
                               {tag}
                             </Badge>

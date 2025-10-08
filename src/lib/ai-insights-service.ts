@@ -4,6 +4,8 @@ import { SmartTaskGenerator } from './smart-task-generator'
 import { WeatherService } from './weather-service'
 import { AIInsight } from '../types/ai'
 
+export type { AIInsight }
+
 export class AIInsightsService {
   // Simple in-memory cache for insights (5 minute TTL)
   private static insightsCache = new Map<string, { data: AIInsight[]; timestamp: number }>()

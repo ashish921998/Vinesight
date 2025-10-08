@@ -295,17 +295,55 @@ export function AIAssistant({
     }
   }, [i18n.language])
 
+  const areMessagesEqual = useCallback((a: Message[], b: Message[]) => {
+    if (a.length !== b.length) return false
+    for (let i = 0; i < a.length; i += 1) {
+      const left = a[i]
+      const right = b[i]
+      if (
+        left.id !== right.id ||
+        left.role !== right.role ||
+        left.content !== right.content ||
+        (left.language || '') !== (right.language || '')
+      ) {
+        return false
+      }
+
+      const leftAttachments = left.attachments ?? []
+      const rightAttachments = right.attachments ?? []
+      if (leftAttachments.length !== rightAttachments.length) {
+        return false
+      }
+      for (let j = 0; j < leftAttachments.length; j += 1) {
+        const leftAttachment = leftAttachments[j]
+        const rightAttachment = rightAttachments[j]
+        if (
+          leftAttachment.type !== rightAttachment.type ||
+          leftAttachment.url !== rightAttachment.url ||
+          leftAttachment.name !== rightAttachment.name
+        ) {
+          return false
+        }
+      }
+    }
+    return true
+  }, [])
+
   useEffect(() => {
     if (chatMessages.length === 0) {
-      setMessages([
-        {
+      setMessages((prev) => {
+        const welcome: Message = {
           id: 'welcome',
           content: getWelcomeMessage(),
           role: 'assistant',
           timestamp: new Date(),
           language: i18n.language
         }
-      ])
+        if (prev.length === 1 && prev[0].id === 'welcome' && prev[0].language === i18n.language) {
+          return prev
+        }
+        return [welcome]
+      })
       return
     }
 
@@ -314,20 +352,35 @@ export function AIAssistant({
       .filter((msg): msg is Message => msg !== null)
 
     if (mapped.length === 0) {
-      setMessages([
-        {
+      setMessages((prev) => {
+        const welcome: Message = {
           id: 'welcome',
           content: getWelcomeMessage(),
           role: 'assistant',
           timestamp: new Date(),
           language: i18n.language
         }
-      ])
+        if (prev.length === 1 && prev[0].id === 'welcome' && prev[0].language === i18n.language) {
+          return prev
+        }
+        return [welcome]
+      })
       return
     }
 
-    setMessages(mapped)
-  }, [chatMessages, uiMessageToAppMessage, getWelcomeMessage, i18n.language])
+    setMessages((prev) => {
+      if (areMessagesEqual(prev, mapped)) {
+        return prev
+      }
+      return mapped
+    })
+  }, [
+    chatMessages,
+    uiMessageToAppMessage,
+    getWelcomeMessage,
+    i18n.language,
+    areMessagesEqual
+  ])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -696,13 +749,27 @@ export function AIAssistant({
           remarkPlugins={[remarkGfm]}
           components={{
             p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-            ul: ({ children }) => (
-              <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>
+            ul: ({ children, ...props }) => (
+              <ul
+                {...props}
+                className={cn('list-disc list-outside pl-5 mb-2 space-y-1', props.className)}
+              >
+                {children}
+              </ul>
             ),
-            ol: ({ children }) => (
-              <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>
+            ol: ({ children, ...props }) => (
+              <ol
+                {...props}
+                className={cn('list-decimal list-outside pl-5 mb-2 space-y-1', props.className)}
+              >
+                {children}
+              </ol>
             ),
-            li: ({ children }) => <li className="ml-0">{children}</li>,
+            li: ({ children, ...props }) => (
+              <li {...props} className={cn('leading-relaxed', props.className)}>
+                {children}
+              </li>
+            ),
             code: ({ children, ...props }) => {
               const isInline = !props.className?.includes('language-')
               return isInline ? (

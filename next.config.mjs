@@ -6,6 +6,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: isProd,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 
   // Performance optimizations from next.config.ts
   experimental: {

@@ -103,36 +103,15 @@ export async function POST(request: NextRequest) {
     // Increment question count for this user
     incrementServerQuestionCount(user.id)
 
-    const systemPrompt = buildSystemPrompt(data?.context)
+    const chatContext = data?.context ?? {}
+    const systemPrompt = buildSystemPrompt(chatContext)
     const modelMessages = convertToModelMessages(validatedMessages)
 
     const result = streamText({
       model: openai('gpt-4o-mini'),
-      system: `You are a highly personalized Agriculture and farming AI assistant. Your primary goal is to learn about the user and provide increasingly personalized help over time.
-      MEMORY MANAGEMENT:
-      1. When users share personal information, preferences, or context, immediately use addMemory to store it
-      2. Before responding to requests, search your memories for relevant context about the user
-      3. Use past conversations to inform current responses
-      4. Remember user's communication style, preferences, and frequently discussed topics
-      
-      PERSONALITY:
-      - Adapt your communication style to match the user's preferences
-      - Reference past conversations naturally when relevant
-      - Proactively offer help based on learned patterns
-      - Be genuinely helpful while respecting privacy
-      
-      EXAMPLES OF WHAT TO REMEMBER:
-      - Work schedule and role
-      - Dietary preferences/restrictions
-      - Communication preferences (formal/casual)
-      - Frequent topics of interest
-      - Goals and projects they're working on
-      - Family/personal context they share
-      - Preferred tools and workflows
-      - Time zone and availability
-      
-      Always search memories before responding to provide personalized, contextual help.`,
+      system: systemPrompt,
       messages: modelMessages,
+      temperature: 0.6,
       tools: {
         ...supermemoryTools(apiKey, {
           containerTags: [user.id]
@@ -204,6 +183,12 @@ Guidelines:
 - Reference specific grape varieties and regional considerations when relevant
 - Use practical measurements and timing recommendations
 - Focus on immediate, actionable solutions
+
+Memory Playbook:
+- Always call searchMemories before drafting a response so you can leverage prior context for this farmer.
+- When a farmer shares a durable fact or preference (e.g., “I prefer organic treatments”, “avoid copper sprays”, irrigation schedules, labour constraints), immediately call addMemory with a concise summary, tagging it with relevant labels such as preference, treatment, language, or the farm ID.
+- Respect stored preferences in every recommendation. For example, if a memory notes that the farmer prefers organic interventions, avoid recommending synthetic chemicals, surface organic options first, and remind them you are honoring their preference.
+- When appropriate, reference the retrieved memories explicitly ("Because you prefer organic control methods...") so the farmer recognises the assistant remembers them.
 
 ${
   context?.recentAnalysis?.length
