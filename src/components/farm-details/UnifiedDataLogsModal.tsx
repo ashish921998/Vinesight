@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ChangeEvent } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import type { ReportAttachmentMeta } from '@/types/reports'
 import {
   Droplets,
   SprayCan,
@@ -29,8 +30,12 @@ import {
   Edit2,
   Trash2,
   Calendar,
-  CheckCircle
+  CheckCircle,
+  Paperclip,
+  FileWarning,
+  RefreshCcw
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 export type LogType =
   | 'irrigation'
@@ -46,6 +51,9 @@ interface LogEntry {
   type: LogType
   data: Record<string, any>
   isValid: boolean
+  meta?: {
+    report?: ReportAttachmentMeta | null
+  }
 }
 
 interface FormField {
@@ -74,6 +82,7 @@ interface UnifiedDataLogsModalProps {
   onClose: () => void
   onSubmit: (logs: LogEntry[], date: string, dayNotes: string, dayPhotos: File[]) => void
   isSubmitting: boolean
+  farmId?: number
 }
 
 const logTypeConfigs: Record<LogType, LogTypeConfig> = {
@@ -412,13 +421,17 @@ export function UnifiedDataLogsModal({
   isOpen,
   onClose,
   onSubmit,
-  isSubmitting
+  isSubmitting,
+  farmId
 }: UnifiedDataLogsModalProps) {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [currentLogType, setCurrentLogType] = useState<LogType | null>(null)
   const [currentFormData, setCurrentFormData] = useState<Record<string, any>>({})
   const [sessionLogs, setSessionLogs] = useState<LogEntry[]>([])
   const [editingLogId, setEditingLogId] = useState<string | null>(null)
+  const [currentReport, setCurrentReport] = useState<ReportAttachmentMeta | null>(null)
+  const [isUploadingReport, setIsUploadingReport] = useState(false)
+  const [reportUploadError, setReportUploadError] = useState<string | null>(null)
 
   // Shared day-level data
   const [dayNotes, setDayNotes] = useState('')
@@ -450,6 +463,9 @@ export function UnifiedDataLogsModal({
       setSprayEntries([])
       setMultipleFertigationMode(false)
       setFertigationEntries([])
+      setCurrentReport(null)
+      setReportUploadError(null)
+      setIsUploadingReport(false)
     }
   }, [isOpen])
 
@@ -476,6 +492,13 @@ export function UnifiedDataLogsModal({
     }
   }, [currentLogType, editingLogId])
 
+  useEffect(() => {
+    if (!currentLogType || (currentLogType !== 'soil_test' && currentLogType !== 'petiole_test')) {
+      setCurrentReport(null)
+      setReportUploadError(null)
+    }
+  }, [currentLogType])
+
   const validateCurrentForm = (): boolean => {
     if (!currentLogType) return false
 
@@ -494,6 +517,112 @@ export function UnifiedDataLogsModal({
       }
     }
     return true
+  }
+
+  const applyParsedParameters = (parameters?: Record<string, number>) => {
+    if (!parameters || !currentLogType) return
+
+    setCurrentFormData((prev) => {
+      const updated = { ...prev }
+
+      const findMatchingValue = (fieldName: string) => {
+        if (parameters[fieldName] !== undefined) return parameters[fieldName]
+
+        const normalizedField = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '')
+        const entry = Object.entries(parameters).find(([key]) => {
+          const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '')
+          return normalizedKey === normalizedField
+        })
+        return entry ? entry[1] : undefined
+      }
+
+      logTypeConfigs[currentLogType].fields.forEach((field) => {
+        const value = findMatchingValue(field.name)
+        if (value !== undefined) {
+          updated[field.name] = Number.isFinite(value) ? value.toString() : ''
+        }
+      })
+
+      return updated
+    })
+  }
+
+  const handleReportFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!currentLogType || (currentLogType !== 'soil_test' && currentLogType !== 'petiole_test')) {
+      event.target.value = ''
+      return
+    }
+
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('File size exceeds 10 MB limit')
+      event.target.value = ''
+      return
+    }
+
+    if (!farmId) {
+      toast.error('Select a farm before uploading reports')
+      event.target.value = ''
+      return
+    }
+    // …rest of function…
+
+    setIsUploadingReport(true)
+    setReportUploadError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('testType', currentLogType === 'soil_test' ? 'soil' : 'petiole')
+      formData.append('farmId', farmId.toString())
+      if (currentReport?.storagePath) {
+        formData.append('existingPath', currentReport.storagePath)
+      }
+
+      const response = await fetch('/api/test-reports/parse', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}))
+        throw new Error(payload.error || 'Failed to process report')
+      }
+
+      const payload = await response.json()
+      const reportMeta: ReportAttachmentMeta = {
+        storagePath: payload.report.storagePath,
+        signedUrl: payload.report.signedUrl,
+        filename: payload.report.filename,
+        mimeType: payload.report.mimeType,
+        reportType: payload.report.reportType,
+        extractionStatus: payload.extraction?.status || 'failed',
+        extractionError: payload.extraction?.error,
+        parsedParameters: payload.extraction?.parameters || undefined,
+        rawNotes: payload.extraction?.rawNotes,
+        summary: payload.extraction?.summary,
+        confidence: payload.extraction?.confidence
+      }
+
+      setCurrentReport(reportMeta)
+
+      if (reportMeta.extractionStatus === 'success') {
+        applyParsedParameters(reportMeta.parsedParameters)
+        toast.success('Report uploaded and values auto-filled')
+      } else {
+        toast.warning('Report uploaded. Review fields and enter values manually.')
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to upload report'
+      setReportUploadError(message)
+      toast.error(message)
+    } finally {
+      setIsUploadingReport(false)
+      event.target.value = ''
+    }
   }
 
   const validateSprayEntry = (data: Record<string, any>): boolean => {
@@ -629,7 +758,11 @@ export function UnifiedDataLogsModal({
       data: {
         ...currentFormData
       },
-      isValid: true
+      isValid: true,
+      meta:
+        currentLogType === 'soil_test' || currentLogType === 'petiole_test'
+          ? { report: currentReport }
+          : undefined
     }
 
     if (editingLogId) {
@@ -644,6 +777,8 @@ export function UnifiedDataLogsModal({
     // Reset form
     setCurrentLogType(null)
     setCurrentFormData({})
+    setCurrentReport(null)
+    setReportUploadError(null)
   }
 
   const handleEditLog = (logId: string) => {
@@ -653,6 +788,8 @@ export function UnifiedDataLogsModal({
     setEditingLogId(logId)
     setCurrentLogType(log.type)
     setCurrentFormData({ ...log.data })
+    setCurrentReport(log.meta?.report || null)
+    setReportUploadError(null)
   }
 
   const handleRemoveLog = (logId: string) => {
@@ -924,6 +1061,122 @@ export function UnifiedDataLogsModal({
     }
   }
 
+  const renderReportAttachmentSection = () => {
+    if (!currentLogType || (currentLogType !== 'soil_test' && currentLogType !== 'petiole_test')) {
+      return null
+    }
+
+    return (
+      <div className="rounded-lg border border-dashed border-gray-300 bg-white p-3 space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <Label htmlFor="lab-report-upload" className="text-sm font-medium text-gray-700">
+              Attach Lab Report
+            </Label>
+            <p className="text-xs text-gray-500">
+              Upload PDF or image (max 10 MB) to auto-fill nutrient values.
+            </p>
+          </div>
+          {currentReport?.extractionStatus === 'success' && (
+            <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
+              Auto parsed
+            </Badge>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Input
+            id="lab-report-upload"
+            type="file"
+            accept="application/pdf,image/*"
+            onChange={handleReportFileChange}
+            disabled={isUploadingReport}
+            className="h-9"
+          />
+          {isUploadingReport ? (
+            <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+          ) : (
+            <Upload className="h-4 w-4 text-gray-400" />
+          )}
+          {currentReport && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setCurrentReport(null)
+                setReportUploadError(null)
+              }}
+              className="h-8 text-xs"
+            >
+              <RefreshCcw className="h-3 w-3 mr-1" />
+              Reset
+            </Button>
+          )}
+        </div>
+
+        {isUploadingReport && (
+          <p className="text-xs text-gray-500 flex items-center gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" /> Processing report, please wait...
+          </p>
+        )}
+
+        {currentReport && (
+          <div className="space-y-1 rounded-md bg-gray-50 p-2 text-xs text-gray-700">
+            <div className="flex flex-wrap items-center gap-2">
+              <Paperclip className="h-3 w-3" />
+              <span className="font-medium truncate max-w-[160px]">{currentReport.filename}</span>
+              <Badge variant="outline" className="capitalize">
+                {currentReport.reportType}
+              </Badge>
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => window.open(currentReport.signedUrl, '_blank', 'noopener')}
+                className="h-auto p-0 text-xs"
+              >
+                View report
+              </Button>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {currentReport.extractionStatus === 'success' ? (
+                <>
+                  <CheckCircle className="h-3 w-3 text-emerald-500" />
+                  <span className="text-emerald-700">Parsed successfully</span>
+                  {typeof currentReport.confidence === 'number' && (
+                    <span className="text-gray-500">
+                      Confidence {(currentReport.confidence * 100).toFixed(0)}%
+                    </span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <FileWarning className="h-3 w-3 text-amber-500" />
+                  <span className="text-amber-600">
+                    {currentReport.extractionError ||
+                      'Automatic parsing failed. Enter values manually.'}
+                  </span>
+                </>
+              )}
+            </div>
+            {currentReport.summary && (
+              <p className="text-gray-600">Summary: {currentReport.summary}</p>
+            )}
+            {currentReport.rawNotes && (
+              <p className="text-gray-500">Notes: {currentReport.rawNotes}</p>
+            )}
+          </div>
+        )}
+
+        {reportUploadError && (
+          <p className="text-xs text-red-600 flex items-center gap-1">
+            <FileWarning className="h-3 w-3" />
+            {reportUploadError}
+          </p>
+        )}
+      </div>
+    )
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -977,6 +1230,12 @@ export function UnifiedDataLogsModal({
                               .slice(0, 2)
                               .join(', ')}
                           </p>
+                          {log.meta?.report && (
+                            <div className="flex items-center gap-1 text-[0.65rem] text-emerald-600 mt-1">
+                              <Paperclip className="h-3 w-3" />
+                              Test report attached
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
@@ -1178,6 +1437,8 @@ export function UnifiedDataLogsModal({
                   <>
                     {/* Dynamic fields for non-spray logs */}
                     {logTypeConfigs[currentLogType].fields.map(renderFormField)}
+
+                    {renderReportAttachmentSection()}
 
                     {/* Add Entry Button */}
                     <Button

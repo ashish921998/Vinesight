@@ -1389,7 +1389,15 @@ export type Database = {
           date: string
           farm_id: number | null
           id: number
+          extraction_error: string | null
+          extraction_status: string | null
           notes: string | null
+          parsed_parameters: Json | null
+          raw_notes: string | null
+          report_filename: string | null
+          report_storage_path: string | null
+          report_type: string | null
+          report_url: string | null
           parameters: Json
           recommendations: string | null
         }
@@ -1398,7 +1406,15 @@ export type Database = {
           date: string
           farm_id?: number | null
           id?: number
+          extraction_error?: string | null
+          extraction_status?: string | null
           notes?: string | null
+          parsed_parameters?: Json | null
+          raw_notes?: string | null
+          report_filename?: string | null
+          report_storage_path?: string | null
+          report_type?: string | null
+          report_url?: string | null
           parameters: Json
           recommendations?: string | null
         }
@@ -1407,7 +1423,15 @@ export type Database = {
           date?: string
           farm_id?: number | null
           id?: number
+          extraction_error?: string | null
+          extraction_status?: string | null
           notes?: string | null
+          parsed_parameters?: Json | null
+          raw_notes?: string | null
+          report_filename?: string | null
+          report_storage_path?: string | null
+          report_type?: string | null
+          report_url?: string | null
           parameters?: Json
           recommendations?: string | null
         }
@@ -1427,7 +1451,15 @@ export type Database = {
           date: string
           farm_id: number | null
           id: number
+          extraction_error: string | null
+          extraction_status: string | null
           notes: string | null
+          parsed_parameters: Json | null
+          raw_notes: string | null
+          report_filename: string | null
+          report_storage_path: string | null
+          report_type: string | null
+          report_url: string | null
           parameters: Json
           recommendations: string | null
         }
@@ -1436,7 +1468,15 @@ export type Database = {
           date: string
           farm_id?: number | null
           id?: number
+          extraction_error?: string | null
+          extraction_status?: string | null
           notes?: string | null
+          parsed_parameters?: Json | null
+          raw_notes?: string | null
+          report_filename?: string | null
+          report_storage_path?: string | null
+          report_type?: string | null
+          report_url?: string | null
           parameters: Json
           recommendations?: string | null
         }
@@ -1445,7 +1485,15 @@ export type Database = {
           date?: string
           farm_id?: number | null
           id?: number
+          extraction_error?: string | null
+          extraction_status?: string | null
           notes?: string | null
+          parsed_parameters?: Json | null
+          raw_notes?: string | null
+          report_filename?: string | null
+          report_storage_path?: string | null
+          report_type?: string | null
+          report_url?: string | null
           parameters?: Json
           recommendations?: string | null
         }

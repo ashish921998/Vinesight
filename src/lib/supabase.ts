@@ -120,6 +120,14 @@ export interface SoilTestRecord {
   parameters: Record<string, number> // pH, N, P, K, etc.
   recommendations?: string
   notes?: string
+  report_url?: string | null
+  report_storage_path?: string | null
+  report_filename?: string | null
+  report_type?: string | null
+  extraction_status?: 'pending' | 'success' | 'failed' | null
+  extraction_error?: string | null
+  parsed_parameters?: Record<string, number> | null
+  raw_notes?: string | null
   created_at?: string
 }
 
@@ -131,5 +139,13 @@ export interface PetioleTestRecord {
   parameters?: Record<string, number>
   recommendations?: string
   notes?: string
+  report_url?: string | null
+  report_storage_path?: string | null
+  report_filename?: string | null
+  report_type?: string | null
+  extraction_status?: 'pending' | 'success' | 'failed' | null
+  extraction_error?: string | null
+  parsed_parameters?: Record<string, number> | null
+  raw_notes?: string | null
   created_at?: string
 }

@@ -13,6 +13,7 @@ import { ActivityFeed } from '@/components/farm-details/ActivityFeed'
 import { SimpleWeatherCard } from '@/components/dashboard/SimpleWeatherCard'
 import { RemainingWaterCard } from '@/components/farm-details/RemainingWaterCard'
 import { UnifiedDataLogsModal } from '@/components/farm-details/UnifiedDataLogsModal'
+import type { ReportAttachmentMeta } from '@/types/reports'
 import { WaterCalculationModal } from '@/components/farm-details/WaterCalculationModal'
 import { EditRecordModal } from '@/components/journal/EditRecordModal'
 import { FarmModal } from '@/components/farm-details/forms/FarmModal'
@@ -265,73 +266,108 @@ export default function FarmDetailsPage() {
         })
         break
 
-      case 'soil_test':
+      case 'soil_test': {
+        const reportMeta = (logEntry.meta?.report || null) as ReportAttachmentMeta | null
+
+        const combineNotes = [dayNotes]
+        if (reportMeta?.summary) combineNotes.push(reportMeta.summary)
+
+        const parsedParameters = reportMeta?.parsedParameters || {}
+        const combinedParameters: Record<string, number> = {}
+
+        const mapSoilKey = (key: string) => {
+          const normalized = key.toLowerCase()
+          if (normalized === 'ph' || normalized === 'soilph') return 'pH'
+          if (normalized === 'nitrogen' || normalized === 'n') return 'nitrogen'
+          if (normalized === 'phosphorus' || normalized === 'p') return 'phosphorus'
+          if (normalized === 'potassium' || normalized === 'k') return 'potassium'
+          return key
+        }
+
+        Object.entries(parsedParameters).forEach(([key, value]) => {
+          if (typeof value !== 'number' || Number.isNaN(value)) return
+          const mappedKey = mapSoilKey(key)
+          combinedParameters[mappedKey] = value
+        })
+
+        const manualEntries: Array<[string, number]> = [
+          ['pH', parseFloat(data.ph ?? '')],
+          ['nitrogen', parseFloat(data.nitrogen ?? '')],
+          ['phosphorus', parseFloat(data.phosphorus ?? '')],
+          ['potassium', parseFloat(data.potassium ?? '')]
+        ]
+
+        manualEntries.forEach(([key, value]) => {
+          if (Number.isFinite(value)) {
+            combinedParameters[key] = value
+          }
+        })
+
         record = await SupabaseService.addSoilTestRecord({
           farm_id: parseInt(farmId),
-          date: date,
-          parameters: {
-            pH: parseFloat(data.ph || '7'),
-            nitrogen: parseFloat(data.nitrogen || '0'),
-            phosphorus: parseFloat(data.phosphorus || '0'),
-            potassium: parseFloat(data.potassium || '0')
-          },
-          notes: dayNotes || ''
+          date,
+          parameters: combinedParameters,
+          notes: combineNotes.filter(Boolean).join(' | ') || '',
+          report_url: reportMeta?.signedUrl,
+          report_storage_path: reportMeta?.storagePath,
+          report_filename: reportMeta?.filename,
+          report_type: reportMeta?.reportType,
+          extraction_status: reportMeta?.extractionStatus,
+          extraction_error: reportMeta?.extractionError,
+          parsed_parameters: reportMeta?.parsedParameters,
+          raw_notes: reportMeta?.rawNotes ?? undefined
         })
         break
+      }
 
-      case 'petiole_test':
+      case 'petiole_test': {
         // Create parameters object with all the nutrient values
-        const parameters: Record<string, number> = {}
+        const reportMeta = (logEntry.meta?.report || null) as ReportAttachmentMeta | null
 
-        // Check each field and add to parameters if it exists
-        if (data.total_nitrogen !== undefined && data.total_nitrogen !== '') {
-          parameters.total_nitrogen = parseFloat(data.total_nitrogen)
+        const combineNotes = [dayNotes]
+        if (reportMeta?.summary) combineNotes.push(reportMeta.summary)
+
+        const parameters: Record<string, number> = { ...(reportMeta?.parsedParameters || {}) }
+
+        const pushParameter = (key: string, rawValue: unknown) => {
+          const numericValue =
+            typeof rawValue === 'string' ? parseFloat(rawValue) : Number(rawValue)
+          if (Number.isFinite(numericValue)) {
+            parameters[key] = numericValue
+          }
         }
-        if (data.phosphorus !== undefined && data.phosphorus !== '') {
-          parameters.phosphorus = parseFloat(data.phosphorus)
-        }
-        if (data.potassium !== undefined && data.potassium !== '') {
-          parameters.potassium = parseFloat(data.potassium)
-        }
-        if (data.calcium !== undefined && data.calcium !== '') {
-          parameters.calcium = parseFloat(data.calcium)
-        }
-        if (data.magnesium !== undefined && data.magnesium !== '') {
-          parameters.magnesium = parseFloat(data.magnesium)
-        }
-        if (data.sulphur !== undefined && data.sulphur !== '') {
-          parameters.sulfur = parseFloat(data.sulphur)
-        }
-        if (data.ferrous !== undefined && data.ferrous !== '') {
-          parameters.iron = parseFloat(data.ferrous)
-        }
-        if (data.manganese !== undefined && data.manganese !== '') {
-          parameters.manganese = parseFloat(data.manganese)
-        }
-        if (data.zinc !== undefined && data.zinc !== '') {
-          parameters.zinc = parseFloat(data.zinc)
-        }
-        if (data.copper !== undefined && data.copper !== '') {
-          parameters.copper = parseFloat(data.copper)
-        }
-        if (data.boron !== undefined && data.boron !== '') {
-          parameters.boron = parseFloat(data.boron)
-        }
-        if (data.nitrate_nitrogen !== undefined && data.nitrate_nitrogen !== '') {
-          parameters.nitrate_nitrogen = parseFloat(data.nitrate_nitrogen)
-        }
-        if (data.ammonical_nitrogen !== undefined && data.ammonical_nitrogen !== '') {
-          parameters.ammonium_nitrogen = parseFloat(data.ammonical_nitrogen)
-        }
+
+        pushParameter('total_nitrogen', data.total_nitrogen)
+        pushParameter('phosphorus', data.phosphorus)
+        pushParameter('potassium', data.potassium)
+        pushParameter('calcium', data.calcium)
+        pushParameter('magnesium', data.magnesium)
+        pushParameter('sulfur', data.sulphur)
+        pushParameter('iron', data.ferrous)
+        pushParameter('manganese', data.manganese)
+        pushParameter('zinc', data.zinc)
+        pushParameter('copper', data.copper)
+        pushParameter('boron', data.boron)
+        pushParameter('nitrate_nitrogen', data.nitrate_nitrogen)
+        pushParameter('ammonium_nitrogen', data.ammonical_nitrogen)
 
         record = await SupabaseService.addPetioleTestRecord({
           farm_id: parseInt(farmId),
-          date: date,
+          date,
           sample_id: data.sample_id || '',
-          parameters: parameters,
-          notes: dayNotes || ''
+          parameters,
+          notes: combineNotes.filter(Boolean).join(' | ') || '',
+          report_url: reportMeta?.signedUrl,
+          report_storage_path: reportMeta?.storagePath,
+          report_filename: reportMeta?.filename,
+          report_type: reportMeta?.reportType,
+          extraction_status: reportMeta?.extractionStatus,
+          extraction_error: reportMeta?.extractionError,
+          parsed_parameters: reportMeta?.parsedParameters,
+          raw_notes: reportMeta?.rawNotes ?? undefined
         })
         break
+      }
     }
 
     return record
@@ -485,6 +521,7 @@ export default function FarmDetailsPage() {
           onClose={() => setShowDataLogsModal(false)}
           onSubmit={handleDataLogsSubmit}
           isSubmitting={isSubmitting}
+          farmId={parseInt(farmId)}
         />
 
         {/* Water Calculation Modal */}
