@@ -144,6 +144,12 @@ export function EditRecordModal({
   const [reportUploadError, setReportUploadError] = useState<string | null>(null)
   const [isFetchingReportUrl, setIsFetchingReportUrl] = useState(false)
 
+  // Helper function to safely convert string to number, returning undefined for empty/invalid strings
+  const toNum = (s: string) => {
+    const n = parseFloat(s)
+    return Number.isFinite(n) ? n : undefined
+  }
+
   type FormByType<T extends EditRecordType> = Extract<EditRecordFormData, { recordType: T }>
 
   const updateFormData = <T extends EditRecordType>(
@@ -259,7 +265,7 @@ export function EditRecordModal({
           extractionError: soilTestRecord.extraction_error || undefined,
           parsedParameters: soilTestRecord.parsed_parameters || undefined,
           rawNotes: soilTestRecord.raw_notes || null,
-          summary: soilTestRecord.raw_notes || undefined,
+          summary: undefined,
           confidence: undefined
         })
       } else {
@@ -429,11 +435,11 @@ export function EditRecordModal({
         if (!irrigationForm) throw new Error('Irrigation form is not ready')
         await SupabaseService.updateIrrigationRecord(record.id!, {
           date: irrigationForm.date,
-          duration: parseFloat(irrigationForm.duration),
-          area: parseFloat(irrigationForm.area),
+          duration: toNum(irrigationForm.duration),
+          area: toNum(irrigationForm.area),
           growth_stage: irrigationForm.growth_stage,
           moisture_status: irrigationForm.moisture_status,
-          system_discharge: parseFloat(irrigationForm.system_discharge),
+          system_discharge: toNum(irrigationForm.system_discharge),
           notes: irrigationForm.notes
         })
       } else if (recordType === 'spray') {
@@ -442,7 +448,7 @@ export function EditRecordModal({
           date: sprayForm.date,
           chemical: sprayForm.chemical,
           dose: sprayForm.dose,
-          area: parseFloat(sprayForm.area),
+          area: toNum(sprayForm.area),
           weather: sprayForm.weather,
           operator: sprayForm.operator,
           notes: sprayForm.notes
@@ -451,9 +457,9 @@ export function EditRecordModal({
         if (!harvestForm) throw new Error('Harvest form is not ready')
         await SupabaseService.updateHarvestRecord(record.id!, {
           date: harvestForm.date,
-          quantity: parseFloat(harvestForm.quantity),
+          quantity: toNum(harvestForm.quantity),
           grade: harvestForm.grade,
-          price: harvestForm.price ? parseFloat(harvestForm.price) : undefined,
+          price: toNum(harvestForm.price),
           buyer: harvestForm.buyer || undefined,
           notes: harvestForm.notes
         })
@@ -464,7 +470,7 @@ export function EditRecordModal({
           fertilizer: fertigationForm.fertilizer,
           dose: fertigationForm.dose,
           purpose: fertigationForm.purpose,
-          area: parseFloat(fertigationForm.area),
+          area: toNum(fertigationForm.area),
           notes: fertigationForm.notes
         })
       } else if (recordType === 'expense') {
@@ -473,7 +479,7 @@ export function EditRecordModal({
           date: expenseForm.date,
           type: expenseForm.type,
           description: expenseForm.description,
-          cost: parseFloat(expenseForm.cost),
+          cost: toNum(expenseForm.cost),
           remarks: expenseForm.remarks
         })
       } else if (recordType === 'soil_test') {
@@ -502,12 +508,17 @@ export function EditRecordModal({
               raw_notes: null
             }
 
-        const payload = {
+        // Build base payload with common fields
+        const payload: any = {
           date: soilTestForm.date,
-          parameters: soilTestForm.parameters,
           recommendations: soilTestForm.recommendations,
           notes: soilTestForm.notes,
           ...metadata
+        }
+
+        // Only include parameters for soil tests or when petiole has non-empty parameters
+        if (!isPetiole || Object.keys(soilTestForm.parameters).length > 0) {
+          payload.parameters = soilTestForm.parameters
         }
 
         if (isPetiole) {

@@ -78,7 +78,6 @@ export class DocumentService {
         const { error: createError } = await supabase.storage.createBucket(TEST_REPORT_BUCKET, {
           public: false,
           allowedMimeTypes: ALLOWED_MIME_TYPES,
-          allowedFileExtensions: ALLOWED_FILE_EXTENSIONS,
           fileSizeLimit: `${MAX_FILE_SIZE_BYTES}`
         } as any)
 
