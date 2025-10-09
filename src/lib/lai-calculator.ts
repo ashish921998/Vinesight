@@ -3,6 +3,18 @@
  * Based on vine morphology and canopy architecture principles
  */
 
+type SeasonKey =
+  | 'spring'
+  | 'summer'
+  | 'autumn'
+  | 'dormant'
+  | 'bud_break'
+  | 'flowering'
+  | 'fruit_set'
+  | 'veraison'
+  | 'harvest'
+  | 'post_harvest'
+
 export interface LAICalculationInputs {
   farmId: number
   vineSpacing: number // meters between vines
@@ -11,11 +23,10 @@ export interface LAICalculationInputs {
   shootsPerVine: number
   avgLeafLength: number // cm
   avgLeafWidth: number // cm
-  canopyHeight: number // meters
   canopyWidth: number // meters
   leafShape: 'heart' | 'round' | 'lobed' // affects shape factor
   trellisSystem: 'vsp' | 'geneva' | 'scott-henry' | 'lyre' | 'pergola'
-  season: 'spring' | 'summer' | 'autumn'
+  season: SeasonKey
 }
 
 export interface LAIResults {
@@ -45,10 +56,17 @@ const LEAF_SHAPE_FACTORS = {
 }
 
 // Seasonal adjustment factors
-const SEASONAL_FACTORS = {
-  spring: 0.6, // New growth, smaller leaves
-  summer: 1.0, // Full leaf development
-  autumn: 0.8 // Some leaf drop, yellowing
+const SEASONAL_FACTORS: Record<SeasonKey, number> = {
+  spring: 0.6,
+  summer: 1.0,
+  autumn: 0.8,
+  dormant: 0.2,
+  bud_break: 0.5,
+  flowering: 0.7,
+  fruit_set: 0.85,
+  veraison: 1.0,
+  harvest: 0.9,
+  post_harvest: 0.6
 }
 
 // Trellis system efficiency factors
@@ -229,7 +247,7 @@ export class LAICalculator {
     const leafAreaPerVine = individualLeafArea * leavesPerShoot * shootsPerVine
 
     // Apply seasonal and trellis adjustments
-    const seasonalFactor = SEASONAL_FACTORS[season]
+    const seasonalFactor = SEASONAL_FACTORS[season] ?? 1
     const trellisEfficiency = TRELLIS_EFFICIENCY[trellisSystem]
     const adjustedLeafAreaPerVine = leafAreaPerVine * seasonalFactor * trellisEfficiency
 
