@@ -41,6 +41,11 @@ import type {
   PetioleTestRecord
 } from '@/lib/supabase'
 
+// Type predicate function to distinguish PetioleTestRecord from SoilTestRecord
+function isPetioleRecord(record: SoilTestRecord | PetioleTestRecord): record is PetioleTestRecord {
+  return 'sample_id' in record
+}
+
 export type EditRecordType =
   | 'irrigation'
   | 'spray'
@@ -280,12 +285,12 @@ export function EditRecordModal({
   const applyParsedParameters = (parameters?: Record<string, number>) => {
     if (!parameters || recordType !== 'soil_test') return
 
-    const isPetioleRecord = record && 'sample_id' in (record as PetioleTestRecord)
+    const isPetiole = record && isPetioleRecord(record)
 
     updateFormData('soil_test', (current) => {
       const nextParameters: Record<string, number> = { ...current.parameters }
 
-      if (isPetioleRecord) {
+      if (isPetiole) {
         Object.entries(parameters).forEach(([key, value]) => {
           if (typeof value === 'number' && Number.isFinite(value)) {
             nextParameters[key] = value
@@ -339,7 +344,7 @@ export function EditRecordModal({
     try {
       const formDataPayload = new FormData()
       formDataPayload.append('file', file)
-      formDataPayload.append('testType', record && 'sample_id' in record ? 'petiole' : 'soil')
+      formDataPayload.append('testType', record && isPetioleRecord(record) ? 'petiole' : 'soil')
       formDataPayload.append('farmId', farmId.toString())
       if (reportMeta?.storagePath) {
         formDataPayload.append('existingPath', reportMeta.storagePath)
@@ -484,7 +489,7 @@ export function EditRecordModal({
         })
       } else if (recordType === 'soil_test') {
         if (!soilTestForm) throw new Error('Soil test form is not ready')
-        const isPetiole = record && 'sample_id' in (record as PetioleTestRecord)
+        const isPetiole = record && isPetioleRecord(record)
 
         const metadata = reportMeta
           ? {

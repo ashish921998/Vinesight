@@ -43,7 +43,6 @@ export function LAICalculatorComponent() {
     shootsPerVine: '',
     avgLeafLength: '',
     avgLeafWidth: '',
-    canopyHeight: '',
     canopyWidth: '',
     leafShape: 'heart' as const,
     trellisSystem: 'vsp' as const,
@@ -80,7 +79,6 @@ export function LAICalculatorComponent() {
         shootsPerVine: parseInt(formData.shootsPerVine),
         avgLeafLength: parseFloat(formData.avgLeafLength),
         avgLeafWidth: parseFloat(formData.avgLeafWidth),
-        canopyHeight: parseFloat(formData.canopyHeight),
         canopyWidth: parseFloat(formData.canopyWidth),
         leafShape: formData.leafShape,
         trellisSystem: formData.trellisSystem,
@@ -118,7 +116,6 @@ export function LAICalculatorComponent() {
       shootsPerVine: '',
       avgLeafLength: '',
       avgLeafWidth: '',
-      canopyHeight: '',
       canopyWidth: '',
       leafShape: 'heart',
       trellisSystem: 'vsp',
@@ -319,20 +316,7 @@ export function LAICalculatorComponent() {
                   </div>
 
                   {/* Canopy Dimensions */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3">
-                    <div>
-                      <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">
-                        Canopy Height (m)
-                      </Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        placeholder="2.5"
-                        value={formData.canopyHeight}
-                        onChange={(e) => handleInputChange('canopyHeight', e.target.value)}
-                        className="h-12 sm:h-11 text-base sm:text-sm"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 gap-4 sm:gap-3">
                     <div>
                       <Label className="text-base sm:text-sm font-medium text-gray-700 mb-2 block">
                         Canopy Width (m)
