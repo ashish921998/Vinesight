@@ -90,7 +90,7 @@ export class ReportParser {
   private static getPrompt(testType: TestType) {
     if (testType === 'soil') {
       return `Extract all nutrient and soil health parameters from the attached soil test report.
-Return numeric values for pH, nitrogen, phosphorus, potassium, and any other nutrients you can find (include micronutrients if present).
+Return numeric values for pH, EC (electrical conductivity), organic carbon, phosphorus, potassium, calcium, magnesium, sulfur, iron, manganese, zinc, copper, boron, molybdenum, sodium, chloride, calcium carbonate, carbonate, bicarbonate, and any other nutrients you can find (include micronutrients if present).
 Also return a short summary of key findings, any recommendations or notes, and a confidence score between 0 and 1 describing how certain you are about the extracted numbers.
 
 Respond strictly as JSON with the shape:
@@ -165,13 +165,68 @@ Respond strictly as JSON with the shape:
 
       candidateKeys.forEach((key) => {
         if (!key) return
-        if (normalized[key] === undefined) {
-          normalized[key] = value
+        const canonicalKey = this.canonicalParameterKey(key)
+        const targetKey = canonicalKey || key
+        if (normalized[targetKey] === undefined) {
+          normalized[targetKey] = value
         }
       })
     })
 
     return normalized
+  }
+
+  private static canonicalParameterKey(key: string): string | null {
+    const normalized = key.toLowerCase().replace(/[^a-z0-9]/g, '')
+
+    const mappings: Record<string, string> = {
+      soilph: 'ph',
+      ph: 'ph',
+      electricalconductivity: 'ec',
+      ec: 'ec',
+      organiccarbon: 'organiccarbon',
+      organicmatter: 'organiccarbon',
+      oc: 'organiccarbon',
+      nitrogen: 'nitrogen',
+      n: 'nitrogen',
+      phosphorus: 'phosphorus',
+      phosphorous: 'phosphorus',
+      p: 'phosphorus',
+      potassium: 'potassium',
+      k: 'potassium',
+      calciumcarbonate: 'calciumcarbonate',
+      caco3: 'calciumcarbonate',
+      calcium: 'calcium',
+      ca: 'calcium',
+      magnesium: 'magnesium',
+      mg: 'magnesium',
+      sulphur: 'sulfur',
+      sulfur: 'sulfur',
+      s: 'sulfur',
+      iron: 'iron',
+      ferrous: 'iron',
+      fe: 'iron',
+      manganese: 'manganese',
+      mn: 'manganese',
+      zinc: 'zinc',
+      zn: 'zinc',
+      copper: 'copper',
+      cu: 'copper',
+      boron: 'boron',
+      b: 'boron',
+      molybdenum: 'molybdenum',
+      mo: 'molybdenum',
+      sodium: 'sodium',
+      na: 'sodium',
+      chloride: 'chloride',
+      cl: 'chloride',
+      carbonate: 'carbonate',
+      co3: 'carbonate',
+      bicarbonate: 'bicarbonate',
+      hco3: 'bicarbonate'
+    }
+
+    return mappings[normalized] ?? null
   }
 
   private static buildSchema() {
