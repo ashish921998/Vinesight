@@ -90,7 +90,7 @@ export class ReportParser {
   private static getPrompt(testType: TestType) {
     if (testType === 'soil') {
       return `Extract all nutrient and soil health parameters from the attached soil test report.
-Return numeric values for pH, EC (electrical conductivity), organic carbon, phosphorus, potassium, calcium, magnesium, sulfur, iron, manganese, zinc, copper, boron, molybdenum, sodium, chloride, calcium carbonate, carbonate, bicarbonate, and any other nutrients you can find (include micronutrients if present).
+Return numeric values for pH, EC (electrical conductivity), organic carbon, nitrogen, phosphorus, potassium, calcium, magnesium, sulfur, iron, manganese, zinc, copper, boron, molybdenum, sodium, chloride, calcium carbonate, carbonate, bicarbonate, and any other nutrients you can find (include micronutrients if present).
 Also return a short summary of key findings, any recommendations or notes, and a confidence score between 0 and 1 describing how certain you are about the extracted numbers.
 
 Respond strictly as JSON with the shape:

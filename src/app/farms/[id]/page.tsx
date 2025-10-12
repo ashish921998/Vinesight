@@ -277,36 +277,42 @@ export default function FarmDetailsPage() {
 
         const mapSoilKey = (key: string) => {
           const normalized = key.toLowerCase()
+          // Create stripped version by removing separators for compound name matching
+          const stripped = normalized.replace(/[_\-\s]/g, '')
+
+          // pH check - exact match
           if (normalized === 'ph' || normalized === 'soilph') return 'pH'
+
+          // Simple nutrient checks - exact match
           if (normalized === 'nitrogen' || normalized === 'n') return 'nitrogen'
           if (normalized === 'phosphorus' || normalized === 'p') return 'phosphorus'
           if (normalized === 'potassium' || normalized === 'k') return 'potassium'
-          if (normalized.includes('ec') || normalized.includes('electricalconductivity'))
-            return 'ec'
-          if (
-            normalized.includes('organiccarbon') ||
-            normalized.includes('organicmatter') ||
-            normalized === 'oc'
-          )
+
+          // EC - exact match against normalized token only
+          if (normalized === 'ec' || stripped === 'electricalconductivity') return 'ec'
+
+          // Compound names first (to avoid partial matches)
+          if (stripped === 'calciumcarbonate' || stripped === 'caco3') return 'calciumCarbonate'
+          if (stripped === 'organiccarbon' || stripped === 'organicmatter' || normalized === 'oc')
             return 'organicCarbon'
-          if (normalized.includes('calciumcarbonate') || normalized.includes('caco3'))
-            return 'calciumCarbonate'
-          if (normalized.includes('calcium') || normalized === 'ca') return 'calcium'
-          if (normalized.includes('magnesium') || normalized === 'mg') return 'magnesium'
-          if (normalized.includes('sulphur') || normalized.includes('sulfur') || normalized === 's')
-            return 'sulfur'
-          if (normalized.includes('iron') || normalized.includes('ferrous') || normalized === 'fe')
-            return 'iron'
-          if (normalized.includes('manganese') || normalized === 'mn') return 'manganese'
-          if (normalized.includes('zinc') || normalized === 'zn') return 'zinc'
-          if (normalized.includes('copper') || normalized === 'cu') return 'copper'
-          if (normalized.includes('boron') || normalized === 'b') return 'boron'
-          if (normalized.includes('molybdenum') || normalized === 'mo') return 'molybdenum'
-          if (normalized.includes('sodium') || normalized === 'na') return 'sodium'
-          if (normalized.includes('chloride') || normalized === 'cl') return 'chloride'
-          if (normalized.includes('carbonate') || normalized === 'co3') return 'carbonate'
-          if (normalized.includes('bicarbonate') || normalized.includes('hco3'))
-            return 'bicarbonate'
+
+          // Simple names after compounds (removed single-letter element checks)
+          if (stripped === 'calcium') return 'calcium'
+          if (stripped === 'magnesium') return 'magnesium'
+          if (stripped === 'sulphur' || stripped === 'sulfur' || normalized === 's') return 'sulfur'
+          if (stripped === 'iron' || stripped === 'ferrous') return 'iron'
+          if (stripped === 'manganese') return 'manganese'
+          if (stripped === 'zinc') return 'zinc'
+          if (stripped === 'copper') return 'copper'
+          if (stripped === 'boron') return 'boron'
+          if (stripped === 'molybdenum') return 'molybdenum'
+          if (stripped === 'sodium') return 'sodium'
+          if (stripped === 'chloride') return 'chloride'
+
+          // Carbonate compounds - check exact match to avoid collisions
+          if (stripped === 'carbonate' || normalized === 'co3') return 'carbonate'
+          if (stripped === 'bicarbonate' || normalized === 'hco3') return 'bicarbonate'
+
           return key
         }
 

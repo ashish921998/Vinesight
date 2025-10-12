@@ -633,9 +633,19 @@ export function UnifiedDataLogsModal({
       const normalized = key.toLowerCase().replace(/[^a-z0-9]/g, '')
       if (normalized.includes('soilph') || normalized === 'ph') return 'ph'
       if (normalized.includes('electricalconductivity') || normalized === 'ec') return 'ec'
-      if (normalized.includes('organiccarbon') || normalized.includes('organicmatter') || normalized === 'oc')
+      if (
+        normalized.includes('organiccarbon') ||
+        normalized.includes('organicmatter') ||
+        normalized === 'oc'
+      )
         return 'organiccarbon'
-      if (normalized === 'nitrogen' || normalized === 'n') return 'nitrogen'
+      if (
+        normalized.includes('organiccarbon') ||
+        normalized.includes('organicmatter') ||
+        normalized === 'oc'
+      )
+        return 'organiccarbon'
+      if (normalized.includes('phosphorus') || normalized === 'p') return 'phosphorus'
       if (normalized.includes('phosphorus') || normalized === 'p') return 'phosphorus'
       if (normalized.includes('potassium') || normalized === 'k') return 'potassium'
       if (normalized.includes('calciumcarbonate') || normalized.includes('caco3'))
@@ -653,8 +663,8 @@ export function UnifiedDataLogsModal({
       if (normalized.includes('molybdenum') || normalized === 'mo') return 'molybdenum'
       if (normalized.includes('sodium') || normalized === 'na') return 'sodium'
       if (normalized.includes('chloride') || normalized === 'cl') return 'chloride'
-      if (normalized.includes('carbonate') || normalized === 'co3') return 'carbonate'
       if (normalized.includes('bicarbonate') || normalized.includes('hco3')) return 'bicarbonate'
+      if (normalized.includes('carbonate') || normalized === 'co3') return 'carbonate'
       return normalized
     }
 
