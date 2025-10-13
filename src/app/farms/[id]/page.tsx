@@ -294,8 +294,8 @@ export default function FarmDetailsPage() {
             return 'ec'
 
           if (stripped === 'calciumcarbonate' || stripped === 'caco3') return 'calciumCarbonate'
-          if (stripped === 'organiccarbon' || stripped === 'organicmatter' || normalized === 'oc')
-            return 'organicCarbon'
+          if (stripped === 'organiccarbon' || normalized === 'oc') return 'organicCarbon'
+          if (stripped === 'organicmatter') return 'organicMatter'
 
           if (stripped === 'calcium') return 'calcium'
           if (stripped === 'magnesium') return 'magnesium'
@@ -333,6 +333,7 @@ export default function FarmDetailsPage() {
           ['pH', parseFloat(data.ph ?? '')],
           ['ec', parseFloat(data.ec ?? '')],
           ['organicCarbon', parseFloat(data.organicCarbon ?? '')],
+          ['organicMatter', parseFloat(data.organicMatter ?? '')],
           ['nitrogen', parseFloat(data.nitrogen ?? '')],
           ['phosphorus', parseFloat(data.phosphorus ?? '')],
           ['potassium', parseFloat(data.potassium ?? '')]
