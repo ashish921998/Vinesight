@@ -277,25 +277,90 @@ export default function FarmDetailsPage() {
 
         const mapSoilKey = (key: string) => {
           const normalized = key.toLowerCase()
+          // Create stripped version by removing separators for compound name matching
+          const stripped = normalized.replace(/[_\-\s]/g, '')
+
           if (normalized === 'ph' || normalized === 'soilph') return 'pH'
+
           if (normalized === 'nitrogen' || normalized === 'n') return 'nitrogen'
           if (normalized === 'phosphorus' || normalized === 'p') return 'phosphorus'
           if (normalized === 'potassium' || normalized === 'k') return 'potassium'
+
+          if (
+            normalized === 'ec' ||
+            stripped === 'electricalconductivity' ||
+            normalized === 'soilec'
+          )
+            return 'ec'
+
+          if (stripped === 'calciumcarbonate' || stripped === 'caco3') return 'calciumCarbonate'
+          if (stripped === 'organiccarbon' || normalized === 'oc') return 'organicCarbon'
+          if (stripped === 'organicmatter') return 'organicMatter'
+
+          if (stripped === 'calcium') return 'calcium'
+          if (stripped === 'magnesium') return 'magnesium'
+          if (stripped === 'sulphur' || stripped === 'sulfur' || normalized === 's') return 'sulfur'
+          if (stripped === 'iron' || stripped === 'ferrous') return 'iron'
+          if (stripped === 'manganese') return 'manganese'
+          if (stripped === 'zinc') return 'zinc'
+          if (stripped === 'copper') return 'copper'
+          if (stripped === 'boron') return 'boron'
+          if (stripped === 'molybdenum') return 'molybdenum'
+          if (stripped === 'sodium') return 'sodium'
+          if (stripped === 'chloride') return 'chloride'
+
+          if (stripped === 'bicarbonate' || normalized === 'hco3') return 'bicarbonate'
+          if (stripped === 'carbonate' || normalized === 'co3') return 'carbonate'
+
           return key
         }
 
         Object.entries(parsedParameters).forEach(([key, value]) => {
-          if (typeof value !== 'number' || Number.isNaN(value)) return
+          let numericValue: number | undefined
+          if (typeof value === 'number') {
+            numericValue = Number.isFinite(value) ? value : undefined
+          } else if (typeof value === 'string') {
+            const parsed = parseFloat(value)
+            numericValue = Number.isFinite(parsed) ? parsed : undefined
+          }
+
+          if (numericValue === undefined) return
           const mappedKey = mapSoilKey(key)
-          combinedParameters[mappedKey] = value
+          combinedParameters[mappedKey] = numericValue
         })
 
         const manualEntries: Array<[string, number]> = [
           ['pH', parseFloat(data.ph ?? '')],
+          ['ec', parseFloat(data.ec ?? '')],
+          ['organicCarbon', parseFloat(data.organicCarbon ?? '')],
+          ['organicMatter', parseFloat(data.organicMatter ?? '')],
           ['nitrogen', parseFloat(data.nitrogen ?? '')],
           ['phosphorus', parseFloat(data.phosphorus ?? '')],
           ['potassium', parseFloat(data.potassium ?? '')]
         ]
+
+        const additionalEntries: Array<[string, number]> = [
+          ['calcium', parseFloat(data.calcium ?? '')],
+          ['magnesium', parseFloat(data.magnesium ?? '')],
+          ['sulfur', parseFloat(data.sulfur ?? data.sulphur ?? '')],
+          ['iron', parseFloat(data.iron ?? data.ferrous ?? '')],
+          ['manganese', parseFloat(data.manganese ?? '')],
+          ['zinc', parseFloat(data.zinc ?? '')],
+          ['copper', parseFloat(data.copper ?? '')],
+          ['boron', parseFloat(data.boron ?? '')],
+          ['molybdenum', parseFloat(data.molybdenum ?? '')],
+          ['sodium', parseFloat(data.sodium ?? '')],
+          ['chloride', parseFloat(data.chloride ?? '')],
+          ['calciumCarbonate', parseFloat(data.calciumCarbonate ?? '')],
+          ['carbonate', parseFloat(data.carbonate ?? '')],
+          ['bicarbonate', parseFloat(data.bicarbonate ?? '')]
+        ]
+
+        additionalEntries.forEach(([key, value]) => {
+          if (Number.isFinite(value)) {
+            combinedParameters[key] = value
+          }
+        })
 
         manualEntries.forEach(([key, value]) => {
           if (Number.isFinite(value)) {

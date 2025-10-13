@@ -383,23 +383,148 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         step: 0.1
       },
       {
+        name: 'ec',
+        type: 'number',
+        label: 'EC (dS/m)',
+        required: false,
+        min: 0,
+        step: 0.01
+      },
+      {
+        name: 'organicCarbon',
+        type: 'number',
+        label: 'Organic Carbon (%)',
+        required: false,
+        min: 0,
+        step: 0.01
+      },
+      {
+        name: 'organicMatter',
+        type: 'number',
+        label: 'Organic Matter (%)',
+        required: false,
+        min: 0,
+        step: 0.01
+      },
+      {
         name: 'nitrogen',
         type: 'number',
-        label: 'Nitrogen (ppm)',
+        label: 'Nitrogen (%)',
         required: false,
-        min: 0
+        min: 0,
+        step: 0.01
       },
       {
         name: 'phosphorus',
         type: 'number',
         label: 'Phosphorus (ppm)',
         required: false,
-        min: 0
+        min: 0,
+        step: 0.1
       },
       {
         name: 'potassium',
         type: 'number',
         label: 'Potassium (ppm)',
+        required: false,
+        min: 0,
+        step: 0.1
+      },
+      {
+        name: 'calcium',
+        type: 'number',
+        label: 'Calcium (ppm)',
+        required: false,
+        min: 0
+      },
+      {
+        name: 'magnesium',
+        type: 'number',
+        label: 'Magnesium (ppm)',
+        required: false,
+        min: 0
+      },
+      {
+        name: 'sulfur',
+        type: 'number',
+        label: 'Sulfur (ppm)',
+        required: false,
+        min: 0
+      },
+      {
+        name: 'iron',
+        type: 'number',
+        label: 'Ferrous / Iron (ppm)',
+        required: false,
+        min: 0
+      },
+      {
+        name: 'manganese',
+        type: 'number',
+        label: 'Manganese (ppm)',
+        required: false,
+        min: 0
+      },
+      {
+        name: 'zinc',
+        type: 'number',
+        label: 'Zinc (ppm)',
+        required: false,
+        min: 0
+      },
+      {
+        name: 'copper',
+        type: 'number',
+        label: 'Copper (ppm)',
+        required: false,
+        min: 0
+      },
+      {
+        name: 'boron',
+        type: 'number',
+        label: 'Boron (ppm)',
+        required: false,
+        min: 0
+      },
+      {
+        name: 'molybdenum',
+        type: 'number',
+        label: 'Molybdenum (ppm)',
+        required: false,
+        min: 0
+      },
+      {
+        name: 'sodium',
+        type: 'number',
+        label: 'Sodium (ppm)',
+        required: false,
+        min: 0
+      },
+      {
+        name: 'chloride',
+        type: 'number',
+        label: 'Chloride (ppm)',
+        required: false,
+        min: 0
+      },
+      {
+        name: 'calciumCarbonate',
+        type: 'number',
+        label: 'Calcium Carbonate (ppm)',
+        required: false,
+        min: 0
+      },
+      {
+        name: 'carbonate',
+        type: 'number',
+        label: 'Carbonate (ppm)',
+        required: false,
+        min: 0
+      },
+      {
+        name: 'bicarbonate',
+        type: 'number',
+        label: 'Bicarbonate (ppm)',
         required: false,
         min: 0
       }
@@ -522,22 +647,64 @@ export function UnifiedDataLogsModal({
   const applyParsedParameters = (parameters?: Record<string, number>) => {
     if (!parameters || !currentLogType) return
 
+    const canonicalize = (key: string) => {
+      const normalized = key.toLowerCase().replace(/[^a-z0-9]/g, '')
+      if (normalized.includes('soilph') || normalized === 'ph') return 'ph'
+      if (
+        normalized.includes('electricalconductivity') ||
+        normalized === 'ec' ||
+        normalized === 'soilec'
+      )
+        return 'ec'
+      if (normalized.includes('organiccarbon') || normalized === 'oc') return 'organicCarbon'
+      if (normalized.includes('organicmatter')) return 'organicMatter'
+      if (normalized.includes('nitrogen') || normalized === 'n') return 'nitrogen'
+      if (normalized.includes('phosphorus') || normalized === 'p') return 'phosphorus'
+      if (normalized.includes('potassium') || normalized === 'k') return 'potassium'
+      if (normalized.includes('calciumcarbonate') || normalized.includes('caco3'))
+        return 'calciumCarbonate'
+      if (normalized.includes('calcium') || normalized === 'ca') return 'calcium'
+      if (normalized.includes('magnesium') || normalized === 'mg') return 'magnesium'
+      if (normalized.includes('sulphur') || normalized.includes('sulfur') || normalized === 's')
+        return 'sulfur'
+      if (normalized.includes('iron') || normalized.includes('ferrous') || normalized === 'fe')
+        return 'iron'
+      if (normalized.includes('manganese') || normalized === 'mn') return 'manganese'
+      if (normalized.includes('zinc') || normalized === 'zn') return 'zinc'
+      if (normalized.includes('copper') || normalized === 'cu') return 'copper'
+      if (normalized.includes('boron') || normalized === 'b') return 'boron'
+      if (normalized.includes('molybdenum') || normalized === 'mo') return 'molybdenum'
+      if (normalized.includes('sodium') || normalized === 'na') return 'sodium'
+      if (normalized.includes('chloride') || normalized === 'cl') return 'chloride'
+      if (normalized.includes('bicarbonate') || normalized.includes('hco3')) return 'bicarbonate'
+      if (normalized.includes('carbonate') || normalized === 'co3') return 'carbonate'
+      return normalized
+    }
+
+    const canonicalParameters = Object.entries(parameters).reduce<Record<string, number>>(
+      (acc, [key, rawValue]) => {
+        let value = rawValue
+        if (typeof value === 'string') {
+          const parsed = parseFloat(value)
+          value = Number.isFinite(parsed) ? parsed : NaN
+        }
+        if (typeof value !== 'number' || !Number.isFinite(value)) return acc
+        acc[canonicalize(key)] = value
+        return acc
+      },
+      {}
+    )
+
     setCurrentFormData((prev) => {
       const updated = { ...prev }
 
-      const findMatchingValue = (fieldName: string) => {
-        if (parameters[fieldName] !== undefined) return parameters[fieldName]
-
-        const normalizedField = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '')
-        const entry = Object.entries(parameters).find(([key]) => {
-          const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '')
-          return normalizedKey === normalizedField
-        })
-        return entry ? entry[1] : undefined
-      }
-
       logTypeConfigs[currentLogType].fields.forEach((field) => {
-        const value = findMatchingValue(field.name)
+        const canonicalFieldKey = canonicalize(field.name)
+        const value =
+          canonicalParameters[canonicalFieldKey] ??
+          parameters[field.name] ??
+          parameters[field.name.replace(/([A-Z])/g, '_$1').toLowerCase()]
+
         if (value !== undefined) {
           updated[field.name] = Number.isFinite(value) ? value.toString() : ''
         }

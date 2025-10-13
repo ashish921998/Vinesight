@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Wind, MapPin, Navigation, Globe } from 'lucide-react'
+import { MapPin, Navigation, Globe } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { OpenMeteoGeocodingService, type LocationResult } from '@/lib/open-meteo-geocoding'
 
@@ -138,21 +138,22 @@ export function LocationForm({ formData, onInputChange, onLocationSelect }: Loca
           <div className="relative">
             <Input
               type="text"
-              placeholder="Search for city, farm, or location..."
+              placeholder="Search location"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-11 text-base pr-24"
+              className="h-11 text-base"
+              style={{ paddingRight: '40px' }}
             />
             <Button
               type="button"
-              variant="outline"
-              size="sm"
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
               onClick={handleCurrentLocation}
               disabled={isLoadingCurrentLocation}
-              className="absolute right-1 top-1 h-9 px-3"
             >
               {isLoadingCurrentLocation ? (
-                <div className="w-4 h-4 border-2 border-gray-300 border-t-green-600 rounded-full animate-spin" />
+                <div className="w-3 h-3 border-2 border-gray-300 border-t-green-600 rounded-full animate-spin" />
               ) : (
                 <Navigation className="w-4 h-4" />
               )}
