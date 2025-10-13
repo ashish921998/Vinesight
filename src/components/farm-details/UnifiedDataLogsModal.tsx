@@ -399,6 +399,14 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         step: 0.01
       },
       {
+        name: 'nitrogen',
+        type: 'number',
+        label: 'Nitrogen (%)',
+        required: false,
+        min: 0,
+        step: 0.01
+      },
+      {
         name: 'phosphorus',
         type: 'number',
         label: 'Phosphorus (ppm)',
@@ -632,20 +640,19 @@ export function UnifiedDataLogsModal({
     const canonicalize = (key: string) => {
       const normalized = key.toLowerCase().replace(/[^a-z0-9]/g, '')
       if (normalized.includes('soilph') || normalized === 'ph') return 'ph'
-      if (normalized.includes('electricalconductivity') || normalized === 'ec') return 'ec'
+      if (
+        normalized.includes('electricalconductivity') ||
+        normalized === 'ec' ||
+        normalized === 'soilec'
+      )
+        return 'ec'
       if (
         normalized.includes('organiccarbon') ||
         normalized.includes('organicmatter') ||
         normalized === 'oc'
       )
         return 'organiccarbon'
-      if (
-        normalized.includes('organiccarbon') ||
-        normalized.includes('organicmatter') ||
-        normalized === 'oc'
-      )
-        return 'organiccarbon'
-      if (normalized.includes('phosphorus') || normalized === 'p') return 'phosphorus'
+      if (normalized.includes('nitrogen') || normalized === 'n') return 'nitrogen'
       if (normalized.includes('phosphorus') || normalized === 'p') return 'phosphorus'
       if (normalized.includes('potassium') || normalized === 'k') return 'potassium'
       if (normalized.includes('calciumcarbonate') || normalized.includes('caco3'))

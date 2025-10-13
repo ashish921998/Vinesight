@@ -280,23 +280,23 @@ export default function FarmDetailsPage() {
           // Create stripped version by removing separators for compound name matching
           const stripped = normalized.replace(/[_\-\s]/g, '')
 
-          // pH check - exact match
           if (normalized === 'ph' || normalized === 'soilph') return 'pH'
 
-          // Simple nutrient checks - exact match
           if (normalized === 'nitrogen' || normalized === 'n') return 'nitrogen'
           if (normalized === 'phosphorus' || normalized === 'p') return 'phosphorus'
           if (normalized === 'potassium' || normalized === 'k') return 'potassium'
 
-          // EC - exact match against normalized token only
-          if (normalized === 'ec' || stripped === 'electricalconductivity') return 'ec'
+          if (
+            normalized === 'ec' ||
+            stripped === 'electricalconductivity' ||
+            normalized === 'soilec'
+          )
+            return 'ec'
 
-          // Compound names first (to avoid partial matches)
           if (stripped === 'calciumcarbonate' || stripped === 'caco3') return 'calciumCarbonate'
           if (stripped === 'organiccarbon' || stripped === 'organicmatter' || normalized === 'oc')
             return 'organicCarbon'
 
-          // Simple names after compounds (removed single-letter element checks)
           if (stripped === 'calcium') return 'calcium'
           if (stripped === 'magnesium') return 'magnesium'
           if (stripped === 'sulphur' || stripped === 'sulfur' || normalized === 's') return 'sulfur'
@@ -309,9 +309,8 @@ export default function FarmDetailsPage() {
           if (stripped === 'sodium') return 'sodium'
           if (stripped === 'chloride') return 'chloride'
 
-          // Carbonate compounds - check exact match to avoid collisions
-          if (stripped === 'carbonate' || normalized === 'co3') return 'carbonate'
           if (stripped === 'bicarbonate' || normalized === 'hco3') return 'bicarbonate'
+          if (stripped === 'carbonate' || normalized === 'co3') return 'carbonate'
 
           return key
         }
@@ -334,6 +333,7 @@ export default function FarmDetailsPage() {
           ['pH', parseFloat(data.ph ?? '')],
           ['ec', parseFloat(data.ec ?? '')],
           ['organicCarbon', parseFloat(data.organicCarbon ?? '')],
+          ['nitrogen', parseFloat(data.nitrogen ?? '')],
           ['phosphorus', parseFloat(data.phosphorus ?? '')],
           ['potassium', parseFloat(data.potassium ?? '')]
         ]
