@@ -399,6 +399,14 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         step: 0.01
       },
       {
+        name: 'organicMatter',
+        type: 'number',
+        label: 'Organic Matter (%)',
+        required: false,
+        min: 0,
+        step: 0.01
+      },
+      {
         name: 'nitrogen',
         type: 'number',
         label: 'Nitrogen (%)',
@@ -411,14 +419,16 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         type: 'number',
         label: 'Phosphorus (ppm)',
         required: false,
-        min: 0
+        min: 0,
+        step: 0.1
       },
       {
         name: 'potassium',
         type: 'number',
         label: 'Potassium (ppm)',
         required: false,
-        min: 0
+        min: 0,
+        step: 0.1
       },
       {
         name: 'calcium',
@@ -646,17 +656,13 @@ export function UnifiedDataLogsModal({
         normalized === 'soilec'
       )
         return 'ec'
-      if (
-        normalized.includes('organiccarbon') ||
-        normalized.includes('organicmatter') ||
-        normalized === 'oc'
-      )
-        return 'organiccarbon'
+      if (normalized.includes('organiccarbon') || normalized === 'oc') return 'organicCarbon'
+      if (normalized.includes('organicmatter')) return 'organicMatter'
       if (normalized.includes('nitrogen') || normalized === 'n') return 'nitrogen'
       if (normalized.includes('phosphorus') || normalized === 'p') return 'phosphorus'
       if (normalized.includes('potassium') || normalized === 'k') return 'potassium'
       if (normalized.includes('calciumcarbonate') || normalized.includes('caco3'))
-        return 'calciumcarbonate'
+        return 'calciumCarbonate'
       if (normalized.includes('calcium') || normalized === 'ca') return 'calcium'
       if (normalized.includes('magnesium') || normalized === 'mg') return 'magnesium'
       if (normalized.includes('sulphur') || normalized.includes('sulfur') || normalized === 's')

@@ -163,14 +163,23 @@ Respond strictly as JSON with the shape:
         candidateKeys.add(strippedMetricSuffix)
       }
 
-      candidateKeys.forEach((key) => {
-        if (!key) return
+      // Process candidates in reverse order (most-general first) to avoid overwriting specific values
+      const candidateArray = Array.from(candidateKeys).reverse()
+
+      for (const key of candidateArray) {
+        if (!key) continue
         const canonicalKey = this.canonicalParameterKey(key)
         const targetKey = canonicalKey || key
+
         if (normalized[targetKey] === undefined) {
           normalized[targetKey] = value
         }
-      })
+
+        // If we found a canonical match, stop processing further candidates for this input
+        if (canonicalKey) {
+          break
+        }
+      }
     })
 
     return normalized
