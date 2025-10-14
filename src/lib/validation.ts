@@ -15,8 +15,8 @@ export const sanitizeString = (str: string): string => {
       .replace(/on\w+\s*=/gi, '')
       // Remove SQL injection attempts
       .replace(/(\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE)?|INSERT|SELECT|UNION|UPDATE)\b)/gi, '')
-      // Limit length to prevent buffer overflow attacks
-      .substring(0, 10000)
+      // Limit length to prevent buffer overflow attacks while supporting long-form logs
+      .substring(0, 50000)
   )
 }
 
@@ -110,12 +110,15 @@ export const IrrigationSchema = z.object({
     'harvest',
     'post_harvest'
   ]),
-  moisture_status: z.string().min(1, 'Moisture status is required').max(50),
   system_discharge: z
     .number()
     .min(1, 'System discharge must be at least 1 L/h')
     .max(10000, 'System discharge too high'),
-  notes: z.string().max(500, 'Notes too long').optional()
+  moisture_status: z
+    .string()
+    .min(1, 'Moisture status is required')
+    .max(2500, 'Moisture status is too long'),
+  notes: z.string().max(25000, 'Notes too long').optional()
 })
 
 // Spray record validation
@@ -125,16 +128,16 @@ export const SpraySchema = z.object({
   pest_disease: z
     .string()
     .min(1, 'Pest/disease is required')
-    .max(100, 'Pest/disease name too long'),
-  chemical: z.string().min(1, 'Chemical is required').max(100, 'Chemical name too long'),
-  dose: z.string().min(1, 'Dose is required').max(50, 'Dose description too long'),
+    .max(5000, 'Pest/disease name too long'),
+  chemical: z.string().min(1, 'Chemical is required').max(5000, 'Chemical name too long'),
+  dose: z.string().min(1, 'Dose is required').max(2500, 'Dose description too long'),
   area: z.number().min(0.01, 'Area must be greater than 0').max(25000, 'Area too large'),
   weather: z
     .string()
     .min(1, 'Weather conditions required')
-    .max(100, 'Weather description too long'),
-  operator: z.string().min(1, 'Operator name required').max(100, 'Operator name too long'),
-  notes: z.string().max(500, 'Notes too long').optional()
+    .max(5000, 'Weather description too long'),
+  operator: z.string().min(1, 'Operator name required').max(5000, 'Operator name too long'),
+  notes: z.string().max(25000, 'Notes too long').optional()
 })
 
 // Harvest record validation
@@ -145,10 +148,10 @@ export const HarvestSchema = z.object({
     .number()
     .min(0.1, 'Quantity must be greater than 0')
     .max(1000000, 'Quantity too large'),
-  grade: z.string().min(1, 'Grade is required').max(50, 'Grade name too long'),
+  grade: z.string().min(1, 'Grade is required').max(2500, 'Grade name too long'),
   price: z.number().min(0, 'Price cannot be negative').max(10000, 'Price too high').optional(),
-  buyer: z.string().max(100, 'Buyer name too long').optional(),
-  notes: z.string().max(500, 'Notes too long').optional()
+  buyer: z.string().max(5000, 'Buyer name too long').optional(),
+  notes: z.string().max(25000, 'Notes too long').optional()
 })
 
 // Task reminder validation
@@ -167,9 +170,9 @@ export const ExpenseSchema = z.object({
   farm_id: z.number().int().positive('Invalid farm ID'),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
   type: z.enum(['labor', 'materials', 'equipment', 'other']),
-  description: z.string().min(1, 'Description is required').max(200, 'Description too long'),
+  description: z.string().min(1, 'Description is required').max(10000, 'Description too long'),
   cost: z.number().min(0, 'Cost cannot be negative').max(10000000, 'Cost too high'),
-  remarks: z.string().max(500, 'Remarks too long').optional()
+  remarks: z.string().max(25000, 'Remarks too long').optional()
 })
 
 // ETc Calculator input validation
