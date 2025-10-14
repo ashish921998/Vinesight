@@ -1,5 +1,12 @@
 import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist'
-import { Serwist } from 'serwist'
+import {
+  CacheFirst,
+  ExpirationPlugin,
+  NetworkFirst,
+  RangeRequestsPlugin,
+  Serwist,
+  StaleWhileRevalidate
+} from 'serwist'
 
 // This adds the "SerwistGlobalConfig" interface to the global scope
 declare global {
@@ -17,185 +24,200 @@ const serwist = new Serwist({
   navigationPreload: true,
   runtimeCaching: [
     {
-      urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-      handler: 'CacheFirst',
-      options: {
+      matcher: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+      handler: new CacheFirst({
         cacheName: 'google-fonts',
-        expiration: {
-          maxEntries: 4,
-          maxAgeSeconds: 365 * 24 * 60 * 60 // 365 days
-        }
-      }
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 4,
+            maxAgeSeconds: 365 * 24 * 60 * 60
+          })
+        ]
+      })
     },
     {
-      urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-      handler: 'CacheFirst',
-      options: {
+      matcher: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+      handler: new CacheFirst({
         cacheName: 'google-fonts-static',
-        expiration: {
-          maxEntries: 4,
-          maxAgeSeconds: 365 * 24 * 60 * 60 // 365 days
-        }
-      }
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 4,
+            maxAgeSeconds: 365 * 24 * 60 * 60
+          })
+        ]
+      })
     },
     {
-      urlPattern: /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
+      matcher: /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
+      handler: new StaleWhileRevalidate({
         cacheName: 'static-font-assets',
-        expiration: {
-          maxEntries: 4,
-          maxAgeSeconds: 7 * 24 * 60 * 60 // 7 days
-        }
-      }
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 4,
+            maxAgeSeconds: 7 * 24 * 60 * 60
+          })
+        ]
+      })
     },
     {
-      urlPattern: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
+      matcher: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
+      handler: new StaleWhileRevalidate({
         cacheName: 'static-image-assets',
-        expiration: {
-          maxEntries: 64,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 64,
+            maxAgeSeconds: 24 * 60 * 60
+          })
+        ]
+      })
     },
     {
-      urlPattern: /\/_next\/image\?url=.+$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
+      matcher: /\/_next\/image\?url=.+$/i,
+      handler: new StaleWhileRevalidate({
         cacheName: 'next-image',
-        expiration: {
-          maxEntries: 64,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 64,
+            maxAgeSeconds: 24 * 60 * 60
+          })
+        ]
+      })
     },
     {
-      urlPattern: /\.(?:mp3|wav|ogg)$/i,
-      handler: 'CacheFirst',
-      options: {
-        rangeRequests: true,
+      matcher: /\.(?:mp3|wav|ogg)$/i,
+      handler: new CacheFirst({
         cacheName: 'static-audio-assets',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
+        plugins: [
+          new RangeRequestsPlugin(),
+          new ExpirationPlugin({
+            maxEntries: 32,
+            maxAgeSeconds: 24 * 60 * 60
+          })
+        ]
+      })
     },
     {
-      urlPattern: /\.(?:mp4)$/i,
-      handler: 'CacheFirst',
-      options: {
-        rangeRequests: true,
+      matcher: /\.(?:mp4)$/i,
+      handler: new CacheFirst({
         cacheName: 'static-video-assets',
-        expiration: {
-          maxEntries: 16,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
+        plugins: [
+          new RangeRequestsPlugin(),
+          new ExpirationPlugin({
+            maxEntries: 16,
+            maxAgeSeconds: 24 * 60 * 60
+          })
+        ]
+      })
     },
     {
-      urlPattern: /\.(?:js)$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
+      matcher: /\.(?:js)$/i,
+      handler: new StaleWhileRevalidate({
         cacheName: 'static-js-assets',
-        expiration: {
-          maxEntries: 48,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 48,
+            maxAgeSeconds: 24 * 60 * 60
+          })
+        ]
+      })
     },
     {
-      urlPattern: /\.(?:css|less)$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
+      matcher: /\.(?:css|less)$/i,
+      handler: new StaleWhileRevalidate({
         cacheName: 'static-style-assets',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 32,
+            maxAgeSeconds: 24 * 60 * 60
+          })
+        ]
+      })
     },
     {
-      urlPattern: /\/_next\/data\/.+\/.+\.json$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
+      matcher: /\/_next\/data\/.+\/.+\.json$/i,
+      handler: new StaleWhileRevalidate({
         cacheName: 'next-data',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 32,
+            maxAgeSeconds: 24 * 60 * 60
+          })
+        ]
+      })
     },
     {
-      urlPattern: /\.(?:json|xml|csv)$/i,
-      handler: 'NetworkFirst',
-      options: {
+      matcher: /\.(?:json|xml|csv)$/i,
+      handler: new NetworkFirst({
         cacheName: 'static-data-assets',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 32,
+            maxAgeSeconds: 24 * 60 * 60
+          })
+        ]
+      })
     },
     {
-      urlPattern: ({ request, sameOrigin }: { request: Request; sameOrigin: boolean }) => {
+      matcher: ({ request, sameOrigin }: { request: Request; sameOrigin: boolean }) => {
         return sameOrigin && request.headers.get('sec-fetch-dest') === 'script'
       },
-      handler: 'NetworkFirst',
-      options: {
+      handler: new NetworkFirst({
         cacheName: 'scripts',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 32,
+            maxAgeSeconds: 24 * 60 * 60
+          })
+        ]
+      })
     },
     {
-      urlPattern: ({ request, sameOrigin }: { request: Request; sameOrigin: boolean }) => {
+      matcher: ({ request, sameOrigin }: { request: Request; sameOrigin: boolean }) => {
         return sameOrigin && request.headers.get('sec-fetch-dest') === 'style'
       },
-      handler: 'NetworkFirst',
-      options: {
+      handler: new NetworkFirst({
         cacheName: 'styles',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 32,
+            maxAgeSeconds: 24 * 60 * 60
+          })
+        ]
+      })
     },
 
     {
-      urlPattern: ({ sameOrigin }: { sameOrigin: boolean }) => {
+      matcher: ({ sameOrigin }: { sameOrigin: boolean }) => {
         return sameOrigin
       },
-      handler: 'NetworkFirst',
-      options: {
+      handler: new NetworkFirst({
         cacheName: 'same-origin',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        },
-        networkTimeoutSeconds: 10
-      }
+        networkTimeoutSeconds: 10,
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 32,
+            maxAgeSeconds: 24 * 60 * 60
+          })
+        ]
+      })
     },
     {
-      urlPattern: ({ request }: { request: Request }) => {
+      matcher: ({ request }: { request: Request }) => {
         return (
           request.destination === 'image' ||
           request.destination === 'script' ||
           request.destination === 'style'
         )
       },
-      handler: 'StaleWhileRevalidate',
-      options: {
+      handler: new StaleWhileRevalidate({
         cacheName: 'static-assets',
-        expiration: {
-          maxEntries: 64,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 64,
+            maxAgeSeconds: 24 * 60 * 60
+          })
+        ]
+      })
     }
   ]
 })

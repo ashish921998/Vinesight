@@ -114,7 +114,7 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         label: 'Chemical Used',
         required: true,
         placeholder: 'e.g., Sulfur fungicide',
-        maxLength: 10
+        maxLength: 500
       },
       {
         name: 'quantity_amount',
@@ -184,7 +184,8 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         type: 'text',
         label: 'Description',
         required: true,
-        placeholder: 'Brief description'
+        placeholder: 'Brief description',
+        maxLength: 10000
       },
       {
         name: 'cost',
@@ -199,7 +200,8 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         type: 'text',
         label: 'Vendor',
         required: false,
-        placeholder: 'Vendor name (optional)'
+        placeholder: 'Vendor name (optional)',
+        maxLength: 5000
       }
     ]
   },
@@ -214,7 +216,8 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         type: 'text',
         label: 'Fertilizer Type',
         required: true,
-        placeholder: 'e.g., NPK 19:19:19'
+        placeholder: 'e.g., NPK 19:19:19',
+        maxLength: 5000
       },
       {
         name: 'quantity',
@@ -1198,6 +1201,7 @@ export function UnifiedDataLogsModal({
                 }))
               }
               placeholder={field.placeholder}
+              maxLength={field.maxLength}
               className="min-h-[80px]"
             />
           </div>
@@ -1652,6 +1656,7 @@ export function UnifiedDataLogsModal({
                     value={dayNotes}
                     onChange={(e) => setDayNotes(e.target.value)}
                     placeholder="Add general notes for all activities on this date..."
+                    maxLength={25000}
                     className="min-h-[80px]"
                   />
                 </div>
