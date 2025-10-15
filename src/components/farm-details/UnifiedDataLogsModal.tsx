@@ -114,7 +114,7 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         label: 'Chemical Used',
         required: true,
         placeholder: 'e.g., Sulfur fungicide',
-        maxLength: 10
+        maxLength: 1000
       },
       {
         name: 'quantity_amount',
@@ -184,7 +184,8 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         type: 'text',
         label: 'Description',
         required: true,
-        placeholder: 'Brief description'
+        placeholder: 'Brief description',
+        maxLength: 1000
       },
       {
         name: 'cost',
@@ -199,7 +200,8 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         type: 'text',
         label: 'Vendor',
         required: false,
-        placeholder: 'Vendor name (optional)'
+        placeholder: 'Vendor name (optional)',
+        maxLength: 1000
       }
     ]
   },
@@ -214,7 +216,8 @@ const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         type: 'text',
         label: 'Fertilizer Type',
         required: true,
-        placeholder: 'e.g., NPK 19:19:19'
+        placeholder: 'e.g., NPK 19:19:19',
+        maxLength: 1000
       },
       {
         name: 'quantity',
