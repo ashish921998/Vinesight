@@ -76,7 +76,7 @@ export class AIInsightsService {
           id: `pest_${pest.id}`,
           type: 'pest_prediction',
           priority: pest.riskLevel === 'critical' ? 'critical' : 'high',
-          title: `${pest.pestDiseaseType.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())} Risk`,
+          title: `${pest.pestDiseaseType.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())} Risk`,
           subtitle:
             daysUntil > 0 ? `Prevention window: ${daysUntil} days` : 'Immediate action needed',
           icon: 'AlertTriangle',

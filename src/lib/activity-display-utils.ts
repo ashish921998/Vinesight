@@ -44,7 +44,7 @@ export function getActivityDisplayData(activity: ActivityLog): string {
       return getTestDateDisplayText(activity)
 
     default:
-      return activity.type.replace('_', ' ')
+      return activity.type.replace(/_/g, ' ')
   }
 }
 
@@ -107,6 +107,9 @@ function getFertigationDisplayText(activity: ActivityLog): string {
 function getTestDateDisplayText(activity: ActivityLog): string {
   try {
     const date = new Date(activity.date)
+    if (isNaN(date.getTime())) {
+      return activity.type.replace(/_/g, ' ')
+    }
     const options: Intl.DateTimeFormatOptions = {
       day: 'numeric',
       month: 'short',
@@ -114,6 +117,6 @@ function getTestDateDisplayText(activity: ActivityLog): string {
     }
     return date.toLocaleDateString('en-IN', options)
   } catch (error) {
-    return activity.type.replace('_', ' ')
+    return activity.type.replace(/_/g, ' ')
   }
 }

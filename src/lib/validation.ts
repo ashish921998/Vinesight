@@ -2,6 +2,9 @@ import { z } from 'zod'
 
 // Common validation patterns with comprehensive XSS protection
 export const sanitizeString = (str: string): string => {
+  // Progressive validation: check length early to avoid processing large inputs
+  if (str.length > 10000) return str.substring(0, 10000)
+  
   return (
     str
       .trim()
@@ -15,8 +18,6 @@ export const sanitizeString = (str: string): string => {
       .replace(/on\w+\s*=/gi, '')
       // Remove SQL injection attempts
       .replace(/(\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE)?|INSERT|SELECT|UNION|UPDATE)\b)/gi, '')
-      // Limit length to prevent buffer overflow attacks
-      .substring(0, 10000)
   )
 }
 
