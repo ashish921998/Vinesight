@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { SupabaseService } from '@/lib/supabase-service'
 import { type Farm } from '@/types/types'
+import { getActivityDisplayData } from '@/lib/activity-display-utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -729,8 +730,8 @@ export default function FarmLogsPage() {
 
                         <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-medium text-gray-900 text-sm capitalize truncate">
-                              {log.type.replace('_', ' ')}
+                            <p className="font-medium text-gray-900 text-sm truncate">
+                              {getActivityDisplayData(log)}
                             </p>
                             <span className="text-xs text-gray-500">
                               {new Date(log.date).toLocaleDateString()}

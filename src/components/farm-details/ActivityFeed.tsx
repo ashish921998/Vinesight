@@ -18,6 +18,7 @@ import {
   ArrowRight
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { getActivityDisplayData } from '@/lib/activity-display-utils'
 
 interface ActivityFeedProps {
   recentActivities: any[]
@@ -198,8 +199,8 @@ export function ActivityFeed({
 
                       <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium text-gray-900 text-sm capitalize truncate">
-                            {activity.type.replace('_', ' ')}
+                          <p className="font-medium text-gray-900 text-sm truncate">
+                            {getActivityDisplayData(activity)}
                           </p>
                           <span className="text-xs text-gray-500">
                             {new Date(activity.date || activity.created_at).toLocaleDateString()}
