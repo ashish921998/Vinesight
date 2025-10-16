@@ -4,22 +4,20 @@ import { z } from 'zod'
 export const sanitizeString = (str: string): string => {
   // Sanitize first 10001 characters (for edge cases), then truncate to 10000
   const toSanitize = str.substring(0, 10001)
-  
-  const sanitized = (
-    toSanitize
-      .trim()
-      // Remove all HTML tags and potentially dangerous content
-      .replace(/<[^>]*>/g, '')
-      // Remove javascript: and data: URIs
-      .replace(/javascript:/gi, '')
-      .replace(/data:/gi, '')
-      .replace(/vbscript:/gi, '')
-      // Remove event handlers
-      .replace(/on\w+\s*=/gi, '')
-      // Remove SQL injection attempts
-      .replace(/(\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE)?|INSERT|SELECT|UNION|UPDATE)\b)/gi, '')
-  )
-  
+
+  const sanitized = toSanitize
+    .trim()
+    // Remove all HTML tags and potentially dangerous content
+    .replace(/<[^>]*>/g, '')
+    // Remove javascript: and data: URIs
+    .replace(/javascript:/gi, '')
+    .replace(/data:/gi, '')
+    .replace(/vbscript:/gi, '')
+    // Remove event handlers
+    .replace(/on\w+\s*=/gi, '')
+    // Remove SQL injection attempts
+    .replace(/(\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE)?|INSERT|SELECT|UNION|UPDATE)\b)/gi, '')
+
   // Return sanitized result truncated to 10000 characters
   return sanitized.substring(0, 10000)
 }

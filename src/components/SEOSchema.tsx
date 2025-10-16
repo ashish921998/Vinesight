@@ -1,6 +1,6 @@
 'use client'
 
-import { SEO_KEYWORDS } from '@/app/layout'
+import { SEO_KEYWORDS } from '@/lib/seo-constants'
 
 interface SEOSchemaProps {
   type?: 'homepage' | 'dashboard' | 'calculator' | 'guide' | 'product'
@@ -151,7 +151,14 @@ interface SchemaProduct {
   }
 }
 
-type SchemaGraphItem = SchemaOrganization | SchemaWebSite | SchemaWebPage | SchemaArticle | SchemaSoftwareApplication | SchemaWebApplication | SchemaProduct
+type SchemaGraphItem =
+  | SchemaOrganization
+  | SchemaWebSite
+  | SchemaWebPage
+  | SchemaArticle
+  | SchemaSoftwareApplication
+  | SchemaWebApplication
+  | SchemaProduct
 
 interface BaseSchema {
   '@context': string

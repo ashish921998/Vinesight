@@ -39,12 +39,6 @@ import { cn, capitalize } from '@/lib/utils'
 import {
   ArrowLeft,
   Calendar as CalendarIcon,
-  Droplets,
-  SprayCan,
-  Scissors,
-  DollarSign,
-  TestTube,
-  Beaker,
   Edit,
   Trash2,
   ChevronLeft,
@@ -53,8 +47,83 @@ import {
   Filter,
   X,
   Check,
-  ChevronsUpDown
+  ChevronsUpDown,
+  Scissors
 } from 'lucide-react'
+
+// Utility function for date formatting with blue-600 color
+const formatLogDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString)
+    // Ensure we handle invalid dates
+    if (isNaN(date.getTime())) {
+      return 'Invalid date'
+    }
+
+    const now = new Date()
+    const isToday = date.toDateString() === now.toDateString()
+    const isYesterday =
+      new Date(now.getTime() - 24 * 60 * 60 * 1000).toDateString() === date.toDateString()
+
+    if (isToday) {
+      return `today, ${date
+        .toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        })
+        .toLowerCase()
+        .replace(' ', '')}`
+    } else if (isYesterday) {
+      return `yesterday, ${date
+        .toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        })
+        .toLowerCase()
+        .replace(' ', '')}`
+    } else {
+      return date
+        .toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        })
+        .replace(',', ',')
+        .replace(/\s+/g, ' ')
+    }
+  } catch (error) {
+    return 'Invalid date'
+  }
+}
+
+// Calculate days after pruning from farm's pruning date and log created date
+const getDaysAfterPruning = (
+  farmPruningDate?: Date | null,
+  logCreatedAt?: string
+): number | null => {
+  if (!farmPruningDate || !logCreatedAt) return null
+
+  try {
+    const pruningDate = farmPruningDate
+    const createdDate = new Date(logCreatedAt)
+
+    if (isNaN(pruningDate.getTime()) || isNaN(createdDate.getTime())) {
+      return null
+    }
+
+    const diffMs = createdDate.getTime() - pruningDate.getTime()
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    return diffDays >= 0 ? diffDays : null
+  } catch (error) {
+    return null
+  }
+}
+import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
 
 interface ActivityLog {
   id: number
@@ -305,27 +374,6 @@ export default function FarmLogsPage() {
     setCurrentPage(1)
   }
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'irrigation':
-        return Droplets
-      case 'spray':
-        return SprayCan
-      case 'harvest':
-        return Scissors
-      case 'expense':
-        return DollarSign
-      case 'fertigation':
-        return Beaker
-      case 'soil_test':
-        return TestTube
-      case 'petiole_test':
-        return TestTube
-      default:
-        return CalendarIcon
-    }
-  }
-
   const handleFarmChange = (farmId: string) => {
     setSelectedFarm(farmId)
     setCurrentPage(1)
@@ -477,7 +525,7 @@ export default function FarmLogsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-0">
-      <div className="px-4 py-3 space-y-3">
+      <div className="px-3 py-3 space-y-3 sm:px-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -495,16 +543,16 @@ export default function FarmLogsPage() {
           </CardHeader>
           <CardContent className="px-3 pb-3">
             <Select value={selectedFarm} onValueChange={handleFarmChange}>
-              <SelectTrigger className="w-full h-10">
+              <SelectTrigger className="w-full h-9 sm:h-10">
                 <SelectValue placeholder="Choose a farm" />
               </SelectTrigger>
               <SelectContent>
                 {farms.map((farm) => (
                   <SelectItem key={farm.id} value={farm.id?.toString() || ''}>
                     <div className="flex items-center gap-2">
-                      <div>
-                        <div className="font-medium text-sm">{capitalize(farm.name)}</div>
-                        <div className="text-xs text-gray-500">{farm.region}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">{capitalize(farm.name)}</div>
+                        <div className="text-xs text-gray-500 truncate">{farm.region}</div>
                       </div>
                     </div>
                   </SelectItem>
@@ -699,60 +747,100 @@ export default function FarmLogsPage() {
         {/* Logs List */}
         <Card>
           <CardHeader className="pb-2 px-3 pt-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="flex items-center gap-2">
                 <CalendarIcon className="h-4 w-4" />
-                Activity Logs
+                <CardTitle className="text-base">Activity Logs</CardTitle>
                 {currentFarm && (
                   <Badge variant="outline" className="text-xs">
                     {capitalize(currentFarm.name)}
                   </Badge>
                 )}
-              </CardTitle>
+              </div>
               <span className="text-xs text-gray-500">{totalLogs} logs</span>
             </div>
+            <div className="mt-2 text-xs text-gray-600 hidden sm:block">
+              <span className="font-medium">Date format:</span> Activity date displayed in blue
+              <span className="text-gray-400"> • </span>
+              Green badge with scissors shows days after pruning when log was added
+            </div>
           </CardHeader>
-          <CardContent className="px-3 pb-3">
+          <CardContent className="px-2 sm:px-3 pb-3">
             {logs.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-2 sm:space-y-3">
                 {logs.map((log, index) => {
-                  const Icon = getActivityIcon(log.type)
+                  const Icon = getLogTypeIcon(log.type)
+
+                  // Validate dates before displaying
+                  const isValidLogDate = log.date && !isNaN(new Date(log.date).getTime())
+                  const isValidCreatedDate =
+                    log.created_at && !isNaN(new Date(log.created_at).getTime())
+
+                  if (!isValidLogDate || !isValidCreatedDate) {
+                    console.warn(`Invalid date found for log ${log.id}:`, {
+                      logDate: log.date,
+                      createdDate: log.created_at
+                    })
+                  }
 
                   return (
                     <div
                       key={`${log.type}-${log.id}-${index}`}
-                      className="flex items-start justify-between gap-2 p-2 bg-gray-50 rounded-lg h-14"
+                      className="flex items-start justify-between gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                     >
+                      {/* Left side: Icon + Content */}
                       <div className="flex items-start gap-2 flex-1 min-w-0">
-                        <div className="p-1 bg-green-100 rounded-md flex-shrink-0 mt-0.5">
-                          <Icon className="h-3 w-3 text-green-600" />
+                        <div
+                          className={`p-1 ${getLogTypeBgColor(log.type)} rounded-md flex-shrink-0`}
+                        >
+                          <Icon className={`h-3 w-3 ${getLogTypeColor(log.type)}`} />
                         </div>
 
-                        <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-medium text-gray-900 text-sm truncate">
+                            <p className="font-medium text-gray-900 text-sm truncate flex-1">
                               {getActivityDisplayData(log)}
                             </p>
-                            <span className="text-xs text-gray-500">
-                              {new Date(log.date).toLocaleDateString()}
-                            </span>
                           </div>
 
-                          <div className="h-4">
-                            {log.notes ? (
-                              <p className="text-xs text-gray-600 break-words line-clamp-1">
-                                {log.notes.length > 60
-                                  ? `${log.notes.substring(0, 60)}...`
-                                  : log.notes}
-                              </p>
-                            ) : (
-                              <p className="text-xs text-gray-400 italic">No notes added</p>
-                            )}
+                          {/* Date info with days after pruning */}
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 text-xs">
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <span className="text-blue-600">{formatLogDate(log.date)}</span>
+                            </div>
+                            {/* Days after pruning indicator */}
+                            {(() => {
+                              const daysAfterPruning = getDaysAfterPruning(
+                                currentFarm?.dateOfPruning,
+                                log.created_at
+                              )
+                              return daysAfterPruning !== null && daysAfterPruning >= 0 ? (
+                                <div className="flex items-center gap-1 mt-1">
+                                  <div
+                                    className="flex-shrink-0 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 cursor-help"
+                                    title={`${daysAfterPruning} days after pruning`}
+                                  >
+                                    <Scissors className="h-3 w-3" />
+                                    {daysAfterPruning}d
+                                  </div>
+                                </div>
+                              ) : null
+                            })()}
                           </div>
+
+                          {/* Notes */}
+                          {log.notes && (
+                            <div className="text-xs text-gray-600 line-clamp-1">
+                              {log.notes.length > 60
+                                ? `${log.notes.substring(0, 60)}...`
+                                : log.notes}
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1 h-full">
+                      {/* Right side: Action buttons */}
+                      <div className="flex items-center gap-1 flex-shrink-0 ml-1">
                         {(log.type === 'irrigation' ||
                           log.type === 'spray' ||
                           log.type === 'harvest' ||
@@ -765,7 +853,8 @@ export default function FarmLogsPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleEditRecord(log)}
-                              className="h-6 w-6 p-0 text-green-600 hover:text-green-800 hover:bg-green-100 flex-shrink-0"
+                              className="h-6 w-6 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                              title="Edit"
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
@@ -773,7 +862,8 @@ export default function FarmLogsPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteRecord(log)}
-                              className="h-6 w-6 p-0 text-red-600 hover:text-red-800 hover:bg-red-100 flex-shrink-0"
+                              className="h-6 w-6 p-0 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                              title="Delete"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>

@@ -55,8 +55,6 @@ export default function FarmDetailsPage() {
   const params = useParams()
   const router = useRouter()
   const farmId = params.id as string
-
-  // Authentication
   const { user } = useSupabaseAuth()
 
   const [dashboardData, setDashboardData] = useState<DashboardData>()
@@ -180,7 +178,8 @@ export default function FarmDetailsPage() {
           growth_stage: 'Active',
           moisture_status: 'Good',
           system_discharge: dashboardData?.farm?.systemDischarge || 100,
-          notes: dayNotes || ''
+          notes: dayNotes || '',
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
 
         // Update soil water level when irrigation is added
@@ -225,7 +224,8 @@ export default function FarmDetailsPage() {
           area: dashboardData?.farm?.area || 0,
           weather: 'Clear',
           operator: 'Farm Owner',
-          notes: dayNotes || ''
+          notes: dayNotes || '',
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
 
@@ -237,7 +237,8 @@ export default function FarmDetailsPage() {
           grade: data.grade || 'Standard',
           price: 0,
           buyer: '',
-          notes: dayNotes || ''
+          notes: dayNotes || '',
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
 
@@ -248,7 +249,8 @@ export default function FarmDetailsPage() {
           type: data.type || 'other',
           description: data.description || '',
           cost: parseFloat(data.cost || '0'),
-          remarks: dayNotes || ''
+          remarks: dayNotes || '',
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
 
@@ -260,7 +262,8 @@ export default function FarmDetailsPage() {
           dose: data.quantity ? `${data.quantity} kg/L` : 'As per requirement',
           purpose: 'Nutrient Application',
           area: dashboardData?.farm?.area || 0,
-          notes: dayNotes || ''
+          notes: dayNotes || '',
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
 
@@ -378,7 +381,8 @@ export default function FarmDetailsPage() {
           extraction_status: reportMeta?.extractionStatus,
           extraction_error: reportMeta?.extractionError,
           parsed_parameters: reportMeta?.parsedParameters,
-          raw_notes: reportMeta?.rawNotes ?? undefined
+          raw_notes: reportMeta?.rawNotes ?? undefined,
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
       }
@@ -427,7 +431,8 @@ export default function FarmDetailsPage() {
           extraction_status: reportMeta?.extractionStatus,
           extraction_error: reportMeta?.extractionError,
           parsed_parameters: reportMeta?.parsedParameters,
-          raw_notes: reportMeta?.rawNotes ?? undefined
+          raw_notes: reportMeta?.rawNotes ?? undefined,
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
       }
@@ -547,12 +552,11 @@ export default function FarmDetailsPage() {
         )}
 
         {/* Phase 3A: AI-Powered Features */}
-        {(dashboardData?.farm || process.env.NEXT_PUBLIC_BYPASS_AUTH) && (
+        {/* {(dashboardData?.farm || process.env.NEXT_PUBLIC_BYPASS_AUTH) && (
           <div className="px-4 mb-6 space-y-4">
-            {/* Comprehensive AI Insights */}
             <AIInsightsCarousel farmId={parseInt(farmId)} className="w-full" />
           </div>
-        )}
+        )} */}
 
         {/* Water Level Card - Only show if farm has irrigation records */}
         {dashboardData?.farm && dashboardData.recordCounts.irrigation > 0 && (

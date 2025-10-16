@@ -49,46 +49,43 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
-  const loadInsights = useCallback(async () => {
-    try {
-      setLoading(true)
+  // const loadInsights = useCallback(async () => {
+  //   try {
+  //     setLoading(true)
 
-      // Call the API route instead of direct service
-      const response = await fetch('/api/ai/insights', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          farmId,
-          limit: 8
-        })
-      })
+  //     // Call the API route instead of direct service
+  //     const response = await fetch('/api/ai/insights', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json'
+  //       },
+  //       body: JSON.stringify({
+  //         farmId,
+  //         limit: 8
+  //       })
+  //     })
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch AI insights')
-      }
+  //     if (!response.ok) {
+  //       throw new Error('Failed to fetch AI insights')
+  //     }
 
-      const data = await response.json()
-      setInsights(data.insights || [])
-    } catch (error) {
-      // Log error for debugging in development only
-      if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
-          console.error('Error loading AI insights:', error)
-        }
-      }
-      // Set empty insights array on error
-      setInsights([])
-    } finally {
-      setLoading(false)
-    }
-  }, [farmId])
+  //     const data = await response.json()
+  //     setInsights(data.insights || [])
+  //   } catch (error) {
+  //     // Log error for debugging in development only
+  //     if (process.env.NODE_ENV === 'development') {
+  //       console.error('Error loading AI insights:', error)
+  //     }
+  //     // Set empty insights array on error
+  //     setInsights([])
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }, [farmId])
 
-  useEffect(() => {
-    loadInsights()
-  }, [loadInsights])
+  // useEffect(() => {
+  //   loadInsights()
+  // }, [loadInsights])
 
   const handleInsightAction = async (insight: AIInsight) => {
     try {
@@ -105,7 +102,7 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
             }
           }
           // Refresh insights after execution
-          await loadInsights()
+          // await loadInsights()
         }
       }
     } catch (error) {

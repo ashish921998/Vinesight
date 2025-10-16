@@ -34,7 +34,7 @@ interface FormData {
   rowSpacing: string
   totalTankCapacity: string
   systemDischarge: string
-  dateOfPruning: string
+  dateOfPruning?: Date
 }
 
 interface LocationData {
@@ -61,7 +61,7 @@ export function FarmModal({
     rowSpacing: editingFarm?.rowSpacing?.toString() || '',
     totalTankCapacity: editingFarm?.totalTankCapacity?.toString() || '',
     systemDischarge: editingFarm?.systemDischarge?.toString() || '',
-    dateOfPruning: editingFarm?.dateOfPruning || ''
+    dateOfPruning: editingFarm?.dateOfPruning || new Date()
   }))
 
   const [locationData, setLocationData] = useState<LocationData>(() => ({
@@ -84,7 +84,7 @@ export function FarmModal({
         rowSpacing: editingFarm.rowSpacing?.toString() || '',
         totalTankCapacity: editingFarm.totalTankCapacity?.toString() || '',
         systemDischarge: editingFarm.systemDischarge?.toString() || '',
-        dateOfPruning: editingFarm.dateOfPruning || ''
+        dateOfPruning: editingFarm.dateOfPruning || new Date()
       })
 
       setLocationData({
@@ -105,7 +105,7 @@ export function FarmModal({
         rowSpacing: '',
         totalTankCapacity: '',
         systemDischarge: '',
-        dateOfPruning: ''
+        dateOfPruning: new Date()
       })
 
       setLocationData({
@@ -118,10 +118,17 @@ export function FarmModal({
   }, [editingFarm])
 
   const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value
-    }))
+    if (field === 'dateOfPruning') {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value ? new Date(value) : undefined
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value
+      }))
+    }
   }
 
   const handleLocationChange = (field: string, value: string) => {
@@ -171,7 +178,6 @@ export function FarmModal({
       location_updated_at:
         locationData.latitude && locationData.longitude ? new Date().toISOString() : undefined
     }
-
     await onSubmit(farmData)
   }
 
@@ -363,7 +369,9 @@ export function FarmModal({
                 <Input
                   id="dateOfPruning"
                   type="date"
-                  value={formData.dateOfPruning}
+                  value={
+                    formData.dateOfPruning ? formData.dateOfPruning.toISOString().split('T')[0] : ''
+                  }
                   onChange={(e) => handleInputChange('dateOfPruning', e.target.value)}
                   max={new Date().toISOString().split('T')[0]}
                   className="mt-1 h-11"

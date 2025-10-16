@@ -35,6 +35,7 @@ export interface IrrigationRecord {
   growth_stage: string
   moisture_status: string
   system_discharge: number // in liters per hour
+  date_of_pruning?: Date // Date object of pruning when this record was created (snapshot from farm level)
   notes?: string
   created_at?: string
 }
@@ -51,6 +52,7 @@ export interface SprayRecord {
   area: number // in acres
   weather: string
   operator: string
+  date_of_pruning?: Date
   notes?: string
   created_at?: string
 }
@@ -63,6 +65,7 @@ export interface FertigationRecord {
   dose: string
   purpose: string
   area: number // in acres
+  date_of_pruning?: Date // Date object of pruning when this record was created (snapshot from farm level)
   notes?: string
   created_at?: string
 }
@@ -75,6 +78,7 @@ export interface HarvestRecord {
   grade: string
   price?: number // per kg
   buyer?: string
+  date_of_pruning?: Date // Date object of pruning when this record was created (snapshot from farm level)
   notes?: string
   created_at?: string
 }
@@ -86,6 +90,7 @@ export interface ExpenseRecord {
   type: 'labor' | 'materials' | 'equipment' | 'other'
   description: string
   cost: number
+  date_of_pruning?: Date // Date object of pruning when this record was created (snapshot from farm level)
   remarks?: string
   created_at?: string
 }
@@ -118,6 +123,7 @@ export interface SoilTestRecord {
   farm_id: number
   date: string
   parameters: Record<string, number> // pH, N, P, K, etc.
+  date_of_pruning?: Date // Date object of pruning when this record was created (snapshot from farm level)
   recommendations?: string
   notes?: string
   report_url?: string | null
@@ -136,6 +142,7 @@ export interface PetioleTestRecord {
   farm_id: number
   date: string
   sample_id?: string
+  date_of_pruning?: Date // Date object of pruning when this record was created (snapshot from farm level)
   parameters?: Record<string, number>
   recommendations?: string
   notes?: string

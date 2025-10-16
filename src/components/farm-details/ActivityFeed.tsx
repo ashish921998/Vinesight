@@ -3,22 +3,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Droplets,
-  SprayCan,
-  Scissors,
-  DollarSign,
-  TestTube,
-  Beaker,
-  Calendar,
-  Clock,
-  CheckCircle,
-  Edit,
-  Trash2,
-  ArrowRight
-} from 'lucide-react'
+import { Calendar, Clock, CheckCircle, Edit, Trash2, ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { getActivityDisplayData } from '@/lib/activity-display-utils'
+import {
+  getLogTypeIcon,
+  getLogTypeBgColor,
+  getLogTypeColor,
+  getLogTypeLabel
+} from '@/lib/log-type-config'
 
 interface ActivityFeedProps {
   recentActivities: any[]
@@ -40,47 +33,6 @@ export function ActivityFeed({
   farmId
 }: ActivityFeedProps) {
   const router = useRouter()
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'irrigation':
-        return Droplets
-      case 'spray':
-        return SprayCan
-      case 'harvest':
-        return Scissors
-      case 'expense':
-        return DollarSign
-      case 'fertigation':
-        return Beaker
-      case 'soil_test':
-        return TestTube
-      case 'petiole_test':
-        return TestTube
-      default:
-        return Calendar
-    }
-  }
-
-  const getActivityColor = (type: string) => {
-    switch (type) {
-      case 'irrigation':
-        return 'bg-green-100 text-green-600'
-      case 'spray':
-        return 'bg-green-100 text-green-600'
-      case 'harvest':
-        return 'bg-green-200 text-green-700'
-      case 'expense':
-        return 'bg-green-300 text-green-800'
-      case 'fertigation':
-        return 'bg-emerald-100 text-emerald-600'
-      case 'soil_test':
-        return 'bg-green-400 text-green-900'
-      case 'petiole_test':
-        return 'bg-green-400 text-green-900'
-      default:
-        return 'bg-gray-100 text-gray-600'
-    }
-  }
 
   if (loading) {
     return (
@@ -185,7 +137,7 @@ export function ActivityFeed({
           {recentActivities && recentActivities.length > 0 ? (
             <div className="space-y-2">
               {recentActivities.slice(0, 5).map((activity, index) => {
-                const Icon = getActivityIcon(activity.type)
+                const Icon = getLogTypeIcon(activity.type)
 
                 return (
                   <div
@@ -193,8 +145,10 @@ export function ActivityFeed({
                     className="flex items-start justify-between gap-2 p-2 bg-gray-50 rounded-lg h-14"
                   >
                     <div className="flex items-start gap-2 flex-1 min-w-0">
-                      <div className="p-1 bg-green-100 rounded-md flex-shrink-0 mt-0.5">
-                        <Icon className="h-3 w-3 text-green-600" />
+                      <div
+                        className={`p-1 ${getLogTypeBgColor(activity.type)} rounded-md flex-shrink-0 mt-0.5`}
+                      >
+                        <Icon className={`h-3 w-3 ${getLogTypeColor(activity.type)}`} />
                       </div>
 
                       <div className="flex-1 min-w-0 flex flex-col justify-center h-full">

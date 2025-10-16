@@ -103,7 +103,7 @@ export function toApplicationFarm(dbFarm: DatabaseFarm): Farm {
     createdAt: dbFarm.created_at || undefined,
     updatedAt: dbFarm.updated_at || undefined,
     userId: dbFarm.user_id || undefined,
-    dateOfPruning: dbFarm.date_of_pruning || undefined
+    dateOfPruning: dbFarm.date_of_pruning ? new Date(dbFarm.date_of_pruning) : undefined
   }
 }
 
@@ -112,6 +112,18 @@ export function toDatabaseFarmInsert(
     user_id: string
   }
 ): DatabaseFarmInsert {
+  // …previous code…
+
+  return {
+    name: appFarm.name,
+    region: appFarm.region,
+    location_source: appFarm.locationSource || null,
+    location_updated_at: appFarm.locationUpdatedAt || null,
+    user_id: appFarm.user_id || null,
+    date_of_pruning: dateToISOString(appFarm.dateOfPruning) as any
+  } as DatabaseFarmInsert
+}
+
   return {
     name: appFarm.name,
     region: appFarm.region,
@@ -132,8 +144,8 @@ export function toDatabaseFarmInsert(
     location_source: appFarm.locationSource || null,
     location_updated_at: appFarm.locationUpdatedAt || null,
     user_id: appFarm.user_id || null,
-    date_of_pruning: appFarm.dateOfPruning || null
-  }
+    date_of_pruning: convertDateToString(appFarm.dateOfPruning) as any
+  } as DatabaseFarmInsert
 }
 
 export function toDatabaseFarmUpdate(appFarmUpdates: Partial<Farm>): DatabaseFarmUpdate {
@@ -165,10 +177,35 @@ export function toDatabaseFarmUpdate(appFarmUpdates: Partial<Farm>): DatabaseFar
   if (appFarmUpdates.locationUpdatedAt !== undefined)
     update.location_updated_at = appFarmUpdates.locationUpdatedAt || null
   if (appFarmUpdates.userId !== undefined) update.user_id = appFarmUpdates.userId || null
-  if (appFarmUpdates.dateOfPruning !== undefined)
-    update.date_of_pruning = appFarmUpdates.dateOfPruning || null
+  if (appFarmUpdates.dateOfPruning !== undefined) {
+    if (appFarmUpdates.dateOfPruning) {
+      const dateValue = appFarmUpdates.dateOfPruning
+      const dateString =
+        dateValue instanceof Date
+          ? dateValue.toISOString().split('T')[0]
+          : typeof dateValue === 'string'
+            ? dateValue
+            : null
 
-  return update
+      update.date_of_pruning = dateString as any
+    } else {
+      update.date_of_pruning = null as any
+    }
+  }
+
+  return update as DatabaseFarmUpdate
+}
+
+// Helper function to convert Date or string to ISO date string
+const dateToISOString = (dateValue: any): string | null => {
+  if (!dateValue) return null
+  if (dateValue instanceof Date) {
+    return dateValue.toISOString().split('T')[0]
+  }
+  if (typeof dateValue === 'string') {
+    return dateValue
+  }
+  return null
 }
 
 // Similar conversion functions for other record types...
@@ -184,6 +221,7 @@ export function toApplicationIrrigationRecord(
     growth_stage: dbRecord.growth_stage,
     moisture_status: dbRecord.moisture_status,
     system_discharge: dbRecord.system_discharge,
+    date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
     notes: dbRecord.notes || undefined,
     created_at: dbRecord.created_at || undefined
   }
@@ -200,8 +238,9 @@ export function toDatabaseIrrigationInsert(
     growth_stage: appRecord.growth_stage,
     moisture_status: appRecord.moisture_status,
     system_discharge: appRecord.system_discharge,
+    date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
     notes: appRecord.notes || null
-  }
+  } as DatabaseIrrigationRecordInsert
 }
 
 export function toDatabaseIrrigationUpdate(
@@ -217,6 +256,8 @@ export function toDatabaseIrrigationUpdate(
   if (appUpdates.moisture_status !== undefined) update.moisture_status = appUpdates.moisture_status
   if (appUpdates.system_discharge !== undefined)
     update.system_discharge = appUpdates.system_discharge
+  if (appUpdates.date_of_pruning !== undefined)
+    update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
 
   return update
@@ -238,6 +279,7 @@ export function toApplicationSprayRecord(
     area: dbRecord.area,
     weather: dbRecord.weather,
     operator: dbRecord.operator,
+    date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
     notes: dbRecord.notes || undefined,
     created_at: dbRecord.created_at || undefined
   }
@@ -256,9 +298,10 @@ export function toDatabaseSprayInsert(
     water_volume: appRecord.water_volume,
     area: appRecord.area,
     weather: appRecord.weather,
+    date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
     operator: appRecord.operator,
     notes: appRecord.notes || null
-  }
+  } as DatabaseSprayRecordInsert
 }
 
 export function toDatabaseSprayUpdate(
@@ -273,6 +316,8 @@ export function toDatabaseSprayUpdate(
   if (appUpdates.area !== undefined) update.area = appUpdates.area
   if (appUpdates.weather !== undefined) update.weather = appUpdates.weather
   if (appUpdates.operator !== undefined) update.operator = appUpdates.operator
+  if (appUpdates.date_of_pruning !== undefined)
+    update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
 
   return update
@@ -290,6 +335,7 @@ export function toApplicationFertigationRecord(
     dose: dbRecord.dose,
     purpose: dbRecord.purpose,
     area: dbRecord.area,
+    date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
     notes: dbRecord.notes || undefined,
     created_at: dbRecord.created_at || undefined
   }
@@ -305,8 +351,9 @@ export function toDatabaseFertigationInsert(
     dose: appRecord.dose,
     purpose: appRecord.purpose,
     area: appRecord.area,
+    date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
     notes: appRecord.notes || null
-  }
+  } as DatabaseFertigationRecordInsert
 }
 
 export function toDatabaseFertigationUpdate(
@@ -320,6 +367,8 @@ export function toDatabaseFertigationUpdate(
   if (appUpdates.dose !== undefined) update.dose = appUpdates.dose
   if (appUpdates.purpose !== undefined) update.purpose = appUpdates.purpose
   if (appUpdates.area !== undefined) update.area = appUpdates.area
+  if (appUpdates.date_of_pruning !== undefined)
+    update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
 
   return update
@@ -337,6 +386,7 @@ export function toApplicationHarvestRecord(
     grade: dbRecord.grade,
     price: dbRecord.price || undefined,
     buyer: dbRecord.buyer || undefined,
+    date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
     notes: dbRecord.notes || undefined,
     created_at: dbRecord.created_at || undefined
   }
@@ -352,8 +402,9 @@ export function toDatabaseHarvestInsert(
     grade: appRecord.grade,
     price: appRecord.price || null,
     buyer: appRecord.buyer || null,
+    date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
     notes: appRecord.notes || null
-  }
+  } as DatabaseHarvestRecordInsert
 }
 
 export function toDatabaseHarvestUpdate(
@@ -367,6 +418,8 @@ export function toDatabaseHarvestUpdate(
   if (appUpdates.grade !== undefined) update.grade = appUpdates.grade
   if (appUpdates.price !== undefined) update.price = appUpdates.price || null
   if (appUpdates.buyer !== undefined) update.buyer = appUpdates.buyer || null
+  if (appUpdates.date_of_pruning !== undefined)
+    update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
 
   return update
@@ -383,6 +436,7 @@ export function toApplicationExpenseRecord(
     type: dbRecord.type as 'labor' | 'materials' | 'equipment' | 'other',
     description: dbRecord.description,
     cost: dbRecord.cost,
+    date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
     remarks: dbRecord.remarks || undefined,
     created_at: dbRecord.created_at || undefined
   }
@@ -397,8 +451,9 @@ export function toDatabaseExpenseInsert(
     type: appRecord.type,
     description: appRecord.description,
     cost: appRecord.cost,
+    date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
     remarks: appRecord.remarks || null
-  }
+  } as DatabaseExpenseRecordInsert
 }
 
 export function toDatabaseExpenseUpdate(
@@ -411,6 +466,8 @@ export function toDatabaseExpenseUpdate(
   if (appUpdates.type !== undefined) update.type = appUpdates.type
   if (appUpdates.description !== undefined) update.description = appUpdates.description
   if (appUpdates.cost !== undefined) update.cost = appUpdates.cost
+  if (appUpdates.date_of_pruning !== undefined)
+    update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.remarks !== undefined) update.remarks = appUpdates.remarks || null
 
   return update
@@ -500,6 +557,7 @@ export function toApplicationSoilTestRecord(
     farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
     parameters: (dbRecord.parameters as Record<string, number>) || {},
+    date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
     recommendations: dbRecord.recommendations || undefined,
     notes: dbRecord.notes || undefined,
     report_url: dbRecord.report_url || undefined,
@@ -522,6 +580,7 @@ export function toDatabaseSoilTestInsert(
     farm_id: appRecord.farm_id,
     date: appRecord.date,
     parameters: appRecord.parameters,
+    date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
     recommendations: appRecord.recommendations || null,
     notes: appRecord.notes || null,
     report_url: appRecord.report_url || null,
@@ -532,7 +591,7 @@ export function toDatabaseSoilTestInsert(
     extraction_error: appRecord.extraction_error || null,
     parsed_parameters: appRecord.parsed_parameters || null,
     raw_notes: appRecord.raw_notes || null
-  }
+  } as DatabaseSoilTestRecordInsert
 }
 
 export function toDatabaseSoilTestUpdate(
@@ -543,6 +602,8 @@ export function toDatabaseSoilTestUpdate(
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.parameters !== undefined) update.parameters = appUpdates.parameters
+  if (appUpdates.date_of_pruning !== undefined)
+    update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.recommendations !== undefined)
     update.recommendations = appUpdates.recommendations || null
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
@@ -570,6 +631,7 @@ export function toApplicationPetioleTestRecord(
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
+    date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
     parameters: (dbRecord.parameters as Record<string, number>) || {},
     recommendations: dbRecord.recommendations || undefined,
     notes: dbRecord.notes || undefined,
@@ -592,6 +654,7 @@ export function toDatabasePetioleTestInsert(
   return {
     farm_id: appRecord.farm_id,
     date: appRecord.date,
+    date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
     parameters: appRecord.parameters || {},
     recommendations: appRecord.recommendations || null,
     notes: appRecord.notes || null,
@@ -603,7 +666,7 @@ export function toDatabasePetioleTestInsert(
     extraction_error: appRecord.extraction_error || null,
     parsed_parameters: appRecord.parsed_parameters || null,
     raw_notes: appRecord.raw_notes || null
-  }
+  } as DatabasePetioleTestRecordInsert
 }
 
 export function toDatabasePetioleTestUpdate(
@@ -613,6 +676,8 @@ export function toDatabasePetioleTestUpdate(
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
+  if (appUpdates.date_of_pruning !== undefined)
+    update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
 
   if (appUpdates.parameters !== undefined) {
     update.parameters = appUpdates.parameters
