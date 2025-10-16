@@ -78,6 +78,19 @@ export type DatabasePetioleTestRecordInsert =
   Database['public']['Tables']['petiole_test_records']['Insert']
 export type DatabasePetioleTestRecordUpdate =
   Database['public']['Tables']['petiole_test_records']['Update']
+
+// Helper function to convert Date or string to ISO date string
+const dateToISOString = (dateValue: any): string | null => {
+  if (!dateValue) return null
+  if (dateValue instanceof Date) {
+    return dateValue.toISOString().split('T')[0]
+  }
+  if (typeof dateValue === 'string') {
+    return dateValue
+  }
+  return null
+}
+
 // Type conversion utilities
 export function toApplicationFarm(dbFarm: DatabaseFarm): Farm {
   return {
@@ -112,18 +125,6 @@ export function toDatabaseFarmInsert(
     user_id: string
   }
 ): DatabaseFarmInsert {
-  // …previous code…
-
-  return {
-    name: appFarm.name,
-    region: appFarm.region,
-    location_source: appFarm.locationSource || null,
-    location_updated_at: appFarm.locationUpdatedAt || null,
-    user_id: appFarm.user_id || null,
-    date_of_pruning: dateToISOString(appFarm.dateOfPruning) as any
-  } as DatabaseFarmInsert
-}
-
   return {
     name: appFarm.name,
     region: appFarm.region,
@@ -144,7 +145,7 @@ export function toDatabaseFarmInsert(
     location_source: appFarm.locationSource || null,
     location_updated_at: appFarm.locationUpdatedAt || null,
     user_id: appFarm.user_id || null,
-    date_of_pruning: convertDateToString(appFarm.dateOfPruning) as any
+    date_of_pruning: dateToISOString(appFarm.dateOfPruning) as any
   } as DatabaseFarmInsert
 }
 
@@ -194,18 +195,6 @@ export function toDatabaseFarmUpdate(appFarmUpdates: Partial<Farm>): DatabaseFar
   }
 
   return update as DatabaseFarmUpdate
-}
-
-// Helper function to convert Date or string to ISO date string
-const dateToISOString = (dateValue: any): string | null => {
-  if (!dateValue) return null
-  if (dateValue instanceof Date) {
-    return dateValue.toISOString().split('T')[0]
-  }
-  if (typeof dateValue === 'string') {
-    return dateValue
-  }
-  return null
 }
 
 // Similar conversion functions for other record types...

@@ -14,7 +14,7 @@ CREATE TABLE farms (
   planting_date DATE NOT NULL,
   vine_spacing DECIMAL(5,2) NOT NULL, -- in meters
   row_spacing DECIMAL(5,2) NOT NULL, -- in meters
-  date_of_pruning DATE, -- Date string when pruning was done (used as reference for log calculations)
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -30,7 +30,7 @@ CREATE TABLE irrigation_records (
   growth_stage VARCHAR(100) NOT NULL,
   moisture_status VARCHAR(50) NOT NULL,
   system_discharge DECIMAL(8,2) NOT NULL, -- in liters per hour
-  date_of_pruning DATE, -- Date string of pruning when this record was created (snapshot from farm level)
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -45,7 +45,7 @@ CREATE TABLE spray_records (
   area DECIMAL(10,2) NOT NULL, -- in hectares
   weather VARCHAR(255) NOT NULL,
   operator VARCHAR(255) NOT NULL,
-  date_of_pruning DATE, -- Date string of pruning when this record was created (snapshot from farm level)
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -59,7 +59,7 @@ CREATE TABLE fertigation_records (
   dose VARCHAR(100) NOT NULL,
   purpose VARCHAR(255) NOT NULL,
   area DECIMAL(10,2) NOT NULL, -- in hectares
-  date_of_pruning DATE, -- Date string of pruning when this record was created (snapshot from farm level)
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -73,7 +73,7 @@ CREATE TABLE harvest_records (
   grade VARCHAR(100) NOT NULL,
   price DECIMAL(10,2), -- per kg
   buyer VARCHAR(255),
-  date_of_pruning DATE, -- Date string of pruning when this record was created (snapshot from farm level)
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -86,7 +86,7 @@ CREATE TABLE expense_records (
   type VARCHAR(20) CHECK (type IN ('labor', 'materials', 'equipment', 'other')) NOT NULL,
   description TEXT NOT NULL,
   cost DECIMAL(12,2) NOT NULL,
-  date_of_pruning DATE, -- Date string of pruning when this record was created (snapshot from farm level)
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   remarks TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -122,7 +122,7 @@ CREATE TABLE soil_test_records (
   farm_id BIGINT REFERENCES farms(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   parameters JSONB NOT NULL, -- pH, N, P, K, etc.
-  date_of_pruning DATE, -- Date string of pruning when this record was created (snapshot from farm level)
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   recommendations TEXT,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -134,7 +134,7 @@ CREATE TABLE petiole_test_records (
   farm_id BIGINT REFERENCES farms(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   parameters JSONB NOT NULL, -- N, P, K, Ca, Mg, etc.
-  date_of_pruning DATE, -- Date string of pruning when this record was created (snapshot from farm level)
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   recommendations TEXT,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

@@ -50,6 +50,7 @@ import {
   ChevronsUpDown,
   Scissors
 } from 'lucide-react'
+import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
 
 // Utility function for date formatting with blue-600 color
 const formatLogDate = (dateString: string): string => {
@@ -123,7 +124,6 @@ const getDaysAfterPruning = (
     return null
   }
 }
-import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
 
 interface ActivityLog {
   id: number

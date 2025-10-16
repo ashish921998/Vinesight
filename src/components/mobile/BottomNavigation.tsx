@@ -249,19 +249,8 @@ export function BottomNavigation() {
       const farmId = parseInt(selectedFarm)
       const currentDate = new Date().toISOString().split('T')[0]
 
-      // Get the selected farm to access dateOfPruning
       const selectedFarmObj = farms.find((farm) => farm.id === farmId)
       const pruningDate = selectedFarmObj?.dateOfPruning
-
-      // Debug logging
-      console.log('BottomNavigation - Creating record:', {
-        selectedLogType,
-        farmId,
-        pruningDate,
-        pruningDateType: typeof pruningDate,
-        pruningDateInstance: pruningDate instanceof Date,
-        farmName: selectedFarmObj?.name
-      })
 
       switch (selectedLogType) {
         case 'irrigation':
