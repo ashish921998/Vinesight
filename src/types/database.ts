@@ -721,6 +721,7 @@ export type Database = {
           cost: number
           created_at: string | null
           date: string
+          date_of_pruning: Date | null
           description: string
           farm_id: number | null
           id: number
@@ -731,6 +732,7 @@ export type Database = {
           cost: number
           created_at?: string | null
           date: string
+          date_of_pruning?: Date | null
           description: string
           farm_id?: number | null
           id?: number
@@ -741,6 +743,7 @@ export type Database = {
           cost?: number
           created_at?: string | null
           date?: string
+          date_of_pruning?: Date | null
           description?: string
           farm_id?: number | null
           id?: number
@@ -808,7 +811,7 @@ export type Database = {
         Row: {
           area: number
           created_at: string | null
-          date_of_pruning: string | null
+          date_of_pruning: Date | null
           elevation: number | null
           grape_variety: string
           id: number
@@ -853,7 +856,7 @@ export type Database = {
           user_id?: string | null
           vine_spacing: number
           water_calculation_updated_at?: string | null
-          date_of_pruning: string | null
+          date_of_pruning: Date | null
         }
         Update: {
           area?: number
@@ -878,7 +881,7 @@ export type Database = {
           user_id?: string | null
           vine_spacing?: number
           water_calculation_updated_at?: string | null
-          date_of_pruning?: string | null
+          date_of_pruning?: Date | null
         }
         Relationships: []
       }
@@ -923,6 +926,7 @@ export type Database = {
           area: number
           created_at: string | null
           date: string
+          date_of_pruning: Date | null
           dose: string
           farm_id: number | null
           fertilizer: string
@@ -934,6 +938,7 @@ export type Database = {
           area: number
           created_at?: string | null
           date: string
+          date_of_pruning?: Date | null
           dose: string
           farm_id?: number | null
           fertilizer: string
@@ -945,6 +950,7 @@ export type Database = {
           area?: number
           created_at?: string | null
           date?: string
+          date_of_pruning?: Date | null
           dose?: string
           farm_id?: number | null
           fertilizer?: string
@@ -967,6 +973,7 @@ export type Database = {
           buyer: string | null
           created_at: string | null
           date: string
+          date_of_pruning: Date | null
           farm_id: number | null
           grade: string
           id: number
@@ -978,6 +985,7 @@ export type Database = {
           buyer?: string | null
           created_at?: string | null
           date: string
+          date_of_pruning?: Date | null
           farm_id?: number | null
           grade: string
           id?: number
@@ -989,6 +997,7 @@ export type Database = {
           buyer?: string | null
           created_at?: string | null
           date?: string
+          date_of_pruning?: Date | null
           farm_id?: number | null
           grade?: string
           id?: number
@@ -1067,6 +1076,7 @@ export type Database = {
           area: number
           created_at: string | null
           date: string
+          date_of_pruning: Date | null
           duration: number
           farm_id: number | null
           growth_stage: string
@@ -1079,6 +1089,7 @@ export type Database = {
           area: number
           created_at?: string | null
           date: string
+          date_of_pruning?: Date | null
           duration: number
           farm_id?: number | null
           growth_stage: string
@@ -1091,6 +1102,7 @@ export type Database = {
           area?: number
           created_at?: string | null
           date?: string
+          date_of_pruning?: Date | null
           duration?: number
           farm_id?: number | null
           growth_stage?: string
@@ -1387,6 +1399,7 @@ export type Database = {
         Row: {
           created_at: string | null
           date: string
+          date_of_pruning: Date | null
           farm_id: number | null
           id: number
           extraction_error: string | null
@@ -1404,6 +1417,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           date: string
+          date_of_pruning?: Date | null
           farm_id?: number | null
           id?: number
           extraction_error?: string | null
@@ -1421,6 +1435,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           date?: string
+          date_of_pruning?: Date | null
           farm_id?: number | null
           id?: number
           extraction_error?: string | null
@@ -1449,6 +1464,7 @@ export type Database = {
         Row: {
           created_at: string | null
           date: string
+          date_of_pruning: Date | null
           farm_id: number | null
           id: number
           extraction_error: string | null
@@ -1466,6 +1482,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           date: string
+          date_of_pruning?: Date | null
           farm_id?: number | null
           id?: number
           extraction_error?: string | null
@@ -1483,6 +1500,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           date?: string
+          date_of_pruning?: Date | null
           farm_id?: number | null
           id?: number
           extraction_error?: string | null
@@ -1513,6 +1531,7 @@ export type Database = {
           chemical: string
           created_at: string | null
           date: string
+          date_of_pruning: Date | null
           dose: string
           farm_id: number | null
           id: number
@@ -1528,6 +1547,7 @@ export type Database = {
           chemical: string
           created_at?: string | null
           date: string
+          date_of_pruning?: Date | null
           dose: string
           farm_id?: number | null
           id?: number
@@ -1543,6 +1563,7 @@ export type Database = {
           chemical?: string
           created_at?: string | null
           date?: string
+          date_of_pruning?: Date | null
           dose?: string
           farm_id?: number | null
           id?: number

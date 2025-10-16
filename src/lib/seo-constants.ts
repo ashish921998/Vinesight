@@ -1,0 +1,3 @@
+// SEO Keywords - Single source of truth for farm management keywords
+export const SEO_KEYWORDS =
+  'farm management system, AI farming, smart agriculture, precision farming, grape farm management, vineyard management, crop monitoring, AI agriculture, farming technology, agricultural automation, yield prediction, disease detection, farming software, digital agriculture, smart farming solutions, agricultural AI, farm analytics, crop management, irrigation management, agricultural data, farming dashboard, agricultural intelligence, modern farming, agritech, farm optimization, agricultural technology, sustainable farming, farming apps, agricultural software, farm productivity, crop analytics, agricultural insights'

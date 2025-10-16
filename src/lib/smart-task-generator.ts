@@ -275,7 +275,7 @@ export class SmartTaskGenerator {
           recommendedDate: new Date(sprayWindow.date),
           priorityScore,
           weatherDependent: true,
-          reasoning: `${pest.riskLevel.toUpperCase()} risk of ${pest.pestDiseaseType.replace('_', ' ')} detected (${Math.round(pest.probabilityScore * 100)}% probability). Preventive treatment recommended.`,
+          reasoning: `${pest.riskLevel.toUpperCase()} risk of ${pest.pestDiseaseType.replace(/_/g, ' ')} detected (${Math.round(pest.probabilityScore * 100)}% probability). Preventive treatment recommended.`,
           confidenceScore: pest.probabilityScore,
           status: 'pending',
           farmerFeedback: undefined,

@@ -20,10 +20,10 @@ interface FarmHeaderProps {
 }
 
 export function FarmHeader({ farm, loading, onEdit, onDelete }: FarmHeaderProps) {
-  const calculateDaysAfterPruning = (pruningDate?: string) => {
+  const calculateDaysAfterPruning = (pruningDate?: Date) => {
     if (!pruningDate) return null
 
-    const pruning = new Date(pruningDate)
+    const pruning = pruningDate
     const today = new Date()
 
     const pruningMidnight = new Date(pruning.getFullYear(), pruning.getMonth(), pruning.getDate())

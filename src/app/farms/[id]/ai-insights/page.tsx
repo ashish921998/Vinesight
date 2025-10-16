@@ -46,7 +46,8 @@ export default function AIInsightsPage() {
   const [criticalAlerts, setCriticalAlerts] = useState<CriticalAlert[]>([])
   const [pestPredictions, setPestPredictions] = useState<PestDiseasePrediction[]>([])
   const [farmerProfile, setFarmerProfile] = useState<FarmerAIProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  // TODO: AI insights are still being developed. Set to false for now to show empty state instead of indefinite loading
+  const [loading, setLoading] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
   const loadInsights = useCallback(async () => {

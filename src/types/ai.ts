@@ -1,4 +1,4 @@
-// AI & Machine Learning Types for FarmAI
+// AI & Machine Learning Types for VineSight
 // Consolidated from ai-intelligence.ts and lib/types/ai-types.ts
 // This is the single source of truth for all AI-related type definitions
 

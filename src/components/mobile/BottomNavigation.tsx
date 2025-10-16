@@ -2,19 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import {
-  Home,
-  Sprout,
-  Calculator,
-  User,
-  Brain,
-  FileText,
-  Droplets,
-  SprayCan,
-  Scissors,
-  DollarSign,
-  Beaker
-} from 'lucide-react'
+import { Home, Sprout, Calculator, User, Brain, FileText } from 'lucide-react'
+import { logTypeConfigs, type LogType } from '@/lib/log-type-config'
 import {
   Dialog,
   DialogContent,
@@ -72,15 +61,15 @@ const navigationItems = [
 
 const logTypes = [
   {
-    id: 'irrigation',
+    id: 'irrigation' as LogType,
     name: 'Irrigation',
-    icon: Droplets,
-    color: 'text-primary',
+    icon: logTypeConfigs.irrigation.icon,
+    color: logTypeConfigs.irrigation.color,
     fields: [
       {
         name: 'duration',
         label: 'Duration (hours)',
-        type: 'number',
+        type: 'number' as const,
         step: '0.5',
         min: '0.5',
         placeholder: '2.5',
@@ -89,49 +78,49 @@ const logTypes = [
       {
         name: 'notes',
         label: 'Notes (optional)',
-        type: 'textarea',
+        type: 'textarea' as const,
         placeholder: 'e.g., Drip irrigation, fruit development stage'
       }
     ]
   },
   {
-    id: 'spray',
+    id: 'spray' as LogType,
     name: 'Spray/Pesticide',
-    icon: SprayCan,
-    color: 'text-primary',
+    icon: logTypeConfigs.spray.icon,
+    color: logTypeConfigs.spray.color,
     fields: [
       {
         name: 'product',
         label: 'Product/Chemical',
-        type: 'text',
+        type: 'text' as const,
         placeholder: 'e.g., Fungicide, Insecticide name',
         required: true
       },
       {
         name: 'notes',
         label: 'Notes (optional)',
-        type: 'textarea',
+        type: 'textarea' as const,
         placeholder: 'e.g., Concentration, weather conditions, target pest/disease'
       }
     ]
   },
   {
-    id: 'fertigation',
+    id: 'fertigation' as LogType,
     name: 'Fertigation',
-    icon: Beaker,
-    color: 'text-primary',
+    icon: logTypeConfigs.fertigation.icon,
+    color: logTypeConfigs.fertigation.color,
     fields: [
       {
         name: 'fertilizer',
         label: 'Fertilizer',
-        type: 'text',
+        type: 'text' as const,
         placeholder: 'e.g., NPK 19:19:19',
         required: true
       },
       {
         name: 'quantity',
         label: 'Quantity (kg)',
-        type: 'number',
+        type: 'number' as const,
         step: '0.1',
         min: '0',
         placeholder: '10',
@@ -140,21 +129,21 @@ const logTypes = [
       {
         name: 'notes',
         label: 'Notes (optional)',
-        type: 'textarea',
+        type: 'textarea' as const,
         placeholder: 'e.g., Growth stage, concentration'
       }
     ]
   },
   {
-    id: 'harvest',
+    id: 'harvest' as LogType,
     name: 'Harvest',
-    icon: Scissors,
-    color: 'text-primary',
+    icon: logTypeConfigs.harvest.icon,
+    color: logTypeConfigs.harvest.color,
     fields: [
       {
         name: 'quantity',
         label: 'Quantity (kg)',
-        type: 'number',
+        type: 'number' as const,
         step: '0.1',
         min: '0',
         placeholder: '100',
@@ -163,21 +152,21 @@ const logTypes = [
       {
         name: 'notes',
         label: 'Notes (optional)',
-        type: 'textarea',
+        type: 'textarea' as const,
         placeholder: 'e.g., Quality grade, market destination, storage location'
       }
     ]
   },
   {
-    id: 'expense',
+    id: 'expense' as LogType,
     name: 'Expense',
-    icon: DollarSign,
-    color: 'text-red-600',
+    icon: logTypeConfigs.expense.icon,
+    color: logTypeConfigs.expense.color,
     fields: [
       {
         name: 'amount',
         label: 'Amount (₹)',
-        type: 'number',
+        type: 'number' as const,
         step: '0.01',
         min: '0',
         placeholder: '1000',
@@ -186,21 +175,21 @@ const logTypes = [
       {
         name: 'category',
         label: 'Category',
-        type: 'text',
+        type: 'text' as const,
         placeholder: 'e.g., Labor, Materials, Fuel',
         required: true
       },
       {
         name: 'description',
         label: 'Description',
-        type: 'text',
+        type: 'text' as const,
         placeholder: 'e.g., Pruning labor',
         required: true
       },
       {
         name: 'notes',
         label: 'Notes (optional)',
-        type: 'textarea',
+        type: 'textarea' as const,
         placeholder: 'Additional details'
       }
     ]
@@ -260,6 +249,9 @@ export function BottomNavigation() {
       const farmId = parseInt(selectedFarm)
       const currentDate = new Date().toISOString().split('T')[0]
 
+      const selectedFarmObj = farms.find((farm) => farm.id === farmId)
+      const pruningDate = selectedFarmObj?.dateOfPruning
+
       switch (selectedLogType) {
         case 'irrigation':
           await SupabaseService.addIrrigationRecord({
@@ -270,7 +262,8 @@ export function BottomNavigation() {
             growth_stage: 'Not specified',
             moisture_status: 'Not specified',
             system_discharge: 0,
-            notes: formData.notes || ''
+            notes: formData.notes || '',
+            date_of_pruning: pruningDate
           })
           break
 
@@ -278,7 +271,7 @@ export function BottomNavigation() {
           await SupabaseService.addSprayRecord({
             farm_id: farmId,
             date: currentDate,
-            chemical: formData.product || '',
+            chemical: formData.product?.trim() || 'Unknown',
             dose: 'Not specified',
             quantity_amount: 0,
             quantity_unit: 'Not specified',
@@ -286,7 +279,8 @@ export function BottomNavigation() {
             area: 0,
             weather: 'Not specified',
             operator: 'Not specified',
-            notes: formData.notes || ''
+            notes: formData.notes || '',
+            date_of_pruning: pruningDate
           })
           break
 
@@ -294,11 +288,12 @@ export function BottomNavigation() {
           await SupabaseService.addFertigationRecord({
             farm_id: farmId,
             date: currentDate,
-            fertilizer: formData.fertilizer || '',
+            fertilizer: formData.fertilizer?.trim() || 'Unknown',
             dose: formData.quantity || '0',
             purpose: '', // Default value
             area: 0,
-            notes: formData.notes || ''
+            notes: formData.notes || '',
+            date_of_pruning: pruningDate
           })
           break
 
@@ -310,7 +305,8 @@ export function BottomNavigation() {
             grade: 'Not specified',
             price: 0,
             buyer: 'Not specified',
-            notes: formData.notes || ''
+            notes: formData.notes || '',
+            date_of_pruning: pruningDate
           })
           break
 
@@ -321,7 +317,8 @@ export function BottomNavigation() {
             type: (formData.category || 'other') as 'labor' | 'materials' | 'equipment' | 'other',
             description: formData.description || '',
             cost: parseFloat(formData.amount || '0'),
-            remarks: formData.notes || ''
+            remarks: formData.notes || '',
+            date_of_pruning: pruningDate
           })
           break
       }

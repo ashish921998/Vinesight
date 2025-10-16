@@ -28,8 +28,7 @@ export function QuickActions({ onDataLogsClick }: QuickActionsProps) {
       description: 'Pest predictions & smart insights',
       icon: Brain,
       color: 'bg-purple-100 text-purple-600 hover:bg-purple-200',
-      onClick: () => router.push(`/farms/${farmId}/ai-insights`),
-      badge: 'NEW'
+      onClick: () => router.push(`/farms/${farmId}/ai-insights`)
     },
     {
       title: 'View Reports',

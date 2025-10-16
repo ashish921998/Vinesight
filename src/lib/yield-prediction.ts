@@ -849,7 +849,7 @@ export class YieldPredictionEngine {
   }
 
   private static getVarietyDescription(variety: string, quality: string): string {
-    const varietyName = variety.replace('_', ' ').toUpperCase()
+    const varietyName = variety.replace(/_/g, ' ').toUpperCase()
     return `${varietyName} variety optimized for ${quality} production`
   }
 }

@@ -17,12 +17,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import type { ReportAttachmentMeta } from '@/types/reports'
 import {
-  Droplets,
-  SprayCan,
-  Scissors,
-  DollarSign,
-  TestTube,
-  Beaker,
   Upload,
   X,
   Loader2,
@@ -36,15 +30,12 @@ import {
   RefreshCcw
 } from 'lucide-react'
 import { toast } from 'sonner'
-
-export type LogType =
-  | 'irrigation'
-  | 'spray'
-  | 'harvest'
-  | 'expense'
-  | 'fertigation'
-  | 'soil_test'
-  | 'petiole_test'
+import {
+  logTypeConfigs,
+  type LogType,
+  type LogTypeConfig,
+  type FormField
+} from '@/lib/log-type-config'
 
 interface LogEntry {
   id: string // temporary ID for session
@@ -56,27 +47,6 @@ interface LogEntry {
   }
 }
 
-interface FormField {
-  name: string
-  type: 'text' | 'number' | 'select' | 'textarea'
-  label: string
-  required: boolean
-  options?: string[]
-  placeholder?: string
-  min?: number
-  max?: number
-  step?: number
-  maxLength?: number
-}
-
-interface LogTypeConfig {
-  icon: any
-  color: string
-  bgColor: string
-  borderColor: string
-  fields: FormField[]
-}
-
 interface UnifiedDataLogsModalProps {
   isOpen: boolean
   onClose: () => void
@@ -85,464 +55,11 @@ interface UnifiedDataLogsModalProps {
   farmId?: number
 }
 
-const logTypeConfigs: Record<LogType, LogTypeConfig> = {
-  irrigation: {
-    icon: Droplets,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    fields: [
-      {
-        name: 'duration',
-        type: 'number',
-        label: 'Duration (hours)',
-        required: true,
-        min: 0,
-        step: 0.1
-      }
-    ]
-  },
-  spray: {
-    icon: SprayCan,
-    color: 'text-green-600',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-200',
-    fields: [
-      {
-        name: 'chemical',
-        type: 'text',
-        label: 'Chemical Used',
-        required: true,
-        placeholder: 'e.g., Sulfur fungicide',
-        maxLength: 1000
-      },
-      {
-        name: 'quantity_amount',
-        type: 'number',
-        label: 'Quantity Amount',
-        required: false,
-        min: 0,
-        step: 0.1,
-        placeholder: 'e.g., 500'
-      },
-      {
-        name: 'quantity_unit',
-        type: 'select',
-        label: 'Unit',
-        required: false,
-        options: ['gm/L', 'ml/L']
-      },
-      {
-        name: 'water_volume',
-        type: 'number',
-        label: 'Water Volume (L)',
-        required: false,
-        min: 0,
-        step: 0.1,
-        placeholder: 'Total water used'
-      }
-    ]
-  },
-  harvest: {
-    icon: Scissors,
-    color: 'text-yellow-600',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-200',
-    fields: [
-      {
-        name: 'quantity',
-        type: 'number',
-        label: 'Quantity (kg)',
-        required: true,
-        min: 0,
-        step: 0.1
-      },
-      {
-        name: 'grade',
-        type: 'select',
-        label: 'Grade',
-        required: true,
-        options: ['Premium', 'Standard', 'Below Standard']
-      }
-    ]
-  },
-  expense: {
-    icon: DollarSign,
-    color: 'text-red-600',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
-    fields: [
-      {
-        name: 'type',
-        type: 'select',
-        label: 'Category',
-        required: true,
-        options: ['labor', 'materials', 'equipment', 'other']
-      },
-      {
-        name: 'description',
-        type: 'text',
-        label: 'Description',
-        required: true,
-        placeholder: 'Brief description',
-        maxLength: 1000
-      },
-      {
-        name: 'cost',
-        type: 'number',
-        label: 'Amount (₹)',
-        required: true,
-        min: 0,
-        step: 0.01
-      },
-      {
-        name: 'vendor',
-        type: 'text',
-        label: 'Vendor',
-        required: false,
-        placeholder: 'Vendor name (optional)',
-        maxLength: 1000
-      }
-    ]
-  },
-  fertigation: {
-    icon: Beaker,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-50',
-    borderColor: 'border-purple-200',
-    fields: [
-      {
-        name: 'fertilizer',
-        type: 'text',
-        label: 'Fertilizer Type',
-        required: true,
-        placeholder: 'e.g., NPK 19:19:19',
-        maxLength: 1000
-      },
-      {
-        name: 'quantity',
-        type: 'number',
-        label: 'Quantity',
-        required: false,
-        min: 0,
-        step: 0.1
-      },
-      {
-        name: 'unit',
-        type: 'select',
-        label: 'Unit',
-        required: false,
-        options: ['kg/acre', 'liter/acre']
-      }
-    ]
-  },
-  petiole_test: {
-    icon: TestTube,
-    color: 'text-green-700',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-200',
-    fields: [
-      {
-        name: 'total_nitrogen',
-        type: 'number',
-        label: 'Total Nitrogen (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'nitrate_nitrogen',
-        type: 'number',
-        label: 'Nitrate Nitrogen (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'ammonical_nitrogen',
-        type: 'number',
-        label: 'Ammonical Nitrogen (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'phosphorus',
-        type: 'number',
-        label: 'Phosphorus (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'potassium',
-        type: 'number',
-        label: 'Potassium (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'calcium',
-        type: 'number',
-        label: 'Calcium (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'magnesium',
-        type: 'number',
-        label: 'Magnesium (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'sulphur',
-        type: 'number',
-        label: 'Sulphur (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'ferrous',
-        type: 'number',
-        label: 'Ferrous (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'manganese',
-        type: 'number',
-        label: 'Manganese (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'zinc',
-        type: 'number',
-        label: 'Zinc (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'copper',
-        type: 'number',
-        label: 'Copper (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'boron',
-        type: 'number',
-        label: 'Boron (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'molybdenum',
-        type: 'number',
-        label: 'Molybdenum (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'sodium',
-        type: 'number',
-        label: 'Sodium (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'chloride',
-        type: 'number',
-        label: 'Chloride (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'carbonate',
-        type: 'number',
-        label: 'Carbonate (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'bicarbonate',
-        type: 'number',
-        label: 'Bicarbonate (PPM)',
-        required: false,
-        min: 0
-      }
-    ]
-  },
-  soil_test: {
-    icon: TestTube,
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-50',
-    borderColor: 'border-orange-200',
-    fields: [
-      {
-        name: 'ph',
-        type: 'number',
-        label: 'pH Level',
-        required: true,
-        min: 0,
-        max: 14,
-        step: 0.1
-      },
-      {
-        name: 'ec',
-        type: 'number',
-        label: 'EC (dS/m)',
-        required: false,
-        min: 0,
-        step: 0.01
-      },
-      {
-        name: 'organicCarbon',
-        type: 'number',
-        label: 'Organic Carbon (%)',
-        required: false,
-        min: 0,
-        step: 0.01
-      },
-      {
-        name: 'organicMatter',
-        type: 'number',
-        label: 'Organic Matter (%)',
-        required: false,
-        min: 0,
-        step: 0.01
-      },
-      {
-        name: 'nitrogen',
-        type: 'number',
-        label: 'Nitrogen (%)',
-        required: false,
-        min: 0,
-        step: 0.01
-      },
-      {
-        name: 'phosphorus',
-        type: 'number',
-        label: 'Phosphorus (ppm)',
-        required: false,
-        min: 0,
-        step: 0.1
-      },
-      {
-        name: 'potassium',
-        type: 'number',
-        label: 'Potassium (ppm)',
-        required: false,
-        min: 0,
-        step: 0.1
-      },
-      {
-        name: 'calcium',
-        type: 'number',
-        label: 'Calcium (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'magnesium',
-        type: 'number',
-        label: 'Magnesium (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'sulfur',
-        type: 'number',
-        label: 'Sulfur (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'iron',
-        type: 'number',
-        label: 'Ferrous / Iron (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'manganese',
-        type: 'number',
-        label: 'Manganese (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'zinc',
-        type: 'number',
-        label: 'Zinc (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'copper',
-        type: 'number',
-        label: 'Copper (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'boron',
-        type: 'number',
-        label: 'Boron (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'molybdenum',
-        type: 'number',
-        label: 'Molybdenum (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'sodium',
-        type: 'number',
-        label: 'Sodium (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'chloride',
-        type: 'number',
-        label: 'Chloride (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'calciumCarbonate',
-        type: 'number',
-        label: 'Calcium Carbonate (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'carbonate',
-        type: 'number',
-        label: 'Carbonate (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'bicarbonate',
-        type: 'number',
-        label: 'Bicarbonate (ppm)',
-        required: false,
-        min: 0
-      }
-    ]
-  }
-}
+// Use centralized logTypeConfigs from @/lib/log-type-config
 
-const logTypeLabels: Record<LogType, string> = {
-  irrigation: 'Irrigation',
-  spray: 'Spray Record',
-  fertigation: 'Fertigation',
-  soil_test: 'Soil Test',
-  harvest: 'Harvest',
-  expense: 'Expense',
-  petiole_test: 'Petiole Test'
+// Helper function to get log type labels from centralized config
+const getLogTypeLabel = (type: LogType): string => {
+  return logTypeConfigs[type]?.label || type.replace(/_/g, ' ')
 }
 
 export function UnifiedDataLogsModal({
@@ -1392,7 +909,7 @@ export function UnifiedDataLogsModal({
                       <div className="flex items-center gap-2">
                         <Icon className={`h-4 w-4 ${config.color}`} />
                         <div>
-                          <p className="font-medium text-sm">{logTypeLabels[log.type]}</p>
+                          <p className="font-medium text-sm">{getLogTypeLabel(log.type)}</p>
                           <p className="text-xs text-gray-600">
                             {Object.entries(log.data)
                               .filter(([, value]) => value)
@@ -1447,14 +964,13 @@ export function UnifiedDataLogsModal({
                 <SelectValue placeholder="Choose a log type to add..." />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(logTypeLabels).map(([type, label]) => {
-                  const config = logTypeConfigs[type as LogType]
+                {Object.entries(logTypeConfigs).map(([type, config]) => {
                   const Icon = config.icon
                   return (
                     <SelectItem key={type} value={type}>
                       <div className="flex items-center gap-2">
                         <Icon className={`h-4 w-4 ${config.color}`} />
-                        {label}
+                        {config.label}
                       </div>
                     </SelectItem>
                   )
@@ -1474,7 +990,7 @@ export function UnifiedDataLogsModal({
                     const Icon = logTypeConfigs[currentLogType].icon
                     return <Icon className={`h-4 w-4 ${logTypeConfigs[currentLogType].color}`} />
                   })()}
-                  {logTypeLabels[currentLogType]} Details
+                  {getLogTypeLabel(currentLogType)} Details
                   {currentLogType === 'spray' && multipleSprayMode && (
                     <Badge variant="outline" className="ml-2">
                       {sprayEntries.length}/10 entries
@@ -1499,7 +1015,12 @@ export function UnifiedDataLogsModal({
                         <CardHeader className="pb-2">
                           <div className="flex items-center justify-between">
                             <CardTitle className="text-sm flex items-center gap-2">
-                              <SprayCan className="h-4 w-4 text-green-600" />
+                              {(() => {
+                                const Icon = logTypeConfigs['spray'].icon
+                                return (
+                                  <Icon className={`h-4 w-4 ${logTypeConfigs['spray'].color}`} />
+                                )
+                              })()}
                               Spray {index + 1}
                               {entry.isValid && <CheckCircle className="h-4 w-4 text-green-600" />}
                             </CardTitle>
@@ -1555,7 +1076,14 @@ export function UnifiedDataLogsModal({
                         <CardHeader className="pb-2">
                           <div className="flex items-center justify-between">
                             <CardTitle className="text-sm flex items-center gap-2">
-                              <Droplets className="h-4 w-4 text-blue-600" />
+                              {(() => {
+                                const Icon = logTypeConfigs['fertigation'].icon
+                                return (
+                                  <Icon
+                                    className={`h-4 w-4 ${logTypeConfigs['fertigation'].color}`}
+                                  />
+                                )
+                              })()}
                               Fertigation {index + 1}
                               {entry.isValid && <CheckCircle className="h-4 w-4 text-green-600" />}
                             </CardTitle>

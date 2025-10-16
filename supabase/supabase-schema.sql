@@ -14,6 +14,7 @@ CREATE TABLE farms (
   planting_date DATE NOT NULL,
   vine_spacing DECIMAL(5,2) NOT NULL, -- in meters
   row_spacing DECIMAL(5,2) NOT NULL, -- in meters
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -29,6 +30,7 @@ CREATE TABLE irrigation_records (
   growth_stage VARCHAR(100) NOT NULL,
   moisture_status VARCHAR(50) NOT NULL,
   system_discharge DECIMAL(8,2) NOT NULL, -- in liters per hour
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -43,6 +45,7 @@ CREATE TABLE spray_records (
   area DECIMAL(10,2) NOT NULL, -- in hectares
   weather VARCHAR(255) NOT NULL,
   operator VARCHAR(255) NOT NULL,
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -56,6 +59,7 @@ CREATE TABLE fertigation_records (
   dose VARCHAR(100) NOT NULL,
   purpose VARCHAR(255) NOT NULL,
   area DECIMAL(10,2) NOT NULL, -- in hectares
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -69,6 +73,7 @@ CREATE TABLE harvest_records (
   grade VARCHAR(100) NOT NULL,
   price DECIMAL(10,2), -- per kg
   buyer VARCHAR(255),
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -81,6 +86,7 @@ CREATE TABLE expense_records (
   type VARCHAR(20) CHECK (type IN ('labor', 'materials', 'equipment', 'other')) NOT NULL,
   description TEXT NOT NULL,
   cost DECIMAL(12,2) NOT NULL,
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   remarks TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -116,6 +122,7 @@ CREATE TABLE soil_test_records (
   farm_id BIGINT REFERENCES farms(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   parameters JSONB NOT NULL, -- pH, N, P, K, etc.
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   recommendations TEXT,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -127,6 +134,7 @@ CREATE TABLE petiole_test_records (
   farm_id BIGINT REFERENCES farms(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   parameters JSONB NOT NULL, -- N, P, K, Ca, Mg, etc.
+  date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   recommendations TEXT,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -134,16 +142,22 @@ CREATE TABLE petiole_test_records (
 
 -- Create indexes for better performance
 CREATE INDEX idx_farms_user_id ON farms(user_id);
+CREATE INDEX idx_farms_date_of_pruning ON farms(date_of_pruning);
 CREATE INDEX idx_irrigation_records_farm_id ON irrigation_records(farm_id);
 CREATE INDEX idx_irrigation_records_date ON irrigation_records(date);
+CREATE INDEX idx_irrigation_records_date_of_pruning ON irrigation_records(date_of_pruning);
 CREATE INDEX idx_spray_records_farm_id ON spray_records(farm_id);
 CREATE INDEX idx_spray_records_date ON spray_records(date);
+CREATE INDEX idx_spray_records_date_of_pruning ON spray_records(date_of_pruning);
 CREATE INDEX idx_fertigation_records_farm_id ON fertigation_records(farm_id);
 CREATE INDEX idx_fertigation_records_date ON fertigation_records(date);
+CREATE INDEX idx_fertigation_records_date_of_pruning ON fertigation_records(date_of_pruning);
 CREATE INDEX idx_harvest_records_farm_id ON harvest_records(farm_id);
 CREATE INDEX idx_harvest_records_date ON harvest_records(date);
+CREATE INDEX idx_harvest_records_date_of_pruning ON harvest_records(date_of_pruning);
 CREATE INDEX idx_expense_records_farm_id ON expense_records(farm_id);
 CREATE INDEX idx_expense_records_date ON expense_records(date);
+CREATE INDEX idx_expense_records_date_of_pruning ON expense_records(date_of_pruning);
 CREATE INDEX idx_calculation_history_farm_id ON calculation_history(farm_id);
 CREATE INDEX idx_calculation_history_date ON calculation_history(date);
 CREATE INDEX idx_task_reminders_farm_id ON task_reminders(farm_id);
@@ -151,8 +165,10 @@ CREATE INDEX idx_task_reminders_due_date ON task_reminders(due_date);
 CREATE INDEX idx_task_reminders_completed ON task_reminders(completed);
 CREATE INDEX idx_soil_test_records_farm_id ON soil_test_records(farm_id);
 CREATE INDEX idx_soil_test_records_date ON soil_test_records(date);
+CREATE INDEX idx_soil_test_records_date_of_pruning ON soil_test_records(date_of_pruning);
 CREATE INDEX idx_petiole_test_records_farm_id ON petiole_test_records(farm_id);
 CREATE INDEX idx_petiole_test_records_date ON petiole_test_records(date);
+CREATE INDEX idx_petiole_test_records_date_of_pruning ON petiole_test_records(date_of_pruning);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE farms ENABLE ROW LEVEL SECURITY;

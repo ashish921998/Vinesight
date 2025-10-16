@@ -1,4 +1,4 @@
-# FarmAI - Smart Farm Management System
+# VineSight - Smart Farm Management System
 # Robots.txt for optimal SEO crawling
 
 User-agent: *
@@ -51,7 +51,7 @@ Allow: /*.svg
 Allow: /*.webp
 
 # Sitemap location
-Sitemap: https://farmai.vercel.app/sitemap.xml
+Sitemap: https://vinesight.vercel.app/sitemap.xml
 
 # Crawl delay to be respectful
 Crawl-delay: 1

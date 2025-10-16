@@ -157,7 +157,7 @@ export default function PrecisionAgriculture() {
         title="Precision Agriculture Technology Guide - Smart Farming Solutions 2025"
         description="Complete guide to precision agriculture technologies, GPS farming, IoT sensors, and data-driven agricultural practices for modern farms."
         url="/precision-agriculture"
-        image="https://farmai.vercel.app/og-image.png"
+        image="https://vinesight.vercel.app/og-image.png"
         guideCategory="Precision Agriculture"
       />
 
@@ -334,7 +334,7 @@ export default function PrecisionAgriculture() {
               Start Your Precision Agriculture Journey
             </h2>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              FarmAI integrates the latest precision agriculture technologies into an easy-to-use
+              VineSight integrates the latest precision agriculture technologies into an easy-to-use
               platform. Get GPS guidance, IoT sensor integration, and AI-powered analytics in one
               solution.
             </p>

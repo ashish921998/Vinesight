@@ -1,7 +1,7 @@
 {
-  "name": "VineSight - Grape Farming Digital Companion",
+  "name": "VineSight - AI-Powered Farm Management System | Smart Agriculture App",
   "short_name": "VineSight",
-  "description": "Scientific grape farming operations management app for Indian farmers",
+  "description": "Transform farming operations with AI-powered smart farm management system. Precision agriculture tools, crop monitoring, yield prediction, and farm automation for modern agriculture. Perfect for grape farming and precision farming.",
   "theme_color": "#059669",
   "background_color": "#ffffff",
   "display": "standalone",
@@ -9,7 +9,7 @@
   "scope": "/",
   "start_url": "/",
   "lang": "en",
-  "categories": ["agriculture", "productivity", "utilities"],
+  "categories": ["agriculture", "productivity", "utilities", "business", "lifestyle"],
   "screenshots": [
     {
       "src": "/screenshot-wide.png",
@@ -25,11 +25,17 @@
     }
   ],
   "features": [
-    "Farm Management",
+    "AI-Powered Farm Management",
+    "Precision Agriculture Tools",
+    "Crop Monitoring & Analytics",
+    "Yield Prediction",
+    "Smart Irrigation Management",
+    "Disease Detection",
     "Scientific Calculators",
     "Operations Journal",
+    "Farm Automation",
     "Offline Support",
-    "Multi-language"
+    "Multi-language Support"
   ],
   "icons": [
     {

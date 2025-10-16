@@ -7,7 +7,15 @@ import { Suspense } from 'react'
 import { GlobalAuthErrorHandler } from '@/components/auth/GlobalAuthErrorHandler'
 import { Analytics } from '@vercel/analytics/next'
 import { GoogleAnalytics, SearchConsoleVerification } from '@/components/GoogleAnalytics'
-import { LayoutContent } from '@/components/layout/LayoutContent'
+import dynamic from 'next/dynamic'
+import { SEO_KEYWORDS } from '@/lib/seo-constants'
+
+const LayoutContent = dynamic(
+  () => import('@/components/layout/LayoutContent').then((mod) => ({ default: mod.LayoutContent })),
+  {
+    ssr: true
+  }
+)
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -36,14 +44,13 @@ const sourceCodePro = Source_Code_Pro({
 })
 
 export const metadata: Metadata = {
-  title: 'FarmAI - AI-Powered Smart Farm Management System | Precision Agriculture Technology',
+  title: 'VineSight - AI-Powered Smart Farm Management',
   description:
-    "Transform your farming operations with FarmAI's intelligent farm management system. AI-driven crop monitoring, yield prediction, disease detection, and automation for modern agriculture. Perfect for grape farming, vineyard management, and precision farming techniques.",
-  keywords:
-    'farm management system, AI farming, smart agriculture, precision farming, grape farm management, vineyard management, crop monitoring, AI agriculture, farming technology, agricultural automation, yield prediction, disease detection, farming software, digital agriculture, smart farming solutions, agricultural AI, farm analytics, crop management, irrigation management, agricultural data, farming dashboard, agricultural intelligence, modern farming, agritech, farm optimization, agricultural technology, sustainable farming, farming apps, agricultural software, farm productivity, crop analytics, agricultural insights',
-  authors: [{ name: 'FarmAI Team' }],
-  creator: 'FarmAI - Smart Agriculture Solutions',
-  publisher: 'FarmAI Technologies',
+    'AI-powered vineyard management with crop monitoring, yield prediction, and disease detection. Transform your farming operations with precision agriculture technology.',
+  keywords: SEO_KEYWORDS,
+  authors: [{ name: 'VineSight Team' }],
+  creator: 'VineSight - Smart Agriculture Solutions',
+  publisher: 'VineSight Technologies',
   robots: {
     index: true,
     follow: true,
@@ -61,34 +68,34 @@ export const metadata: Metadata = {
   category: 'agriculture',
   classification: 'Agriculture Technology',
   manifest: '/manifest.json',
-  metadataBase: new URL('https://farmai.vercel.app'),
+  metadataBase: new URL('https://vinesight.vercel.app'),
   alternates: {
     canonical: '/'
   },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://farmai.vercel.app',
-    title: 'FarmAI - AI-Powered Smart Farm Management System',
+    url: 'https://vinesight.vercel.app',
+    title: 'VineSight - AI-Powered Smart Farm Management System',
     description:
       'Transform your farming operations with AI-driven crop monitoring, yield prediction, and automated farm management. Perfect for grape farming and precision agriculture.',
-    siteName: 'FarmAI',
+    siteName: 'VineSight',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'FarmAI - Smart Farm Management System'
+        alt: 'VineSight - Smart Farm Management System'
       }
     ]
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FarmAI - AI-Powered Smart Farm Management',
+    title: 'VineSight - AI-Powered Smart Farm Management',
     description:
       'Transform farming with AI-driven crop monitoring, yield prediction, and automated management systems.',
     images: ['/og-image.png'],
-    creator: '@FarmAI'
+    creator: '@VineSight'
   },
   icons: {
     icon: [
@@ -119,12 +126,12 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="FarmAI" />
+        <meta name="apple-mobile-web-app-title" content="VineSight" />
 
         {/* Enhanced SEO Meta Tags */}
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="application-name" content="FarmAI" />
+        <meta name="application-name" content="VineSight" />
         <meta name="msapplication-TileColor" content="#37a765" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
 
@@ -133,9 +140,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
         {/* Canonical URL will be set per page */}
-        <link rel="canonical" href="https://farmai.vercel.app" />
+        <link rel="canonical" href="https://vinesight.vercel.app" />
 
         {/* Additional SEO enhancements */}
+        <meta name="keywords" content={SEO_KEYWORDS} />
         <meta name="rating" content="general" />
         <meta name="distribution" content="global" />
         <meta name="language" content="en" />

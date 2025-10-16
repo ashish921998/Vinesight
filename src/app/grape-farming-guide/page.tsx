@@ -92,7 +92,7 @@ export default function GrapeFarmingGuide() {
         title="Complete Grape Farming Guide 2025 - Modern Vineyard Management Techniques"
         description="Comprehensive guide to grape farming and vineyard management. Learn modern techniques for higher yields, disease prevention, and sustainable grape cultivation."
         url="/grape-farming-guide"
-        image="https://farmai.vercel.app/og-image.png"
+        image="https://vinesight.vercel.app/og-image.png"
         guideCategory="Viticulture"
       />
 
@@ -221,8 +221,9 @@ export default function GrapeFarmingGuide() {
               Ready to Transform Your Vineyard?
             </h2>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Join thousands of successful grape farmers using FarmAI&apos;s smart management tools.
-              Get AI-powered insights, yield predictions, and personalized farming recommendations.
+              Join thousands of successful grape farmers using VineSight&apos;s smart management
+              tools. Get AI-powered insights, yield predictions, and personalized farming
+              recommendations.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="h-12">
