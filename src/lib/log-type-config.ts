@@ -3,7 +3,7 @@
  * Used across the application to maintain consistency in log type display
  */
 
-import { Droplets, SprayCan, Scissors, DollarSign, TestTube, Beaker } from 'lucide-react'
+import { Droplets, SprayCan, Scissors, IndianRupee, TestTube, Beaker } from 'lucide-react'
 
 export type LogType =
   | 'irrigation'
@@ -121,7 +121,7 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
     ]
   },
   expense: {
-    icon: DollarSign,
+    icon: IndianRupee,
     color: 'text-red-600',
     bgColor: 'bg-red-50',
     borderColor: 'border-red-200',
