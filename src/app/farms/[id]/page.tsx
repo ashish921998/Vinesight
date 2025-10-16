@@ -214,7 +214,7 @@ export default function FarmDetailsPage() {
         record = await SupabaseService.addSprayRecord({
           farm_id: parseInt(farmId),
           date: date,
-          chemical: data.chemical,
+          chemical: data.chemical?.trim() || 'Unknown',
           dose:
             data.quantity_amount && data.quantity_unit
               ? `${data.quantity_amount}${data.quantity_unit}`
@@ -256,7 +256,7 @@ export default function FarmDetailsPage() {
         record = await SupabaseService.addFertigationRecord({
           farm_id: parseInt(farmId),
           date: date,
-          fertilizer: data.fertilizer,
+          fertilizer: data.fertilizer?.trim() || 'Unknown',
           dose: data.quantity ? `${data.quantity} kg/L` : 'As per requirement',
           purpose: 'Nutrient Application',
           area: dashboardData?.farm?.area || 0,

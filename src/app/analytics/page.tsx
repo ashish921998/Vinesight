@@ -269,10 +269,10 @@ export default function AnalyticsPage() {
     <>
       <SEOSchema
         type="dashboard"
-        title="Farm Analytics - Data Insights & Performance Metrics | FarmAI"
+        title="Farm Analytics - Data Insights & Performance Metrics | VineSight"
         description="Comprehensive farm analytics dashboard with AI-powered insights, cost analysis, yield predictions, and performance metrics for modern agriculture operations."
         url="/analytics"
-        image="https://farmai.vercel.app/og-image.png"
+        image="https://vinesight.vercel.app/og-image.png"
       />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}

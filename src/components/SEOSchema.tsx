@@ -1,5 +1,7 @@
 'use client'
 
+import { SEO_KEYWORDS } from '@/app/layout'
+
 interface SEOSchemaProps {
   type?: 'homepage' | 'dashboard' | 'calculator' | 'guide' | 'product'
   title?: string
@@ -250,8 +252,8 @@ export function SEOSchema({
   if (type === 'calculator') {
     const calculatorPage: SchemaWebPage = {
       '@type': 'WebPage',
-      '@id': `https://vinesight.vercel.app${url}#webpage`,
-      url: `https://vinesight.vercel.app${url}`,
+      '@id': `https://vinesight.vercel.app${url || ''}#webpage`,
+      url: `https://vinesight.vercel.app${url || ''}`,
       name: title || 'Farm Calculator',
       description: description || 'Scientific agricultural calculator for farming operations',
       isPartOf: {
@@ -279,10 +281,10 @@ export function SEOSchema({
   if (type === 'guide') {
     const guideArticle: SchemaArticle = {
       '@type': 'Article',
-      '@id': `https://vinesight.vercel.app${url}#article`,
+      '@id': `https://vinesight.vercel.app${url || ''}#article`,
       headline: title,
       description: description,
-      url: `https://vinesight.vercel.app${url}`,
+      url: `https://vinesight.vercel.app${url || ''}`,
       datePublished: '2025-10-15',
       dateModified: '2025-10-15',
       author: {
@@ -292,7 +294,7 @@ export function SEOSchema({
         '@id': 'https://vinesight.vercel.app/#organization'
       },
       articleSection: guideCategory || 'Agriculture',
-      keywords: 'farm management, agriculture, farming techniques, crop management, precision agriculture',
+      keywords: SEO_KEYWORDS,
       image: {
         '@type': 'ImageObject',
         url: image || 'https://vinesight.vercel.app/og-image.png',
@@ -301,7 +303,7 @@ export function SEOSchema({
       },
       mainEntityOfPage: {
         '@type': 'WebPage',
-        '@id': `https://vinesight.vercel.app${url}#webpage`
+        '@id': `https://vinesight.vercel.app${url || ''}#webpage`
       }
     }
     baseSchema['@graph'].push(guideArticle)

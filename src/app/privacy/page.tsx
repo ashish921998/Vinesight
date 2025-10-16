@@ -24,7 +24,7 @@ export default function PrivacyPolicyPage() {
         title="Privacy Policy - VineSight Grape Farming Assistant"
         description="Learn how VineSight protects your privacy and handles your farming data. Comprehensive privacy policy for Indian grape farmers."
         type="guide"
-        image="https://farmai.vercel.app/og-image.png"
+        image="https://vinesight.vercel.app/og-image.png"
       />
 
       {/* Header */}

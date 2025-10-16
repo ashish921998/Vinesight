@@ -9,6 +9,10 @@ import { Analytics } from '@vercel/analytics/next'
 import { GoogleAnalytics, SearchConsoleVerification } from '@/components/GoogleAnalytics'
 import { LayoutContent } from '@/components/layout/LayoutContent'
 
+// SEO Keywords - Single source of truth for farm management keywords
+export const SEO_KEYWORDS =
+  'farm management system, AI farming, smart agriculture, precision farming, grape farm management, vineyard management, crop monitoring, AI agriculture, farming technology, agricultural automation, yield prediction, disease detection, farming software, digital agriculture, smart farming solutions, agricultural AI, farm analytics, crop management, irrigation management, agricultural data, farming dashboard, agricultural intelligence, modern farming, agritech, farm optimization, agricultural technology, sustainable farming, farming apps, agricultural software, farm productivity, crop analytics, agricultural insights'
+
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin']
@@ -38,9 +42,8 @@ const sourceCodePro = Source_Code_Pro({
 export const metadata: Metadata = {
   title: 'VineSight - AI-Powered Smart Farm Management',
   description:
-    "AI-powered vineyard management with crop monitoring, yield prediction, and disease detection. Transform your farming operations with precision agriculture technology.",
-  keywords:
-    'farm management system, AI farming, smart agriculture, precision farming, grape farm management, vineyard management, crop monitoring, AI agriculture, farming technology, agricultural automation, yield prediction, disease detection, farming software, digital agriculture, smart farming solutions, agricultural AI, farm analytics, crop management, irrigation management, agricultural data, farming dashboard, agricultural intelligence, modern farming, agritech, farm optimization, agricultural technology, sustainable farming, farming apps, agricultural software, farm productivity, crop analytics, agricultural insights',
+    'AI-powered vineyard management with crop monitoring, yield prediction, and disease detection. Transform your farming operations with precision agriculture technology.',
+  keywords: SEO_KEYWORDS,
   authors: [{ name: 'VineSight Team' }],
   creator: 'VineSight - Smart Agriculture Solutions',
   publisher: 'VineSight Technologies',
@@ -136,7 +139,7 @@ export default function RootLayout({
         <link rel="canonical" href="https://vinesight.vercel.app" />
 
         {/* Additional SEO enhancements */}
-        <meta name="keywords" content="farm management, AI farming, smart agriculture, precision farming, crop monitoring, agricultural automation, farm analytics, vineyard management, grape farming, agricultural technology, farming software, digital agriculture, farm productivity, agritech, sustainable farming" />
+        <meta name="keywords" content={SEO_KEYWORDS} />
         <meta name="rating" content="general" />
         <meta name="distribution" content="global" />
         <meta name="language" content="en" />

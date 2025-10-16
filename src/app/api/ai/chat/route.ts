@@ -165,7 +165,7 @@ function buildSystemPrompt(context: any): string {
         ? 'Respond in Marathi with Devanagari script'
         : 'Respond in English'
 
-  return `You are FarmAI, an expert agricultural assistant specializing in grape farming and viticulture. ${langInstruction}.
+  return `You are VineSight, an expert agricultural assistant specializing in grape farming and viticulture. ${langInstruction}.
 
 Your expertise includes:
 - Grape disease identification, treatment, and prevention

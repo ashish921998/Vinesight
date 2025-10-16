@@ -278,7 +278,7 @@ export function BottomNavigation() {
           await SupabaseService.addSprayRecord({
             farm_id: farmId,
             date: currentDate,
-            chemical: formData.product || '',
+            chemical: formData.product?.trim() || 'Unknown',
             dose: 'Not specified',
             quantity_amount: 0,
             quantity_unit: 'Not specified',
@@ -294,7 +294,7 @@ export function BottomNavigation() {
           await SupabaseService.addFertigationRecord({
             farm_id: farmId,
             date: currentDate,
-            fertilizer: formData.fertilizer || '',
+            fertilizer: formData.fertilizer?.trim() || 'Unknown',
             dose: formData.quantity || '0',
             purpose: '', // Default value
             area: 0,

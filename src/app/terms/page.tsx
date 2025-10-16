@@ -26,7 +26,7 @@ export default function TermsOfServicePage() {
         title="Terms of Service - VineSight Grape Farming Assistant"
         description="Terms and conditions for using VineSight's grape farming platform. Legal terms for Indian grape farmers and agricultural services."
         type="guide"
-        image="https://farmai.vercel.app/og-image.png"
+        image="https://vinesight.vercel.app/og-image.png"
       />
 
       {/* Header */}
