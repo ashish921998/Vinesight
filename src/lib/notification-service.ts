@@ -1,6 +1,6 @@
 'use client'
 
-import { TaskReminder } from '../types/types'
+import { Task } from '../types/types'
 
 export interface NotificationSettings {
   enabled: boolean
@@ -97,7 +97,7 @@ export class NotificationService {
     setTimeout(() => notification.close(), 10000)
   }
 
-  sendTaskReminder(task: TaskReminder, type: 'due_today' | 'overdue' | 'upcoming'): void {
+  sendTaskReminder(task: Task, type: 'due_today' | 'overdue' | 'upcoming'): void {
     if (!this.canSendNotifications()) return
 
     let title: string
@@ -132,7 +132,7 @@ export class NotificationService {
     })
   }
 
-  scheduleTaskNotifications(tasks: TaskReminder[]): void {
+  scheduleTaskNotifications(tasks: Task[]): void {
     // Clear existing notifications
     this.clearScheduledNotifications()
 
@@ -141,7 +141,7 @@ export class NotificationService {
     const now = new Date()
 
     tasks.forEach((task) => {
-      if (task.completed) return
+      if (task.status === 'completed') return
 
       const dueDate = new Date(task.dueDate)
       const timeDiff = dueDate.getTime() - now.getTime()
@@ -237,7 +237,7 @@ export class NotificationService {
   }
 
   // Task completion celebration
-  sendTaskCompletionCelebration(task: TaskReminder): void {
+  sendTaskCompletionCelebration(task: Task): void {
     if (!this.canSendNotifications()) return
 
     this.sendNotification('🎉 Task Completed!', {

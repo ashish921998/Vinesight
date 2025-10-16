@@ -212,19 +212,19 @@ export class PaginatedQueries {
     }
   ): Promise<PaginatedResult<any>> {
     let query = supabase
-      .from('task_reminders')
+      .from('tasks')
       .select('*', { count: 'exact' })
       .eq('farm_id', farmId)
 
     // Apply filters
     if (filters?.completed !== undefined) {
-      query = query.eq('completed', filters.completed)
+      query = filters.completed ? query.eq('status', 'completed') : query.neq('status', 'completed')
     }
     if (filters?.priority) {
       query = query.eq('priority', filters.priority)
     }
     if (filters?.type) {
-      query = query.eq('type', filters.type)
+      query = query.eq('category', filters.type)
     }
 
     query = query.order(params.sortBy || 'due_date', {

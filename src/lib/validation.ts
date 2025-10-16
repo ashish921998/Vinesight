@@ -151,15 +151,19 @@ export const HarvestSchema = z.object({
   notes: z.string().max(500, 'Notes too long').optional()
 })
 
-// Task reminder validation
-export const TaskReminderSchema = z.object({
-  farm_id: z.number().int().positive('Invalid farm ID'),
+// Task validation
+export const TaskSchema = z.object({
+  farmId: z.number().int().positive('Invalid farm ID').nullable().optional(),
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
-  description: z.string().max(1000, 'Description too long').optional(),
-  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
-  type: z.enum(['irrigation', 'spray', 'fertigation', 'training', 'harvest', 'other']),
-  priority: z.enum(['low', 'medium', 'high']),
-  completed: z.boolean()
+  description: z.string().max(1000, 'Description too long').optional().nullable(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
+  priority: z.enum(['low', 'medium', 'high']).default('medium'),
+  status: z.enum(['pending', 'in-progress', 'completed']).default('pending'),
+  category: z
+    .string()
+    .min(1, 'Category is required')
+    .max(50, 'Category too long')
+    .default('general')
 })
 
 // Expense record validation

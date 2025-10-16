@@ -18,8 +18,8 @@ import {
   Sparkles,
   Target
 } from 'lucide-react'
-import { CloudDataService, TaskReminder } from '@/lib/cloud-data-service'
-import type { Farm } from '@/types/types'
+import { CloudDataService, Task } from '@/lib/cloud-data-service'
+import type { Farm, TaskPriority, TaskStatus } from '@/types/types'
 import { SupabaseService } from '@/lib/supabase-service'
 import { TaskTemplateSelector } from '@/components/reminders/TaskTemplateSelector'
 import { NotificationSettings } from '@/components/reminders/NotificationSettings'
@@ -30,11 +30,11 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 export default function RemindersPage() {
   const [farms, setFarms] = useState<Farm[]>([])
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null)
-  const [tasks, setTasks] = useState<TaskReminder[]>([])
+  const [tasks, setTasks] = useState<Task[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [showTemplateSelector, setShowTemplateSelector] = useState(false)
   const [showNotificationSettings, setShowNotificationSettings] = useState(false)
-  const [editingTask, setEditingTask] = useState<TaskReminder | null>(null)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed' | 'overdue'>('all')
   const [showSeasonalSuggestions, setShowSeasonalSuggestions] = useState(true)
   const [farmsLoading, setFarmsLoading] = useState(true)
@@ -45,8 +45,9 @@ export default function RemindersPage() {
     title: '',
     description: '',
     dueDate: '',
-    type: 'other' as const,
-    priority: 'medium' as const
+    category: 'other',
+    priority: 'medium' as TaskPriority,
+    status: 'pending' as TaskStatus
   })
 
   const loadFarms = useCallback(async () => {
@@ -78,7 +79,11 @@ export default function RemindersPage() {
     if (!selectedFarm) return
 
     try {
-      const taskList = await SupabaseService.getTaskReminders(selectedFarm.id!)
+      const taskList = await SupabaseService.getTasks({
+        farmId: selectedFarm.id!,
+        includeCompleted: true,
+        orderBy: 'due_date'
+      })
       setTasks(taskList)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
@@ -118,22 +123,21 @@ export default function RemindersPage() {
     if (!selectedFarm) return
 
     try {
+      const payload = {
+        title: formData.title,
+        description: formData.description || null,
+        dueDate: formData.dueDate,
+        priority: formData.priority,
+        category: formData.category,
+        status: formData.status
+      }
+
       if (editingTask) {
-        // For editing, we'd need an update method in CloudDataService
-        if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
-          console.log('Editing not implemented yet')
-        }
+        await SupabaseService.updateTask(editingTask.id, payload)
       } else {
-        await SupabaseService.addTaskReminder({
-          farmId: selectedFarm.id!,
-          title: formData.title,
-          description: formData.description,
-          dueDate: formData.dueDate,
-          type: formData.type,
-          priority: formData.priority,
-          completed: false,
-          completedAt: null
+        await SupabaseService.createTask({
+          ...payload,
+          farmId: selectedFarm.id!
         })
       }
 

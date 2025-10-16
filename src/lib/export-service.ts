@@ -127,7 +127,7 @@ export class ExportService {
     }
 
     if (includeTypes.includes('tasks')) {
-      const allRecords = await SupabaseService.getTaskReminders(farmId)
+      const allRecords = await SupabaseService.getTasks({ farmId, includeCompleted: true })
       data.tasks = this.filterByDateRange(allRecords, dateRange)
     }
 

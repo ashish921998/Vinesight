@@ -12,11 +12,11 @@ import type {
   SoilTestRecord,
   PetioleTestRecord
 } from './supabase'
-import type { TaskReminder, Farm } from '@/types/types'
+import type { Task, Farm } from '@/types/types'
 
 // Re-export application types
 export type {
-  TaskReminder,
+  Task,
   IrrigationRecord,
   SprayRecord,
   FertigationRecord,
@@ -62,9 +62,9 @@ export type DatabaseCalculationHistoryInsert =
 export type DatabaseCalculationHistoryUpdate =
   Database['public']['Tables']['calculation_history']['Update']
 
-export type DatabaseTaskReminder = Database['public']['Tables']['task_reminders']['Row']
-export type DatabaseTaskReminderInsert = Database['public']['Tables']['task_reminders']['Insert']
-export type DatabaseTaskReminderUpdate = Database['public']['Tables']['task_reminders']['Update']
+export type DatabaseTask = Database['public']['Tables']['tasks']['Row']
+export type DatabaseTaskInsert = Database['public']['Tables']['tasks']['Insert']
+export type DatabaseTaskUpdate = Database['public']['Tables']['tasks']['Update']
 
 export type DatabaseSoilTestRecord = Database['public']['Tables']['soil_test_records']['Row']
 export type DatabaseSoilTestRecordInsert =
@@ -443,50 +443,51 @@ export function toDatabaseCalculationHistoryInsert(
   }
 }
 
-// Task Reminder conversion functions
-export function toApplicationTaskReminder(dbRecord: DatabaseTaskReminder): TaskReminder {
+// Task conversion functions
+export function toApplicationTask(dbRecord: DatabaseTask): Task {
   return {
     id: dbRecord.id,
+    userId: dbRecord.user_id,
     farmId: dbRecord.farm_id,
     title: dbRecord.title,
     description: dbRecord.description || null,
     dueDate: dbRecord.due_date,
-    type: dbRecord.type,
-    completed: dbRecord.completed || false,
-    priority: dbRecord.priority || null,
+    priority: (dbRecord.priority as Task['priority']) || 'medium',
+    status: (dbRecord.status as Task['status']) || 'pending',
+    category: dbRecord.category ?? 'general',
     createdAt: dbRecord.created_at || null,
-    completedAt: dbRecord.completed_at || null
+    updatedAt: dbRecord.updated_at || null
   }
 }
 
-export function toDatabaseTaskReminderInsert(
-  appRecord: Omit<TaskReminder, 'id' | 'createdAt'>
-): DatabaseTaskReminderInsert {
+export function toDatabaseTaskInsert(
+  appRecord: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>
+): DatabaseTaskInsert {
   return {
-    farm_id: appRecord.farmId,
+    user_id: appRecord.userId,
+    farm_id: appRecord.farmId ?? null,
     title: appRecord.title,
     description: appRecord.description,
     due_date: appRecord.dueDate,
-    type: appRecord.type,
-    completed: appRecord.completed,
     priority: appRecord.priority,
-    completed_at: appRecord.completedAt
+    status: appRecord.status,
+    category: appRecord.category
   }
 }
 
-export function toDatabaseTaskReminderUpdate(
-  appUpdates: Partial<TaskReminder>
-): DatabaseTaskReminderUpdate {
-  const update: DatabaseTaskReminderUpdate = {}
+export function toDatabaseTaskUpdate(appUpdates: Partial<Task>): DatabaseTaskUpdate {
+  const update: DatabaseTaskUpdate = {}
 
+  if (appUpdates.userId !== undefined) update.user_id = appUpdates.userId
   if (appUpdates.farmId !== undefined) update.farm_id = appUpdates.farmId
   if (appUpdates.title !== undefined) update.title = appUpdates.title
   if (appUpdates.description !== undefined) update.description = appUpdates.description
   if (appUpdates.dueDate !== undefined) update.due_date = appUpdates.dueDate
-  if (appUpdates.type !== undefined) update.type = appUpdates.type
-  if (appUpdates.completed !== undefined) update.completed = appUpdates.completed
   if (appUpdates.priority !== undefined) update.priority = appUpdates.priority
-  if (appUpdates.completedAt !== undefined) update.completed_at = appUpdates.completedAt
+  if (appUpdates.status !== undefined) update.status = appUpdates.status
+  if (appUpdates.category !== undefined) update.category = appUpdates.category
+  if (appUpdates.createdAt !== undefined) update.created_at = appUpdates.createdAt
+  if (appUpdates.updatedAt !== undefined) update.updated_at = appUpdates.updatedAt
 
   return update
 }

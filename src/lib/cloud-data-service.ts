@@ -5,7 +5,7 @@ import {
   type SprayRecord,
   type HarvestRecord,
   type ExpenseRecord,
-  type TaskReminder,
+  type Task,
   toApplicationFarm,
   toApplicationIrrigationRecord,
   toApplicationSprayRecord,
@@ -14,7 +14,7 @@ import {
 } from './supabase-types'
 
 // Re-export types for easier importing
-export type { IrrigationRecord, SprayRecord, HarvestRecord, ExpenseRecord, TaskReminder }
+export type { IrrigationRecord, SprayRecord, HarvestRecord, ExpenseRecord, Task }
 
 /**
  * Cloud Data Service - Pure Supabase integration for online-only app
@@ -255,5 +255,5 @@ export class CloudDataService {
     return data || []
   }
 
-  // Note: For task reminders, use SupabaseService.getTaskReminders, addTaskReminder, completeTask instead
+  // Note: For tasks, use SupabaseService.getTasks, createTask, updateTask, and markTaskComplete instead
 }
