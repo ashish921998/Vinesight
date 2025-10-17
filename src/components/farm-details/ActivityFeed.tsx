@@ -140,33 +140,39 @@ export function ActivityFeed({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {pendingTasks.slice(0, 3).map((task, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-3 p-3 bg-white rounded-xl border border-green-200"
-                >
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  </div>
+              {pendingTasks.slice(0, 3).map((task, index) => {
+                const dueDate = task.dueDate || task.due_date
+                const title = task.title || task.task_type || 'Task'
+                const category = task.type || task.category
 
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 text-sm">
-                      {task.title || task.task_type || 'Task'}
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      Due:{' '}
-                      {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No date'}
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() => onCompleteTask(task.id)}
-                    className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium hover:bg-green-200 transition-colors"
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 p-3 bg-white rounded-xl border border-green-200"
                   >
-                    Complete
-                  </button>
-                </div>
-              ))}
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 text-sm flex items-center gap-2">
+                        <span>{title}</span>
+                        {category && <Badge variant="outline">{category}</Badge>}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        Due: {dueDate ? new Date(dueDate).toLocaleDateString() : 'No date'}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => onCompleteTask(task.id)}
+                      className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium hover:bg-green-200 transition-colors"
+                    >
+                      Complete
+                    </button>
+                  </div>
+                )
+              })}
             </div>
           </CardContent>
         </Card>

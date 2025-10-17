@@ -112,15 +112,22 @@ export class NotificationService {
         break
       case 'overdue':
         title = `Overdue Task: ${task.title}`
-        body = `Task "${task.title}" was due on ${new Date(task.dueDate).toLocaleDateString()}.`
+        body = task.dueDate
+          ? `Task "${task.title}" was due on ${new Date(task.dueDate).toLocaleDateString()}.`
+          : `Task "${task.title}" is overdue.`
         icon = '⚠️'
         break
       case 'upcoming':
-        const daysUntil = Math.ceil(
-          (new Date(task.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-        )
-        title = `Upcoming Task: ${task.title}`
-        body = `Task "${task.title}" is due in ${daysUntil} day${daysUntil === 1 ? '' : 's'}.`
+        if (task.dueDate) {
+          const daysUntil = Math.ceil(
+            (new Date(task.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+          )
+          title = `Upcoming Task: ${task.title}`
+          body = `Task "${task.title}" is due in ${daysUntil} day${daysUntil === 1 ? '' : 's'}.`
+        } else {
+          title = `Upcoming Task: ${task.title}`
+          body = `Task "${task.title}" has an upcoming due date.`
+        }
         icon = '📋'
         break
     }
@@ -143,8 +150,10 @@ export class NotificationService {
     tasks.forEach((task) => {
       if (task.status === 'completed') return
 
-      const dueDate = new Date(task.dueDate)
-      const timeDiff = dueDate.getTime() - now.getTime()
+      const dueDateValue = task.dueDate ? new Date(task.dueDate) : null
+      if (!dueDateValue || Number.isNaN(dueDateValue.getTime())) return
+
+      const timeDiff = dueDateValue.getTime() - now.getTime()
       const daysUntil = Math.ceil(timeDiff / (1000 * 60 * 60 * 24))
 
       // Schedule overdue notification (if already overdue)

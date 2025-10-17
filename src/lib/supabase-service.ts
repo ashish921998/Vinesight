@@ -48,6 +48,7 @@ interface TaskQueryOptions {
   farmId?: number
   status?: TaskStatus | TaskStatus[]
   category?: string
+  type?: string
   includeCompleted?: boolean
   search?: string
   dueFrom?: string
@@ -64,6 +65,7 @@ interface TaskCreateInput {
   priority?: TaskPriority
   status?: TaskStatus
   category?: string
+  type?: string
   farmId?: number | null
 }
 
@@ -74,6 +76,7 @@ interface TaskUpdateInput {
   priority?: TaskPriority
   status?: TaskStatus
   category?: string
+  type?: string
   farmId?: number | null
 }
 
@@ -459,6 +462,7 @@ export class SupabaseService {
       farmId,
       status,
       category,
+      type: typeFilter,
       includeCompleted = true,
       search,
       dueFrom,
@@ -478,8 +482,9 @@ export class SupabaseService {
       query = query.eq('priority', priority)
     }
 
-    if (category) {
-      query = query.eq('category', category)
+    const categoryFilter = category ?? typeFilter
+    if (categoryFilter) {
+      query = query.eq('category', categoryFilter)
     }
 
     if (status) {
@@ -503,7 +508,7 @@ export class SupabaseService {
     }
 
     if (search) {
-      query = query.ilike('title', `%${search}%`)
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
     }
 
     const { data, error } = await query.order(orderBy, {
@@ -524,6 +529,9 @@ export class SupabaseService {
     if (userError) throw userError
     if (!user) throw new Error('User must be authenticated to create tasks')
 
+    const status = input.status ?? 'pending'
+    const category = input.category ?? input.type ?? 'general'
+
     const taskToInsert: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> = {
       userId: user.id,
       farmId: input.farmId ?? null,
@@ -531,8 +539,10 @@ export class SupabaseService {
       description: input.description ?? null,
       dueDate: input.dueDate,
       priority: input.priority ?? 'medium',
-      status: input.status ?? 'pending',
-      category: input.category ?? 'general'
+      status,
+      category,
+      type: category,
+      completed: status === 'completed'
     }
 
     const dbTask = toDatabaseTaskInsert(taskToInsert)
@@ -566,8 +576,17 @@ export class SupabaseService {
     if (updates.description !== undefined) taskUpdates.description = updates.description ?? null
     if (updates.dueDate !== undefined) taskUpdates.dueDate = updates.dueDate
     if (updates.priority !== undefined) taskUpdates.priority = updates.priority
-    if (updates.status !== undefined) taskUpdates.status = updates.status
-    if (updates.category !== undefined) taskUpdates.category = updates.category
+    if (updates.status !== undefined) {
+      taskUpdates.status = updates.status
+      taskUpdates.completed = updates.status === 'completed'
+    }
+    if (updates.category !== undefined || updates.type !== undefined) {
+      const categoryValue = updates.category ?? updates.type
+      if (categoryValue !== undefined) {
+        taskUpdates.category = categoryValue
+        taskUpdates.type = categoryValue
+      }
+    }
     if (updates.farmId !== undefined) taskUpdates.farmId = updates.farmId
 
     const dbUpdates = toDatabaseTaskUpdate(taskUpdates)
@@ -601,6 +620,10 @@ export class SupabaseService {
 
   static async markTaskComplete(id: number): Promise<Task> {
     return this.updateTask(id, { status: 'completed' })
+  }
+
+  static async completeTask(id: number): Promise<Task> {
+    return this.markTaskComplete(id)
   }
 
   static async getPendingTasks(farmId: number): Promise<Task[]> {

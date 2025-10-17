@@ -201,7 +201,7 @@ export class PaginatedQueries {
     return PaginationHelper.createResult(data || [], count || 0, params)
   }
 
-  static async getTaskReminders(
+  static async getTasks(
     supabase: any,
     farmId: number,
     params: PaginationParams,
@@ -211,10 +211,7 @@ export class PaginatedQueries {
       type?: string
     }
   ): Promise<PaginatedResult<any>> {
-    let query = supabase
-      .from('tasks')
-      .select('*', { count: 'exact' })
-      .eq('farm_id', farmId)
+    let query = supabase.from('tasks').select('*', { count: 'exact' }).eq('farm_id', farmId)
 
     // Apply filters
     if (filters?.completed !== undefined) {

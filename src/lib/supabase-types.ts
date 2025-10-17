@@ -445,6 +445,9 @@ export function toDatabaseCalculationHistoryInsert(
 
 // Task conversion functions
 export function toApplicationTask(dbRecord: DatabaseTask): Task {
+  const status = (dbRecord.status as Task['status']) || 'pending'
+  const category = dbRecord.category ?? 'general'
+
   return {
     id: dbRecord.id,
     userId: dbRecord.user_id,
@@ -453,8 +456,10 @@ export function toApplicationTask(dbRecord: DatabaseTask): Task {
     description: dbRecord.description || null,
     dueDate: dbRecord.due_date,
     priority: (dbRecord.priority as Task['priority']) || 'medium',
-    status: (dbRecord.status as Task['status']) || 'pending',
-    category: dbRecord.category ?? 'general',
+    status,
+    category,
+    type: category,
+    completed: status === 'completed',
     createdAt: dbRecord.created_at || null,
     updatedAt: dbRecord.updated_at || null
   }
@@ -463,6 +468,7 @@ export function toApplicationTask(dbRecord: DatabaseTask): Task {
 export function toDatabaseTaskInsert(
   appRecord: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>
 ): DatabaseTaskInsert {
+  const category = appRecord.category ?? appRecord.type ?? 'general'
   return {
     user_id: appRecord.userId,
     farm_id: appRecord.farmId ?? null,
@@ -471,7 +477,7 @@ export function toDatabaseTaskInsert(
     due_date: appRecord.dueDate,
     priority: appRecord.priority,
     status: appRecord.status,
-    category: appRecord.category
+    category
   }
 }
 
@@ -485,7 +491,9 @@ export function toDatabaseTaskUpdate(appUpdates: Partial<Task>): DatabaseTaskUpd
   if (appUpdates.dueDate !== undefined) update.due_date = appUpdates.dueDate
   if (appUpdates.priority !== undefined) update.priority = appUpdates.priority
   if (appUpdates.status !== undefined) update.status = appUpdates.status
-  if (appUpdates.category !== undefined) update.category = appUpdates.category
+  if (appUpdates.category !== undefined || appUpdates.type !== undefined) {
+    update.category = (appUpdates.category ?? appUpdates.type) || null
+  }
   if (appUpdates.createdAt !== undefined) update.created_at = appUpdates.createdAt
   if (appUpdates.updatedAt !== undefined) update.updated_at = appUpdates.updatedAt
 

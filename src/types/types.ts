@@ -14,12 +14,17 @@ export interface Task {
   priority: TaskPriority
   status: TaskStatus
   category: string
+  type: string
+  completed: boolean
   createdAt: string | null
   updatedAt: string | null
 }
 
 // Convert database row to Task
 export function taskFromDB(row: Database['public']['Tables']['tasks']['Row']): Task {
+  const status = (row.status as TaskStatus) || 'pending'
+  const category = row.category ?? 'general'
+
   return {
     id: row.id,
     userId: row.user_id,
@@ -28,8 +33,10 @@ export function taskFromDB(row: Database['public']['Tables']['tasks']['Row']): T
     description: row.description,
     dueDate: row.due_date,
     priority: (row.priority as TaskPriority) || 'medium',
-    status: (row.status as TaskStatus) || 'pending',
-    category: row.category ?? 'general',
+    status,
+    category,
+    type: category,
+    completed: status === 'completed',
     createdAt: row.created_at,
     updatedAt: row.updated_at
   }

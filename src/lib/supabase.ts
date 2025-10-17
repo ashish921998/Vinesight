@@ -1,5 +1,6 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { Database } from '@/types/database'
+import type { Task, TaskPriority, TaskStatus } from '@/types/types'
 
 // Client-side Supabase client for React components
 export const createClient = () =>
@@ -100,18 +101,7 @@ export interface CalculationHistory {
   created_at?: string
 }
 
-export interface TaskReminder {
-  id?: number
-  farm_id: number
-  title: string
-  description?: string
-  due_date: string
-  type: 'irrigation' | 'spray' | 'fertigation' | 'training' | 'harvest' | 'other'
-  completed: boolean
-  priority: 'low' | 'medium' | 'high'
-  created_at?: string
-  completed_at?: string
-}
+export type { Task, TaskPriority, TaskStatus }
 
 export interface SoilTestRecord {
   id?: number

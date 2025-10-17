@@ -671,7 +671,7 @@ export class ExportService {
           SupabaseService.getExpenseRecords(farmId),
           SupabaseService.getCalculationHistory(farmId),
           SupabaseService.getSoilTestRecords(farmId),
-          SupabaseService.getTaskReminders(farmId)
+          SupabaseService.getTasks({ farmId, includeCompleted: true })
         ])
 
       if (irrigation.length > 0) availableTypes.push('irrigation')
