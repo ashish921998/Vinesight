@@ -1,34 +1,44 @@
 import { Database } from './database'
 
-// Task Reminder type matching the database schema
-export interface TaskReminder {
+export type TaskStatus = 'pending' | 'in-progress' | 'completed'
+export type TaskPriority = 'low' | 'medium' | 'high'
+
+// Task type matching the database schema
+export interface Task {
   id: number
+  userId: string
   farmId: number | null
   title: string
   description: string | null
   dueDate: string
+  priority: TaskPriority
+  status: TaskStatus
+  category: string
   type: string
-  completed: boolean | null
-  completedAt: string | null
-  priority: string | null
+  completed: boolean
   createdAt: string | null
+  updatedAt: string | null
 }
 
-// Convert database row to TaskReminder
-export function taskReminderFromDB(
-  row: Database['public']['Tables']['task_reminders']['Row']
-): TaskReminder {
+// Convert database row to Task
+export function taskFromDB(row: Database['public']['Tables']['tasks']['Row']): Task {
+  const status = (row.status as TaskStatus) || 'pending'
+  const category = row.category ?? 'general'
+
   return {
     id: row.id,
+    userId: row.user_id,
     farmId: row.farm_id,
     title: row.title,
     description: row.description,
     dueDate: row.due_date,
-    type: row.type,
-    completed: row.completed,
-    completedAt: row.completed_at,
-    priority: row.priority,
-    createdAt: row.created_at
+    priority: (row.priority as TaskPriority) || 'medium',
+    status,
+    category,
+    type: category,
+    completed: status === 'completed',
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
   }
 }
 

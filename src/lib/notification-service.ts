@@ -1,6 +1,6 @@
 'use client'
 
-import { TaskReminder } from '../types/types'
+import { Task } from '../types/types'
 
 export interface NotificationSettings {
   enabled: boolean
@@ -97,7 +97,7 @@ export class NotificationService {
     setTimeout(() => notification.close(), 10000)
   }
 
-  sendTaskReminder(task: TaskReminder, type: 'due_today' | 'overdue' | 'upcoming'): void {
+  sendTaskReminder(task: Task, type: 'due_today' | 'overdue' | 'upcoming'): void {
     if (!this.canSendNotifications()) return
 
     let title: string
@@ -112,15 +112,22 @@ export class NotificationService {
         break
       case 'overdue':
         title = `Overdue Task: ${task.title}`
-        body = `Task "${task.title}" was due on ${new Date(task.dueDate).toLocaleDateString()}.`
+        body = task.dueDate
+          ? `Task "${task.title}" was due on ${new Date(task.dueDate).toLocaleDateString()}.`
+          : `Task "${task.title}" is overdue.`
         icon = '⚠️'
         break
       case 'upcoming':
-        const daysUntil = Math.ceil(
-          (new Date(task.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-        )
-        title = `Upcoming Task: ${task.title}`
-        body = `Task "${task.title}" is due in ${daysUntil} day${daysUntil === 1 ? '' : 's'}.`
+        if (task.dueDate) {
+          const daysUntil = Math.ceil(
+            (new Date(task.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+          )
+          title = `Upcoming Task: ${task.title}`
+          body = `Task "${task.title}" is due in ${daysUntil} day${daysUntil === 1 ? '' : 's'}.`
+        } else {
+          title = `Upcoming Task: ${task.title}`
+          body = `Task "${task.title}" has an upcoming due date.`
+        }
         icon = '📋'
         break
     }
@@ -132,7 +139,7 @@ export class NotificationService {
     })
   }
 
-  scheduleTaskNotifications(tasks: TaskReminder[]): void {
+  scheduleTaskNotifications(tasks: Task[]): void {
     // Clear existing notifications
     this.clearScheduledNotifications()
 
@@ -141,10 +148,12 @@ export class NotificationService {
     const now = new Date()
 
     tasks.forEach((task) => {
-      if (task.completed) return
+      if (task.status === 'completed') return
 
-      const dueDate = new Date(task.dueDate)
-      const timeDiff = dueDate.getTime() - now.getTime()
+      const dueDateValue = task.dueDate ? new Date(task.dueDate) : null
+      if (!dueDateValue || Number.isNaN(dueDateValue.getTime())) return
+
+      const timeDiff = dueDateValue.getTime() - now.getTime()
       const daysUntil = Math.ceil(timeDiff / (1000 * 60 * 60 * 24))
 
       // Schedule overdue notification (if already overdue)
@@ -237,7 +246,7 @@ export class NotificationService {
   }
 
   // Task completion celebration
-  sendTaskCompletionCelebration(task: TaskReminder): void {
+  sendTaskCompletionCelebration(task: Task): void {
     if (!this.canSendNotifications()) return
 
     this.sendNotification('🎉 Task Completed!', {

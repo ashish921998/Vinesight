@@ -27,7 +27,12 @@ const calculateFarmStatus = (
 ): 'healthy' | 'attention' | 'critical' => {
   const criticalAlerts = alerts?.filter((alert) => alert.type === 'critical')?.length || 0
   const overdueTasks =
-    tasks?.filter((task) => !task.completed && new Date(task.due_date) < new Date())?.length || 0
+    tasks?.filter((task) => {
+      if (task.completed) return false
+      const dueDate = task.dueDate || task.due_date
+      if (!dueDate) return false
+      return new Date(dueDate) < new Date()
+    })?.length || 0
 
   if (criticalAlerts > 0 || overdueTasks > 2) return 'critical'
   if (overdueTasks > 0) return 'attention'
@@ -165,7 +170,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
 
   const handleTaskComplete = async (taskId: string) => {
     try {
-      await SupabaseService.completeTask(parseInt(taskId))
+      await SupabaseService.markTaskComplete(parseInt(taskId))
       // Refresh dashboard data
       if (selectedFarmId) {
         const data = await SupabaseService.getDashboardSummary(selectedFarmId)
@@ -344,17 +349,23 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
         {' '}
         {/* Extra bottom padding for mobile navigation */}
         {/* Critical Alerts Banner - Always visible if present */}
-        {dashboardData?.pendingTasks?.filter(
-          (task: any) => !task.completed && new Date(task.due_date) < new Date()
-        ).length > 0 && (
+        {dashboardData?.pendingTasks?.filter((task: any) => {
+          if (task.completed) return false
+          const dueDate = task.dueDate || task.due_date
+          if (!dueDate) return false
+          return new Date(dueDate) < new Date()
+        }).length > 0 && (
           <div className="bg-red-50 border-l-4 border-l-red-500 px-4 py-3 mx-4 mt-4 rounded-r-lg">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <span className="text-sm font-medium text-red-800">
                 {
-                  dashboardData.pendingTasks.filter(
-                    (task: any) => !task.completed && new Date(task.due_date) < new Date()
-                  ).length
+                  dashboardData.pendingTasks.filter((task: any) => {
+                    if (task.completed) return false
+                    const dueDate = task.dueDate || task.due_date
+                    if (!dueDate) return false
+                    return new Date(dueDate) < new Date()
+                  }).length
                 }{' '}
                 Overdue Task(s)
               </span>
@@ -407,22 +418,26 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
         <div className="px-4 py-2">
           <TodaysTasksSection
             tasks={
-              dashboardData?.pendingTasks?.map((task: any) => ({
-                id: task.id.toString(),
-                title: task.title,
-                type: task.category || 'maintenance',
-                priority: task.priority || 'medium',
-                scheduledTime: task.due_date
-                  ? new Date(task.due_date).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })
-                  : undefined,
-                farmBlock: task.location || (selectedFarm ? capitalize(selectedFarm.name) : ''),
-                estimatedDuration: task.estimated_duration || 60,
-                completed: task.completed || false,
-                description: task.description
-              })) || []
+              dashboardData?.pendingTasks?.map((task: any) => {
+                const dueDate = task.dueDate || task.due_date
+                const category = task.type || task.category || 'maintenance'
+                return {
+                  id: task.id.toString(),
+                  title: task.title,
+                  type: category,
+                  priority: task.priority || 'medium',
+                  scheduledTime: dueDate
+                    ? new Date(dueDate).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
+                    : undefined,
+                  farmBlock: task.location || (selectedFarm ? capitalize(selectedFarm.name) : ''),
+                  estimatedDuration: task.estimated_duration || 60,
+                  completed: Boolean(task.completed),
+                  description: task.description
+                }
+              }) || []
             }
             onTaskComplete={handleTaskComplete}
             onTaskAction={handleTaskAction}

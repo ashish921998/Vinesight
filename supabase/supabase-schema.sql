@@ -116,6 +116,21 @@ CREATE TABLE task_reminders (
   completed_at TIMESTAMP WITH TIME ZONE
 );
 
+-- Create tasks table
+CREATE TABLE tasks (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  farm_id BIGINT REFERENCES farms(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  due_date DATE NOT NULL,
+  priority TEXT CHECK (priority IN ('low', 'medium', 'high')) DEFAULT 'medium',
+  status TEXT CHECK (status IN ('pending', 'in-progress', 'completed')) DEFAULT 'pending',
+  category TEXT DEFAULT 'general',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create soil_test_records table
 CREATE TABLE soil_test_records (
   id BIGSERIAL PRIMARY KEY,
@@ -163,6 +178,10 @@ CREATE INDEX idx_calculation_history_date ON calculation_history(date);
 CREATE INDEX idx_task_reminders_farm_id ON task_reminders(farm_id);
 CREATE INDEX idx_task_reminders_due_date ON task_reminders(due_date);
 CREATE INDEX idx_task_reminders_completed ON task_reminders(completed);
+CREATE INDEX idx_tasks_user_id ON tasks(user_id);
+CREATE INDEX idx_tasks_farm_id ON tasks(farm_id);
+CREATE INDEX idx_tasks_due_date ON tasks(due_date);
+CREATE INDEX idx_tasks_status ON tasks(status);
 CREATE INDEX idx_soil_test_records_farm_id ON soil_test_records(farm_id);
 CREATE INDEX idx_soil_test_records_date ON soil_test_records(date);
 CREATE INDEX idx_soil_test_records_date_of_pruning ON soil_test_records(date_of_pruning);
@@ -179,6 +198,7 @@ ALTER TABLE harvest_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE expense_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE calculation_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE task_reminders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE soil_test_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE petiole_test_records ENABLE ROW LEVEL SECURITY;
 
@@ -287,6 +307,18 @@ CREATE POLICY "Users can delete task reminders for their farms" ON task_reminder
   EXISTS (SELECT 1 FROM farms WHERE farms.id = task_reminders.farm_id AND farms.user_id = auth.uid())
 );
 
+-- Tasks
+CREATE POLICY "Users can view their tasks" ON tasks FOR SELECT USING (
+  auth.uid() = user_id OR
+  (
+    farm_id IS NOT NULL AND
+    EXISTS (SELECT 1 FROM farms WHERE farms.id = tasks.farm_id AND farms.user_id = auth.uid())
+  )
+);
+CREATE POLICY "Users can insert their tasks" ON tasks FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their tasks" ON tasks FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can delete their tasks" ON tasks FOR DELETE USING (auth.uid() = user_id);
+
 -- Soil test records
 CREATE POLICY "Users can view their farm soil test records" ON soil_test_records FOR SELECT USING (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_test_records.farm_id AND farms.user_id = auth.uid())
@@ -326,6 +358,10 @@ $$ language 'plpgsql';
 
 -- Trigger to automatically update updated_at for farms
 CREATE TRIGGER update_farms_updated_at BEFORE UPDATE ON farms 
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Trigger to automatically update updated_at for tasks
+CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Insert some sample data (optional - you can remove this section)

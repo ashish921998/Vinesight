@@ -9,7 +9,7 @@ import {
   type SoilTestRecord,
   type PetioleTestRecord
 } from './supabase'
-import { type Farm, type TaskReminder } from '@/types/types'
+import { type Farm, type Task, type TaskStatus, type TaskPriority } from '@/types/types'
 import {
   toApplicationFarm,
   toDatabaseFarmInsert,
@@ -31,9 +31,9 @@ import {
   toDatabaseExpenseUpdate,
   toApplicationCalculationHistory,
   toDatabaseCalculationHistoryInsert,
-  toApplicationTaskReminder,
-  toDatabaseTaskReminderInsert,
-  toDatabaseTaskReminderUpdate,
+  toApplicationTask,
+  toDatabaseTaskInsert,
+  toDatabaseTaskUpdate,
   toApplicationSoilTestRecord,
   toDatabaseSoilTestInsert,
   toDatabaseSoilTestUpdate,
@@ -41,6 +41,44 @@ import {
   toDatabasePetioleTestInsert,
   toDatabasePetioleTestUpdate
 } from './supabase-types'
+
+type TaskOrderColumn = 'due_date' | 'priority' | 'created_at'
+
+interface TaskQueryOptions {
+  farmId?: number
+  status?: TaskStatus | TaskStatus[]
+  category?: string
+  type?: string
+  includeCompleted?: boolean
+  search?: string
+  dueFrom?: string
+  dueTo?: string
+  priority?: TaskPriority
+  orderBy?: TaskOrderColumn
+  orderDirection?: 'asc' | 'desc'
+}
+
+interface TaskCreateInput {
+  title: string
+  description?: string | null
+  dueDate: string
+  priority?: TaskPriority
+  status?: TaskStatus
+  category?: string
+  type?: string
+  farmId?: number | null
+}
+
+interface TaskUpdateInput {
+  title?: string
+  description?: string | null
+  dueDate?: string
+  priority?: TaskPriority
+  status?: TaskStatus
+  category?: string
+  type?: string
+  farmId?: number | null
+}
 
 export class SupabaseService {
   // Farm operations
@@ -417,64 +455,179 @@ export class SupabaseService {
     return toApplicationCalculationHistory(data)
   }
 
-  // Task and reminder operations
-  static async getTaskReminders(farmId: number): Promise<TaskReminder[]> {
+  // Task operations
+  static async getTasks(options: TaskQueryOptions = {}): Promise<Task[]> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
-      .from('task_reminders')
-      .select('*')
-      .eq('farm_id', farmId)
-      .order('due_date', { ascending: true })
+    const {
+      farmId,
+      status,
+      category,
+      type: typeFilter,
+      includeCompleted = true,
+      search,
+      dueFrom,
+      dueTo,
+      priority,
+      orderBy = 'due_date',
+      orderDirection = 'asc'
+    } = options
+
+    let query = supabase.from('tasks').select('*')
+
+    if (farmId !== undefined) {
+      query = query.eq('farm_id', farmId)
+    }
+
+    if (priority) {
+      query = query.eq('priority', priority)
+    }
+
+    const categoryFilter = category ?? typeFilter
+    if (categoryFilter) {
+      query = query.eq('category', categoryFilter)
+    }
+
+    if (status) {
+      if (Array.isArray(status)) {
+        if (status.length > 0) {
+          query = query.in('status', status)
+        }
+      } else {
+        query = query.eq('status', status)
+      }
+    } else if (!includeCompleted) {
+      query = query.neq('status', 'completed')
+    }
+
+    if (dueFrom) {
+      query = query.gte('due_date', dueFrom)
+    }
+
+    if (dueTo) {
+      query = query.lte('due_date', dueTo)
+    }
+
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
+    }
+
+    const { data, error } = await query.order(orderBy, {
+      ascending: orderDirection === 'asc'
+    })
 
     if (error) throw error
-    return (data || []).map(toApplicationTaskReminder)
+    return (data || []).map(toApplicationTask)
   }
 
-  static async getPendingTasks(farmId: number): Promise<TaskReminder[]> {
+  static async createTask(input: TaskCreateInput): Promise<Task> {
     const supabase = getTypedSupabaseClient()
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser()
+
+    if (userError) throw userError
+    if (!user) throw new Error('User must be authenticated to create tasks')
+
+    const status = input.status ?? 'pending'
+    const category = input.category ?? input.type ?? 'general'
+
+    const taskToInsert: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> = {
+      userId: user.id,
+      farmId: input.farmId ?? null,
+      title: input.title,
+      description: input.description ?? null,
+      dueDate: input.dueDate,
+      priority: input.priority ?? 'medium',
+      status,
+      category,
+      type: category,
+      completed: status === 'completed'
+    }
+
+    const dbTask = toDatabaseTaskInsert(taskToInsert)
     const { data, error } = await supabase
-      .from('task_reminders')
-      .select('*')
-      .eq('farm_id', farmId)
-      .eq('completed', false)
-      .order('due_date', { ascending: true })
-
-    if (error) throw error
-    return (data || []).map(toApplicationTaskReminder)
-  }
-
-  static async addTaskReminder(
-    task: Omit<TaskReminder, 'id' | 'createdAt'>
-  ): Promise<TaskReminder> {
-    const supabase = getTypedSupabaseClient()
-    const dbTask = toDatabaseTaskReminderInsert(task)
-
-    const { data, error } = await supabase
-      .from('task_reminders')
+      .from('tasks')
       .insert(dbTask as any)
       .select()
       .single()
 
     if (error) throw error
-    return toApplicationTaskReminder(data)
+    return toApplicationTask(data)
   }
 
-  static async completeTask(id: number): Promise<TaskReminder> {
+  static async updateTask(id: number, updates: TaskUpdateInput): Promise<Task> {
+    if (!updates || Object.keys(updates).length === 0) {
+      throw new Error('No task updates provided')
+    }
+
     const supabase = getTypedSupabaseClient()
-    const dbUpdates = toDatabaseTaskReminderUpdate({
-      completed: true,
-      completedAt: new Date().toISOString()
-    })
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser()
+
+    if (userError) throw userError
+    if (!user) throw new Error('User must be authenticated to update tasks')
+
+    const taskUpdates: Partial<Task> = {}
+
+    if (updates.title !== undefined) taskUpdates.title = updates.title
+    if (updates.description !== undefined) taskUpdates.description = updates.description ?? null
+    if (updates.dueDate !== undefined) taskUpdates.dueDate = updates.dueDate
+    if (updates.priority !== undefined) taskUpdates.priority = updates.priority
+    if (updates.status !== undefined) {
+      taskUpdates.status = updates.status
+      taskUpdates.completed = updates.status === 'completed'
+    }
+    if (updates.category !== undefined || updates.type !== undefined) {
+      const categoryValue = updates.category ?? updates.type
+      if (categoryValue !== undefined) {
+        taskUpdates.category = categoryValue
+        taskUpdates.type = categoryValue
+      }
+    }
+    if (updates.farmId !== undefined) taskUpdates.farmId = updates.farmId
+
+    const dbUpdates = toDatabaseTaskUpdate(taskUpdates)
 
     const { data, error } = await supabase
-      .from('task_reminders')
+      .from('tasks')
       .update(dbUpdates as any)
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single()
 
     if (error) throw error
-    return toApplicationTaskReminder(data)
+    return toApplicationTask(data)
+  }
+
+  static async deleteTask(id: number): Promise<void> {
+    const supabase = getTypedSupabaseClient()
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser()
+
+    if (userError) throw userError
+    if (!user) throw new Error('User must be authenticated to delete tasks')
+
+    const { error } = await supabase.from('tasks').delete().eq('id', id).eq('user_id', user.id)
+
+    if (error) throw error
+  }
+
+  static async markTaskComplete(id: number): Promise<Task> {
+    return this.updateTask(id, { status: 'completed' })
+  }
+
+  static async completeTask(id: number): Promise<Task> {
+    return this.markTaskComplete(id)
+  }
+
+  static async getPendingTasks(farmId: number): Promise<Task[]> {
+    return this.getTasks({ farmId, includeCompleted: false })
   }
 
   // Soil test operations
@@ -747,7 +900,7 @@ export class SupabaseService {
         {
           event: '*',
           schema: 'public',
-          table: 'task_reminders',
+          table: 'tasks',
           filter: `farm_id=eq.${farmId}`
         },
         callback

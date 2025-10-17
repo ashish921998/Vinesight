@@ -1,28 +1,65 @@
 import { createBrowserClient } from '@supabase/ssr'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database'
+import type { Task, TaskPriority, TaskStatus } from '@/types/types'
 
 // Client-side Supabase client for React components
-export const createClient = () =>
-  createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+const isInvalidEnvValue = (value?: string | null) =>
+  !value || value === 'undefined' || value === 'null'
+
+let cachedClient: SupabaseClient<Database> | null = null
+let cachedTypedClient: SupabaseClient<Database> | null = null
+
+const getSupabaseConfig = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (isInvalidEnvValue(url) || isInvalidEnvValue(anonKey)) {
+    throw new Error('Supabase client is not configured. Missing URL or anon key.')
+  }
+
+  return { url: url as string, anonKey: anonKey as string }
+}
+
+export const createClient = () => {
+  const { url, anonKey } = getSupabaseConfig()
+  return createBrowserClient<Database>(url, anonKey)
+}
 
 // Helper function for backward compatibility
 export function getSupabaseClient() {
-  return createClient()
+  if (!cachedClient) {
+    cachedClient = createClient()
+  }
+  return cachedClient
 }
 
 // Properly typed client for service operations
 export function getTypedSupabaseClient() {
-  return createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  if (!cachedTypedClient) {
+    const { url, anonKey } = getSupabaseConfig()
+    cachedTypedClient = createBrowserClient<Database>(url, anonKey)
+  }
+  return cachedTypedClient
 }
 
-// For backward compatibility
-export const supabase = getSupabaseClient()
+// Lazily evaluated supabase client for backward compatibility
+// Ensures build-time environments without Supabase config do not crash
+const supabaseProxyHandler: ProxyHandler<SupabaseClient<Database>> = {
+  get(_target, property) {
+    const client = getSupabaseClient()
+    const value = (client as any)[property]
+    if (typeof value === 'function') {
+      return value.bind(client)
+    }
+    return value
+  }
+}
+
+export const supabase = new Proxy(
+  {} as SupabaseClient<Database>,
+  supabaseProxyHandler
+) as SupabaseClient<Database>
 
 // Database types based on your existing schema
 
@@ -105,18 +142,7 @@ export interface CalculationHistory {
   created_at?: string
 }
 
-export interface TaskReminder {
-  id?: number
-  farm_id: number
-  title: string
-  description?: string
-  due_date: string
-  type: 'irrigation' | 'spray' | 'fertigation' | 'training' | 'harvest' | 'other'
-  completed: boolean
-  priority: 'low' | 'medium' | 'high'
-  created_at?: string
-  completed_at?: string
-}
+export type { Task, TaskPriority, TaskStatus }
 
 export interface SoilTestRecord {
   id?: number

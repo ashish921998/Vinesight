@@ -127,7 +127,7 @@ export class ExportService {
     }
 
     if (includeTypes.includes('tasks')) {
-      const allRecords = await SupabaseService.getTaskReminders(farmId)
+      const allRecords = await SupabaseService.getTasks({ farmId, includeCompleted: true })
       data.tasks = this.filterByDateRange(allRecords, dateRange)
     }
 
@@ -671,7 +671,7 @@ export class ExportService {
           SupabaseService.getExpenseRecords(farmId),
           SupabaseService.getCalculationHistory(farmId),
           SupabaseService.getSoilTestRecords(farmId),
-          SupabaseService.getTaskReminders(farmId)
+          SupabaseService.getTasks({ farmId, includeCompleted: true })
         ])
 
       if (irrigation.length > 0) availableTypes.push('irrigation')

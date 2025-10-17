@@ -1684,6 +1684,56 @@ export type Database = {
           }
         ]
       }
+      tasks: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          due_date: string
+          farm_id: number | null
+          id: number
+          priority: string
+          status: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          due_date: string
+          farm_id?: number | null
+          id?: number
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          due_date?: string
+          farm_id?: number | null
+          id?: number
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'tasks_farm_id_fkey'
+            columns: ['farm_id']
+            isOneToOne: false
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       weather_data: {
         Row: {
           created_at: string | null

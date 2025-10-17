@@ -18,8 +18,8 @@ import {
   Sparkles,
   Target
 } from 'lucide-react'
-import { CloudDataService, TaskReminder } from '@/lib/cloud-data-service'
-import type { Farm } from '@/types/types'
+import { CloudDataService, Task } from '@/lib/cloud-data-service'
+import type { Farm, TaskPriority, TaskStatus } from '@/types/types'
 import { SupabaseService } from '@/lib/supabase-service'
 import { TaskTemplateSelector } from '@/components/reminders/TaskTemplateSelector'
 import { NotificationSettings } from '@/components/reminders/NotificationSettings'
@@ -30,11 +30,11 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 export default function RemindersPage() {
   const [farms, setFarms] = useState<Farm[]>([])
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null)
-  const [tasks, setTasks] = useState<TaskReminder[]>([])
+  const [tasks, setTasks] = useState<Task[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [showTemplateSelector, setShowTemplateSelector] = useState(false)
   const [showNotificationSettings, setShowNotificationSettings] = useState(false)
-  const [editingTask, setEditingTask] = useState<TaskReminder | null>(null)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed' | 'overdue'>('all')
   const [showSeasonalSuggestions, setShowSeasonalSuggestions] = useState(true)
   const [farmsLoading, setFarmsLoading] = useState(true)
@@ -45,8 +45,9 @@ export default function RemindersPage() {
     title: '',
     description: '',
     dueDate: '',
-    type: 'other' as const,
-    priority: 'medium' as const
+    type: 'other',
+    priority: 'medium' as TaskPriority,
+    status: 'pending' as TaskStatus
   })
 
   const loadFarms = useCallback(async () => {
@@ -78,7 +79,12 @@ export default function RemindersPage() {
     if (!selectedFarm) return
 
     try {
-      const taskList = await SupabaseService.getTaskReminders(selectedFarm.id!)
+      const taskList = await SupabaseService.getTasks({
+        farmId: selectedFarm.id!,
+        includeCompleted: true,
+        orderBy: 'due_date',
+        orderDirection: 'asc'
+      })
       setTasks(taskList)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
@@ -103,8 +109,12 @@ export default function RemindersPage() {
   }, [selectedFarm, loadTasks])
 
   useEffect(() => {
-    // Set up notifications when tasks change
-    if (notificationServiceRef.current && tasks.length > 0) {
+    if (!notificationServiceRef.current) return
+
+    // Clear existing notifications before scheduling new ones
+    notificationServiceRef.current.clearScheduledNotifications()
+
+    if (tasks.length > 0) {
       notificationServiceRef.current.scheduleTaskNotifications(tasks)
       const pendingCount = tasks.filter((t) => !t.completed).length
       notificationServiceRef.current.scheduleDailyReminder(pendingCount)
@@ -118,22 +128,23 @@ export default function RemindersPage() {
     if (!selectedFarm) return
 
     try {
+      const category = formData.type || 'other'
+      const payload = {
+        title: formData.title,
+        description: formData.description || null,
+        dueDate: formData.dueDate,
+        priority: formData.priority,
+        status: formData.status,
+        category,
+        type: category
+      }
+
       if (editingTask) {
-        // For editing, we'd need an update method in CloudDataService
-        if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
-          console.log('Editing not implemented yet')
-        }
+        await SupabaseService.updateTask(editingTask.id, payload)
       } else {
-        await SupabaseService.addTaskReminder({
-          farmId: selectedFarm.id!,
-          title: formData.title,
-          description: formData.description,
-          dueDate: formData.dueDate,
-          type: formData.type,
-          priority: formData.priority,
-          completed: false,
-          completedAt: null
+        await SupabaseService.createTask({
+          ...payload,
+          farmId: selectedFarm.id!
         })
       }
 
@@ -149,10 +160,9 @@ export default function RemindersPage() {
 
   const handleComplete = async (taskId: number) => {
     try {
-      await SupabaseService.completeTask(taskId)
-      const completedTask = tasks.find((t) => t.id === taskId)
-      if (completedTask && notificationServiceRef.current) {
-        notificationServiceRef.current.sendTaskCompletionCelebration(completedTask)
+      const updatedTask = await SupabaseService.markTaskComplete(taskId)
+      if (updatedTask && notificationServiceRef.current) {
+        notificationServiceRef.current.sendTaskCompletionCelebration(updatedTask)
       }
       await loadTasks()
     } catch (error) {
@@ -167,15 +177,17 @@ export default function RemindersPage() {
     if (!selectedFarm) return
 
     try {
-      await SupabaseService.addTaskReminder({
+      const category = templateData.type || 'other'
+      const dueDate = templateData.dueDate || new Date().toISOString().split('T')[0]
+      await SupabaseService.createTask({
         farmId: selectedFarm.id!,
         title: templateData.title,
         description: templateData.description,
-        dueDate: templateData.dueDate,
-        type: templateData.type,
+        dueDate,
         priority: templateData.priority,
-        completed: false,
-        completedAt: null
+        status: 'pending',
+        category,
+        type: category
       })
 
       setShowTemplateSelector(false)
@@ -201,17 +213,26 @@ export default function RemindersPage() {
       description: '',
       dueDate: '',
       type: 'other',
-      priority: 'medium'
+      priority: 'medium' as TaskPriority,
+      status: 'pending' as TaskStatus
     })
     setShowAddForm(false)
     setEditingTask(null)
   }
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value
-    }))
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => {
+      if (field === 'priority') {
+        return { ...prev, priority: value as TaskPriority }
+      }
+      if (field === 'status') {
+        return { ...prev, status: value as TaskStatus }
+      }
+      return {
+        ...prev,
+        [field]: value
+      }
+    })
   }
 
   const getFilteredTasks = () => {
@@ -263,10 +284,21 @@ export default function RemindersPage() {
     }
   }
 
-  const isOverdue = (dueDate: string) => {
+  const formatStatusLabel = (status: TaskStatus) =>
+    status
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+
+  const isOverdue = (dueDate?: string | null) => {
+    if (!dueDate) return false
+
+    const due = new Date(dueDate)
+    if (Number.isNaN(due.getTime())) return false
+
     const now = new Date()
     now.setHours(23, 59, 59, 999)
-    return new Date(dueDate) < now
+    return due < now
   }
 
   const filteredTasks = getFilteredTasks()
@@ -568,70 +600,89 @@ export default function RemindersPage() {
               <CardContent>
                 {filteredTasks.length > 0 ? (
                   <div className="space-y-4">
-                    {filteredTasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className={`border rounded-lg p-4 ${
-                          task.completed
-                            ? 'bg-gray-50 opacity-75'
-                            : isOverdue(task.dueDate)
-                              ? 'bg-red-50 border-red-200'
-                              : 'bg-white'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-lg">{getTaskTypeIcon(task.type)}</span>
-                              <h3
-                                className={`font-semibold ${task.completed ? 'line-through text-gray-500' : ''}`}
-                              >
-                                {task.title}
-                              </h3>
-                              <Badge variant="outline" className={getPriorityColor(task.priority)}>
-                                {task.priority} priority
-                              </Badge>
-                              {isOverdue(task.dueDate) && !task.completed && (
+                    {filteredTasks.map((task) => {
+                      const overdue = isOverdue(task.dueDate)
+                      let statusLabel: string | null = null
+                      if (!task.completed && task.status !== 'pending') {
+                        statusLabel = formatStatusLabel(task.status)
+                      }
+                      const dueDateLabel = task.dueDate
+                        ? new Date(task.dueDate).toLocaleDateString()
+                        : 'No date'
+
+                      return (
+                        <div
+                          key={task.id}
+                          className={`border rounded-lg p-4 ${
+                            task.completed
+                              ? 'bg-gray-50 opacity-75'
+                              : overdue
+                                ? 'bg-red-50 border-red-200'
+                                : 'bg-white'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                <span className="text-lg">{getTaskTypeIcon(task.type)}</span>
+                                <h3
+                                  className={`font-semibold ${task.completed ? 'line-through text-gray-500' : ''}`}
+                                >
+                                  {task.title}
+                                </h3>
                                 <Badge
                                   variant="outline"
-                                  className="text-red-600 bg-red-50 border-red-200"
+                                  className={getPriorityColor(task.priority)}
                                 >
-                                  Overdue
+                                  {task.priority} priority
+                                </Badge>
+                                {statusLabel && (
+                                  <Badge variant="outline" className="capitalize">
+                                    {statusLabel}
+                                  </Badge>
+                                )}
+                                {overdue && !task.completed && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-red-600 bg-red-50 border-red-200"
+                                  >
+                                    Overdue
+                                  </Badge>
+                                )}
+                              </div>
+
+                              {task.description && (
+                                <p className="text-sm text-muted-foreground mb-2">
+                                  {task.description}
+                                </p>
+                              )}
+
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                                <span>Due: {dueDateLabel}</span>
+                                <Badge variant="outline">{task.type}</Badge>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {!task.completed && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleComplete(task.id)}
+                                >
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {task.completed && (
+                                <Badge className="text-green-600 bg-green-50 border-green-200">
+                                  ✓ Completed
                                 </Badge>
                               )}
                             </div>
-
-                            {task.description && (
-                              <p className="text-sm text-muted-foreground mb-2">
-                                {task.description}
-                              </p>
-                            )}
-
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
-                              <Badge variant="outline">{task.type}</Badge>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            {!task.completed && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleComplete(task.id!)}
-                              >
-                                <CheckCircle2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {task.completed && (
-                              <Badge className="text-green-600 bg-green-50 border-green-200">
-                                ✓ Completed
-                              </Badge>
-                            )}
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-8">
