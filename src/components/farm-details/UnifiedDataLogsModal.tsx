@@ -30,12 +30,7 @@ import {
   RefreshCcw
 } from 'lucide-react'
 import { toast } from 'sonner'
-import {
-  logTypeConfigs,
-  type LogType,
-  type LogTypeConfig,
-  type FormField
-} from '@/lib/log-type-config'
+import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-config'
 import { SprayChemicalUnit } from '@/lib/supabase'
 import { ErrorHandler, ErrorContexts, useErrorHandler } from '@/lib/error-handler'
 import React from 'react'
@@ -138,13 +133,6 @@ export function UnifiedDataLogsModal({
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [currentLogType, setCurrentLogType] = useState<LogType | null>(null)
 
-  // Memoize validation results for performance
-  const chemicalValidationResults = useMemo(() => {
-    return chemicalEntries.map(entry => ({
-      id: entry.id,
-      validation: validateChemicalEntry(entry)
-    }))
-  }, [chemicalEntries, validateChemicalEntry])
   const [currentFormData, setCurrentFormData] = useState<Record<string, any>>({})
   const [sessionLogs, setSessionLogs] = useState<LogEntry[]>([])
   const [editingLogId, setEditingLogId] = useState<string | null>(null)
@@ -399,49 +387,60 @@ export function UnifiedDataLogsModal({
   }
 
   interface ChemicalValidationResult {
-  isValid: boolean
-  errors: string[]
-  warnings: string[]
-}
+    isValid: boolean
+    errors: string[]
+    warnings: string[]
+  }
 
-  const validateChemicalEntry = useCallback((entry: {
-    name: string
-    quantity: string
-    unit: SprayChemicalUnit
-  }): ChemicalValidationResult => {
-    const errors: string[] = []
-    const warnings: string[] = []
+  const validateChemicalEntry = useCallback(
+    (entry: {
+      name: string
+      quantity: string
+      unit: SprayChemicalUnit
+    }): ChemicalValidationResult => {
+      const errors: string[] = []
+      const warnings: string[] = []
 
-    // Validate name
-    if (!entry.name.trim()) {
-      errors.push('Chemical name is required')
-    } else if (entry.name.trim().length < 2) {
-      errors.push('Chemical name must be at least 2 characters')
-    } else if (entry.name.trim().length > 100) {
-      errors.push('Chemical name is too long (max 100 characters)')
-    }
+      // Validate name
+      if (!entry.name.trim()) {
+        errors.push('Chemical name is required')
+      } else if (entry.name.trim().length < 2) {
+        errors.push('Chemical name must be at least 2 characters')
+      } else if (entry.name.trim().length > 100) {
+        errors.push('Chemical name is too long (max 100 characters)')
+      }
 
-    // Validate quantity
-    const value = Number(entry.quantity)
-    if (!Number.isFinite(value) || value <= 0) {
-      errors.push('Quantity must be a positive number')
-    } else if (value > 1000) {
-      warnings.push('High concentration detected - please verify dosage')
-    } else if (value < 0.1) {
-      warnings.push('Very low concentration - verify if this is correct')
-    }
+      // Validate quantity
+      const value = Number(entry.quantity)
+      if (!Number.isFinite(value) || value <= 0) {
+        errors.push('Quantity must be a positive number')
+      } else if (value > 1000) {
+        warnings.push('High concentration detected - please verify dosage')
+      } else if (value < 0.1) {
+        warnings.push('Very low concentration - verify if this is correct')
+      }
 
-    // Validate unit
-    if (!entry.unit) {
-      errors.push('Unit is required')
-    }
+      // Validate unit
+      if (!entry.unit) {
+        errors.push('Unit is required')
+      }
 
-    return {
-      isValid: errors.length === 0,
-      errors,
-      warnings
-    }
-  }, [])
+      return {
+        isValid: errors.length === 0,
+        errors,
+        warnings
+      }
+    },
+    []
+  )
+
+  // Memoize validation results for performance
+  const chemicalValidationResults = useMemo(() => {
+    return chemicalEntries.map((entry) => ({
+      id: entry.id,
+      validation: validateChemicalEntry(entry)
+    }))
+  }, [chemicalEntries, validateChemicalEntry])
 
   const handleAddChemical = () => {
     setChemicalEntries((prev) => {
@@ -636,7 +635,7 @@ export function UnifiedDataLogsModal({
 
       if (chemicals.length > 0) {
         // Add missing errors and warnings properties for backward compatibility
-        const updatedChemicals = chemicals.map(chem => ({
+        const updatedChemicals = chemicals.map((chem) => ({
           ...chem,
           errors: [],
           warnings: []

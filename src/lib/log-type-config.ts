@@ -527,7 +527,8 @@ export function getLogTypeBorderColor(type: string): string {
 }
 
 /**
- * Get the label for a given log type (memoized)
+/**
+ * Get the label for a given log type
  */
 export function getLogTypeLabel(type: string): string {
   const config = logTypeConfigs[type as LogType]
