@@ -5,6 +5,7 @@ import { Database } from '@/types/database'
 import type {
   IrrigationRecord,
   SprayRecord,
+  SprayChemical,
   FertigationRecord,
   HarvestRecord,
   ExpenseRecord,
@@ -41,6 +42,13 @@ export type DatabaseIrrigationRecordUpdate =
 export type DatabaseSprayRecord = Database['public']['Tables']['spray_records']['Row']
 export type DatabaseSprayRecordInsert = Database['public']['Tables']['spray_records']['Insert']
 export type DatabaseSprayRecordUpdate = Database['public']['Tables']['spray_records']['Update']
+
+export type DatabaseSprayRecordChemical =
+  Database['public']['Tables']['spray_record_chemicals']['Row']
+export type DatabaseSprayRecordChemicalInsert =
+  Database['public']['Tables']['spray_record_chemicals']['Insert']
+export type DatabaseSprayRecordChemicalUpdate =
+  Database['public']['Tables']['spray_record_chemicals']['Update']
 
 export type DatabaseFertigationRecord = Database['public']['Tables']['fertigation_records']['Row']
 export type DatabaseFertigationRecordInsert =
@@ -253,21 +261,36 @@ export function toDatabaseIrrigationUpdate(
 }
 
 // Spray Record conversion functions
+export function toApplicationSprayChemical(dbChemical: DatabaseSprayRecordChemical): SprayChemical {
+  return {
+    id: dbChemical.id,
+    spray_record_id: dbChemical.spray_record_id,
+    name: dbChemical.name,
+    quantity_amount: dbChemical.quantity_amount ?? undefined,
+    quantity_unit: (dbChemical.quantity_unit as SprayChemical['quantity_unit']) || undefined,
+    mix_order: dbChemical.mix_order ?? undefined,
+    created_at: dbChemical.created_at || undefined
+  }
+}
+
 export function toApplicationSprayRecord(
-  dbRecord: DatabaseSprayRecord
-): import('./supabase').SprayRecord {
+  dbRecord: DatabaseSprayRecord & { spray_record_chemicals?: DatabaseSprayRecordChemical[] | null }
+): SprayRecord {
+  const chemicals = (dbRecord.spray_record_chemicals || [])
+    .map(toApplicationSprayChemical)
+    .sort((a, b) => (a.mix_order || 0) - (b.mix_order || 0))
+
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
-    chemical: dbRecord.chemical,
-    dose: dbRecord.dose,
-    quantity_amount: dbRecord.quantity_amount,
-    quantity_unit: dbRecord.quantity_unit,
-    water_volume: dbRecord.water_volume,
+    water_volume: dbRecord.water_volume || 0,
     area: dbRecord.area,
     weather: dbRecord.weather,
     operator: dbRecord.operator,
+    chemicals,
+    legacy_chemical: dbRecord.chemical,
+    legacy_dose: dbRecord.dose,
     date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
     notes: dbRecord.notes || undefined,
     created_at: dbRecord.created_at || undefined
@@ -275,15 +298,15 @@ export function toApplicationSprayRecord(
 }
 
 export function toDatabaseSprayInsert(
-  appRecord: Omit<import('./supabase').SprayRecord, 'id' | 'created_at'>
+  appRecord: Omit<SprayRecord, 'id' | 'created_at'>
 ): DatabaseSprayRecordInsert {
   return {
     farm_id: appRecord.farm_id,
     date: appRecord.date,
-    chemical: appRecord.chemical,
-    dose: appRecord.dose,
-    quantity_amount: appRecord.quantity_amount,
-    quantity_unit: appRecord.quantity_unit,
+    chemical: appRecord.legacy_chemical || null,
+    dose: appRecord.legacy_dose || null,
+    quantity_amount: appRecord.chemicals?.[0]?.quantity_amount || null,
+    quantity_unit: appRecord.chemicals?.[0]?.quantity_unit || null,
     water_volume: appRecord.water_volume,
     area: appRecord.area,
     weather: appRecord.weather,
@@ -293,21 +316,47 @@ export function toDatabaseSprayInsert(
   } as DatabaseSprayRecordInsert
 }
 
-export function toDatabaseSprayUpdate(
-  appUpdates: Partial<import('./supabase').SprayRecord>
-): DatabaseSprayRecordUpdate {
+export function toDatabaseSprayUpdate(appUpdates: Partial<SprayRecord>): DatabaseSprayRecordUpdate {
   const update: DatabaseSprayRecordUpdate = {}
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
-  if (appUpdates.chemical !== undefined) update.chemical = appUpdates.chemical
-  if (appUpdates.dose !== undefined) update.dose = appUpdates.dose
+  if (appUpdates.legacy_chemical !== undefined) update.chemical = appUpdates.legacy_chemical || null
+  if (appUpdates.legacy_dose !== undefined) update.dose = appUpdates.legacy_dose || null
   if (appUpdates.area !== undefined) update.area = appUpdates.area
   if (appUpdates.weather !== undefined) update.weather = appUpdates.weather
   if (appUpdates.operator !== undefined) update.operator = appUpdates.operator
+  if (appUpdates.water_volume !== undefined) update.water_volume = appUpdates.water_volume
   if (appUpdates.date_of_pruning !== undefined)
     update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
+
+  return update
+}
+
+export function toDatabaseSprayChemicalInsert(
+  chemical: SprayChemical,
+  sprayRecordId: number,
+  mixOrder: number
+): DatabaseSprayRecordChemicalInsert {
+  return {
+    spray_record_id: sprayRecordId,
+    name: chemical.name,
+    quantity_amount: chemical.quantity_amount ?? null,
+    quantity_unit: chemical.quantity_unit ?? null,
+    mix_order: mixOrder
+  }
+}
+
+export function toDatabaseSprayChemicalUpdate(
+  chemical: SprayChemical
+): DatabaseSprayRecordChemicalUpdate {
+  const update: DatabaseSprayRecordChemicalUpdate = {}
+
+  if (chemical.name !== undefined) update.name = chemical.name
+  if (chemical.quantity_amount !== undefined) update.quantity_amount = chemical.quantity_amount
+  if (chemical.quantity_unit !== undefined) update.quantity_unit = chemical.quantity_unit ?? null
+  if (chemical.mix_order !== undefined) update.mix_order = chemical.mix_order
 
   return update
 }

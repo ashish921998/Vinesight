@@ -1,217 +1,180 @@
-// Centralized error handling system
-export interface AppError {
-  code: string
-  message: string
-  details?: any
-  timestamp: number
-  userFriendly: boolean
+/**
+ * Centralized error handling utility for VineSight
+ * Provides consistent error message formatting and user feedback
+ */
+
+import { toast } from 'sonner'
+
+export interface ErrorContext {
+  operation: string
+  component?: string
+  additionalInfo?: Record<string, any>
 }
 
 export class ErrorHandler {
-  private static instance: ErrorHandler
-  private errorHistory: AppError[] = []
-
-  static getInstance(): ErrorHandler {
-    if (!ErrorHandler.instance) {
-      ErrorHandler.instance = new ErrorHandler()
-    }
-    return ErrorHandler.instance
+  /**
+   * Handle errors with consistent formatting and user feedback
+   */
+  static handle(error: unknown, context: ErrorContext): void {
+    const errorMessage = this.getErrorMessage(error)
+    const contextualMessage = `${context.operation}: ${errorMessage}`
+    
+    // Show user-friendly toast notification
+    toast.error(contextualMessage)
+    
+    // Log detailed error for debugging
+    this.logError(error, context)
   }
 
-  // Create standardized error objects
-  createError(
-    code: string,
-    message: string,
-    details?: any,
-    userFriendly: boolean = true
-  ): AppError {
-    const error: AppError = {
-      code,
-      message,
-      details,
-      timestamp: Date.now(),
-      userFriendly
-    }
-
-    // Store in history (keep only last 100)
-    this.errorHistory.push(error)
-    if (this.errorHistory.length > 100) {
-      this.errorHistory.shift()
-    }
-
-    return error
+  /**
+   * Handle errors silently (no user notification)
+   */
+  static log(error: unknown, context: ErrorContext): void {
+    this.logError(error, context)
   }
 
-  // Handle database errors
-  handleDatabaseError(error: any): AppError {
-    console.error('Database error:', error)
-
-    if (error.code === 'PGRST116') {
-      return this.createError('NOT_FOUND', 'The requested data was not found', error)
+  /**
+   * Get user-friendly error message from various error types
+   */
+  static getErrorMessage(error: unknown): string {
+    if (error === null || error === undefined) {
+      return 'An unknown error occurred'
     }
 
-    if (error.code === '23505') {
-      return this.createError('DUPLICATE_ENTRY', 'This entry already exists', error)
+    // Handle Supabase errors
+    if (typeof error === 'object' && error !== null) {
+      const errorObj = error as Record<string, unknown>
+      
+      // Supabase error format
+      if (errorObj.message && typeof errorObj.message === 'string') {
+        // Handle specific Supabase error codes
+        if (errorObj.code === 'PGRST116') {
+          return 'Record not found'
+        }
+        if (errorObj.code === '23505') {
+          return 'Duplicate entry - this record already exists'
+        }
+        if (errorObj.code === '23503') {
+          return 'Invalid reference - related record not found'
+        }
+        
+        return errorObj.message
+      }
+
+      // Handle network errors
+      if (errorObj.name === 'TypeError' && typeof errorObj.message === 'string' && errorObj.message.includes('fetch')) {
+        return 'Network connection error - please check your internet connection'
+      }
     }
 
-    if (error.code === '23503') {
-      return this.createError(
-        'FOREIGN_KEY_VIOLATION',
-        'Cannot complete this operation due to related data',
-        error
-      )
+    // Handle Error objects
+    if (error instanceof Error) {
+      // Handle common error patterns
+      if (error.message.includes('NetworkError')) {
+        return 'Network connection error'
+      }
+      if (error.message.includes('timeout')) {
+        return 'Request timed out - please try again'
+      }
+      if (error.message.includes('permission')) {
+        return 'You do not have permission to perform this action'
+      }
+
+      return error.message
     }
 
-    return this.createError(
-      'DATABASE_ERROR',
-      'A database error occurred. Please try again.',
-      error,
-      true
-    )
+    // Handle string errors
+    if (typeof error === 'string') {
+      return error
+    }
+
+    // Default fallback
+    return 'An unexpected error occurred. Please try again.'
   }
 
-  // Handle API errors
-  handleApiError(error: any): AppError {
-    console.error('API error:', error)
-
-    if (error.name === 'ValidationError') {
-      return this.createError('VALIDATION_ERROR', 'The provided data is invalid', error.errors)
+  /**
+   * Log error details for debugging
+   */
+  private static logError(error: unknown, context: ErrorContext): void {
+    const errorDetails = {
+      timestamp: new Date().toISOString(),
+      context,
+      error: {
+        message: this.getErrorMessage(error),
+        original: error,
+        type: typeof error,
+        ...(error instanceof Error && {
+          stack: error.stack,
+          name: error.name
+        })
+      }
     }
 
-    if (error.status === 401) {
-      return this.createError('UNAUTHORIZED', 'You need to sign in to perform this action', error)
+    // Log to console in development
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.group(`🚨 Error in ${context.operation}`)
+      console.error('Error Details:', errorDetails)
+      console.groupEnd()
+    } else {
+      // In production, log structured error
+      console.error('[VineSight Error]', errorDetails)
     }
-
-    if (error.status === 403) {
-      return this.createError(
-        'FORBIDDEN',
-        'You do not have permission to perform this action',
-        error
-      )
-    }
-
-    if (error.status === 429) {
-      return this.createError(
-        'RATE_LIMITED',
-        'Too many requests. Please wait a moment and try again.',
-        error
-      )
-    }
-
-    if (error.status >= 500) {
-      return this.createError('SERVER_ERROR', 'Server error. Please try again later.', error)
-    }
-
-    return this.createError(
-      'UNKNOWN_ERROR',
-      'An unexpected error occurred. Please try again.',
-      error
-    )
   }
 
-  // Handle form validation errors
-  handleValidationError(errors: string[]): AppError {
-    return this.createError('FORM_VALIDATION', 'Please check the form for errors', errors)
-  }
-
-  // Get user-friendly error message
-  getUserMessage(error: AppError): string {
-    if (!error.userFriendly) {
-      return 'An unexpected error occurred. Please try again.'
+  /**
+   * Create a user-friendly async error wrapper
+   */
+  static async wrapAsync<T>(
+    asyncFn: () => Promise<T>,
+    context: ErrorContext
+  ): Promise<T | null> {
+    try {
+      return await asyncFn()
+    } catch (error) {
+      this.handle(error, context)
+      return null
     }
-    return error.message
   }
 
-  // Get error history for debugging
-  getErrorHistory(): AppError[] {
-    return [...this.errorHistory]
-  }
-
-  // Clear error history
-  clearHistory(): void {
-    this.errorHistory = []
+  /**
+   * Validate an operation result and handle errors
+   */
+  static validate<T>(
+    result: T | null | undefined,
+    context: ErrorContext,
+    customMessage?: string
+  ): T {
+    if (result === null || result === undefined) {
+      const message = customMessage || `Invalid result in ${context.operation}`
+      this.handle(new Error(message), context)
+      throw new Error(message)
+    }
+    return result
   }
 }
 
-// Retry utility for failed operations
-export class RetryHandler {
-  static async withRetry<T>(
-    operation: () => Promise<T>,
-    maxRetries: number = 3,
-    delay: number = 1000
-  ): Promise<T> {
-    let lastError: any
+/**
+ * Common error contexts for consistency
+ */
+export const ErrorContexts = {
+  SPRAY_RECORD_CREATE: { operation: 'Failed to create spray record', component: 'UnifiedDataLogsModal' },
+  SPRAY_RECORD_UPDATE: { operation: 'Failed to update spray record', component: 'UnifiedDataLogsModal' },
+  CHEMICAL_VALIDATION: { operation: 'Chemical validation failed', component: 'ChemicalEntry' },
+  FORM_SUBMISSION: { operation: 'Form submission failed', component: 'FormHandler' },
+  DATA_FETCH: { operation: 'Failed to load data', component: 'DataLoader' },
+  FILE_UPLOAD: { operation: 'Failed to upload file', component: 'FileUploader' },
+  SAVE_SUCCESS: { operation: 'Save successful', component: 'Base' }
+} as const
 
-    for (let i = 0; i <= maxRetries; i++) {
-      try {
-        return await operation()
-      } catch (error) {
-        lastError = error
-
-        if (i < maxRetries) {
-          // Exponential backoff
-          const waitTime = delay * Math.pow(2, i)
-          await new Promise((resolve) => setTimeout(resolve, waitTime))
-        }
-      }
-    }
-
-    throw lastError
-  }
-}
-
-// React hook for error handling
-import { useState, useCallback } from 'react'
-
-export function useErrorHandler() {
-  const [error, setError] = useState<AppError | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const errorHandler = ErrorHandler.getInstance()
-
-  const handleAsync = useCallback(
-    async <T>(
-      operation: () => Promise<T>,
-      options?: {
-        onSuccess?: (result: T) => void
-        onError?: (error: AppError) => void
-        showLoader?: boolean
-      }
-    ): Promise<T | null> => {
-      if (options?.showLoader !== false) {
-        setIsLoading(true)
-      }
-      setError(null)
-
-      try {
-        const result = await operation()
-        options?.onSuccess?.(result)
-        return result
-      } catch (err: any) {
-        const appError = errorHandler.handleApiError(err)
-        setError(appError)
-        options?.onError?.(appError)
-        return null
-      } finally {
-        if (options?.showLoader !== false) {
-          setIsLoading(false)
-        }
-      }
-    },
-    [errorHandler]
-  )
-
-  const clearError = useCallback(() => {
-    setError(null)
-  }, [])
-
+/**
+ * Simplified error handling hook for React components
+ */
+export const useErrorHandler = () => {
   return {
-    error,
-    isLoading,
-    handleAsync,
-    clearError,
-    getUserMessage: (err: AppError) => errorHandler.getUserMessage(err)
+    handleError: ErrorHandler.handle,
+    handleSuccess: (message: string) => {
+      toast.success(message)
+      ErrorHandler.log(null, { ...ErrorContexts.SAVE_SUCCESS, operation: message })
+    }
   }
 }
-
-// Global error handler instance
-export const globalErrorHandler = ErrorHandler.getInstance()

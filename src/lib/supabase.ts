@@ -40,18 +40,32 @@ export interface IrrigationRecord {
   created_at?: string
 }
 
+export enum SprayChemicalUnit {
+  GramPerLiter = 'gm/L',
+  MilliliterPerLiter = 'ml/L'
+}
+
+export interface SprayChemical {
+  id?: number
+  spray_record_id?: number
+  name: string
+  quantity_amount?: number
+  quantity_unit?: SprayChemicalUnit
+  mix_order?: number
+  created_at?: string
+}
+
 export interface SprayRecord {
   id?: number
   farm_id: number
   date: string
-  chemical: string
-  dose: string
-  quantity_amount: number
-  quantity_unit: string // 'gm/L' or 'ml/L'
   water_volume: number // total water volume in liters
   area: number // in acres
   weather: string
   operator: string
+  chemicals: SprayChemical[]
+  legacy_chemical?: string | null
+  legacy_dose?: string | null
   date_of_pruning?: Date
   notes?: string
   created_at?: string

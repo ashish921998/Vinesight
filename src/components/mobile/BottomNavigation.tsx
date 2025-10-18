@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Sprout, Calculator, User, Brain, FileText } from 'lucide-react'
+import { Home, Sprout, Calculator, User, Brain, FileText, type LucideIcon } from 'lucide-react'
 import { logTypeConfigs, type LogType } from '@/lib/log-type-config'
 import {
   Dialog,
@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { SupabaseService } from '@/lib/supabase-service'
+import { SprayChemicalUnit } from '@/lib/supabase'
 import { type Farm } from '@/types/types'
 import { capitalize } from '@/lib/utils'
 
@@ -59,7 +60,38 @@ const navigationItems = [
   }
 ]
 
-const logTypes = [
+type LogField =
+  | {
+      name: string
+      label: string
+      type: 'textarea'
+      placeholder?: string
+      required?: boolean
+    }
+  | {
+      name: string
+      label: string
+      type: 'select'
+      options: string[]
+      required?: boolean
+    }
+  | {
+      name: string
+      label: string
+      type: 'text' | 'number'
+      step?: string
+      min?: string
+      placeholder: string
+      required?: boolean
+    }
+
+const logTypes: Array<{
+  id: LogType
+  name: string
+  icon: LucideIcon
+  color: string
+  fields: LogField[]
+}> = [
   {
     id: 'irrigation' as LogType,
     name: 'Irrigation',
@@ -69,7 +101,7 @@ const logTypes = [
       {
         name: 'duration',
         label: 'Duration (hours)',
-        type: 'number' as const,
+        type: 'number',
         step: '0.5',
         min: '0.5',
         placeholder: '2.5',
@@ -78,7 +110,7 @@ const logTypes = [
       {
         name: 'notes',
         label: 'Notes (optional)',
-        type: 'textarea' as const,
+        type: 'textarea',
         placeholder: 'e.g., Drip irrigation, fruit development stage'
       }
     ]
@@ -92,14 +124,30 @@ const logTypes = [
       {
         name: 'product',
         label: 'Product/Chemical',
-        type: 'text' as const,
+        type: 'text',
         placeholder: 'e.g., Fungicide, Insecticide name',
+        required: true
+      },
+      {
+        name: 'quantity',
+        label: 'Quantity',
+        type: 'number',
+        step: '0.1',
+        min: '0',
+        placeholder: '1.5',
+        required: true
+      },
+      {
+        name: 'unit',
+        label: 'Unit',
+        type: 'select',
+        options: [SprayChemicalUnit.GramPerLiter, SprayChemicalUnit.MilliliterPerLiter],
         required: true
       },
       {
         name: 'notes',
         label: 'Notes (optional)',
-        type: 'textarea' as const,
+        type: 'textarea',
         placeholder: 'e.g., Concentration, weather conditions, target pest/disease'
       }
     ]
@@ -113,14 +161,14 @@ const logTypes = [
       {
         name: 'fertilizer',
         label: 'Fertilizer',
-        type: 'text' as const,
+        type: 'text',
         placeholder: 'e.g., NPK 19:19:19',
         required: true
       },
       {
         name: 'quantity',
         label: 'Quantity (kg)',
-        type: 'number' as const,
+        type: 'number',
         step: '0.1',
         min: '0',
         placeholder: '10',
@@ -129,7 +177,7 @@ const logTypes = [
       {
         name: 'notes',
         label: 'Notes (optional)',
-        type: 'textarea' as const,
+        type: 'textarea',
         placeholder: 'e.g., Growth stage, concentration'
       }
     ]
@@ -143,7 +191,7 @@ const logTypes = [
       {
         name: 'quantity',
         label: 'Quantity (kg)',
-        type: 'number' as const,
+        type: 'number',
         step: '0.1',
         min: '0',
         placeholder: '100',
@@ -152,7 +200,7 @@ const logTypes = [
       {
         name: 'notes',
         label: 'Notes (optional)',
-        type: 'textarea' as const,
+        type: 'textarea',
         placeholder: 'e.g., Quality grade, market destination, storage location'
       }
     ]
@@ -166,7 +214,7 @@ const logTypes = [
       {
         name: 'amount',
         label: 'Amount (₹)',
-        type: 'number' as const,
+        type: 'number',
         step: '0.01',
         min: '0',
         placeholder: '1000',
@@ -175,21 +223,21 @@ const logTypes = [
       {
         name: 'category',
         label: 'Category',
-        type: 'text' as const,
+        type: 'text',
         placeholder: 'e.g., Labor, Materials, Fuel',
         required: true
       },
       {
         name: 'description',
         label: 'Description',
-        type: 'text' as const,
+        type: 'text',
         placeholder: 'e.g., Pruning labor',
         required: true
       },
       {
         name: 'notes',
         label: 'Notes (optional)',
-        type: 'textarea' as const,
+        type: 'textarea',
         placeholder: 'Additional details'
       }
     ]
@@ -210,11 +258,6 @@ export function BottomNavigation() {
   useEffect(() => {
     loadFarms()
     setMounted(true)
-
-    // Cleanup function
-    return () => {
-      // Any cleanup code can go here if needed in the future
-    }
   }, [])
 
   const loadFarms = async () => {
@@ -271,15 +314,24 @@ export function BottomNavigation() {
           await SupabaseService.addSprayRecord({
             farm_id: farmId,
             date: currentDate,
-            chemical: formData.product?.trim() || 'Unknown',
-            dose: 'Not specified',
-            quantity_amount: 0,
-            quantity_unit: 'Not specified',
             water_volume: 0,
             area: 0,
             weather: 'Not specified',
             operator: 'Not specified',
             notes: formData.notes || '',
+            chemicals: [
+              {
+                name: formData.product?.trim() || 'Unknown',
+                quantity_amount: formData.quantity ? parseFloat(formData.quantity) : undefined,
+                quantity_unit: ((formData.unit as string) ||
+                  SprayChemicalUnit.GramPerLiter) as SprayChemicalUnit,
+                mix_order: 1
+              }
+            ],
+            legacy_chemical: formData.product?.trim() || null,
+            legacy_dose: formData.quantity
+              ? `${formData.quantity}${(formData.unit as string) || SprayChemicalUnit.GramPerLiter}`
+              : null,
             date_of_pruning: pruningDate
           })
           break
@@ -412,6 +464,25 @@ export function BottomNavigation() {
                         className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-20 resize-none"
                         required={field.required}
                       />
+                    ) : field.type === 'select' ? (
+                      <Select
+                        value={(formData[field.name] as string) || SprayChemicalUnit.GramPerLiter}
+                        onValueChange={(value) => handleFormDataChange(field.name, value)}
+                      >
+                        <SelectTrigger 
+                          className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-10 px-3 py-2 text-sm flex items-center"
+                          aria-label="Select chemical unit for spray measurement"
+                        >
+                          <SelectValue placeholder="Choose unit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(field.options || []).map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     ) : (
                       <Input
                         type={field.type}
@@ -420,8 +491,9 @@ export function BottomNavigation() {
                         value={formData[field.name] || ''}
                         onChange={(e) => handleFormDataChange(field.name, e.target.value)}
                         placeholder={field.placeholder}
-                        className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12"
+                        className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-10 px-3 text-sm"
                         required={field.required}
+                        aria-label={`${field.label} input field`}
                       />
                     )}
                   </div>

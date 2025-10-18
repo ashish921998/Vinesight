@@ -213,19 +213,23 @@ export default function FarmDetailsPage() {
         record = await SupabaseService.addSprayRecord({
           farm_id: parseInt(farmId),
           date: date,
-          chemical: data.chemical?.trim() || 'Unknown',
-          dose:
-            data.quantity_amount && data.quantity_unit
-              ? `${data.quantity_amount}${data.quantity_unit}`
-              : 'As per label',
-          quantity_amount: data.quantity_amount ? parseFloat(data.quantity_amount) : 0,
-          quantity_unit: data.quantity_unit || 'gm/L',
           water_volume: data.water_volume ? parseFloat(data.water_volume) : 0,
           area: dashboardData?.farm?.area || 0,
           weather: 'Clear',
           operator: 'Farm Owner',
           notes: dayNotes || '',
-          date_of_pruning: dashboardData?.farm?.dateOfPruning
+          date_of_pruning: dashboardData?.farm?.dateOfPruning,
+          chemicals: (data.chemicals || []).slice(0, 10).map((chem: any, index: number) => ({
+            name: chem.name?.trim() || `Chemical ${index + 1}`,
+            quantity_amount: chem.quantity ? parseFloat(chem.quantity) : undefined,
+            quantity_unit: chem.unit || undefined,
+            mix_order: index + 1
+          })),
+          legacy_chemical: data.chemical?.trim() || null,
+          legacy_dose:
+            data.quantity_amount && data.quantity_unit
+              ? `${data.quantity_amount}${data.quantity_unit}`
+              : null
         })
         break
 

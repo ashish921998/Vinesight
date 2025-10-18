@@ -4,6 +4,7 @@
  */
 
 import { Droplets, SprayCan, Scissors, IndianRupee, TestTube, Beaker } from 'lucide-react'
+import { SprayChemicalUnit } from '@/lib/supabase'
 
 export type LogType =
   | 'irrigation'
@@ -83,7 +84,7 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         type: 'select',
         label: 'Unit',
         required: false,
-        options: ['gm/L', 'ml/L']
+        options: [SprayChemicalUnit.GramPerLiter, SprayChemicalUnit.MilliliterPerLiter]
       },
       {
         name: 'water_volume',
@@ -526,7 +527,7 @@ export function getLogTypeBorderColor(type: string): string {
 }
 
 /**
- * Get the label for a given log type
+ * Get the label for a given log type (memoized)
  */
 export function getLogTypeLabel(type: string): string {
   const config = logTypeConfigs[type as LogType]

@@ -36,18 +36,35 @@ CREATE TABLE irrigation_records (
 );
 
 -- Create spray_records table
+-- Updated to support multiple chemicals per spray record
+-- Legacy fields (chemical, dose) kept for backward compatibility with existing data
 CREATE TABLE spray_records (
   id BIGSERIAL PRIMARY KEY,
   farm_id BIGINT REFERENCES farms(id) ON DELETE CASCADE,
   date DATE NOT NULL,
-  chemical VARCHAR(255) NOT NULL,
-  dose VARCHAR(100) NOT NULL,
+  water_volume DECIMAL(10,2), -- Total water volume in liters (new field)
   area DECIMAL(10,2) NOT NULL, -- in hectares
-  weather VARCHAR(255) NOT NULL,
-  operator VARCHAR(255) NOT NULL,
+  weather VARCHAR(255), -- Weather conditions during spray (now optional)
+  operator VARCHAR(255), -- Name of operator (now optional)
+  -- Legacy fields for backward compatibility - now nullable
+  chemical VARCHAR(255), -- Legacy single chemical name (kept for compatibility with old records)
+  dose VARCHAR(100), -- Legacy single chemical dose (kept for compatibility with old records)
   date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
-  notes TEXT,
+  notes TEXT, -- Additional notes about the spray application
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create spray_record_chemicals table for multiple chemicals per spray record
+-- This table allows storing up to 10 chemicals per spray application
+-- Replaces the previous single-chemical approach for better data normalization
+CREATE TABLE spray_record_chemicals (
+  id BIGSERIAL PRIMARY KEY,
+  spray_record_id BIGINT NOT NULL REFERENCES spray_records(id) ON DELETE CASCADE,
+  name TEXT NOT NULL, -- Chemical product name (e.g., "Imidacloprid", "Copper fungicide")
+  quantity_amount NUMERIC(8,2), -- Chemical quantity amount (e.g., 1.5, 2.0)
+  quantity_unit TEXT CHECK (quantity_unit IN ('gm/L', 'ml/L')), -- Unit: grams per liter or milliliters per liter
+  mix_order SMALLINT NOT NULL DEFAULT 1, -- Order in which chemicals should be mixed (1-10)
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create fertigation_records table
@@ -149,6 +166,12 @@ CREATE INDEX idx_irrigation_records_date_of_pruning ON irrigation_records(date_o
 CREATE INDEX idx_spray_records_farm_id ON spray_records(farm_id);
 CREATE INDEX idx_spray_records_date ON spray_records(date);
 CREATE INDEX idx_spray_records_date_of_pruning ON spray_records(date_of_pruning);
+
+-- Indexes for spray_record_chemicals table
+-- Performance optimized for common queries relating chemicals to spray records
+CREATE INDEX idx_spray_record_chemicals_spray_record_id ON spray_record_chemicals(spray_record_id);
+-- Unique index ensures proper mix ordering and prevents duplicate mix orders
+CREATE UNIQUE INDEX idx_spray_record_chemicals_mix_order ON spray_record_chemicals(spray_record_id, mix_order);
 CREATE INDEX idx_fertigation_records_farm_id ON fertigation_records(farm_id);
 CREATE INDEX idx_fertigation_records_date ON fertigation_records(date);
 CREATE INDEX idx_fertigation_records_date_of_pruning ON fertigation_records(date_of_pruning);
@@ -174,6 +197,7 @@ CREATE INDEX idx_petiole_test_records_date_of_pruning ON petiole_test_records(da
 ALTER TABLE farms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE irrigation_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE spray_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE spray_record_chemicals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fertigation_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE harvest_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE expense_records ENABLE ROW LEVEL SECURITY;
@@ -215,6 +239,40 @@ CREATE POLICY "Users can update spray records for their farms" ON spray_records 
 );
 CREATE POLICY "Users can delete spray records for their farms" ON spray_records FOR DELETE USING (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = spray_records.farm_id AND farms.user_id = auth.uid())
+);
+
+-- Spray record chemicals
+CREATE POLICY "Users can view spray chemicals for their farm spray records" ON spray_record_chemicals FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM spray_records 
+    JOIN farms ON farms.id = spray_records.farm_id 
+    WHERE spray_records.id = spray_record_chemicals.spray_record_id 
+    AND farms.user_id = auth.uid()
+  )
+);
+CREATE POLICY "Users can insert spray chemicals for their farm spray records" ON spray_record_chemicals FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM spray_records 
+    JOIN farms ON farms.id = spray_records.farm_id 
+    WHERE spray_records.id = spray_record_chemicals.spray_record_id 
+    AND farms.user_id = auth.uid()
+  )
+);
+CREATE POLICY "Users can update spray chemicals for their farm spray records" ON spray_record_chemicals FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM spray_records 
+    JOIN farms ON farms.id = spray_records.farm_id 
+    WHERE spray_records.id = spray_record_chemicals.spray_record_id 
+    AND farms.user_id = auth.uid()
+  )
+);
+CREATE POLICY "Users can delete spray chemicals for their farm spray records" ON spray_record_chemicals FOR DELETE USING (
+  EXISTS (
+    SELECT 1 FROM spray_records 
+    JOIN farms ON farms.id = spray_records.farm_id 
+    WHERE spray_records.id = spray_record_chemicals.spray_record_id 
+    AND farms.user_id = auth.uid()
+  )
 );
 
 -- Fertigation records
