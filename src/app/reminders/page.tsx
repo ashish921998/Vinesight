@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { DatePicker } from '@/components/ui/date-picker'
 import {
   Bell,
   Plus,
@@ -21,11 +22,32 @@ import {
 import { CloudDataService, TaskReminder } from '@/lib/cloud-data-service'
 import type { Farm } from '@/types/types'
 import { SupabaseService } from '@/lib/supabase-service'
-import { TaskTemplateSelector } from '@/components/reminders/TaskTemplateSelector'
+import {
+  TaskTemplateSelector,
+  TaskTemplateFormData
+} from '@/components/reminders/TaskTemplateSelector'
 import { NotificationSettings } from '@/components/reminders/NotificationSettings'
 import { NotificationService } from '@/lib/notification-service'
 import { getCurrentSeasonTemplates } from '@/lib/task-templates'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+
+type TaskTypeOption =
+  | 'irrigation'
+  | 'spray'
+  | 'fertigation'
+  | 'training'
+  | 'harvest'
+  | 'soil_test'
+  | 'other'
+type TaskPriorityOption = 'low' | 'medium' | 'high'
+
+interface TaskFormState {
+  title: string
+  description: string
+  dueDate?: Date
+  type: TaskTypeOption
+  priority: TaskPriorityOption
+}
 
 export default function RemindersPage() {
   const [farms, setFarms] = useState<Farm[]>([])
@@ -41,12 +63,12 @@ export default function RemindersPage() {
 
   const notificationServiceRef = useRef<NotificationService | null>(null)
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<TaskFormState>({
     title: '',
     description: '',
-    dueDate: '',
-    type: 'other' as const,
-    priority: 'medium' as const
+    dueDate: undefined,
+    type: 'other',
+    priority: 'medium'
   })
 
   const loadFarms = useCallback(async () => {
@@ -125,11 +147,14 @@ export default function RemindersPage() {
           console.log('Editing not implemented yet')
         }
       } else {
+        if (!formData.dueDate) {
+          return // Date is required
+        }
         await SupabaseService.addTaskReminder({
           farmId: selectedFarm.id!,
           title: formData.title,
           description: formData.description,
-          dueDate: formData.dueDate,
+          dueDate: formData.dueDate.toISOString().split('T')[0],
           type: formData.type,
           priority: formData.priority,
           completed: false,
@@ -163,15 +188,15 @@ export default function RemindersPage() {
     }
   }
 
-  const handleTemplateSelect = async (templateData: any) => {
-    if (!selectedFarm) return
+  const handleTemplateSelect = async (templateData: TaskTemplateFormData) => {
+    if (!selectedFarm || !templateData.dueDate) return
 
     try {
       await SupabaseService.addTaskReminder({
         farmId: selectedFarm.id!,
         title: templateData.title,
         description: templateData.description,
-        dueDate: templateData.dueDate,
+        dueDate: templateData.dueDate.toISOString().split('T')[0],
         type: templateData.type,
         priority: templateData.priority,
         completed: false,
@@ -199,7 +224,7 @@ export default function RemindersPage() {
     setFormData({
       title: '',
       description: '',
-      dueDate: '',
+      dueDate: undefined,
       type: 'other',
       priority: 'medium'
     })
@@ -207,10 +232,20 @@ export default function RemindersPage() {
     setEditingTask(null)
   }
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = <K extends keyof Omit<TaskFormState, 'dueDate'>>(
+    field: K,
+    value: TaskFormState[K]
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value
+    }))
+  }
+
+  const handleDateChange = (date: Date | undefined) => {
+    setFormData((prev) => ({
+      ...prev,
+      dueDate: date
     }))
   }
 
@@ -454,11 +489,11 @@ export default function RemindersPage() {
                       </div>
                       <div>
                         <Label htmlFor="dueDate">Due Date</Label>
-                        <Input
+                        <DatePicker
                           id="dueDate"
-                          type="date"
-                          value={formData.dueDate}
-                          onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                          date={formData.dueDate}
+                          onDateChange={handleDateChange}
+                          placeholder="Select due date"
                           required
                         />
                       </div>
@@ -467,7 +502,9 @@ export default function RemindersPage() {
                         <select
                           id="type"
                           value={formData.type}
-                          onChange={(e) => handleInputChange('type', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange('type', e.target.value as TaskTypeOption)
+                          }
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <option value="irrigation">Irrigation</option>
@@ -483,7 +520,9 @@ export default function RemindersPage() {
                         <select
                           id="priority"
                           value={formData.priority}
-                          onChange={(e) => handleInputChange('priority', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange('priority', e.target.value as TaskPriorityOption)
+                          }
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <option value="low">Low</option>
@@ -504,7 +543,9 @@ export default function RemindersPage() {
                     </div>
 
                     <div className="flex gap-2">
-                      <Button type="submit">{editingTask ? 'Update Task' : 'Add Task'}</Button>
+                      <Button type="submit" disabled={!formData.dueDate || !formData.title}>
+                        {editingTask ? 'Update Task' : 'Add Task'}
+                      </Button>
                       <Button type="button" variant="outline" onClick={resetForm}>
                         Cancel
                       </Button>

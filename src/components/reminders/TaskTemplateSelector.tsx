@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { DatePicker } from '@/components/ui/date-picker'
 import {
   TASK_TEMPLATES,
   TaskTemplate,
@@ -27,15 +28,15 @@ import {
   CheckCircle2
 } from 'lucide-react'
 
-interface TaskTemplateFormData {
+export interface TaskTemplateFormData {
   title: string
   description: string
-  dueDate: string
+  dueDate?: Date
   type: string
   priority: string
   isRecurring: boolean
   frequency?: string
-  endDate?: string
+  endDate?: Date
   customInstructions?: string
 }
 
@@ -58,7 +59,7 @@ export function TaskTemplateSelector({
   const [formData, setFormData] = useState<TaskTemplateFormData>({
     title: '',
     description: '',
-    dueDate: '',
+    dueDate: undefined,
     type: 'other',
     priority: 'medium',
     isRecurring: false,
@@ -115,7 +116,7 @@ export function TaskTemplateSelector({
     setFormData({
       title: template.title,
       description: template.description,
-      dueDate: '',
+      dueDate: undefined,
       type: template.type,
       priority: template.priority,
       isRecurring: template.frequency !== 'once',
@@ -124,15 +125,28 @@ export function TaskTemplateSelector({
     })
   }
 
-  const handleInputChange = (field: keyof TaskTemplateFormData, value: string | boolean) => {
+  const handleInputChange = <K extends keyof Omit<TaskTemplateFormData, 'dueDate' | 'endDate'>>(
+    field: K,
+    value: TaskTemplateFormData[K]
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value
     }))
   }
 
+  const handleRecurringToggle = (checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      isRecurring: checked,
+      frequency: checked ? prev.frequency ?? 'weekly' : undefined,
+      endDate: checked ? prev.endDate : undefined
+    }))
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!formData.dueDate) return
     onSelectTemplate(formData)
   }
 
@@ -294,11 +308,13 @@ export function TaskTemplateSelector({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="dueDate">Due Date</Label>
-                      <Input
+                      <DatePicker
                         id="dueDate"
-                        type="date"
-                        value={formData.dueDate}
-                        onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                        date={formData.dueDate}
+                        onDateChange={(date) =>
+                          setFormData((prev) => ({ ...prev, dueDate: date }))
+                        }
+                        placeholder="Select due date"
                         required
                       />
                     </div>
@@ -325,7 +341,7 @@ export function TaskTemplateSelector({
                         type="checkbox"
                         id="recurring"
                         checked={formData.isRecurring}
-                        onChange={(e) => handleInputChange('isRecurring', e.target.checked)}
+                        onChange={(e) => handleRecurringToggle(e.target.checked)}
                         className="rounded"
                       />
                       <Label htmlFor="recurring">Make this a recurring task</Label>
@@ -349,11 +365,14 @@ export function TaskTemplateSelector({
                         </div>
                         <div>
                           <Label htmlFor="endDate">End Date (optional)</Label>
-                          <Input
+                          <DatePicker
                             id="endDate"
-                            type="date"
-                            value={formData.endDate || ''}
-                            onChange={(e) => handleInputChange('endDate', e.target.value)}
+                            date={formData.endDate}
+                            onDateChange={(date) =>
+                              setFormData((prev) => ({ ...prev, endDate: date }))
+                            }
+                            placeholder="Select end date"
+                            fromDate={formData.dueDate}
                           />
                         </div>
                       </div>
@@ -372,7 +391,7 @@ export function TaskTemplateSelector({
                   </div>
 
                   <div className="flex gap-2 pt-4">
-                    <Button type="submit" className="flex-1">
+                    <Button type="submit" className="flex-1" disabled={!formData.dueDate}>
                       Create Task
                     </Button>
                     <Button type="button" variant="outline" onClick={onCancel}>
