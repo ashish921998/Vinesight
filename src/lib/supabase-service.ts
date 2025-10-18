@@ -170,9 +170,53 @@ export class SupabaseService {
 
   static async deleteIrrigationRecord(id: number): Promise<void> {
     const supabase = getTypedSupabaseClient()
+
+    const { data: records, error: fetchError } = await supabase
+      .from('irrigation_records')
+      .select('*')
+      .eq('id', id)
+      .limit(1)
+
+    if (fetchError) throw fetchError
+
+    const record = records?.[0]
+
     const { error } = await supabase.from('irrigation_records').delete().eq('id', id)
 
     if (error) throw error
+
+    if (!record?.farm_id) {
+      return
+    }
+
+    const farm = await this.getFarmById(record.farm_id)
+
+    if (!farm) {
+      return
+    }
+
+    const duration = Number(record.duration ?? 0)
+    const rawSystemDischarge = record.system_discharge ?? farm.systemDischarge ?? 0
+    const systemDischarge = Number(rawSystemDischarge)
+
+    if (!Number.isFinite(duration) || !Number.isFinite(systemDischarge)) {
+      return
+    }
+
+    const waterContribution = duration * systemDischarge
+
+    if (waterContribution === 0) {
+      return
+    }
+
+    const currentWaterLevel = Number(farm.remainingWater ?? 0)
+    const safeCurrentLevel = Number.isFinite(currentWaterLevel) ? currentWaterLevel : 0
+    const updatedWaterLevel = Math.max(safeCurrentLevel - waterContribution, 0)
+
+    await this.updateFarm(record.farm_id, {
+      remainingWater: updatedWaterLevel,
+      waterCalculationUpdatedAt: new Date().toISOString()
+    })
   }
 
   // Spray operations
