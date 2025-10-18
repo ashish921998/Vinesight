@@ -17,30 +17,41 @@ const LayoutContent = dynamic(
   }
 )
 
+// Optimize font loading - preload only critical fonts, defer others
 const geistSans = Geist({
   variable: '--font-geist-sans',
-  subsets: ['latin']
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true
 })
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
-  subsets: ['latin']
+  subsets: ['latin'],
+  display: 'swap',
+  preload: false
 })
 
 const montserrat = Montserrat({
   variable: '--font-montserrat',
-  subsets: ['latin']
+  subsets: ['latin'],
+  display: 'swap',
+  preload: false
 })
 
 const merriweather = Merriweather({
   variable: '--font-merriweather',
   subsets: ['latin'],
-  weight: ['300', '400', '700', '900']
+  weight: ['300', '400', '700', '900'],
+  display: 'swap',
+  preload: false
 })
 
 const sourceCodePro = Source_Code_Pro({
   variable: '--font-source-code-pro',
-  subsets: ['latin']
+  subsets: ['latin'],
+  display: 'swap',
+  preload: false
 })
 
 export const metadata: Metadata = {

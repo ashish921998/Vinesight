@@ -25,9 +25,8 @@ import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { getQuotaStatus, incrementQuestionCount } from '@/lib/quota-service'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import { Textarea } from '../ui/textarea'
+import { LazyMarkdown } from '../optimized/LazyMarkdown'
 import {
   supabaseConversationStorage,
   type Message,
@@ -76,6 +75,19 @@ export function AIAssistant({
   const [quotaStatus, setQuotaStatus] = useState(() => getQuotaStatus())
   const [showHistory, setShowHistory] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
+  const sortedConversations = useMemo(
+    () =>
+      conversations
+        .map((conversation) => ({
+          ...conversation,
+          updatedAt:
+            conversation.updatedAt instanceof Date
+              ? conversation.updatedAt
+              : new Date(conversation.updatedAt)
+        }))
+        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
+    [conversations]
+  )
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const currentConversationIdRef = useRef<string | null>(null)
   const savingInProgressRef = useRef<boolean>(false)
@@ -736,69 +748,25 @@ export function AIAssistant({
     }
   }
 
-  const formatMessage = (content: string, isAssistant: boolean = false) => {
+  const formatMessage = useCallback((content: string, isAssistant: boolean = false) => {
     if (isAssistant) {
       return (
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          components={{
-            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-            ul: ({ children, ...props }) => (
-              <ul
-                {...props}
-                className={cn('list-disc list-outside pl-5 mb-2 space-y-1', props.className)}
-              >
-                {children}
-              </ul>
-            ),
-            ol: ({ children, ...props }) => (
-              <ol
-                {...props}
-                className={cn('list-decimal list-outside pl-5 mb-2 space-y-1', props.className)}
-              >
-                {children}
-              </ol>
-            ),
-            li: ({ children, ...props }) => (
-              <li {...props} className={cn('leading-relaxed', props.className)}>
-                {children}
-              </li>
-            ),
-            code: ({ children, ...props }) => {
-              const isInline = !props.className?.includes('language-')
-              return isInline ? (
-                <code className="bg-gray-200 px-1 py-0.5 rounded text-xs font-mono">
-                  {children}
-                </code>
-              ) : (
-                <pre className="bg-gray-100 p-2 rounded text-xs font-mono overflow-x-auto mb-2">
-                  <code>{children}</code>
-                </pre>
-              )
-            },
-            strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-            em: ({ children }) => <em className="italic">{children}</em>,
-            h1: ({ children }) => <h1 className="text-base font-bold mb-2">{children}</h1>,
-            h2: ({ children }) => <h2 className="text-sm font-semibold mb-2">{children}</h2>,
-            h3: ({ children }) => <h3 className="text-sm font-medium mb-1">{children}</h3>,
-            blockquote: ({ children }) => (
-              <blockquote className="border-l-2 border-gray-300 pl-3 ml-2 my-2 text-gray-700">
-                {children}
-              </blockquote>
-            )
-          }}
-        >
-          {content}
-        </ReactMarkdown>
+        <LazyMarkdown
+          content={content}
+          className="prose prose-sm max-w-none dark:prose-invert prose-p:mb-2 prose-ul:my-1 prose-li:leading-relaxed"
+        />
       )
-    } else {
-      return content.split('\n').map((line, index) => (
-        <p key={index} className="mb-2 last:mb-0">
+    }
+
+    return content
+      .split(/\n+/)
+      .filter(Boolean)
+      .map((line, index) => (
+        <p key={`${index}-${line.slice(0, 24)}`} className="mb-2 last:mb-0">
           {line}
         </p>
       ))
-    }
-  }
+  }, [])
 
   const quickQuestions = [
     {
@@ -893,36 +861,33 @@ export function AIAssistant({
               <p className="text-xs text-gray-500">No saved conversations yet</p>
             ) : (
               <div className="space-y-2">
-                {conversations
-                  .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-                  .map((conv) => (
-                    <div
-                      key={conv.id}
-                      className={cn(
-                        'group flex items-center justify-between p-2 rounded cursor-pointer text-xs hover:bg-gray-200',
-                        currentConversationId === conv.id && 'bg-blue-100'
-                      )}
-                    >
-                      <div onClick={() => loadConversation(conv.id)} className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 truncate">{conv.title}</div>
-                        <div className="text-gray-500 text-xs">
-                          {conv.updatedAt.toLocaleDateString()} • {conv.messages.length - 1}{' '}
-                          messages
-                        </div>
+                {sortedConversations.map((conv) => (
+                  <div
+                    key={conv.id}
+                    className={cn(
+                      'group flex items-center justify-between p-2 rounded cursor-pointer text-xs hover:bg-gray-200',
+                      currentConversationId === conv.id && 'bg-blue-100'
+                    )}
+                  >
+                    <div onClick={() => loadConversation(conv.id)} className="flex-1 min-w-0">
+                      <div className="font-medium text-gray-900 truncate">{conv.title}</div>
+                      <div className="text-gray-500 text-xs">
+                        {conv.updatedAt.toLocaleDateString()} • {conv.messages.length - 1} messages
                       </div>
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          deleteConversation(conv.id)
-                        }}
-                        variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-red-400 hover:text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
                     </div>
-                  ))}
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteConversation(conv.id)
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-red-400 hover:text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
               </div>
             )}
           </div>

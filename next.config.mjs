@@ -13,7 +13,15 @@ const nextConfig = {
       'lucide-react',
       '@radix-ui/react-select',
       '@radix-ui/react-progress',
-      'jspdf'
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-tooltip',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-tabs',
+      'jspdf',
+      'date-fns',
+      'react-markdown',
+      'framer-motion'
     ]
   },
 
