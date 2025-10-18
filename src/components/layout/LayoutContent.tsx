@@ -1,5 +1,6 @@
 'use client'
 
+import '@/lib/performance-monitor'
 import { usePathname } from 'next/navigation'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import Navigation from '@/components/navigation'

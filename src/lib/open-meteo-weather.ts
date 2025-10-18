@@ -3,6 +3,8 @@
  * Provides all necessary weather parameters for accurate evapotranspiration calculations
  */
 
+import { cacheService, CACHE_TTL } from './cache-service'
+
 export interface OpenMeteoWeatherData {
   date: string
 
@@ -101,6 +103,12 @@ export class OpenMeteoWeatherService {
     const start = startDate || today
     const end = endDate || today
 
+    const cacheKey = `weather:${latitude}:${longitude}:${start}:${end}`
+    const cached = cacheService.get<OpenMeteoWeatherData[]>(cacheKey)
+    if (cached) {
+      return cached
+    }
+
     // Parameters needed for ETo calculation
     const params = new URLSearchParams({
       latitude: latitude.toString(),
@@ -126,14 +134,20 @@ export class OpenMeteoWeatherService {
     const url = `${this.BASE_URL}?${params}`
 
     try {
-      const response = await fetch(url)
+      const response = await fetch(url, {
+        next: {
+          revalidate: CACHE_TTL.MEDIUM / 1000 // seconds
+        }
+      })
 
       if (!response.ok) {
         throw new Error(`Open-Meteo API error: ${response.status} ${response.statusText}`)
       }
 
       const data: OpenMeteoApiResponse = await response.json()
-      return this.parseWeatherData(data)
+      const parsed = this.parseWeatherData(data)
+      cacheService.set(cacheKey, parsed, CACHE_TTL.MEDIUM)
+      return parsed
     } catch (error) {
       console.error('Error fetching Open-Meteo weather data:', error)
       throw new Error('Failed to fetch weather data from Open-Meteo API')

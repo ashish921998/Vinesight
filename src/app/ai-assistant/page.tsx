@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { AIAssistant } from '@/components/ai/AIAssistant'
+import { LazyAIAssistant } from '@/components/lazy/LazyAIAssistant'
 import { ImageAnalysisResult } from '@/lib/ai-service'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 
@@ -10,7 +10,7 @@ export default function AIAssistantPage() {
 
   return (
     <ProtectedRoute>
-      <AIAssistant recentAnalysis={recentAnalysis} isOpen={true} />
+      <LazyAIAssistant recentAnalysis={recentAnalysis} isOpen={true} />
     </ProtectedRoute>
   )
 }
