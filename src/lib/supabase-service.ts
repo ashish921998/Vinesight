@@ -171,19 +171,19 @@ export class SupabaseService {
   static async deleteIrrigationRecord(id: number): Promise<void> {
     const supabase = getTypedSupabaseClient()
 
-    const { data: records, error: fetchError } = await supabase
+    const { data: record, error } = await supabase
       .from('irrigation_records')
-      .select('*')
+      .delete()
       .eq('id', id)
-      .limit(1)
+      .select('*')
+      .single()
 
-    if (fetchError) throw fetchError
-
-    const record = records?.[0]
-
-    const { error } = await supabase.from('irrigation_records').delete().eq('id', id)
-
-    if (error) throw error
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return
+      }
+      throw error
+    }
 
     if (!record?.farm_id) {
       return
@@ -195,17 +195,23 @@ export class SupabaseService {
       return
     }
 
-    const duration = Number(record.duration ?? 0)
-    const rawSystemDischarge = record.system_discharge ?? farm.systemDischarge ?? 0
-    const systemDischarge = Number(rawSystemDischarge)
+    const rawDuration = Number(record.duration ?? 0)
+    const rawSystemDischarge = Number(record.system_discharge ?? farm.systemDischarge ?? 0)
 
-    if (!Number.isFinite(duration) || !Number.isFinite(systemDischarge)) {
+    if (!Number.isFinite(rawDuration) || !Number.isFinite(rawSystemDischarge)) {
+      return
+    }
+
+    const duration = Math.max(rawDuration, 0)
+    const systemDischarge = Math.max(rawSystemDischarge, 0)
+
+    if (duration <= 0 || systemDischarge <= 0) {
       return
     }
 
     const waterContribution = duration * systemDischarge
 
-    if (waterContribution === 0) {
+    if (!Number.isFinite(waterContribution) || waterContribution <= 0) {
       return
     }
 
