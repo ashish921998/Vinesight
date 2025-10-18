@@ -173,9 +173,19 @@ export class ExportService {
       // Spray Records
       if (data.spray.length > 0) {
         csvContent += 'SPRAY RECORDS\n'
-        csvContent += 'Date,Pest/Disease,Chemical,Dose,Area (ha),Weather,Operator,Notes\n'
+        csvContent +=
+          'Date,Pest/Disease,Chemicals,Area (ha),Water Volume (L),Weather,Operator,Notes\n'
         data.spray.forEach((record) => {
-          csvContent += `${record.date},"${record.pest_disease}","${record.chemical}",${record.dose},${record.area},"${record.weather_conditions}","${record.operator}","${record.notes || ''}"\n`
+          const chemicals = (record.chemicals || [])
+            .map((chem: any) => {
+              const amount = chem.quantity_amount
+                ? `${chem.quantity_amount}${chem.quantity_unit || ''}`
+                : ''
+              return amount ? `${chem.name} (${amount})` : chem.name
+            })
+            .join('; ')
+
+          csvContent += `${record.date},"${record.pest_disease}","${chemicals}",${record.area},${record.water_volume || ''},"${record.weather_conditions}","${record.operator}","${record.notes || ''}"\n`
         })
         csvContent += '\n'
       }
@@ -376,16 +386,23 @@ export class ExportService {
       const sprayData = data.spray.map((record) => [
         record.date,
         record.pest_disease,
-        record.chemical,
-        record.dose,
+        (record.chemicals || [])
+          .map((chem: any) => {
+            const amount = chem.quantity_amount
+              ? `${chem.quantity_amount}${chem.quantity_unit || ''}`
+              : ''
+            return amount ? `${chem.name} (${amount})` : chem.name
+          })
+          .join('; '),
         `${record.area}ha`,
+        record.water_volume ? `${record.water_volume}L` : '',
         record.operator
       ])
 
       await this.ensureAutoTable(pdf)
       ;(pdf as any).autoTable({
         startY: yPosition,
-        head: [['Date', 'Pest/Disease', 'Chemical', 'Dose', 'Area', 'Operator']],
+        head: [['Date', 'Pest/Disease', 'Chemicals', 'Area', 'Water Volume', 'Operator']],
         body: sprayData,
         theme: 'striped',
         headStyles: { fillColor: [34, 197, 94] },

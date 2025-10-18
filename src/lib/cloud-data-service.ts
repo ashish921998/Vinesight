@@ -175,7 +175,7 @@ export class CloudDataService {
 
     const { data, error } = await supabase
       .from('spray_records')
-      .select('*')
+      .select('*, spray_record_chemicals(*)')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
 

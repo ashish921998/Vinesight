@@ -1528,51 +1528,51 @@ export type Database = {
       spray_records: {
         Row: {
           area: number
-          chemical: string
+          chemical: string | null
           created_at: string | null
           date: string
           date_of_pruning: Date | null
-          dose: string
+          dose: string | null
           farm_id: number | null
           id: number
           notes: string | null
           operator: string
           weather: string
           water_volume: number
-          quantity_amount: number
-          quantity_unit: string
+          quantity_amount: number | null
+          quantity_unit: string | null
         }
         Insert: {
           area: number
-          chemical: string
+          chemical?: string | null
           created_at?: string | null
           date: string
           date_of_pruning?: Date | null
-          dose: string
+          dose?: string | null
           farm_id?: number | null
           id?: number
           notes?: string | null
           operator: string
           weather: string
           water_volume?: number
-          quantity_amount?: number
-          quantity_unit?: string
+          quantity_amount?: number | null
+          quantity_unit?: string | null
         }
         Update: {
           area?: number
-          chemical?: string
+          chemical?: string | null
           created_at?: string | null
           date?: string
           date_of_pruning?: Date | null
-          dose?: string
+          dose?: string | null
           farm_id?: number | null
           id?: number
           notes?: string | null
           operator?: string
           weather?: string
           water_volume?: number
-          quantity_amount?: number
-          quantity_unit?: string
+          quantity_amount?: number | null
+          quantity_unit?: string | null
         }
         Relationships: [
           {
@@ -1580,6 +1580,44 @@ export type Database = {
             columns: ['farm_id']
             isOneToOne: false
             referencedRelation: 'farms'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      spray_record_chemicals: {
+        Row: {
+          created_at: string | null
+          id: number
+          mix_order: number
+          name: string
+          quantity_amount: number | null
+          quantity_unit: string | null
+          spray_record_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          mix_order?: number
+          name: string
+          quantity_amount?: number | null
+          quantity_unit?: string | null
+          spray_record_id: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          mix_order?: number
+          name?: string
+          quantity_amount?: number | null
+          quantity_unit?: string | null
+          spray_record_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'spray_record_chemicals_spray_record_id_fkey'
+            columns: ['spray_record_id']
+            isOneToOne: false
+            referencedRelation: 'spray_records'
             referencedColumns: ['id']
           }
         ]

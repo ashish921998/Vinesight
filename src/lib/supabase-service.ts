@@ -39,7 +39,9 @@ import {
   toDatabaseSoilTestUpdate,
   toApplicationPetioleTestRecord,
   toDatabasePetioleTestInsert,
-  toDatabasePetioleTestUpdate
+  toDatabasePetioleTestUpdate,
+  toDatabaseSprayChemicalUpdate,
+  toDatabaseSprayChemicalInsert
 } from './supabase-types'
 
 export class SupabaseService {
@@ -180,7 +182,7 @@ export class SupabaseService {
     const supabase = getTypedSupabaseClient()
     const { data, error } = await supabase
       .from('spray_records')
-      .select('*')
+      .select('*, spray_record_chemicals(*)')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
 
@@ -194,29 +196,100 @@ export class SupabaseService {
     const supabase = getTypedSupabaseClient()
     const dbRecord = toDatabaseSprayInsert(record)
 
-    const { data, error } = await supabase
+    const { data: inserted, error } = await supabase
       .from('spray_records')
       .insert(dbRecord as any)
       .select()
       .single()
 
     if (error) throw error
-    return toApplicationSprayRecord(data)
+
+    const sprayRecordId = inserted.id
+
+    if (sprayRecordId && record.chemicals?.length) {
+      const chemicalsPayload = record.chemicals
+        .slice(0, 10)
+        .map((chemical, index) => toDatabaseSprayChemicalInsert(chemical, sprayRecordId, index + 1))
+
+      const { error: chemError } = await supabase
+        .from('spray_record_chemicals')
+        .insert(chemicalsPayload)
+
+      if (chemError) throw chemError
+    }
+
+    const { data: complete, error: fetchError } = await supabase
+      .from('spray_records')
+      .select('*, spray_record_chemicals(*)')
+      .eq('id', sprayRecordId)
+      .single()
+
+    if (fetchError) throw fetchError
+
+    return toApplicationSprayRecord(complete)
   }
 
   static async updateSprayRecord(id: number, updates: Partial<SprayRecord>): Promise<SprayRecord> {
     const supabase = getTypedSupabaseClient()
     const dbUpdates = toDatabaseSprayUpdate(updates)
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('spray_records')
       .update(dbUpdates as any)
       .eq('id', id)
-      .select()
-      .single()
 
     if (error) throw error
-    return toApplicationSprayRecord(data)
+
+    if (updates.chemicals) {
+      const chemicals = updates.chemicals.slice(0, 10)
+      const existingIds = chemicals.filter((c) => c.id).map((c) => c.id!)
+
+      if (existingIds.length) {
+        const { error: deleteError } = await supabase
+          .from('spray_record_chemicals')
+          .delete()
+          .eq('spray_record_id', id)
+          .not('id', 'in', `(${existingIds.join(',')})`)
+
+        if (deleteError) throw deleteError
+      } else {
+        const { error: deleteAllError } = await supabase
+          .from('spray_record_chemicals')
+          .delete()
+          .eq('spray_record_id', id)
+
+        if (deleteAllError) throw deleteAllError
+      }
+
+      for (const [index, chemical] of chemicals.entries()) {
+        if (chemical.id) {
+          const payload = toDatabaseSprayChemicalUpdate({ ...chemical, mix_order: index + 1 })
+          const { error: updateError } = await supabase
+            .from('spray_record_chemicals')
+            .update(payload as any)
+            .eq('id', chemical.id)
+
+          if (updateError) throw updateError
+        } else {
+          const payload = toDatabaseSprayChemicalInsert(chemical, id, index + 1)
+          const { error: insertError } = await supabase
+            .from('spray_record_chemicals')
+            .insert(payload as any)
+
+          if (insertError) throw insertError
+        }
+      }
+    }
+
+    const { data: refreshed, error: fetchError } = await supabase
+      .from('spray_records')
+      .select('*, spray_record_chemicals(*)')
+      .eq('id', id)
+      .single()
+
+    if (fetchError) throw fetchError
+
+    return toApplicationSprayRecord(refreshed)
   }
 
   static async deleteSprayRecord(id: number): Promise<void> {
