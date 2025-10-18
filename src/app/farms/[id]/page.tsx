@@ -5,11 +5,13 @@ import { useParams, useRouter } from 'next/navigation'
 import { SupabaseService } from '@/lib/supabase-service'
 import { PhotoService } from '@/lib/photo-service'
 import { FarmHeader } from '@/components/farm-details/FarmHeader'
-import { FarmOverview } from '@/components/farm-details/FarmOverview'
-import { QuickActions } from '@/components/farm-details/QuickActions'
+import { FarmStatsBar } from '@/components/farm-details/FarmStatsBar'
+import { FarmDetailsTabs } from '@/components/farm-details/FarmDetailsTabs'
+import { FarmOverviewTab } from '@/components/farm-details/FarmOverviewTab'
+import { AIInsightsTab } from '@/components/farm-details/AIInsightsTab'
+import { ReportsTab } from '@/components/farm-details/ReportsTab'
 import { ActivityFeed } from '@/components/farm-details/ActivityFeed'
-import { SimpleWeatherCard } from '@/components/dashboard/SimpleWeatherCard'
-import { RemainingWaterCard } from '@/components/farm-details/RemainingWaterCard'
+import { FloatingActionButton } from '@/components/farm-details/FloatingActionButton'
 import { UnifiedDataLogsModal } from '@/components/farm-details/UnifiedDataLogsModal'
 import type { ReportAttachmentMeta } from '@/types/reports'
 import { WaterCalculationModal } from '@/components/farm-details/WaterCalculationModal'
@@ -24,9 +26,6 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-
-// Phase 3A: AI-Powered Components
-import { AIInsightsCarousel } from '@/components/ai/AIInsightsCarousel'
 import { PestPredictionService } from '@/lib/pest-prediction-service'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
@@ -55,6 +54,7 @@ export default function FarmDetailsPage() {
   const params = useParams()
   const router = useRouter()
   const farmId = params.id as string
+  const farmIdNumber = parseInt(farmId, 10) || 0
   const { user } = useSupabaseAuth()
 
   const [dashboardData, setDashboardData] = useState<DashboardData>()
@@ -80,7 +80,7 @@ export default function FarmDetailsPage() {
   const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true)
-      const data = await SupabaseService.getDashboardSummary(parseInt(farmId))
+      const data = await SupabaseService.getDashboardSummary(farmIdNumber)
       setDashboardData({
         ...data,
         farm: data.farm
@@ -90,20 +90,20 @@ export default function FarmDetailsPage() {
     } finally {
       setLoading(false)
     }
-  }, [farmId])
+  }, [farmIdNumber])
 
   useEffect(() => {
-    if (farmId) {
+    if (farmIdNumber) {
       loadDashboardData()
     }
-  }, [farmId, loadDashboardData])
+  }, [farmIdNumber, loadDashboardData])
 
   // Generate AI predictions when farm data is loaded
   useEffect(() => {
     const generateAIPredictions = async () => {
-      if (dashboardData?.farm && user && !aiPredictionsGenerated) {
+      if (dashboardData?.farm && user && !aiPredictionsGenerated && farmIdNumber) {
         try {
-          await PestPredictionService.generatePredictions(parseInt(farmId), dashboardData.farm)
+          await PestPredictionService.generatePredictions(farmIdNumber, dashboardData.farm)
           setAiPredictionsGenerated(true)
         } catch (error) {
           console.error('Error generating AI predictions:', error)
@@ -112,7 +112,7 @@ export default function FarmDetailsPage() {
     }
 
     generateAIPredictions()
-  }, [dashboardData, farmId, user, aiPredictionsGenerated])
+  }, [dashboardData, farmIdNumber, user, aiPredictionsGenerated])
 
   const completeTask = async (taskId: number) => {
     try {
@@ -171,7 +171,7 @@ export default function FarmDetailsPage() {
     switch (type) {
       case 'irrigation':
         record = await SupabaseService.addIrrigationRecord({
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNumber,
           date: date,
           duration: parseFloat(data.duration || '0'),
           area: parseFloat(data.area || '0') || dashboardData?.farm?.area || 0,
@@ -193,7 +193,7 @@ export default function FarmDetailsPage() {
             const currentWaterLevel = dashboardData.farm.remainingWater || 0
             const newWaterLevel = currentWaterLevel + waterAdded
 
-            await SupabaseService.updateFarm(parseInt(farmId), {
+            await SupabaseService.updateFarm(farmIdNumber, {
               remainingWater: newWaterLevel,
               waterCalculationUpdatedAt: new Date().toISOString()
             })
@@ -211,7 +211,7 @@ export default function FarmDetailsPage() {
 
       case 'spray':
         record = await SupabaseService.addSprayRecord({
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNumber,
           date: date,
           chemical: data.chemical?.trim() || 'Unknown',
           dose:
@@ -231,7 +231,7 @@ export default function FarmDetailsPage() {
 
       case 'harvest':
         record = await SupabaseService.addHarvestRecord({
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNumber,
           date: date,
           quantity: parseFloat(data.quantity || '0'),
           grade: data.grade || 'Standard',
@@ -244,7 +244,7 @@ export default function FarmDetailsPage() {
 
       case 'expense':
         record = await SupabaseService.addExpenseRecord({
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNumber,
           date: date,
           type: data.type || 'other',
           description: data.description || '',
@@ -256,7 +256,7 @@ export default function FarmDetailsPage() {
 
       case 'fertigation':
         record = await SupabaseService.addFertigationRecord({
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNumber,
           date: date,
           fertilizer: data.fertilizer?.trim() || 'Unknown',
           dose: data.quantity ? `${data.quantity} kg/L` : 'As per requirement',
@@ -370,7 +370,7 @@ export default function FarmDetailsPage() {
         })
 
         record = await SupabaseService.addSoilTestRecord({
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNumber,
           date,
           parameters: combinedParameters,
           notes: combineNotes.filter(Boolean).join(' | ') || '',
@@ -419,7 +419,7 @@ export default function FarmDetailsPage() {
         pushParameter('ammonium_nitrogen', data.ammonical_nitrogen)
 
         record = await SupabaseService.addPetioleTestRecord({
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNumber,
           date,
           sample_id: data.sample_id || '',
           parameters,
@@ -517,7 +517,7 @@ export default function FarmDetailsPage() {
   const handleFarmSubmit = async (farmData: any) => {
     try {
       setFarmSubmitLoading(true)
-      await SupabaseService.updateFarm(parseInt(farmId), farmData)
+      await SupabaseService.updateFarm(farmIdNumber, farmData)
       await loadDashboardData()
       setShowFarmModal(false)
     } catch (error) {
@@ -530,7 +530,7 @@ export default function FarmDetailsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 pb-20">
         {/* Farm Header */}
         {dashboardData?.farm && (
           <FarmHeader
@@ -541,46 +541,55 @@ export default function FarmDetailsPage() {
           />
         )}
 
-        {/* Farm Overview */}
-        <FarmOverview loading={loading} />
-
-        {/* Weather Card */}
-        {dashboardData?.farm && (
-          <div className="px-4 mt-6 mb-4">
-            <SimpleWeatherCard farm={dashboardData.farm} />
-          </div>
-        )}
-
-        {/* Phase 3A: AI-Powered Features */}
-        {/* {(dashboardData?.farm || process.env.NEXT_PUBLIC_BYPASS_AUTH) && (
-          <div className="px-4 mb-6 space-y-4">
-            <AIInsightsCarousel farmId={parseInt(farmId)} className="w-full" />
-          </div>
-        )} */}
-
-        {/* Water Level Card - Only show if farm has irrigation records */}
-        {dashboardData?.farm && dashboardData.recordCounts.irrigation > 0 && (
-          <div className="px-4 mb-4">
-            <RemainingWaterCard
-              farm={dashboardData.farm}
-              onCalculateClick={() => setShowWaterCalculationModal(true)}
-            />
-          </div>
-        )}
-
-        {/* Quick Actions */}
-        <QuickActions onDataLogsClick={() => setShowDataLogsModal(true)} />
-
-        {/* Activity Feed */}
-        <ActivityFeed
-          recentActivities={dashboardData?.recentActivities || []}
-          pendingTasks={dashboardData?.pendingTasks || []}
+        {/* Stats Bar - Horizontal scrollable quick stats */}
+        <FarmStatsBar
+          recordCounts={dashboardData?.recordCounts}
+          pendingTasksCount={dashboardData?.pendingTasksCount}
+          waterLevel={dashboardData?.farm?.remainingWater}
+          totalHarvest={dashboardData?.totalHarvest}
           loading={loading}
-          onCompleteTask={completeTask}
-          onEditRecord={handleEditRecord}
-          onDeleteRecord={handleDeleteRecord}
-          farmId={farmId}
         />
+
+        {/* Tabbed Content Area */}
+        {dashboardData?.farm && (
+          <FarmDetailsTabs
+            overviewContent={
+              <FarmOverviewTab
+                farm={dashboardData.farm}
+                pendingTasks={dashboardData.pendingTasks}
+                recentActivities={dashboardData.recentActivities}
+                onCompleteTask={completeTask}
+                onCalculateWater={() => setShowWaterCalculationModal(true)}
+                onSeeAllActivities={() => router.push(`/farms/${farmId}/logs`)}
+              />
+            }
+            activitiesContent={
+              <div className="pb-24">
+                <ActivityFeed
+                  recentActivities={dashboardData?.recentActivities || []}
+                  pendingTasks={dashboardData?.pendingTasks || []}
+                  loading={loading}
+                  onCompleteTask={completeTask}
+                  onEditRecord={handleEditRecord}
+                  onDeleteRecord={handleDeleteRecord}
+                  farmId={farmId}
+                />
+              </div>
+            }
+            aiInsightsContent={<AIInsightsTab farmId={farmIdNumber} />}
+            analyticsContent={
+              <ReportsTab
+                farmId={farmIdNumber}
+                totalHarvest={dashboardData?.totalHarvest}
+                totalWaterUsage={dashboardData?.totalWaterUsage}
+                recordCounts={dashboardData?.recordCounts}
+              />
+            }
+          />
+        )}
+
+        {/* Floating Action Button for Quick Add Logs */}
+        <FloatingActionButton onClick={() => setShowDataLogsModal(true)} />
 
         {/* Unified Data Logs Modal */}
         <UnifiedDataLogsModal
@@ -588,7 +597,7 @@ export default function FarmDetailsPage() {
           onClose={() => setShowDataLogsModal(false)}
           onSubmit={handleDataLogsSubmit}
           isSubmitting={isSubmitting}
-          farmId={parseInt(farmId)}
+          farmId={farmIdNumber}
         />
 
         {/* Water Calculation Modal */}
