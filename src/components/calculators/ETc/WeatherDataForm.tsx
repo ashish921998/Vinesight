@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { DatePicker } from '@/components/ui/date-picker'
 import {
   Select,
   SelectContent,
@@ -144,11 +145,15 @@ export function WeatherDataForm({
         <div className="grid grid-cols-1 gap-3">
           <div>
             <Label className="text-sm font-medium text-gray-700">Date</Label>
-            <Input
-              type="date"
-              value={formData.date}
-              onChange={(e) => onInputChange('date', e.target.value)}
-              className="h-11 text-base mt-1"
+            <DatePicker
+              id="weather-date"
+              date={formData.date ? new Date(formData.date) : undefined}
+              onDateChange={(date) =>
+                onInputChange('date', date ? date.toISOString().split('T')[0] : '')
+              }
+              placeholder="Select date"
+              required
+              className="mt-1"
             />
           </div>
 

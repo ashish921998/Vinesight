@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 import { LocationForm } from '@/components/calculators/ETc/LocationForm'
+import { DatePicker } from '@/components/ui/date-picker'
 import type { LocationResult } from '@/lib/open-meteo-geocoding'
 import type { Farm } from '@/types/types'
 
@@ -29,7 +30,7 @@ interface FormData {
   region: string
   area: string
   grapeVariety: string
-  plantingDate: string
+  plantingDate?: Date
   vineSpacing: string
   rowSpacing: string
   totalTankCapacity: string
@@ -51,17 +52,26 @@ export function FarmModal({
   editingFarm = null,
   isSubmitting = false
 }: FarmModalProps) {
+  const parseDateValue = (value?: string | Date | null) => {
+    if (!value) return undefined
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? undefined : value
+    }
+    const parsed = new Date(value)
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed
+  }
+
   const [formData, setFormData] = useState<FormData>(() => ({
     name: editingFarm?.name || '',
     region: editingFarm?.region || '',
     area: editingFarm?.area?.toString() || '',
     grapeVariety: editingFarm?.grapeVariety || '',
-    plantingDate: editingFarm?.plantingDate || '',
+    plantingDate: editingFarm?.plantingDate ? new Date(editingFarm.plantingDate) : undefined,
     vineSpacing: editingFarm?.vineSpacing?.toString() || '',
     rowSpacing: editingFarm?.rowSpacing?.toString() || '',
     totalTankCapacity: editingFarm?.totalTankCapacity?.toString() || '',
     systemDischarge: editingFarm?.systemDischarge?.toString() || '',
-    dateOfPruning: editingFarm?.dateOfPruning || new Date()
+    dateOfPruning: editingFarm?.dateOfPruning || undefined
   }))
 
   const [locationData, setLocationData] = useState<LocationData>(() => ({
@@ -79,12 +89,12 @@ export function FarmModal({
         region: editingFarm.region || '',
         area: editingFarm.area?.toString() || '',
         grapeVariety: editingFarm.grapeVariety || '',
-        plantingDate: editingFarm.plantingDate || '',
+        plantingDate: parseDateValue(editingFarm.plantingDate),
         vineSpacing: editingFarm.vineSpacing?.toString() || '',
         rowSpacing: editingFarm.rowSpacing?.toString() || '',
         totalTankCapacity: editingFarm.totalTankCapacity?.toString() || '',
         systemDischarge: editingFarm.systemDischarge?.toString() || '',
-        dateOfPruning: editingFarm.dateOfPruning || new Date()
+        dateOfPruning: parseDateValue(editingFarm.dateOfPruning)
       })
 
       setLocationData({
@@ -100,12 +110,12 @@ export function FarmModal({
         region: '',
         area: '',
         grapeVariety: '',
-        plantingDate: '',
+        plantingDate: undefined,
         vineSpacing: '',
         rowSpacing: '',
         totalTankCapacity: '',
         systemDischarge: '',
-        dateOfPruning: new Date()
+        dateOfPruning: undefined
       })
 
       setLocationData({
@@ -117,18 +127,21 @@ export function FarmModal({
     }
   }, [editingFarm])
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    if (field === 'dateOfPruning') {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: value ? new Date(value) : undefined
-      }))
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: value
-      }))
-    }
+  const handleFieldChange = (
+    field: Exclude<keyof FormData, 'plantingDate' | 'dateOfPruning'>,
+    value: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleDateChange = (field: 'plantingDate' | 'dateOfPruning', value: Date | undefined) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value
+    }))
   }
 
   const handleLocationChange = (field: string, value: string) => {
@@ -149,7 +162,7 @@ export function FarmModal({
     // Also update the region if it's empty
     if (!formData.region) {
       const regionName = location.admin1 ? `${location.name}, ${location.admin1}` : location.name
-      handleInputChange('region', regionName)
+      handleFieldChange('region', regionName)
     }
   }
 
@@ -161,7 +174,7 @@ export function FarmModal({
       region: formData.region,
       area: parseFloat(formData.area),
       grapeVariety: formData.grapeVariety,
-      plantingDate: formData.plantingDate,
+      plantingDate: formData.plantingDate ? formData.plantingDate.toISOString().split('T')[0] : '',
       vineSpacing: parseFloat(formData.vineSpacing),
       rowSpacing: parseFloat(formData.rowSpacing),
       totalTankCapacity: formData.totalTankCapacity
@@ -208,7 +221,7 @@ export function FarmModal({
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                onChange={(e) => handleFieldChange('name', e.target.value)}
                 placeholder="e.g., Nashik Vineyard"
                 required
                 className="mt-1 h-11"
@@ -223,7 +236,7 @@ export function FarmModal({
               <Input
                 id="region"
                 value={formData.region}
-                onChange={(e) => handleInputChange('region', e.target.value)}
+                onChange={(e) => handleFieldChange('region', e.target.value)}
                 placeholder="e.g., Nashik, Maharashtra"
                 required
                 className="mt-1 h-11"
@@ -242,7 +255,7 @@ export function FarmModal({
                   step="0.1"
                   min="0"
                   value={formData.area}
-                  onChange={(e) => handleInputChange('area', e.target.value)}
+                  onChange={(e) => handleFieldChange('area', e.target.value)}
                   placeholder="6.2"
                   required
                   className="mt-1 h-11"
@@ -255,7 +268,7 @@ export function FarmModal({
                 <Input
                   id="grapeVariety"
                   value={formData.grapeVariety}
-                  onChange={(e) => handleInputChange('grapeVariety', e.target.value)}
+                  onChange={(e) => handleFieldChange('grapeVariety', e.target.value)}
                   placeholder="Thompson Seedless"
                   required
                   className="mt-1 h-11"
@@ -268,13 +281,13 @@ export function FarmModal({
               <Label htmlFor="plantingDate" className="text-sm font-medium text-gray-700">
                 Planting Date *
               </Label>
-              <Input
+              <DatePicker
                 id="plantingDate"
-                type="date"
-                value={formData.plantingDate}
-                onChange={(e) => handleInputChange('plantingDate', e.target.value)}
+                date={formData.plantingDate}
+                onDateChange={(date) => handleDateChange('plantingDate', date)}
+                placeholder="Select planting date"
                 required
-                className="mt-1 h-11"
+                className="mt-1"
               />
             </div>
 
@@ -290,7 +303,7 @@ export function FarmModal({
                   step="0.1"
                   min="0"
                   value={formData.vineSpacing}
-                  onChange={(e) => handleInputChange('vineSpacing', e.target.value)}
+                  onChange={(e) => handleFieldChange('vineSpacing', e.target.value)}
                   placeholder="3.0"
                   required
                   className="mt-1 h-11"
@@ -306,7 +319,7 @@ export function FarmModal({
                   step="0.1"
                   min="0"
                   value={formData.rowSpacing}
-                  onChange={(e) => handleInputChange('rowSpacing', e.target.value)}
+                  onChange={(e) => handleFieldChange('rowSpacing', e.target.value)}
                   placeholder="9.0"
                   required
                   className="mt-1 h-11"
@@ -325,7 +338,7 @@ export function FarmModal({
                 step="1"
                 min="0"
                 value={formData.totalTankCapacity}
-                onChange={(e) => handleInputChange('totalTankCapacity', e.target.value)}
+                onChange={(e) => handleFieldChange('totalTankCapacity', e.target.value)}
                 placeholder="1000"
                 className="mt-1 h-11"
               />
@@ -345,7 +358,7 @@ export function FarmModal({
                 step="0.0001"
                 min="0"
                 value={formData.systemDischarge}
-                onChange={(e) => handleInputChange('systemDischarge', e.target.value)}
+                onChange={(e) => handleFieldChange('systemDischarge', e.target.value)}
                 placeholder="100.5000"
                 className="mt-1 h-11"
               />
@@ -366,15 +379,13 @@ export function FarmModal({
                 <Label htmlFor="dateOfPruning" className="text-sm font-medium text-gray-700">
                   Date of Pruning
                 </Label>
-                <Input
+                <DatePicker
                   id="dateOfPruning"
-                  type="date"
-                  value={
-                    formData.dateOfPruning ? formData.dateOfPruning.toISOString().split('T')[0] : ''
-                  }
-                  onChange={(e) => handleInputChange('dateOfPruning', e.target.value)}
-                  max={new Date().toISOString().split('T')[0]}
-                  className="mt-1 h-11"
+                  date={formData.dateOfPruning}
+                  onDateChange={(date) => handleDateChange('dateOfPruning', date)}
+                  placeholder="Select pruning date"
+                  toDate={new Date()}
+                  className="mt-1"
                 />
               </div>
             </div>
@@ -408,7 +419,7 @@ export function FarmModal({
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !formData.plantingDate}
               className="flex-1 h-11 order-1 sm:order-2 bg-green-600 hover:bg-green-700"
             >
               {isSubmitting ? (
