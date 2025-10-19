@@ -474,16 +474,16 @@ export function EditRecordModal({
             } else if (parsedDose.unit === 'ml/L') {
               quantity_unit = SprayChemicalUnit.MilliliterPerLiter
             } else {
-              throw new Error(
-                `Unsupported dose unit: ${parsedDose.unit}. Please use gm/L or ml/L.`
-              )
+              throw new Error(`Unsupported dose unit: ${parsedDose.unit}. Please use gm/L or ml/L.`)
             }
 
-            chemicals = [{
-              name: sprayForm.chemical,
-              quantity_amount: parsedDose.quantity,
-              quantity_unit
-            }]
+            chemicals = [
+              {
+                name: sprayForm.chemical,
+                quantity_amount: parsedDose.quantity,
+                quantity_unit
+              }
+            ]
           }
         }
 
