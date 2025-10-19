@@ -311,6 +311,12 @@ export function BottomNavigation() {
           break
 
         case 'spray':
+          // Sanitize input data before building payload
+          const trimmedProduct = formData.product?.trim()
+          const parsedQuantity = formData.quantity ? parseFloat(formData.quantity) : NaN
+          const isValidQuantity = Number.isFinite(parsedQuantity) && parsedQuantity > 0
+          const trimmedUnit = formData.unit?.trim()
+
           await SupabaseService.addSprayRecord({
             farm_id: farmId,
             date: currentDate,
@@ -321,17 +327,19 @@ export function BottomNavigation() {
             notes: formData.notes || '',
             chemicals: [
               {
-                name: formData.product?.trim() || 'Unknown',
-                quantity_amount: formData.quantity ? parseFloat(formData.quantity) : undefined,
-                quantity_unit: ((formData.unit as string) ||
-                  SprayChemicalUnit.GramPerLiter) as SprayChemicalUnit,
+                name: trimmedProduct || 'Unknown',
+                quantity_amount: isValidQuantity ? parsedQuantity : undefined,
+                quantity_unit: trimmedUnit ? (trimmedUnit as SprayChemicalUnit) : undefined,
                 mix_order: 1
               }
             ],
-            legacy_chemical: formData.product?.trim() || null,
-            legacy_dose: formData.quantity
-              ? `${formData.quantity}${(formData.unit as string) || SprayChemicalUnit.GramPerLiter}`
-              : null,
+            legacy_chemical: trimmedProduct || null,
+            legacy_dose:
+              isValidQuantity && trimmedUnit
+                ? `${parsedQuantity} ${trimmedUnit}`
+                : isValidQuantity
+                  ? `${parsedQuantity}`
+                  : null,
             date_of_pruning: pruningDate
           })
           break

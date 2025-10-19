@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { SprayChemicalUnit } from '@/lib/supabase'
 import { useParams, useRouter } from 'next/navigation'
 import { SupabaseService } from '@/lib/supabase-service'
 import { PhotoService } from '@/lib/photo-service'
@@ -220,18 +221,42 @@ export default function FarmDetailsPage() {
           operator: 'Farm Owner',
           notes: dayNotes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning,
-          chemicals: (data.chemicals || []).slice(0, 10).map((chem: any, index: number) => ({
-            name: chem.name?.trim() || `Chemical ${index + 1}`,
-            quantity_amount: parseChemicalQuantity(chem.quantity),
-            quantity_unit: chem.unit || undefined,
-            mix_order: index + 1
-          })),
-          legacy_chemical:
-            !data.chemicals || data.chemicals.length === 0 ? data.chemical?.trim() || null : null,
-          legacy_dose:
-            (!data.chemicals || data.chemicals.length === 0) &&
-            data.quantity_amount &&
-            data.quantity_unit
+          chemicals: (data.chemicals || [])
+            .slice(0, 10)
+            .map((chem: any, index: number) => {
+              // Validate chemical data before processing
+              const chemName = chem.name?.trim()
+              const quantity = parseChemicalQuantity(chem.quantity)
+              const unit = chem.unit
+
+              if (!chemName) {
+                console.warn(`Chemical at index ${index} has no name, skipping`)
+                return null
+              }
+              if (!quantity || quantity <= 0) {
+                console.warn(`Chemical ${chemName} has invalid quantity: ${quantity}, skipping`)
+                return null
+              }
+              if (!unit || !['gm/L', 'ml/L'].includes(unit)) {
+                console.warn(`Chemical ${chemName} has invalid unit: ${unit}, skipping`)
+                return null
+              }
+
+              return {
+                name: chemName,
+                quantity_amount: quantity,
+                quantity_unit:
+                  unit === 'gm/L'
+                    ? SprayChemicalUnit.GramPerLiter
+                    : SprayChemicalUnit.MilliliterPerLiter,
+                mix_order: index + 1
+              }
+            })
+            .filter(Boolean) as any[],
+          legacy_chemical: data.chemicals?.[0]?.name?.trim() || data.chemical?.trim() || null,
+          legacy_dose: data.chemicals?.[0]
+            ? `${data.chemicals[0].quantity_amount}${data.chemicals[0].quantity_unit}`
+            : data.quantity_amount && data.quantity_unit
               ? `${data.quantity_amount}${data.quantity_unit}`
               : null
         })

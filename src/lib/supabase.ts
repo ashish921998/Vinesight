@@ -59,7 +59,7 @@ export interface SprayRecord {
   id?: number
   farm_id: number
   date: string
-  water_volume?: number // total water volume in liters (optional)
+  water_volume: number // total water volume in liters (required)
   area: number // in acres
   weather: string
   operator: string

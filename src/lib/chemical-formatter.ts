@@ -17,9 +17,9 @@ export interface ChemicalEntry {
 export function formatChemicalsList(chemicals: ChemicalEntry[]): string {
   return chemicals
     .map((chem) => {
-      const amount = chem.quantity_amount
-        ? `${chem.quantity_amount}${chem.quantity_unit || ''}`
-        : ''
+      // Use nullish checks to preserve valid zero values
+      const amount =
+        chem.quantity_amount != null ? `${chem.quantity_amount}${chem.quantity_unit ?? ''}` : ''
       return amount ? `${chem.name} (${amount})` : chem.name
     })
     .join('; ')

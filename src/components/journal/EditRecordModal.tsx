@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, type ChangeEvent } from 'react'
+import { SprayChemicalUnit } from '@/lib/supabase'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -203,8 +204,10 @@ export function EditRecordModal({
         recordType: 'spray',
         date: sprayRecord.date,
         notes: sprayRecord.notes || '',
-        chemical: sprayRecord.legacy_chemical || '',
-        dose: sprayRecord.legacy_dose || '',
+        chemical: sprayRecord.chemicals?.[0]?.name || sprayRecord.legacy_chemical || '',
+        dose: sprayRecord.chemicals?.[0]
+          ? `${sprayRecord.chemicals[0].quantity_amount}${sprayRecord.chemicals[0].quantity_unit}`
+          : sprayRecord.legacy_dose || '',
         area: sprayRecord.area?.toString() || '',
         weather: sprayRecord.weather || '',
         operator: sprayRecord.operator || '',
@@ -449,8 +452,25 @@ export function EditRecordModal({
         })
       } else if (recordType === 'spray') {
         if (!sprayForm) throw new Error('Spray form is not ready')
+
+        // Parse chemical and dose to create chemicals array
+        const chemicals =
+          sprayForm.chemical && sprayForm.dose
+            ? [
+                {
+                  name: sprayForm.chemical,
+                  quantity_amount: parseFloat(sprayForm.dose.replace(/[^0-9.]/g, '')),
+                  quantity_unit:
+                    sprayForm.dose.replace(/[0-9.]/g, '') === 'gm/L'
+                      ? SprayChemicalUnit.GramPerLiter
+                      : SprayChemicalUnit.MilliliterPerLiter
+                }
+              ]
+            : []
+
         await SupabaseService.updateSprayRecord(record.id!, {
           date: sprayForm.date,
+          chemicals,
           legacy_chemical: sprayForm.chemical,
           legacy_dose: sprayForm.dose,
           area: toNum(sprayForm.area),

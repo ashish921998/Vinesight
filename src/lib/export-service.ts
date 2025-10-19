@@ -178,7 +178,7 @@ export class ExportService {
           'Date,Pest/Disease,Chemicals,Area (ha),Water Volume (L),Weather,Operator,Notes\n'
         data.spray.forEach((record) => {
           const chemicals = formatChemicalsList(record.chemicals || [])
-          csvContent += `${record.date},"${record.pest_disease}","${chemicals}",${record.area},${record.water_volume != null ? record.water_volume : ''},"${record.weather_conditions}","${record.operator}","${record.notes || ''}"\n`
+          csvContent += `${record.date},"${record.pest_disease}","${chemicals}",${record.area},${record.water_volume != null ? record.water_volume : ''},"${record.weather || ''}","${record.operator}","${record.notes || ''}"\n`
         })
         csvContent += '\n'
       }

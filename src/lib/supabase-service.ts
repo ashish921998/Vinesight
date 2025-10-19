@@ -194,6 +194,18 @@ export class SupabaseService {
     record: Omit<SprayRecord, 'id' | 'created_at'>
   ): Promise<SprayRecord> {
     const supabase = getTypedSupabaseClient()
+
+    // Validate chemicals array is not empty
+    if (!record.chemicals || record.chemicals.length === 0) {
+      throw new Error('At least one chemical is required for spray records')
+    }
+
+    // Validate and set default water_volume
+    if (typeof record.water_volume !== 'number' || record.water_volume < 0) {
+      console.warn('Invalid water_volume provided, using default value of 0')
+      record.water_volume = 0
+    }
+
     const dbRecord = toDatabaseSprayInsert(record)
 
     const { data: inserted, error } = await supabase
@@ -231,6 +243,15 @@ export class SupabaseService {
 
   static async updateSprayRecord(id: number, updates: Partial<SprayRecord>): Promise<SprayRecord> {
     const supabase = getTypedSupabaseClient()
+
+    // Validate and set default water_volume if provided
+    if (updates.water_volume !== undefined) {
+      if (typeof updates.water_volume !== 'number' || updates.water_volume < 0) {
+        console.warn('Invalid water_volume provided, using default value of 0')
+        updates.water_volume = 0
+      }
+    }
+
     const dbUpdates = toDatabaseSprayUpdate(updates)
 
     const { error } = await supabase
@@ -286,29 +307,22 @@ export class SupabaseService {
       }
 
       // Keep legacy quantity fields in sync with first chemical for backward compatibility
+      // Always perform an update that validates name and clears stale fields
       const firstChemical = chemicals[0]
-      if (firstChemical && firstChemical.quantity_amount && firstChemical.quantity_unit) {
-        const { error: legacyUpdateError } = await supabase
-          .from('spray_records')
-          .update({
-            chemical: firstChemical.name?.trim() || null,
-            dose: `${firstChemical.quantity_amount}${firstChemical.quantity_unit}`
-          })
-          .eq('id', id)
-
-        if (legacyUpdateError) throw legacyUpdateError
-      } else if (chemicals.length === 0) {
-        // Clear legacy fields when no chemicals present
-        const { error: legacyClearError } = await supabase
-          .from('spray_records')
-          .update({
-            chemical: null,
-            dose: null
-          })
-          .eq('id', id)
-
-        if (legacyClearError) throw legacyClearError
+      const legacyPayload = {
+        chemical: firstChemical?.name?.trim() || null,
+        dose:
+          firstChemical?.quantity_amount != null && firstChemical?.quantity_unit
+            ? `${firstChemical.quantity_amount}${firstChemical.quantity_unit}`
+            : null
       }
+
+      const { error: legacyUpdateError } = await supabase
+        .from('spray_records')
+        .update(legacyPayload)
+        .eq('id', id)
+
+      if (legacyUpdateError) throw legacyUpdateError
     }
 
     const { data: refreshed, error: fetchError } = await supabase
