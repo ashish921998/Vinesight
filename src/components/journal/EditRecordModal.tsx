@@ -2,6 +2,7 @@
 
 import { useState, useEffect, type ChangeEvent } from 'react'
 import { SprayChemicalUnit } from '@/lib/supabase'
+import { parseChemicalDose } from '@/lib/chemical-formatter'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -454,19 +455,22 @@ export function EditRecordModal({
         if (!sprayForm) throw new Error('Spray form is not ready')
 
         // Parse chemical and dose to create chemicals array
-        const chemicals =
-          sprayForm.chemical && sprayForm.dose
-            ? [
-                {
-                  name: sprayForm.chemical,
-                  quantity_amount: parseFloat(sprayForm.dose.replace(/[^0-9.]/g, '')),
-                  quantity_unit:
-                    sprayForm.dose.replace(/[0-9.]/g, '') === 'gm/L'
-                      ? SprayChemicalUnit.GramPerLiter
-                      : SprayChemicalUnit.MilliliterPerLiter
-                }
-              ]
-            : []
+        const chemicals: SprayChemical[] = []
+        if (sprayForm.chemical && sprayForm.dose) {
+          const parsedDose = parseChemicalDose(sprayForm.dose)
+          if (parsedDose) {
+            const quantity_unit =
+              parsedDose.unit === 'gm/L'
+                ? SprayChemicalUnit.GramPerLiter
+                : SprayChemicalUnit.MilliliterPerLiter
+
+            chemicals.push({
+              name: sprayForm.chemical,
+              quantity_amount: parsedDose.quantity,
+              quantity_unit
+            })
+          }
+        }
 
         await SupabaseService.updateSprayRecord(record.id!, {
           date: sprayForm.date,

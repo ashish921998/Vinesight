@@ -34,3 +34,34 @@ export function parseChemicalQuantity(quantity: string | undefined): number | un
   const parsed = parseFloat(quantity)
   return Number.isFinite(parsed) ? parsed : undefined
 }
+
+/**
+ * Parse chemical quantity and unit from dose string
+ * Returns { quantity: number, unit: string } or null if parsing fails
+ */
+export function parseChemicalDose(
+  dose: string | undefined
+): { quantity: number; unit: string } | null {
+  if (!dose || !dose.trim()) return null
+
+  const trimmedDose = dose.trim()
+
+  // Match patterns like "1.5 gm/L", "2ml/L", "10 g/L", etc.
+  const match = trimmedDose.match(/^([\d.]+)\s*([a-zA-Z/]+)$/)
+  if (!match) return null
+
+  const quantity = parseFloat(match[1])
+  if (!Number.isFinite(quantity) || quantity <= 0) return null
+
+  const unit = match[2].toLowerCase()
+
+  // Normalize unit to standard format
+  let normalizedUnit = unit
+  if (unit === 'g/l' || unit === 'g/l' || unit === 'gm/l') {
+    normalizedUnit = 'gm/L'
+  } else if (unit === 'ml/l' || unit === 'ml/l') {
+    normalizedUnit = 'ml/L'
+  }
+
+  return { quantity, unit: normalizedUnit }
+}

@@ -310,7 +310,7 @@ export function BottomNavigation() {
           })
           break
 
-        case 'spray':
+        case 'spray': {
           // Sanitize input data before building payload
           const trimmedProduct = formData.product?.trim()
           const parsedQuantity = formData.quantity ? parseFloat(formData.quantity) : NaN
@@ -343,6 +343,7 @@ export function BottomNavigation() {
             date_of_pruning: pruningDate
           })
           break
+        }
 
         case 'fertigation':
           await SupabaseService.addFertigationRecord({

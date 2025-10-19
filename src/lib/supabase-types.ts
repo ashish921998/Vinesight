@@ -307,7 +307,7 @@ export function toDatabaseSprayInsert(
     dose: appRecord.legacy_dose || null,
     quantity_amount: appRecord.chemicals?.[0]?.quantity_amount || null,
     quantity_unit: appRecord.chemicals?.[0]?.quantity_unit || null,
-    water_volume: appRecord.water_volume || 0,
+    water_volume: appRecord.water_volume,
     area: appRecord.area,
     weather: appRecord.weather,
     date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
