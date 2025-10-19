@@ -244,7 +244,7 @@ export class SupabaseService {
   static async updateSprayRecord(id: number, updates: Partial<SprayRecord>): Promise<SprayRecord> {
     const supabase = getTypedSupabaseClient()
 
-    // Validate and set default water_volume if provided
+    // Validate water_volume if provided
     if (updates.water_volume !== undefined) {
       if (typeof updates.water_volume !== 'number' || updates.water_volume < 0) {
         console.warn('Invalid water_volume provided, using default value of 0')

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type ChangeEvent } from 'react'
 import { SprayChemicalUnit } from '@/lib/supabase'
-import { parseChemicalDose } from '@/lib/chemical-formatter'
+import { parseChemicalDose, UNIT_DISPLAY_MAP } from '@/lib/chemical-formatter'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -207,7 +207,7 @@ export function EditRecordModal({
         notes: sprayRecord.notes || '',
         chemical: sprayRecord.chemicals?.[0]?.name || sprayRecord.legacy_chemical || '',
         dose: sprayRecord.chemicals?.[0]
-          ? `${sprayRecord.chemicals[0].quantity_amount}${sprayRecord.chemicals[0].quantity_unit}`
+          ? `${sprayRecord.chemicals[0].quantity_amount} ${UNIT_DISPLAY_MAP[sprayRecord.chemicals[0].quantity_unit] || sprayRecord.chemicals[0].quantity_unit}`
           : sprayRecord.legacy_dose || '',
         area: sprayRecord.area?.toString() || '',
         weather: sprayRecord.weather || '',
@@ -459,10 +459,16 @@ export function EditRecordModal({
         if (sprayForm.chemical && sprayForm.dose) {
           const parsedDose = parseChemicalDose(sprayForm.dose)
           if (parsedDose) {
-            const quantity_unit =
-              parsedDose.unit === 'gm/L'
-                ? SprayChemicalUnit.GramPerLiter
-                : SprayChemicalUnit.MilliliterPerLiter
+            let quantity_unit: SprayChemicalUnit
+            if (parsedDose.unit === 'gm/L') {
+              quantity_unit = SprayChemicalUnit.GramPerLiter
+            } else if (parsedDose.unit === 'ml/L') {
+              quantity_unit = SprayChemicalUnit.MilliliterPerLiter
+            } else {
+              throw new Error(
+                `Unsupported dose unit: ${parsedDose.unit}. Please use gm/L or ml/L.`
+              )
+            }
 
             chemicals.push({
               name: sprayForm.chemical,
@@ -475,8 +481,6 @@ export function EditRecordModal({
         await SupabaseService.updateSprayRecord(record.id!, {
           date: sprayForm.date,
           chemicals,
-          legacy_chemical: sprayForm.chemical,
-          legacy_dose: sprayForm.dose,
           area: toNum(sprayForm.area),
           weather: sprayForm.weather,
           operator: sprayForm.operator,

@@ -39,6 +39,19 @@ export function parseChemicalQuantity(quantity: string | undefined): number | un
  * Parse chemical quantity and unit from dose string
  * Returns { quantity: number, unit: string } or null if parsing fails
  */
+// Display mapping for formatted chemical units
+export const UNIT_DISPLAY_MAP: Record<string, string> = {
+  'gm/L': 'gm/L',
+  'ml/L': 'ml/L',
+  'g/L': 'g/L',
+  'g/l': 'g/L',
+  'ml/l': 'ml/l'
+}
+
+/**
+ * Parse chemical quantity and unit from dose string
+ * Returns { quantity: number; unit: string } or null if parsing fails
+ */
 export function parseChemicalDose(
   dose: string | undefined
 ): { quantity: number; unit: string } | null {

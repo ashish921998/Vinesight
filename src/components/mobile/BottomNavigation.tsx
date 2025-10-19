@@ -133,7 +133,7 @@ const logTypes: Array<{
         label: 'Quantity',
         type: 'number',
         step: '0.1',
-        min: '0',
+        min: '0.0000001',
         placeholder: '1.5',
         required: true
       },
@@ -310,13 +310,7 @@ export function BottomNavigation() {
           })
           break
 
-        case 'spray': {
-          // Sanitize input data before building payload
-          const trimmedProduct = formData.product?.trim()
-          const parsedQuantity = formData.quantity ? parseFloat(formData.quantity) : NaN
-          const isValidQuantity = Number.isFinite(parsedQuantity) && parsedQuantity > 0
-          const trimmedUnit = formData.unit?.trim()
-
+        case 'spray':
           await SupabaseService.addSprayRecord({
             farm_id: farmId,
             date: currentDate,
@@ -327,23 +321,20 @@ export function BottomNavigation() {
             notes: formData.notes || '',
             chemicals: [
               {
-                name: trimmedProduct || 'Unknown',
-                quantity_amount: isValidQuantity ? parsedQuantity : undefined,
-                quantity_unit: trimmedUnit ? (trimmedUnit as SprayChemicalUnit) : undefined,
+                name: formData.product?.trim() || 'Unknown',
+                quantity_amount: formData.quantity ? parseFloat(formData.quantity) : undefined,
+                quantity_unit: ((formData.unit as string) ||
+                  SprayChemicalUnit.GramPerLiter) as SprayChemicalUnit,
                 mix_order: 1
               }
             ],
-            legacy_chemical: trimmedProduct || null,
-            legacy_dose:
-              isValidQuantity && trimmedUnit
-                ? `${parsedQuantity} ${trimmedUnit}`
-                : isValidQuantity
-                  ? `${parsedQuantity}`
-                  : null,
+            legacy_chemical: formData.product?.trim() || null,
+            legacy_dose: formData.quantity
+              ? `${formData.quantity}${(formData.unit as string) || SprayChemicalUnit.GramPerLiter}`
+              : null,
             date_of_pruning: pruningDate
           })
           break
-        }
 
         case 'fertigation':
           await SupabaseService.addFertigationRecord({
@@ -438,7 +429,19 @@ export function BottomNavigation() {
             {selectedFarm && (
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700">Select Log Type</Label>
-                <Select value={selectedLogType} onValueChange={setSelectedLogType}>
+                <Select
+                  value={selectedLogType}
+                  onValueChange={(value) => {
+                    setSelectedLogType(value)
+                    // Initialize formData.unit to match Select component default when log type becomes spray
+                    if (value === 'spray') {
+                      setFormData((prev) => ({
+                        ...prev,
+                        unit: SprayChemicalUnit.GramPerLiter
+                      }))
+                    }
+                  }}
+                >
                   <SelectTrigger className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12">
                     <SelectValue placeholder="Choose log type" />
                   </SelectTrigger>
@@ -475,13 +478,10 @@ export function BottomNavigation() {
                       />
                     ) : field.type === 'select' ? (
                       <Select
-                        value={(formData[field.name] as string) || SprayChemicalUnit.GramPerLiter}
+                        value={formData[field.name] as string}
                         onValueChange={(value) => handleFormDataChange(field.name, value)}
                       >
-                        <SelectTrigger
-                          className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-10 px-3 py-2 text-sm flex items-center"
-                          aria-label="Select chemical unit for spray measurement"
-                        >
+                        <SelectTrigger className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-10 px-3 py-2 text-sm flex items-center !px-3 !py-2">
                           <SelectValue placeholder="Choose unit" />
                         </SelectTrigger>
                         <SelectContent>
@@ -500,9 +500,8 @@ export function BottomNavigation() {
                         value={formData[field.name] || ''}
                         onChange={(e) => handleFormDataChange(field.name, e.target.value)}
                         placeholder={field.placeholder}
-                        className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-10 px-3 text-sm"
+                        className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12"
                         required={field.required}
-                        aria-label={`${field.label} input field`}
                       />
                     )}
                   </div>

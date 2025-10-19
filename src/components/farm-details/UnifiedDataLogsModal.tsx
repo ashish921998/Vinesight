@@ -1097,27 +1097,21 @@ export function UnifiedDataLogsModal({
                 {/* Multiple Spray Entries */}
                 {currentLogType === 'spray' ? (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      <div className="space-y-1">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Water Volume (L)
-                        </Label>
-                        <Input
-                          type="number"
-                          value={toStringValue(currentFormData.water_volume) || ''}
-                          onChange={(e) =>
-                            setCurrentFormData((prev) => ({
-                              ...prev,
-                              water_volume: e.target.value
-                            }))
-                          }
-                          placeholder="Total water used"
-                          min={0}
-                          step={0.1}
-                          className="h-10"
-                        />
-                      </div>
-                    </div>
+                    <Label className="text-sm font-medium text-gray-700">Water Volume (L)</Label>
+                    <Input
+                      type="number"
+                      value={toStringValue(currentFormData.water_volume) || ''}
+                      onChange={(e) =>
+                        setCurrentFormData((prev) => ({
+                          ...prev,
+                          water_volume: e.target.value
+                        }))
+                      }
+                      placeholder="Total water used"
+                      min={0}
+                      step={0.1}
+                      className="h-10"
+                    />
 
                     {chemicalEntries.map((entry, index) => (
                       <Card

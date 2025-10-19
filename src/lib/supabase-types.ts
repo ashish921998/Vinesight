@@ -305,8 +305,8 @@ export function toDatabaseSprayInsert(
     date: appRecord.date,
     chemical: appRecord.legacy_chemical || null,
     dose: appRecord.legacy_dose || null,
-    quantity_amount: appRecord.chemicals?.[0]?.quantity_amount || null,
-    quantity_unit: appRecord.chemicals?.[0]?.quantity_unit || null,
+    quantity_amount: appRecord.chemicals?.[0]?.quantity_amount ?? null,
+    quantity_unit: appRecord.chemicals?.[0]?.quantity_unit ?? null,
     water_volume: appRecord.water_volume,
     area: appRecord.area,
     weather: appRecord.weather,
@@ -323,6 +323,12 @@ export function toDatabaseSprayUpdate(appUpdates: Partial<SprayRecord>): Databas
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.legacy_chemical !== undefined) update.chemical = appUpdates.legacy_chemical || null
   if (appUpdates.legacy_dose !== undefined) update.dose = appUpdates.legacy_dose || null
+  // Sync quantity fields from first chemical when chemicals array is updated
+  if (appUpdates.chemicals !== undefined) {
+    const first = appUpdates.chemicals?.[0]
+    update.quantity_amount = first?.quantity_amount ?? null
+    update.quantity_unit = first?.quantity_unit ?? null
+  }
   if (appUpdates.area !== undefined) update.area = appUpdates.area
   if (appUpdates.weather !== undefined) update.weather = appUpdates.weather
   if (appUpdates.operator !== undefined) update.operator = appUpdates.operator
