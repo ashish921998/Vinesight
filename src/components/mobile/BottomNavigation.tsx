@@ -133,7 +133,7 @@ const logTypes: Array<{
         label: 'Quantity',
         type: 'number',
         step: '0.1',
-        min: '0.0000001',
+        min: '0.1',
         placeholder: '1.5',
         required: true
       },
@@ -294,6 +294,14 @@ export function BottomNavigation() {
 
       const selectedFarmObj = farms.find((farm) => farm.id === farmId)
       const pruningDate = selectedFarmObj?.dateOfPruning
+
+      // Validate quantity for spray records
+      if (selectedLogType === 'spray') {
+        const parsedQuantity = parseFloat(formData.quantity || '0')
+        if (!Number.isFinite(parsedQuantity) || parsedQuantity < 0.1) {
+          throw new Error('Quantity must be at least 0.1')
+        }
+      }
 
       switch (selectedLogType) {
         case 'irrigation':
@@ -478,10 +486,13 @@ export function BottomNavigation() {
                       />
                     ) : field.type === 'select' ? (
                       <Select
-                        value={formData[field.name] as string}
+                        value={(formData[field.name] as string) || ''}
                         onValueChange={(value) => handleFormDataChange(field.name, value)}
                       >
-                        <SelectTrigger className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-10 px-3 py-2 text-sm flex items-center !px-3 !py-2">
+                        <SelectTrigger
+                          className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-10 px-3 py-2 text-sm flex items-center !px-3 !py-2"
+                          aria-label={field.label}
+                        >
                           <SelectValue placeholder="Choose unit" />
                         </SelectTrigger>
                         <SelectContent>

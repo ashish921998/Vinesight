@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, type ChangeEvent } from 'react'
-import { SprayChemicalUnit } from '@/lib/supabase'
+import { SprayChemicalUnit, type SprayChemical } from '@/lib/supabase'
 import { parseChemicalDose, UNIT_DISPLAY_MAP } from '@/lib/chemical-formatter'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -206,9 +206,18 @@ export function EditRecordModal({
         date: sprayRecord.date,
         notes: sprayRecord.notes || '',
         chemical: sprayRecord.chemicals?.[0]?.name || sprayRecord.legacy_chemical || '',
-        dose: sprayRecord.chemicals?.[0]
-          ? `${sprayRecord.chemicals[0].quantity_amount} ${UNIT_DISPLAY_MAP[sprayRecord.chemicals[0].quantity_unit] || sprayRecord.chemicals[0].quantity_unit}`
-          : sprayRecord.legacy_dose || '',
+        dose: (() => {
+          const first = sprayRecord.chemicals?.[0]
+          if (first?.quantity_amount != null && first.quantity_unit) {
+            const enumLabel = {
+              [SprayChemicalUnit.GramPerLiter]: 'gm/L',
+              [SprayChemicalUnit.MilliliterPerLiter]: 'ml/L'
+            } as const
+            const label = enumLabel[first.quantity_unit] ?? String(first.quantity_unit)
+            return `${first.quantity_amount} ${label}`
+          }
+          return sprayRecord.legacy_dose || ''
+        })(),
         area: sprayRecord.area?.toString() || '',
         weather: sprayRecord.weather || '',
         operator: sprayRecord.operator || '',
@@ -454,8 +463,8 @@ export function EditRecordModal({
       } else if (recordType === 'spray') {
         if (!sprayForm) throw new Error('Spray form is not ready')
 
-        // Parse chemical and dose to create chemicals array
-        const chemicals: SprayChemical[] = []
+        // Parse chemical and dose; include only if valid
+        let chemicals: SprayChemical[] | undefined
         if (sprayForm.chemical && sprayForm.dose) {
           const parsedDose = parseChemicalDose(sprayForm.dose)
           if (parsedDose) {
@@ -470,22 +479,23 @@ export function EditRecordModal({
               )
             }
 
-            chemicals.push({
+            chemicals = [{
               name: sprayForm.chemical,
               quantity_amount: parsedDose.quantity,
               quantity_unit
-            })
+            }]
           }
         }
 
-        await SupabaseService.updateSprayRecord(record.id!, {
+        const payload = {
           date: sprayForm.date,
-          chemicals,
           area: toNum(sprayForm.area),
           weather: sprayForm.weather,
           operator: sprayForm.operator,
-          notes: sprayForm.notes
-        })
+          notes: sprayForm.notes,
+          ...(chemicals ? { chemicals } : {})
+        }
+        await SupabaseService.updateSprayRecord(record.id!, payload)
       } else if (recordType === 'harvest') {
         if (!harvestForm) throw new Error('Harvest form is not ready')
         await SupabaseService.updateHarvestRecord(record.id!, {

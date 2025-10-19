@@ -43,9 +43,9 @@ export function parseChemicalQuantity(quantity: string | undefined): number | un
 export const UNIT_DISPLAY_MAP: Record<string, string> = {
   'gm/L': 'gm/L',
   'ml/L': 'ml/L',
-  'g/L': 'g/L',
-  'g/l': 'g/L',
-  'ml/l': 'ml/l'
+  'g/L': 'gm/L',
+  'g/l': 'gm/L',
+  'ml/l': 'ml/L'
 }
 
 /**
@@ -70,9 +70,10 @@ export function parseChemicalDose(
 
   // Normalize unit to standard format
   let normalizedUnit = unit
-  if (unit === 'g/l' || unit === 'g/l' || unit === 'gm/l') {
+  if (unit === 'g/l' || unit === 'gm/l') {
     normalizedUnit = 'gm/L'
-  } else if (unit === 'ml/l' || unit === 'ml/l') {
+    normalizedUnit = 'gm/L'
+  } else if (unit === 'ml/l') {
     normalizedUnit = 'ml/L'
   }
 
