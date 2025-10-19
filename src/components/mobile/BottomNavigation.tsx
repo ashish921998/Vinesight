@@ -469,7 +469,7 @@ export function BottomNavigation() {
                         value={(formData[field.name] as string) || SprayChemicalUnit.GramPerLiter}
                         onValueChange={(value) => handleFormDataChange(field.name, value)}
                       >
-                        <SelectTrigger 
+                        <SelectTrigger
                           className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-10 px-3 py-2 text-sm flex items-center"
                           aria-label="Select chemical unit for spray measurement"
                         >

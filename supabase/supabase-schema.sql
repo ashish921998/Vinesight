@@ -61,9 +61,9 @@ CREATE TABLE spray_record_chemicals (
   id BIGSERIAL PRIMARY KEY,
   spray_record_id BIGINT NOT NULL REFERENCES spray_records(id) ON DELETE CASCADE,
   name TEXT NOT NULL, -- Chemical product name (e.g., "Imidacloprid", "Copper fungicide")
-  quantity_amount NUMERIC(8,2), -- Chemical quantity amount (e.g., 1.5, 2.0)
-  quantity_unit TEXT CHECK (quantity_unit IN ('gm/L', 'ml/L')), -- Unit: grams per liter or milliliters per liter
-  mix_order SMALLINT NOT NULL DEFAULT 1, -- Order in which chemicals should be mixed (1-10)
+  quantity_amount NUMERIC(8,2) NOT NULL CHECK (quantity_amount > 0), -- Chemical quantity amount (e.g., 1.5, 2.0)
+  quantity_unit TEXT NOT NULL CHECK (quantity_unit IN ('gm/L', 'ml/L')), -- Unit: grams per liter or milliliters per liter
+  mix_order SMALLINT NOT NULL DEFAULT 1 CHECK (mix_order >= 1 AND mix_order <= 10), -- Order in which chemicals should be mixed (1-10)
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

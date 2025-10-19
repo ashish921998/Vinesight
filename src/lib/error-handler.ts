@@ -18,10 +18,10 @@ export class ErrorHandler {
   static handle(error: unknown, context: ErrorContext): void {
     const errorMessage = this.getErrorMessage(error)
     const contextualMessage = `${context.operation}: ${errorMessage}`
-    
+
     // Show user-friendly toast notification
     toast.error(contextualMessage)
-    
+
     // Log detailed error for debugging
     this.logError(error, context)
   }
@@ -44,7 +44,7 @@ export class ErrorHandler {
     // Handle Supabase errors
     if (typeof error === 'object' && error !== null) {
       const errorObj = error as Record<string, unknown>
-      
+
       // Supabase error format
       if (errorObj.message && typeof errorObj.message === 'string') {
         // Handle specific Supabase error codes
@@ -57,12 +57,16 @@ export class ErrorHandler {
         if (errorObj.code === '23503') {
           return 'Invalid reference - related record not found'
         }
-        
+
         return errorObj.message
       }
 
       // Handle network errors
-      if (errorObj.name === 'TypeError' && typeof errorObj.message === 'string' && errorObj.message.includes('fetch')) {
+      if (
+        errorObj.name === 'TypeError' &&
+        typeof errorObj.message === 'string' &&
+        errorObj.message.includes('fetch')
+      ) {
         return 'Network connection error - please check your internet connection'
       }
     }
@@ -122,12 +126,30 @@ export class ErrorHandler {
   }
 
   /**
+   * Log success details for debugging (not as errors)
+   */
+  public static logSuccess(message: string, context: ErrorContext): void {
+    const successDetails = {
+      timestamp: new Date().toISOString(),
+      context,
+      message
+    }
+
+    // Log to console in development
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.group(`✅ Success: ${context.operation}`)
+      console.log('Success Details:', successDetails)
+      console.groupEnd()
+    } else {
+      // In production, log structured success
+      console.log('[VineSight Success]', successDetails)
+    }
+  }
+
+  /**
    * Create a user-friendly async error wrapper
    */
-  static async wrapAsync<T>(
-    asyncFn: () => Promise<T>,
-    context: ErrorContext
-  ): Promise<T | null> {
+  static async wrapAsync<T>(asyncFn: () => Promise<T>, context: ErrorContext): Promise<T | null> {
     try {
       return await asyncFn()
     } catch (error) {
@@ -157,8 +179,14 @@ export class ErrorHandler {
  * Common error contexts for consistency
  */
 export const ErrorContexts = {
-  SPRAY_RECORD_CREATE: { operation: 'Failed to create spray record', component: 'UnifiedDataLogsModal' },
-  SPRAY_RECORD_UPDATE: { operation: 'Failed to update spray record', component: 'UnifiedDataLogsModal' },
+  SPRAY_RECORD_CREATE: {
+    operation: 'Failed to create spray record',
+    component: 'UnifiedDataLogsModal'
+  },
+  SPRAY_RECORD_UPDATE: {
+    operation: 'Failed to update spray record',
+    component: 'UnifiedDataLogsModal'
+  },
   CHEMICAL_VALIDATION: { operation: 'Chemical validation failed', component: 'ChemicalEntry' },
   FORM_SUBMISSION: { operation: 'Form submission failed', component: 'FormHandler' },
   DATA_FETCH: { operation: 'Failed to load data', component: 'DataLoader' },
@@ -174,7 +202,7 @@ export const useErrorHandler = () => {
     handleError: ErrorHandler.handle,
     handleSuccess: (message: string) => {
       toast.success(message)
-      ErrorHandler.log(null, { ...ErrorContexts.SAVE_SUCCESS, operation: message })
+      ErrorHandler.logSuccess(message, { ...ErrorContexts.SAVE_SUCCESS, operation: message })
     }
   }
 }

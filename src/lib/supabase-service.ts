@@ -242,9 +242,12 @@ export class SupabaseService {
 
     if (updates.chemicals) {
       const chemicals = updates.chemicals.slice(0, 10)
-      const existingIds = chemicals.filter((c) => c.id).map((c) => c.id!)
+      const existingIds = chemicals
+        .filter((c) => c.id && typeof c.id === 'number')
+        .map((c) => c.id!)
 
-      if (existingIds.length) {
+      // Delete chemicals that are no longer needed, with proper array guard
+      if (existingIds.length > 0) {
         const { error: deleteError } = await supabase
           .from('spray_record_chemicals')
           .delete()
@@ -253,6 +256,7 @@ export class SupabaseService {
 
         if (deleteError) throw deleteError
       } else {
+        // If no existing IDs, delete all chemicals for this spray record
         const { error: deleteAllError } = await supabase
           .from('spray_record_chemicals')
           .delete()
@@ -261,8 +265,9 @@ export class SupabaseService {
         if (deleteAllError) throw deleteAllError
       }
 
+      // Insert/update chemicals
       for (const [index, chemical] of chemicals.entries()) {
-        if (chemical.id) {
+        if (chemical.id && typeof chemical.id === 'number') {
           const payload = toDatabaseSprayChemicalUpdate({ ...chemical, mix_order: index + 1 })
           const { error: updateError } = await supabase
             .from('spray_record_chemicals')
@@ -278,6 +283,31 @@ export class SupabaseService {
 
           if (insertError) throw insertError
         }
+      }
+
+      // Keep legacy quantity fields in sync with first chemical for backward compatibility
+      const firstChemical = chemicals[0]
+      if (firstChemical && firstChemical.quantity_amount && firstChemical.quantity_unit) {
+        const { error: legacyUpdateError } = await supabase
+          .from('spray_records')
+          .update({
+            chemical: firstChemical.name?.trim() || null,
+            dose: `${firstChemical.quantity_amount}${firstChemical.quantity_unit}`
+          })
+          .eq('id', id)
+
+        if (legacyUpdateError) throw legacyUpdateError
+      } else if (chemicals.length === 0) {
+        // Clear legacy fields when no chemicals present
+        const { error: legacyClearError } = await supabase
+          .from('spray_records')
+          .update({
+            chemical: null,
+            dose: null
+          })
+          .eq('id', id)
+
+        if (legacyClearError) throw legacyClearError
       }
     }
 

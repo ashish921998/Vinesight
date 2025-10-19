@@ -155,7 +155,7 @@ export default function AnalyticsPage() {
       // Group sprays by chemical type
       const spraysByType = new Map<string, number>()
       allSprays.forEach((record) => {
-        const type = record.chemical
+        const type = record.legacy_chemical || 'Unknown'
         spraysByType.set(type, (spraysByType.get(type) || 0) + 1)
       })
 
@@ -181,7 +181,7 @@ export default function AnalyticsPage() {
           type: 'spray' as const,
           farmName: (record as any).farmName,
           date: record.date,
-          details: `${record.chemical} treatment`
+          details: `${record.legacy_chemical || 'Unknown chemical'} treatment`
         })
       })
 

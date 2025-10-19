@@ -284,7 +284,7 @@ export function toApplicationSprayRecord(
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
-    water_volume: dbRecord.water_volume || 0,
+    water_volume: dbRecord.water_volume,
     area: dbRecord.area,
     weather: dbRecord.weather,
     operator: dbRecord.operator,

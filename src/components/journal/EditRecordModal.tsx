@@ -203,8 +203,8 @@ export function EditRecordModal({
         recordType: 'spray',
         date: sprayRecord.date,
         notes: sprayRecord.notes || '',
-        chemical: sprayRecord.chemical || '',
-        dose: sprayRecord.dose || '',
+        chemical: sprayRecord.legacy_chemical || '',
+        dose: sprayRecord.legacy_dose || '',
         area: sprayRecord.area?.toString() || '',
         weather: sprayRecord.weather || '',
         operator: sprayRecord.operator || '',
@@ -451,8 +451,8 @@ export function EditRecordModal({
         if (!sprayForm) throw new Error('Spray form is not ready')
         await SupabaseService.updateSprayRecord(record.id!, {
           date: sprayForm.date,
-          chemical: sprayForm.chemical,
-          dose: sprayForm.dose,
+          legacy_chemical: sprayForm.chemical,
+          legacy_dose: sprayForm.dose,
           area: toNum(sprayForm.area),
           weather: sprayForm.weather,
           operator: sprayForm.operator,

@@ -226,7 +226,7 @@ export default function FarmLogsPage() {
             type: 'spray',
             date: log.date,
             notes: log.notes,
-            chemical: log.chemical,
+            chemical: log.legacy_chemical,
             created_at: log.created_at || log.date
           })),
         ...harvest

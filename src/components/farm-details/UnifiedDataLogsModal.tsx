@@ -133,7 +133,7 @@ export function UnifiedDataLogsModal({
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [currentLogType, setCurrentLogType] = useState<LogType | null>(null)
 
-  const [currentFormData, setCurrentFormData] = useState<Record<string, any>>({})
+  const [currentFormData, setCurrentFormData] = useState<Record<string, unknown>>({})
   const [sessionLogs, setSessionLogs] = useState<LogEntry[]>([])
   const [editingLogId, setEditingLogId] = useState<string | null>(null)
   const [currentReport, setCurrentReport] = useState<ReportAttachmentMeta | null>(null)
@@ -159,7 +159,7 @@ export function UnifiedDataLogsModal({
   // Multiple fertigation entries state
   const [multipleFertigationMode, setMultipleFertigationMode] = useState(false)
   const [fertigationEntries, setFertigationEntries] = useState<
-    Array<{ id: string; data: Record<string, any>; isValid: boolean }>
+    Array<{ id: string; data: Record<string, unknown>; isValid: boolean }>
   >([])
 
   // Reset modal state when opened/closed
@@ -440,7 +440,7 @@ export function UnifiedDataLogsModal({
       id: entry.id,
       validation: validateChemicalEntry(entry)
     }))
-  }, [chemicalEntries, validateChemicalEntry])
+  }, [chemicalEntries])
 
   const handleAddChemical = () => {
     setChemicalEntries((prev) => {
@@ -485,7 +485,7 @@ export function UnifiedDataLogsModal({
     )
   }
 
-  const validateFertigationEntry = (data: Record<string, any>): boolean => {
+  const validateFertigationEntry = (data: Record<string, unknown>): boolean => {
     const config = logTypeConfigs['fertigation']
     for (const field of config.fields) {
       if (field.required && !data[field.name]) {
@@ -1104,7 +1104,7 @@ export function UnifiedDataLogsModal({
                         </Label>
                         <Input
                           type="number"
-                          value={currentFormData.water_volume || ''}
+                          value={toStringValue(currentFormData.water_volume) || ''}
                           onChange={(e) =>
                             setCurrentFormData((prev) => ({
                               ...prev,

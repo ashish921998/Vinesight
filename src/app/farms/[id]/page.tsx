@@ -32,6 +32,7 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Farm } from '@/types/types'
 import { capitalize } from '@/lib/utils'
+import { parseChemicalQuantity } from '@/lib/chemical-formatter'
 
 interface DashboardData {
   farm: Farm | null
@@ -221,13 +222,16 @@ export default function FarmDetailsPage() {
           date_of_pruning: dashboardData?.farm?.dateOfPruning,
           chemicals: (data.chemicals || []).slice(0, 10).map((chem: any, index: number) => ({
             name: chem.name?.trim() || `Chemical ${index + 1}`,
-            quantity_amount: chem.quantity ? parseFloat(chem.quantity) : undefined,
+            quantity_amount: parseChemicalQuantity(chem.quantity),
             quantity_unit: chem.unit || undefined,
             mix_order: index + 1
           })),
-          legacy_chemical: data.chemical?.trim() || null,
+          legacy_chemical:
+            !data.chemicals || data.chemicals.length === 0 ? data.chemical?.trim() || null : null,
           legacy_dose:
-            data.quantity_amount && data.quantity_unit
+            (!data.chemicals || data.chemicals.length === 0) &&
+            data.quantity_amount &&
+            data.quantity_unit
               ? `${data.quantity_amount}${data.quantity_unit}`
               : null
         })

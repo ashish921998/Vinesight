@@ -5,6 +5,7 @@
 
 import jsPDF from 'jspdf'
 import { SupabaseService } from './supabase-service'
+import { formatChemicalsList } from './chemical-formatter'
 import type { Farm } from '@/types/types'
 
 // Extend jsPDF type to include autoTable
@@ -176,16 +177,8 @@ export class ExportService {
         csvContent +=
           'Date,Pest/Disease,Chemicals,Area (ha),Water Volume (L),Weather,Operator,Notes\n'
         data.spray.forEach((record) => {
-          const chemicals = (record.chemicals || [])
-            .map((chem: any) => {
-              const amount = chem.quantity_amount
-                ? `${chem.quantity_amount}${chem.quantity_unit || ''}`
-                : ''
-              return amount ? `${chem.name} (${amount})` : chem.name
-            })
-            .join('; ')
-
-          csvContent += `${record.date},"${record.pest_disease}","${chemicals}",${record.area},${record.water_volume || ''},"${record.weather_conditions}","${record.operator}","${record.notes || ''}"\n`
+          const chemicals = formatChemicalsList(record.chemicals || [])
+          csvContent += `${record.date},"${record.pest_disease}","${chemicals}",${record.area},${record.water_volume != null ? record.water_volume : ''},"${record.weather_conditions}","${record.operator}","${record.notes || ''}"\n`
         })
         csvContent += '\n'
       }
@@ -386,16 +379,9 @@ export class ExportService {
       const sprayData = data.spray.map((record) => [
         record.date,
         record.pest_disease,
-        (record.chemicals || [])
-          .map((chem: any) => {
-            const amount = chem.quantity_amount
-              ? `${chem.quantity_amount}${chem.quantity_unit || ''}`
-              : ''
-            return amount ? `${chem.name} (${amount})` : chem.name
-          })
-          .join('; '),
+        formatChemicalsList(record.chemicals || []),
         `${record.area}ha`,
-        record.water_volume ? `${record.water_volume}L` : '',
+        record.water_volume != null ? `${record.water_volume}L` : '',
         record.operator
       ])
 
