@@ -42,7 +42,7 @@ CREATE TABLE spray_records (
   id BIGSERIAL PRIMARY KEY,
   farm_id BIGINT REFERENCES farms(id) ON DELETE CASCADE,
   date DATE NOT NULL,
-  water_volume DECIMAL(10,2), -- Total water volume in liters (new field)
+  water_volume DECIMAL(10,2) CHECK (water_volume >= 0), -- Total water volume in liters (new field)
   area DECIMAL(10,2) NOT NULL, -- in hectares
   weather VARCHAR(255), -- Weather conditions during spray (now optional)
   operator VARCHAR(255), -- Name of operator (now optional)

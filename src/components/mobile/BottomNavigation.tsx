@@ -301,6 +301,10 @@ export function BottomNavigation() {
         if (!Number.isFinite(parsedQuantity) || parsedQuantity < 0.1) {
           throw new Error('Quantity must be at least 0.1')
         }
+        // Ensure unit is never undefined or empty
+        if (!formData.unit || formData.unit === '') {
+          formData.unit = SprayChemicalUnit.GramPerLiter
+        }
       }
 
       switch (selectedLogType) {
@@ -331,15 +335,18 @@ export function BottomNavigation() {
               {
                 name: formData.product?.trim() || 'Unknown',
                 quantity_amount: formData.quantity ? parseFloat(formData.quantity) : undefined,
-                quantity_unit: ((formData.unit as string) ||
-                  SprayChemicalUnit.GramPerLiter) as SprayChemicalUnit,
+                quantity_unit:
+                  (formData.unit as SprayChemicalUnit) || SprayChemicalUnit.GramPerLiter,
                 mix_order: 1
               }
             ],
             legacy_chemical: formData.product?.trim() || null,
-            legacy_dose: formData.quantity
-              ? `${formData.quantity}${(formData.unit as string) || SprayChemicalUnit.GramPerLiter}`
-              : null,
+            legacy_dose:
+              formData.quantity && formData.unit && formData.unit.trim() !== ''
+                ? `${formData.quantity} ${formData.unit}`
+                : formData.quantity
+                  ? `${formData.quantity} ${SprayChemicalUnit.GramPerLiter}`
+                  : null,
             date_of_pruning: pruningDate
           })
           break

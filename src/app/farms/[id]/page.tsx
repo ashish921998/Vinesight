@@ -254,11 +254,13 @@ export default function FarmDetailsPage() {
             })
             .filter(Boolean) as any[],
           legacy_chemical: data.chemicals?.[0]?.name?.trim() || data.chemical?.trim() || null,
-          legacy_dose: data.chemicals?.[0]
-            ? `${data.chemicals[0].quantity_amount}${data.chemicals[0].quantity_unit}`
-            : data.quantity_amount && data.quantity_unit
-              ? `${data.quantity_amount}${data.quantity_unit}`
-              : null
+          legacy_dose:
+            data.chemicals?.[0]?.quantity_amount != null &&
+            data.chemicals?.[0]?.quantity_unit != null
+              ? `${data.chemicals[0].quantity_amount} ${data.chemicals[0].quantity_unit}`
+              : data.quantity_amount != null && data.quantity_unit != null
+                ? `${data.quantity_amount} ${data.quantity_unit}`
+                : null
         })
         break
 

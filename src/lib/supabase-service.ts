@@ -10,6 +10,7 @@ import {
   type PetioleTestRecord
 } from './supabase'
 import { type Farm, type TaskReminder } from '@/types/types'
+import { MAX_CHEMICALS_PER_SPRAY } from '@/lib/constants'
 import {
   toApplicationFarm,
   toDatabaseFarmInsert,
@@ -220,7 +221,7 @@ export class SupabaseService {
 
     if (sprayRecordId && record.chemicals?.length) {
       const chemicalsPayload = record.chemicals
-        .slice(0, 10)
+        .slice(0, MAX_CHEMICALS_PER_SPRAY)
         .map((chemical, index) => toDatabaseSprayChemicalInsert(chemical, sprayRecordId, index + 1))
 
       const { error: chemError } = await supabase
@@ -262,7 +263,7 @@ export class SupabaseService {
     if (error) throw error
 
     if (updates.chemicals) {
-      const chemicals = updates.chemicals.slice(0, 10)
+      const chemicals = updates.chemicals.slice(0, MAX_CHEMICALS_PER_SPRAY)
       const existingIds = chemicals
         .filter((c) => c.id && typeof c.id === 'number')
         .map((c) => c.id!)
@@ -312,9 +313,11 @@ export class SupabaseService {
       const legacyPayload = {
         chemical: firstChemical?.name?.trim() || null,
         dose:
-          firstChemical?.quantity_amount != null && firstChemical?.quantity_unit
-            ? `${firstChemical.quantity_amount}${firstChemical.quantity_unit}`
-            : null
+          firstChemical?.quantity_amount != null && firstChemical?.quantity_unit != null
+            ? `${firstChemical.quantity_amount} ${firstChemical.quantity_unit}`
+            : firstChemical?.quantity_amount != null
+              ? `${firstChemical.quantity_amount} gm/L`
+              : null
       }
 
       const { error: legacyUpdateError } = await supabase

@@ -33,6 +33,7 @@ import { toast } from 'sonner'
 import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-config'
 import { SprayChemicalUnit } from '@/lib/supabase'
 import { ErrorHandler, ErrorContexts, useErrorHandler } from '@/lib/error-handler'
+import { MAX_CHEMICALS_PER_SPRAY } from '@/lib/constants'
 import React from 'react'
 
 interface LogEntry {
@@ -69,8 +70,8 @@ const formatLogPreview = (log: LogEntry): string => {
         const unitCandidate = chem.unit ?? chem.quantity_unit ?? chem.quantityUnit
         const unit = typeof unitCandidate === 'string' ? unitCandidate : undefined
 
-        if (quantity !== undefined && unit) {
-          return `${name} (${quantity}${unit})`
+        if (quantity !== undefined && unit && unit !== '') {
+          return `${name} (${quantity} ${unit})`
         }
         if (quantity !== undefined) {
           return `${name} (${quantity})`
@@ -132,7 +133,6 @@ export function UnifiedDataLogsModal({
   const { handleError, handleSuccess } = useErrorHandler()
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [currentLogType, setCurrentLogType] = useState<LogType | null>(null)
-
   const [currentFormData, setCurrentFormData] = useState<Record<string, unknown>>({})
   const [sessionLogs, setSessionLogs] = useState<LogEntry[]>([])
   const [editingLogId, setEditingLogId] = useState<string | null>(null)
@@ -149,7 +149,7 @@ export function UnifiedDataLogsModal({
       id: string
       name: string
       quantity: string
-      unit: SprayChemicalUnit
+      unit: SprayChemicalUnit | ''
       isValid: boolean
       errors: string[]
       warnings: string[]
@@ -396,7 +396,7 @@ export function UnifiedDataLogsModal({
     (entry: {
       name: string
       quantity: string
-      unit: SprayChemicalUnit
+      unit: SprayChemicalUnit | ''
     }): ChemicalValidationResult => {
       const errors: string[] = []
       const warnings: string[] = []
@@ -434,17 +434,9 @@ export function UnifiedDataLogsModal({
     []
   )
 
-  // Memoize validation results for performance
-  const chemicalValidationResults = useMemo(() => {
-    return chemicalEntries.map((entry) => ({
-      id: entry.id,
-      validation: validateChemicalEntry(entry)
-    }))
-  }, [chemicalEntries])
-
   const handleAddChemical = () => {
     setChemicalEntries((prev) => {
-      if (prev.length >= 10) return prev
+      if (prev.length >= MAX_CHEMICALS_PER_SPRAY) return prev
       const newEntry = {
         id: Date.now().toString(),
         name: '',
@@ -468,7 +460,7 @@ export function UnifiedDataLogsModal({
   const handleChemicalChange = (
     entryId: string,
     field: 'name' | 'quantity' | 'unit',
-    value: string | SprayChemicalUnit
+    value: string | SprayChemicalUnit | ''
   ) => {
     setChemicalEntries((prev) =>
       prev.map((entry) => {
@@ -542,9 +534,13 @@ export function UnifiedDataLogsModal({
           chemicals: validChemicals,
           legacy_chemical: validChemicals[0]?.name || null,
           legacy_dose:
-            validChemicals[0]?.quantity && validChemicals[0]?.unit
-              ? `${validChemicals[0].quantity}${validChemicals[0].unit}`
-              : null
+            validChemicals[0]?.quantity != null &&
+            validChemicals[0]?.unit != null &&
+            validChemicals[0]?.unit !== ''
+              ? `${validChemicals[0].quantity} ${validChemicals[0].unit}`
+              : validChemicals[0]?.quantity != null
+                ? `${validChemicals[0].quantity} gm/L`
+                : null
         },
         isValid: true
       }
@@ -1199,17 +1195,18 @@ export function UnifiedDataLogsModal({
                             </div>
                           </div>
 
-                          {index === chemicalEntries.length - 1 && chemicalEntries.length < 10 && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleAddChemical}
-                              className="w-full mt-2 border-dashed"
-                            >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Add Another Chemical
-                            </Button>
-                          )}
+                          {index === chemicalEntries.length - 1 &&
+                            chemicalEntries.length < MAX_CHEMICALS_PER_SPRAY && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleAddChemical}
+                                className="w-full mt-2 border-dashed"
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Add Another Chemical
+                              </Button>
+                            )}
                         </CardContent>
                       </Card>
                     ))}

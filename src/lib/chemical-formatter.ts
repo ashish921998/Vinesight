@@ -19,7 +19,13 @@ export function formatChemicalsList(chemicals: ChemicalEntry[]): string {
     .map((chem) => {
       // Use nullish checks to preserve valid zero values
       const amount =
-        chem.quantity_amount != null ? `${chem.quantity_amount}${chem.quantity_unit ?? ''}` : ''
+        chem.quantity_amount != null &&
+        chem.quantity_unit != null &&
+        chem.quantity_unit.trim() !== ''
+          ? `${chem.quantity_amount} ${chem.quantity_unit}`
+          : chem.quantity_amount != null
+            ? `${chem.quantity_amount}`
+            : ''
       return amount ? `${chem.name} (${amount})` : chem.name
     })
     .join('; ')
