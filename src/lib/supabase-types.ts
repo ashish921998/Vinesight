@@ -258,18 +258,32 @@ export function toDatabaseIrrigationUpdate(
 export function toApplicationSprayRecord(
   dbRecord: DatabaseSprayRecord
 ): import('./supabase').SprayRecord {
+  // Helper to safely parse chemicals from Json
+  const parseChemicals = (
+    chemicalsJson: Json
+  ): import('./supabase').SprayChemical[] | undefined => {
+    if (!chemicalsJson || !Array.isArray(chemicalsJson)) return undefined
+    // Validate structure
+    const isValid = chemicalsJson.every(
+      (c: any) =>
+        typeof c === 'object' &&
+        typeof c.name === 'string' &&
+        typeof c.quantity === 'number' &&
+        (c.unit === 'gm/L' || c.unit === 'ml/L')
+    )
+    return isValid ? (chemicalsJson as unknown as import('./supabase').SprayChemical[]) : undefined
+  }
+
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
-    chemical: dbRecord.chemical,
-    dose: dbRecord.dose,
+    chemical: dbRecord.chemical || undefined,
+    dose: dbRecord.dose || undefined,
     quantity_amount: dbRecord.quantity_amount,
-    quantity_unit: dbRecord.quantity_unit,
-    water_volume: dbRecord.water_volume || 0,
-    chemicals: dbRecord.chemicals
-      ? (dbRecord.chemicals as unknown as import('./supabase').SprayChemical[])
-      : undefined,
+    quantity_unit: dbRecord.quantity_unit as 'gm/L' | 'ml/L',
+    water_volume: dbRecord.water_volume,
+    chemicals: parseChemicals(dbRecord.chemicals),
     area: dbRecord.area,
     weather: dbRecord.weather,
     operator: dbRecord.operator,
@@ -285,11 +299,11 @@ export function toDatabaseSprayInsert(
   return {
     farm_id: appRecord.farm_id,
     date: appRecord.date,
-    chemical: appRecord.chemical,
-    dose: appRecord.dose,
+    chemical: appRecord.chemical || null,
+    dose: appRecord.dose || null,
     quantity_amount: appRecord.quantity_amount,
     quantity_unit: appRecord.quantity_unit,
-    water_volume: appRecord.water_volume || 0, // Default to 0 if not provided
+    water_volume: appRecord.water_volume,
     chemicals:
       appRecord.chemicals && appRecord.chemicals.length > 0
         ? (appRecord.chemicals as unknown as Json)
@@ -309,8 +323,8 @@ export function toDatabaseSprayUpdate(
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
-  if (appUpdates.chemical !== undefined) update.chemical = appUpdates.chemical
-  if (appUpdates.dose !== undefined) update.dose = appUpdates.dose
+  if (appUpdates.chemical !== undefined) update.chemical = appUpdates.chemical || null
+  if (appUpdates.dose !== undefined) update.dose = appUpdates.dose || null
   if (appUpdates.quantity_amount !== undefined) update.quantity_amount = appUpdates.quantity_amount
   if (appUpdates.quantity_unit !== undefined) update.quantity_unit = appUpdates.quantity_unit
   if (appUpdates.water_volume !== undefined) update.water_volume = appUpdates.water_volume

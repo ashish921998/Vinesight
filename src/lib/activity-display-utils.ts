@@ -2,7 +2,8 @@
  * Utility functions for generating meaningful display text for farm activities
  */
 
-import { formatChemicalData } from '@/lib/chemical-formatter'
+import { formatChemicalData, formatChemicalsForDisplay, Chemical } from '@/lib/chemical-formatter'
+import { logger } from '@/lib/logger'
 
 interface ActivityLog {
   id: number
@@ -24,6 +25,16 @@ interface ActivityLog {
  * @returns String to display as the main activity text
  */
 export function getActivityDisplayData(activity: ActivityLog): string {
+  // Add null/undefined guard for activity
+  if (!activity) {
+    return 'Unknown Activity'
+  }
+
+  // Add null/undefined guard for activity type
+  if (!activity.type) {
+    return 'Unknown Activity'
+  }
+
   switch (activity.type) {
     case 'irrigation':
       return getIrrigationDisplayText(activity)
@@ -47,7 +58,8 @@ export function getActivityDisplayData(activity: ActivityLog): string {
       return getTestDateDisplayText(activity)
 
     default:
-      return activity.type.replace(/_/g, ' ')
+      // Add null/undefined guard for type replacement
+      return activity.type ? activity.type.replace(/_/g, ' ') : 'Unknown Activity'
   }
 }
 
@@ -55,8 +67,18 @@ export function getActivityDisplayData(activity: ActivityLog): string {
  * Format irrigation duration display
  */
 function getIrrigationDisplayText(activity: ActivityLog): string {
-  if (activity.duration !== undefined && activity.duration > 0) {
-    return `${activity.duration} hrs`
+  // Add null/undefined guard and validation
+  if (
+    activity.duration !== undefined &&
+    activity.duration !== null &&
+    !isNaN(activity.duration) &&
+    activity.duration > 0
+  ) {
+    // Ensure duration is a reasonable number
+    const duration = Number(activity.duration)
+    if (isFinite(duration)) {
+      return `${duration} hrs`
+    }
   }
   return 'Irrigation'
 }
@@ -66,21 +88,47 @@ function getIrrigationDisplayText(activity: ActivityLog): string {
  */
 function getSprayDisplayText(activity: ActivityLog): string {
   // Check for chemicals array first (new format)
-  if (activity.chemicals && Array.isArray(activity.chemicals)) {
-    const formattedChemicals = formatChemicalData(activity.chemicals)
-    if (formattedChemicals) {
-      // Truncate if very long
-      return formattedChemicals.length > 30
-        ? formattedChemicals.substring(0, 27) + '...'
-        : formattedChemicals
+  if (activity.chemicals && Array.isArray(activity.chemicals) && activity.chemicals.length > 0) {
+    try {
+      // Validate chemicals array structure
+      const validChemicals = activity.chemicals.filter(
+        (chem) =>
+          chem &&
+          typeof chem === 'object' &&
+          typeof chem.name === 'string' &&
+          chem.name.trim() !== '' &&
+          typeof chem.quantity === 'number' &&
+          isFinite(chem.quantity) &&
+          chem.quantity > 0
+      ) as Chemical[]
+
+      if (validChemicals.length > 0) {
+        const formattedChemicals = formatChemicalsForDisplay(validChemicals, 30)
+        if (formattedChemicals && formattedChemicals.trim() !== '') {
+          return formattedChemicals
+        }
+      }
+    } catch (error) {
+      // If formatting fails, continue to fallback
+      logger.warn('Error formatting chemicals array:', error)
     }
   }
 
   // Fallback to legacy chemical field
-  if (activity.chemical && activity.chemical.trim()) {
-    // Truncate if very long
+  if (activity.chemical && typeof activity.chemical === 'string') {
     const chemical = activity.chemical.trim()
-    return chemical.length > 30 ? chemical.substring(0, 27) + '...' : chemical
+    if (chemical !== '') {
+      // Use the updated chemical formatter for legacy field
+      const formattedLegacy = formatChemicalData(chemical)
+      if (formattedLegacy && formattedLegacy.trim() !== '') {
+        // Apply truncation if very long
+        return formattedLegacy.length > 30
+          ? formattedLegacy.substring(0, 27) + '...'
+          : formattedLegacy
+      }
+      // If formatter returns empty, use the original value
+      return chemical.length > 30 ? chemical.substring(0, 27) + '...' : chemical
+    }
   }
 
   return 'Spray'
@@ -90,8 +138,18 @@ function getSprayDisplayText(activity: ActivityLog): string {
  * Format harvest quantity display
  */
 function getHarvestDisplayText(activity: ActivityLog): string {
-  if (activity.quantity !== undefined && activity.quantity > 0) {
-    return `${activity.quantity} kg`
+  // Add null/undefined guard and validation
+  if (
+    activity.quantity !== undefined &&
+    activity.quantity !== null &&
+    !isNaN(activity.quantity) &&
+    activity.quantity > 0
+  ) {
+    // Ensure quantity is a reasonable number
+    const quantity = Number(activity.quantity)
+    if (isFinite(quantity)) {
+      return `${quantity} kg`
+    }
   }
   return 'Harvest'
 }
@@ -100,8 +158,23 @@ function getHarvestDisplayText(activity: ActivityLog): string {
  * Format expense cost display
  */
 function getExpenseDisplayText(activity: ActivityLog): string {
-  if (activity.cost !== undefined && activity.cost > 0) {
-    return `₹${activity.cost.toLocaleString('en-IN')}`
+  // Add null/undefined guard and validation
+  if (
+    activity.cost !== undefined &&
+    activity.cost !== null &&
+    !isNaN(activity.cost) &&
+    activity.cost > 0
+  ) {
+    // Ensure cost is a reasonable number
+    const cost = Number(activity.cost)
+    if (isFinite(cost)) {
+      try {
+        return `₹${cost.toLocaleString('en-IN')}`
+      } catch (error) {
+        // Fallback if toLocaleString fails
+        return `₹${cost.toFixed(2)}`
+      }
+    }
   }
   return 'Expense'
 }
@@ -110,9 +183,21 @@ function getExpenseDisplayText(activity: ActivityLog): string {
  * Format fertilizer display
  */
 function getFertigationDisplayText(activity: ActivityLog): string {
-  if (activity.fertilizer && activity.fertilizer.trim()) {
+  // Add null/undefined guard and type checking
+  if (activity.fertilizer && typeof activity.fertilizer === 'string') {
     const fertilizer = activity.fertilizer.trim()
-    return fertilizer.length > 25 ? fertilizer.substring(0, 22) + '...' : fertilizer
+    if (fertilizer !== '') {
+      // Use the updated chemical formatter for consistency
+      const formattedFertilizer = formatChemicalData(fertilizer)
+      if (formattedFertilizer && formattedFertilizer.trim() !== '') {
+        // Apply truncation if very long
+        return formattedFertilizer.length > 25
+          ? formattedFertilizer.substring(0, 22) + '...'
+          : formattedFertilizer
+      }
+      // If formatter returns empty, use the original value
+      return fertilizer.length > 25 ? fertilizer.substring(0, 22) + '...' : fertilizer
+    }
   }
   return 'Fertigation'
 }
@@ -121,18 +206,30 @@ function getFertigationDisplayText(activity: ActivityLog): string {
  * Format test date display for soil and petiole tests
  */
 function getTestDateDisplayText(activity: ActivityLog): string {
+  // Add null/undefined guard for date
+  if (!activity.date) {
+    return activity.type ? activity.type.replace(/_/g, ' ') : 'Test'
+  }
+
   try {
     const date = new Date(activity.date)
     if (isNaN(date.getTime())) {
-      return activity.type.replace(/_/g, ' ')
+      return activity.type ? activity.type.replace(/_/g, ' ') : 'Test'
     }
+
     const options: Intl.DateTimeFormatOptions = {
       day: 'numeric',
       month: 'short',
       year: 'numeric'
     }
-    return date.toLocaleDateString('en-IN', options)
+
+    try {
+      return date.toLocaleDateString('en-IN', options)
+    } catch (localeError) {
+      // Fallback if locale formatting fails
+      return date.toLocaleDateString()
+    }
   } catch (error) {
-    return activity.type.replace(/_/g, ' ')
+    return activity.type ? activity.type.replace(/_/g, ' ') : 'Test'
   }
 }

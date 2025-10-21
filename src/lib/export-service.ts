@@ -175,7 +175,7 @@ export class ExportService {
         csvContent += 'SPRAY RECORDS\n'
         csvContent += 'Date,Pest/Disease,Chemical,Dose,Area (ha),Weather,Operator,Notes\n'
         data.spray.forEach((record) => {
-          csvContent += `${record.date},"${record.pest_disease}","${record.chemical}",${record.dose},${record.area},"${record.weather_conditions}","${record.operator}","${record.notes || ''}"\n`
+          csvContent += `${record.date},"${record.pest_disease}","${record.chemical || 'N/A'}",${record.dose},${record.area},"${record.weather_conditions}","${record.operator}","${record.notes || ''}"\n`
         })
         csvContent += '\n'
       }
@@ -376,7 +376,7 @@ export class ExportService {
       const sprayData = data.spray.map((record) => [
         record.date,
         record.pest_disease,
-        record.chemical,
+        record.chemical?.trim() || 'N/A',
         record.dose,
         `${record.area}ha`,
         record.operator
