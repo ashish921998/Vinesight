@@ -9,8 +9,7 @@ import {
   getActivityDisplayData,
   groupActivitiesByDate,
   getGroupedActivitiesSummary,
-  formatGroupedDate,
-  type GroupedActivities
+  formatGroupedDate
 } from '@/lib/activity-display-utils'
 import {
   getLogTypeIcon,
@@ -27,6 +26,7 @@ interface ActivityFeedProps {
   onEditRecord: (record: any, recordType: string) => void
   onDeleteRecord: (record: any, recordType: string) => void
   onEditDateGroup?: (date: string, activities: any[]) => void
+  onDeleteDateGroup?: (date: string, activities: any[]) => void
   farmId?: string
 }
 
@@ -38,6 +38,7 @@ export function ActivityFeed({
   onEditRecord,
   onDeleteRecord,
   onEditDateGroup,
+  onDeleteDateGroup,
   farmId
 }: ActivityFeedProps) {
   const router = useRouter()
@@ -224,6 +225,17 @@ export function ActivityFeed({
                           title="Edit all logs for this date"
                         >
                           <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {onDeleteDateGroup && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onDeleteDateGroup(grouped.date, grouped.activities)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-100 flex-shrink-0"
+                          title="Delete all logs for this date"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       )}
                     </div>

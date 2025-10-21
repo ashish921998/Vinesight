@@ -74,8 +74,14 @@ export function UnifiedDataLogsModal({
   const [internalSelectedDate, setInternalSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   )
-  const selectedDateToUse = selectedDate || internalSelectedDate
-  const setSelectedDate = selectedDate ? () => {} : setInternalSelectedDate
+  const selectedDateToUse =
+    mode === 'edit' && existingLogs.length > 0
+      ? existingLogs[0]?.data?.date || selectedDate || internalSelectedDate
+      : selectedDate || internalSelectedDate
+  const setSelectedDate =
+    selectedDate || (mode === 'edit' && existingLogs.length > 0)
+      ? () => {}
+      : setInternalSelectedDate
   const [currentLogType, setCurrentLogType] = useState<LogType | null>(null)
   const [currentFormData, setCurrentFormData] = useState<Record<string, any>>({})
   const [sessionLogs, setSessionLogs] = useState<LogEntry[]>([])
@@ -148,6 +154,10 @@ export function UnifiedDataLogsModal({
       const firstLog = existingLogs[0]
       if (firstLog?.data?.notes) {
         setDayNotes(firstLog.data.notes)
+      }
+      // Set the internal date if selectedDate is provided
+      if (selectedDate) {
+        setInternalSelectedDate(selectedDate)
       }
     }
   }, [isOpen, mode, existingLogs, selectedDate])
@@ -1104,12 +1114,7 @@ export function UnifiedDataLogsModal({
         <div className="flex-1 overflow-y-auto space-y-4">
           {/* Date Selector */}
           <div className="space-y-1">
-            <Label className="text-sm font-medium text-gray-700">
-              Date{' '}
-              {mode === 'edit' && (
-                <span className="text-xs text-gray-500">(Editing logs from this date)</span>
-              )}
-            </Label>
+            <Label className="text-sm font-medium text-gray-700">Date</Label>
             <Input
               type="date"
               value={selectedDateToUse}
@@ -1118,17 +1123,6 @@ export function UnifiedDataLogsModal({
               className="h-9"
               disabled={mode === 'edit'}
             />
-            {mode === 'edit' && selectedDateToUse && (
-              <p className="text-xs text-gray-500">
-                Editing all logs from{' '}
-                {new Date(selectedDateToUse).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </p>
-            )}
           </div>
 
           {/* Current Session Logs */}
@@ -1153,18 +1147,108 @@ export function UnifiedDataLogsModal({
                       <div className="flex items-center gap-2">
                         <Icon className={`h-4 w-4 ${config.color}`} />
                         <div>
-                          <p className="font-medium text-sm">{getLogTypeLabel(log.type)}</p>
+                          <p className="font-medium text-sm">
+                            {(() => {
+                              // Handle spray records with meaningful display
+                              if (log.type === 'spray') {
+                                const chemicals = log.data.chemicals as Chemical[]
+                                if (chemicals && Array.isArray(chemicals) && chemicals.length > 0) {
+                                  const chemicalNames = chemicals
+                                    .filter((chem) => chem.name && chem.name.trim())
+                                    .map((chem) => chem.name.trim())
+                                  if (chemicalNames.length > 0) {
+                                    // Show 1-2 chemicals with truncation for mobile
+                                    const displayChemicals = chemicalNames.slice(0, 2)
+                                    let chemicalDisplay = displayChemicals.join(', ')
+
+                                    // Add indicator if there are more chemicals
+                                    if (chemicalNames.length > 2) {
+                                      chemicalDisplay += ` +${chemicalNames.length - 2}`
+                                    }
+
+                                    // Truncate if too long for mobile
+                                    const maxLength = 25 // Mobile-friendly length
+                                    if (chemicalDisplay.length > maxLength) {
+                                      chemicalDisplay =
+                                        chemicalDisplay.substring(0, maxLength - 3) + '...'
+                                    }
+
+                                    return chemicalDisplay
+                                  }
+                                }
+                                // Fallback for old format
+                                if (log.data.chemical && log.data.chemical.trim()) {
+                                  let chemicalDisplay = log.data.chemical.trim()
+                                  // Truncate if too long for mobile
+                                  const maxLength = 25 // Mobile-friendly length
+                                  if (chemicalDisplay.length > maxLength) {
+                                    chemicalDisplay =
+                                      chemicalDisplay.substring(0, maxLength - 3) + '...'
+                                  }
+                                  return chemicalDisplay
+                                }
+                              }
+
+                              // For other log types, use the standard label
+                              return getLogTypeLabel(log.type)
+                            })()}
+                          </p>
                           <p className="text-xs text-gray-600">
                             {(() => {
+                              // Handle spray records with additional details
+                              if (log.type === 'spray') {
+                                const chemicals = log.data.chemicals as Chemical[]
+                                const waterVolume = log.data.water_volume
+                                const parts = []
+
+                                if (chemicals && Array.isArray(chemicals) && chemicals.length > 0) {
+                                  const validChemicals = chemicals.filter(
+                                    (chem) => chem.name && chem.name.trim()
+                                  )
+                                  if (validChemicals.length > 0) {
+                                    // Show quantities for the first chemical only to save space
+                                    const firstChem = validChemicals[0]
+                                    parts.push(`${firstChem.quantity} ${firstChem.unit}`)
+                                    if (validChemicals.length > 1) {
+                                      parts.push(`${validChemicals.length} chemicals`)
+                                    }
+                                  }
+                                } else if (log.data.chemical && log.data.chemical.trim()) {
+                                  parts.push(log.data.chemical.trim())
+                                }
+
+                                if (waterVolume && waterVolume > 0) {
+                                  parts.push(`${waterVolume}L water`)
+                                }
+
+                                return parts.join(' • ') || 'Spray record'
+                              }
+
+                              // Handle other log types
                               const entries = Object.entries(log.data).filter(([, value]) => value)
                               return entries
                                 .map(([key, value]) => {
-                                  if (key === 'chemicals' && Array.isArray(value)) {
-                                    return `Chemicals: ${formatChemicalsArray(value as Chemical[])}`
+                                  // Skip technical fields
+                                  if (
+                                    [
+                                      'id',
+                                      'farm_id',
+                                      'created_at',
+                                      'updated_at',
+                                      'chemicals',
+                                      'chemical',
+                                      'water_volume'
+                                    ].includes(key)
+                                  ) {
+                                    return null
                                   }
-                                  if (key === 'water_volume') return `Water Volume: ${value} L`
+                                  if (key === 'fertilizer') return `Fertilizer: ${value}`
+                                  if (key === 'duration') return `Duration: ${value} hrs`
+                                  if (key === 'quantity') return `Quantity: ${value} kg`
+                                  if (key === 'cost') return `Cost: ₹${value}`
                                   return `${key.replace(/_/g, ' ')}: ${value}`
                                 })
+                                .filter(Boolean)
                                 .slice(0, 2)
                                 .join(', ')
                             })()}

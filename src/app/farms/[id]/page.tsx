@@ -24,8 +24,6 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-
-// Phase 3A: AI-Powered Components
 import { AIInsightsCarousel } from '@/components/ai/AIInsightsCarousel'
 import { PestPredictionService } from '@/lib/pest-prediction-service'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
@@ -142,7 +140,12 @@ export default function FarmDetailsPage() {
 
       for (let i = 0; i < logs.length; i++) {
         const logEntry = logs[i]
-        const record = await saveLogEntry(logEntry, date, dayNotes)
+        // For edit mode, use the original date from the log entry data to preserve it
+        const dateToUse = editMode === 'edit' ? logEntry.data?.date || date : date
+        const record =
+          editMode === 'edit'
+            ? await updateLogEntry(logEntry, dateToUse, dayNotes)
+            : await saveLogEntry(logEntry, dateToUse, dayNotes)
 
         // Store first record ID for photo upload
         if (i === 0 && record?.id) {
@@ -215,26 +218,42 @@ export default function FarmDetailsPage() {
         }
         break
 
-      case 'spray':
-        record = await SupabaseService.addSprayRecord({
+      case 'spray': {
+        // Handle spray record with chemicals array (new format) or single chemical (old format)
+        const sprayData: any = {
           farm_id: parseInt(farmId),
           date: date,
-          chemical: data.chemical?.trim() || 'Unknown',
-          dose:
-            data.quantity_amount && data.quantity_unit
-              ? `${data.quantity_amount}${data.quantity_unit}`
-              : 'As per label',
-          quantity_amount: data.quantity_amount ? parseFloat(data.quantity_amount) : 0,
-          quantity_unit: data.quantity_unit || 'gm/L',
           water_volume: data.water_volume ? parseFloat(data.water_volume) : 0,
-          chemicals: data.chemicals,
+          chemicals: data.chemicals || [],
           area: dashboardData?.farm?.area || 0,
           weather: 'Clear',
           operator: 'Farm Owner',
           notes: dayNotes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
-        })
+        }
+
+        // Handle legacy single chemical format for backward compatibility
+        if (data.chemicals && Array.isArray(data.chemicals) && data.chemicals.length > 0) {
+          // New format: use chemicals array, set first chemical as primary for backward compatibility
+          const firstChemical = data.chemicals[0]
+          sprayData.chemical = firstChemical.name || 'Unknown'
+          sprayData.quantity_amount = firstChemical.quantity || 0
+          sprayData.quantity_unit = firstChemical.unit || 'gm/L'
+          sprayData.dose = `${firstChemical.quantity || 0}${firstChemical.unit || 'gm/L'}`
+        } else {
+          // Old format: single chemical
+          sprayData.chemical = data.chemical?.trim() || 'Unknown'
+          sprayData.quantity_amount = data.quantity_amount ? parseFloat(data.quantity_amount) : 0
+          sprayData.quantity_unit = data.quantity_unit || 'gm/L'
+          sprayData.dose =
+            data.quantity_amount && data.quantity_unit
+              ? `${data.quantity_amount}${data.quantity_unit}`
+              : 'As per label'
+        }
+
+        record = await SupabaseService.addSprayRecord(sprayData)
         break
+      }
 
       case 'harvest':
         record = await SupabaseService.addHarvestRecord({
@@ -448,6 +467,280 @@ export default function FarmDetailsPage() {
     return record
   }
 
+  const updateLogEntry = async (logEntry: any, date: string, dayNotes: string) => {
+    const { type, data, id } = logEntry
+    let record
+
+    // Extract the original record ID from the log entry
+    const originalId = parseInt(id.toString())
+
+    // Preserve the original date from the log entry data
+    const originalDate = data.date || date
+
+    switch (type) {
+      case 'irrigation':
+        record = await SupabaseService.updateIrrigationRecord(originalId, {
+          farm_id: parseInt(farmId),
+          date: originalDate,
+          duration: parseFloat(data.duration || '0'),
+          area: parseFloat(data.area || '0') || dashboardData?.farm?.area || 0,
+          growth_stage: 'Active',
+          moisture_status: 'Good',
+          system_discharge: dashboardData?.farm?.systemDischarge || 100,
+          notes: dayNotes || '',
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
+        })
+        break
+
+      case 'spray': {
+        // Handle spray record with chemicals array (new format) or single chemical (old format)
+        const sprayData: any = {
+          farm_id: parseInt(farmId),
+          date: originalDate,
+          water_volume: data.water_volume ? parseFloat(data.water_volume) : 0,
+          chemicals: data.chemicals || [],
+          area: dashboardData?.farm?.area || 0,
+          weather: 'Clear',
+          operator: 'Farm Owner',
+          notes: dayNotes || '',
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
+        }
+
+        // Handle legacy single chemical format for backward compatibility
+        if (data.chemicals && Array.isArray(data.chemicals) && data.chemicals.length > 0) {
+          // New format: use chemicals array, set first chemical as primary for backward compatibility
+          const firstChemical = data.chemicals[0]
+          sprayData.chemical = firstChemical.name || 'Unknown'
+          sprayData.quantity_amount = firstChemical.quantity || 0
+          sprayData.quantity_unit = firstChemical.unit || 'gm/L'
+          sprayData.dose = `${firstChemical.quantity || 0}${firstChemical.unit || 'gm/L'}`
+        } else {
+          // Old format: single chemical
+          sprayData.chemical = data.chemical?.trim() || 'Unknown'
+          sprayData.quantity_amount = data.quantity_amount ? parseFloat(data.quantity_amount) : 0
+          sprayData.quantity_unit = data.quantity_unit || 'gm/L'
+          sprayData.dose =
+            data.quantity_amount && data.quantity_unit
+              ? `${data.quantity_amount}${data.quantity_unit}`
+              : 'As per label'
+        }
+
+        record = await SupabaseService.updateSprayRecord(originalId, sprayData)
+        break
+      }
+
+      case 'harvest':
+        record = await SupabaseService.updateHarvestRecord(originalId, {
+          farm_id: parseInt(farmId),
+          date: originalDate,
+          quantity: parseFloat(data.quantity || '0'),
+          grade: data.grade || 'Standard',
+          price: 0,
+          buyer: '',
+          notes: dayNotes || '',
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
+        })
+        break
+
+      case 'expense':
+        record = await SupabaseService.updateExpenseRecord(originalId, {
+          farm_id: parseInt(farmId),
+          date: originalDate,
+          type: data.type || 'other',
+          description: data.description || '',
+          cost: parseFloat(data.cost || '0'),
+          remarks: dayNotes || '',
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
+        })
+        break
+
+      case 'fertigation':
+        record = await SupabaseService.updateFertigationRecord(originalId, {
+          farm_id: parseInt(farmId),
+          date: originalDate,
+          fertilizer: data.fertilizer?.trim() || 'Unknown',
+          dose: data.quantity ? `${data.quantity} kg/L` : 'As per requirement',
+          purpose: 'Nutrient Application',
+          area: dashboardData?.farm?.area || 0,
+          notes: dayNotes || '',
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
+        })
+        break
+
+      case 'soil_test': {
+        const reportMeta = (logEntry.meta?.report || null) as ReportAttachmentMeta | null
+
+        const combineNotes = [dayNotes]
+        if (reportMeta?.summary) combineNotes.push(reportMeta.summary)
+
+        const parsedParameters = reportMeta?.parsedParameters || {}
+        const combinedParameters: Record<string, number> = {}
+
+        const mapSoilKey = (key: string) => {
+          const normalized = key.toLowerCase()
+          // Create stripped version by removing separators for compound name matching
+          const stripped = normalized.replace(/[_\-\s]/g, '')
+
+          if (normalized === 'ph' || normalized === 'soilph') return 'pH'
+
+          if (normalized === 'nitrogen' || normalized === 'n') return 'nitrogen'
+          if (normalized === 'phosphorus' || normalized === 'p') return 'phosphorus'
+          if (normalized === 'potassium' || normalized === 'k') return 'potassium'
+
+          if (
+            normalized === 'ec' ||
+            stripped === 'electricalconductivity' ||
+            normalized === 'soilec'
+          )
+            return 'ec'
+
+          if (stripped === 'calciumcarbonate' || stripped === 'caco3') return 'calciumCarbonate'
+          if (stripped === 'organiccarbon' || normalized === 'oc') return 'organicCarbon'
+          if (stripped === 'organicmatter') return 'organicMatter'
+
+          if (stripped === 'calcium') return 'calcium'
+          if (stripped === 'magnesium') return 'magnesium'
+          if (stripped === 'sulphur' || stripped === 'sulfur' || normalized === 's') return 'sulfur'
+          if (stripped === 'iron' || stripped === 'ferrous') return 'iron'
+          if (stripped === 'manganese') return 'manganese'
+          if (stripped === 'zinc') return 'zinc'
+          if (stripped === 'copper') return 'copper'
+          if (stripped === 'boron') return 'boron'
+          if (stripped === 'molybdenum') return 'molybdenum'
+          if (stripped === 'sodium') return 'sodium'
+          if (stripped === 'chloride') return 'chloride'
+
+          if (stripped === 'bicarbonate' || normalized === 'hco3') return 'bicarbonate'
+          if (stripped === 'carbonate' || normalized === 'co3') return 'carbonate'
+
+          return key
+        }
+
+        Object.entries(parsedParameters).forEach(([key, value]) => {
+          let numericValue: number | undefined
+          if (typeof value === 'number') {
+            numericValue = Number.isFinite(value) ? value : undefined
+          } else if (typeof value === 'string') {
+            const parsed = parseFloat(value)
+            numericValue = Number.isFinite(parsed) ? parsed : undefined
+          }
+
+          if (numericValue === undefined) return
+          const mappedKey = mapSoilKey(key)
+          combinedParameters[mappedKey] = numericValue
+        })
+
+        const manualEntries: Array<[string, number]> = [
+          ['pH', parseFloat(data.ph ?? '')],
+          ['ec', parseFloat(data.ec ?? '')],
+          ['organicCarbon', parseFloat(data.organicCarbon ?? '')],
+          ['organicMatter', parseFloat(data.organicMatter ?? '')],
+          ['nitrogen', parseFloat(data.nitrogen ?? '')],
+          ['phosphorus', parseFloat(data.phosphorus ?? '')],
+          ['potassium', parseFloat(data.potassium ?? '')]
+        ]
+
+        const additionalEntries: Array<[string, number]> = [
+          ['calcium', parseFloat(data.calcium ?? '')],
+          ['magnesium', parseFloat(data.magnesium ?? '')],
+          ['sulfur', parseFloat(data.sulfur ?? data.sulphur ?? '')],
+          ['iron', parseFloat(data.iron ?? data.ferrous ?? '')],
+          ['manganese', parseFloat(data.manganese ?? '')],
+          ['zinc', parseFloat(data.zinc ?? '')],
+          ['copper', parseFloat(data.copper ?? '')],
+          ['boron', parseFloat(data.boron ?? '')],
+          ['molybdenum', parseFloat(data.molybdenum ?? '')],
+          ['sodium', parseFloat(data.sodium ?? '')],
+          ['chloride', parseFloat(data.chloride ?? '')],
+          ['calciumCarbonate', parseFloat(data.calciumCarbonate ?? '')],
+          ['carbonate', parseFloat(data.carbonate ?? '')],
+          ['bicarbonate', parseFloat(data.bicarbonate ?? '')]
+        ]
+
+        additionalEntries.forEach(([key, value]) => {
+          if (Number.isFinite(value)) {
+            combinedParameters[key] = value
+          }
+        })
+
+        manualEntries.forEach(([key, value]) => {
+          if (Number.isFinite(value)) {
+            combinedParameters[key] = value
+          }
+        })
+
+        record = await SupabaseService.updateSoilTestRecord(originalId, {
+          farm_id: parseInt(farmId),
+          date: originalDate,
+          parameters: combinedParameters,
+          notes: combineNotes.filter(Boolean).join(' | ') || '',
+          report_url: reportMeta?.signedUrl,
+          report_storage_path: reportMeta?.storagePath,
+          report_filename: reportMeta?.filename,
+          report_type: reportMeta?.reportType,
+          extraction_status: reportMeta?.extractionStatus,
+          extraction_error: reportMeta?.extractionError,
+          parsed_parameters: reportMeta?.parsedParameters,
+          raw_notes: reportMeta?.rawNotes ?? undefined,
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
+        })
+        break
+      }
+
+      case 'petiole_test': {
+        // Create parameters object with all the nutrient values
+        const reportMeta = (logEntry.meta?.report || null) as ReportAttachmentMeta | null
+
+        const combineNotes = [dayNotes]
+        if (reportMeta?.summary) combineNotes.push(reportMeta.summary)
+
+        const parameters: Record<string, number> = { ...(reportMeta?.parsedParameters || {}) }
+
+        const pushParameter = (key: string, rawValue: unknown) => {
+          const numericValue =
+            typeof rawValue === 'string' ? parseFloat(rawValue) : Number(rawValue)
+          if (Number.isFinite(numericValue)) {
+            parameters[key] = numericValue
+          }
+        }
+
+        pushParameter('total_nitrogen', data.total_nitrogen)
+        pushParameter('phosphorus', data.phosphorus)
+        pushParameter('potassium', data.potassium)
+        pushParameter('calcium', data.calcium)
+        pushParameter('magnesium', data.magnesium)
+        pushParameter('sulfur', data.sulphur)
+        pushParameter('iron', data.ferrous)
+        pushParameter('manganese', data.manganese)
+        pushParameter('zinc', data.zinc)
+        pushParameter('copper', data.copper)
+        pushParameter('boron', data.boron)
+        pushParameter('nitrate_nitrogen', data.nitrate_nitrogen)
+        pushParameter('ammonium_nitrogen', data.ammonical_nitrogen)
+
+        record = await SupabaseService.updatePetioleTestRecord(originalId, {
+          farm_id: parseInt(farmId),
+          date: originalDate,
+          sample_id: data.sample_id || '',
+          parameters,
+          notes: combineNotes.filter(Boolean).join(' | ') || '',
+          report_url: reportMeta?.signedUrl,
+          report_storage_path: reportMeta?.storagePath,
+          report_filename: reportMeta?.filename,
+          report_type: reportMeta?.reportType,
+          extraction_status: reportMeta?.extractionStatus,
+          extraction_error: reportMeta?.extractionError,
+          parsed_parameters: reportMeta?.parsedParameters,
+          raw_notes: reportMeta?.rawNotes ?? undefined,
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
+        })
+        break
+      }
+    }
+
+    return record
+  }
+
   const handleEditRecord = (record: any, recordType: string) => {
     setEditingRecord(record)
     setShowEditModal(true)
@@ -463,11 +756,62 @@ export default function FarmDetailsPage() {
     // Convert activities to LogEntry format for UnifiedDataLogsModal
     const existingLogs = transformActivitiesToLogEntries(activities)
 
+    // Ensure date is in YYYY-MM-DD format for the date input
+    const formattedDate = new Date(date).toISOString().split('T')[0]
+
     // Set up the edit modal with existing logs
     setEditModeLogs(existingLogs)
-    setEditModeDate(date)
+    setEditModeDate(formattedDate)
     setEditMode('edit')
     setShowDataLogsModal(true)
+  }
+
+  // New handler for deleting date groups
+  const handleDeleteDateGroup = async (date: string, activities: any[]) => {
+    if (
+      !confirm(
+        `Are you sure you want to delete all ${activities.length} logs from ${date}? This action cannot be undone.`
+      )
+    ) {
+      return
+    }
+
+    try {
+      setIsDeleting(true)
+
+      // Delete each activity in the group
+      for (const activity of activities) {
+        switch (activity.type) {
+          case 'irrigation':
+            await SupabaseService.deleteIrrigationRecord(activity.id)
+            break
+          case 'spray':
+            await SupabaseService.deleteSprayRecord(activity.id)
+            break
+          case 'harvest':
+            await SupabaseService.deleteHarvestRecord(activity.id)
+            break
+          case 'fertigation':
+            await SupabaseService.deleteFertigationRecord(activity.id)
+            break
+          case 'expense':
+            await SupabaseService.deleteExpenseRecord(activity.id)
+            break
+          case 'soil_test':
+            await SupabaseService.deleteSoilTestRecord(activity.id)
+            break
+          case 'petiole_test':
+            await SupabaseService.deletePetioleTestRecord(activity.id)
+            break
+        }
+      }
+
+      await loadDashboardData()
+    } catch (error) {
+      console.error('Error deleting date group:', error)
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const confirmDeleteRecord = async () => {
@@ -599,6 +943,7 @@ export default function FarmDetailsPage() {
           onEditRecord={handleEditRecord}
           onDeleteRecord={handleDeleteRecord}
           onEditDateGroup={handleEditDateGroup}
+          onDeleteDateGroup={handleDeleteDateGroup}
           farmId={farmId}
         />
 
@@ -607,7 +952,6 @@ export default function FarmDetailsPage() {
           isOpen={showDataLogsModal}
           onClose={() => {
             setShowDataLogsModal(false)
-            // Reset edit mode state when closing
             setEditMode('add')
             setEditModeLogs([])
             setEditModeDate('')
