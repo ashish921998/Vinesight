@@ -49,6 +49,9 @@ interface UnifiedDataLogsModalProps {
   onSubmit: (logs: LogEntry[], date: string, dayNotes: string, dayPhotos: File[]) => void
   isSubmitting: boolean
   farmId?: number
+  mode?: 'add' | 'edit'
+  existingLogs?: LogEntry[]
+  selectedDate?: string
 }
 
 // Use centralized logTypeConfigs from @/lib/log-type-config
@@ -63,9 +66,16 @@ export function UnifiedDataLogsModal({
   onClose,
   onSubmit,
   isSubmitting,
-  farmId
+  farmId,
+  mode = 'add',
+  existingLogs = [],
+  selectedDate
 }: UnifiedDataLogsModalProps) {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [internalSelectedDate, setInternalSelectedDate] = useState(
+    new Date().toISOString().split('T')[0]
+  )
+  const selectedDateToUse = selectedDate || internalSelectedDate
+  const setSelectedDate = selectedDate ? () => {} : setInternalSelectedDate
   const [currentLogType, setCurrentLogType] = useState<LogType | null>(null)
   const [currentFormData, setCurrentFormData] = useState<Record<string, any>>({})
   const [sessionLogs, setSessionLogs] = useState<LogEntry[]>([])
@@ -96,14 +106,17 @@ export function UnifiedDataLogsModal({
     Array<{ id: string; data: Record<string, any>; isValid: boolean }>
   >([])
 
-  // Reset modal state when opened/closed
+  // Initialize modal state when opened or when mode/existingLogs change
   useEffect(() => {
     if (!isOpen) {
+      // Reset state when closing
       setCurrentLogType(null)
       setCurrentFormData({})
       setSessionLogs([])
       setEditingLogId(null)
-      setSelectedDate(new Date().toISOString().split('T')[0])
+      if (!selectedDate) {
+        setInternalSelectedDate(new Date().toISOString().split('T')[0])
+      }
       setDayNotes('')
       setDayPhotos([])
       setMultipleSprayMode(false)
@@ -115,8 +128,16 @@ export function UnifiedDataLogsModal({
       setCurrentReport(null)
       setReportUploadError(null)
       setIsUploadingReport(false)
+    } else if (mode === 'edit' && existingLogs.length > 0) {
+      // Initialize with existing logs for edit mode
+      setSessionLogs(existingLogs)
+      // Extract day notes from the first log if available
+      const firstLog = existingLogs[0]
+      if (firstLog?.data?.notes) {
+        setDayNotes(firstLog.data.notes)
+      }
     }
-  }, [isOpen])
+  }, [isOpen, mode, existingLogs, selectedDate])
 
   // Reset current form when log type changes
   useEffect(() => {
@@ -580,7 +601,7 @@ export function UnifiedDataLogsModal({
 
   const handleSaveAllLogs = () => {
     if (sessionLogs.length === 0) return
-    onSubmit(sessionLogs, selectedDate, dayNotes, dayPhotos)
+    onSubmit(sessionLogs, selectedDateToUse, dayNotes, dayPhotos)
   }
 
   const renderSprayEntryField = (
@@ -953,7 +974,7 @@ export function UnifiedDataLogsModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-2xl max-h-[90vh] md:max-h-[85vh] overflow-y-auto touch-auto"
+        className="max-w-2xl max-h-[90vh] md:max-h-[85vh] flex flex-col touch-auto"
         style={{
           WebkitOverflowScrolling: 'touch',
           userSelect: 'auto',
@@ -961,24 +982,41 @@ export function UnifiedDataLogsModal({
           touchAction: 'pan-y'
         }}
       >
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-green-600" />
-            Add Data Logs
+            {mode === 'edit' ? 'Edit Data Logs' : 'Add Data Logs'}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
+        <div className="flex-1 overflow-y-auto space-y-4">
           {/* Date Selector */}
           <div className="space-y-1">
-            <Label className="text-sm font-medium text-gray-700">Date</Label>
+            <Label className="text-sm font-medium text-gray-700">
+              Date{' '}
+              {mode === 'edit' && (
+                <span className="text-xs text-gray-500">(Editing logs from this date)</span>
+              )}
+            </Label>
             <Input
               type="date"
-              value={selectedDate}
+              value={selectedDateToUse}
               onChange={(e) => setSelectedDate(e.target.value)}
               max={new Date().toISOString().split('T')[0]}
               className="h-9"
+              disabled={mode === 'edit'}
             />
+            {mode === 'edit' && selectedDateToUse && (
+              <p className="text-xs text-gray-500">
+                Editing all logs from{' '}
+                {new Date(selectedDateToUse).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+            )}
           </div>
 
           {/* Current Session Logs */}
@@ -1417,7 +1455,7 @@ export function UnifiedDataLogsModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-4 border-t">
+        <div className="flex-shrink-0 flex items-center justify-between pt-4 border-t">
           <div className="text-sm text-gray-500">
             {sessionLogs.length} log{sessionLogs.length !== 1 ? 's' : ''} ready to save
             {dayNotes && <span className="ml-2">• Notes included</span>}

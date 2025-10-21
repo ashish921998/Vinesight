@@ -32,6 +32,7 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Farm } from '@/types/types'
 import { capitalize } from '@/lib/utils'
+import { transformActivitiesToLogEntries } from '@/lib/activity-display-utils'
 
 interface DashboardData {
   farm: Farm | null
@@ -69,6 +70,11 @@ export default function FarmDetailsPage() {
   const [deletingRecord, setDeletingRecord] = useState<any>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // Edit mode state for UnifiedDataLogsModal
+  const [editModeLogs, setEditModeLogs] = useState<any[]>([])
+  const [editModeDate, setEditModeDate] = useState<string>('')
+  const [editMode, setEditMode] = useState<'add' | 'edit'>('add')
 
   // Farm edit modal states
   const [showFarmModal, setShowFarmModal] = useState(false)
@@ -221,7 +227,7 @@ export default function FarmDetailsPage() {
           quantity_amount: data.quantity_amount ? parseFloat(data.quantity_amount) : 0,
           quantity_unit: data.quantity_unit || 'gm/L',
           water_volume: data.water_volume ? parseFloat(data.water_volume) : 0,
-          chemicals: data.chemicals || null,
+          chemicals: data.chemicals,
           area: dashboardData?.farm?.area || 0,
           weather: 'Clear',
           operator: 'Farm Owner',
@@ -452,6 +458,18 @@ export default function FarmDetailsPage() {
     setShowDeleteDialog(true)
   }
 
+  // New handler for editing date groups
+  const handleEditDateGroup = (date: string, activities: any[]) => {
+    // Convert activities to LogEntry format for UnifiedDataLogsModal
+    const existingLogs = transformActivitiesToLogEntries(activities)
+
+    // Set up the edit modal with existing logs
+    setEditModeLogs(existingLogs)
+    setEditModeDate(date)
+    setEditMode('edit')
+    setShowDataLogsModal(true)
+  }
+
   const confirmDeleteRecord = async () => {
     if (!deletingRecord) return
 
@@ -580,16 +598,26 @@ export default function FarmDetailsPage() {
           onCompleteTask={completeTask}
           onEditRecord={handleEditRecord}
           onDeleteRecord={handleDeleteRecord}
+          onEditDateGroup={handleEditDateGroup}
           farmId={farmId}
         />
 
         {/* Unified Data Logs Modal */}
         <UnifiedDataLogsModal
           isOpen={showDataLogsModal}
-          onClose={() => setShowDataLogsModal(false)}
+          onClose={() => {
+            setShowDataLogsModal(false)
+            // Reset edit mode state when closing
+            setEditMode('add')
+            setEditModeLogs([])
+            setEditModeDate('')
+          }}
           onSubmit={handleDataLogsSubmit}
           isSubmitting={isSubmitting}
           farmId={parseInt(farmId)}
+          mode={editMode}
+          existingLogs={editModeLogs}
+          selectedDate={editModeDate}
         />
 
         {/* Water Calculation Modal */}
