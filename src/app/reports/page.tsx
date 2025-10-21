@@ -836,13 +836,17 @@ export default function UnifiedReportsPage() {
                                     <span className="text-muted-foreground block text-xs">
                                       Chemical
                                     </span>
-                                    <span className="font-medium">{record.chemical}</span>
+                                    <span className="font-medium">
+                                      {record.chemical?.trim() || 'N/A'}
+                                    </span>
                                   </div>
                                   <div className="bg-gray-50 p-2 rounded">
                                     <span className="text-muted-foreground block text-xs">
                                       Dose
                                     </span>
-                                    <span className="font-medium">{record.dose}</span>
+                                    <span className="font-medium">
+                                      {record.dose?.trim() || 'N/A'}
+                                    </span>
                                   </div>
                                   <div className="bg-gray-50 p-2 rounded">
                                     <span className="text-muted-foreground block text-xs">

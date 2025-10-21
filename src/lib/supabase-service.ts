@@ -138,6 +138,56 @@ export class SupabaseService {
     record: Omit<IrrigationRecord, 'id' | 'created_at'>
   ): Promise<IrrigationRecord> {
     const supabase = getTypedSupabaseClient()
+
+    // Validate duration if provided
+    if (record.duration !== undefined && record.duration !== null) {
+      // Validate duration is strictly greater than 0
+      if (record.duration <= 0 || !isFinite(record.duration)) {
+        throw new Error('Duration must be greater than 0')
+      }
+
+      // Validate duration is within reasonable bounds (max 24 hours)
+      if (record.duration > 24) {
+        throw new Error('Duration cannot exceed 24 hours')
+      }
+    }
+
+    // Validate area if provided
+    if (record.area !== undefined && record.area !== null) {
+      // Check for NaN and Infinity
+      if (isNaN(record.area) || !isFinite(record.area)) {
+        throw new Error('Area must be a valid number')
+      }
+
+      // Validate area is strictly greater than 0
+      if (record.area <= 0) {
+        throw new Error('Area must be greater than 0')
+      }
+
+      // Validate area is within reasonable bounds
+      if (record.area > 25000) {
+        throw new Error('Area cannot exceed 25,000 acres')
+      }
+    }
+
+    // Validate system_discharge if provided
+    if (record.system_discharge !== undefined && record.system_discharge !== null) {
+      // Check for NaN and Infinity
+      if (isNaN(record.system_discharge) || !isFinite(record.system_discharge)) {
+        throw new Error('System discharge must be a valid number')
+      }
+
+      // Validate system_discharge is strictly greater than 0
+      if (record.system_discharge <= 0) {
+        throw new Error('System discharge must be greater than 0')
+      }
+
+      // Validate system_discharge is within reasonable bounds
+      if (record.system_discharge > 10000) {
+        throw new Error('System discharge cannot exceed 10,000 L/h')
+      }
+    }
+
     const dbRecord = toDatabaseIrrigationInsert(record)
 
     const { data, error } = await supabase
@@ -155,6 +205,61 @@ export class SupabaseService {
     updates: Partial<IrrigationRecord>
   ): Promise<IrrigationRecord> {
     const supabase = getTypedSupabaseClient()
+
+    // Validate duration if provided
+    if (updates.duration !== undefined && updates.duration !== null) {
+      // Check for NaN and Infinity
+      if (isNaN(updates.duration) || !isFinite(updates.duration)) {
+        throw new Error('Duration must be a valid number')
+      }
+
+      // Validate duration is strictly greater than 0
+      if (updates.duration <= 0) {
+        throw new Error('Duration must be greater than 0')
+      }
+
+      // Validate duration is within reasonable bounds (max 24 hours)
+      if (updates.duration > 24) {
+        throw new Error('Duration cannot exceed 24 hours')
+      }
+    }
+
+    // Validate area if provided
+    if (updates.area !== undefined && updates.area !== null) {
+      // Check for NaN and Infinity
+      if (isNaN(updates.area) || !isFinite(updates.area)) {
+        throw new Error('Area must be a valid number')
+      }
+
+      // Validate area is strictly greater than 0
+      if (updates.area <= 0) {
+        throw new Error('Area must be greater than 0')
+      }
+
+      // Validate area is within reasonable bounds
+      if (updates.area > 25000) {
+        throw new Error('Area cannot exceed 25,000 acres')
+      }
+    }
+
+    // Validate system_discharge if provided
+    if (updates.system_discharge !== undefined && updates.system_discharge !== null) {
+      // Check for NaN and Infinity
+      if (isNaN(updates.system_discharge) || !isFinite(updates.system_discharge)) {
+        throw new Error('System discharge must be a valid number')
+      }
+
+      // Validate system_discharge is strictly greater than 0
+      if (updates.system_discharge <= 0) {
+        throw new Error('System discharge must be greater than 0')
+      }
+
+      // Validate system_discharge is within reasonable bounds
+      if (updates.system_discharge > 10000) {
+        throw new Error('System discharge cannot exceed 10,000 L/h')
+      }
+    }
+
     const dbUpdates = toDatabaseIrrigationUpdate(updates)
 
     const { data, error } = await supabase
@@ -197,19 +302,115 @@ export class SupabaseService {
     if (record.chemicals && record.chemicals.length > 0) {
       // Ensure each chemical has the required fields
       for (const chemical of record.chemicals) {
-        if (!chemical.name || chemical.quantity === undefined || !chemical.unit) {
-          throw new Error('Each chemical must have name, quantity, and unit fields')
+        // Validate chemical name
+        const trimmedName = chemical.name.trim()
+        if (!trimmedName) {
+          throw new Error('Chemical name is required and cannot be empty')
         }
+
+        // Validate chemical name length
+        if (trimmedName.length > 100) {
+          throw new Error('Chemical name must be less than 100 characters')
+        }
+
+        // Validate quantity is provided and is a valid number
+        if (chemical.quantity === undefined || chemical.quantity === null) {
+          throw new Error('Chemical quantity is required')
+        }
+
+        // Check for NaN and Infinity
+        if (isNaN(chemical.quantity) || !isFinite(chemical.quantity)) {
+          throw new Error('Chemical quantity must be a valid number')
+        }
+
+        // Validate quantity is strictly greater than 0
+        if (chemical.quantity <= 0) {
+          throw new Error('Chemical quantity must be greater than 0')
+        }
+
+        // Validate unit is provided
+        if (!chemical.unit) {
+          throw new Error('Chemical unit is required')
+        }
+
+        // Trim unit once into local variable
+        const unit = chemical.unit.trim()
+
         // Validate unit is one of the allowed values
-        if (!['gm/L', 'ml/L'].includes(chemical.unit)) {
+        if (!['gm/L', 'ml/L'].includes(unit)) {
           throw new Error('Chemical unit must be either "gm/L" or "ml/L"')
         }
+
+        // Assign/store sanitized trimmed value back to object with proper type assertion
+        chemical.unit = unit as 'gm/L' | 'ml/L'
       }
     }
 
-    // Validate water_volume is a positive number if provided
-    if (record.water_volume !== undefined && record.water_volume < 0) {
-      throw new Error('Water volume must be a positive number')
+    // Validate water_volume if provided
+    if (record.water_volume !== undefined && record.water_volume !== null) {
+      // Check for NaN and Infinity
+      if (isNaN(record.water_volume) || !isFinite(record.water_volume)) {
+        throw new Error('Water volume must be a valid number')
+      }
+
+      // Validate water_volume is strictly greater than 0
+      if (record.water_volume <= 0) {
+        throw new Error('Water volume must be greater than 0')
+      }
+    }
+
+    // Validate quantity_amount if provided
+    if (record.quantity_amount !== undefined && record.quantity_amount !== null) {
+      // Check for NaN and Infinity
+      if (isNaN(record.quantity_amount) || !isFinite(record.quantity_amount)) {
+        throw new Error('Quantity amount must be a valid number')
+      }
+
+      // Validate quantity_amount is strictly greater than 0
+      if (record.quantity_amount <= 0) {
+        throw new Error('Quantity amount must be greater than 0')
+      }
+    }
+
+    // Validate quantity_unit - if quantity_amount is provided, unit is required
+    if (record.quantity_amount !== undefined && record.quantity_amount !== null) {
+      // quantity_amount is provided, so unit is required
+      if (!record.quantity_unit || typeof record.quantity_unit !== 'string') {
+        throw new Error('Quantity unit is required when quantity amount is provided')
+      }
+
+      const unit = record.quantity_unit.trim()
+      if (!unit) {
+        throw new Error('Quantity unit cannot be empty when quantity amount is provided')
+      }
+
+      if (!['gm/L', 'ml/L'].includes(unit)) {
+        throw new Error('Quantity unit must be either "gm/L" or "ml/L"')
+      }
+
+      // Assign/store sanitized trimmed value back to record with proper type assertion
+      record.quantity_unit = unit as 'gm/L' | 'ml/L'
+    } else if (record.quantity_unit) {
+      // quantity_amount is not provided, but unit is - validate it anyway
+      const unit = record.quantity_unit.trim()
+      if (unit && !['gm/L', 'ml/L'].includes(unit)) {
+        throw new Error('Quantity unit must be either "gm/L" or "ml/L"')
+      }
+      // Assign/store sanitized trimmed value back to record with proper type assertion
+      record.quantity_unit = unit as 'gm/L' | 'ml/L'
+    }
+
+    // Validate area if provided
+    if (record.area !== undefined && record.area !== null) {
+      // Check for NaN and Infinity
+      if (isNaN(record.area) || !isFinite(record.area)) {
+        throw new Error('Area must be a valid number')
+      }
+
+      // Validate area is strictly greater than 0
+      if (record.area <= 0) {
+        throw new Error('Area must be greater than 0')
+      }
     }
 
     const dbRecord = toDatabaseSprayInsert(record)
@@ -226,6 +427,121 @@ export class SupabaseService {
 
   static async updateSprayRecord(id: number, updates: Partial<SprayRecord>): Promise<SprayRecord> {
     const supabase = getTypedSupabaseClient()
+
+    // Validate the chemicals array if provided
+    if (updates.chemicals && updates.chemicals.length > 0) {
+      // Ensure each chemical has the required fields
+      for (const chemical of updates.chemicals) {
+        // Validate chemical name
+        if (!chemical.name || !chemical.name.trim()) {
+          throw new Error('Chemical name is required and cannot be empty')
+        }
+
+        // Validate chemical name length
+        if (chemical.name.trim().length > 100) {
+          throw new Error('Chemical name must be less than 100 characters')
+        }
+
+        // Validate quantity is provided and is a valid number
+        if (chemical.quantity === undefined || chemical.quantity === null) {
+          throw new Error('Chemical quantity is required')
+        }
+
+        // Check for NaN and Infinity
+        if (isNaN(chemical.quantity) || !isFinite(chemical.quantity)) {
+          throw new Error('Chemical quantity must be a valid number')
+        }
+
+        // Validate quantity is strictly greater than 0
+        if (chemical.quantity <= 0) {
+          throw new Error('Chemical quantity must be greater than 0')
+        }
+
+        // Validate unit is provided
+        if (!chemical.unit) {
+          throw new Error('Chemical unit is required')
+        }
+
+        // Trim unit once into local variable
+        const unit = chemical.unit.trim()
+
+        // Validate unit is one of the allowed values
+        if (!['gm/L', 'ml/L'].includes(unit)) {
+          throw new Error('Chemical unit must be either "gm/L" or "ml/L"')
+        }
+
+        // Assign/store sanitized trimmed value back to object with proper type assertion
+        chemical.unit = unit as 'gm/L' | 'ml/L'
+      }
+    }
+
+    // Validate water_volume if provided
+    if (updates.water_volume !== undefined && updates.water_volume !== null) {
+      // Check for NaN and Infinity
+      if (isNaN(updates.water_volume) || !isFinite(updates.water_volume)) {
+        throw new Error('Water volume must be a valid number')
+      }
+
+      // Validate water_volume is strictly greater than 0
+      if (updates.water_volume <= 0) {
+        throw new Error('Water volume must be greater than 0')
+      }
+    }
+
+    // Validate quantity_amount if provided
+    if (updates.quantity_amount !== undefined && updates.quantity_amount !== null) {
+      // Check for NaN and Infinity
+      if (isNaN(updates.quantity_amount) || !isFinite(updates.quantity_amount)) {
+        throw new Error('Quantity amount must be a valid number')
+      }
+
+      // Validate quantity_amount is strictly greater than 0
+      if (updates.quantity_amount <= 0) {
+        throw new Error('Quantity amount must be greater than 0')
+      }
+    }
+
+    // Validate quantity_unit - if quantity_amount is provided, unit is required
+    if (updates.quantity_amount !== undefined && updates.quantity_amount !== null) {
+      // quantity_amount is provided, so unit is required
+      if (!updates.quantity_unit || typeof updates.quantity_unit !== 'string') {
+        throw new Error('Quantity unit is required when quantity amount is provided')
+      }
+
+      const unit = updates.quantity_unit.trim()
+      if (!unit) {
+        throw new Error('Quantity unit cannot be empty when quantity amount is provided')
+      }
+
+      if (!['gm/L', 'ml/L'].includes(unit)) {
+        throw new Error('Quantity unit must be either "gm/L" or "ml/L"')
+      }
+
+      // Assign/store sanitized trimmed value back to updates with proper type assertion
+      updates.quantity_unit = unit as 'gm/L' | 'ml/L'
+    } else if (updates.quantity_unit) {
+      // quantity_amount is not provided, but unit is - validate it anyway
+      const unit = updates.quantity_unit.trim()
+      if (unit && !['gm/L', 'ml/L'].includes(unit)) {
+        throw new Error('Quantity unit must be either "gm/L" or "ml/L"')
+      }
+      // Assign/store sanitized trimmed value back to updates with proper type assertion
+      updates.quantity_unit = unit as 'gm/L' | 'ml/L'
+    }
+
+    // Validate area if provided
+    if (updates.area !== undefined && updates.area !== null) {
+      // Check for NaN and Infinity
+      if (isNaN(updates.area) || !isFinite(updates.area)) {
+        throw new Error('Area must be a valid number')
+      }
+
+      // Validate area is strictly greater than 0
+      if (updates.area <= 0) {
+        throw new Error('Area must be greater than 0')
+      }
+    }
+
     const dbUpdates = toDatabaseSprayUpdate(updates)
 
     const { data, error } = await supabase
