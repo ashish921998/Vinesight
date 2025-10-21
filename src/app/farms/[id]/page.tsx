@@ -221,6 +221,7 @@ export default function FarmDetailsPage() {
           quantity_amount: data.quantity_amount ? parseFloat(data.quantity_amount) : 0,
           quantity_unit: data.quantity_unit || 'gm/L',
           water_volume: data.water_volume ? parseFloat(data.water_volume) : 0,
+          chemicals: data.chemicals || null,
           area: dashboardData?.farm?.area || 0,
           weather: 'Clear',
           operator: 'Farm Owner',

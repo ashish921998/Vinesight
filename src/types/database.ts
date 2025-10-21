@@ -1529,6 +1529,7 @@ export type Database = {
         Row: {
           area: number
           chemical: string
+          chemicals: Json
           created_at: string | null
           date: string
           date_of_pruning: Date | null
@@ -1538,13 +1539,14 @@ export type Database = {
           notes: string | null
           operator: string
           weather: string
-          water_volume: number
+          water_volume: number | null
           quantity_amount: number
           quantity_unit: string
         }
         Insert: {
           area: number
           chemical: string
+          chemicals?: Json
           created_at?: string | null
           date: string
           date_of_pruning?: Date | null
@@ -1561,6 +1563,7 @@ export type Database = {
         Update: {
           area?: number
           chemical?: string
+          chemicals?: Json
           created_at?: string | null
           date?: string
           date_of_pruning?: Date | null

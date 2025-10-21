@@ -40,15 +40,23 @@ export interface IrrigationRecord {
   created_at?: string
 }
 
+// Chemical object type for the chemicals array
+export interface SprayChemical {
+  name: string
+  quantity: number
+  unit: 'gm/L' | 'ml/L'
+}
+
 export interface SprayRecord {
   id?: number
   farm_id: number
   date: string
-  chemical: string
+  chemical: string // Keeping for backward compatibility
   dose: string
   quantity_amount: number
   quantity_unit: string // 'gm/L' or 'ml/L'
   water_volume: number // total water volume in liters
+  chemicals?: SprayChemical[] // New array of chemicals for multiple chemicals support
   area: number // in acres
   weather: string
   operator: string

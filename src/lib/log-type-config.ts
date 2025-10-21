@@ -62,37 +62,13 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
     label: 'Spray Record',
     fields: [
       {
-        name: 'chemical',
-        type: 'text',
-        label: 'Chemical Used',
-        required: true,
-        placeholder: 'e.g., Sulfur fungicide',
-        maxLength: 1000
-      },
-      {
-        name: 'quantity_amount',
-        type: 'number',
-        label: 'Quantity Amount',
-        required: false,
-        min: 0,
-        step: 0.1,
-        placeholder: 'e.g., 500'
-      },
-      {
-        name: 'quantity_unit',
-        type: 'select',
-        label: 'Unit',
-        required: false,
-        options: ['gm/L', 'ml/L']
-      },
-      {
         name: 'water_volume',
         type: 'number',
         label: 'Water Volume (L)',
-        required: false,
+        required: true,
         min: 0,
         step: 0.1,
-        placeholder: 'Total water used'
+        placeholder: 'e.g., 1000'
       }
     ]
   },

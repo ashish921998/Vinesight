@@ -1,10 +1,11 @@
 // Type adapters to bridge application types with Supabase database types
-import { Database } from '@/types/database'
+import { Database, Json } from '@/types/database'
 
 // Import application types from both sources
 import type {
   IrrigationRecord,
   SprayRecord,
+  SprayChemical,
   FertigationRecord,
   HarvestRecord,
   ExpenseRecord,
@@ -19,6 +20,7 @@ export type {
   TaskReminder,
   IrrigationRecord,
   SprayRecord,
+  SprayChemical,
   FertigationRecord,
   HarvestRecord,
   ExpenseRecord,
@@ -264,7 +266,10 @@ export function toApplicationSprayRecord(
     dose: dbRecord.dose,
     quantity_amount: dbRecord.quantity_amount,
     quantity_unit: dbRecord.quantity_unit,
-    water_volume: dbRecord.water_volume,
+    water_volume: dbRecord.water_volume || 0,
+    chemicals: dbRecord.chemicals
+      ? (dbRecord.chemicals as unknown as import('./supabase').SprayChemical[])
+      : undefined,
     area: dbRecord.area,
     weather: dbRecord.weather,
     operator: dbRecord.operator,
@@ -284,7 +289,11 @@ export function toDatabaseSprayInsert(
     dose: appRecord.dose,
     quantity_amount: appRecord.quantity_amount,
     quantity_unit: appRecord.quantity_unit,
-    water_volume: appRecord.water_volume,
+    water_volume: appRecord.water_volume || 0, // Default to 0 if not provided
+    chemicals:
+      appRecord.chemicals && appRecord.chemicals.length > 0
+        ? (appRecord.chemicals as unknown as Json)
+        : null, // Only store if array has items
     area: appRecord.area,
     weather: appRecord.weather,
     date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
@@ -302,6 +311,15 @@ export function toDatabaseSprayUpdate(
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.chemical !== undefined) update.chemical = appUpdates.chemical
   if (appUpdates.dose !== undefined) update.dose = appUpdates.dose
+  if (appUpdates.quantity_amount !== undefined) update.quantity_amount = appUpdates.quantity_amount
+  if (appUpdates.quantity_unit !== undefined) update.quantity_unit = appUpdates.quantity_unit
+  if (appUpdates.water_volume !== undefined) update.water_volume = appUpdates.water_volume
+  if (appUpdates.chemicals !== undefined) {
+    update.chemicals =
+      appUpdates.chemicals && appUpdates.chemicals.length > 0
+        ? (appUpdates.chemicals as unknown as Json)
+        : null
+  }
   if (appUpdates.area !== undefined) update.area = appUpdates.area
   if (appUpdates.weather !== undefined) update.weather = appUpdates.weather
   if (appUpdates.operator !== undefined) update.operator = appUpdates.operator
