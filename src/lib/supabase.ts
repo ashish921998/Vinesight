@@ -54,7 +54,7 @@ export interface SprayRecord {
   chemical?: string | null // Made optional for backward compatibility
   dose?: string | null // Made optional for backward compatibility
   quantity_amount: number
-  quantity_unit: string // 'gm/L' or 'ml/L'
+  quantity_unit: 'gm/L' | 'ml/L'
   water_volume: number | null // total water volume in liters, can be null
   chemicals?: SprayChemical[] // New array of chemicals for multiple chemicals support
   area: number // in acres

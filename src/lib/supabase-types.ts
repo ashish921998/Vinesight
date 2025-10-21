@@ -281,7 +281,7 @@ export function toApplicationSprayRecord(
     chemical: dbRecord.chemical || undefined,
     dose: dbRecord.dose || undefined,
     quantity_amount: dbRecord.quantity_amount,
-    quantity_unit: dbRecord.quantity_unit,
+    quantity_unit: dbRecord.quantity_unit as 'gm/L' | 'ml/L',
     water_volume: dbRecord.water_volume,
     chemicals: parseChemicals(dbRecord.chemicals),
     area: dbRecord.area,

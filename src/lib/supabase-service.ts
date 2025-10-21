@@ -141,13 +141,8 @@ export class SupabaseService {
 
     // Validate duration if provided
     if (record.duration !== undefined && record.duration !== null) {
-      // Check for NaN and Infinity
-      if (isNaN(record.duration) || !isFinite(record.duration)) {
-        throw new Error('Duration must be a valid number')
-      }
-
       // Validate duration is strictly greater than 0
-      if (record.duration <= 0) {
+      if (record.duration <= 0 || !isFinite(record.duration)) {
         throw new Error('Duration must be greater than 0')
       }
 
@@ -308,12 +303,13 @@ export class SupabaseService {
       // Ensure each chemical has the required fields
       for (const chemical of record.chemicals) {
         // Validate chemical name
-        if (!chemical.name || !chemical.name.trim()) {
+        const trimmedName = chemical.name.trim()
+        if (!trimmedName) {
           throw new Error('Chemical name is required and cannot be empty')
         }
 
         // Validate chemical name length
-        if (chemical.name.trim().length > 100) {
+        if (trimmedName.length > 100) {
           throw new Error('Chemical name must be less than 100 characters')
         }
 
@@ -337,10 +333,16 @@ export class SupabaseService {
           throw new Error('Chemical unit is required')
         }
 
+        // Trim unit once into local variable
+        const unit = chemical.unit.trim()
+
         // Validate unit is one of the allowed values
-        if (!['gm/L', 'ml/L'].includes(chemical.unit)) {
+        if (!['gm/L', 'ml/L'].includes(unit)) {
           throw new Error('Chemical unit must be either "gm/L" or "ml/L"')
         }
+
+        // Assign/store sanitized trimmed value back to object with proper type assertion
+        chemical.unit = unit as 'gm/L' | 'ml/L'
       }
     }
 
@@ -370,12 +372,32 @@ export class SupabaseService {
       }
     }
 
-    // Validate quantity_unit if provided
-    if (record.quantity_unit && record.quantity_unit.trim()) {
-      // Validate unit is one of the allowed values
-      if (!['gm/L', 'ml/L'].includes(record.quantity_unit)) {
+    // Validate quantity_unit - if quantity_amount is provided, unit is required
+    if (record.quantity_amount !== undefined && record.quantity_amount !== null) {
+      // quantity_amount is provided, so unit is required
+      if (!record.quantity_unit || typeof record.quantity_unit !== 'string') {
+        throw new Error('Quantity unit is required when quantity amount is provided')
+      }
+
+      const unit = record.quantity_unit.trim()
+      if (!unit) {
+        throw new Error('Quantity unit cannot be empty when quantity amount is provided')
+      }
+
+      if (!['gm/L', 'ml/L'].includes(unit)) {
         throw new Error('Quantity unit must be either "gm/L" or "ml/L"')
       }
+
+      // Assign/store sanitized trimmed value back to record with proper type assertion
+      record.quantity_unit = unit as 'gm/L' | 'ml/L'
+    } else if (record.quantity_unit) {
+      // quantity_amount is not provided, but unit is - validate it anyway
+      const unit = record.quantity_unit.trim()
+      if (unit && !['gm/L', 'ml/L'].includes(unit)) {
+        throw new Error('Quantity unit must be either "gm/L" or "ml/L"')
+      }
+      // Assign/store sanitized trimmed value back to record with proper type assertion
+      record.quantity_unit = unit as 'gm/L' | 'ml/L'
     }
 
     // Validate area if provided
@@ -440,10 +462,16 @@ export class SupabaseService {
           throw new Error('Chemical unit is required')
         }
 
+        // Trim unit once into local variable
+        const unit = chemical.unit.trim()
+
         // Validate unit is one of the allowed values
-        if (!['gm/L', 'ml/L'].includes(chemical.unit)) {
+        if (!['gm/L', 'ml/L'].includes(unit)) {
           throw new Error('Chemical unit must be either "gm/L" or "ml/L"')
         }
+
+        // Assign/store sanitized trimmed value back to object with proper type assertion
+        chemical.unit = unit as 'gm/L' | 'ml/L'
       }
     }
 
@@ -473,12 +501,32 @@ export class SupabaseService {
       }
     }
 
-    // Validate quantity_unit if provided
-    if (updates.quantity_unit && updates.quantity_unit.trim()) {
-      // Validate unit is one of the allowed values
-      if (!['gm/L', 'ml/L'].includes(updates.quantity_unit)) {
+    // Validate quantity_unit - if quantity_amount is provided, unit is required
+    if (updates.quantity_amount !== undefined && updates.quantity_amount !== null) {
+      // quantity_amount is provided, so unit is required
+      if (!updates.quantity_unit || typeof updates.quantity_unit !== 'string') {
+        throw new Error('Quantity unit is required when quantity amount is provided')
+      }
+
+      const unit = updates.quantity_unit.trim()
+      if (!unit) {
+        throw new Error('Quantity unit cannot be empty when quantity amount is provided')
+      }
+
+      if (!['gm/L', 'ml/L'].includes(unit)) {
         throw new Error('Quantity unit must be either "gm/L" or "ml/L"')
       }
+
+      // Assign/store sanitized trimmed value back to updates with proper type assertion
+      updates.quantity_unit = unit as 'gm/L' | 'ml/L'
+    } else if (updates.quantity_unit) {
+      // quantity_amount is not provided, but unit is - validate it anyway
+      const unit = updates.quantity_unit.trim()
+      if (unit && !['gm/L', 'ml/L'].includes(unit)) {
+        throw new Error('Quantity unit must be either "gm/L" or "ml/L"')
+      }
+      // Assign/store sanitized trimmed value back to updates with proper type assertion
+      updates.quantity_unit = unit as 'gm/L' | 'ml/L'
     }
 
     // Validate area if provided

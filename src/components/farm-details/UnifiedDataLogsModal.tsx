@@ -65,6 +65,19 @@ export function UnifiedDataLogsModal({
   isSubmitting,
   farmId
 }: UnifiedDataLogsModalProps) {
+  // Helper to create a blank chemical row with stable ID (pure function)
+  // Moved before state declarations to avoid TDZ issues
+  const makeEmptyChemical = (): { id: string; name: string; quantity: string; unit: string } => {
+    // Generate stable unique ID without referencing external state
+    return {
+      id:
+        globalThis.crypto?.randomUUID?.() ?? `${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      name: '',
+      quantity: '',
+      unit: 'gm/L'
+    }
+  }
+
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [currentLogType, setCurrentLogType] = useState<LogType | null>(null)
   const [currentFormData, setCurrentFormData] = useState<Record<string, any>>({})
@@ -83,24 +96,6 @@ export function UnifiedDataLogsModal({
   const [sprayEntries, setSprayEntries] = useState<
     Array<{ id: string; data: Record<string, any>; isValid: boolean }>
   >([])
-
-  // Helper to create a blank chemical row with stable ID
-  const makeEmptyChemical = (): { id: string; name: string; quantity: string; unit: string } => {
-    // Improved ID generation to avoid collisions
-    const timestamp = Date.now()
-    const randomPart = Math.random().toString(36).substring(2, 15)
-    const counter = (chemicals.length + 1).toString().padStart(3, '0')
-
-    return {
-      id:
-        typeof crypto !== 'undefined' && 'randomUUID' in crypto
-          ? crypto.randomUUID()
-          : `${timestamp}_${randomPart}_${counter}`,
-      name: '',
-      quantity: '',
-      unit: 'gm/L'
-    }
-  }
 
   // Water volume and chemicals state for spray
   const [waterVolume, setWaterVolume] = useState('')
@@ -188,7 +183,7 @@ export function UnifiedDataLogsModal({
       // Validate each chemical has required fields with stronger checks
       for (const chemical of validChemicals) {
         // Name validation
-        if (!chemical.name || typeof chemical.name !== 'string' || chemical.name.trim() === '') {
+        if (!chemical.name || chemical.name.trim() === '') {
           return false
         }
 
@@ -213,7 +208,14 @@ export function UnifiedDataLogsModal({
     for (const field of config.fields) {
       if (field.required) {
         const value = currentFormData[field.name]
-        if (!value) return false
+        // Check for explicit emptiness instead of truthiness
+        if (
+          value === undefined ||
+          value === null ||
+          (typeof value === 'string' && value.trim() === '')
+        ) {
+          return false
+        }
 
         // Additional validation for numeric fields
         if (field.type === 'number') {
@@ -222,9 +224,6 @@ export function UnifiedDataLogsModal({
           if (field.min !== undefined && numValue < field.min) return false
           if (field.max !== undefined && numValue > field.max) return false
         }
-
-        // String validation with trimming
-        if (typeof value === 'string' && value.trim() === '') return false
       }
     }
     return true
@@ -383,7 +382,14 @@ export function UnifiedDataLogsModal({
     for (const field of config.fields) {
       if (field.required) {
         const value = data[field.name]
-        if (!value) return false
+        // Check for explicit emptiness instead of truthiness
+        if (
+          value === undefined ||
+          value === null ||
+          (typeof value === 'string' && value.trim() === '')
+        ) {
+          return false
+        }
 
         // Additional validation for numeric fields
         if (field.type === 'number') {
@@ -392,9 +398,6 @@ export function UnifiedDataLogsModal({
           if (field.min !== undefined && numValue < field.min) return false
           if (field.max !== undefined && numValue > field.max) return false
         }
-
-        // String validation with trimming
-        if (typeof value === 'string' && value.trim() === '') return false
       }
     }
     return true
@@ -435,6 +438,7 @@ export function UnifiedDataLogsModal({
   // Chemical management functions
   const handleAddChemical = () => {
     if (chemicals.length >= 10) return
+    // Add new chemical and derive display number from current array length
     setChemicals((prev) => [...prev, makeEmptyChemical()])
   }
 
@@ -459,7 +463,14 @@ export function UnifiedDataLogsModal({
     for (const field of config.fields) {
       if (field.required) {
         const value = data[field.name]
-        if (!value) return false
+        // Check for explicit emptiness instead of truthiness
+        if (
+          value === undefined ||
+          value === null ||
+          (typeof value === 'string' && value.trim() === '')
+        ) {
+          return false
+        }
 
         // Additional validation for numeric fields
         if (field.type === 'number') {
@@ -468,9 +479,6 @@ export function UnifiedDataLogsModal({
           if (field.min !== undefined && numValue < field.min) return false
           if (field.max !== undefined && numValue > field.max) return false
         }
-
-        // String validation with trimming
-        if (typeof value === 'string' && value.trim() === '') return false
       }
     }
     return true
@@ -653,9 +661,8 @@ export function UnifiedDataLogsModal({
       // Convert chemicals array to form format
       const formChemicals = (log.data.chemicals as Chemical[]).map((chem) => ({
         id:
-          typeof crypto !== 'undefined' && 'randomUUID' in crypto
-            ? crypto.randomUUID()
-            : `${Date.now()}_${Math.random().toString(36).slice(2)}`,
+          globalThis.crypto?.randomUUID?.() ??
+          `${Date.now()}_${Math.random().toString(36).slice(2)}`,
         name: chem.name || '',
         quantity: chem.quantity?.toString() || '',
         unit: chem.unit || 'gm/L'

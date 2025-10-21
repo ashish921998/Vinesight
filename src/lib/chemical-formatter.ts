@@ -68,6 +68,11 @@ export function formatChemicalsArray(chemicals: Chemical[]): string {
 function findSafeTruncationPoint(text: string, maxLength: number): number {
   if (maxLength <= 0) return 0
 
+  // Clamp maxLength to text.length to prevent array index out of bounds
+  if (maxLength > text.length) {
+    maxLength = text.length
+  }
+
   // If the text at maxLength is already a space or comma, we can truncate there
   const charAtMaxLength = text[maxLength - 1]
   if (charAtMaxLength === ' ' || charAtMaxLength === ',') {

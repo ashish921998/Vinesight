@@ -3,6 +3,7 @@
  */
 
 import { formatChemicalData, formatChemicalsForDisplay, Chemical } from '@/lib/chemical-formatter'
+import { logger } from '@/lib/logger'
 
 interface ActivityLog {
   id: number
@@ -97,7 +98,8 @@ function getSprayDisplayText(activity: ActivityLog): string {
           typeof chem.name === 'string' &&
           chem.name.trim() !== '' &&
           typeof chem.quantity === 'number' &&
-          isFinite(chem.quantity)
+          isFinite(chem.quantity) &&
+          chem.quantity > 0
       ) as Chemical[]
 
       if (validChemicals.length > 0) {
@@ -108,7 +110,7 @@ function getSprayDisplayText(activity: ActivityLog): string {
       }
     } catch (error) {
       // If formatting fails, continue to fallback
-      console.warn('Error formatting chemicals array:', error)
+      logger.warn('Error formatting chemicals array:', error)
     }
   }
 
