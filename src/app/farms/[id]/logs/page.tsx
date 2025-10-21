@@ -132,6 +132,7 @@ interface ActivityLog {
   notes?: string
   duration?: number
   chemical?: string
+  chemicals?: Array<{ name: string; quantity: number; unit: string }>
   quantity?: number
   cost?: number
   fertilizer?: string
@@ -227,6 +228,7 @@ export default function FarmLogsPage() {
             date: log.date,
             notes: log.notes,
             chemical: log.chemical,
+            chemicals: log.chemicals,
             created_at: log.created_at || log.date
           })),
         ...harvest

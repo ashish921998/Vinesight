@@ -30,12 +30,8 @@ import {
   RefreshCcw
 } from 'lucide-react'
 import { toast } from 'sonner'
-import {
-  logTypeConfigs,
-  type LogType,
-  type LogTypeConfig,
-  type FormField
-} from '@/lib/log-type-config'
+import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-config'
+import { formatChemicalsArray, type Chemical } from '@/lib/chemical-formatter'
 
 interface LogEntry {
   id: string // temporary ID for session
@@ -88,6 +84,12 @@ export function UnifiedDataLogsModal({
     Array<{ id: string; data: Record<string, any>; isValid: boolean }>
   >([])
 
+  // Water volume and chemicals state for spray
+  const [waterVolume, setWaterVolume] = useState('')
+  const [chemicals, setChemicals] = useState<
+    Array<{ id: string; name: string; quantity: string; unit: string }>
+  >([{ id: Date.now().toString(), name: '', quantity: '', unit: 'gm/L' }])
+
   // Multiple fertigation entries state
   const [multipleFertigationMode, setMultipleFertigationMode] = useState(false)
   const [fertigationEntries, setFertigationEntries] = useState<
@@ -106,6 +108,8 @@ export function UnifiedDataLogsModal({
       setDayPhotos([])
       setMultipleSprayMode(false)
       setSprayEntries([])
+      setWaterVolume('')
+      setChemicals([{ id: Date.now().toString(), name: '', quantity: '', unit: 'gm/L' }])
       setMultipleFertigationMode(false)
       setFertigationEntries([])
       setCurrentReport(null)
@@ -123,6 +127,8 @@ export function UnifiedDataLogsModal({
         setMultipleSprayMode(true)
         setMultipleFertigationMode(false)
         setFertigationEntries([])
+        setWaterVolume('')
+        setChemicals([{ id: Date.now().toString(), name: '', quantity: '', unit: 'gm/L' }])
       } else if (currentLogType === 'fertigation') {
         setFertigationEntries([{ id: Date.now().toString(), data: {}, isValid: false }])
         setMultipleFertigationMode(true)
@@ -131,6 +137,8 @@ export function UnifiedDataLogsModal({
       } else {
         setMultipleSprayMode(false)
         setSprayEntries([])
+        setWaterVolume('')
+        setChemicals([{ id: Date.now().toString(), name: '', quantity: '', unit: 'gm/L' }])
         setMultipleFertigationMode(false)
         setFertigationEntries([])
       }
@@ -148,7 +156,21 @@ export function UnifiedDataLogsModal({
     if (!currentLogType) return false
 
     if (currentLogType === 'spray' && multipleSprayMode) {
-      return sprayEntries.some((entry) => entry.isValid)
+      // Validate water volume
+      if (!waterVolume || parseFloat(waterVolume) <= 0) return false
+
+      // Validate at least one chemical with name
+      const validChemicals = chemicals.filter((chem) => chem.name.trim() !== '')
+      if (validChemicals.length === 0) return false
+
+      // Validate each chemical has required fields
+      for (const chemical of validChemicals) {
+        if (!chemical.name.trim()) return false
+        if (!chemical.quantity || parseFloat(chemical.quantity) <= 0) return false
+        if (!chemical.unit) return false
+      }
+
+      return true
     }
 
     if (currentLogType === 'fertigation' && multipleFertigationMode) {
@@ -354,6 +376,34 @@ export function UnifiedDataLogsModal({
     )
   }
 
+  // Chemical management functions
+  const handleAddChemical = () => {
+    if (chemicals.length >= 10) return
+    const newChemical = {
+      id: Date.now().toString(),
+      name: '',
+      quantity: '',
+      unit: 'gm/L'
+    }
+    setChemicals((prev) => [...prev, newChemical])
+  }
+
+  const handleRemoveChemical = (id: string) => {
+    if (chemicals.length === 1) return
+    setChemicals((prev) => prev.filter((chem) => chem.id !== id))
+  }
+
+  const handleChemicalChange = (id: string, field: 'name' | 'quantity' | 'unit', value: string) => {
+    setChemicals((prev) =>
+      prev.map((chem) => {
+        if (chem.id === id) {
+          return { ...chem, [field]: value }
+        }
+        return chem
+      })
+    )
+  }
+
   const validateFertigationEntry = (data: Record<string, any>): boolean => {
     const config = logTypeConfigs['fertigation']
     for (const field of config.fields) {
@@ -400,22 +450,40 @@ export function UnifiedDataLogsModal({
     if (!currentLogType || !validateCurrentForm()) return
 
     if (currentLogType === 'spray' && multipleSprayMode) {
-      // Handle multiple spray entries
-      const validSprayEntries = sprayEntries.filter((entry) => entry.isValid)
+      // Handle spray with water volume and multiple chemicals
+      const validChemicals = chemicals.filter((chem) => chem.name.trim() !== '')
 
-      const newSprayLogs: LogEntry[] = validSprayEntries.map((entry) => ({
-        id: entry.id + '_spray',
+      const sprayData: Record<string, any> = {
+        water_volume: parseFloat(waterVolume),
+        chemicals: validChemicals.map((chem) => ({
+          name: chem.name.trim(),
+          quantity: parseFloat(chem.quantity),
+          unit: chem.unit
+        }))
+      }
+
+      const newSprayLog: LogEntry = {
+        id: editingLogId || Date.now().toString() + '_spray',
         type: 'spray',
-        data: { ...entry.data },
+        data: sprayData,
         isValid: true
-      }))
+      }
 
-      setSessionLogs((prev) => [...prev, ...newSprayLogs])
+      if (editingLogId) {
+        // Update existing spray log
+        setSessionLogs((prev) => prev.map((log) => (log.id === editingLogId ? newSprayLog : log)))
+        setEditingLogId(null)
+      } else {
+        // Add new spray log
+        setSessionLogs((prev) => [...prev, newSprayLog])
+      }
 
       // Reset spray mode
       setCurrentLogType(null)
       setMultipleSprayMode(false)
       setSprayEntries([])
+      setWaterVolume('')
+      setChemicals([{ id: Date.now().toString(), name: '', quantity: '', unit: 'gm/L' }])
       return
     }
 
@@ -474,7 +542,25 @@ export function UnifiedDataLogsModal({
 
     setEditingLogId(logId)
     setCurrentLogType(log.type)
-    setCurrentFormData({ ...log.data })
+
+    // Handle spray records with chemicals array
+    if (log.type === 'spray' && log.data.chemicals && Array.isArray(log.data.chemicals)) {
+      // Set water volume
+      setWaterVolume(log.data.water_volume?.toString() || '')
+
+      // Convert chemicals array to form format
+      const formChemicals = log.data.chemicals.map((chem: any) => ({
+        id: Date.now().toString() + Math.random(),
+        name: chem.name || '',
+        quantity: chem.quantity?.toString() || '',
+        unit: chem.unit || 'gm/L'
+      }))
+      setChemicals(formChemicals)
+      setMultipleSprayMode(true)
+    } else {
+      setCurrentFormData({ ...log.data })
+    }
+
     setCurrentReport(log.meta?.report || null)
     setReportUploadError(null)
   }
@@ -866,7 +952,15 @@ export function UnifiedDataLogsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-2xl max-h-[90vh] md:max-h-[85vh] overflow-y-auto touch-auto"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          userSelect: 'auto',
+          WebkitUserSelect: 'auto',
+          touchAction: 'pan-y'
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-green-600" />
@@ -874,7 +968,7 @@ export function UnifiedDataLogsModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
           {/* Date Selector */}
           <div className="space-y-1">
             <Label className="text-sm font-medium text-gray-700">Date</Label>
@@ -911,11 +1005,18 @@ export function UnifiedDataLogsModal({
                         <div>
                           <p className="font-medium text-sm">{getLogTypeLabel(log.type)}</p>
                           <p className="text-xs text-gray-600">
-                            {Object.entries(log.data)
-                              .filter(([, value]) => value)
-                              .map(([key, value]) => `${key}: ${value}`)
-                              .slice(0, 2)
-                              .join(', ')}
+                            {(() => {
+                              const entries = Object.entries(log.data).filter(([, value]) => value)
+                              return entries
+                                .map(([key, value]) => {
+                                  if (key === 'chemicals' && Array.isArray(value)) {
+                                    return `Chemicals: ${formatChemicalsArray(value as Chemical[])}`
+                                  }
+                                  return `${key}: ${value}`
+                                })
+                                .slice(0, 2)
+                                .join(', ')
+                            })()}
                           </p>
                           {log.meta?.report && (
                             <div className="flex items-center gap-1 text-[0.65rem] text-emerald-600 mt-1">
@@ -993,7 +1094,7 @@ export function UnifiedDataLogsModal({
                   {getLogTypeLabel(currentLogType)} Details
                   {currentLogType === 'spray' && multipleSprayMode && (
                     <Badge variant="outline" className="ml-2">
-                      {sprayEntries.length}/10 entries
+                      {chemicals.length}/10 chemicals
                     </Badge>
                   )}
                   {currentLogType === 'fertigation' && multipleFertigationMode && (
@@ -1007,63 +1108,149 @@ export function UnifiedDataLogsModal({
                 {/* Multiple Spray Entries */}
                 {currentLogType === 'spray' && multipleSprayMode ? (
                   <div className="space-y-4">
-                    {sprayEntries.map((entry, index) => (
-                      <Card
-                        key={entry.id}
-                        className="bg-white border-2 border-dashed border-gray-200"
-                      >
-                        <CardHeader className="pb-2">
-                          <div className="flex items-center justify-between">
-                            <CardTitle className="text-sm flex items-center gap-2">
-                              {(() => {
-                                const Icon = logTypeConfigs['spray'].icon
-                                return (
-                                  <Icon className={`h-4 w-4 ${logTypeConfigs['spray'].color}`} />
-                                )
-                              })()}
-                              Spray {index + 1}
-                              {entry.isValid && <CheckCircle className="h-4 w-4 text-green-600" />}
-                            </CardTitle>
-                            {sprayEntries.length > 1 && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveSprayEntry(entry.id)}
-                                className="h-6 w-6 p-0 text-red-600 hover:text-red-800"
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            )}
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                          {logTypeConfigs[currentLogType].fields.map((field) =>
-                            renderSprayEntryField(entry, field)
-                          )}
+                    {/* Water Volume Field */}
+                    <div className="space-y-2">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Water Volume (L)
+                          <span className="text-red-500 ml-1">*</span>
+                        </Label>
+                        <Input
+                          type="number"
+                          value={waterVolume}
+                          onChange={(e) => setWaterVolume(e.target.value)}
+                          placeholder="e.g., 1000"
+                          min={0}
+                          step={0.1}
+                          className="h-9"
+                        />
+                      </div>
+                    </div>
 
-                          {/* Add button after water volume field */}
-                          {index === sprayEntries.length - 1 && sprayEntries.length < 10 && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleAddSprayEntry}
-                              className="w-full mt-2 border-dashed"
-                            >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Add Another Spray
-                            </Button>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
+                    {/* Chemicals Section */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Chemical Elements
+                          <span className="text-red-500 ml-1">*</span>
+                        </Label>
+                        <Badge variant="outline" className="text-xs">
+                          {chemicals.length}/10
+                        </Badge>
+                      </div>
 
-                    {/* Save Multiple Spray Entries Button */}
+                      {chemicals.map((chemical, index) => (
+                        <Card
+                          key={chemical.id}
+                          className="bg-white border-2 border-dashed border-gray-200"
+                        >
+                          <CardHeader className="pb-2">
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="text-sm flex items-center gap-2">
+                                <span className="text-green-600">🧪</span>
+                                Chemical {index + 1}
+                                {chemical.name.trim() && chemical.quantity && (
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                )}
+                              </CardTitle>
+                              {chemicals.length > 1 && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveChemical(chemical.id)}
+                                  className="h-6 w-6 p-0 text-red-600 hover:text-red-800"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            {/* Chemical Name */}
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium text-gray-600">
+                                Chemical Name
+                                <span className="text-red-500 ml-1">*</span>
+                              </Label>
+                              <Input
+                                type="text"
+                                value={chemical.name}
+                                onChange={(e) =>
+                                  handleChemicalChange(chemical.id, 'name', e.target.value)
+                                }
+                                placeholder="e.g., Sulfur fungicide"
+                                maxLength={1000}
+                                className="h-8 text-sm"
+                              />
+                            </div>
+
+                            {/* Quantity and Unit Row */}
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="space-y-1">
+                                <Label className="text-xs font-medium text-gray-600">
+                                  Quantity
+                                  <span className="text-red-500 ml-1">*</span>
+                                </Label>
+                                <Input
+                                  type="number"
+                                  value={chemical.quantity}
+                                  onChange={(e) =>
+                                    handleChemicalChange(chemical.id, 'quantity', e.target.value)
+                                  }
+                                  placeholder="e.g., 500"
+                                  min={0}
+                                  step={0.1}
+                                  className="h-8 text-sm"
+                                />
+                              </div>
+
+                              <div className="space-y-1">
+                                <Label className="text-xs font-medium text-gray-600">
+                                  Unit
+                                  <span className="text-red-500 ml-1">*</span>
+                                </Label>
+                                <Select
+                                  value={chemical.unit}
+                                  onValueChange={(value) =>
+                                    handleChemicalChange(chemical.id, 'unit', value)
+                                  }
+                                >
+                                  <SelectTrigger className="h-8 text-sm">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="gm/L">gm/L</SelectItem>
+                                    <SelectItem value="ml/L">ml/L</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+
+                      {/* Add Chemical Button */}
+                      {chemicals.length < 10 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAddChemical}
+                          className="w-full border-dashed"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add Another Chemical
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Save Spray Button */}
                     <Button
                       onClick={handleAddLogEntry}
                       disabled={!validateCurrentForm()}
                       className="w-full"
                     >
-                      Save All Spray Entries ({sprayEntries.filter((e) => e.isValid).length})
+                      Save Spray Record ({chemicals.filter((c) => c.name.trim() !== '').length}{' '}
+                      chemicals)
                     </Button>
                   </div>
                 ) : currentLogType === 'fertigation' && multipleFertigationMode ? (

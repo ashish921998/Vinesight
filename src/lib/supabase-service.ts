@@ -192,6 +192,26 @@ export class SupabaseService {
     record: Omit<SprayRecord, 'id' | 'created_at'>
   ): Promise<SprayRecord> {
     const supabase = getTypedSupabaseClient()
+
+    // Validate the chemicals array if provided
+    if (record.chemicals && record.chemicals.length > 0) {
+      // Ensure each chemical has the required fields
+      for (const chemical of record.chemicals) {
+        if (!chemical.name || chemical.quantity === undefined || !chemical.unit) {
+          throw new Error('Each chemical must have name, quantity, and unit fields')
+        }
+        // Validate unit is one of the allowed values
+        if (!['gm/L', 'ml/L'].includes(chemical.unit)) {
+          throw new Error('Chemical unit must be either "gm/L" or "ml/L"')
+        }
+      }
+    }
+
+    // Validate water_volume is a positive number if provided
+    if (record.water_volume !== undefined && record.water_volume < 0) {
+      throw new Error('Water volume must be a positive number')
+    }
+
     const dbRecord = toDatabaseSprayInsert(record)
 
     const { data, error } = await supabase

@@ -2,6 +2,8 @@
  * Utility functions for generating meaningful display text for farm activities
  */
 
+import { formatChemicalData } from '@/lib/chemical-formatter'
+
 interface ActivityLog {
   id: number
   type: string
@@ -9,6 +11,7 @@ interface ActivityLog {
   notes?: string
   duration?: number
   chemical?: string
+  chemicals?: Array<{ name: string; quantity: number; unit: string }>
   quantity?: number
   cost?: number
   fertilizer?: string
@@ -62,11 +65,24 @@ function getIrrigationDisplayText(activity: ActivityLog): string {
  * Format spray chemical display
  */
 function getSprayDisplayText(activity: ActivityLog): string {
+  // Check for chemicals array first (new format)
+  if (activity.chemicals && Array.isArray(activity.chemicals)) {
+    const formattedChemicals = formatChemicalData(activity.chemicals)
+    if (formattedChemicals) {
+      // Truncate if very long
+      return formattedChemicals.length > 30
+        ? formattedChemicals.substring(0, 27) + '...'
+        : formattedChemicals
+    }
+  }
+
+  // Fallback to legacy chemical field
   if (activity.chemical && activity.chemical.trim()) {
     // Truncate if very long
     const chemical = activity.chemical.trim()
     return chemical.length > 30 ? chemical.substring(0, 27) + '...' : chemical
   }
+
   return 'Spray'
 }
 
