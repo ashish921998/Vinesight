@@ -20,8 +20,7 @@ export function OptimizedImage({ fallbackSrc, alt, ...props }: OptimizedImagePro
         {...props}
         src={fallbackSrc}
         alt={alt}
-        onLoad={() => setIsLoading(false)}
-        className={`${props.className || ''} ${isLoading ? 'blur-sm' : 'blur-0'} transition-all duration-300`}
+        className={`${props.className || ''} transition-all duration-300`}
       />
     )
   }

@@ -10,8 +10,10 @@ interface CacheEntry<T> {
 }
 
 class CacheService {
-  private cache: Map<string, CacheEntry<any>> = new Map()
+  private cache: Map<string, CacheEntry<unknown>> = new Map()
+  private pendingFetches: Map<string, Promise<unknown>> = new Map()
   private readonly DEFAULT_TTL = 5 * 60 * 1000 // 5 minutes
+  private readonly MAX_CACHE_SIZE = 500 // Increased for farming app with multiple data types
 
   /**
    * Get cached data if valid, otherwise return null
@@ -44,7 +46,7 @@ class CacheService {
     })
 
     // Clean up old entries if cache gets too large
-    if (this.cache.size > 100) {
+    if (this.cache.size > this.MAX_CACHE_SIZE) {
       this.cleanup()
     }
   }
@@ -81,7 +83,7 @@ class CacheService {
 
   /**
    * Get or fetch data with caching
-   * Useful pattern: if cached, return cached data, else fetch and cache
+   * Prevents duplicate concurrent fetches for the same key
    */
   async getOrFetch<T>(
     key: string,
@@ -89,14 +91,30 @@ class CacheService {
     ttl: number = this.DEFAULT_TTL
   ): Promise<T> {
     const cached = this.get<T>(key)
-
     if (cached !== null) {
       return cached
     }
 
-    const data = await fetchFn()
-    this.set(key, data, ttl)
-    return data
+    // Check if fetch is already in progress
+    const pending = this.pendingFetches.get(key)
+    if (pending) {
+      return pending as Promise<T>
+    }
+
+    // Start new fetch
+    const fetchPromise = fetchFn()
+      .then((data) => {
+        this.set(key, data, ttl)
+        this.pendingFetches.delete(key)
+        return data
+      })
+      .catch((error) => {
+        this.pendingFetches.delete(key)
+        throw error
+      })
+
+    this.pendingFetches.set(key, fetchPromise)
+    return fetchPromise
   }
 
   /**

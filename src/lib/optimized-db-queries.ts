@@ -238,12 +238,12 @@ export async function parallelQueries<T>(
   queries: Array<() => Promise<T>>,
   concurrency = 3
 ): Promise<T[]> {
-  const results: T[] = []
+  const results: T[] = new Array(queries.length)
   const executing: Promise<void>[] = []
 
-  for (const query of queries) {
-    const promise = query().then((result) => {
-      results.push(result)
+  for (let i = 0; i < queries.length; i++) {
+    const promise = queries[i]().then((result) => {
+      results[i] = result
       const index = executing.indexOf(promise)
       if (index > -1) {
         executing.splice(index, 1)

@@ -31,11 +31,17 @@ export function useTensorFlow() {
 
 // Preload TensorFlow.js on idle
 export function preloadTensorFlow() {
-  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-    window.requestIdleCallback(() => {
-      if (!tfPromise) {
-        tfPromise = import('@tensorflow/tfjs')
-      }
-    })
+  if (typeof window === 'undefined') return
+
+  const loadTf = () => {
+    if (!tfPromise) {
+      tfPromise = import('@tensorflow/tfjs')
+    }
+  }
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(loadTf)
+  } else {
+    setTimeout(loadTf, 1)
   }
 }

@@ -5,7 +5,11 @@ export function memoize<T extends (...args: any[]) => any>(fn: T): T {
   const cache = new Map()
 
   return ((...args: any[]) => {
-    const key = JSON.stringify(args)
+    // Use simple string key for primitives, fallback to JSON for objects
+    const key =
+      args.length === 1 && (typeof args[0] === 'string' || typeof args[0] === 'number')
+        ? String(args[0])
+        : JSON.stringify(args)
 
     if (cache.has(key)) {
       return cache.get(key)
@@ -16,8 +20,10 @@ export function memoize<T extends (...args: any[]) => any>(fn: T): T {
 
     // Clean up old entries if cache gets too large
     if (cache.size > 100) {
-      const firstKey = cache.keys().next().value
-      cache.delete(firstKey)
+      // Remove oldest 10% of entries
+      const entriesToRemove = Math.floor(cache.size * 0.1)
+      const keys = Array.from(cache.keys()).slice(0, entriesToRemove)
+      keys.forEach((k) => cache.delete(k))
     }
 
     return result
@@ -102,10 +108,9 @@ export class LRUCache<K, V> {
       this.cache.delete(key)
     } else if (this.cache.size >= this.max) {
       // Delete oldest item
-      const iterator = this.cache.keys().next()
-      if (!iterator.done) {
-        const firstKey = iterator.value
-        this.cache.delete(firstKey as K)
+      const firstKey = this.cache.keys().next().value
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey)
       }
     }
     this.cache.set(key, value)

@@ -52,6 +52,8 @@ export class PerformanceMonitor {
     try {
       const observer = new PerformanceObserver((list) => {
         const entries = list.getEntries()
+        if (entries.length === 0) return
+
         const lastEntry = entries[entries.length - 1]
         const lcp = lastEntry.startTime
 
@@ -78,21 +80,22 @@ export class PerformanceMonitor {
     if (typeof window === 'undefined') return
 
     try {
-      let clsValue = 0
-
       const observer = new PerformanceObserver((list) => {
+        let clsValue = 0
         for (const entry of list.getEntries()) {
           if (!(entry as any).hadRecentInput) {
             clsValue += (entry as any).value
           }
         }
 
-        this.recordMetric({
-          name: 'CLS',
-          value: clsValue,
-          rating: clsValue < 0.1 ? 'good' : clsValue < 0.25 ? 'needs-improvement' : 'poor',
-          timestamp: Date.now()
-        })
+        if (clsValue > 0) {
+          this.recordMetric({
+            name: 'CLS',
+            value: clsValue,
+            rating: clsValue < 0.1 ? 'good' : clsValue < 0.25 ? 'needs-improvement' : 'poor',
+            timestamp: Date.now()
+          })
+        }
       })
 
       observer.observe({ type: 'layout-shift', buffered: true })
@@ -273,9 +276,10 @@ export class PerformanceMonitor {
   }
 }
 
-// Auto-initialize on client side
-if (typeof window !== 'undefined') {
-  // Wait for page to be interactive
+// Export initialization function instead of auto-initializing
+export function initializePerformanceMonitoring() {
+  if (typeof window === 'undefined') return
+
   if (document.readyState === 'complete') {
     PerformanceMonitor.initializeCoreWebVitals()
   } else {
@@ -283,4 +287,9 @@ if (typeof window !== 'undefined') {
       PerformanceMonitor.initializeCoreWebVitals()
     })
   }
+}
+
+// Only auto-initialize in development for debugging
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  initializePerformanceMonitoring()
 }
