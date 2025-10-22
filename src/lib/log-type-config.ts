@@ -93,6 +93,22 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         label: 'Grade',
         required: true,
         options: ['Premium', 'Standard', 'Below Standard']
+      },
+      {
+        name: 'price',
+        type: 'number',
+        label: 'Price per kg (₹)',
+        required: false,
+        min: 0,
+        step: 0.01
+      },
+      {
+        name: 'buyer',
+        type: 'text',
+        label: 'Buyer',
+        required: false,
+        placeholder: 'Buyer name',
+        maxLength: 1000
       }
     ]
   },

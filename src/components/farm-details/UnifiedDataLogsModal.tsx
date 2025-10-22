@@ -1,7 +1,14 @@
 'use client'
 
 import { useState, useEffect, type ChangeEvent } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,6 +39,7 @@ import {
 import { toast } from 'sonner'
 import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-config'
 import { formatChemicalsArray, type Chemical } from '@/lib/chemical-formatter'
+import { SupabaseService } from '@/lib/supabase-service'
 
 interface LogEntry {
   id: string // temporary ID for session
@@ -49,6 +57,9 @@ interface UnifiedDataLogsModalProps {
   onSubmit: (logs: LogEntry[], date: string, dayNotes: string, dayPhotos: File[]) => void
   isSubmitting: boolean
   farmId?: number
+  mode?: 'add' | 'edit'
+  existingLogs?: LogEntry[]
+  selectedDate?: string
 }
 
 // Use centralized logTypeConfigs from @/lib/log-type-config
@@ -63,22 +74,36 @@ export function UnifiedDataLogsModal({
   onClose,
   onSubmit,
   isSubmitting,
-  farmId
+  farmId,
+  mode = 'add',
+  existingLogs = [],
+  selectedDate
 }: UnifiedDataLogsModalProps) {
-  // Helper to create a blank chemical row with stable ID (pure function)
-  // Moved before state declarations to avoid TDZ issues
-  const makeEmptyChemical = (): { id: string; name: string; quantity: string; unit: string } => {
-    // Generate stable unique ID without referencing external state
-    return {
-      id:
-        globalThis.crypto?.randomUUID?.() ?? `${Date.now()}_${Math.random().toString(36).slice(2)}`,
-      name: '',
-      quantity: '',
-      unit: 'gm/L'
+  const [internalSelectedDate, setInternalSelectedDate] = useState(
+    new Date().toISOString().split('T')[0]
+  )
+
+  // Helper function to normalize date to local YYYY-MM-DD format
+  const toISO = (dateStr?: string) => {
+    if (!dateStr) {
+      const now = new Date()
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
     }
+    const d = new Date(dateStr)
+    if (!Number.isFinite(d.getTime())) return dateStr
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  // In edit mode, use the original date from the first log entry's data to preserve it
+  const selectedDateToUse = toISO(
+    mode === 'edit' && existingLogs.length > 0
+      ? existingLogs[0]?.data?.date || selectedDate || internalSelectedDate
+      : selectedDate || internalSelectedDate
+  )
+  const setSelectedDate =
+    selectedDate || (mode === 'edit' && existingLogs.length > 0)
+      ? () => {}
+      : (v: string) => setInternalSelectedDate(toISO(v))
   const [currentLogType, setCurrentLogType] = useState<LogType | null>(null)
   const [currentFormData, setCurrentFormData] = useState<Record<string, any>>({})
   const [sessionLogs, setSessionLogs] = useState<LogEntry[]>([])
@@ -99,6 +124,19 @@ export function UnifiedDataLogsModal({
 
   // Water volume and chemicals state for spray
   const [waterVolume, setWaterVolume] = useState('')
+
+  // Helper to create a blank chemical row with stable ID (pure function)
+  // Moved before state declarations to avoid TDZ issues
+  const makeEmptyChemical = (): { id: string; name: string; quantity: string; unit: string } => {
+    // Generate stable unique ID without referencing external state
+    return {
+      id:
+        globalThis.crypto?.randomUUID?.() ?? `${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      name: '',
+      quantity: '',
+      unit: 'gm/L'
+    }
+  }
   const [chemicals, setChemicals] = useState<
     Array<{ id: string; name: string; quantity: string; unit: string }>
   >([makeEmptyChemical()])
@@ -109,14 +147,76 @@ export function UnifiedDataLogsModal({
     Array<{ id: string; data: Record<string, any>; isValid: boolean }>
   >([])
 
-  // Reset modal state when opened/closed
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean
+    logId: string | null
+    logType: LogType | null
+    isLoading: boolean
+  }>({
+    isOpen: false,
+    logId: null,
+    logType: null,
+    isLoading: false
+  })
+
+  // Initialize modal state when opened or when mode/existingLogs change
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      // First, completely reset all state to prevent any leakage
+      const resetState = () => {
+        setCurrentLogType(null)
+        setCurrentFormData({})
+        setSessionLogs([])
+        setEditingLogId(null)
+        setDayNotes('')
+        setDayPhotos([])
+        setMultipleSprayMode(false)
+        setSprayEntries([])
+        setWaterVolume('')
+        setChemicals([makeEmptyChemical()])
+        setMultipleFertigationMode(false)
+        setFertigationEntries([])
+        setCurrentReport(null)
+        setReportUploadError(null)
+        setIsUploadingReport(false)
+      }
+
+      // Reset state immediately
+      resetState()
+
+      // Then initialize based on mode after a brief delay to ensure reset is complete
+      const timer = setTimeout(() => {
+        if (mode === 'edit' && existingLogs.length > 0) {
+          // Initialize with existing logs for edit mode
+          setSessionLogs(existingLogs)
+          // Extract day notes from the first log if available
+          const firstLog = existingLogs[0]
+          if (firstLog?.data?.notes) {
+            setDayNotes(firstLog.data.notes)
+          }
+          // Set the internal date if selectedDate is provided
+          if (selectedDate) {
+            setInternalSelectedDate(selectedDate)
+          }
+        } else {
+          // For add mode, ensure we have a fresh date
+          if (!selectedDate) {
+            setInternalSelectedDate(new Date().toISOString().split('T')[0])
+          }
+        }
+      }, 0) // Use setTimeout to ensure state reset completes before initialization
+
+      return () => clearTimeout(timer)
+    } else {
+      // Reset state when closing
       setCurrentLogType(null)
       setCurrentFormData({})
       setSessionLogs([])
       setEditingLogId(null)
-      setSelectedDate(new Date().toISOString().split('T')[0])
+      if (!selectedDate) {
+        setInternalSelectedDate(new Date().toISOString().split('T')[0])
+      }
       setDayNotes('')
       setDayPhotos([])
       setMultipleSprayMode(false)
@@ -129,7 +229,7 @@ export function UnifiedDataLogsModal({
       setReportUploadError(null)
       setIsUploadingReport(false)
     }
-  }, [isOpen])
+  }, [isOpen, mode, existingLogs, selectedDate])
 
   // Reset current form when log type changes
   useEffect(() => {
@@ -143,7 +243,9 @@ export function UnifiedDataLogsModal({
         setWaterVolume('')
         setChemicals([makeEmptyChemical()])
       } else if (currentLogType === 'fertigation') {
-        setFertigationEntries([{ id: Date.now().toString(), data: {}, isValid: false }])
+        setFertigationEntries([
+          { id: Date.now().toString(), data: { unit: 'kg/acre' }, isValid: false }
+        ])
         setMultipleFertigationMode(true)
         setMultipleSprayMode(false)
         setSprayEntries([])
@@ -489,7 +591,7 @@ export function UnifiedDataLogsModal({
 
     const newEntry = {
       id: Date.now().toString(),
-      data: {},
+      data: { unit: 'kg/acre' }, // Set default unit to kg/acre
       isValid: false
     }
     setFertigationEntries((prev) => [...prev, newEntry])
@@ -678,7 +780,65 @@ export function UnifiedDataLogsModal({
   }
 
   const handleRemoveLog = (logId: string) => {
-    setSessionLogs((prev) => prev.filter((log) => log.id !== logId))
+    const log = sessionLogs.find((l) => l.id === logId)
+    if (!log) return
+
+    // Check if this is an existing log (has a real database ID)
+    const isExistingLog =
+      mode === 'edit' && existingLogs.some((existingLog) => existingLog.id === logId)
+
+    if (isExistingLog) {
+      // Show confirmation dialog for existing logs
+      setDeleteConfirm({
+        isOpen: true,
+        logId,
+        logType: log.type,
+        isLoading: false
+      })
+    } else {
+      // Remove new logs immediately without confirmation
+      setSessionLogs((prev) => prev.filter((l) => l.id !== logId))
+    }
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm.logId || !deleteConfirm.logType || !farmId) return
+
+    setDeleteConfirm((prev) => ({ ...prev, isLoading: true }))
+
+    try {
+      // Extract the real database ID from the log ID
+      const realLogId = deleteConfirm.logId.replace(/_spray$|_fertigation$/, '')
+
+      // Use the unified deletion helper
+      await SupabaseService.deleteLogByType(deleteConfirm.logType, parseInt(realLogId))
+
+      // Remove from local state
+      setSessionLogs((prev) => prev.filter((log) => log.id !== deleteConfirm.logId))
+
+      // Close confirmation dialog
+      setDeleteConfirm({
+        isOpen: false,
+        logId: null,
+        logType: null,
+        isLoading: false
+      })
+
+      toast.success(`${getLogTypeLabel(deleteConfirm.logType)} record deleted successfully`)
+    } catch (error) {
+      console.error('Error deleting record:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to delete record')
+      setDeleteConfirm((prev) => ({ ...prev, isLoading: false }))
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm({
+      isOpen: false,
+      logId: null,
+      logType: null,
+      isLoading: false
+    })
   }
 
   const handlePhotoAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -692,7 +852,7 @@ export function UnifiedDataLogsModal({
 
   const handleSaveAllLogs = () => {
     if (sessionLogs.length === 0) return
-    onSubmit(sessionLogs, selectedDate, dayNotes, dayPhotos)
+    onSubmit(sessionLogs, selectedDateToUse, dayNotes, dayPhotos)
   }
 
   const renderSprayEntryField = (
@@ -811,7 +971,20 @@ export function UnifiedDataLogsModal({
             <Input
               type="number"
               value={value}
-              onChange={(e) => handleFertigationEntryChange(entry.id, field.name, e.target.value)}
+              onChange={(e) => {
+                const inputValue = e.target.value
+                // For quantity field, allow empty string to be stored as is
+                if (field.name === 'quantity') {
+                  handleFertigationEntryChange(entry.id, field.name, inputValue)
+                } else {
+                  // For other number fields, convert empty to 0
+                  handleFertigationEntryChange(
+                    entry.id,
+                    field.name,
+                    inputValue === '' ? '0' : inputValue
+                  )
+                }
+              }}
               placeholder={field.placeholder}
               min={field.min}
               max={field.max}
@@ -883,14 +1056,65 @@ export function UnifiedDataLogsModal({
               {field.required && <span className="text-red-500 ml-1">*</span>}
             </Label>
             <Input
-              type="number"
+              type={field.name === 'duration' ? 'text' : 'number'}
               value={value}
-              onChange={(e) =>
-                setCurrentFormData((prev) => ({
-                  ...prev,
-                  [field.name]: e.target.value
-                }))
-              }
+              onChange={(e) => {
+                const inputValue = e.target.value
+
+                // Special handling for duration field to prevent zero insertion bug
+                if (field.name === 'duration') {
+                  // Allow empty input or valid numbers
+                  if (
+                    inputValue === '' ||
+                    (!isNaN(parseFloat(inputValue)) &&
+                      parseFloat(inputValue) > 0 &&
+                      (field.max === undefined || parseFloat(inputValue) <= field.max))
+                  ) {
+                    setCurrentFormData((prev) => ({
+                      ...prev,
+                      [field.name]: inputValue
+                    }))
+                  }
+                } else {
+                  // For quantity field, allow empty string to be stored as is
+                  if (field.name === 'quantity') {
+                    setCurrentFormData((prev) => ({
+                      ...prev,
+                      [field.name]: inputValue
+                    }))
+                  } else {
+                    // For other number fields, convert empty to 0
+                    setCurrentFormData((prev) => ({
+                      ...prev,
+                      [field.name]: inputValue === '' ? '0' : inputValue
+                    }))
+                  }
+                }
+              }}
+              onBlur={(e) => {
+                const inputValue = e.target.value
+
+                // Special validation for duration field on blur
+                if (field.name === 'duration') {
+                  if (
+                    inputValue === '' ||
+                    (!isNaN(parseFloat(inputValue)) &&
+                      parseFloat(inputValue) > 0 &&
+                      (field.max === undefined || parseFloat(inputValue) <= field.max))
+                  ) {
+                    setCurrentFormData((prev) => ({
+                      ...prev,
+                      [field.name]: inputValue
+                    }))
+                  }
+                }
+              }}
+              onFocus={(e) => {
+                // Select all text on focus for duration field to make editing easier
+                if (field.name === 'duration') {
+                  e.target.select()
+                }
+              }}
               placeholder={field.placeholder}
               min={field.min}
               max={field.max}
@@ -1065,7 +1289,7 @@ export function UnifiedDataLogsModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-2xl max-h-[90vh] md:max-h-[85vh] overflow-y-auto touch-auto"
+        className="max-w-2xl max-h-[90vh] md:max-h-[85vh] flex flex-col touch-auto"
         style={{
           WebkitOverflowScrolling: 'touch',
           userSelect: 'auto',
@@ -1073,23 +1297,24 @@ export function UnifiedDataLogsModal({
           touchAction: 'pan-y'
         }}
       >
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-green-600" />
-            Add Data Logs
+            {mode === 'edit' ? 'Edit Data Logs' : 'Add Data Logs'}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
+        <div className="flex-1 overflow-y-auto space-y-4">
           {/* Date Selector */}
           <div className="space-y-1">
             <Label className="text-sm font-medium text-gray-700">Date</Label>
             <Input
               type="date"
-              value={selectedDate}
+              value={selectedDateToUse}
               onChange={(e) => setSelectedDate(e.target.value)}
               max={new Date().toISOString().split('T')[0]}
               className="h-9"
+              disabled={mode === 'edit'}
             />
           </div>
 
@@ -1115,18 +1340,108 @@ export function UnifiedDataLogsModal({
                       <div className="flex items-center gap-2">
                         <Icon className={`h-4 w-4 ${config.color}`} />
                         <div>
-                          <p className="font-medium text-sm">{getLogTypeLabel(log.type)}</p>
+                          <p className="font-medium text-sm">
+                            {(() => {
+                              // Handle spray records with meaningful display
+                              if (log.type === 'spray') {
+                                const chemicals = log.data.chemicals as Chemical[]
+                                if (chemicals && Array.isArray(chemicals) && chemicals.length > 0) {
+                                  const chemicalNames = chemicals
+                                    .filter((chem) => chem.name && chem.name.trim())
+                                    .map((chem) => chem.name.trim())
+                                  if (chemicalNames.length > 0) {
+                                    // Show 1-2 chemicals with truncation for mobile
+                                    const displayChemicals = chemicalNames.slice(0, 2)
+                                    let chemicalDisplay = displayChemicals.join(', ')
+
+                                    // Add indicator if there are more chemicals
+                                    if (chemicalNames.length > 2) {
+                                      chemicalDisplay += ` +${chemicalNames.length - 2}`
+                                    }
+
+                                    // Truncate if too long for mobile
+                                    const maxLength = 25 // Mobile-friendly length
+                                    if (chemicalDisplay.length > maxLength) {
+                                      chemicalDisplay =
+                                        chemicalDisplay.substring(0, maxLength - 3) + '...'
+                                    }
+
+                                    return chemicalDisplay
+                                  }
+                                }
+                                // Fallback for old format
+                                if (log.data.chemical && log.data.chemical.trim()) {
+                                  let chemicalDisplay = log.data.chemical.trim()
+                                  // Truncate if too long for mobile
+                                  const maxLength = 25 // Mobile-friendly length
+                                  if (chemicalDisplay.length > maxLength) {
+                                    chemicalDisplay =
+                                      chemicalDisplay.substring(0, maxLength - 3) + '...'
+                                  }
+                                  return chemicalDisplay
+                                }
+                              }
+
+                              // For other log types, use the standard label
+                              return getLogTypeLabel(log.type)
+                            })()}
+                          </p>
                           <p className="text-xs text-gray-600">
                             {(() => {
+                              // Handle spray records with additional details
+                              if (log.type === 'spray') {
+                                const chemicals = log.data.chemicals as Chemical[]
+                                const waterVolume = log.data.water_volume
+                                const parts = []
+
+                                if (chemicals && Array.isArray(chemicals) && chemicals.length > 0) {
+                                  const validChemicals = chemicals.filter(
+                                    (chem) => chem.name && chem.name.trim()
+                                  )
+                                  if (validChemicals.length > 0) {
+                                    // Show quantities for the first chemical only to save space
+                                    const firstChem = validChemicals[0]
+                                    parts.push(`${firstChem.quantity} ${firstChem.unit}`)
+                                    if (validChemicals.length > 1) {
+                                      parts.push(`${validChemicals.length} chemicals`)
+                                    }
+                                  }
+                                } else if (log.data.chemical && log.data.chemical.trim()) {
+                                  parts.push(log.data.chemical.trim())
+                                }
+
+                                if (waterVolume && waterVolume > 0) {
+                                  parts.push(`${waterVolume}L water`)
+                                }
+
+                                return parts.join(' • ') || 'Spray record'
+                              }
+
+                              // Handle other log types
                               const entries = Object.entries(log.data).filter(([, value]) => value)
                               return entries
                                 .map(([key, value]) => {
-                                  if (key === 'chemicals' && Array.isArray(value)) {
-                                    return `Chemicals: ${formatChemicalsArray(value as Chemical[])}`
+                                  // Skip technical fields
+                                  if (
+                                    [
+                                      'id',
+                                      'farm_id',
+                                      'created_at',
+                                      'updated_at',
+                                      'chemicals',
+                                      'chemical',
+                                      'water_volume'
+                                    ].includes(key)
+                                  ) {
+                                    return null
                                   }
-                                  if (key === 'water_volume') return `Water Volume: ${value} L`
+                                  if (key === 'fertilizer') return `Fertilizer: ${value}`
+                                  if (key === 'duration') return `Duration: ${value} hrs`
+                                  if (key === 'quantity') return `Quantity: ${value} kg`
+                                  if (key === 'cost') return `Cost: ₹${value}`
                                   return `${key.replace(/_/g, ' ')}: ${value}`
                                 })
+                                .filter(Boolean)
                                 .slice(0, 2)
                                 .join(', ')
                             })()}
@@ -1160,6 +1475,45 @@ export function UnifiedDataLogsModal({
                     </div>
                   )
                 })}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Empty State - When all logs are deleted */}
+          {sessionLogs.length === 0 && mode === 'edit' && (
+            <Card className="border-2 border-dashed border-amber-300 bg-amber-50">
+              <CardContent className="pt-6">
+                <div className="text-center space-y-3">
+                  <div className="mx-auto w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                    <Trash2 className="h-6 w-6 text-amber-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-amber-800">All Logs Deleted</h3>
+                    <p className="text-xs text-amber-600 mt-1">
+                      You&apos;ve removed all logs for this date. You can add new logs or close this
+                      modal.
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-center gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentLogType(null)}
+                      className="border-amber-200 text-amber-700 hover:bg-amber-100"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add New Log
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onClose}
+                      className="text-amber-700 hover:bg-amber-100"
+                    >
+                      Close Modal
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -1554,7 +1908,7 @@ export function UnifiedDataLogsModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-4 border-t">
+        <div className="flex-shrink-0 flex items-center justify-between pt-4 border-t">
           <div className="text-sm text-gray-500">
             {sessionLogs.length} log{sessionLogs.length !== 1 ? 's' : ''} ready to save
             {dayNotes && <span className="ml-2">• Notes included</span>}
@@ -1579,6 +1933,45 @@ export function UnifiedDataLogsModal({
           </div>
         </div>
       </DialogContent>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirm.isOpen} onOpenChange={(open) => !open && handleCancelDelete()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Delete {deleteConfirm.logType ? getLogTypeLabel(deleteConfirm.logType) : 'Record'}
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this{' '}
+              {deleteConfirm.logType ? getLogTypeLabel(deleteConfirm.logType) : 'record'}? This
+              action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCancelDelete}
+              disabled={deleteConfirm.isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleteConfirm.isLoading}
+            >
+              {deleteConfirm.isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   )
 }

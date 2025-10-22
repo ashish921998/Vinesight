@@ -5,7 +5,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Calendar, Clock, CheckCircle, Edit, Trash2, ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { getActivityDisplayData } from '@/lib/activity-display-utils'
+import {
+  getActivityDisplayData,
+  groupActivitiesByDate,
+  getGroupedActivitiesSummary,
+  formatGroupedDate,
+  normalizeDateToYYYYMMDD
+} from '@/lib/activity-display-utils'
 import {
   getLogTypeIcon,
   getLogTypeBgColor,
@@ -20,6 +26,8 @@ interface ActivityFeedProps {
   onCompleteTask: (taskId: number) => Promise<void>
   onEditRecord: (record: any, recordType: string) => void
   onDeleteRecord: (record: any, recordType: string) => void
+  onEditDateGroup?: (date: string, activities: any[]) => void
+  onDeleteDateGroup?: (date: string, activities: any[]) => void
   farmId?: string
 }
 
@@ -30,9 +38,14 @@ export function ActivityFeed({
   onCompleteTask,
   onEditRecord,
   onDeleteRecord,
+  onEditDateGroup,
+  onDeleteDateGroup,
   farmId
 }: ActivityFeedProps) {
   const router = useRouter()
+
+  // Group activities by date for better organization
+  const groupedActivities = recentActivities ? groupActivitiesByDate(recentActivities) : []
 
   if (loading) {
     return (
@@ -134,73 +147,102 @@ export function ActivityFeed({
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0 px-3 pb-3 space-y-2">
-          {recentActivities && recentActivities.length > 0 ? (
+          {groupedActivities.length > 0 ? (
             <div className="space-y-2">
-              {recentActivities.slice(0, 5).map((activity, index) => {
-                const Icon = getLogTypeIcon(activity.type)
+              {groupedActivities.slice(0, 5).map((grouped, index) => {
+                const firstActivity = grouped.activities[0]
+                const Icon = getLogTypeIcon(firstActivity.type)
 
                 return (
                   <div
                     key={index}
-                    className="flex items-start justify-between gap-2 p-2 bg-gray-50 rounded-lg h-14"
+                    className="flex items-start justify-between gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
-                    <div className="flex items-start gap-2 flex-1 min-w-0">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
                       <div
-                        className={`p-1 ${getLogTypeBgColor(activity.type)} rounded-md flex-shrink-0 mt-0.5`}
+                        className={`p-2 ${getLogTypeBgColor(firstActivity.type)} rounded-lg flex-shrink-0`}
                       >
-                        <Icon className={`h-3 w-3 ${getLogTypeColor(activity.type)}`} />
+                        <Icon className={`h-4 w-4 ${getLogTypeColor(firstActivity.type)}`} />
                       </div>
 
-                      <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium text-gray-900 text-sm truncate">
-                            {getActivityDisplayData(activity)}
+                          <p className="font-medium text-gray-900 text-sm">
+                            {formatGroupedDate(grouped.date)}
                           </p>
-                          <span className="text-xs text-gray-500">
-                            {new Date(activity.date || activity.created_at).toLocaleDateString()}
-                          </span>
+                          <Badge variant="secondary" className="text-xs">
+                            {grouped.totalCount} log{grouped.totalCount !== 1 ? 's' : ''}
+                          </Badge>
                         </div>
 
                         <div className="h-4">
-                          {activity.notes ? (
-                            <p className="text-xs text-gray-600 break-words line-clamp-1">
-                              {activity.notes.length > 60
-                                ? `${activity.notes.substring(0, 60)}...`
-                                : activity.notes}
-                            </p>
-                          ) : (
-                            <p className="text-xs text-gray-400 italic">No notes added</p>
-                          )}
+                          <p className="text-xs text-gray-600">
+                            {getGroupedActivitiesSummary(grouped)}
+                          </p>
                         </div>
+
+                        {/* Show first activity's notes if available */}
+                        {firstActivity.notes && (
+                          <div className="mt-1">
+                            <p className="text-xs text-gray-500 break-words line-clamp-1">
+                              {firstActivity.notes.length > 60
+                                ? `${firstActivity.notes.substring(0, 60)}...`
+                                : firstActivity.notes}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Show log type icons */}
+                        {grouped.logTypes.length > 1 && (
+                          <div className="flex items-center gap-1 mt-2">
+                            {grouped.logTypes.slice(0, 4).map((type, typeIndex) => {
+                              const TypeIcon = getLogTypeIcon(type)
+                              return (
+                                <div
+                                  key={typeIndex}
+                                  className={`p-1 ${getLogTypeBgColor(type)} rounded`}
+                                >
+                                  <TypeIcon className={`h-3 w-3 ${getLogTypeColor(type)}`} />
+                                </div>
+                              )
+                            })}
+                            {grouped.logTypes.length > 4 && (
+                              <span className="text-xs text-gray-500 ml-1">
+                                +{grouped.logTypes.length - 4}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 h-full">
-                      {(activity.type === 'irrigation' ||
-                        activity.type === 'spray' ||
-                        activity.type === 'harvest' ||
-                        activity.type === 'fertigation' ||
-                        activity.type === 'expense' ||
-                        activity.type === 'soil_test' ||
-                        activity.type === 'petiole_test') && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onEditRecord(activity, activity.type)}
-                            className="h-6 w-6 p-0 text-green-600 hover:text-green-800 hover:bg-green-100 flex-shrink-0"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onDeleteRecord(activity, activity.type)}
-                            className="h-6 w-6 p-0 text-red-600 hover:text-red-800 hover:bg-red-100 flex-shrink-0"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </>
+                    <div className="flex items-center gap-1">
+                      {onEditDateGroup && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const dateForEdit = normalizeDateToYYYYMMDD(grouped.date)
+                            if (dateForEdit) {
+                              onEditDateGroup(dateForEdit, grouped.activities)
+                            }
+                          }}
+                          className="h-8 w-8 p-0 text-green-600 hover:text-green-800 hover:bg-green-100 flex-shrink-0"
+                          title="Edit all logs for this date"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {onDeleteDateGroup && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onDeleteDateGroup(grouped.date, grouped.activities)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-100 flex-shrink-0"
+                          title="Delete all logs for this date"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -217,7 +259,7 @@ export function ActivityFeed({
             </div>
           )}
 
-          {recentActivities && recentActivities.length > 0 && (
+          {groupedActivities.length > 0 && (
             <div className="pt-2 border-t border-gray-100 mt-2">
               <Button
                 variant="outline"

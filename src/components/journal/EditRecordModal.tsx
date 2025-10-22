@@ -26,11 +26,14 @@ import {
   Paperclip,
   FileWarning,
   RefreshCcw,
-  CheckCircle
+  CheckCircle,
+  Plus,
+  X
 } from 'lucide-react'
 import { SupabaseService } from '@/lib/supabase-service'
 import { toast } from 'sonner'
 import type { ReportAttachmentMeta } from '@/types/reports'
+import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-config'
 import type {
   IrrigationRecord,
   SprayRecord,
@@ -40,6 +43,16 @@ import type {
   SoilTestRecord,
   PetioleTestRecord
 } from '@/lib/supabase'
+
+// Type for spray data update
+interface SprayDataUpdate {
+  date: string
+  notes?: string
+  water_volume?: number
+  chemicals?: Array<{ name: string; quantity: number; unit: 'gm/L' | 'ml/L' }>
+  chemical?: string
+  dose?: string
+}
 
 // Type predicate function to distinguish PetioleTestRecord from SoilTestRecord
 function isPetioleRecord(record: SoilTestRecord | PetioleTestRecord): record is PetioleTestRecord {
@@ -71,12 +84,8 @@ export interface IrrigationFormData extends BaseFormData {
 
 export interface SprayFormData extends BaseFormData {
   recordType: 'spray'
-  chemical: string
-  dose: string
-  area: string
-  weather: string
-  operator: string
-  pest_disease?: string
+  water_volume: string
+  chemicals: Array<{ id: string; name: string; quantity: string; unit: string }>
 }
 
 export interface HarvestFormData extends BaseFormData {
@@ -90,9 +99,8 @@ export interface HarvestFormData extends BaseFormData {
 export interface FertigationFormData extends BaseFormData {
   recordType: 'fertigation'
   fertilizer: string
-  dose: string
-  purpose: string
-  area: string
+  quantity: number
+  unit: 'kg/acre' | 'liter/acre'
 }
 
 type ExpenseCategory = 'labor' | 'materials' | 'equipment' | 'other'
@@ -131,7 +139,6 @@ interface EditRecordModalProps {
     | ExpenseRecord
     | SoilTestRecord
     | PetioleTestRecord
-    | null
   recordType: EditRecordType
 }
 
@@ -186,7 +193,10 @@ export function EditRecordModal({
         recordType: 'irrigation',
         date: irrigationRecord.date,
         notes: irrigationRecord.notes || '',
-        duration: irrigationRecord.duration?.toString() || '',
+        duration:
+          irrigationRecord.duration !== undefined && irrigationRecord.duration !== null
+            ? irrigationRecord.duration.toString()
+            : '',
         area: irrigationRecord.area?.toString() || '',
         growth_stage: irrigationRecord.growth_stage || '',
         moisture_status: irrigationRecord.moisture_status || '',
@@ -199,16 +209,63 @@ export function EditRecordModal({
         typeof (sprayRecord as Record<string, unknown>).pest_disease === 'string'
           ? ((sprayRecord as Record<string, unknown>).pest_disease as string)
           : ''
+
+      // Helper function to ensure spray chemicals format consistency
+      const ensureSprayChemicalsFormat = (sprayRecord: SprayRecord) => {
+        const generateChemicalId = () => {
+          return `chem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        }
+
+        let waterVolume = ''
+        let chemicals: Array<{ id: string; name: string; quantity: string; unit: string }> = []
+
+        if (
+          sprayRecord.water_volume &&
+          sprayRecord.chemicals &&
+          Array.isArray(sprayRecord.chemicals)
+        ) {
+          // New format with water_volume and chemicals array
+          waterVolume = sprayRecord.water_volume.toString()
+          chemicals = sprayRecord.chemicals.map((chem) => ({
+            id: chem.id || generateChemicalId(),
+            name: chem.name || '',
+            quantity: chem.quantity?.toString() || '',
+            unit: chem.unit || 'gm/L'
+          }))
+        } else {
+          // Old format - convert to new format
+          waterVolume = '1000' // Default water volume
+          chemicals = [
+            {
+              id: generateChemicalId(),
+              name: sprayRecord.chemical || '',
+              quantity: sprayRecord.dose || '',
+              unit: 'gm/L'
+            }
+          ]
+        }
+
+        // Ensure at least one chemical
+        if (chemicals.length === 0) {
+          chemicals.push({
+            id: generateChemicalId(),
+            name: '',
+            quantity: '',
+            unit: 'gm/L'
+          })
+        }
+
+        return { waterVolume, chemicals }
+      }
+
+      const { waterVolume, chemicals } = ensureSprayChemicalsFormat(sprayRecord)
+
       setFormData({
         recordType: 'spray',
         date: sprayRecord.date,
         notes: sprayRecord.notes || '',
-        chemical: sprayRecord.chemical || '',
-        dose: sprayRecord.dose || '',
-        area: sprayRecord.area?.toString() || '',
-        weather: sprayRecord.weather || '',
-        operator: sprayRecord.operator || '',
-        pest_disease: pestDisease
+        water_volume: waterVolume,
+        chemicals: chemicals
       })
     } else if (recordType === 'harvest') {
       const harvestRecord = record as HarvestRecord
@@ -228,9 +285,8 @@ export function EditRecordModal({
         date: fertigationRecord.date,
         notes: fertigationRecord.notes || '',
         fertilizer: fertigationRecord.fertilizer || '',
-        dose: fertigationRecord.dose || '',
-        purpose: fertigationRecord.purpose || '',
-        area: fertigationRecord.area?.toString() || ''
+        quantity: fertigationRecord.quantity,
+        unit: (fertigationRecord.unit as 'kg/acre' | 'liter/acre') || 'kg/acre'
       })
     } else if (recordType === 'expense') {
       const expenseRecord = record as ExpenseRecord
@@ -449,15 +505,39 @@ export function EditRecordModal({
         })
       } else if (recordType === 'spray') {
         if (!sprayForm) throw new Error('Spray form is not ready')
-        await SupabaseService.updateSprayRecord(record.id!, {
+
+        // Convert form data to the expected format
+        const validChemicals = sprayForm.chemicals.filter((chem) => chem.name.trim() !== '')
+        const sprayData: SprayDataUpdate = {
           date: sprayForm.date,
-          chemical: sprayForm.chemical,
-          dose: sprayForm.dose,
-          area: toNum(sprayForm.area),
-          weather: sprayForm.weather,
-          operator: sprayForm.operator,
           notes: sprayForm.notes
-        })
+        }
+
+        // Handle new format with water_volume and chemicals array
+        if (sprayForm.water_volume && validChemicals.length > 0) {
+          sprayData.water_volume = toNum(sprayForm.water_volume)
+          const processedChemicals = validChemicals
+            .map((chem) => ({
+              name: chem.name.trim(),
+              quantity: toNum(chem.quantity),
+              unit: chem.unit as 'gm/L' | 'ml/L'
+            }))
+            .filter(
+              (chem): chem is { name: string; quantity: number; unit: 'gm/L' | 'ml/L' } =>
+                chem.quantity !== undefined
+            )
+
+          if (processedChemicals.length > 0) {
+            sprayData.chemicals = processedChemicals
+          }
+        } else {
+          // Fallback to old format for backward compatibility
+          const firstChemical = validChemicals[0]
+          sprayData.chemical = firstChemical?.name || ''
+          sprayData.dose = firstChemical?.quantity || ''
+        }
+
+        await SupabaseService.updateSprayRecord(record.id!, sprayData)
       } else if (recordType === 'harvest') {
         if (!harvestForm) throw new Error('Harvest form is not ready')
         await SupabaseService.updateHarvestRecord(record.id!, {
@@ -473,9 +553,8 @@ export function EditRecordModal({
         await SupabaseService.updateFertigationRecord(record.id!, {
           date: fertigationForm.date,
           fertilizer: fertigationForm.fertilizer,
-          dose: fertigationForm.dose,
-          purpose: fertigationForm.purpose,
-          area: toNum(fertigationForm.area),
+          quantity: fertigationForm.quantity,
+          unit: fertigationForm.unit,
           notes: fertigationForm.notes
         })
       } else if (recordType === 'expense') {
@@ -574,7 +653,9 @@ export function EditRecordModal({
       case 'expense':
         return 'Edit Expense Record'
       case 'soil_test':
-        return 'Edit Soil Test Record'
+        return record && isPetioleRecord(record)
+          ? 'Edit Petiole Test Record'
+          : 'Edit Soil Test Record'
       default:
         return 'Edit Record'
     }
@@ -603,37 +684,47 @@ export function EditRecordModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-lg sm:max-w-2xl mx-auto max-h-[85vh] sm:max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className={`flex items-center gap-3 ${getColor().split(' ')[0]}`}>
             <div className={`p-2 rounded-xl ${getColor()}`}>{getIcon()}</div>
             {getTitle()}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Date Input */}
-          <div>
-            <Label htmlFor="date" className="text-sm font-medium text-gray-700">
-              Date *
-            </Label>
-            <Input
-              id="date"
-              type="date"
-              value={formData?.date ?? ''}
-              onChange={(e) =>
-                setFormData((prev) => (prev ? { ...prev, date: e.target.value } : prev))
-              }
-              max={new Date().toISOString().split('T')[0]}
-              className="mt-1"
-              required
-            />
-          </div>
+        <div className="flex-1 overflow-y-auto">
+          <form onSubmit={handleSubmit} className="space-y-4 pr-2">
+            {/* Date Input */}
+            <div>
+              <Label htmlFor="date" className="text-sm font-medium text-gray-700">
+                Date *
+              </Label>
+              {recordType === 'irrigation' ? (
+                <Input
+                  id="date"
+                  type="date"
+                  value={formData?.date ?? ''}
+                  disabled
+                  className="mt-1 bg-gray-50 text-gray-600"
+                  readOnly
+                />
+              ) : (
+                <Input
+                  id="date"
+                  type="date"
+                  value={formData?.date ?? ''}
+                  onChange={(e) =>
+                    setFormData((prev) => (prev ? { ...prev, date: e.target.value } : prev))
+                  }
+                  max={new Date().toISOString().split('T')[0]}
+                  className="mt-1"
+                  required
+                />
+              )}
+            </div>
 
-          {/* Record type specific fields */}
-          {recordType === 'irrigation' && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
+            {recordType === 'irrigation' && (
+              <>
                 <div>
                   <Label htmlFor="duration" className="text-sm font-medium text-gray-700">
                     Duration (hours) *
@@ -641,254 +732,382 @@ export function EditRecordModal({
                   <Input
                     id="duration"
                     type="number"
-                    step="0.1"
-                    min="0"
-                    value={irrigationForm?.duration ?? ''}
-                    onChange={(e) =>
+                    step="0.01"
+                    min={0.01}
+                    max={24}
+                    value={irrigationForm?.duration || ''}
+                    onChange={(e) => {
+                      const value = e.target.value
                       updateFormData('irrigation', (current) => ({
                         ...current,
-                        duration: e.target.value
+                        duration: value
+                      }))
+                    }}
+                    onFocus={(e) => {
+                      // Select all text on focus for easy editing
+                      e.target.select()
+                    }}
+                    className="mt-1"
+                    required
+                  />
+                </div>
+              </>
+            )}
+
+            {recordType === 'spray' && (
+              <>
+                {/* Water Volume Field */}
+                <div>
+                  <Label htmlFor="water_volume" className="text-sm font-medium text-gray-700">
+                    Water Volume (L) *
+                  </Label>
+                  <Input
+                    id="water_volume"
+                    type="number"
+                    value={sprayForm?.water_volume ?? ''}
+                    onChange={(e) =>
+                      updateFormData('spray', (current) => ({
+                        ...current,
+                        water_volume: e.target.value
+                      }))
+                    }
+                    placeholder="e.g., 1000"
+                    min={0.1}
+                    step={0.1}
+                    className="mt-1"
+                    required
+                  />
+                </div>
+
+                {/* Chemicals Section */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium text-gray-700">Chemical Elements *</Label>
+                    <Badge variant="outline" className="text-xs">
+                      {sprayForm?.chemicals?.length || 0}/10
+                    </Badge>
+                  </div>
+
+                  {sprayForm?.chemicals?.map((chemical, index) => (
+                    <div
+                      key={chemical.id}
+                      className="space-y-2 p-3 border border-gray-200 rounded-lg"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">
+                          Chemical {index + 1}
+                        </span>
+                        {sprayForm.chemicals.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              updateFormData('spray', (current) => ({
+                                ...current,
+                                chemicals: current.chemicals.filter((c) => c.id !== chemical.id)
+                              }))
+                            }}
+                            className="h-6 w-6 p-0 text-red-600 hover:text-red-800"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <div>
+                          <Label className="text-xs font-medium text-gray-600">
+                            Chemical Name *
+                          </Label>
+                          <Input
+                            value={chemical.name}
+                            onChange={(e) => {
+                              updateFormData('spray', (current) => ({
+                                ...current,
+                                chemicals: current.chemicals.map((c) =>
+                                  c.id === chemical.id ? { ...c, name: e.target.value } : c
+                                )
+                              }))
+                            }}
+                            placeholder="e.g., Sulfur fungicide"
+                            className="h-8 text-sm"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-xs font-medium text-gray-600">Quantity *</Label>
+                            <Input
+                              type="number"
+                              value={chemical.quantity}
+                              onChange={(e) => {
+                                updateFormData('spray', (current) => ({
+                                  ...current,
+                                  chemicals: current.chemicals.map((c) =>
+                                    c.id === chemical.id ? { ...c, quantity: e.target.value } : c
+                                  )
+                                }))
+                              }}
+                              placeholder="e.g., 500"
+                              min={0.1}
+                              step={0.1}
+                              className="h-8 text-sm"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium text-gray-600">Unit *</Label>
+                            <Select
+                              value={chemical.unit}
+                              onValueChange={(value) => {
+                                updateFormData('spray', (current) => ({
+                                  ...current,
+                                  chemicals: current.chemicals.map((c) =>
+                                    c.id === chemical.id ? { ...c, unit: value } : c
+                                  )
+                                }))
+                              }}
+                            >
+                              <SelectTrigger className="h-8 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="gm/L">gm/L</SelectItem>
+                                <SelectItem value="ml/L">ml/L</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {sprayForm && sprayForm.chemicals.length < 10 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        updateFormData('spray', (current) => ({
+                          ...current,
+                          chemicals: [
+                            ...current.chemicals,
+                            {
+                              id: `${Date.now()}_${current.chemicals.length}`,
+                              name: '',
+                              quantity: '',
+                              unit: 'gm/L'
+                            }
+                          ]
+                        }))
+                      }}
+                      className="w-full border-dashed"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Another Chemical
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
+
+            {recordType === 'harvest' && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+                      Quantity (kg) *
+                    </Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={harvestForm?.quantity ?? ''}
+                      onChange={(e) =>
+                        updateFormData('harvest', (current) => ({
+                          ...current,
+                          quantity: e.target.value
+                        }))
+                      }
+                      className="mt-1"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="grade" className="text-sm font-medium text-gray-700">
+                      Grade *
+                    </Label>
+                    <Select
+                      value={harvestForm?.grade ?? ''}
+                      onValueChange={(value) =>
+                        updateFormData('harvest', (current) => ({
+                          ...current,
+                          grade: value
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select grade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Premium">Premium</SelectItem>
+                        <SelectItem value="Grade A">Grade A</SelectItem>
+                        <SelectItem value="Grade B">Grade B</SelectItem>
+                        <SelectItem value="Grade C">Grade C</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="price" className="text-sm font-medium text-gray-700">
+                      Price per kg (₹)
+                    </Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={harvestForm?.price ?? ''}
+                      onChange={(e) =>
+                        updateFormData('harvest', (current) => ({
+                          ...current,
+                          price: e.target.value
+                        }))
+                      }
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="buyer" className="text-sm font-medium text-gray-700">
+                      Buyer
+                    </Label>
+                    <Input
+                      id="buyer"
+                      value={harvestForm?.buyer ?? ''}
+                      onChange={(e) =>
+                        updateFormData('harvest', (current) => ({
+                          ...current,
+                          buyer: e.target.value
+                        }))
+                      }
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {recordType === 'fertigation' && (
+              <>
+                <div>
+                  <Label htmlFor="fertilizer" className="text-sm font-medium text-gray-700">
+                    Fertilizer Type *
+                  </Label>
+                  <Input
+                    id="fertilizer"
+                    value={fertigationForm?.fertilizer ?? ''}
+                    onChange={(e) =>
+                      updateFormData('fertigation', (current) => ({
+                        ...current,
+                        fertilizer: e.target.value
                       }))
                     }
                     className="mt-1"
                     required
                   />
                 </div>
-                <div>
-                  <Label htmlFor="area" className="text-sm font-medium text-gray-700">
-                    Area (acres)
-                  </Label>
-                  <Input
-                    id="area"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={irrigationForm?.area ?? ''}
-                    onChange={(e) =>
-                      updateFormData('irrigation', (current) => ({
-                        ...current,
-                        area: e.target.value
-                      }))
-                    }
-                    className="mt-1"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+                      Quantity *
+                    </Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={
+                        fertigationForm?.quantity === 0 ? '' : (fertigationForm?.quantity ?? '')
+                      }
+                      onChange={(e) => {
+                        const value = e.target.value
+                        updateFormData('fertigation', (current) => ({
+                          ...current,
+                          quantity: value === '' ? 0 : parseFloat(value) || 0
+                        }))
+                      }}
+                      className="mt-1"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="unit" className="text-sm font-medium text-gray-700">
+                      Unit *
+                    </Label>
+                    <Select
+                      value={fertigationForm?.unit ?? 'kg/acre'}
+                      onValueChange={(value) =>
+                        updateFormData('fertigation', (current) => ({
+                          ...current,
+                          unit: value as 'kg/acre' | 'liter/acre'
+                        }))
+                      }
+                      required
+                      defaultValue={fertigationForm?.unit ?? 'kg/acre'}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kg/acre">kg/acre</SelectItem>
+                        <SelectItem value="liter/acre">liter/acre</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="growth_stage" className="text-sm font-medium text-gray-700">
-                    Growth Stage
-                  </Label>
-                  <Input
-                    id="growth_stage"
-                    value={irrigationForm?.growth_stage ?? ''}
-                    onChange={(e) =>
-                      updateFormData('irrigation', (current) => ({
-                        ...current,
-                        growth_stage: e.target.value
-                      }))
-                    }
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="system_discharge" className="text-sm font-medium text-gray-700">
-                    System Discharge
-                  </Label>
-                  <Input
-                    id="system_discharge"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={irrigationForm?.system_discharge ?? ''}
-                    onChange={(e) =>
-                      updateFormData('irrigation', (current) => ({
-                        ...current,
-                        system_discharge: e.target.value
-                      }))
-                    }
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-            </>
-          )}
+              </>
+            )}
 
-          {recordType === 'spray' && (
-            <>
-              <div>
-                <Label htmlFor="chemical" className="text-sm font-medium text-gray-700">
-                  Chemical/Product *
-                </Label>
-                <Input
-                  id="chemical"
-                  value={sprayForm?.chemical ?? ''}
-                  onChange={(e) =>
-                    updateFormData('spray', (current) => ({
-                      ...current,
-                      chemical: e.target.value
-                    }))
-                  }
-                  className="mt-1"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+            {recordType === 'expense' && (
+              <>
                 <div>
-                  <Label htmlFor="pest_disease" className="text-sm font-medium text-gray-700">
-                    Target Pest/Disease
-                  </Label>
-                  <Input
-                    id="pest_disease"
-                    value={sprayForm?.pest_disease ?? ''}
-                    onChange={(e) =>
-                      updateFormData('spray', (current) => ({
-                        ...current,
-                        pest_disease: e.target.value
-                      }))
-                    }
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="dose" className="text-sm font-medium text-gray-700">
-                    Dose
-                  </Label>
-                  <Input
-                    id="dose"
-                    value={sprayForm?.dose ?? ''}
-                    onChange={(e) =>
-                      updateFormData('spray', (current) => ({
-                        ...current,
-                        dose: e.target.value
-                      }))
-                    }
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
-          {recordType === 'harvest' && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="quantity" className="text-sm font-medium text-gray-700">
-                    Quantity (kg) *
-                  </Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={harvestForm?.quantity ?? ''}
-                    onChange={(e) =>
-                      updateFormData('harvest', (current) => ({
-                        ...current,
-                        quantity: e.target.value
-                      }))
-                    }
-                    className="mt-1"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="grade" className="text-sm font-medium text-gray-700">
-                    Grade *
+                  <Label htmlFor="type" className="text-sm font-medium text-gray-700">
+                    Category *
                   </Label>
                   <Select
-                    value={harvestForm?.grade ?? ''}
+                    value={expenseForm?.type ?? 'other'}
                     onValueChange={(value) =>
-                      updateFormData('harvest', (current) => ({
+                      updateFormData('expense', (current) => ({
                         ...current,
-                        grade: value
+                        type: value as ExpenseCategory
                       }))
                     }
                   >
                     <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select grade" />
+                      <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Premium">Premium</SelectItem>
-                      <SelectItem value="Grade A">Grade A</SelectItem>
-                      <SelectItem value="Grade B">Grade B</SelectItem>
-                      <SelectItem value="Grade C">Grade C</SelectItem>
+                      <SelectItem value="labor">Labor</SelectItem>
+                      <SelectItem value="materials">Materials</SelectItem>
+                      <SelectItem value="equipment">Equipment</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="price" className="text-sm font-medium text-gray-700">
-                    Price per kg (₹)
+                  <Label htmlFor="description" className="text-sm font-medium text-gray-700">
+                    Description *
                   </Label>
                   <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={harvestForm?.price ?? ''}
+                    id="description"
+                    value={expenseForm?.description ?? ''}
                     onChange={(e) =>
-                      updateFormData('harvest', (current) => ({
+                      updateFormData('expense', (current) => ({
                         ...current,
-                        price: e.target.value
-                      }))
-                    }
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="buyer" className="text-sm font-medium text-gray-700">
-                    Buyer
-                  </Label>
-                  <Input
-                    id="buyer"
-                    value={harvestForm?.buyer ?? ''}
-                    onChange={(e) =>
-                      updateFormData('harvest', (current) => ({
-                        ...current,
-                        buyer: e.target.value
-                      }))
-                    }
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
-          {recordType === 'fertigation' && (
-            <>
-              <div>
-                <Label htmlFor="fertilizer" className="text-sm font-medium text-gray-700">
-                  Fertilizer *
-                </Label>
-                <Input
-                  id="fertilizer"
-                  value={fertigationForm?.fertilizer ?? ''}
-                  onChange={(e) =>
-                    updateFormData('fertigation', (current) => ({
-                      ...current,
-                      fertilizer: e.target.value
-                    }))
-                  }
-                  className="mt-1"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="dose" className="text-sm font-medium text-gray-700">
-                    Dose *
-                  </Label>
-                  <Input
-                    id="dose"
-                    value={fertigationForm?.dose ?? ''}
-                    onChange={(e) =>
-                      updateFormData('fertigation', (current) => ({
-                        ...current,
-                        dose: e.target.value
+                        description: e.target.value
                       }))
                     }
                     className="mt-1"
@@ -896,381 +1115,218 @@ export function EditRecordModal({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="area" className="text-sm font-medium text-gray-700">
-                    Area (acres)
+                  <Label htmlFor="cost" className="text-sm font-medium text-gray-700">
+                    Cost (₹) *
                   </Label>
                   <Input
-                    id="area"
+                    id="cost"
                     type="number"
-                    step="0.1"
+                    step="0.01"
                     min="0"
-                    value={fertigationForm?.area ?? ''}
+                    value={expenseForm?.cost ?? ''}
                     onChange={(e) =>
-                      updateFormData('fertigation', (current) => ({
+                      updateFormData('expense', (current) => ({
                         ...current,
-                        area: e.target.value
+                        cost: e.target.value
                       }))
                     }
                     className="mt-1"
+                    required
                   />
                 </div>
-              </div>
-              <div>
-                <Label htmlFor="purpose" className="text-sm font-medium text-gray-700">
-                  Purpose
-                </Label>
-                <Input
-                  id="purpose"
-                  value={fertigationForm?.purpose ?? ''}
-                  onChange={(e) =>
-                    updateFormData('fertigation', (current) => ({
-                      ...current,
-                      purpose: e.target.value
-                    }))
-                  }
-                  className="mt-1"
-                />
-              </div>
-            </>
-          )}
+              </>
+            )}
 
-          {recordType === 'expense' && (
-            <>
-              <div>
-                <Label htmlFor="type" className="text-sm font-medium text-gray-700">
-                  Category *
-                </Label>
-                <Select
-                  value={expenseForm?.type ?? 'other'}
-                  onValueChange={(value) =>
-                    updateFormData('expense', (current) => ({
-                      ...current,
-                      type: value as ExpenseCategory
-                    }))
-                  }
+            {recordType === 'soil_test' && (
+              <>
+                {/* Dynamic Soil Test Fields */}
+                <div
+                  className={`space-y-3 ${logTypeConfigs[record && isPetioleRecord(record) ? 'petiole_test' : 'soil_test'].fields.length > 1 ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : ''}`}
                 >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="labor">Labor</SelectItem>
-                    <SelectItem value="materials">Materials</SelectItem>
-                    <SelectItem value="equipment">Equipment</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="description" className="text-sm font-medium text-gray-700">
-                  Description *
-                </Label>
-                <Input
-                  id="description"
-                  value={expenseForm?.description ?? ''}
-                  onChange={(e) =>
-                    updateFormData('expense', (current) => ({
-                      ...current,
-                      description: e.target.value
-                    }))
-                  }
-                  className="mt-1"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="cost" className="text-sm font-medium text-gray-700">
-                  Cost (₹) *
-                </Label>
-                <Input
-                  id="cost"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={expenseForm?.cost ?? ''}
-                  onChange={(e) =>
-                    updateFormData('expense', (current) => ({
-                      ...current,
-                      cost: e.target.value
-                    }))
-                  }
-                  className="mt-1"
-                  required
-                />
-              </div>
-            </>
-          )}
-
-          {recordType === 'soil_test' && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="ph" className="text-sm font-medium text-gray-700">
-                    pH Level
-                  </Label>
-                  <Input
-                    id="ph"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="14"
-                    value={soilTestForm?.parameters?.pH ?? ''}
-                    onChange={(e) => {
-                      const parsed = parseFloat(e.target.value)
-                      updateFormData('soil_test', (current) => ({
-                        ...current,
-                        parameters: {
-                          ...current.parameters,
-                          pH: Number.isNaN(parsed) ? 0 : parsed
-                        }
-                      }))
-                    }}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="nitrogen" className="text-sm font-medium text-gray-700">
-                    Nitrogen (ppm)
-                  </Label>
-                  <Input
-                    id="nitrogen"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={soilTestForm?.parameters?.nitrogen ?? ''}
-                    onChange={(e) => {
-                      const parsed = parseFloat(e.target.value)
-                      updateFormData('soil_test', (current) => ({
-                        ...current,
-                        parameters: {
-                          ...current.parameters,
-                          nitrogen: Number.isNaN(parsed) ? 0 : parsed
-                        }
-                      }))
-                    }}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="phosphorus" className="text-sm font-medium text-gray-700">
-                    Phosphorus (ppm)
-                  </Label>
-                  <Input
-                    id="phosphorus"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={soilTestForm?.parameters?.phosphorus ?? ''}
-                    onChange={(e) => {
-                      const parsed = parseFloat(e.target.value)
-                      updateFormData('soil_test', (current) => ({
-                        ...current,
-                        parameters: {
-                          ...current.parameters,
-                          phosphorus: Number.isNaN(parsed) ? 0 : parsed
-                        }
-                      }))
-                    }}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="potassium" className="text-sm font-medium text-gray-700">
-                    Potassium (ppm)
-                  </Label>
-                  <Input
-                    id="potassium"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={soilTestForm?.parameters?.potassium ?? ''}
-                    onChange={(e) => {
-                      const parsed = parseFloat(e.target.value)
-                      updateFormData('soil_test', (current) => ({
-                        ...current,
-                        parameters: {
-                          ...current.parameters,
-                          potassium: Number.isNaN(parsed) ? 0 : parsed
-                        }
-                      }))
-                    }}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 space-y-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">
-                      Lab Report Attachment
-                    </Label>
-                    <p className="text-xs text-gray-500">
-                      Upload a PDF or image report to refresh nutrient values.
-                    </p>
-                  </div>
-                  {reportMeta?.extractionStatus === 'success' && (
-                    <Badge
-                      variant="outline"
-                      className="border-emerald-200 bg-emerald-50 text-emerald-700"
-                    >
-                      Auto parsed
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="file"
-                    accept="application/pdf,image/*"
-                    onChange={handleReportFileChange}
-                    disabled={isUploadingReport}
-                    className="h-9"
-                  />
-                  {isUploadingReport ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
-                  ) : (
-                    <Upload className="h-4 w-4 text-gray-400" />
-                  )}
-                  {reportMeta && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleResetReport}
-                      className="h-8 text-xs"
-                    >
-                      <RefreshCcw className="h-3 w-3 mr-1" />
-                      Clear
-                    </Button>
-                  )}
-                </div>
-
-                {reportMeta && (
-                  <div className="space-y-1 rounded-md bg-white p-2 text-xs text-gray-700">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Paperclip className="h-3 w-3" />
-                      <span className="font-medium truncate max-w-[180px]">
-                        {reportMeta.filename}
-                      </span>
-                      <Badge variant="outline" className="capitalize">
-                        {reportMeta.reportType}
-                      </Badge>
-                      <Button
-                        variant="link"
-                        size="sm"
-                        onClick={handleViewReport}
-                        disabled={isFetchingReportUrl}
-                        className="h-auto p-0 text-xs"
-                      >
-                        {isFetchingReportUrl ? (
-                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                        ) : null}
-                        View report
-                      </Button>
+                  {logTypeConfigs[
+                    record && isPetioleRecord(record) ? 'petiole_test' : 'soil_test'
+                  ].fields.map((field) => (
+                    <div key={field.name}>
+                      <Label htmlFor={field.name} className="text-sm font-medium text-gray-700">
+                        {field.label}
+                        {field.required && <span className="text-red-500 ml-1">*</span>}
+                      </Label>
+                      <Input
+                        id={field.name}
+                        type="number"
+                        step={field.step}
+                        min={field.min}
+                        max={field.max}
+                        value={soilTestForm?.parameters?.[field.name] ?? ''}
+                        onChange={(e) => {
+                          const parsed = parseFloat(e.target.value)
+                          updateFormData('soil_test', (current) => ({
+                            ...current,
+                            parameters: {
+                              ...current.parameters,
+                              [field.name]: Number.isNaN(parsed) ? 0 : parsed
+                            }
+                          }))
+                        }}
+                        className="mt-1"
+                      />
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {reportMeta.extractionStatus === 'success' ? (
-                        <>
-                          <CheckCircle className="h-3 w-3 text-emerald-500" />
-                          <span className="text-emerald-700">Parsed successfully</span>
-                          {typeof reportMeta.confidence === 'number' && (
-                            <span className="text-gray-500">
-                              Confidence {(reportMeta.confidence * 100).toFixed(0)}%
+                  ))}
+                </div>
+                <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">
+                        Lab Report Attachment
+                      </Label>
+                      <p className="text-xs text-gray-500">
+                        Upload a PDF or image report to refresh nutrient values.
+                      </p>
+                    </div>
+                    {reportMeta?.extractionStatus === 'success' && (
+                      <Badge
+                        variant="outline"
+                        className="border-emerald-200 bg-emerald-50 text-emerald-700"
+                      >
+                        Auto parsed
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="file"
+                      accept="application/pdf,image/*"
+                      onChange={handleReportFileChange}
+                      disabled={isUploadingReport}
+                      className="h-9"
+                    />
+                    {isUploadingReport ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                    ) : (
+                      <Upload className="h-4 w-4 text-gray-400" />
+                    )}
+                    {reportMeta && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleResetReport}
+                        className="h-8 text-xs"
+                      >
+                        <RefreshCcw className="h-3 w-3 mr-1" />
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+
+                  {reportMeta && (
+                    <div className="space-y-1 rounded-md bg-white p-2 text-xs text-gray-700">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Paperclip className="h-3 w-3" />
+                        <span className="font-medium truncate max-w-[180px]">
+                          {reportMeta.filename}
+                        </span>
+                        <Badge variant="outline" className="capitalize">
+                          {reportMeta.reportType}
+                        </Badge>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          onClick={handleViewReport}
+                          disabled={isFetchingReportUrl}
+                          className="h-auto p-0 text-xs"
+                        >
+                          {isFetchingReportUrl ? (
+                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                          ) : null}
+                          View report
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {reportMeta.extractionStatus === 'success' ? (
+                          <>
+                            <CheckCircle className="h-3 w-3 text-emerald-500" />
+                            <span className="text-emerald-700">Parsed successfully</span>
+                            {typeof reportMeta.confidence === 'number' && (
+                              <span className="text-gray-500">
+                                Confidence {(reportMeta.confidence * 100).toFixed(0)}%
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <FileWarning className="h-3 w-3 text-amber-500" />
+                            <span className="text-amber-600">
+                              {reportMeta.extractionError ||
+                                'Automatic parsing failed. Please verify values.'}
                             </span>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <FileWarning className="h-3 w-3 text-amber-500" />
-                          <span className="text-amber-600">
-                            {reportMeta.extractionError ||
-                              'Automatic parsing failed. Please verify values.'}
-                          </span>
-                        </>
+                          </>
+                        )}
+                      </div>
+                      {reportMeta.summary && (
+                        <p className="text-gray-600">Summary: {reportMeta.summary}</p>
+                      )}
+                      {reportMeta.rawNotes && (
+                        <p className="text-gray-500">Notes: {reportMeta.rawNotes}</p>
                       )}
                     </div>
-                    {reportMeta.summary && (
-                      <p className="text-gray-600">Summary: {reportMeta.summary}</p>
-                    )}
-                    {reportMeta.rawNotes && (
-                      <p className="text-gray-500">Notes: {reportMeta.rawNotes}</p>
-                    )}
-                  </div>
-                )}
+                  )}
 
-                {reportUploadError && (
-                  <p className="text-xs text-red-600 flex items-center gap-1">
-                    <FileWarning className="h-3 w-3" />
-                    {reportUploadError}
-                  </p>
-                )}
-              </div>
+                  {reportUploadError && (
+                    <p className="text-xs text-red-600 flex items-center gap-1">
+                      <FileWarning className="h-3 w-3" />
+                      {reportUploadError}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
 
-              <div>
-                <Label htmlFor="recommendations" className="text-sm font-medium text-gray-700">
-                  Recommendations
-                </Label>
-                <Textarea
-                  id="recommendations"
-                  value={soilTestForm?.recommendations ?? ''}
-                  onChange={(e) =>
-                    updateFormData('soil_test', (current) => ({
-                      ...current,
-                      recommendations: e.target.value
-                    }))
-                  }
-                  className="mt-1 resize-none"
-                  rows={3}
-                />
-              </div>
-            </>
-          )}
-
-          {/* Notes/Remarks */}
-          <div>
-            <Label htmlFor="notes" className="text-sm font-medium text-gray-700">
-              {recordType === 'expense' ? 'Remarks' : 'Notes'}
-            </Label>
-            <Textarea
-              id="notes"
-              value={
-                recordType === 'expense' ? (expenseForm?.remarks ?? '') : (formData?.notes ?? '')
-              }
-              onChange={(e) => {
-                const value = e.target.value
-                if (recordType === 'expense') {
-                  updateFormData('expense', (current) => ({ ...current, remarks: value }))
-                } else {
-                  setFormData((prev) => (prev ? { ...prev, notes: value } : prev))
+            <div>
+              <Label htmlFor="notes" className="text-sm font-medium text-gray-700">
+                {recordType === 'expense' ? 'Remarks' : 'Notes'}
+              </Label>
+              <Textarea
+                id="notes"
+                value={
+                  recordType === 'expense' ? (expenseForm?.remarks ?? '') : (formData?.notes ?? '')
                 }
-              }}
-              placeholder="Any additional notes..."
-              className="mt-1 resize-none"
-              rows={3}
-            />
-          </div>
+                onChange={(e) => {
+                  const value = e.target.value
+                  if (recordType === 'expense') {
+                    updateFormData('expense', (current) => ({ ...current, remarks: value }))
+                  } else {
+                    setFormData((prev) => (prev ? { ...prev, notes: value } : prev))
+                  }
+                }}
+                placeholder="Any additional notes..."
+                className="mt-1 resize-none"
+                rows={3}
+              />
+            </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </Button>
-          </div>
-        </form>
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4 sticky bottom-0 bg-white border-t">
+              <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   )

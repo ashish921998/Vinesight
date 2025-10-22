@@ -17,6 +17,23 @@ interface ActivityLog {
   cost?: number
   fertilizer?: string
   created_at: string
+  // Report-related properties for soil and petiole tests
+  report_url?: string
+  report_storage_path?: string
+  report_filename?: string
+  report_mimeType?: string
+  report_type?: string
+  extraction_status?: string
+  extraction_error?: string
+  parsed_parameters?: Record<string, number>
+  raw_notes?: string
+}
+
+export interface GroupedActivities {
+  date: string
+  activities: ActivityLog[]
+  totalCount: number
+  logTypes: string[]
 }
 
 /**
@@ -231,5 +248,362 @@ function getTestDateDisplayText(activity: ActivityLog): string {
     }
   } catch (error) {
     return activity.type ? activity.type.replace(/_/g, ' ') : 'Test'
+  }
+}
+
+/**
+ * Group activities by date for better organization
+ * @param activities - Array of activity logs
+ * @returns Array of grouped activities by date
+ */
+export function groupActivitiesByDate(activities: ActivityLog[]): GroupedActivities[] {
+  const grouped: Record<string, ActivityLog[]> = {}
+
+  // Group activities by date
+  activities.forEach((activity) => {
+    const date = activity.date || activity.created_at
+    if (!date) return
+
+    const dateKey = new Date(date).toDateString()
+    if (!grouped[dateKey]) {
+      grouped[dateKey] = []
+    }
+    grouped[dateKey].push(activity)
+  })
+
+  // Convert to array and sort by date (newest first)
+  return Object.entries(grouped)
+    .map(([date, activities]) => ({
+      date,
+      activities: activities.sort(
+        (a, b) =>
+          new Date(b.date || b.created_at || '').getTime() -
+          new Date(a.date || a.created_at || '').getTime()
+      ),
+      totalCount: activities.length,
+      logTypes: [...new Set(activities.map((a) => a.type))]
+    }))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+}
+
+/**
+ * Get all logs for a specific date
+ * @param activities - Array of activity logs
+ * @param targetDate - The date to extract logs for
+ * @returns Array of activities for the specified date
+ */
+export function getLogsForDate(activities: ActivityLog[], targetDate: string): ActivityLog[] {
+  const targetDateKey = new Date(targetDate).toDateString()
+  return activities.filter((activity) => {
+    const activityDate = activity.date || activity.created_at
+    if (!activityDate) return false
+    return new Date(activityDate).toDateString() === targetDateKey
+  })
+}
+
+/**
+ * Get a summary text for a group of activities
+ * @param grouped - Grouped activities object
+ * @returns Summary string for display
+ */
+export function getGroupedActivitiesSummary(grouped: GroupedActivities): string {
+  const { totalCount, logTypes } = grouped
+
+  if (totalCount === 1) {
+    return `1 log: ${logTypes[0].replace(/_/g, ' ')}`
+  }
+
+  const typeNames = logTypes.map((type) => type.replace(/_/g, ' '))
+
+  if (typeNames.length === 1) {
+    return `${totalCount} ${typeNames[0]} logs`
+  }
+
+  if (typeNames.length === 2) {
+    return `${totalCount} logs: ${typeNames.join(' & ')}`
+  }
+
+  return `${totalCount} logs: ${typeNames.slice(0, 2).join(', ')} & ${typeNames.length - 2} more`
+}
+
+// Define valid activity types for type safety
+type ValidActivityType =
+  | 'irrigation'
+  | 'spray'
+  | 'harvest'
+  | 'expense'
+  | 'fertigation'
+  | 'soil_test'
+  | 'petiole_test'
+
+/**
+ * Validate and normalize activity type
+ */
+function validateActivityType(type: string | undefined): ValidActivityType | null {
+  if (!type || typeof type !== 'string') return null
+
+  const validTypes: ValidActivityType[] = [
+    'irrigation',
+    'spray',
+    'harvest',
+    'expense',
+    'fertigation',
+    'soil_test',
+    'petiole_test'
+  ]
+  return validTypes.includes(type as ValidActivityType) ? (type as ValidActivityType) : null
+}
+
+/**
+ * Transform activities to log entries format for UnifiedDataLogsModal
+ * @param activities - Array of activity logs
+ * @returns Array of log entries in the format expected by UnifiedDataLogsModal
+ */
+export function transformActivitiesToLogEntries(activities: ActivityLog[]): Array<{
+  id: string
+  type: ValidActivityType
+  data: Record<string, any>
+  isValid: boolean
+  meta?: {
+    report?: {
+      storagePath: string
+      signedUrl: string
+      filename: string
+      mimeType: string
+      reportType: string
+      extractionStatus: string
+      extractionError?: string
+      parsedParameters?: Record<string, number>
+      rawNotes?: string
+    }
+  }
+}> {
+  return activities
+    .map((activity) => {
+      // Validate activity type
+      const validatedType = validateActivityType(activity.type)
+      if (!validatedType) {
+        // Log warning for invalid activity type
+        logger.warn(`Invalid activity type detected: ${activity.type}`, {
+          activityId: activity.id,
+          activityType: activity.type,
+          date: activity.date
+        })
+
+        // Filter out invalid types instead of coercing to irrigation
+        return null
+      }
+
+      // Validate report fields
+      const hasValidReport =
+        activity.report_url && activity.report_storage_path && activity.report_filename
+
+      return {
+        id: activity.id.toString(),
+        type: validatedType,
+        data: { ...activity },
+        isValid: true,
+        meta: hasValidReport
+          ? {
+              report: {
+                storagePath: activity.report_storage_path!,
+                signedUrl: activity.report_url!,
+                filename: activity.report_filename!,
+                mimeType: activity.report_mimeType || '',
+                reportType: activity.report_type || '',
+                extractionStatus: activity.extraction_status || '',
+                extractionError: activity.extraction_error,
+                parsedParameters: activity.parsed_parameters,
+                rawNotes: activity.raw_notes
+              }
+            }
+          : undefined
+      }
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+}
+
+/**
+ * Get summary items for an array of activities
+ * @param activities - Array of activity logs
+ * @returns Array of summary objects with type, summary, and count
+ */
+export function getActivitiesSummary(activities: ActivityLog[]): Array<{
+  type: string
+  summary: string
+  count: number
+}> {
+  // Group activities by type
+  const groupedByType: Record<string, ActivityLog[]> = {}
+
+  activities.forEach((activity) => {
+    if (!groupedByType[activity.type]) {
+      groupedByType[activity.type] = []
+    }
+    groupedByType[activity.type].push(activity)
+  })
+
+  // Create summary items for each type
+  return Object.entries(groupedByType).map(([type, typeActivities]) => {
+    const count = typeActivities.length
+    let summary = ''
+
+    // Create type-specific summary
+    switch (type) {
+      case 'irrigation': {
+        const totalDuration = typeActivities.reduce((sum, act) => sum + (act.duration || 0), 0)
+        summary = totalDuration > 0 ? `${totalDuration} hrs irrigation` : 'Irrigation'
+        break
+      }
+
+      case 'spray': {
+        // Get unique chemicals
+        const chemicals = new Set<string>()
+        typeActivities.forEach((act) => {
+          if (act.chemical && act.chemical.trim()) {
+            chemicals.add(act.chemical.trim())
+          }
+          if (act.chemicals && Array.isArray(act.chemicals)) {
+            act.chemicals.forEach((chem) => {
+              if (chem.name && chem.name.trim()) {
+                chemicals.add(chem.name.trim())
+              }
+            })
+          }
+        })
+        if (chemicals.size > 0) {
+          summary = Array.from(chemicals).join(', ')
+        } else {
+          summary = 'Spray'
+        }
+        break
+      }
+
+      case 'harvest': {
+        const totalQuantity = typeActivities.reduce((sum, act) => sum + (act.quantity || 0), 0)
+        summary = totalQuantity > 0 ? `${totalQuantity} kg harvested` : 'Harvest'
+        break
+      }
+
+      case 'expense': {
+        const totalCost = typeActivities.reduce((sum, act) => sum + (act.cost || 0), 0)
+        summary = totalCost > 0 ? `₹${totalCost.toLocaleString('en-IN')} expenses` : 'Expense'
+        break
+      }
+
+      case 'fertigation': {
+        const fertilizers = new Set<string>()
+        typeActivities.forEach((act) => {
+          if (act.fertilizer && act.fertilizer.trim()) {
+            fertilizers.add(act.fertilizer.trim())
+          }
+        })
+        if (fertilizers.size > 0) {
+          summary = Array.from(fertilizers).join(', ')
+        } else {
+          summary = 'Fertigation'
+        }
+        break
+      }
+
+      case 'soil_test':
+      case 'petiole_test':
+        summary = type.replace(/_/g, ' ')
+        break
+
+      default:
+        summary = type.replace(/_/g, ' ')
+    }
+
+    return {
+      type,
+      summary,
+      count
+    }
+  })
+}
+
+/**
+ * Normalize date string to YYYY-MM-DD format in a timezone-safe manner
+ * @param dateString - Date string to normalize
+ * @returns YYYY-MM-DD format string or null if parsing fails
+ */
+export function normalizeDateToYYYYMMDD(dateString: string | undefined | null): string | null {
+  if (!dateString || typeof dateString !== 'string') {
+    return null
+  }
+
+  try {
+    // Check if already in YYYY-MM-DD format
+    const yyyyMmDdPattern = /^(\d{4})-(\d{2})-(\d{2})$/
+    if (yyyyMmDdPattern.test(dateString.trim())) {
+      return dateString.trim()
+    }
+
+    // Try to extract YYYY-MM-DD pattern from the string
+    const match = dateString.match(/\d{4}-\d{2}-\d{2}/)
+    if (match && match[0]) {
+      return match[0]
+    }
+
+    // For locale date strings (like "Mon Oct 15 2023"), parse as local time
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) {
+      return null
+    }
+
+    // Return YYYY-MM-DD format using local time components
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  } catch (error) {
+    return null
+  }
+}
+
+/**
+ * Format date for display in grouped activities
+ * @param dateString - Date string to format
+ * @returns Formatted date string
+ */
+export function formatGroupedDate(dateString: string): string {
+  try {
+    let date: Date
+
+    // Check if dateString is in YYYY-MM-DD format and parse as local date
+    const yyyyMmDdPattern = /^(\d{4})-(\d{2})-(\d{2})$/
+    if (yyyyMmDdPattern.test(dateString)) {
+      const match = dateString.match(yyyyMmDdPattern)
+      if (match) {
+        const year = parseInt(match[1], 10)
+        const month = parseInt(match[2], 10) - 1 // Convert to 0-based month
+        const day = parseInt(match[3], 10)
+        date = new Date(year, month, day)
+      } else {
+        date = new Date(dateString)
+      }
+    } else {
+      date = new Date(dateString)
+    }
+
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today'
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday'
+    } else {
+      const options: Intl.DateTimeFormatOptions = {
+        day: 'numeric',
+        month: 'short',
+        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+      }
+      return date.toLocaleDateString('en-IN', options)
+    }
+  } catch (error) {
+    return dateString
   }
 }

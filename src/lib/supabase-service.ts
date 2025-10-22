@@ -51,7 +51,10 @@ export class SupabaseService {
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase error in updateFarm:', error)
+      throw new Error(`Failed to update farm: ${error.message} (Code: ${error.code || 'UNKNOWN'})`)
+    }
     return (data || []).map(toApplicationFarm)
   }
 
@@ -579,7 +582,73 @@ export class SupabaseService {
     record: Omit<FertigationRecord, 'id' | 'created_at'>
   ): Promise<FertigationRecord> {
     const supabase = getTypedSupabaseClient()
-    const dbRecord = toDatabaseFertigationInsert(record)
+
+    // Validate fertilizer name
+    if (!record.fertilizer || !record.fertilizer.trim()) {
+      throw new Error('Fertilizer name is required and cannot be empty')
+    }
+
+    const trimmedFertilizer = record.fertilizer.trim()
+    if (trimmedFertilizer.length > 100) {
+      throw new Error('Fertilizer name must be less than 100 characters')
+    }
+
+    // Validate quantity is provided and is a valid number
+    if (record.quantity === undefined || record.quantity === null) {
+      throw new Error('Fertilizer quantity is required')
+    }
+
+    // Check for NaN and Infinity
+    if (isNaN(record.quantity) || !isFinite(record.quantity)) {
+      throw new Error('Fertilizer quantity must be a valid number')
+    }
+
+    // Validate quantity is strictly greater than 0
+    if (record.quantity <= 0) {
+      throw new Error('Fertilizer quantity must be greater than 0')
+    }
+
+    // Validate unit is provided
+    if (!record.unit) {
+      throw new Error('Fertilizer unit is required')
+    }
+
+    const unit = record.unit.trim()
+    if (!unit) {
+      throw new Error('Fertilizer unit cannot be empty')
+    }
+
+    // Validate unit is one of the allowed values
+    if (!['kg/acre', 'liter/acre'].includes(unit)) {
+      throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre"')
+    }
+
+    // Validate area if provided
+    if (record.area !== undefined && record.area !== null) {
+      // Check for NaN and Infinity
+      if (isNaN(record.area) || !isFinite(record.area)) {
+        throw new Error('Area must be a valid number')
+      }
+
+      // Validate area is strictly greater than 0
+      if (record.area <= 0) {
+        throw new Error('Area must be greater than 0')
+      }
+
+      // Validate area is within reasonable bounds
+      if (record.area > 25000) {
+        throw new Error('Area cannot exceed 25,000 acres')
+      }
+    }
+
+    // Sanitize the record
+    const sanitizedRecord = {
+      ...record,
+      fertilizer: trimmedFertilizer,
+      unit: unit as 'kg/acre' | 'liter/acre'
+    }
+
+    const dbRecord = toDatabaseFertigationInsert(sanitizedRecord)
 
     const { data, error } = await supabase
       .from('fertigation_records')
@@ -587,7 +656,12 @@ export class SupabaseService {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase error in addFertigationRecord:', error)
+      throw new Error(
+        `Failed to add fertigation record: ${error.message} (Code: ${error.code || 'UNKNOWN'})`
+      )
+    }
     return toApplicationFertigationRecord(data)
   }
 
@@ -596,6 +670,70 @@ export class SupabaseService {
     updates: Partial<FertigationRecord>
   ): Promise<FertigationRecord> {
     const supabase = getTypedSupabaseClient()
+
+    // Validate fertilizer name if provided
+    if (updates.fertilizer !== undefined) {
+      if (!updates.fertilizer || !updates.fertilizer.trim()) {
+        throw new Error('Fertilizer name is required and cannot be empty')
+      }
+
+      const trimmedFertilizer = updates.fertilizer.trim()
+      if (trimmedFertilizer.length > 100) {
+        throw new Error('Fertilizer name must be less than 100 characters')
+      }
+      updates.fertilizer = trimmedFertilizer
+    }
+
+    // Validate quantity if provided
+    if (updates.quantity !== undefined && updates.quantity !== null) {
+      // Check for NaN and Infinity
+      if (isNaN(updates.quantity) || !isFinite(updates.quantity)) {
+        throw new Error('Fertilizer quantity must be a valid number')
+      }
+
+      // Validate quantity is strictly greater than 0
+      if (updates.quantity <= 0) {
+        throw new Error('Fertilizer quantity must be greater than 0')
+      }
+    }
+
+    // Validate unit if provided
+    if (updates.unit !== undefined) {
+      if (!updates.unit) {
+        throw new Error('Fertilizer unit cannot be empty')
+      }
+
+      const unit = updates.unit.trim()
+      if (!unit) {
+        throw new Error('Fertilizer unit cannot be empty')
+      }
+
+      // Validate unit is one of the allowed values
+      if (!['kg/acre', 'liter/acre'].includes(unit)) {
+        throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre"')
+      }
+
+      updates.unit = unit as 'kg/acre' | 'liter/acre'
+    }
+
+    // Validate area if provided
+    if (updates.area !== undefined && updates.area !== null) {
+      // Check for NaN and Infinity
+      if (isNaN(updates.area) || !isFinite(updates.area)) {
+        throw new Error('Area must be a valid number')
+      }
+
+      // Validate area is strictly greater than 0
+      if (updates.area <= 0) {
+        throw new Error('Area must be greater than 0')
+      }
+
+      // Validate area is within reasonable bounds
+      if (updates.area > 25000) {
+        throw new Error('Area cannot exceed 25,000 acres')
+      }
+    }
+
     const dbUpdates = toDatabaseFertigationUpdate(updates)
 
     const { data, error } = await supabase
@@ -605,7 +743,12 @@ export class SupabaseService {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase error in updateFertigationRecord:', error)
+      throw new Error(
+        `Failed to update fertigation record: ${error.message} (Code: ${error.code || 'UNKNOWN'})`
+      )
+    }
     return toApplicationFertigationRecord(data)
   }
 
@@ -1054,6 +1197,35 @@ export class SupabaseService {
     const supabase = getTypedSupabaseClient()
     const { error } = await supabase.auth.signOut()
     if (error) throw error
+  }
+
+  // Unified deletion helper
+  static async deleteLogByType(logType: string, logId: number): Promise<void> {
+    switch (logType) {
+      case 'irrigation':
+        await this.deleteIrrigationRecord(logId)
+        break
+      case 'spray':
+        await this.deleteSprayRecord(logId)
+        break
+      case 'fertigation':
+        await this.deleteFertigationRecord(logId)
+        break
+      case 'harvest':
+        await this.deleteHarvestRecord(logId)
+        break
+      case 'expense':
+        await this.deleteExpenseRecord(logId)
+        break
+      case 'soil_test':
+        await this.deleteSoilTestRecord(logId)
+        break
+      case 'petiole_test':
+        await this.deletePetioleTestRecord(logId)
+        break
+      default:
+        throw new Error(`Unknown log type: ${logType}`)
+    }
   }
 
   // Real-time subscriptions
