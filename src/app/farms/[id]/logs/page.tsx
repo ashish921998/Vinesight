@@ -53,6 +53,7 @@ import {
 } from 'lucide-react'
 import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
 import { transformActivitiesToLogEntries } from '@/lib/activity-display-utils'
+import { PhotoService } from '@/lib/photo-service'
 
 // Utility function for date formatting with blue-600 color
 const formatLogDate = (dateString: string): string => {
@@ -105,16 +106,18 @@ const formatLogDate = (dateString: string): string => {
 
 // Calculate days after pruning from farm's pruning date and log created date
 const getDaysAfterPruning = (
-  farmPruningDate?: Date | null,
+  farmPruningDate?: Date | string | null,
   logCreatedAt?: string
 ): number | null => {
   if (!farmPruningDate || !logCreatedAt) return null
 
   try {
-    const pruningDate = farmPruningDate
+    // Convert string date to Date object if needed
+    const pruningDate =
+      typeof farmPruningDate === 'string' ? new Date(farmPruningDate) : farmPruningDate
     const createdDate = new Date(logCreatedAt)
 
-    if (isNaN(pruningDate.getTime()) || isNaN(createdDate.getTime())) {
+    if (!pruningDate || isNaN(pruningDate.getTime()) || isNaN(createdDate.getTime())) {
       return null
     }
 
@@ -398,17 +401,166 @@ export default function FarmLogsPage() {
     // Transform activities to the format expected by UnifiedDataLogsModal
     const existingLogs = transformActivitiesToLogEntries(activities)
 
-    setSelectedDate(date)
+    // Convert date to ISO format (YYYY-MM-DD) for proper handling
+    const isoDate = date
+      ? new Date(date).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0]
+
+    setSelectedDate(isoDate)
     setExistingLogsForEdit(existingLogs)
     setEditMode('edit')
     setShowUnifiedModal(true)
   }
 
-  const handleSubmitLogs = async () => {
+  // Helper function to save log entries
+  const saveLogEntry = async (logEntry: any, date: string, dayNotes: string) => {
+    const { type, data } = logEntry
+    let record
+
+    switch (type) {
+      case 'irrigation':
+        record = await SupabaseService.addIrrigationRecord({
+          farm_id: parseInt(selectedFarm),
+          date: date,
+          duration: parseFloat(data.duration || '0'),
+          area: parseFloat(data.area || '0') || currentFarm?.area || 0,
+          growth_stage: 'Active',
+          moisture_status: 'Good',
+          system_discharge: currentFarm?.systemDischarge || 100,
+          notes: dayNotes || '',
+          date_of_pruning: currentFarm?.dateOfPruning
+        })
+        break
+
+      case 'spray': {
+        const sprayData: any = {
+          farm_id: parseInt(selectedFarm),
+          date: date,
+          water_volume: data.water_volume ? parseFloat(data.water_volume) : 0,
+          chemicals: data.chemicals || [],
+          area: currentFarm?.area || 0,
+          weather: 'Clear',
+          operator: 'Farm Owner',
+          notes: dayNotes || '',
+          date_of_pruning: currentFarm?.dateOfPruning
+        }
+
+        if (data.chemicals && Array.isArray(data.chemicals) && data.chemicals.length > 0) {
+          const firstChemical = data.chemicals[0]
+          sprayData.chemical = firstChemical.name || 'Unknown'
+          sprayData.quantity_amount = firstChemical.quantity || 0
+          sprayData.quantity_unit = firstChemical.unit || 'gm/L'
+          sprayData.dose = `${firstChemical.quantity || 0}${firstChemical.unit || 'gm/L'}`
+        } else {
+          sprayData.chemical = data.chemical?.trim() || 'Unknown'
+          sprayData.quantity_amount = data.quantity_amount ? parseFloat(data.quantity_amount) : 0
+          sprayData.quantity_unit = data.quantity_unit || 'gm/L'
+          sprayData.dose =
+            data.quantity_amount && data.quantity_unit
+              ? `${data.quantity_amount}${data.quantity_unit}`
+              : 'As per label'
+        }
+
+        record = await SupabaseService.addSprayRecord(sprayData)
+        break
+      }
+
+      case 'harvest':
+        record = await SupabaseService.addHarvestRecord({
+          farm_id: parseInt(selectedFarm),
+          date: date,
+          quantity: parseFloat(data.quantity || '0'),
+          grade: data.grade || 'Standard',
+          price: 0,
+          buyer: '',
+          notes: dayNotes || '',
+          date_of_pruning: currentFarm?.dateOfPruning
+        })
+        break
+
+      case 'expense':
+        record = await SupabaseService.addExpenseRecord({
+          farm_id: parseInt(selectedFarm),
+          date: date,
+          type: data.type || 'other',
+          description: data.description || '',
+          cost: parseFloat(data.cost || '0'),
+          remarks: dayNotes || '',
+          date_of_pruning: currentFarm?.dateOfPruning
+        })
+        break
+
+      case 'fertigation':
+        record = await SupabaseService.addFertigationRecord({
+          farm_id: parseInt(selectedFarm),
+          date: date,
+          fertilizer: data.fertilizer?.trim() || 'Unknown',
+          quantity: data.quantity || 0,
+          unit: data.unit || 'kg/acre',
+          notes: dayNotes || '',
+          date_of_pruning: currentFarm?.dateOfPruning
+        })
+        break
+
+      case 'soil_test':
+        record = await SupabaseService.addSoilTestRecord({
+          farm_id: parseInt(selectedFarm),
+          date,
+          parameters: {},
+          notes: dayNotes || '',
+          date_of_pruning: currentFarm?.dateOfPruning
+        })
+        break
+
+      case 'petiole_test':
+        record = await SupabaseService.addPetioleTestRecord({
+          farm_id: parseInt(selectedFarm),
+          date,
+          sample_id: data.sample_id || '',
+          parameters: {},
+          notes: dayNotes || '',
+          date_of_pruning: currentFarm?.dateOfPruning
+        })
+        break
+    }
+
+    return record
+  }
+
+  const handleSubmitLogs = async (
+    logs: any[],
+    date: string,
+    dayNotes: string,
+    dayPhotos: File[]
+  ) => {
     setIsSubmitting(true)
     try {
-      // The UnifiedDataLogsModal will handle the submission
-      await loadLogs() // Reload logs after editing
+      let firstRecordId: number | null = null
+
+      // Save all log entries
+      for (let i = 0; i < logs.length; i++) {
+        const logEntry = logs[i]
+        const record = await saveLogEntry(logEntry, date, dayNotes)
+
+        // Store first record ID for photo upload
+        if (i === 0 && record?.id) {
+          firstRecordId = record.id
+        }
+      }
+
+      // Upload day photos if any
+      if (firstRecordId && dayPhotos && dayPhotos.length > 0) {
+        for (const photo of dayPhotos) {
+          try {
+            await PhotoService.uploadPhoto(photo, 'day_photos', firstRecordId)
+          } catch (photoError) {
+            console.error('Error uploading day photo:', photoError)
+          }
+        }
+      }
+
+      // Reload logs after saving
+      await loadLogs()
       setShowUnifiedModal(false)
       setExistingLogsForEdit([])
       setSelectedDate('')

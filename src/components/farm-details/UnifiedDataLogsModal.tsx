@@ -1,7 +1,14 @@
 'use client'
 
 import { useState, useEffect, type ChangeEvent } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,6 +39,7 @@ import {
 import { toast } from 'sonner'
 import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-config'
 import { formatChemicalsArray, type Chemical } from '@/lib/chemical-formatter'
+import { SupabaseService } from '@/lib/supabase-service'
 
 interface LogEntry {
   id: string // temporary ID for session
@@ -74,14 +82,24 @@ export function UnifiedDataLogsModal({
   const [internalSelectedDate, setInternalSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   )
-  const selectedDateToUse =
+
+  // Helper function to normalize date to ISO format (YYYY-MM-DD)
+  const toISO = (dateStr?: string) => {
+    if (!dateStr) return new Date().toISOString().split('T')[0]
+    const d = new Date(dateStr)
+    return Number.isFinite(d.getTime()) ? d.toISOString().split('T')[0] : dateStr
+  }
+
+  // In edit mode, use the original date from the first log entry's data to preserve it
+  const selectedDateToUse = toISO(
     mode === 'edit' && existingLogs.length > 0
       ? existingLogs[0]?.data?.date || selectedDate || internalSelectedDate
       : selectedDate || internalSelectedDate
+  )
   const setSelectedDate =
     selectedDate || (mode === 'edit' && existingLogs.length > 0)
       ? () => {}
-      : setInternalSelectedDate
+      : (v: string) => setInternalSelectedDate(toISO(v))
   const [currentLogType, setCurrentLogType] = useState<LogType | null>(null)
   const [currentFormData, setCurrentFormData] = useState<Record<string, any>>({})
   const [sessionLogs, setSessionLogs] = useState<LogEntry[]>([])
@@ -125,9 +143,68 @@ export function UnifiedDataLogsModal({
     Array<{ id: string; data: Record<string, any>; isValid: boolean }>
   >([])
 
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean
+    logId: string | null
+    logType: LogType | null
+    isLoading: boolean
+  }>({
+    isOpen: false,
+    logId: null,
+    logType: null,
+    isLoading: false
+  })
+
   // Initialize modal state when opened or when mode/existingLogs change
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      // First, completely reset all state to prevent any leakage
+      const resetState = () => {
+        setCurrentLogType(null)
+        setCurrentFormData({})
+        setSessionLogs([])
+        setEditingLogId(null)
+        setDayNotes('')
+        setDayPhotos([])
+        setMultipleSprayMode(false)
+        setSprayEntries([])
+        setWaterVolume('')
+        setChemicals([makeEmptyChemical()])
+        setMultipleFertigationMode(false)
+        setFertigationEntries([])
+        setCurrentReport(null)
+        setReportUploadError(null)
+        setIsUploadingReport(false)
+      }
+
+      // Reset state immediately
+      resetState()
+
+      // Then initialize based on mode after a brief delay to ensure reset is complete
+      const timer = setTimeout(() => {
+        if (mode === 'edit' && existingLogs.length > 0) {
+          // Initialize with existing logs for edit mode
+          setSessionLogs(existingLogs)
+          // Extract day notes from the first log if available
+          const firstLog = existingLogs[0]
+          if (firstLog?.data?.notes) {
+            setDayNotes(firstLog.data.notes)
+          }
+          // Set the internal date if selectedDate is provided
+          if (selectedDate) {
+            setInternalSelectedDate(selectedDate)
+          }
+        } else {
+          // For add mode, ensure we have a fresh date
+          if (!selectedDate) {
+            setInternalSelectedDate(new Date().toISOString().split('T')[0])
+          }
+        }
+      }, 0) // Use setTimeout to ensure state reset completes before initialization
+
+      return () => clearTimeout(timer)
+    } else {
       // Reset state when closing
       setCurrentLogType(null)
       setCurrentFormData({})
@@ -147,18 +224,6 @@ export function UnifiedDataLogsModal({
       setCurrentReport(null)
       setReportUploadError(null)
       setIsUploadingReport(false)
-    } else if (mode === 'edit' && existingLogs.length > 0) {
-      // Initialize with existing logs for edit mode
-      setSessionLogs(existingLogs)
-      // Extract day notes from the first log if available
-      const firstLog = existingLogs[0]
-      if (firstLog?.data?.notes) {
-        setDayNotes(firstLog.data.notes)
-      }
-      // Set the internal date if selectedDate is provided
-      if (selectedDate) {
-        setInternalSelectedDate(selectedDate)
-      }
     }
   }, [isOpen, mode, existingLogs, selectedDate])
 
@@ -174,7 +239,9 @@ export function UnifiedDataLogsModal({
         setWaterVolume('')
         setChemicals([makeEmptyChemical()])
       } else if (currentLogType === 'fertigation') {
-        setFertigationEntries([{ id: Date.now().toString(), data: {}, isValid: false }])
+        setFertigationEntries([
+          { id: Date.now().toString(), data: { unit: 'kg/acre' }, isValid: false }
+        ])
         setMultipleFertigationMode(true)
         setMultipleSprayMode(false)
         setSprayEntries([])
@@ -520,7 +587,7 @@ export function UnifiedDataLogsModal({
 
     const newEntry = {
       id: Date.now().toString(),
-      data: {},
+      data: { unit: 'kg/acre' }, // Set default unit to kg/acre
       isValid: false
     }
     setFertigationEntries((prev) => [...prev, newEntry])
@@ -709,7 +776,89 @@ export function UnifiedDataLogsModal({
   }
 
   const handleRemoveLog = (logId: string) => {
-    setSessionLogs((prev) => prev.filter((log) => log.id !== logId))
+    const log = sessionLogs.find((l) => l.id === logId)
+    if (!log) return
+
+    // Check if this is an existing log (has a real database ID)
+    const isExistingLog =
+      mode === 'edit' && existingLogs.some((existingLog) => existingLog.id === logId)
+
+    if (isExistingLog) {
+      // Show confirmation dialog for existing logs
+      setDeleteConfirm({
+        isOpen: true,
+        logId,
+        logType: log.type,
+        isLoading: false
+      })
+    } else {
+      // Remove new logs immediately without confirmation
+      setSessionLogs((prev) => prev.filter((l) => l.id !== logId))
+    }
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm.logId || !deleteConfirm.logType || !farmId) return
+
+    setDeleteConfirm((prev) => ({ ...prev, isLoading: true }))
+
+    try {
+      // Extract the real database ID from the log ID
+      const realLogId = deleteConfirm.logId.replace(/_spray$|_fertigation$/, '')
+
+      // Call the appropriate delete method based on log type
+      switch (deleteConfirm.logType) {
+        case 'irrigation':
+          await SupabaseService.deleteIrrigationRecord(parseInt(realLogId))
+          break
+        case 'spray':
+          await SupabaseService.deleteSprayRecord(parseInt(realLogId))
+          break
+        case 'fertigation':
+          await SupabaseService.deleteFertigationRecord(parseInt(realLogId))
+          break
+        case 'harvest':
+          await SupabaseService.deleteHarvestRecord(parseInt(realLogId))
+          break
+        case 'expense':
+          await SupabaseService.deleteExpenseRecord(parseInt(realLogId))
+          break
+        case 'soil_test':
+          await SupabaseService.deleteSoilTestRecord(parseInt(realLogId))
+          break
+        case 'petiole_test':
+          await SupabaseService.deletePetioleTestRecord(parseInt(realLogId))
+          break
+        default:
+          throw new Error(`Unknown log type: ${deleteConfirm.logType}`)
+      }
+
+      // Remove from local state
+      setSessionLogs((prev) => prev.filter((log) => log.id !== deleteConfirm.logId))
+
+      // Close confirmation dialog
+      setDeleteConfirm({
+        isOpen: false,
+        logId: null,
+        logType: null,
+        isLoading: false
+      })
+
+      toast.success(`${getLogTypeLabel(deleteConfirm.logType)} record deleted successfully`)
+    } catch (error) {
+      console.error('Error deleting record:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to delete record')
+      setDeleteConfirm((prev) => ({ ...prev, isLoading: false }))
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm({
+      isOpen: false,
+      logId: null,
+      logType: null,
+      isLoading: false
+    })
   }
 
   const handlePhotoAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -842,7 +991,20 @@ export function UnifiedDataLogsModal({
             <Input
               type="number"
               value={value}
-              onChange={(e) => handleFertigationEntryChange(entry.id, field.name, e.target.value)}
+              onChange={(e) => {
+                const inputValue = e.target.value
+                // For quantity field, allow empty string to be stored as is
+                if (field.name === 'quantity') {
+                  handleFertigationEntryChange(entry.id, field.name, inputValue)
+                } else {
+                  // For other number fields, convert empty to 0
+                  handleFertigationEntryChange(
+                    entry.id,
+                    field.name,
+                    inputValue === '' ? '0' : inputValue
+                  )
+                }
+              }}
               placeholder={field.placeholder}
               min={field.min}
               max={field.max}
@@ -914,14 +1076,65 @@ export function UnifiedDataLogsModal({
               {field.required && <span className="text-red-500 ml-1">*</span>}
             </Label>
             <Input
-              type="number"
+              type={field.name === 'duration' ? 'text' : 'number'}
               value={value}
-              onChange={(e) =>
-                setCurrentFormData((prev) => ({
-                  ...prev,
-                  [field.name]: e.target.value
-                }))
-              }
+              onChange={(e) => {
+                const inputValue = e.target.value
+
+                // Special handling for duration field to prevent zero insertion bug
+                if (field.name === 'duration') {
+                  // Allow empty input or valid numbers
+                  if (
+                    inputValue === '' ||
+                    (!isNaN(parseFloat(inputValue)) &&
+                      parseFloat(inputValue) > 0 &&
+                      (field.max === undefined || parseFloat(inputValue) <= field.max))
+                  ) {
+                    setCurrentFormData((prev) => ({
+                      ...prev,
+                      [field.name]: inputValue
+                    }))
+                  }
+                } else {
+                  // For quantity field, allow empty string to be stored as is
+                  if (field.name === 'quantity') {
+                    setCurrentFormData((prev) => ({
+                      ...prev,
+                      [field.name]: inputValue
+                    }))
+                  } else {
+                    // For other number fields, convert empty to 0
+                    setCurrentFormData((prev) => ({
+                      ...prev,
+                      [field.name]: inputValue === '' ? '0' : inputValue
+                    }))
+                  }
+                }
+              }}
+              onBlur={(e) => {
+                const inputValue = e.target.value
+
+                // Special validation for duration field on blur
+                if (field.name === 'duration') {
+                  if (
+                    inputValue === '' ||
+                    (!isNaN(parseFloat(inputValue)) &&
+                      parseFloat(inputValue) > 0 &&
+                      (field.max === undefined || parseFloat(inputValue) <= field.max))
+                  ) {
+                    setCurrentFormData((prev) => ({
+                      ...prev,
+                      [field.name]: inputValue
+                    }))
+                  }
+                }
+              }}
+              onFocus={(e) => {
+                // Select all text on focus for duration field to make editing easier
+                if (field.name === 'duration') {
+                  e.target.select()
+                }
+              }}
               placeholder={field.placeholder}
               min={field.min}
               max={field.max}
@@ -1282,6 +1495,45 @@ export function UnifiedDataLogsModal({
                     </div>
                   )
                 })}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Empty State - When all logs are deleted */}
+          {sessionLogs.length === 0 && mode === 'edit' && (
+            <Card className="border-2 border-dashed border-amber-300 bg-amber-50">
+              <CardContent className="pt-6">
+                <div className="text-center space-y-3">
+                  <div className="mx-auto w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                    <Trash2 className="h-6 w-6 text-amber-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-amber-800">All Logs Deleted</h3>
+                    <p className="text-xs text-amber-600 mt-1">
+                      You&apos;ve removed all logs for this date. You can add new logs or close this
+                      modal.
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-center gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentLogType(null)}
+                      className="border-amber-200 text-amber-700 hover:bg-amber-100"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add New Log
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onClose}
+                      className="text-amber-700 hover:bg-amber-100"
+                    >
+                      Close Modal
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -1701,6 +1953,45 @@ export function UnifiedDataLogsModal({
           </div>
         </div>
       </DialogContent>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirm.isOpen} onOpenChange={(open) => !open && handleCancelDelete()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Delete {deleteConfirm.logType ? getLogTypeLabel(deleteConfirm.logType) : 'Record'}
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this{' '}
+              {deleteConfirm.logType ? getLogTypeLabel(deleteConfirm.logType) : 'record'}? This
+              action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCancelDelete}
+              disabled={deleteConfirm.isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleteConfirm.isLoading}
+            >
+              {deleteConfirm.isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   )
 }

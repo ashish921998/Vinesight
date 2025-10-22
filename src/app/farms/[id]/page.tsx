@@ -103,20 +103,20 @@ export default function FarmDetailsPage() {
   }, [farmId, loadDashboardData])
 
   // Generate AI predictions when farm data is loaded
-  useEffect(() => {
-    const generateAIPredictions = async () => {
-      if (dashboardData?.farm && user && !aiPredictionsGenerated) {
-        try {
-          await PestPredictionService.generatePredictions(parseInt(farmId), dashboardData.farm)
-          setAiPredictionsGenerated(true)
-        } catch (error) {
-          console.error('Error generating AI predictions:', error)
-        }
-      }
-    }
+  // useEffect(() => {
+  //   const generateAIPredictions = async () => {
+  //     if (dashboardData?.farm && user && !aiPredictionsGenerated) {
+  //       try {
+  //         await PestPredictionService.generatePredictions(parseInt(farmId), dashboardData.farm)
+  //         setAiPredictionsGenerated(true)
+  //       } catch (error) {
+  //         console.error('Error generating AI predictions:', error)
+  //       }
+  //     }
+  //   }
 
-    generateAIPredictions()
-  }, [dashboardData, farmId, user, aiPredictionsGenerated])
+  //   generateAIPredictions()
+  // }, [dashboardData, farmId, user, aiPredictionsGenerated])
 
   const completeTask = async (taskId: number) => {
     try {
@@ -285,9 +285,10 @@ export default function FarmDetailsPage() {
           farm_id: parseInt(farmId),
           date: date,
           fertilizer: data.fertilizer?.trim() || 'Unknown',
-          dose: data.quantity ? `${data.quantity} kg/L` : 'As per requirement',
-          purpose: 'Nutrient Application',
+          quantity: data.quantity || 0,
+          unit: data.unit || 'kg/acre',
           area: dashboardData?.farm?.area || 0,
+          purpose: data.purpose || 'General',
           notes: dayNotes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
@@ -559,9 +560,10 @@ export default function FarmDetailsPage() {
           farm_id: parseInt(farmId),
           date: originalDate,
           fertilizer: data.fertilizer?.trim() || 'Unknown',
-          dose: data.quantity ? `${data.quantity} kg/L` : 'As per requirement',
-          purpose: 'Nutrient Application',
-          area: dashboardData?.farm?.area || 0,
+          quantity: data.quantity || 0,
+          unit: data.unit || 'kg/acre',
+          area: data.area || dashboardData?.farm?.area || 0,
+          purpose: data.purpose || 'General',
           notes: dayNotes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
@@ -741,29 +743,46 @@ export default function FarmDetailsPage() {
     return record
   }
 
-  const handleEditRecord = (record: any, recordType: string) => {
+  const handleEditRecord = (record: any) => {
     setEditingRecord(record)
     setShowEditModal(true)
   }
 
-  const handleDeleteRecord = (record: any, recordType: string) => {
+  const handleDeleteRecord = (record: any) => {
     setDeletingRecord(record)
     setShowDeleteDialog(true)
   }
 
   // New handler for editing date groups
   const handleEditDateGroup = (date: string, activities: any[]) => {
-    // Convert activities to LogEntry format for UnifiedDataLogsModal
-    const existingLogs = transformActivitiesToLogEntries(activities)
+    // Normalize date to ISO format (YYYY-MM-DD) for proper handling
+    const normalizedDate = date
+      ? new Date(date).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0]
 
-    // Ensure date is in YYYY-MM-DD format for the date input
-    const formattedDate = new Date(date).toISOString().split('T')[0]
+    // Check if there's only one activity - if so, use the dedicated edit modal
+    if (activities.length === 1) {
+      const activity = activities[0]
 
-    // Set up the edit modal with existing logs
-    setEditModeLogs(existingLogs)
-    setEditModeDate(formattedDate)
-    setEditMode('edit')
-    setShowDataLogsModal(true)
+      // Transform activity to record format for EditRecordModal
+      // The activity object already contains all the record fields
+      const record = {
+        ...activity, // Include all activity fields (duration, etc.)
+        type: activity.type,
+        notes: activity.notes || ''
+      }
+
+      handleEditRecord(record)
+    } else {
+      // Multiple activities - use UnifiedDataLogsModal
+      const existingLogs = transformActivitiesToLogEntries(activities)
+
+      // Set up the edit modal with existing logs
+      setEditModeLogs(existingLogs)
+      setEditModeDate(normalizedDate)
+      setEditMode('edit')
+      setShowDataLogsModal(true)
+    }
   }
 
   // New handler for deleting date groups
@@ -932,7 +951,15 @@ export default function FarmDetailsPage() {
         )}
 
         {/* Quick Actions */}
-        <QuickActions onDataLogsClick={() => setShowDataLogsModal(true)} />
+        <QuickActions
+          onDataLogsClick={() => {
+            // Reset edit mode state before opening modal for adding new logs
+            setEditMode('add')
+            setEditModeLogs([])
+            setEditModeDate('')
+            setShowDataLogsModal(true)
+          }}
+        />
 
         {/* Activity Feed */}
         <ActivityFeed

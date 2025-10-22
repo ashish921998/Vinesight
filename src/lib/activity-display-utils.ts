@@ -326,6 +326,34 @@ export function getGroupedActivitiesSummary(grouped: GroupedActivities): string 
   return `${totalCount} logs: ${typeNames.slice(0, 2).join(', ')} & ${typeNames.length - 2} more`
 }
 
+// Define valid activity types for type safety
+type ValidActivityType =
+  | 'irrigation'
+  | 'spray'
+  | 'harvest'
+  | 'expense'
+  | 'fertigation'
+  | 'soil_test'
+  | 'petiole_test'
+
+/**
+ * Validate and normalize activity type
+ */
+function validateActivityType(type: string | undefined): ValidActivityType | null {
+  if (!type || typeof type !== 'string') return null
+
+  const validTypes: ValidActivityType[] = [
+    'irrigation',
+    'spray',
+    'harvest',
+    'expense',
+    'fertigation',
+    'soil_test',
+    'petiole_test'
+  ]
+  return validTypes.includes(type as ValidActivityType) ? (type as ValidActivityType) : null
+}
+
 /**
  * Transform activities to log entries format for UnifiedDataLogsModal
  * @param activities - Array of activity logs
@@ -333,7 +361,7 @@ export function getGroupedActivitiesSummary(grouped: GroupedActivities): string 
  */
 export function transformActivitiesToLogEntries(activities: ActivityLog[]): Array<{
   id: string
-  type: any
+  type: ValidActivityType
   data: Record<string, any>
   isValid: boolean
   meta?: {
@@ -350,27 +378,45 @@ export function transformActivitiesToLogEntries(activities: ActivityLog[]): Arra
     }
   }
 }> {
-  return activities.map((activity) => ({
-    id: activity.id.toString(),
-    type: activity.type as any,
-    data: { ...activity },
-    isValid: true,
-    meta: activity.report_url
-      ? {
-          report: {
-            storagePath: activity.report_storage_path || '',
-            signedUrl: activity.report_url,
-            filename: activity.report_filename || '',
-            mimeType: activity.report_mimeType || '',
-            reportType: activity.report_type || '',
-            extractionStatus: activity.extraction_status || '',
-            extractionError: activity.extraction_error,
-            parsedParameters: activity.parsed_parameters,
-            rawNotes: activity.raw_notes
+  return activities.map((activity) => {
+    // Validate activity type
+    const validatedType = validateActivityType(activity.type)
+    if (!validatedType) {
+      // Return invalid entry for unknown types
+      return {
+        id: activity.id.toString(),
+        type: 'irrigation', // fallback type
+        data: { ...activity },
+        isValid: false
+      }
+    }
+
+    // Validate report fields
+    const hasValidReport =
+      activity.report_url && activity.report_storage_path && activity.report_filename
+
+    return {
+      id: activity.id.toString(),
+      type: validatedType,
+      data: { ...activity },
+      isValid: true,
+      meta: hasValidReport
+        ? {
+            report: {
+              storagePath: activity.report_storage_path!,
+              signedUrl: activity.report_url!,
+              filename: activity.report_filename!,
+              mimeType: activity.report_mimeType || '',
+              reportType: activity.report_type || '',
+              extractionStatus: activity.extraction_status || '',
+              extractionError: activity.extraction_error,
+              parsedParameters: activity.parsed_parameters,
+              rawNotes: activity.raw_notes
+            }
           }
-        }
-      : undefined
-  }))
+        : undefined
+    }
+  })
 }
 
 /**
