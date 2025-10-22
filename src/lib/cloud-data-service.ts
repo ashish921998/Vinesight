@@ -10,7 +10,9 @@ import {
   toApplicationIrrigationRecord,
   toApplicationSprayRecord,
   toApplicationHarvestRecord,
-  toApplicationExpenseRecord
+  toApplicationExpenseRecord,
+  toDatabaseFarmInsert,
+  toDatabaseFarmUpdate
 } from './supabase-types'
 
 // Re-export types for easier importing
@@ -57,9 +59,11 @@ export class CloudDataService {
       throw new Error('Authentication required')
     }
 
-    const { data, error } = await (supabase as any)
+    const dbFarm = toDatabaseFarmInsert({ ...farmData, user_id: user.id })
+
+    const { data, error } = await supabase
       .from('farms')
-      .insert({ ...farmData, user_id: user.id })
+      .insert(dbFarm as any)
       .select()
       .single()
 
@@ -80,9 +84,11 @@ export class CloudDataService {
       throw new Error('Authentication required')
     }
 
-    const { data, error } = await (supabase as any)
+    const dbUpdates = toDatabaseFarmUpdate(farmData)
+
+    const { data, error } = await supabase
       .from('farms')
-      .update(farmData)
+      .update(dbUpdates as any)
       .eq('id', id)
       .eq('user_id', user.id)
       .select()

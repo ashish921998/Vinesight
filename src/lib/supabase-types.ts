@@ -95,12 +95,17 @@ const dateToISOString = (dateValue: any): string | null => {
 
 // Type conversion utilities
 export function toApplicationFarm(dbFarm: DatabaseFarm): Farm {
+  const derivedCropName = dbFarm.crop_name || (dbFarm.grape_variety ? 'Grapes' : undefined)
+  const derivedCropVariety = dbFarm.crop_variety || dbFarm.grape_variety || undefined
+
   return {
     id: dbFarm.id,
     name: dbFarm.name,
     region: dbFarm.region,
     area: dbFarm.area,
-    grapeVariety: dbFarm.grape_variety,
+    cropName: derivedCropName || undefined,
+    cropVariety: derivedCropVariety || undefined,
+    grapeVariety: dbFarm.grape_variety || undefined,
     plantingDate: dbFarm.planting_date,
     vineSpacing: dbFarm.vine_spacing || undefined,
     rowSpacing: dbFarm.row_spacing || undefined,
@@ -127,11 +132,19 @@ export function toDatabaseFarmInsert(
     user_id: string
   }
 ): DatabaseFarmInsert {
+  const sanitizedCropName = appFarm.cropName?.trim()
+  const sanitizedCropVariety = appFarm.cropVariety?.trim()
+  const sanitizedGrapeVariety = appFarm.grapeVariety?.trim()
+  const fallbackVariety =
+    sanitizedCropVariety || sanitizedGrapeVariety || sanitizedCropName || 'General'
+
   return {
     name: appFarm.name,
     region: appFarm.region,
     area: appFarm.area,
-    grape_variety: appFarm.grapeVariety,
+    crop_name: sanitizedCropName || (sanitizedCropVariety || sanitizedGrapeVariety ? 'Grapes' : null),
+    crop_variety: sanitizedCropVariety || sanitizedGrapeVariety || null,
+    grape_variety: fallbackVariety,
     planting_date: appFarm.plantingDate,
     vine_spacing: appFarm.vineSpacing || 0,
     row_spacing: appFarm.rowSpacing || 0,
@@ -157,7 +170,21 @@ export function toDatabaseFarmUpdate(appFarmUpdates: Partial<Farm>): DatabaseFar
   if (appFarmUpdates.name !== undefined) update.name = appFarmUpdates.name
   if (appFarmUpdates.region !== undefined) update.region = appFarmUpdates.region
   if (appFarmUpdates.area !== undefined) update.area = appFarmUpdates.area
-  if (appFarmUpdates.grapeVariety !== undefined) update.grape_variety = appFarmUpdates.grapeVariety
+  if (appFarmUpdates.cropName !== undefined) {
+    const sanitized = appFarmUpdates.cropName?.trim()
+    update.crop_name = sanitized && sanitized.length > 0 ? sanitized : null
+  }
+  if (appFarmUpdates.cropVariety !== undefined) {
+    const sanitized = appFarmUpdates.cropVariety?.trim()
+    update.crop_variety = sanitized && sanitized.length > 0 ? sanitized : null
+    if (appFarmUpdates.grapeVariety === undefined) {
+      update.grape_variety = sanitized && sanitized.length > 0 ? sanitized : null
+    }
+  }
+  if (appFarmUpdates.grapeVariety !== undefined) {
+    const sanitized = appFarmUpdates.grapeVariety?.trim()
+    update.grape_variety = sanitized && sanitized.length > 0 ? sanitized : null
+  }
   if (appFarmUpdates.plantingDate !== undefined) update.planting_date = appFarmUpdates.plantingDate
   if (appFarmUpdates.vineSpacing !== undefined) update.vine_spacing = appFarmUpdates.vineSpacing
   if (appFarmUpdates.rowSpacing !== undefined) update.row_spacing = appFarmUpdates.rowSpacing

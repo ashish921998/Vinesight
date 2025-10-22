@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
+import { SearchableCombobox } from '@/components/ui/searchable-combobox'
+import { cropOptions, getVarietiesForCrop, addCustomVariety, normalizeCropName } from '@/data/crops'
+import { cn } from '@/lib/utils'
 import { LocationForm } from '@/components/calculators/ETc/LocationForm'
 import type { LocationResult } from '@/lib/open-meteo-geocoding'
 import type { Farm } from '@/types/types'
@@ -28,7 +31,8 @@ interface FormData {
   name: string
   region: string
   area: string
-  grapeVariety: string
+  cropName: string
+  cropVariety: string
   plantingDate: string
   vineSpacing: string
   rowSpacing: string
@@ -51,18 +55,25 @@ export function FarmModal({
   editingFarm = null,
   isSubmitting = false
 }: FarmModalProps) {
-  const [formData, setFormData] = useState<FormData>(() => ({
-    name: editingFarm?.name || '',
-    region: editingFarm?.region || '',
-    area: editingFarm?.area?.toString() || '',
-    grapeVariety: editingFarm?.grapeVariety || '',
-    plantingDate: editingFarm?.plantingDate || '',
-    vineSpacing: editingFarm?.vineSpacing?.toString() || '',
-    rowSpacing: editingFarm?.rowSpacing?.toString() || '',
-    totalTankCapacity: editingFarm?.totalTankCapacity?.toString() || '',
-    systemDischarge: editingFarm?.systemDischarge?.toString() || '',
-    dateOfPruning: editingFarm?.dateOfPruning || new Date()
-  }))
+  const [formData, setFormData] = useState<FormData>(() => {
+    const initialCropVariety = editingFarm?.cropVariety || editingFarm?.grapeVariety || ''
+    const initialCropName =
+      editingFarm?.cropName || (initialCropVariety ? 'Grapes' : '')
+
+    return {
+      name: editingFarm?.name || '',
+      region: editingFarm?.region || '',
+      area: editingFarm?.area?.toString() || '',
+      cropName: initialCropName,
+      cropVariety: initialCropVariety,
+      plantingDate: editingFarm?.plantingDate || '',
+      vineSpacing: editingFarm?.vineSpacing?.toString() || '',
+      rowSpacing: editingFarm?.rowSpacing?.toString() || '',
+      totalTankCapacity: editingFarm?.totalTankCapacity?.toString() || '',
+      systemDischarge: editingFarm?.systemDischarge?.toString() || '',
+      dateOfPruning: editingFarm?.dateOfPruning || new Date()
+    }
+  })
 
   const [locationData, setLocationData] = useState<LocationData>(() => ({
     latitude: editingFarm?.latitude?.toString() || '',
@@ -70,15 +81,27 @@ export function FarmModal({
     elevation: editingFarm?.elevation?.toString() || '',
     locationName: editingFarm?.locationName || ''
   }))
+  const [formError, setFormError] = useState<string | null>(null)
+
+  const varietyOptions = useMemo(() => {
+    return getVarietiesForCrop(formData.cropName).map((variety) => ({
+      value: variety,
+      label: variety
+    }))
+  }, [formData.cropName])
 
   // Update form data when editingFarm prop changes
   useEffect(() => {
     if (editingFarm) {
+      const updatedCropVariety = editingFarm.cropVariety || editingFarm.grapeVariety || ''
+      const updatedCropName = editingFarm.cropName || (updatedCropVariety ? 'Grapes' : '')
+
       setFormData({
         name: editingFarm.name || '',
         region: editingFarm.region || '',
         area: editingFarm.area?.toString() || '',
-        grapeVariety: editingFarm.grapeVariety || '',
+        cropName: updatedCropName,
+        cropVariety: updatedCropVariety,
         plantingDate: editingFarm.plantingDate || '',
         vineSpacing: editingFarm.vineSpacing?.toString() || '',
         rowSpacing: editingFarm.rowSpacing?.toString() || '',
@@ -93,13 +116,15 @@ export function FarmModal({
         elevation: editingFarm.elevation?.toString() || '',
         locationName: editingFarm.locationName || ''
       })
+      setFormError(null)
     } else {
       // Reset form when not editing (adding new farm)
       setFormData({
         name: '',
         region: '',
         area: '',
-        grapeVariety: '',
+        cropName: '',
+        cropVariety: '',
         plantingDate: '',
         vineSpacing: '',
         rowSpacing: '',
@@ -114,6 +139,7 @@ export function FarmModal({
         elevation: '',
         locationName: ''
       })
+      setFormError(null)
     }
   }, [editingFarm])
 
@@ -153,14 +179,60 @@ export function FarmModal({
     }
   }
 
+  const handleCropNameSelect = (selected: string) => {
+    const normalizedName = normalizeCropName(selected)
+    const availableForCrop = getVarietiesForCrop(normalizedName)
+
+    setFormData((prev) => ({
+      ...prev,
+      cropName: normalizedName,
+      cropVariety: availableForCrop.includes(prev.cropVariety) ? prev.cropVariety : ''
+    }))
+    setFormError(null)
+  }
+
+  const handleCropVarietySelect = (selected: string) => {
+    const normalizedVariety = normalizeCropName(selected)
+
+    if (formData.cropName) {
+      addCustomVariety(formData.cropName, normalizedVariety)
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      cropVariety: normalizedVariety
+    }))
+    setFormError(null)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const cropNameMissing = !formData.cropName.trim()
+    const cropVarietyMissing = !formData.cropVariety.trim()
+
+    if (cropNameMissing || cropVarietyMissing) {
+      setFormError(
+        cropNameMissing && cropVarietyMissing
+          ? 'Please select a crop name and crop variety.'
+          : cropNameMissing
+            ? 'Please select a crop name.'
+            : 'Please select a crop variety.'
+      )
+      return
+    }
+
+    const normalizedCropName = normalizeCropName(formData.cropName)
+    const normalizedCropVariety = normalizeCropName(formData.cropVariety)
+    setFormError(null)
 
     const farmData = {
       name: formData.name,
       region: formData.region,
       area: parseFloat(formData.area),
-      grapeVariety: formData.grapeVariety,
+      cropName: normalizedCropName,
+      cropVariety: normalizedCropVariety,
+      grapeVariety: normalizedCropVariety,
       plantingDate: formData.plantingDate,
       vineSpacing: parseFloat(formData.vineSpacing),
       rowSpacing: parseFloat(formData.rowSpacing),
@@ -181,8 +253,12 @@ export function FarmModal({
     await onSubmit(farmData)
   }
 
+  const cropNameHasError = !!formError && !formData.cropName.trim()
+  const cropVarietyHasError = !!formError && !formData.cropVariety.trim()
+
   const resetAndClose = () => {
     // Form data will be reset by useEffect when editingFarm changes
+    setFormError(null)
     onClose()
   }
 
@@ -194,7 +270,7 @@ export function FarmModal({
             {editingFarm ? 'Edit Farm' : 'Add New Farm'}
           </DialogTitle>
           <DialogDescription className="text-sm text-gray-600">
-            {editingFarm ? 'Update your vineyard details' : 'Enter your vineyard details'}
+            {editingFarm ? 'Update your farm details' : 'Enter your farm details'}
           </DialogDescription>
         </DialogHeader>
 
@@ -230,7 +306,7 @@ export function FarmModal({
               />
             </div>
 
-            {/* Area and Grape Variety */}
+            {/* Area and Crop */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="area" className="text-sm font-medium text-gray-700">
@@ -249,18 +325,57 @@ export function FarmModal({
                 />
               </div>
               <div>
-                <Label htmlFor="grapeVariety" className="text-sm font-medium text-gray-700">
-                  Grape Variety *
-                </Label>
-                <Input
-                  id="grapeVariety"
-                  value={formData.grapeVariety}
-                  onChange={(e) => handleInputChange('grapeVariety', e.target.value)}
-                  placeholder="Thompson Seedless"
-                  required
-                  className="mt-1 h-11"
+                <Label className="text-sm font-medium text-gray-700">Primary Crop *</Label>
+                <SearchableCombobox
+                  value={formData.cropName}
+                  onSelect={handleCropNameSelect}
+                  options={cropOptions}
+                  placeholder="Select crop"
+                  searchPlaceholder="Search crops..."
+                  allowCustom
+                  className="mt-1"
+                  buttonClassName={cn(
+                    'h-11',
+                    cropNameHasError && 'border-red-500 focus-visible:ring-red-500 focus-visible:ring-offset-0'
+                  )}
+                  createLabel={(value) => `Add "${normalizeCropName(value)}"`}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Search the global crop list or add your own crop name.
+                </p>
+                {cropNameHasError && (
+                  <p className="text-xs text-red-600 mt-1">Crop name is required.</p>
+                )}
               </div>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Crop Variety *</Label>
+              <SearchableCombobox
+                value={formData.cropVariety}
+                onSelect={handleCropVarietySelect}
+                options={varietyOptions}
+                placeholder={
+                  formData.cropName ? `Select ${formData.cropName} variety` : 'Select crop first'
+                }
+                searchPlaceholder="Search varieties..."
+                allowCustom
+                disabled={!formData.cropName}
+                className="mt-1"
+                buttonClassName={cn(
+                  'h-11',
+                  !formData.cropName && 'bg-muted text-muted-foreground cursor-not-allowed',
+                  cropVarietyHasError &&
+                    'border-red-500 focus-visible:ring-red-500 focus-visible:ring-offset-0'
+                )}
+                createLabel={(value) => `Add "${normalizeCropName(value)}"`}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Select a listed variety or add a custom entry.
+              </p>
+              {cropVarietyHasError && (
+                <p className="text-xs text-red-600 mt-1">Crop variety is required.</p>
+              )}
             </div>
 
             {/* Planting Date */}
