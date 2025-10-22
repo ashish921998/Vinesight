@@ -38,7 +38,8 @@ export interface Farm {
   name: string
   region: string
   area: number // in acres
-  grapeVariety: string
+  crop: string // e.g., "Grapes", "Pomegranates", "Cotton"
+  cropVariety: string // variety of the selected crop
   plantingDate: string
   vineSpacing?: number // in meters
   rowSpacing?: number // in meters

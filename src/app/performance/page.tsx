@@ -407,7 +407,7 @@ export default function FarmEfficiencyPage() {
                         <div>
                           <div className="font-medium">{farm.name}</div>
                           <div className="text-sm text-muted-foreground">
-                            {farm.area} acres • {farm.region} • {farm.grapeVariety}
+                            {farm.area} acres • {farm.region} • {farm.crop} ({farm.cropVariety})
                           </div>
                         </div>
                       </SelectItem>
@@ -658,7 +658,7 @@ export default function FarmEfficiencyPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Sun className="h-5 w-5" />
-                  Efficiency Best Practices for {selectedFarm.grapeVariety} Grapes
+                  Efficiency Best Practices for {selectedFarm.crop}
                 </CardTitle>
                 <CardDescription>
                   Recommended practices to improve farm efficiency and yield quality

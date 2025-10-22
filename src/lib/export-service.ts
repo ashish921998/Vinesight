@@ -283,7 +283,8 @@ export class ExportService {
     const farmDetails = [
       ['Region', data.farm.region || 'Not specified'],
       ['Area', `${data.farm.area} acres`],
-      ['Grape Variety', data.farm.grapeVariety || 'Not specified'],
+      ['Crop', data.farm.crop || 'Not specified'],
+      ['Crop Variety', data.farm.cropVariety || 'Not specified'],
       ['Planting Date', data.farm.plantingDate || 'Not specified'],
       ['Vine Spacing', data.farm.vineSpacing ? `${data.farm.vineSpacing}m` : 'Not specified'],
       ['Row Spacing', data.farm.rowSpacing ? `${data.farm.rowSpacing}m` : 'Not specified']

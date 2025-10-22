@@ -233,7 +233,13 @@ export default function FarmsPage() {
                               </div>
                               <div>
                                 <div className="text-lg font-semibold text-gray-900">
-                                  {capitalize(farm.grapeVariety)}
+                                  {capitalize(farm.crop)}
+                                </div>
+                                <div className="text-xs text-gray-500">crop</div>
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium text-gray-700">
+                                  {farm.cropVariety}
                                 </div>
                                 <div className="text-xs text-gray-500">variety</div>
                               </div>

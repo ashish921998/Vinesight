@@ -52,8 +52,8 @@ export class SupabaseService {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Supabase error in updateFarm:', error)
-      throw new Error(`Failed to update farm: ${error.message} (Code: ${error.code || 'UNKNOWN'})`)
+      console.error('Supabase error in getAllFarms:', error)
+      throw new Error(`Failed to get farms: ${error.message} (Code: ${error.code || 'UNKNOWN'})`)
     }
     return (data || []).map(toApplicationFarm)
   }

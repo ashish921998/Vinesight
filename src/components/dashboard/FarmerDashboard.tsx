@@ -63,7 +63,8 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
         id: selectedFarm.id?.toString() || '',
         name: capitalize(selectedFarm.name),
         location: selectedFarm.locationName || selectedFarm.region,
-        cropType: selectedFarm.grapeVariety,
+        crop: selectedFarm.crop,
+        cropType: selectedFarm.cropVariety,
         totalAcres: selectedFarm.area,
         status: calculateFarmStatus(
           selectedFarm,
