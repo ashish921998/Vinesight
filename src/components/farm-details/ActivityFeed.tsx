@@ -9,7 +9,8 @@ import {
   getActivityDisplayData,
   groupActivitiesByDate,
   getGroupedActivitiesSummary,
-  formatGroupedDate
+  formatGroupedDate,
+  normalizeDateToYYYYMMDD
 } from '@/lib/activity-display-utils'
 import {
   getLogTypeIcon,
@@ -221,10 +222,10 @@ export function ActivityFeed({
                           variant="ghost"
                           size="sm"
                           onClick={() => {
-                            // Use the grouped.date directly as it should already be in YYYY-MM-DD format
-                            const dateForEdit =
-                              grouped.date || new Date().toISOString().slice(0, 10)
-                            onEditDateGroup(dateForEdit, grouped.activities)
+                            const dateForEdit = normalizeDateToYYYYMMDD(grouped.date)
+                            if (dateForEdit) {
+                              onEditDateGroup(dateForEdit, grouped.activities)
+                            }
                           }}
                           className="h-8 w-8 p-0 text-green-600 hover:text-green-800 hover:bg-green-100 flex-shrink-0"
                           title="Edit all logs for this date"

@@ -42,6 +42,7 @@ export interface IrrigationRecord {
 
 // Chemical object type for the chemicals array
 export interface SprayChemical {
+  id?: string // Optional ID for frontend tracking
   name: string
   quantity: number
   unit: 'gm/L' | 'ml/L'

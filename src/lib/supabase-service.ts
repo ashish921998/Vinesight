@@ -51,7 +51,10 @@ export class SupabaseService {
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase error in updateFarm:', error)
+      throw new Error(`Failed to update farm: ${error.message} (Code: ${error.code || 'UNKNOWN'})`)
+    }
     return (data || []).map(toApplicationFarm)
   }
 
@@ -655,7 +658,9 @@ export class SupabaseService {
 
     if (error) {
       console.error('Supabase error in addFertigationRecord:', error)
-      throw new Error(`Failed to add fertigation record: ${error.message || 'Unknown error'}`)
+      throw new Error(
+        `Failed to add fertigation record: ${error.message} (Code: ${error.code || 'UNKNOWN'})`
+      )
     }
     return toApplicationFertigationRecord(data)
   }
@@ -740,7 +745,9 @@ export class SupabaseService {
 
     if (error) {
       console.error('Supabase error in updateFertigationRecord:', error)
-      throw new Error(`Failed to update fertigation record: ${error.message || 'Unknown error'}`)
+      throw new Error(
+        `Failed to update fertigation record: ${error.message} (Code: ${error.code || 'UNKNOWN'})`
+      )
     }
     return toApplicationFertigationRecord(data)
   }
@@ -1190,6 +1197,35 @@ export class SupabaseService {
     const supabase = getTypedSupabaseClient()
     const { error } = await supabase.auth.signOut()
     if (error) throw error
+  }
+
+  // Unified deletion helper
+  static async deleteLogByType(logType: string, logId: number): Promise<void> {
+    switch (logType) {
+      case 'irrigation':
+        await this.deleteIrrigationRecord(logId)
+        break
+      case 'spray':
+        await this.deleteSprayRecord(logId)
+        break
+      case 'fertigation':
+        await this.deleteFertigationRecord(logId)
+        break
+      case 'harvest':
+        await this.deleteHarvestRecord(logId)
+        break
+      case 'expense':
+        await this.deleteExpenseRecord(logId)
+        break
+      case 'soil_test':
+        await this.deleteSoilTestRecord(logId)
+        break
+      case 'petiole_test':
+        await this.deletePetioleTestRecord(logId)
+        break
+      default:
+        throw new Error(`Unknown log type: ${logType}`)
+    }
   }
 
   // Real-time subscriptions

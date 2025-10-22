@@ -378,45 +378,49 @@ export function transformActivitiesToLogEntries(activities: ActivityLog[]): Arra
     }
   }
 }> {
-  return activities.map((activity) => {
-    // Validate activity type
-    const validatedType = validateActivityType(activity.type)
-    if (!validatedType) {
-      // Return invalid entry for unknown types
+  return activities
+    .map((activity) => {
+      // Validate activity type
+      const validatedType = validateActivityType(activity.type)
+      if (!validatedType) {
+        // Log warning for invalid activity type
+        logger.warn(`Invalid activity type detected: ${activity.type}`, {
+          activityId: activity.id,
+          activityType: activity.type,
+          date: activity.date
+        })
+
+        // Filter out invalid types instead of coercing to irrigation
+        return null
+      }
+
+      // Validate report fields
+      const hasValidReport =
+        activity.report_url && activity.report_storage_path && activity.report_filename
+
       return {
         id: activity.id.toString(),
-        type: 'irrigation', // fallback type
+        type: validatedType,
         data: { ...activity },
-        isValid: false
-      }
-    }
-
-    // Validate report fields
-    const hasValidReport =
-      activity.report_url && activity.report_storage_path && activity.report_filename
-
-    return {
-      id: activity.id.toString(),
-      type: validatedType,
-      data: { ...activity },
-      isValid: true,
-      meta: hasValidReport
-        ? {
-            report: {
-              storagePath: activity.report_storage_path!,
-              signedUrl: activity.report_url!,
-              filename: activity.report_filename!,
-              mimeType: activity.report_mimeType || '',
-              reportType: activity.report_type || '',
-              extractionStatus: activity.extraction_status || '',
-              extractionError: activity.extraction_error,
-              parsedParameters: activity.parsed_parameters,
-              rawNotes: activity.raw_notes
+        isValid: true,
+        meta: hasValidReport
+          ? {
+              report: {
+                storagePath: activity.report_storage_path!,
+                signedUrl: activity.report_url!,
+                filename: activity.report_filename!,
+                mimeType: activity.report_mimeType || '',
+                reportType: activity.report_type || '',
+                extractionStatus: activity.extraction_status || '',
+                extractionError: activity.extraction_error,
+                parsedParameters: activity.parsed_parameters,
+                rawNotes: activity.raw_notes
+              }
             }
-          }
-        : undefined
-    }
-  })
+          : undefined
+      }
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
 }
 
 /**
@@ -517,6 +521,45 @@ export function getActivitiesSummary(activities: ActivityLog[]): Array<{
       count
     }
   })
+}
+
+/**
+ * Normalize date string to YYYY-MM-DD format in a timezone-safe manner
+ * @param dateString - Date string to normalize
+ * @returns YYYY-MM-DD format string or null if parsing fails
+ */
+export function normalizeDateToYYYYMMDD(dateString: string | undefined | null): string | null {
+  if (!dateString || typeof dateString !== 'string') {
+    return null
+  }
+
+  try {
+    // Check if already in YYYY-MM-DD format
+    const yyyyMmDdPattern = /^(\d{4})-(\d{2})-(\d{2})$/
+    if (yyyyMmDdPattern.test(dateString.trim())) {
+      return dateString.trim()
+    }
+
+    // Try to extract YYYY-MM-DD pattern from the string
+    const match = dateString.match(/\d{4}-\d{2}-\d{2}/)
+    if (match && match[0]) {
+      return match[0]
+    }
+
+    // For locale date strings (like "Mon Oct 15 2023"), parse as local time
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) {
+      return null
+    }
+
+    // Return YYYY-MM-DD format using local time components
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  } catch (error) {
+    return null
+  }
 }
 
 /**

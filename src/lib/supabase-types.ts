@@ -371,9 +371,9 @@ export function toDatabaseFertigationInsert(
     farm_id: appRecord.farm_id,
     date: appRecord.date,
     fertilizer: appRecord.fertilizer,
-    dose: appRecord.dose || null, // Handle undefined dose for backward compatibility
-    purpose: appRecord.purpose || null, // Handle undefined purpose for backward compatibility
-    area: appRecord.area || null, // Handle undefined area for backward compatibility
+    dose: appRecord.dose ?? null, // Handle undefined dose for backward compatibility
+    purpose: appRecord.purpose ?? null, // Handle undefined purpose for backward compatibility
+    area: appRecord.area ?? null, // Handle undefined area for backward compatibility
     quantity: appRecord.quantity,
     unit: appRecord.unit,
     date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
@@ -389,9 +389,9 @@ export function toDatabaseFertigationUpdate(
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.fertilizer !== undefined) update.fertilizer = appUpdates.fertilizer
-  if (appUpdates.dose !== undefined) update.dose = appUpdates.dose || null
-  if (appUpdates.purpose !== undefined) update.purpose = appUpdates.purpose || null
-  if (appUpdates.area !== undefined) update.area = appUpdates.area || null
+  if (appUpdates.dose !== undefined) update.dose = appUpdates.dose ?? null
+  if (appUpdates.purpose !== undefined) update.purpose = appUpdates.purpose as string | null
+  if (appUpdates.area !== undefined) update.area = appUpdates.area ?? null
   if (appUpdates.quantity !== undefined) update.quantity = appUpdates.quantity
   if (appUpdates.unit !== undefined) update.unit = appUpdates.unit
   if (appUpdates.date_of_pruning !== undefined)

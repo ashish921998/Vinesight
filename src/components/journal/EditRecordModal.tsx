@@ -44,6 +44,16 @@ import type {
   PetioleTestRecord
 } from '@/lib/supabase'
 
+// Type for spray data update
+interface SprayDataUpdate {
+  date: string
+  notes?: string
+  water_volume?: number
+  chemicals?: Array<{ name: string; quantity: number; unit: 'gm/L' | 'ml/L' }>
+  chemical?: string
+  dose?: string
+}
+
 // Type predicate function to distinguish PetioleTestRecord from SoilTestRecord
 function isPetioleRecord(record: SoilTestRecord | PetioleTestRecord): record is PetioleTestRecord {
   return 'sample_id' in record
@@ -200,45 +210,55 @@ export function EditRecordModal({
           ? ((sprayRecord as Record<string, unknown>).pest_disease as string)
           : ''
 
-      // Handle both old format (chemical, dose) and new format (water_volume, chemicals)
-      let waterVolume = ''
-      let chemicals: Array<{ id: string; name: string; quantity: string; unit: string }> = []
+      // Helper function to ensure spray chemicals format consistency
+      const ensureSprayChemicalsFormat = (sprayRecord: SprayRecord) => {
+        const generateChemicalId = () => {
+          return `chem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        }
 
-      if (
-        sprayRecord.water_volume &&
-        sprayRecord.chemicals &&
-        Array.isArray(sprayRecord.chemicals)
-      ) {
-        // New format with water_volume and chemicals array
-        waterVolume = sprayRecord.water_volume.toString()
-        chemicals = sprayRecord.chemicals.map((chem, index) => ({
-          id: `${Date.now()}_${index}`,
-          name: chem.name || '',
-          quantity: chem.quantity?.toString() || '',
-          unit: chem.unit || 'gm/L'
-        }))
-      } else {
-        // Old format - convert to new format
-        waterVolume = '1000' // Default water volume
-        chemicals = [
-          {
-            id: `${Date.now()}_0`,
-            name: sprayRecord.chemical || '',
-            quantity: sprayRecord.dose || '',
+        let waterVolume = ''
+        let chemicals: Array<{ id: string; name: string; quantity: string; unit: string }> = []
+
+        if (
+          sprayRecord.water_volume &&
+          sprayRecord.chemicals &&
+          Array.isArray(sprayRecord.chemicals)
+        ) {
+          // New format with water_volume and chemicals array
+          waterVolume = sprayRecord.water_volume.toString()
+          chemicals = sprayRecord.chemicals.map((chem) => ({
+            id: chem.id || generateChemicalId(),
+            name: chem.name || '',
+            quantity: chem.quantity?.toString() || '',
+            unit: chem.unit || 'gm/L'
+          }))
+        } else {
+          // Old format - convert to new format
+          waterVolume = '1000' // Default water volume
+          chemicals = [
+            {
+              id: generateChemicalId(),
+              name: sprayRecord.chemical || '',
+              quantity: sprayRecord.dose || '',
+              unit: 'gm/L'
+            }
+          ]
+        }
+
+        // Ensure at least one chemical
+        if (chemicals.length === 0) {
+          chemicals.push({
+            id: generateChemicalId(),
+            name: '',
+            quantity: '',
             unit: 'gm/L'
-          }
-        ]
+          })
+        }
+
+        return { waterVolume, chemicals }
       }
 
-      // Ensure at least one chemical
-      if (chemicals.length === 0) {
-        chemicals.push({
-          id: `${Date.now()}_0`,
-          name: '',
-          quantity: '',
-          unit: 'gm/L'
-        })
-      }
+      const { waterVolume, chemicals } = ensureSprayChemicalsFormat(sprayRecord)
 
       setFormData({
         recordType: 'spray',
@@ -488,7 +508,7 @@ export function EditRecordModal({
 
         // Convert form data to the expected format
         const validChemicals = sprayForm.chemicals.filter((chem) => chem.name.trim() !== '')
-        const sprayData: any = {
+        const sprayData: SprayDataUpdate = {
           date: sprayForm.date,
           notes: sprayForm.notes
         }
@@ -496,11 +516,20 @@ export function EditRecordModal({
         // Handle new format with water_volume and chemicals array
         if (sprayForm.water_volume && validChemicals.length > 0) {
           sprayData.water_volume = toNum(sprayForm.water_volume)
-          sprayData.chemicals = validChemicals.map((chem) => ({
-            name: chem.name.trim(),
-            quantity: toNum(chem.quantity),
-            unit: chem.unit
-          }))
+          const processedChemicals = validChemicals
+            .map((chem) => ({
+              name: chem.name.trim(),
+              quantity: toNum(chem.quantity),
+              unit: chem.unit as 'gm/L' | 'ml/L'
+            }))
+            .filter(
+              (chem): chem is { name: string; quantity: number; unit: 'gm/L' | 'ml/L' } =>
+                chem.quantity !== undefined
+            )
+
+          if (processedChemicals.length > 0) {
+            sprayData.chemicals = processedChemicals
+          }
         } else {
           // Fallback to old format for backward compatibility
           const firstChemical = validChemicals[0]
@@ -655,7 +684,7 @@ export function EditRecordModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl mx-auto max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-lg sm:max-w-2xl mx-auto max-h-[85vh] sm:max-h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className={`flex items-center gap-3 ${getColor().split(' ')[0]}`}>
             <div className={`p-2 rounded-xl ${getColor()}`}>{getIcon()}</div>
@@ -702,40 +731,17 @@ export function EditRecordModal({
                   </Label>
                   <Input
                     id="duration"
-                    type="text"
+                    type="number"
                     step="0.01"
                     min={0.01}
                     max={24}
                     value={irrigationForm?.duration || ''}
                     onChange={(e) => {
                       const value = e.target.value
-                      // Allow empty input or valid numbers
-                      if (
-                        value === '' ||
-                        (!isNaN(parseFloat(value)) &&
-                          parseFloat(value) > 0 &&
-                          parseFloat(value) <= 24)
-                      ) {
-                        updateFormData('irrigation', (current) => ({
-                          ...current,
-                          duration: value
-                        }))
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const value = e.target.value
-                      // Validate on blur and convert to proper format
-                      if (
-                        value === '' ||
-                        (!isNaN(parseFloat(value)) &&
-                          parseFloat(value) > 0 &&
-                          parseFloat(value) <= 24)
-                      ) {
-                        updateFormData('irrigation', (current) => ({
-                          ...current,
-                          duration: value
-                        }))
-                      }
+                      updateFormData('irrigation', (current) => ({
+                        ...current,
+                        duration: value
+                      }))
                     }}
                     onFocus={(e) => {
                       // Select all text on focus for easy editing
@@ -1134,36 +1140,36 @@ export function EditRecordModal({
             {recordType === 'soil_test' && (
               <>
                 {/* Dynamic Soil Test Fields */}
-                <div className="space-y-3">
+                <div
+                  className={`space-y-3 ${logTypeConfigs[record && isPetioleRecord(record) ? 'petiole_test' : 'soil_test'].fields.length > 1 ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : ''}`}
+                >
                   {logTypeConfigs[
                     record && isPetioleRecord(record) ? 'petiole_test' : 'soil_test'
                   ].fields.map((field) => (
-                    <div key={field.name} className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor={field.name} className="text-sm font-medium text-gray-700">
-                          {field.label}
-                          {field.required && <span className="text-red-500 ml-1">*</span>}
-                        </Label>
-                        <Input
-                          id={field.name}
-                          type="number"
-                          step={field.step}
-                          min={field.min}
-                          max={field.max}
-                          value={soilTestForm?.parameters?.[field.name] ?? ''}
-                          onChange={(e) => {
-                            const parsed = parseFloat(e.target.value)
-                            updateFormData('soil_test', (current) => ({
-                              ...current,
-                              parameters: {
-                                ...current.parameters,
-                                [field.name]: Number.isNaN(parsed) ? 0 : parsed
-                              }
-                            }))
-                          }}
-                          className="mt-1"
-                        />
-                      </div>
+                    <div key={field.name}>
+                      <Label htmlFor={field.name} className="text-sm font-medium text-gray-700">
+                        {field.label}
+                        {field.required && <span className="text-red-500 ml-1">*</span>}
+                      </Label>
+                      <Input
+                        id={field.name}
+                        type="number"
+                        step={field.step}
+                        min={field.min}
+                        max={field.max}
+                        value={soilTestForm?.parameters?.[field.name] ?? ''}
+                        onChange={(e) => {
+                          const parsed = parseFloat(e.target.value)
+                          updateFormData('soil_test', (current) => ({
+                            ...current,
+                            parameters: {
+                              ...current.parameters,
+                              [field.name]: Number.isNaN(parsed) ? 0 : parsed
+                            }
+                          }))
+                        }}
+                        className="mt-1"
+                      />
                     </div>
                   ))}
                 </div>

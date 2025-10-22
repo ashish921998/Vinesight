@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { SupabaseService } from '@/lib/supabase-service'
 import { PhotoService } from '@/lib/photo-service'
 import { FarmHeader } from '@/components/farm-details/FarmHeader'
@@ -53,6 +53,7 @@ interface DashboardData {
 export default function FarmDetailsPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const farmId = params.id as string
   const { user } = useSupabaseAuth()
 
@@ -101,6 +102,36 @@ export default function FarmDetailsPage() {
       loadDashboardData()
     }
   }, [farmId, loadDashboardData])
+
+  // Handle edit parameters from logs page
+  useEffect(() => {
+    const action = searchParams.get('action')
+    const date = searchParams.get('date')
+    const activitiesParam = searchParams.get('activities')
+
+    if (action === 'edit' && date && activitiesParam) {
+      try {
+        const activities = JSON.parse(decodeURIComponent(activitiesParam))
+        const existingLogs = transformActivitiesToLogEntries(activities)
+
+        // Normalize date to ISO format (YYYY-MM-DD) for proper handling
+        const normalizedDate = date
+          ? new Date(date).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0]
+
+        // Set up the edit modal with existing logs
+        setEditModeLogs(existingLogs)
+        setEditModeDate(normalizedDate)
+        setEditMode('edit')
+        setShowDataLogsModal(true)
+
+        // Clear the URL parameters
+        router.replace(`/farms/${farmId}`, { scroll: false })
+      } catch (error) {
+        console.error('Error parsing edit parameters:', error)
+      }
+    }
+  }, [searchParams, farmId, router])
 
   // Generate AI predictions when farm data is loaded
   // useEffect(() => {
@@ -223,13 +254,18 @@ export default function FarmDetailsPage() {
         const sprayData: any = {
           farm_id: parseInt(farmId),
           date: date,
-          water_volume: data.water_volume ? parseFloat(data.water_volume) : 0,
           chemicals: data.chemicals || [],
           area: dashboardData?.farm?.area || 0,
           weather: 'Clear',
           operator: 'Farm Owner',
           notes: dayNotes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
+        }
+
+        // Only add water_volume if it's a valid positive number
+        const waterVolume = parseFloat(data.water_volume ?? '')
+        if (Number.isFinite(waterVolume) && waterVolume > 0) {
+          sprayData.water_volume = waterVolume
         }
 
         // Handle legacy single chemical format for backward compatibility
@@ -498,13 +534,18 @@ export default function FarmDetailsPage() {
         const sprayData: any = {
           farm_id: parseInt(farmId),
           date: originalDate,
-          water_volume: data.water_volume ? parseFloat(data.water_volume) : 0,
           chemicals: data.chemicals || [],
           area: dashboardData?.farm?.area || 0,
           weather: 'Clear',
           operator: 'Farm Owner',
           notes: dayNotes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
+        }
+
+        // Only add water_volume if it's a valid positive number
+        const waterVolume = parseFloat(data.water_volume ?? '')
+        if (Number.isFinite(waterVolume) && waterVolume > 0) {
+          sprayData.water_volume = waterVolume
         }
 
         // Handle legacy single chemical format for backward compatibility
@@ -536,8 +577,11 @@ export default function FarmDetailsPage() {
           date: originalDate,
           quantity: parseFloat(data.quantity || '0'),
           grade: data.grade || 'Standard',
-          price: 0,
-          buyer: '',
+          price:
+            data.price !== undefined
+              ? parseFloat(data.price.toString())
+              : logEntry.data?.price || 0,
+          buyer: data.buyer !== undefined ? data.buyer : logEntry.data?.buyer || '',
           notes: dayNotes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
@@ -765,11 +809,72 @@ export default function FarmDetailsPage() {
       const activity = activities[0]
 
       // Transform activity to record format for EditRecordModal
-      // The activity object already contains all the record fields
+      // Only include fields that EditRecordModal expects
       const record = {
-        ...activity, // Include all activity fields (duration, etc.)
+        id: activity.id,
         type: activity.type,
-        notes: activity.notes || ''
+        date: activity.date,
+        notes: activity.notes || '',
+        // Include type-specific fields that EditRecordModal handles
+        ...(activity.type === 'irrigation' && {
+          duration: activity.duration,
+          area: activity.area,
+          growth_stage: activity.growth_stage,
+          moisture_status: activity.moisture_status,
+          system_discharge: activity.system_discharge
+        }),
+        ...(activity.type === 'spray' && {
+          chemical: activity.chemical,
+          chemicals: activity.chemicals,
+          water_volume: activity.water_volume,
+          dose: activity.dose,
+          quantity_amount: activity.quantity_amount,
+          quantity_unit: activity.quantity_unit
+        }),
+        ...(activity.type === 'harvest' && {
+          quantity: activity.quantity,
+          grade: activity.grade,
+          price: activity.price,
+          buyer: activity.buyer
+        }),
+        ...(activity.type === 'fertigation' && {
+          fertilizer: activity.fertilizer,
+          quantity: activity.quantity,
+          unit: activity.unit,
+          purpose: activity.purpose,
+          area: activity.area
+        }),
+        ...(activity.type === 'expense' && {
+          type: activity.type,
+          description: activity.description,
+          cost: activity.cost,
+          remarks: activity.remarks
+        }),
+        ...(activity.type === 'soil_test' && {
+          parameters: activity.parameters,
+          recommendations: activity.recommendations,
+          report_url: activity.report_url,
+          report_storage_path: activity.report_storage_path,
+          report_filename: activity.report_filename,
+          report_type: activity.report_type,
+          extraction_status: activity.extraction_status,
+          extraction_error: activity.extraction_error,
+          parsed_parameters: activity.parsed_parameters,
+          raw_notes: activity.raw_notes
+        }),
+        ...(activity.type === 'petiole_test' && {
+          sample_id: activity.sample_id,
+          parameters: activity.parameters,
+          recommendations: activity.recommendations,
+          report_url: activity.report_url,
+          report_storage_path: activity.report_storage_path,
+          report_filename: activity.report_filename,
+          report_type: activity.report_type,
+          extraction_status: activity.extraction_status,
+          extraction_error: activity.extraction_error,
+          parsed_parameters: activity.parsed_parameters,
+          raw_notes: activity.raw_notes
+        })
       }
 
       handleEditRecord(record)

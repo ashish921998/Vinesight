@@ -810,32 +810,8 @@ export function UnifiedDataLogsModal({
       // Extract the real database ID from the log ID
       const realLogId = deleteConfirm.logId.replace(/_spray$|_fertigation$/, '')
 
-      // Call the appropriate delete method based on log type
-      switch (deleteConfirm.logType) {
-        case 'irrigation':
-          await SupabaseService.deleteIrrigationRecord(parseInt(realLogId))
-          break
-        case 'spray':
-          await SupabaseService.deleteSprayRecord(parseInt(realLogId))
-          break
-        case 'fertigation':
-          await SupabaseService.deleteFertigationRecord(parseInt(realLogId))
-          break
-        case 'harvest':
-          await SupabaseService.deleteHarvestRecord(parseInt(realLogId))
-          break
-        case 'expense':
-          await SupabaseService.deleteExpenseRecord(parseInt(realLogId))
-          break
-        case 'soil_test':
-          await SupabaseService.deleteSoilTestRecord(parseInt(realLogId))
-          break
-        case 'petiole_test':
-          await SupabaseService.deletePetioleTestRecord(parseInt(realLogId))
-          break
-        default:
-          throw new Error(`Unknown log type: ${deleteConfirm.logType}`)
-      }
+      // Use the unified deletion helper
+      await SupabaseService.deleteLogByType(deleteConfirm.logType, parseInt(realLogId))
 
       // Remove from local state
       setSessionLogs((prev) => prev.filter((log) => log.id !== deleteConfirm.logId))
