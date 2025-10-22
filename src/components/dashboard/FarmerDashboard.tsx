@@ -38,7 +38,7 @@ interface FarmInfo {
   id: string
   name: string
   location: string
-  cropType: string
+  cropVariety: string
   totalAcres: number
   status: 'healthy' | 'attention' | 'critical'
 }
@@ -63,7 +63,8 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
         id: selectedFarm.id?.toString() || '',
         name: capitalize(selectedFarm.name),
         location: selectedFarm.locationName || selectedFarm.region,
-        cropType: selectedFarm.grapeVariety,
+        crop: selectedFarm.crop,
+        cropVariety: selectedFarm.cropVariety,
         totalAcres: selectedFarm.area,
         status: calculateFarmStatus(
           selectedFarm,
@@ -305,7 +306,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                   <MapPin className="h-3 w-3 flex-shrink-0" />
                   <span className="truncate">{farmInfo.location}</span>
                   <span>•</span>
-                  <span className="flex-shrink-0">{farmInfo.cropType}</span>
+                  <span className="flex-shrink-0">{farmInfo.cropVariety}</span>
                   <span>•</span>
                   <span className="flex-shrink-0">{farmInfo.totalAcres} acres</span>
                 </div>

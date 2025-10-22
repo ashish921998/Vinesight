@@ -13,6 +13,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 import { LocationForm } from '@/components/calculators/ETc/LocationForm'
+import { Combobox } from '@/components/ui/combobox'
+import { getAllCrops, getVarietiesForCrop, getDefaultVariety } from '@/lib/crop-data'
 import type { LocationResult } from '@/lib/open-meteo-geocoding'
 import type { Farm } from '@/types/types'
 
@@ -28,7 +30,8 @@ interface FormData {
   name: string
   region: string
   area: string
-  grapeVariety: string
+  crop: string
+  cropVariety: string
   plantingDate: string
   vineSpacing: string
   rowSpacing: string
@@ -55,7 +58,8 @@ export function FarmModal({
     name: editingFarm?.name || '',
     region: editingFarm?.region || '',
     area: editingFarm?.area?.toString() || '',
-    grapeVariety: editingFarm?.grapeVariety || '',
+    crop: editingFarm?.crop || 'Grapes',
+    cropVariety: editingFarm?.cropVariety || getDefaultVariety('Grapes'),
     plantingDate: editingFarm?.plantingDate || '',
     vineSpacing: editingFarm?.vineSpacing?.toString() || '',
     rowSpacing: editingFarm?.rowSpacing?.toString() || '',
@@ -78,7 +82,8 @@ export function FarmModal({
         name: editingFarm.name || '',
         region: editingFarm.region || '',
         area: editingFarm.area?.toString() || '',
-        grapeVariety: editingFarm.grapeVariety || '',
+        crop: editingFarm.crop || 'Grapes',
+        cropVariety: editingFarm.cropVariety || getDefaultVariety(editingFarm.crop || 'Grapes'),
         plantingDate: editingFarm.plantingDate || '',
         vineSpacing: editingFarm.vineSpacing?.toString() || '',
         rowSpacing: editingFarm.rowSpacing?.toString() || '',
@@ -99,7 +104,8 @@ export function FarmModal({
         name: '',
         region: '',
         area: '',
-        grapeVariety: '',
+        crop: 'Grapes',
+        cropVariety: getDefaultVariety('Grapes'),
         plantingDate: '',
         vineSpacing: '',
         rowSpacing: '',
@@ -160,10 +166,11 @@ export function FarmModal({
       name: formData.name,
       region: formData.region,
       area: parseFloat(formData.area),
-      grapeVariety: formData.grapeVariety,
+      crop: formData.crop,
+      cropVariety: formData.cropVariety,
       plantingDate: formData.plantingDate,
-      vineSpacing: parseFloat(formData.vineSpacing),
-      rowSpacing: parseFloat(formData.rowSpacing),
+      vineSpacing: formData.vineSpacing ? parseFloat(formData.vineSpacing) : undefined,
+      rowSpacing: formData.rowSpacing ? parseFloat(formData.rowSpacing) : undefined,
       totalTankCapacity: formData.totalTankCapacity
         ? parseFloat(formData.totalTankCapacity)
         : undefined,
@@ -230,36 +237,66 @@ export function FarmModal({
               />
             </div>
 
-            {/* Area and Grape Variety */}
+            {/* Area */}
+            <div>
+              <Label htmlFor="area" className="text-sm font-medium text-gray-700">
+                Area (acres) *
+              </Label>
+              <Input
+                id="area"
+                type="number"
+                step="0.1"
+                min="0"
+                value={formData.area}
+                onChange={(e) => handleInputChange('area', e.target.value)}
+                placeholder="6.2"
+                required
+                className="mt-1 h-11"
+              />
+            </div>
+
+            {/* Crop and Crop Variety */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="area" className="text-sm font-medium text-gray-700">
-                  Area (acres) *
-                </Label>
-                <Input
-                  id="area"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  value={formData.area}
-                  onChange={(e) => handleInputChange('area', e.target.value)}
-                  placeholder="6.2"
-                  required
-                  className="mt-1 h-11"
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">Crop *</Label>
+                <Combobox
+                  options={getAllCrops().map((crop) => ({
+                    value: crop,
+                    label: crop
+                  }))}
+                  value={formData.crop}
+                  onValueChange={(value) => {
+                    handleInputChange('crop', value)
+                    // Auto-set the first variety for the selected crop
+                    const varieties = getVarietiesForCrop(value)
+                    if (varieties.length > 0) {
+                      handleInputChange('cropVariety', varieties[0])
+                    }
+                  }}
+                  placeholder="Select a crop"
+                  searchPlaceholder="Search crops..."
                 />
               </div>
               <div>
-                <Label htmlFor="grapeVariety" className="text-sm font-medium text-gray-700">
-                  Grape Variety *
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Crop Variety *
                 </Label>
-                <Input
-                  id="grapeVariety"
-                  value={formData.grapeVariety}
-                  onChange={(e) => handleInputChange('grapeVariety', e.target.value)}
-                  placeholder="Thompson Seedless"
-                  required
-                  className="mt-1 h-11"
+                <Combobox
+                  options={getVarietiesForCrop(formData.crop).map((variety) => ({
+                    value: variety,
+                    label: variety
+                  }))}
+                  value={formData.cropVariety}
+                  onValueChange={(value) => handleInputChange('cropVariety', value)}
+                  placeholder="Select a variety"
+                  searchPlaceholder="Search varieties..."
+                  allowCustom={true}
+                  customPlaceholder="Type to add custom variety..."
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Don&apos;t see your variety? Type it in and select &quot;Add as custom
+                  variety&quot;
+                </p>
               </div>
             </div>
 
@@ -282,7 +319,7 @@ export function FarmModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="vineSpacing" className="text-sm font-medium text-gray-700">
-                  Vine Spacing (m) *
+                  Vine Spacing (m)
                 </Label>
                 <Input
                   id="vineSpacing"
@@ -292,13 +329,13 @@ export function FarmModal({
                   value={formData.vineSpacing}
                   onChange={(e) => handleInputChange('vineSpacing', e.target.value)}
                   placeholder="3.0"
-                  required
                   className="mt-1 h-11"
                 />
+                <p className="text-xs text-gray-500 mt-1">Optional: Distance between vines</p>
               </div>
               <div>
                 <Label htmlFor="rowSpacing" className="text-sm font-medium text-gray-700">
-                  Row Spacing (m) *
+                  Row Spacing (m)
                 </Label>
                 <Input
                   id="rowSpacing"
@@ -308,9 +345,9 @@ export function FarmModal({
                   value={formData.rowSpacing}
                   onChange={(e) => handleInputChange('rowSpacing', e.target.value)}
                   placeholder="9.0"
-                  required
                   className="mt-1 h-11"
                 />
+                <p className="text-xs text-gray-500 mt-1">Optional: Distance between rows</p>
               </div>
             </div>
 

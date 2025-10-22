@@ -81,9 +81,14 @@ export function FarmHeader({ farm, loading, onEdit, onDelete }: FarmHeaderProps)
               )}
             </div>
 
-            <Badge variant="secondary" className="bg-green-50 text-green-700 text-xs">
-              {farm.grapeVariety || 'Grape Vineyard'}
-            </Badge>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="secondary" className="bg-blue-50 text-blue-700 text-xs">
+                {farm.crop || 'Grapes'}
+              </Badge>
+              <Badge variant="secondary" className="bg-green-50 text-green-700 text-xs">
+                {farm.cropVariety || 'Variety'}
+              </Badge>
+            </div>
           </div>
 
           {(onEdit || onDelete) && (

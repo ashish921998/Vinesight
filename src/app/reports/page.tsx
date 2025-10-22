@@ -162,7 +162,7 @@ export default function UnifiedReportsPage() {
           id: 1,
           farm_id: farm.id,
           date: '2025-08-25',
-          variety: farm.grapeVariety,
+          variety: farm.cropVariety,
           quantity: 1250.0,
           unit: 'kg',
           quality_grade: 'Premium',

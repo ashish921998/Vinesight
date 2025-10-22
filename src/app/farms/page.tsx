@@ -134,18 +134,22 @@ export default function FarmsPage() {
                         <div className="w-6 h-6 bg-gray-200 rounded"></div>
                       </div>
                       <div className="mt-3 pt-3 border-t border-gray-100">
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 gap-3">
                           <div className="text-center">
-                            <div className="h-3 bg-gray-200 rounded w-8 mx-auto mb-1"></div>
+                            <div className="h-4 bg-gray-200 rounded w-8 mx-auto mb-1"></div>
                             <div className="h-2 bg-gray-200 rounded w-12 mx-auto"></div>
                           </div>
                           <div className="text-center">
-                            <div className="h-3 bg-gray-200 rounded w-12 mx-auto mb-1"></div>
+                            <div className="h-4 bg-gray-200 rounded w-12 mx-auto mb-1"></div>
                             <div className="h-2 bg-gray-200 rounded w-8 mx-auto"></div>
                           </div>
                           <div className="text-center">
-                            <div className="h-3 bg-gray-200 rounded w-10 mx-auto mb-1"></div>
-                            <div className="h-2 bg-gray-200 rounded w-6 mx-auto"></div>
+                            <div className="h-4 bg-gray-200 rounded w-10 mx-auto mb-1"></div>
+                            <div className="h-2 bg-gray-200 rounded w-12 mx-auto"></div>
+                          </div>
+                          <div className="text-center">
+                            <div className="h-4 bg-gray-200 rounded w-8 mx-auto mb-1"></div>
+                            <div className="h-2 bg-gray-200 rounded w-12 mx-auto"></div>
                           </div>
                         </div>
                       </div>
@@ -224,21 +228,27 @@ export default function FarmsPage() {
                           </div>
 
                           <div className="mt-3 pt-3 border-t border-gray-100">
-                            <div className="grid grid-cols-3 gap-4 text-center">
+                            <div className="grid grid-cols-3 gap-3 text-center">
                               <div>
-                                <div className="text-lg font-semibold text-gray-900">
+                                <div className="text-lg font-semibold text-gray-900 truncate">
                                   {farm.area}
                                 </div>
                                 <div className="text-xs text-gray-500">acres</div>
                               </div>
                               <div>
-                                <div className="text-lg font-semibold text-gray-900">
-                                  {capitalize(farm.grapeVariety)}
+                                <div className="text-lg font-semibold text-gray-900 truncate">
+                                  {capitalize(farm.crop)}
+                                </div>
+                                <div className="text-xs text-gray-500">crop</div>
+                              </div>
+                              <div>
+                                <div className="text-lg font-semibold text-gray-900 truncate">
+                                  {farm.cropVariety}
                                 </div>
                                 <div className="text-xs text-gray-500">variety</div>
                               </div>
                               <div>
-                                <div className="text-lg font-semibold text-gray-900">
+                                <div className="text-lg font-semibold text-gray-900 truncate">
                                   {Math.floor(
                                     (Date.now() - new Date(farm.plantingDate).getTime()) /
                                       (1000 * 60 * 60 * 24 * 365)

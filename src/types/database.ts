@@ -810,10 +810,11 @@ export type Database = {
       farms: {
         Row: {
           area: number
+          crop: string
           created_at: string | null
+          crop_variety: string
           date_of_pruning: string | null
           elevation: number | null
-          grape_variety: string
           id: number
           latitude: number | null
           location_name: string | null
@@ -835,9 +836,11 @@ export type Database = {
         }
         Insert: {
           area: number
+          crop?: string
           created_at?: string | null
+          crop_variety: string
+          date_of_pruning?: string | null
           elevation?: number | null
-          grape_variety: string
           id?: number
           latitude?: number | null
           location_name?: string | null
@@ -848,21 +851,22 @@ export type Database = {
           planting_date: string
           region: string
           remaining_water?: number | null
-          row_spacing: number
+          row_spacing?: number | null
           system_discharge?: number | null
           timezone?: string | null
           total_tank_capacity?: number | null
           updated_at?: string | null
           user_id?: string | null
-          vine_spacing: number
+          vine_spacing?: number | null
           water_calculation_updated_at?: string | null
-          date_of_pruning: string | null
         }
         Update: {
           area?: number
+          crop?: string
           created_at?: string | null
+          crop_variety?: string
+          date_of_pruning?: string | null
           elevation?: number | null
-          grape_variety?: string
           id?: number
           latitude?: number | null
           location_name?: string | null
@@ -873,15 +877,14 @@ export type Database = {
           planting_date?: string
           region?: string
           remaining_water?: number | null
-          row_spacing?: number
+          row_spacing?: number | null
           system_discharge?: number | null
           timezone?: string | null
           total_tank_capacity?: number | null
           updated_at?: string | null
           user_id?: string | null
-          vine_spacing?: number
+          vine_spacing?: number | null
           water_calculation_updated_at?: string | null
-          date_of_pruning?: string | null
         }
         Relationships: []
       }
@@ -1134,7 +1137,7 @@ export type Database = {
           data_sources: Json | null
           demand_forecast: Json | null
           expires_at: string | null
-          grape_variety: string | null
+          crop_variety: string | null
           id: number
           prediction_date: string
           price_data: Json
@@ -1149,7 +1152,7 @@ export type Database = {
           data_sources?: Json | null
           demand_forecast?: Json | null
           expires_at?: string | null
-          grape_variety?: string | null
+          crop_variety?: string | null
           id?: number
           prediction_date: string
           price_data?: Json
@@ -1164,7 +1167,7 @@ export type Database = {
           data_sources?: Json | null
           demand_forecast?: Json | null
           expires_at?: string | null
-          grape_variety?: string | null
+          crop_variety?: string | null
           id?: number
           prediction_date?: string
           price_data?: Json

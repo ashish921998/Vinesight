@@ -67,11 +67,17 @@ export const FarmSchema = z.object({
     .min(0.01, 'Area must be greater than 0')
     .max(25000, 'Area must be less than 25,000 acres')
     .finite('Area must be a valid number'),
-  grape_variety: z
+  crop: z
     .string()
-    .min(1, 'Grape variety is required')
-    .max(50, 'Grape variety must be less than 50 characters')
-    .regex(/^[a-zA-Z0-9\s\-]+$/, 'Grape variety contains invalid characters')
+    .min(1, 'Crop is required')
+    .max(50, 'Crop must be less than 50 characters')
+    .regex(/^[a-zA-Z0-9\s\-]+$/, 'Crop contains invalid characters')
+    .transform(sanitizeString),
+  crop_variety: z
+    .string()
+    .min(1, 'Crop variety is required')
+    .max(50, 'Crop variety must be less than 50 characters')
+    .regex(/^[a-zA-Z0-9\s\-]+$/, 'Crop variety contains invalid characters')
     .transform(sanitizeString),
   planting_date: z
     .string()
@@ -86,12 +92,14 @@ export const FarmSchema = z.object({
     .number()
     .min(0.5, 'Vine spacing must be at least 0.5 meters')
     .max(10, 'Vine spacing must be less than 10 meters')
-    .finite('Vine spacing must be a valid number'),
+    .finite('Vine spacing must be a valid number')
+    .optional(),
   row_spacing: z
     .number()
     .min(1, 'Row spacing must be at least 1 meter')
     .max(20, 'Row spacing must be less than 20 meters')
     .finite('Row spacing must be a valid number')
+    .optional()
 })
 
 // Irrigation record validation

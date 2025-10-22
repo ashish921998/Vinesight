@@ -100,7 +100,8 @@ export function toApplicationFarm(dbFarm: DatabaseFarm): Farm {
     name: dbFarm.name,
     region: dbFarm.region,
     area: dbFarm.area,
-    grapeVariety: dbFarm.grape_variety,
+    crop: dbFarm.crop,
+    cropVariety: dbFarm.crop_variety,
     plantingDate: dbFarm.planting_date,
     vineSpacing: dbFarm.vine_spacing || undefined,
     rowSpacing: dbFarm.row_spacing || undefined,
@@ -131,7 +132,7 @@ export function toDatabaseFarmInsert(
     name: appFarm.name,
     region: appFarm.region,
     area: appFarm.area,
-    grape_variety: appFarm.grapeVariety,
+    crop_variety: appFarm.cropVariety,
     planting_date: appFarm.plantingDate,
     vine_spacing: appFarm.vineSpacing || 0,
     row_spacing: appFarm.rowSpacing || 0,
@@ -157,7 +158,7 @@ export function toDatabaseFarmUpdate(appFarmUpdates: Partial<Farm>): DatabaseFar
   if (appFarmUpdates.name !== undefined) update.name = appFarmUpdates.name
   if (appFarmUpdates.region !== undefined) update.region = appFarmUpdates.region
   if (appFarmUpdates.area !== undefined) update.area = appFarmUpdates.area
-  if (appFarmUpdates.grapeVariety !== undefined) update.grape_variety = appFarmUpdates.grapeVariety
+  if (appFarmUpdates.cropVariety !== undefined) update.crop_variety = appFarmUpdates.cropVariety
   if (appFarmUpdates.plantingDate !== undefined) update.planting_date = appFarmUpdates.plantingDate
   if (appFarmUpdates.vineSpacing !== undefined) update.vine_spacing = appFarmUpdates.vineSpacing
   if (appFarmUpdates.rowSpacing !== undefined) update.row_spacing = appFarmUpdates.rowSpacing
