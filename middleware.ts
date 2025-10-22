@@ -36,14 +36,19 @@ export async function middleware(req: NextRequest) {
     data: { user }
   } = await supabase.auth.getUser()
 
-  // If user is signed in and the current path is /auth redirect the user to /
+  // If user is signed in and the current path is /auth redirect the user to /dashboard
   // But exclude the email verification page
   if (
     user &&
     req.nextUrl.pathname === '/auth' &&
     !req.nextUrl.pathname.startsWith('/auth/verify-email')
   ) {
-    return NextResponse.redirect(new URL('/', req.url))
+    return NextResponse.redirect(new URL('/dashboard', req.url))
+  }
+
+  // If user is signed in and trying to access the homepage, redirect to dashboard
+  if (user && req.nextUrl.pathname === '/') {
+    return NextResponse.redirect(new URL('/dashboard', req.url))
   }
 
   return supabaseResponse

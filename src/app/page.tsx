@@ -4,6 +4,7 @@ import type React from 'react'
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import SmartSimpleBrilliant from '../components/smart-simple-brilliant'
 import YourWorkInSync from '../components/your-work-in-sync'
 import EffortlessIntegration from '../components/effortless-integration-updated'
@@ -31,9 +32,17 @@ function Badge({ icon, text }: { icon: React.ReactNode; text: string }) {
 
 export default function LandingPage() {
   const router = useRouter()
+  const { user, loading } = useSupabaseAuth()
   const [activeCard, setActiveCard] = useState(0)
   const [progress, setProgress] = useState(0)
   const mountedRef = useRef(true)
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/dashboard')
+    }
+  }, [user, loading, router])
 
   useEffect(() => {
     const progressInterval = setInterval(() => {
@@ -61,6 +70,18 @@ export default function LandingPage() {
       mountedRef.current = false
     }
   }, [])
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen bg-[#F7F5F3] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   const handleCardClick = (index: number) => {
     if (!mountedRef.current) return
