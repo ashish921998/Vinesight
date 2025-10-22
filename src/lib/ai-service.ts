@@ -1,4 +1,4 @@
-import * as tf from '@tensorflow/tfjs'
+import type { LayersModel, Tensor } from '@tensorflow/tfjs'
 import OpenAI from 'openai'
 
 export interface DiseaseDetectionResult {
@@ -129,7 +129,8 @@ export const GRAPE_DISEASES = {
 
 export class AIService {
   private static openai: OpenAI | null = null
-  private static diseaseModel: tf.LayersModel | null = null
+  private static diseaseModel: LayersModel | null = null
+  private static tfPromise: Promise<typeof import('@tensorflow/tfjs')> | null = null
 
   // Initialize OpenAI client - Use server-side API routes instead
   static async initializeOpenAI() {
@@ -138,9 +139,19 @@ export class AIService {
     this.openai = null // Removed client-side OpenAI initialization
   }
 
+  // Lazy load TensorFlow.js for better performance
+  private static async loadTensorFlow() {
+    if (!this.tfPromise) {
+      this.tfPromise = import('@tensorflow/tfjs')
+    }
+    return this.tfPromise
+  }
+
   // Load pre-trained disease detection model
   static async loadDiseaseModel(): Promise<void> {
     try {
+      const tf = await this.loadTensorFlow()
+
       // In a real implementation, you would load a trained model
       // For now, we'll simulate with a basic model structure
 
@@ -172,6 +183,8 @@ export class AIService {
     imageElement: HTMLImageElement | HTMLCanvasElement
   ): Promise<ImageAnalysisResult> {
     try {
+      const tf = await this.loadTensorFlow()
+
       // Preprocess image for model input
       const tensor = tf.browser
         .fromPixels(imageElement)
@@ -198,7 +211,7 @@ export class AIService {
   }
 
   // Simulate disease detection (replace with actual model inference)
-  private static async simulateDiseaseDetection(tensor: tf.Tensor): Promise<ImageAnalysisResult> {
+  private static async simulateDiseaseDetection(tensor: Tensor): Promise<ImageAnalysisResult> {
     // Simulate analysis delay
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
