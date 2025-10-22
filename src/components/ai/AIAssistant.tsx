@@ -27,7 +27,7 @@ import { toast } from 'sonner'
 import { getQuotaStatus, incrementQuestionCount } from '@/lib/quota-service'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Textarea } from '../ui/textarea'
+import { Textarea } from '@/components/ui/textarea'
 import {
   supabaseConversationStorage,
   type Message,

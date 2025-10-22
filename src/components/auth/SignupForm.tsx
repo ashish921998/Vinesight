@@ -4,11 +4,13 @@ import type React from 'react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { LoginButton } from '@/components/auth/LoginButton'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/ui/password-input'
+import { LoginButton } from '@/components/auth/LoginButton'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 export default function SignupForm() {
   const [email, setEmail] = useState('')
@@ -102,20 +104,21 @@ export default function SignupForm() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label
+              <Label
                 htmlFor="email"
-                className="block text-sm font-medium text-card-foreground mb-2"
+                className="mb-2 block text-sm font-medium text-card-foreground"
               >
                 Email address
-              </label>
-              <input
+              </Label>
+              <Input
                 id="email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                 placeholder="Enter your email"
+                className="min-h-[44px]"
               />
             </div>
 
@@ -128,6 +131,8 @@ export default function SignupForm() {
                 minLength={6}
                 placeholder="Create a password"
                 label="Password"
+                autoComplete="new-password"
+                className="min-h-[44px]"
               />
               <p className="mt-1 text-xs text-muted-foreground">
                 Password must be at least 6 characters long
@@ -143,6 +148,8 @@ export default function SignupForm() {
                 minLength={6}
                 placeholder="Re-enter your password"
                 label="Confirm password"
+                autoComplete="new-password"
+                className="min-h-[44px]"
                 error={
                   password !== confirmPassword && confirmPassword
                     ? 'Passwords do not match'
@@ -153,15 +160,16 @@ export default function SignupForm() {
 
             <Button
               type="submit"
+              size="lg"
               disabled={
                 loading || password !== confirmPassword || !email || !password || !confirmPassword
               }
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
+              className="w-full min-h-[48px]"
             >
               {loading ? (
                 <div className="flex items-center">
                   <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary-foreground"
+                    className="-ml-1 mr-3 h-5 w-5 animate-spin text-primary-foreground"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"

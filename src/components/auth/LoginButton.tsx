@@ -1,9 +1,9 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
-import { cva, type VariantProps } from 'class-variance-authority'
-import { buttonVariants } from '@/components/ui/button'
+import { type VariantProps } from 'class-variance-authority'
+import { cn } from '@/lib/utils'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 interface LoginButtonProps {
@@ -24,7 +24,7 @@ export function LoginButton({ className, children, variant }: LoginButtonProps) 
       onClick={handleGoogleSignIn}
       disabled={loading}
       variant={variant}
-      className={`w-full ${className}`}
+      className={cn('w-full', className)}
     >
       {loading ? (
         <>

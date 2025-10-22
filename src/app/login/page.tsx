@@ -5,16 +5,20 @@ import type React from 'react'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { LoginButton } from '@/components/auth/LoginButton'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/ui/password-input'
+import { LoginButton } from '@/components/auth/LoginButton'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showError, setShowError] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const router = useRouter()
   const { signInWithEmail, loading, error, user, clearError } = useSupabaseAuth()
 
@@ -86,20 +90,21 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label
+              <Label
                 htmlFor="email"
-                className="block text-sm font-medium text-card-foreground mb-2"
+                className="mb-2 block text-sm font-medium text-card-foreground"
               >
                 Email address
-              </label>
-              <input
+              </Label>
+              <Input
                 id="email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                 placeholder="Enter your email"
+                className="min-h-[44px]"
               />
             </div>
 
@@ -111,41 +116,38 @@ export default function LoginPage() {
                 required
                 placeholder="Enter your password"
                 label="Password"
+                autoComplete="current-password"
+                className="min-h-[44px]"
               />
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
+              <div className="flex items-center space-x-2">
+                <Checkbox
                   id="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-muted-foreground">
+                <Label htmlFor="remember-me" className="text-sm font-normal text-muted-foreground">
                   Remember me
-                </label>
+                </Label>
               </div>
 
-              <div className="text-sm">
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  className="font-medium text-primary hover:text-primary/80"
-                >
-                  Forgot your password?
-                </button>
-              </div>
+              <Button
+                type="button"
+                variant="link"
+                onClick={handleForgotPassword}
+                className="px-0 text-sm font-medium"
+              >
+                Forgot your password?
+              </Button>
             </div>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
-            >
+            <Button type="submit" size="lg" disabled={loading} className="w-full min-h-[48px]">
               {loading ? (
                 <div className="flex items-center">
                   <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary-foreground"
+                    className="-ml-1 mr-3 h-5 w-5 animate-spin text-primary-foreground"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
