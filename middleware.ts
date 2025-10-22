@@ -46,10 +46,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', req.url))
   }
 
-  // If user is signed in and trying to access the homepage, redirect to dashboard
-  if (user && req.nextUrl.pathname === '/') {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
-  }
+  // Note: Homepage redirect for authenticated users is handled client-side in page.tsx
+  // to prevent redirect loops with dashboard page logic
 
   return supabaseResponse
 }
