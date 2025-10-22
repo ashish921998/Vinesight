@@ -83,11 +83,15 @@ export function UnifiedDataLogsModal({
     new Date().toISOString().split('T')[0]
   )
 
-  // Helper function to normalize date to ISO format (YYYY-MM-DD)
+  // Helper function to normalize date to local YYYY-MM-DD format
   const toISO = (dateStr?: string) => {
-    if (!dateStr) return new Date().toISOString().split('T')[0]
+    if (!dateStr) {
+      const now = new Date()
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    }
     const d = new Date(dateStr)
-    return Number.isFinite(d.getTime()) ? d.toISOString().split('T')[0] : dateStr
+    if (!Number.isFinite(d.getTime())) return dateStr
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
   // In edit mode, use the original date from the first log entry's data to preserve it

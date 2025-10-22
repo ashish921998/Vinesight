@@ -221,11 +221,10 @@ export function ActivityFeed({
                           variant="ghost"
                           size="sm"
                           onClick={() => {
-                            // Convert date to ISO format (YYYY-MM-DD) for proper handling
-                            const isoDate = grouped.date
-                              ? new Date(grouped.date).toISOString().slice(0, 10)
-                              : new Date().toISOString().slice(0, 10)
-                            onEditDateGroup(isoDate, grouped.activities)
+                            // Use the grouped.date directly as it should already be in YYYY-MM-DD format
+                            const dateForEdit =
+                              grouped.date || new Date().toISOString().slice(0, 10)
+                            onEditDateGroup(dateForEdit, grouped.activities)
                           }}
                           className="h-8 w-8 p-0 text-green-600 hover:text-green-800 hover:bg-green-100 flex-shrink-0"
                           title="Edit all logs for this date"

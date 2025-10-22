@@ -526,7 +526,24 @@ export function getActivitiesSummary(activities: ActivityLog[]): Array<{
  */
 export function formatGroupedDate(dateString: string): string {
   try {
-    const date = new Date(dateString)
+    let date: Date
+
+    // Check if dateString is in YYYY-MM-DD format and parse as local date
+    const yyyyMmDdPattern = /^(\d{4})-(\d{2})-(\d{2})$/
+    if (yyyyMmDdPattern.test(dateString)) {
+      const match = dateString.match(yyyyMmDdPattern)
+      if (match) {
+        const year = parseInt(match[1], 10)
+        const month = parseInt(match[2], 10) - 1 // Convert to 0-based month
+        const day = parseInt(match[3], 10)
+        date = new Date(year, month, day)
+      } else {
+        date = new Date(dateString)
+      }
+    } else {
+      date = new Date(dateString)
+    }
+
     const today = new Date()
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
