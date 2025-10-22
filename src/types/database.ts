@@ -851,13 +851,13 @@ export type Database = {
           planting_date: string
           region: string
           remaining_water?: number | null
-          row_spacing: number
+          row_spacing?: number | null
           system_discharge?: number | null
           timezone?: string | null
           total_tank_capacity?: number | null
           updated_at?: string | null
           user_id?: string | null
-          vine_spacing: number
+          vine_spacing?: number | null
           water_calculation_updated_at?: string | null
         }
         Update: {
@@ -877,13 +877,13 @@ export type Database = {
           planting_date?: string
           region?: string
           remaining_water?: number | null
-          row_spacing?: number
+          row_spacing?: number | null
           system_discharge?: number | null
           timezone?: string | null
           total_tank_capacity?: number | null
           updated_at?: string | null
           user_id?: string | null
-          vine_spacing?: number
+          vine_spacing?: number | null
           water_calculation_updated_at?: string | null
         }
         Relationships: []

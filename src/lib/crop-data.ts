@@ -92,29 +92,79 @@ export function isPopularCrop(crop: string): boolean {
   return POPULAR_CROPS.includes(crop)
 }
 
-// Get recommended crops based on region (basic implementation)
+// Regional crop mappings for better maintainability
+const REGION_CROP_MAPPINGS = {
+  // Maharashtra regions (primary focus)
+  nashik: ['Grapes', 'Pomegranates', 'Onions'],
+  pune: ['Grapes', 'Pomegranates', 'Strawberries'],
+  sangli: ['Grapes', 'Sugarcane', 'Pomegranates'],
+  solapur: ['Cotton', 'Sugarcane', 'Pomegranates'],
+  satara: ['Strawberries', 'Grapes', 'Sugarcane'],
+  hingoli: ['Cotton', 'Sugarcane', 'Pomegranates'],
+  kolhapur: ['Sugarcane', 'Pomegranates', 'Grapes'],
+  ahmednagar: ['Grapes', 'Onions', 'Pomegranates'],
+  // Generic climate-based recommendations
+  hot: ['Cotton', 'Sugarcane', 'Pomegranates'],
+  moderate: ['Grapes', 'Pomegranates', 'Strawberries'],
+  cool: ['Strawberries', 'Grapes']
+}
+
+// Alternative region names and spellings
+const REGION_ALIASES: Record<string, string[]> = {
+  nashik: ['nashik', 'nasik'],
+  pune: ['pune', 'poona'],
+  sangli: ['sangli'],
+  solapur: ['solapur', 'sholapur'],
+  satara: ['satara'],
+  kolhapur: ['kolhapur', 'kolhapur'],
+  ahmednagar: ['ahmednagar', 'ahmadnagar']
+}
+
+// Get recommended crops based on region (enhanced implementation)
 export function getRecommendedCropsForRegion(region: string): string[] {
-  const region_lower = region.toLowerCase()
+  if (!region || !region.trim()) {
+    return POPULAR_CROPS
+  }
 
-  // Simple region-based recommendations
+  const region_lower = region.toLowerCase().trim()
+
+  // Check for exact matches and aliases
+  for (const [canonicalRegion, aliases] of Object.entries(REGION_ALIASES)) {
+    if (aliases.some((alias) => region_lower.includes(alias))) {
+      return (
+        REGION_CROP_MAPPINGS[canonicalRegion as keyof typeof REGION_CROP_MAPPINGS] || POPULAR_CROPS
+      )
+    }
+  }
+
+  // Check for partial matches in region names
+  for (const [regionKey, crops] of Object.entries(REGION_CROP_MAPPINGS)) {
+    if (region_lower.includes(regionKey)) {
+      return crops
+    }
+  }
+
+  // Climate-based fallback (very basic for now)
   if (
-    region_lower.includes('nashik') ||
-    region_lower.includes('pune') ||
-    region_lower.includes('sangli')
+    region_lower.includes('north') ||
+    region_lower.includes('hill') ||
+    region_lower.includes('mountain')
   ) {
-    return ['Grapes', 'Pomegranates', 'Onions']
+    return REGION_CROP_MAPPINGS.cool
   }
 
-  if (region_lower.includes('solapur') || region_lower.includes('hingoli')) {
-    return ['Cotton', 'Sugarcane', 'Pomegranates']
-  }
-
-  if (region_lower.includes('satara')) {
-    return ['Strawberries', 'Grapes', 'Sugarcane']
+  if (region_lower.includes('coastal') || region_lower.includes('beach')) {
+    return ['Mango', 'Coconut', 'Pomegranates']
   }
 
   // Default: return popular crops
   return POPULAR_CROPS
+}
+
+// Check if a crop is recommended for a region
+export function isCropRecommendedForRegion(region: string, crop: string): boolean {
+  const recommendedCrops = getRecommendedCropsForRegion(region)
+  return recommendedCrops.includes(crop)
 }
 
 // Get default variety for a crop

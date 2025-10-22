@@ -1,3 +1,5 @@
+'use client'
+
 import * as React from 'react'
 import { ChevronsUpDown, Check } from 'lucide-react'
 
@@ -96,7 +98,10 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
                     key={option.value}
                     value={option.value}
                     onSelect={(currentValue) => {
-                      onValueChange(currentValue === value ? '' : currentValue)
+                      // Only update if the value is different (prevents clearing on reselection)
+                      if (currentValue !== value) {
+                        onValueChange(currentValue)
+                      }
                       setOpen(false)
                       setSearchValue('')
                     }}
