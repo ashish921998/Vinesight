@@ -809,12 +809,14 @@ export type Database = {
       }
       farms: {
         Row: {
-          area: number
-          created_at: string | null
-          date_of_pruning: string | null
-          elevation: number | null
-          grape_variety: string
-          id: number
+           area: number
+           created_at: string | null
+           crop_name: string | null
+           crop_variety: string | null
+           date_of_pruning: string | null
+           elevation: number | null
+           grape_variety: string
+
           latitude: number | null
           location_name: string | null
           location_source: string | null
@@ -834,11 +836,13 @@ export type Database = {
           water_calculation_updated_at: string | null
         }
         Insert: {
-          area: number
-          created_at?: string | null
-          elevation?: number | null
-          grape_variety: string
-          id?: number
+           area: number
+           created_at?: string | null
+           crop_name?: string | null
+           crop_variety?: string | null
+           elevation?: number | null
+           grape_variety: string
+
           latitude?: number | null
           location_name?: string | null
           location_source?: string | null
@@ -859,11 +863,13 @@ export type Database = {
           date_of_pruning: string | null
         }
         Update: {
-          area?: number
-          created_at?: string | null
-          elevation?: number | null
-          grape_variety?: string
-          id?: number
+           area?: number
+           created_at?: string | null
+           crop_name?: string | null
+           crop_variety?: string | null
+           elevation?: number | null
+           grape_variety?: string
+
           latitude?: number | null
           location_name?: string | null
           location_source?: string | null

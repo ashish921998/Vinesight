@@ -1,6 +1,6 @@
 'use client'
 
-import { Grape, Scissors, Edit, Trash2, MoreVertical } from 'lucide-react'
+import { Sprout, Scissors, Edit, Trash2, MoreVertical } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -39,6 +39,9 @@ export function FarmHeader({ farm, loading, onEdit, onDelete }: FarmHeaderProps)
   }
 
   const daysAfterPruning = calculateDaysAfterPruning(farm.dateOfPruning)
+  const cropName = farm?.cropName || 'Grapes'
+  const cropVariety = farm?.cropVariety || farm?.grapeVariety || ''
+  const cropBadgeLabel = cropVariety ? `${cropName} • ${cropVariety}` : cropName
 
   if (loading) {
     return (
@@ -64,7 +67,7 @@ export function FarmHeader({ farm, loading, onEdit, onDelete }: FarmHeaderProps)
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
             <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center">
-              <Grape className="h-5 w-5 text-white" />
+              <Sprout className="h-5 w-5 text-white" />
             </div>
           </div>
 
@@ -82,7 +85,7 @@ export function FarmHeader({ farm, loading, onEdit, onDelete }: FarmHeaderProps)
             </div>
 
             <Badge variant="secondary" className="bg-green-50 text-green-700 text-xs">
-              {farm.grapeVariety || 'Grape Vineyard'}
+              {cropBadgeLabel}
             </Badge>
           </div>
 

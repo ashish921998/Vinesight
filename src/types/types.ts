@@ -38,7 +38,9 @@ export interface Farm {
   name: string
   region: string
   area: number // in acres
-  grapeVariety: string
+  cropName?: string // e.g., Rice, Grapes, Maize
+  cropVariety?: string // e.g., Basmati, Thompson Seedless
+  grapeVariety?: string // Deprecated: retained for backward compatibility
   plantingDate: string
   vineSpacing?: number // in meters
   rowSpacing?: number // in meters
