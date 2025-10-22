@@ -471,8 +471,8 @@ export default function FarmLogsPage() {
           date: date,
           quantity: parseFloat(data.quantity || '0'),
           grade: data.grade || 'Standard',
-          price: 0,
-          buyer: '',
+          price: data.price ? parseFloat(data.price) : undefined,
+          buyer: data.buyer?.trim() || undefined,
           notes: dayNotes || '',
           date_of_pruning: currentFarm?.dateOfPruning
         })

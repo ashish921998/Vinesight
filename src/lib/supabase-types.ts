@@ -389,12 +389,9 @@ export function toDatabaseFertigationUpdate(
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.fertilizer !== undefined) update.fertilizer = appUpdates.fertilizer
-  if (appUpdates.dose !== undefined)
-    update.dose = appUpdates.dose === undefined ? null : appUpdates.dose
-  if (appUpdates.purpose !== undefined)
-    update.purpose = appUpdates.purpose === undefined ? null : appUpdates.purpose
-  if (appUpdates.area !== undefined)
-    update.area = appUpdates.area === undefined ? null : appUpdates.area
+  if (appUpdates.dose !== undefined) update.dose = appUpdates.dose || null
+  if (appUpdates.purpose !== undefined) update.purpose = appUpdates.purpose || null
+  if (appUpdates.area !== undefined) update.area = appUpdates.area || null
   if (appUpdates.quantity !== undefined) update.quantity = appUpdates.quantity
   if (appUpdates.unit !== undefined) update.unit = appUpdates.unit
   if (appUpdates.date_of_pruning !== undefined)
