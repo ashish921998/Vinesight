@@ -149,10 +149,21 @@ export function ActivityFeed({
                   <div
                     key={index}
                     className="flex items-start justify-between gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer hover:shadow-md"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => {
                       const dateForEdit = normalizeDateToYYYYMMDD(grouped.date)
                       if (dateForEdit && onEditDateGroup) {
                         onEditDateGroup(dateForEdit, grouped.activities)
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                        e.preventDefault()
+                        const dateForEdit = normalizeDateToYYYYMMDD(grouped.date)
+                        if (dateForEdit && onEditDateGroup) {
+                          onEditDateGroup(dateForEdit, grouped.activities)
+                        }
                       }
                     }}
                   >
