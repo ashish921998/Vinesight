@@ -237,7 +237,10 @@ export function ActivityFeed({
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation()
-                            onDeleteDateGroup(grouped.date, grouped.activities)
+                            const dateForDelete = normalizeDateToYYYYMMDD(grouped.date)
+                            if (dateForDelete) {
+                              onDeleteDateGroup(dateForDelete, grouped.activities)
+                            }
                           }}
                           className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-100 flex-shrink-0"
                           title="Delete all logs for this date"
