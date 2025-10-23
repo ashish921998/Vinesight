@@ -278,9 +278,59 @@ export class SupabaseService {
 
   static async deleteIrrigationRecord(id: number): Promise<void> {
     const supabase = getTypedSupabaseClient()
-    const { error } = await supabase.from('irrigation_records').delete().eq('id', id)
 
-    if (error) throw error
+    const { data: record, error } = await supabase
+      .from('irrigation_records')
+      .delete()
+      .eq('id', id)
+      .select('*')
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return
+      }
+      throw error
+    }
+
+    if (!record?.farm_id) {
+      return
+    }
+
+    const farm = await this.getFarmById(record.farm_id)
+
+    if (!farm) {
+      return
+    }
+
+    const rawDuration = Number(record.duration ?? 0)
+    const rawSystemDischarge = Number(record.system_discharge ?? farm.systemDischarge ?? 0)
+
+    if (!Number.isFinite(rawDuration) || !Number.isFinite(rawSystemDischarge)) {
+      return
+    }
+
+    const duration = Math.max(rawDuration, 0)
+    const systemDischarge = Math.max(rawSystemDischarge, 0)
+
+    if (duration <= 0 || systemDischarge <= 0) {
+      return
+    }
+
+    const waterContribution = duration * systemDischarge
+
+    if (!Number.isFinite(waterContribution) || waterContribution <= 0) {
+      return
+    }
+
+    const currentWaterLevel = Number(farm.remainingWater ?? 0)
+    const safeCurrentLevel = Number.isFinite(currentWaterLevel) ? currentWaterLevel : 0
+    const updatedWaterLevel = Math.max(safeCurrentLevel - waterContribution, 0)
+
+    await this.updateFarm(record.farm_id, {
+      remainingWater: updatedWaterLevel,
+      waterCalculationUpdatedAt: new Date().toISOString()
+    })
   }
 
   // Spray operations
