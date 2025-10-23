@@ -917,8 +917,18 @@ export default function FarmLogsPage() {
                   return (
                     <div
                       key={`${log.type}-${log.id}`}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Edit ${getActivityDisplayData(log)} from ${formatLogDate(log.created_at)}`}
                       className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-50"
                       onClick={() => handleEditRecord(log)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleEditRecord(log)
+                        }
+                      }}
                     >
                       <div className="grid grid-cols-[auto_1fr_auto] gap-3 items-start">
                         <div
