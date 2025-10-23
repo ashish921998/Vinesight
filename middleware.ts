@@ -2,6 +2,14 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+/**
+ * Initializes a Supabase server client with cookie synchronization, enforces auth-route redirect rules, and returns the resulting NextResponse.
+ *
+ * Creates a Supabase server client that mirrors cookies from the incoming request and applies any cookies Supabase sets to the outgoing response, retrieves the current user, and if the user is authenticated and is accessing an auth route (any path starting with `/auth` except `/auth/verify-email`) redirects to `/dashboard`.
+ *
+ * @param req - The incoming Next.js request
+ * @returns The NextResponse to continue the request lifecycle; may include cookies set by Supabase or be a redirect to `/dashboard`
+ */
 export async function middleware(req: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request: req

@@ -30,6 +30,13 @@ function Badge({ icon, text }: { icon: React.ReactNode; text: string }) {
   )
 }
 
+/**
+ * Render the Vinesight landing page, including hero, rotating dashboard preview, feature cards, and supporting sections.
+ *
+ * Redirects authenticated users to `/dashboard` and automatically advances the central dashboard feature every ~5 seconds using an internal progress timer; clicking a feature card selects it and resets progress.
+ *
+ * @returns The React element that composes the full landing page
+ */
 export default function LandingPage() {
   const router = useRouter()
   const { user, loading } = useSupabaseAuth()
