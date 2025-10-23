@@ -54,12 +54,11 @@ import {
 import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
 import { transformActivitiesToLogEntries } from '@/lib/activity-display-utils'
 import { PhotoService } from '@/lib/photo-service'
+import { toast } from 'sonner'
 
-// Utility function for date formatting with blue-600 color
 const formatLogDate = (dateString: string): string => {
   try {
     const date = new Date(dateString)
-    // Ensure we handle invalid dates
     if (isNaN(date.getTime())) {
       return 'Invalid date'
     }
@@ -79,7 +78,7 @@ const formatLogDate = (dateString: string): string => {
         .toLowerCase()
         .replace(' ', '')}`
     } else if (isYesterday) {
-      return `yesterday, ${date
+      return `Yesterday, ${date
         .toLocaleTimeString('en-US', {
           hour: '2-digit',
           minute: '2-digit',
@@ -619,13 +618,11 @@ export default function FarmLogsPage() {
 
       // Reload logs after deletion
       await loadLogs()
-
-      // Close dialog
       setShowDeleteDialog(false)
       setDeletingRecord(null)
     } catch (error) {
       console.error('Error deleting record:', error)
-      // You might want to show a toast notification here
+      toast.error('Error deleting record')
     } finally {
       setIsDeleting(false)
     }
@@ -920,99 +917,53 @@ export default function FarmLogsPage() {
                   return (
                     <div
                       key={`${log.type}-${log.id}`}
-                      className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Edit ${getActivityDisplayData(log)} from ${formatLogDate(log.created_at)}`}
+                      className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleEditRecord(log)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleEditRecord(log)
+                        }
+                      }}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          {/* Log Type Icon */}
-                          <div
-                            className={`p-2 ${getLogTypeBgColor(log.type)} rounded-md flex-shrink-0`}
-                          >
-                            <Icon className={`h-4 w-4 ${getLogTypeColor(log.type)}`} />
-                          </div>
-
-                          {/* Log Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-medium text-sm text-gray-900 capitalize">
-                                {log.type.replace('_', ' ')}
-                              </h3>
-                              <span className="text-blue-600 text-xs font-medium">
-                                {formatLogDate(log.date)}
-                              </span>
-                            </div>
-
-                            {/* Log-specific details */}
-                            <div className="text-xs text-gray-600 space-y-1">
-                              {log.type === 'spray' && (
-                                <>
-                                  {log.chemicals &&
-                                    Array.isArray(log.chemicals) &&
-                                    log.chemicals.length > 0 && (
-                                      <p>
-                                        <span className="font-medium">Chemicals:</span>{' '}
-                                        {log.chemicals.map((chem, idx) => (
-                                          <span key={idx}>
-                                            {chem.name} ({chem.quantity} {chem.unit})
-                                            {idx < (log.chemicals?.length || 0) - 1 && ', '}
-                                          </span>
-                                        ))}
-                                      </p>
-                                    )}
-                                </>
-                              )}
-
-                              {log.type === 'harvest' && log.quantity && (
-                                <p>
-                                  <span className="font-medium">Quantity:</span> {log.quantity}{' '}
-                                  units
-                                </p>
-                              )}
-
-                              {log.type === 'expense' && log.cost && (
-                                <p>
-                                  <span className="font-medium">Cost:</span> ${log.cost}
-                                </p>
-                              )}
-
-                              {log.type === 'fertigation' && log.fertilizer && (
-                                <p>
-                                  <span className="font-medium">Fertilizer:</span> {log.fertilizer}
-                                </p>
-                              )}
-
-                              {log.type === 'irrigation' && log.duration && (
-                                <p>
-                                  <span className="font-medium">Duration:</span> {log.duration}{' '}
-                                  minutes
-                                </p>
-                              )}
-
-                              {log.notes && (
-                                <p className="text-gray-700">
-                                  <span className="font-medium">Notes:</span> {log.notes}
-                                </p>
-                              )}
-                            </div>
-
-                            {/* Days after pruning indicator */}
-                            {daysAfterPruning !== null && daysAfterPruning >= 0 && (
-                              <div className="mt-2">
-                                <div className="inline-flex items-center gap-1 bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full cursor-help">
-                                  <Scissors className="h-3 w-3" />
-                                  {daysAfterPruning}d
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                      <div className="grid grid-cols-[auto_1fr_auto] gap-3 items-start">
+                        <div
+                          className={`p-2 ${getLogTypeBgColor(log.type)} rounded-md flex-shrink-0`}
+                        >
+                          <Icon className={`h-4 w-4 ${getLogTypeColor(log.type)}`} />
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-1 ml-2">
+                        <div className="min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
+                            <h3 className="font-medium text-sm text-gray-900 capitalize truncate max-w-[200px] sm:max-w-[300px] md:max-w-[400px]">
+                              {getActivityDisplayData(log)}
+                            </h3>
+                            <span className="text-blue-600 text-xs font-medium">
+                              {formatLogDate(log.created_at)}
+                            </span>
+                          </div>
+                          {daysAfterPruning !== null && daysAfterPruning >= 0 && (
+                            <div className="mt-2">
+                              <div className="inline-flex items-center gap-1 bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full cursor-help">
+                                <Scissors className="h-3 w-3" />
+                                {daysAfterPruning}d
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1 flex-shrink-0">
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleEditRecord(log)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditRecord(log)
+                            }}
                             className="h-7 w-7 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
                             title="Edit this log"
                           >
@@ -1021,7 +972,10 @@ export default function FarmLogsPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDeleteRecord(log)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteRecord(log)
+                            }}
                             className="h-7 w-7 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
                             title="Delete this log"
                           >
