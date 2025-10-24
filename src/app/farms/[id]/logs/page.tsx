@@ -62,6 +62,12 @@ import {
   Scissors
 } from 'lucide-react'
 
+// Helper function to normalize dates for consistent comparison
+const normalizeDateToYYYYMMDD = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return d.toISOString().split('T')[0]
+}
+
 const formatLogDate = (dateString: string): string => {
   try {
     const date = new Date(dateString)
@@ -75,7 +81,7 @@ const formatLogDate = (dateString: string): string => {
       new Date(now.getTime() - 24 * 60 * 60 * 1000).toDateString() === date.toDateString()
 
     if (isToday) {
-      return `today, ${date
+      return `Today, ${date
         .toLocaleTimeString('en-US', {
           hour: '2-digit',
           minute: '2-digit',
@@ -145,6 +151,7 @@ interface ActivityLog {
   quantity?: number
   cost?: number
   fertilizer?: string
+  unit?: string
   created_at: string
 }
 
@@ -214,7 +221,7 @@ export default function FarmLogsPage() {
           SupabaseService.getSoilTestRecords(farmIdNum),
           SupabaseService.getPetioleTestRecords(farmIdNum)
         ])
-
+      console.log(spray, 'spray')
       const combinedLogs: ActivityLog[] = [
         ...irrigation
           .filter((log) => log.id != null)
@@ -235,7 +242,8 @@ export default function FarmLogsPage() {
             notes: log.notes,
             chemical: log.chemical,
             chemicals: log.chemicals,
-            created_at: log.created_at || log.date
+            created_at: log.created_at || log.date,
+            water_volume: log.water_volume
           })),
         ...harvest
           .filter((log) => log.id != null)
@@ -265,6 +273,8 @@ export default function FarmLogsPage() {
             date: log.date,
             notes: log.notes,
             fertilizer: log.fertilizer,
+            quantity: log.quantity,
+            unit: log.unit,
             created_at: log.created_at || log.date
           })),
         ...soilTests
@@ -314,10 +324,14 @@ export default function FarmLogsPage() {
     }
 
     if (dateFrom) {
-      filtered = filtered.filter((log) => new Date(log.date) >= new Date(dateFrom))
+      filtered = filtered.filter(
+        (log) => normalizeDateToYYYYMMDD(log.date) >= normalizeDateToYYYYMMDD(dateFrom)
+      )
     }
     if (dateTo) {
-      filtered = filtered.filter((log) => new Date(log.date) <= new Date(dateTo))
+      filtered = filtered.filter(
+        (log) => normalizeDateToYYYYMMDD(log.date) <= normalizeDateToYYYYMMDD(dateTo)
+      )
     }
 
     return filtered
@@ -385,29 +399,20 @@ export default function FarmLogsPage() {
 
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage)
-  }
-
-  const handleEditDateGroup = (date: string, activities: any[]) => {
-    const existingLogs = transformActivitiesToLogEntries(activities)
-
-    const isoDate = date
-      ? new Date(date).toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0]
-
-    setSelectedDate(isoDate)
-    setExistingLogsForEdit(existingLogs)
-    setEditMode('edit')
-    setShowUnifiedModal(true)
+    setCurrentPage(1)
   }
 
   const saveLogEntry = async (logEntry: any, date: string, dayNotes: string) => {
     const { type, data } = logEntry
     let record
 
+    // Create a single parsed farmId with explicit radix
+    const farmIdNum = Number.parseInt(selectedFarm, 10)
+
     switch (type) {
       case 'irrigation':
         record = await SupabaseService.addIrrigationRecord({
-          farm_id: parseInt(selectedFarm),
+          farm_id: farmIdNum,
           date: date,
           duration: parseFloat(data.duration || '0'),
           area: parseFloat(data.area || '0') || currentFarm?.area || 0,
@@ -421,7 +426,7 @@ export default function FarmLogsPage() {
 
       case 'spray': {
         const sprayData: any = {
-          farm_id: parseInt(selectedFarm),
+          farm_id: farmIdNum,
           date: date,
           water_volume: data.water_volume ? parseFloat(data.water_volume) : 0,
           chemicals: data.chemicals || [],
@@ -454,7 +459,7 @@ export default function FarmLogsPage() {
 
       case 'harvest':
         record = await SupabaseService.addHarvestRecord({
-          farm_id: parseInt(selectedFarm),
+          farm_id: farmIdNum,
           date: date,
           quantity: parseFloat(data.quantity || '0'),
           grade: data.grade || 'Standard',
@@ -467,7 +472,7 @@ export default function FarmLogsPage() {
 
       case 'expense':
         record = await SupabaseService.addExpenseRecord({
-          farm_id: parseInt(selectedFarm),
+          farm_id: farmIdNum,
           date: date,
           type: data.type || 'other',
           description: data.description || '',
@@ -479,10 +484,10 @@ export default function FarmLogsPage() {
 
       case 'fertigation':
         record = await SupabaseService.addFertigationRecord({
-          farm_id: parseInt(selectedFarm),
+          farm_id: farmIdNum,
           date: date,
           fertilizer: data.fertilizer?.trim() || 'Unknown',
-          quantity: data.quantity || 0,
+          quantity: data.quantity ? parseFloat(String(data.quantity)) : 0,
           unit: data.unit || 'kg/acre',
           notes: dayNotes || '',
           date_of_pruning: currentFarm?.dateOfPruning
@@ -491,7 +496,7 @@ export default function FarmLogsPage() {
 
       case 'soil_test':
         record = await SupabaseService.addSoilTestRecord({
-          farm_id: parseInt(selectedFarm),
+          farm_id: farmIdNum,
           date,
           parameters: {},
           notes: dayNotes || '',
@@ -501,7 +506,7 @@ export default function FarmLogsPage() {
 
       case 'petiole_test':
         record = await SupabaseService.addPetioleTestRecord({
-          farm_id: parseInt(selectedFarm),
+          farm_id: farmIdNum,
           date,
           sample_id: data.sample_id || '',
           parameters: {},
@@ -549,12 +554,18 @@ export default function FarmLogsPage() {
       setSelectedDate('')
     } catch (error) {
       console.error('Error saving logs:', error)
+      toast.error('Failed to save logs. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleEditRecord = (log: ActivityLog) => {
+    console.log(log, 'log')
+    if (log.type === 'petiole_test') {
+      toast.info('Editing Petiole Test is not supported here.')
+      return
+    }
     setEditingRecord(log)
     setShowEditModal(true)
   }
@@ -892,12 +903,19 @@ export default function FarmLogsPage() {
                   return (
                     <div
                       key={`${log.type}-${log.id}`}
-                      className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-50"
+                      className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-100"
                       role="button"
                       tabIndex={0}
+                      aria-label={`Edit ${log.type} log from ${log.date}`}
                       onClick={() => handleEditRecord(log)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          handleEditRecord(log)
+                        }
+                      }}
+                      onKeyUp={(e) => {
+                        if (e.key === ' ') {
                           e.preventDefault()
                           handleEditRecord(log)
                         }
@@ -1065,7 +1083,7 @@ export default function FarmLogsPage() {
           }}
           onSubmit={handleSubmitLogs}
           isSubmitting={isSubmitting}
-          farmId={parseInt(selectedFarm)}
+          farmId={Number.parseInt(selectedFarm, 10)}
           mode={editMode}
           existingLogs={existingLogsForEdit}
           selectedDate={selectedDate}

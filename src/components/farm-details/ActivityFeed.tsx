@@ -101,7 +101,7 @@ export function ActivityFeed({
               {pendingTasks.slice(0, 3).map((task, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-3 p-3 bg-white rounded-xl border border-green-200"
+                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-green-200"
                 >
                   <div className="p-2 bg-green-100 rounded-lg">
                     <CheckCircle className="h-4 w-4 text-green-600" />
@@ -151,6 +151,7 @@ export function ActivityFeed({
                     className="flex items-start justify-between gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer hover:shadow-md"
                     role="button"
                     tabIndex={0}
+                    aria-label={`Edit logs for ${formatGroupedDate(grouped.date)}`}
                     onClick={() => {
                       const dateForEdit = normalizeDateToYYYYMMDD(grouped.date)
                       if (dateForEdit && onEditDateGroup) {
@@ -158,7 +159,18 @@ export function ActivityFeed({
                       }
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                      if (e.target !== e.currentTarget) return
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        const dateForEdit = normalizeDateToYYYYMMDD(grouped.date)
+                        if (dateForEdit && onEditDateGroup) {
+                          onEditDateGroup(dateForEdit, grouped.activities)
+                        }
+                      }
+                    }}
+                    onKeyUp={(e) => {
+                      if (e.target !== e.currentTarget) return
+                      if (e.key === ' ' || e.key === 'Spacebar') {
                         e.preventDefault()
                         const dateForEdit = normalizeDateToYYYYMMDD(grouped.date)
                         if (dateForEdit && onEditDateGroup) {
@@ -248,7 +260,10 @@ export function ActivityFeed({
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation()
-                            onDeleteDateGroup(grouped.date, grouped.activities)
+                            const dateForDelete = normalizeDateToYYYYMMDD(grouped.date)
+                            if (dateForDelete && onDeleteDateGroup) {
+                              onDeleteDateGroup(dateForDelete, grouped.activities)
+                            }
                           }}
                           className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-100 flex-shrink-0"
                           title="Delete all logs for this date"

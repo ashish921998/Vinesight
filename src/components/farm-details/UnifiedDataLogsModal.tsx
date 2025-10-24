@@ -1176,7 +1176,7 @@ export function UnifiedDataLogsModal({
     }
 
     return (
-      <div className="rounded-lg border border-dashed border-gray-300 bg-white p-3 space-y-2">
+      <div className="rounded-lg border border-dashed border-gray-300 p-3 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <div>
             <Label htmlFor="lab-report-upload" className="text-sm font-medium text-gray-700">
@@ -1620,7 +1620,7 @@ export function UnifiedDataLogsModal({
                         ) => (
                           <Card
                             key={chemical.id}
-                            className="bg-white border-2 border-dashed border-gray-200"
+                            className="bg-gray-50 border-2 border-dashed border-gray-200"
                           >
                             <CardHeader className="pb-2">
                               <div className="flex items-center justify-between">
@@ -1749,7 +1749,7 @@ export function UnifiedDataLogsModal({
                     {fertigationEntries.map((entry, index) => (
                       <Card
                         key={entry.id}
-                        className="bg-white border-2 border-dashed border-gray-200"
+                        className="bg-gray-50 border-2 border-dashed border-gray-200"
                       >
                         <CardHeader className="pb-2">
                           <div className="flex items-center justify-between">
