@@ -1,0 +1,363 @@
+npm warn Unknown env config "python". This will stop working in the next major version of npm.
+
+> vinesight@0.1.0 lint
+> eslint . --ext .js,.jsx,.ts,.tsx
+
+
+/home/engine/project/eslint.config.js
+  8:1  warning  Assign array to a variable before exporting as module default  import/no-anonymous-default-export
+
+/home/engine/project/public/sw.js
+  16:9   warning  Unexpected console statement  no-console
+  45:11  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/app/analytics/page.tsx
+   62:6   warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  127:11  warning  Unexpected console statement                                                                                 no-console
+  209:9   warning  Unexpected console statement                                                                                 no-console
+  212:7   warning  Unexpected console statement                                                                                 no-console
+
+/home/engine/project/src/app/api/ai/chat/route.ts
+  150:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/app/api/ai/insights/route.ts
+  91:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/app/api/test-reports/signed-url/route.ts
+  106:5  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/app/auth/auth-code-error/page.tsx
+  44:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/app/auth/callback/page.tsx
+  69:9  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/app/error.tsx
+  15:5  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/app/farms/[id]/logs/page.tsx
+  193:7   warning  Unexpected console statement  no-console
+  297:7   warning  Unexpected console statement  no-console
+  545:13  warning  Unexpected console statement  no-console
+  555:7   warning  Unexpected console statement  no-console
+  615:7   warning  Unexpected console statement  no-console
+
+/home/engine/project/src/app/farms/[id]/page.tsx
+    94:7   warning  Unexpected console statement  no-console
+   131:9   warning  Unexpected console statement  no-console
+   157:7   warning  Unexpected console statement  no-console
+   193:13  warning  Unexpected console statement  no-console
+   201:7   warning  Unexpected console statement  no-console
+   935:7   warning  Unexpected console statement  no-console
+   972:7   warning  Unexpected console statement  no-console
+   999:9   warning  Unexpected console statement  no-console
+  1011:7   warning  Unexpected console statement  no-console
+
+/home/engine/project/src/app/farms/page.tsx
+  37:7  warning  Unexpected console statement  no-console
+  56:7  warning  Unexpected console statement  no-console
+  83:9  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/app/page.tsx
+  189:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  214:27  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  229:27  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  244:27  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/home/engine/project/src/app/reports/page.tsx
+  109:6  warning  React Hook useCallback has a missing dependency: 'loadReportData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/engine/project/src/app/weather/page.tsx
+  38:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/ErrorBoundary.tsx
+   37:7  warning  Unexpected console statement  no-console
+   46:9  warning  Unexpected console statement  no-console
+   58:7  warning  Unexpected console statement  no-console
+  171:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/ai/AIAssistant.tsx
+  205:13  warning  Unexpected console statement                                                                                                no-console
+  499:11  warning  Unexpected console statement                                                                                                no-console
+  505:5   warning  React Hook useCallback has a missing dependency: 'currentConversationId'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  535:11  warning  Unexpected console statement                                                                                                no-console
+  586:11  warning  Unexpected console statement                                                                                                no-console
+  612:11  warning  Unexpected console statement                                                                                                no-console
+
+/home/engine/project/src/components/auth/GlobalAuthErrorHandler.tsx
+  17:9  warning  Unexpected console statement  no-console
+  28:9  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/auth/UserMenu.tsx
+  31:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/calculators/ETc/LocationForm.tsx
+   45:11  warning  Unexpected console statement  no-console
+  109:7   warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/calculators/ETc/WeatherDataForm.tsx
+  87:9  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/calculators/ETcCalculator.tsx
+  66:9  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/calculators/LAICalculator.tsx
+   65:7  warning  Unexpected console statement  no-console
+  100:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/calculators/NutrientCalculator.tsx
+   86:7  warning  Unexpected console statement  no-console
+  135:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/dashboard/FarmerDashboard.tsx
+  102:9  warning  Unexpected console statement  no-console
+  121:9  warning  Unexpected console statement  no-console
+  150:9  warning  Unexpected console statement  no-console
+  165:5  warning  Unexpected console statement  no-console
+  178:7  warning  Unexpected console statement  no-console
+  183:5  warning  Unexpected console statement  no-console
+  188:5  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/dashboard/SimpleWeatherCard.tsx
+  47:7  warning  Unexpected console statement                                                                                                                 no-console
+  57:6  warning  React Hook useEffect has missing dependencies: 'fetchWeatherData' and 'hasLocationData'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/engine/project/src/components/farm-details/UnifiedDataLogsModal.tsx
+  829:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/farm-details/WaterCalculationModal.tsx
+  66:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/farm-details/WeatherCard.tsx
+  104:6  warning  React Hook useEffect has missing dependencies: 'fetchWeatherData' and 'hasLocationData'. Either include them or remove the dependency array         react-hooks/exhaustive-deps
+  147:6  warning  React Hook useEffect has missing dependencies: 'fetchSolarRadiationData' and 'hasLocationData'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/engine/project/src/components/farm/AIIntelligenceIntegration.tsx
+   32:6  warning  React Hook useEffect has a missing dependency: 'loadCriticalAlerts'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   89:7  warning  Unexpected console statement                                                                                           no-console
+  118:9  warning  Unexpected console statement                                                                                           no-console
+  124:7  warning  Unexpected console statement                                                                                           no-console
+  143:7  warning  Unexpected console statement                                                                                           no-console
+
+/home/engine/project/src/components/journal/EditRecordModal.tsx
+  619:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/mobile/BottomNavigation.tsx
+  225:7  warning  Unexpected console statement  no-console
+  328:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/mobile/CameraCapture.tsx
+  47:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/components/pricing-section.tsx
+  55:6  warning  React Hook useEffect has a missing dependency: 'serverRegion'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/engine/project/src/components/reminders/NotificationSettings.tsx
+  42:6  warning  React Hook useEffect has a missing dependency: 'notificationService'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/engine/project/src/components/smart-simple-brilliant.tsx
+  132:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  196:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  323:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  387:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/home/engine/project/src/components/testimonials-section.tsx
+  66:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/home/engine/project/src/components/weather/WeatherDashboard.tsx
+  51:6  warning  React Hook useEffect has a missing dependency: 'loadWeatherData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  71:7  warning  Unexpected console statement                                                                                        no-console
+
+/home/engine/project/src/components/your-work-in-sync.tsx
+  301:15  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/home/engine/project/src/hooks/usePerformanceMonitor.ts
+   39:7   warning  Unexpected console statement  no-console
+   66:9   warning  Unexpected console statement  no-console
+   91:11  warning  Unexpected console statement  no-console
+   99:11  warning  Unexpected console statement  no-console
+  130:11  warning  Unexpected console statement  no-console
+  158:13  warning  Unexpected console statement  no-console
+  173:15  warning  Unexpected console statement  no-console
+  196:13  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/ai-initialization.ts
+   66:7   warning  Unexpected console statement  no-console
+   85:7   warning  Unexpected console statement  no-console
+   90:7   warning  Unexpected console statement  no-console
+   99:7   warning  Unexpected console statement  no-console
+  109:7   warning  Unexpected console statement  no-console
+  117:7   warning  Unexpected console statement  no-console
+  130:7   warning  Unexpected console statement  no-console
+  134:7   warning  Unexpected console statement  no-console
+  172:11  warning  Unexpected console statement  no-console
+  178:9   warning  Unexpected console statement  no-console
+  197:7   warning  Unexpected console statement  no-console
+  265:7   warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/ai-insights-service.ts
+  159:9   warning  Unexpected console statement  no-console
+  166:11  warning  Unexpected console statement  no-console
+  202:7   warning  Unexpected console statement  no-console
+  340:7   warning  Unexpected console statement  no-console
+  377:9   warning  Unexpected console statement  no-console
+  455:7   warning  Unexpected console statement  no-console
+  574:7   warning  Unexpected console statement  no-console
+  683:7   warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/ai-profile-service.ts
+   40:9  warning  Unexpected console statement  no-console
+   46:7  warning  Unexpected console statement  no-console
+   90:9  warning  Unexpected console statement  no-console
+   96:7  warning  Unexpected console statement  no-console
+  169:7  warning  Unexpected console statement  no-console
+  194:9  warning  Unexpected console statement  no-console
+  197:7  warning  Unexpected console statement  no-console
+  267:7  warning  Unexpected console statement  no-console
+  368:9  warning  Unexpected console statement  no-console
+  374:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/ai-service.ts
+  353:7  warning  Unexpected console statement  no-console
+  416:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/analytics-service.ts
+  119:9  warning  Unexpected console statement  no-console
+  193:9  warning  Unexpected console statement  no-console
+  299:9  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/auth-utils.ts
+   45:5  warning  Unexpected console statement  no-console
+  119:7  warning  Unexpected console statement  no-console
+  129:5  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/conversation-storage.ts
+   60:7  warning  Unexpected console statement  no-console
+   79:7  warning  Unexpected console statement  no-console
+  150:7  warning  Unexpected console statement  no-console
+  180:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/error-handler.ts
+  47:5  warning  Unexpected console statement  no-console
+  75:5  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/etc-calculator.ts
+  118:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/eto-validation-test.ts
+   41:3  warning  Unexpected console statement  no-console
+   42:3  warning  Unexpected console statement  no-console
+   43:3  warning  Unexpected console statement  no-console
+   44:3  warning  Unexpected console statement  no-console
+   45:3  warning  Unexpected console statement  no-console
+   49:3  warning  Unexpected console statement  no-console
+  131:3  warning  Unexpected console statement  no-console
+  146:3  warning  Unexpected console statement  no-console
+  147:3  warning  Unexpected console statement  no-console
+  148:3  warning  Unexpected console statement  no-console
+  149:3  warning  Unexpected console statement  no-console
+  150:3  warning  Unexpected console statement  no-console
+  151:3  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/export-service.ts
+   49:9  warning  Unexpected console statement  no-console
+   51:9  warning  Unexpected console statement  no-console
+  689:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/farmer-learning-service.ts
+   76:7   warning  Unexpected console statement  no-console
+  100:11  warning  Unexpected console statement  no-console
+  111:11  warning  Unexpected console statement  no-console
+  118:7   warning  Unexpected console statement  no-console
+  171:7   warning  Unexpected console statement  no-console
+  217:9   warning  Unexpected console statement  no-console
+  220:7   warning  Unexpected console statement  no-console
+  312:7   warning  Unexpected console statement  no-console
+  337:7   warning  Unexpected console statement  no-console
+  406:9   warning  Unexpected console statement  no-console
+  409:7   warning  Unexpected console statement  no-console
+  514:7   warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/iot-sensor-service.ts
+  125:7  warning  Unexpected console statement  no-console
+  128:7  warning  Unexpected console statement  no-console
+  348:7  warning  Unexpected console statement  no-console
+  351:7  warning  Unexpected console statement  no-console
+  362:5  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/logger.ts
+  27:7  warning  Unexpected console statement  no-console
+  33:7  warning  Unexpected console statement  no-console
+  39:7  warning  Unexpected console statement  no-console
+  45:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/open-meteo-geocoding.ts
+   62:7   warning  Unexpected console statement  no-console
+  115:7   warning  Unexpected console statement  no-console
+  167:7   warning  Unexpected console statement  no-console
+  214:11  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/open-meteo-weather.ts
+  138:7  warning  Unexpected console statement  no-console
+  323:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/pest-prediction-service.ts
+  291:7   warning  Unexpected console statement  no-console
+  333:7   warning  Unexpected console statement  no-console
+  483:7   warning  Unexpected console statement  no-console
+  623:7   warning  Unexpected console statement  no-console
+  643:7   warning  Unexpected console statement  no-console
+  674:9   warning  Unexpected console statement  no-console
+  677:7   warning  Unexpected console statement  no-console
+  696:11  warning  Unexpected console statement  no-console
+  701:9   warning  Unexpected console statement  no-console
+  712:7   warning  Unexpected console statement  no-console
+  728:9   warning  Unexpected console statement  no-console
+  742:7   warning  Unexpected console statement  no-console
+  834:9   warning  Unexpected console statement  no-console
+  837:7   warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/photo-service.ts
+  20:9  warning  Unexpected console statement  no-console
+  29:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/quota-service.ts
+  37:5  warning  Unexpected console statement  no-console
+  76:5  warning  Unexpected console statement  no-console
+  90:5  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/smart-task-generator.ts
+  111:7  warning  Unexpected console statement  no-console
+  518:7  warning  Unexpected console statement  no-console
+  554:7  warning  Unexpected console statement  no-console
+  569:7  warning  Unexpected console statement  no-console
+  751:9  warning  Unexpected console statement  no-console
+  754:7  warning  Unexpected console statement  no-console
+  772:9  warning  Unexpected console statement  no-console
+  778:7  warning  Unexpected console statement  no-console
+  801:9  warning  Unexpected console statement  no-console
+  804:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/supabase-conversation-storage.ts
+   84:9  warning  Unexpected console statement  no-console
+   90:7  warning  Unexpected console statement  no-console
+  157:7  warning  Unexpected console statement  no-console
+  185:7  warning  Unexpected console statement  no-console
+  217:7  warning  Unexpected console statement  no-console
+  256:7  warning  Unexpected console statement  no-console
+  290:9  warning  Unexpected console statement  no-console
+  296:7  warning  Unexpected console statement  no-console
+  321:9  warning  Unexpected console statement  no-console
+  420:7  warning  Unexpected console statement  no-console
+  450:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/src/lib/supabase-service.ts
+   55:7  warning  Unexpected console statement  no-console
+  710:7  warning  Unexpected console statement  no-console
+  797:7  warning  Unexpected console statement  no-console
+
+/home/engine/project/tailwind.config.mjs
+  4:1  warning  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
+
+✖ 229 problems (0 errors, 229 warnings)
+
