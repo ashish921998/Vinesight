@@ -210,7 +210,6 @@ export function EditRecordModal({
           return `chem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         }
 
-        let waterVolume = 0
         let chemicals: Array<{ id: string; name: string; quantity: number; unit: string }> = []
 
         if (
@@ -225,13 +224,8 @@ export function EditRecordModal({
             quantity: chem.quantity,
             unit: chem.unit || 'gm/L'
           }))
-
-          // Extract water volume using helper function
-          waterVolume = getWaterVolumeFromRecord(sprayRecord)
         } else {
           // Old format - convert to new format
-          waterVolume = getWaterVolumeFromRecord(sprayRecord)
-
           chemicals = [
             {
               id: generateChemicalId(),
@@ -252,16 +246,16 @@ export function EditRecordModal({
           })
         }
 
-        return { waterVolume, chemicals }
+        return chemicals
       }
 
-      const { waterVolume, chemicals } = ensureSprayChemicalsFormat(sprayRecord)
+      const chemicals = ensureSprayChemicalsFormat(sprayRecord)
 
       setFormData({
         recordType: 'spray',
         date: sprayRecord.date,
         notes: sprayRecord.notes || '',
-        water_volume: waterVolume.toString() || '', // Handle case where waterVolume is 0
+        water_volume: sprayRecord.water_volume?.toString() || '',
         chemicals: chemicals
       })
     } else if (recordType === 'harvest') {
