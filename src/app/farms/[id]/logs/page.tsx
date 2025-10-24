@@ -36,10 +36,7 @@ import { UnifiedDataLogsModal } from '@/components/farm-details/UnifiedDataLogsM
 import { EditRecordModal } from '@/components/journal/EditRecordModal'
 
 import { SupabaseService } from '@/lib/supabase-service'
-import {
-  getActivityDisplayData,
-  transformActivitiesToLogEntries
-} from '@/lib/activity-display-utils'
+import { getActivityDisplayData, normalizeDateToYYYYMMDD } from '@/lib/activity-display-utils'
 import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
 import { PhotoService } from '@/lib/photo-service'
 import { cn, capitalize } from '@/lib/utils'
@@ -61,12 +58,6 @@ import {
   ChevronsUpDown,
   Scissors
 } from 'lucide-react'
-
-// Helper function to normalize dates for consistent comparison
-const normalizeDateToYYYYMMDD = (date: Date | string): string => {
-  const d = typeof date === 'string' ? new Date(date) : date
-  return d.toISOString().split('T')[0]
-}
 
 const formatLogDate = (dateString: string): string => {
   try {
@@ -221,7 +212,7 @@ export default function FarmLogsPage() {
           SupabaseService.getSoilTestRecords(farmIdNum),
           SupabaseService.getPetioleTestRecords(farmIdNum)
         ])
-      console.log(spray, 'spray')
+
       const combinedLogs: ActivityLog[] = [
         ...irrigation
           .filter((log) => log.id != null)
@@ -324,14 +315,22 @@ export default function FarmLogsPage() {
     }
 
     if (dateFrom) {
-      filtered = filtered.filter(
-        (log) => normalizeDateToYYYYMMDD(log.date) >= normalizeDateToYYYYMMDD(dateFrom)
-      )
+      const normalizedDateFrom = normalizeDateToYYYYMMDD(dateFrom)
+      if (normalizedDateFrom) {
+        filtered = filtered.filter((log) => {
+          const normalizedLogDate = normalizeDateToYYYYMMDD(log.date)
+          return normalizedLogDate && normalizedLogDate >= normalizedDateFrom
+        })
+      }
     }
     if (dateTo) {
-      filtered = filtered.filter(
-        (log) => normalizeDateToYYYYMMDD(log.date) <= normalizeDateToYYYYMMDD(dateTo)
-      )
+      const normalizedDateTo = normalizeDateToYYYYMMDD(dateTo)
+      if (normalizedDateTo) {
+        filtered = filtered.filter((log) => {
+          const normalizedLogDate = normalizeDateToYYYYMMDD(log.date)
+          return normalizedLogDate && normalizedLogDate <= normalizedDateTo
+        })
+      }
     }
 
     return filtered
@@ -561,7 +560,6 @@ export default function FarmLogsPage() {
   }
 
   const handleEditRecord = (log: ActivityLog) => {
-    console.log(log, 'log')
     if (log.type === 'petiole_test') {
       toast.info('Editing Petiole Test is not supported here.')
       return
