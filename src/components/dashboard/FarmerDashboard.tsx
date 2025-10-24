@@ -1,7 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 import { AlertsSection } from './AlertsSection'
+import { DashboardOnboarding } from './DashboardOnboarding'
 import { TodaysTasksSection } from './TodaysTasksSection'
 import { LiveFarmStatus } from './LiveFarmStatus'
 import { Button } from '@/components/ui/button'
@@ -48,7 +51,9 @@ interface FarmerDashboardProps {
 }
 
 export function FarmerDashboard({ className }: FarmerDashboardProps) {
+  const { t } = useTranslation()
   const { user, loading: authLoading } = useSupabaseAuth()
+  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [farms, setFarms] = useState<Farm[]>([])
   const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null)
@@ -80,32 +85,29 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       if (authLoading) return
 
       if (!user) {
-        setError('Please sign in to view your farms')
+        setError(t('dashboard.errors.authRequired'))
         setLoading(false)
         return
       }
 
       try {
         setLoading(true)
+        setError(null)
         const userFarms = await SupabaseService.getAllFarms()
         setFarms(userFarms)
 
-        // Select first farm by default
-        if (userFarms.length > 0) {
-          setSelectedFarmId(userFarms[0].id!)
-        } else {
-          setError('No farms found. Please add a farm first.')
-        }
+        const firstFarm = userFarms[0]
+        setSelectedFarmId(firstFarm?.id ?? null)
       } catch (err) {
         console.error('Error loading farms:', err)
-        setError('Failed to load farms')
+        setError(t('dashboard.errors.loadFailed'))
       } finally {
         setLoading(false)
       }
     }
 
     loadFarms()
-  }, [user, authLoading])
+  }, [user, authLoading, t])
 
   // Load dashboard data when farm is selected
   useEffect(() => {
@@ -187,6 +189,10 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     // Navigate to add task screen
   }
 
+  const handleStartOnboarding = () => {
+    router.push('/farms')
+  }
+
   // Get status color for farm identification
   const getStatusColor = (status?: string) => {
     switch (status) {
@@ -207,7 +213,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground mt-4">Loading your dashboard...</p>
+          <p className="text-muted-foreground mt-4">{t('dashboard.loading')}</p>
         </div>
       </div>
     )
@@ -219,28 +225,17 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center p-6">
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-lg font-semibold mb-2">Dashboard Error</h2>
+          <h2 className="text-lg font-semibold mb-2">{t('dashboard.errorTitle')}</h2>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>Try Again</Button>
+          <Button onClick={() => window.location.reload()}>{t('dashboard.retry')}</Button>
         </div>
       </div>
     )
   }
 
-  // Show no farms state
+  // Show onboarding when no farms exist
   if (farms.length === 0) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center p-6">
-          <div className="text-6xl mb-4">🌱</div>
-          <h2 className="text-lg font-semibold mb-2">No Farms Found</h2>
-          <p className="text-muted-foreground mb-4">
-            Add your first farm to start tracking your agricultural data
-          </p>
-          <Button onClick={() => (window.location.href = '/farms')}>Add Your First Farm</Button>
-        </div>
-      </div>
-    )
+    return <DashboardOnboarding onAddFarm={handleStartOnboarding} />
   }
 
   return (

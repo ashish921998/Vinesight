@@ -54,6 +54,43 @@ const resources = {
           openModule: 'Open Module'
         }
       },
+      // Dashboard
+      dashboard: {
+        loading: 'Loading your dashboard...',
+        errorTitle: 'Dashboard Error',
+        retry: 'Try Again',
+        errors: {
+          authRequired: 'Please sign in to view your farms.',
+          loadFailed: "We couldn't load your farms. Please try again."
+        },
+        onboarding: {
+          badge: 'Step 1 · Add your farm',
+          title: 'Welcome to VineSight!',
+          subtitle:
+            "Let's set up your vineyard to unlock personalized insights, smart tasks, and AI guidance for every season.",
+          benefitsTitle: 'Add your farm to:',
+          benefits: {
+            recommendations: {
+              title: 'Get tailored recommendations',
+              description:
+                'Receive irrigation schedules, pest alerts, and fertigation plans that match your field conditions.'
+            },
+            tracking: {
+              title: 'Track everything in one place',
+              description:
+                'Log daily activities, monitor weather, and keep records organized for every block.'
+            },
+            planning: {
+              title: 'Plan with confidence',
+              description:
+                'Measure profitability, predict yields, and make proactive decisions with the AI assistant.'
+            }
+          },
+          ctaPrimary: 'Add Your First Farm',
+          ctaSecondary: 'Explore the getting started guide',
+          helperText: 'You can add more farms anytime from the Farms section.'
+        }
+      },
       // Homepage
       home: {
         title: 'VineSight',
@@ -348,6 +385,43 @@ const resources = {
         no: 'नहीं',
         buttons: {
           openModule: 'मॉड्यूल खोलें'
+        }
+      },
+      // Dashboard - Hindi
+      dashboard: {
+        loading: 'आपका डैशबोर्ड लोड हो रहा है...',
+        errorTitle: 'डैशबोर्ड त्रुटि',
+        retry: 'फिर से कोशिश करें',
+        errors: {
+          authRequired: 'अपने फार्म देखने के लिए साइन इन करें।',
+          loadFailed: 'हम आपके फार्म लोड नहीं कर पाए। कृपया दोबारा कोशिश करें।'
+        },
+        onboarding: {
+          badge: 'चरण 1 · अपना फार्म जोड़ें',
+          title: 'वाइनसाइट में आपका स्वागत है!',
+          subtitle:
+            'हर मौसम के लिए निजी इनसाइट्स, स्मार्ट कार्य और AI मार्गदर्शन पाने के लिए अपनी अंगूर बगिया सेट करें।',
+          benefitsTitle: 'अपना फार्म जोड़कर आप:',
+          benefits: {
+            recommendations: {
+              title: 'व्यक्तिगत सिफारिशें प्राप्त करें',
+              description:
+                'अपने खेत की स्थितियों के अनुसार सिंचाई समय-सारणी, रोग चेतावनी और फर्टिगेशन योजनाएँ पाएं।'
+            },
+            tracking: {
+              title: 'सब कुछ एक ही जगह ट्रैक करें',
+              description:
+                'दैनिक गतिविधियाँ दर्ज करें, मौसम पर नज़र रखें और हर ब्लॉक के रिकॉर्ड व्यवस्थित रखें।'
+            },
+            planning: {
+              title: 'आत्मविश्वास के साथ योजना बनाएं',
+              description:
+                'लाभप्रदता मापें, उत्पादन का पूर्वानुमान लगाएं और AI सहायक के साथ सक्रिय निर्णय लें।'
+            }
+          },
+          ctaPrimary: 'अपना पहला फार्म जोड़ें',
+          ctaSecondary: 'गेटिंग स्टार्टेड गाइड देखें',
+          helperText: 'आप किसी भी समय फार्म्स सेक्शन से और फार्म जोड़ सकते हैं।'
         }
       },
       // Homepage - Hindi
@@ -645,6 +719,43 @@ const resources = {
         no: 'नाही',
         buttons: {
           openModule: 'मॉड्यूल उघडा'
+        }
+      },
+      // Dashboard - Marathi
+      dashboard: {
+        loading: 'आपला डॅशबोर्ड लोड होत आहे...',
+        errorTitle: 'डॅशबोर्ड त्रुटी',
+        retry: 'पुन्हा प्रयत्न करा',
+        errors: {
+          authRequired: 'आपले शेत पाहण्यासाठी साइन इन करा.',
+          loadFailed: 'आम्हाला आपली शेतांची माहिती लोड करता आली नाही. कृपया पुन्हा प्रयत्न करा.'
+        },
+        onboarding: {
+          badge: 'पायरी 1 · आपले शेत जोडा',
+          title: 'वाइनसाइटमध्ये आपले स्वागत आहे!',
+          subtitle:
+            'प्रत्येक हंगामासाठी वैयक्तिक इनसाइट्स, स्मार्ट कार्ये आणि AI मार्गदर्शन मिळवण्यासाठी आपली द्राक्षबाग सेट करा.',
+          benefitsTitle: 'शेत जोडल्यावर आपण:',
+          benefits: {
+            recommendations: {
+              title: 'वैयक्तिक शिफारसी मिळवा',
+              description:
+                'आपल्या शेताच्या परिस्थितीनुसार सिंचन वेळापत्रक, कीड चेतावणी आणि फर्टिगेशन योजना मिळवा.'
+            },
+            tracking: {
+              title: 'सर्व काही एका ठिकाणी नोंदवा',
+              description:
+                'दैनंदिन कामांची नोंद करा, हवामानावर लक्ष ठेवा आणि प्रत्येक ब्लॉकचे रेकॉर्ड व्यवस्थित ठेवा.'
+            },
+            planning: {
+              title: 'आत्मविश्वासाने योजना करा',
+              description:
+                'लाभदायकता मोजा, उत्पादनाचा अंदाज लावा आणि AI सहाय्याने सक्रिय निर्णय घ्या.'
+            }
+          },
+          ctaPrimary: 'आपला पहिला शेत जोडा',
+          ctaSecondary: 'गेटिंग स्टार्टेड मार्गदर्शक पाहा',
+          helperText: 'शेत विभागातून आपण कोणत्याही वेळी आणखी शेत जोडू शकता.'
         }
       },
       // Homepage - Marathi
