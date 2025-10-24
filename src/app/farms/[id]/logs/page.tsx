@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { SupabaseService } from '@/lib/supabase-service'
-import { type Farm } from '@/types/types'
-import { getActivityDisplayData } from '@/lib/activity-display-utils'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -36,7 +34,19 @@ import {
 } from '@/components/ui/dialog'
 import { UnifiedDataLogsModal } from '@/components/farm-details/UnifiedDataLogsModal'
 import { EditRecordModal } from '@/components/journal/EditRecordModal'
+
+import { SupabaseService } from '@/lib/supabase-service'
+import {
+  getActivityDisplayData,
+  transformActivitiesToLogEntries
+} from '@/lib/activity-display-utils'
+import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
+import { PhotoService } from '@/lib/photo-service'
 import { cn, capitalize } from '@/lib/utils'
+import { toast } from 'sonner'
+
+import { type Farm } from '@/types/types'
+
 import {
   ArrowLeft,
   Calendar as CalendarIcon,
@@ -51,15 +61,16 @@ import {
   ChevronsUpDown,
   Scissors
 } from 'lucide-react'
-import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
-import { transformActivitiesToLogEntries } from '@/lib/activity-display-utils'
-import { PhotoService } from '@/lib/photo-service'
 
-// Utility function for date formatting with blue-600 color
+// Helper function to normalize dates for consistent comparison
+const normalizeDateToYYYYMMDD = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return d.toISOString().split('T')[0]
+}
+
 const formatLogDate = (dateString: string): string => {
   try {
     const date = new Date(dateString)
-    // Ensure we handle invalid dates
     if (isNaN(date.getTime())) {
       return 'Invalid date'
     }
@@ -70,7 +81,7 @@ const formatLogDate = (dateString: string): string => {
       new Date(now.getTime() - 24 * 60 * 60 * 1000).toDateString() === date.toDateString()
 
     if (isToday) {
-      return `today, ${date
+      return `Today, ${date
         .toLocaleTimeString('en-US', {
           hour: '2-digit',
           minute: '2-digit',
@@ -79,7 +90,7 @@ const formatLogDate = (dateString: string): string => {
         .toLowerCase()
         .replace(' ', '')}`
     } else if (isYesterday) {
-      return `yesterday, ${date
+      return `Yesterday, ${date
         .toLocaleTimeString('en-US', {
           hour: '2-digit',
           minute: '2-digit',
@@ -104,7 +115,6 @@ const formatLogDate = (dateString: string): string => {
   }
 }
 
-// Calculate days after pruning from farm's pruning date and log created date
 const getDaysAfterPruning = (
   farmPruningDate?: Date | string | null,
   logCreatedAt?: string
@@ -141,6 +151,7 @@ interface ActivityLog {
   quantity?: number
   cost?: number
   fertilizer?: string
+  unit?: string
   created_at: string
 }
 
@@ -198,10 +209,8 @@ export default function FarmLogsPage() {
     try {
       setLoading(true)
 
-      // Get all activity logs for the selected farm
       const farmIdNum = parseInt(selectedFarm)
 
-      // Load different types of logs
       const [irrigation, spray, harvest, expenses, fertigation, soilTests, petioleTests] =
         await Promise.all([
           SupabaseService.getIrrigationRecords(farmIdNum),
@@ -212,8 +221,7 @@ export default function FarmLogsPage() {
           SupabaseService.getSoilTestRecords(farmIdNum),
           SupabaseService.getPetioleTestRecords(farmIdNum)
         ])
-
-      // Combine and format all logs, filtering out records without valid IDs
+      console.log(spray, 'spray')
       const combinedLogs: ActivityLog[] = [
         ...irrigation
           .filter((log) => log.id != null)
@@ -234,7 +242,8 @@ export default function FarmLogsPage() {
             notes: log.notes,
             chemical: log.chemical,
             chemicals: log.chemicals,
-            created_at: log.created_at || log.date
+            created_at: log.created_at || log.date,
+            water_volume: log.water_volume
           })),
         ...harvest
           .filter((log) => log.id != null)
@@ -264,6 +273,8 @@ export default function FarmLogsPage() {
             date: log.date,
             notes: log.notes,
             fertilizer: log.fertilizer,
+            quantity: log.quantity,
+            unit: log.unit,
             created_at: log.created_at || log.date
           })),
         ...soilTests
@@ -286,7 +297,6 @@ export default function FarmLogsPage() {
           }))
       ]
 
-      // Sort by date (newest first)
       const sortedLogs = combinedLogs.sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )
@@ -299,16 +309,13 @@ export default function FarmLogsPage() {
     }
   }, [selectedFarm])
 
-  // Filter logs based on search query, activity type, and date range
   const filteredLogs = useMemo(() => {
     let filtered = [...allLogs]
 
-    // Filter by activity types (multiple selection)
     if (selectedActivityTypes.length > 0) {
       filtered = filtered.filter((log) => selectedActivityTypes.includes(log.type))
     }
 
-    // Filter by search query (search in notes)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim()
       filtered = filtered.filter(
@@ -316,24 +323,25 @@ export default function FarmLogsPage() {
       )
     }
 
-    // Filter by date range
     if (dateFrom) {
-      filtered = filtered.filter((log) => new Date(log.date) >= new Date(dateFrom))
+      filtered = filtered.filter(
+        (log) => normalizeDateToYYYYMMDD(log.date) >= normalizeDateToYYYYMMDD(dateFrom)
+      )
     }
     if (dateTo) {
-      filtered = filtered.filter((log) => new Date(log.date) <= new Date(dateTo))
+      filtered = filtered.filter(
+        (log) => normalizeDateToYYYYMMDD(log.date) <= normalizeDateToYYYYMMDD(dateTo)
+      )
     }
 
     return filtered
   }, [allLogs, selectedActivityTypes, searchQuery, dateFrom, dateTo])
 
-  // Paginate individual logs
   const paginatedLogs = useMemo(() => {
     const offset = (currentPage - 1) * itemsPerPage
     return filteredLogs.slice(offset, offset + itemsPerPage)
   }, [filteredLogs, currentPage, itemsPerPage])
 
-  // Update logs and total count when filters change
   useEffect(() => {
     setLogs(paginatedLogs)
     setTotalLogs(filteredLogs.length)
@@ -351,7 +359,6 @@ export default function FarmLogsPage() {
     loadLogs()
   }, [loadLogs])
 
-  // Clear filters function
   const clearFilters = () => {
     setSearchQuery('')
     setSelectedActivityTypes([])
@@ -360,7 +367,6 @@ export default function FarmLogsPage() {
     setCurrentPage(1)
   }
 
-  // Activity type options
   const activityTypes = [
     { value: 'irrigation', label: 'Irrigation' },
     { value: 'spray', label: 'Spray' },
@@ -371,7 +377,6 @@ export default function FarmLogsPage() {
     { value: 'petiole_test', label: 'Petiole Test' }
   ]
 
-  // Handle activity type checkbox toggle
   const handleActivityTypeToggle = (activityType: string, checked: boolean) => {
     if (checked) {
       setSelectedActivityTypes((prev) => [...prev, activityType])
@@ -394,33 +399,20 @@ export default function FarmLogsPage() {
 
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage)
-    setCurrentPage(1) // Reset to first page
+    setCurrentPage(1)
   }
 
-  const handleEditDateGroup = (date: string, activities: any[]) => {
-    // Transform activities to the format expected by UnifiedDataLogsModal
-    const existingLogs = transformActivitiesToLogEntries(activities)
-
-    // Convert date to ISO format (YYYY-MM-DD) for proper handling
-    const isoDate = date
-      ? new Date(date).toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0]
-
-    setSelectedDate(isoDate)
-    setExistingLogsForEdit(existingLogs)
-    setEditMode('edit')
-    setShowUnifiedModal(true)
-  }
-
-  // Helper function to save log entries
   const saveLogEntry = async (logEntry: any, date: string, dayNotes: string) => {
     const { type, data } = logEntry
     let record
 
+    // Create a single parsed farmId with explicit radix
+    const farmIdNum = Number.parseInt(selectedFarm, 10)
+
     switch (type) {
       case 'irrigation':
         record = await SupabaseService.addIrrigationRecord({
-          farm_id: parseInt(selectedFarm),
+          farm_id: farmIdNum,
           date: date,
           duration: parseFloat(data.duration || '0'),
           area: parseFloat(data.area || '0') || currentFarm?.area || 0,
@@ -434,7 +426,7 @@ export default function FarmLogsPage() {
 
       case 'spray': {
         const sprayData: any = {
-          farm_id: parseInt(selectedFarm),
+          farm_id: farmIdNum,
           date: date,
           water_volume: data.water_volume ? parseFloat(data.water_volume) : 0,
           chemicals: data.chemicals || [],
@@ -467,7 +459,7 @@ export default function FarmLogsPage() {
 
       case 'harvest':
         record = await SupabaseService.addHarvestRecord({
-          farm_id: parseInt(selectedFarm),
+          farm_id: farmIdNum,
           date: date,
           quantity: parseFloat(data.quantity || '0'),
           grade: data.grade || 'Standard',
@@ -480,7 +472,7 @@ export default function FarmLogsPage() {
 
       case 'expense':
         record = await SupabaseService.addExpenseRecord({
-          farm_id: parseInt(selectedFarm),
+          farm_id: farmIdNum,
           date: date,
           type: data.type || 'other',
           description: data.description || '',
@@ -492,10 +484,10 @@ export default function FarmLogsPage() {
 
       case 'fertigation':
         record = await SupabaseService.addFertigationRecord({
-          farm_id: parseInt(selectedFarm),
+          farm_id: farmIdNum,
           date: date,
           fertilizer: data.fertilizer?.trim() || 'Unknown',
-          quantity: data.quantity || 0,
+          quantity: data.quantity ? parseFloat(String(data.quantity)) : 0,
           unit: data.unit || 'kg/acre',
           notes: dayNotes || '',
           date_of_pruning: currentFarm?.dateOfPruning
@@ -504,7 +496,7 @@ export default function FarmLogsPage() {
 
       case 'soil_test':
         record = await SupabaseService.addSoilTestRecord({
-          farm_id: parseInt(selectedFarm),
+          farm_id: farmIdNum,
           date,
           parameters: {},
           notes: dayNotes || '',
@@ -514,7 +506,7 @@ export default function FarmLogsPage() {
 
       case 'petiole_test':
         record = await SupabaseService.addPetioleTestRecord({
-          farm_id: parseInt(selectedFarm),
+          farm_id: farmIdNum,
           date,
           sample_id: data.sample_id || '',
           parameters: {},
@@ -537,18 +529,15 @@ export default function FarmLogsPage() {
     try {
       let firstRecordId: number | null = null
 
-      // Save all log entries
       for (let i = 0; i < logs.length; i++) {
         const logEntry = logs[i]
         const record = await saveLogEntry(logEntry, date, dayNotes)
 
-        // Store first record ID for photo upload
         if (i === 0 && record?.id) {
           firstRecordId = record.id
         }
       }
 
-      // Upload day photos if any
       if (firstRecordId && dayPhotos && dayPhotos.length > 0) {
         for (const photo of dayPhotos) {
           try {
@@ -559,19 +548,24 @@ export default function FarmLogsPage() {
         }
       }
 
-      // Reload logs after saving
       await loadLogs()
       setShowUnifiedModal(false)
       setExistingLogsForEdit([])
       setSelectedDate('')
     } catch (error) {
       console.error('Error saving logs:', error)
+      toast.error('Failed to save logs. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleEditRecord = (log: ActivityLog) => {
+    console.log(log, 'log')
+    if (log.type === 'petiole_test') {
+      toast.info('Editing Petiole Test is not supported here.')
+      return
+    }
     setEditingRecord(log)
     setShowEditModal(true)
   }
@@ -581,7 +575,6 @@ export default function FarmLogsPage() {
     setShowDeleteDialog(true)
   }
 
-  // Edit modal state
   const [editingRecord, setEditingRecord] = useState<ActivityLog | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
 
@@ -617,15 +610,14 @@ export default function FarmLogsPage() {
           throw new Error(`Unsupported record type: ${deletingRecord.type}`)
       }
 
-      // Reload logs after deletion
       await loadLogs()
-
-      // Close dialog
       setShowDeleteDialog(false)
       setDeletingRecord(null)
     } catch (error) {
       console.error('Error deleting record:', error)
-      // You might want to show a toast notification here
+      toast.error(
+        `Failed to delete ${deletingRecord?.type.replace('_', ' ')} record. Please try again.`
+      )
     } finally {
       setIsDeleting(false)
     }
@@ -668,7 +660,6 @@ export default function FarmLogsPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-0">
       <div className="px-3 py-3 space-y-3 sm:px-4">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 px-2">
@@ -678,7 +669,6 @@ export default function FarmLogsPage() {
           </div>
         </div>
 
-        {/* Farm Selector */}
         <Card>
           <CardHeader className="pb-2 px-3 pt-3">
             <CardTitle className="text-base">Select Farm</CardTitle>
@@ -704,7 +694,6 @@ export default function FarmLogsPage() {
           </CardContent>
         </Card>
 
-        {/* Search and Filters */}
         <Card>
           <CardHeader className="pb-2 px-3 pt-3">
             <div className="flex items-center justify-between">
@@ -724,7 +713,6 @@ export default function FarmLogsPage() {
             </div>
           </CardHeader>
           <CardContent className="px-3 pb-3 space-y-3">
-            {/* Search Bar */}
             <div>
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -747,10 +735,8 @@ export default function FarmLogsPage() {
               </div>
             </div>
 
-            {/* Filters */}
             {showFilters && (
               <div className="space-y-3 pt-2 border-t border-gray-100">
-                {/* Activity Type Multi-Select */}
                 <div>
                   <Label className="text-xs font-medium text-gray-700 mb-2 block">
                     Activity Types
@@ -834,7 +820,6 @@ export default function FarmLogsPage() {
                   )}
                 </div>
 
-                {/* Date Range Filters */}
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label className="text-xs font-medium text-gray-700 mb-1 block">
@@ -867,7 +852,6 @@ export default function FarmLogsPage() {
                   </div>
                 </div>
 
-                {/* Clear Filters */}
                 {(searchQuery || selectedActivityTypes.length > 0 || dateFrom || dateTo) && (
                   <div className="pt-2">
                     <Button
@@ -886,7 +870,6 @@ export default function FarmLogsPage() {
           </CardContent>
         </Card>
 
-        {/* Logs List */}
         <Card>
           <CardHeader className="pb-2 px-3 pt-3">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -920,99 +903,58 @@ export default function FarmLogsPage() {
                   return (
                     <div
                       key={`${log.type}-${log.id}`}
-                      className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
+                      className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-100"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Edit ${log.type} log from ${log.date}`}
+                      onClick={() => handleEditRecord(log)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          handleEditRecord(log)
+                        }
+                      }}
+                      onKeyUp={(e) => {
+                        if (e.key === ' ') {
+                          e.preventDefault()
+                          handleEditRecord(log)
+                        }
+                      }}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          {/* Log Type Icon */}
-                          <div
-                            className={`p-2 ${getLogTypeBgColor(log.type)} rounded-md flex-shrink-0`}
-                          >
-                            <Icon className={`h-4 w-4 ${getLogTypeColor(log.type)}`} />
-                          </div>
-
-                          {/* Log Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-medium text-sm text-gray-900 capitalize">
-                                {log.type.replace('_', ' ')}
-                              </h3>
-                              <span className="text-blue-600 text-xs font-medium">
-                                {formatLogDate(log.date)}
-                              </span>
-                            </div>
-
-                            {/* Log-specific details */}
-                            <div className="text-xs text-gray-600 space-y-1">
-                              {log.type === 'spray' && (
-                                <>
-                                  {log.chemicals &&
-                                    Array.isArray(log.chemicals) &&
-                                    log.chemicals.length > 0 && (
-                                      <p>
-                                        <span className="font-medium">Chemicals:</span>{' '}
-                                        {log.chemicals.map((chem, idx) => (
-                                          <span key={idx}>
-                                            {chem.name} ({chem.quantity} {chem.unit})
-                                            {idx < (log.chemicals?.length || 0) - 1 && ', '}
-                                          </span>
-                                        ))}
-                                      </p>
-                                    )}
-                                </>
-                              )}
-
-                              {log.type === 'harvest' && log.quantity && (
-                                <p>
-                                  <span className="font-medium">Quantity:</span> {log.quantity}{' '}
-                                  units
-                                </p>
-                              )}
-
-                              {log.type === 'expense' && log.cost && (
-                                <p>
-                                  <span className="font-medium">Cost:</span> ${log.cost}
-                                </p>
-                              )}
-
-                              {log.type === 'fertigation' && log.fertilizer && (
-                                <p>
-                                  <span className="font-medium">Fertilizer:</span> {log.fertilizer}
-                                </p>
-                              )}
-
-                              {log.type === 'irrigation' && log.duration && (
-                                <p>
-                                  <span className="font-medium">Duration:</span> {log.duration}{' '}
-                                  minutes
-                                </p>
-                              )}
-
-                              {log.notes && (
-                                <p className="text-gray-700">
-                                  <span className="font-medium">Notes:</span> {log.notes}
-                                </p>
-                              )}
-                            </div>
-
-                            {/* Days after pruning indicator */}
-                            {daysAfterPruning !== null && daysAfterPruning >= 0 && (
-                              <div className="mt-2">
-                                <div className="inline-flex items-center gap-1 bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full cursor-help">
-                                  <Scissors className="h-3 w-3" />
-                                  {daysAfterPruning}d
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                      <div className="grid grid-cols-[auto_1fr_auto] gap-3 items-start">
+                        <div
+                          className={`p-2 ${getLogTypeBgColor(log.type)} rounded-md flex-shrink-0`}
+                        >
+                          <Icon className={`h-4 w-4 ${getLogTypeColor(log.type)}`} />
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-1 ml-2">
+                        <div className="min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
+                            <h3 className="font-medium text-sm text-gray-900 capitalize truncate max-w-[200px] sm:max-w-[300px] md:max-w-[400px]">
+                              {getActivityDisplayData(log)}
+                            </h3>
+                            <span className="text-blue-600 text-xs font-medium">
+                              {formatLogDate(log.created_at)}
+                            </span>
+                          </div>
+                          {daysAfterPruning !== null && daysAfterPruning >= 0 && (
+                            <div className="mt-2">
+                              <div className="inline-flex items-center gap-1 bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full cursor-help">
+                                <Scissors className="h-3 w-3" />
+                                {daysAfterPruning}d
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1 flex-shrink-0">
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleEditRecord(log)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditRecord(log)
+                            }}
                             className="h-7 w-7 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
                             title="Edit this log"
                           >
@@ -1021,7 +963,10 @@ export default function FarmLogsPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDeleteRecord(log)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteRecord(log)
+                            }}
                             className="h-7 w-7 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
                             title="Delete this log"
                           >
@@ -1045,7 +990,6 @@ export default function FarmLogsPage() {
           </CardContent>
         </Card>
 
-        {/* Pagination & Records Per Page */}
         <Card>
           <CardContent className="px-3 py-2">
             <div className="flex items-center justify-between">
@@ -1130,7 +1074,6 @@ export default function FarmLogsPage() {
           </CardContent>
         </Card>
 
-        {/* Unified Data Logs Modal */}
         <UnifiedDataLogsModal
           isOpen={showUnifiedModal}
           onClose={() => {
@@ -1140,13 +1083,12 @@ export default function FarmLogsPage() {
           }}
           onSubmit={handleSubmitLogs}
           isSubmitting={isSubmitting}
-          farmId={parseInt(selectedFarm)}
+          farmId={Number.parseInt(selectedFarm, 10)}
           mode={editMode}
           existingLogs={existingLogsForEdit}
           selectedDate={selectedDate}
         />
 
-        {/* Edit Record Modal */}
         {editingRecord && editingRecord.type !== 'petiole_test' && (
           <EditRecordModal
             isOpen={showEditModal}
@@ -1172,7 +1114,6 @@ export default function FarmLogsPage() {
           />
         )}
 
-        {/* Delete Confirmation Dialog */}
         <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>

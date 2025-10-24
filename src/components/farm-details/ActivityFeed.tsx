@@ -6,18 +6,12 @@ import { Button } from '@/components/ui/button'
 import { Calendar, Clock, CheckCircle, Edit, Trash2, ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
-  getActivityDisplayData,
   groupActivitiesByDate,
   getGroupedActivitiesSummary,
   formatGroupedDate,
   normalizeDateToYYYYMMDD
 } from '@/lib/activity-display-utils'
-import {
-  getLogTypeIcon,
-  getLogTypeBgColor,
-  getLogTypeColor,
-  getLogTypeLabel
-} from '@/lib/log-type-config'
+import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
 
 interface ActivityFeedProps {
   recentActivities: any[]
@@ -69,8 +63,6 @@ export function ActivityFeed({
             </div>
           </CardContent>
         </Card>
-
-        {/* Recent Activities Loading */}
         <Card className="border-gray-200">
           <CardHeader>
             <div className="w-32 h-5 bg-gray-200 rounded animate-pulse" />
@@ -109,7 +101,7 @@ export function ActivityFeed({
               {pendingTasks.slice(0, 3).map((task, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-3 p-3 bg-white rounded-xl border border-green-200"
+                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-green-200"
                 >
                   <div className="p-2 bg-green-100 rounded-lg">
                     <CheckCircle className="h-4 w-4 text-green-600" />
@@ -156,7 +148,36 @@ export function ActivityFeed({
                 return (
                   <div
                     key={index}
-                    className="flex items-start justify-between gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="flex items-start justify-between gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer hover:shadow-md"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Edit logs for ${formatGroupedDate(grouped.date)}`}
+                    onClick={() => {
+                      const dateForEdit = normalizeDateToYYYYMMDD(grouped.date)
+                      if (dateForEdit && onEditDateGroup) {
+                        onEditDateGroup(dateForEdit, grouped.activities)
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.target !== e.currentTarget) return
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        const dateForEdit = normalizeDateToYYYYMMDD(grouped.date)
+                        if (dateForEdit && onEditDateGroup) {
+                          onEditDateGroup(dateForEdit, grouped.activities)
+                        }
+                      }
+                    }}
+                    onKeyUp={(e) => {
+                      if (e.target !== e.currentTarget) return
+                      if (e.key === ' ' || e.key === 'Spacebar') {
+                        e.preventDefault()
+                        const dateForEdit = normalizeDateToYYYYMMDD(grouped.date)
+                        if (dateForEdit && onEditDateGroup) {
+                          onEditDateGroup(dateForEdit, grouped.activities)
+                        }
+                      }
+                    }}
                   >
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <div
@@ -167,7 +188,7 @@ export function ActivityFeed({
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium text-gray-900 text-sm">
+                          <p className="font-medium text-gray-900 text-sm truncate max-w-[150px] sm:max-w-[200px]">
                             {formatGroupedDate(grouped.date)}
                           </p>
                           <Badge variant="secondary" className="text-xs">
@@ -176,7 +197,7 @@ export function ActivityFeed({
                         </div>
 
                         <div className="h-4">
-                          <p className="text-xs text-gray-600">
+                          <p className="text-xs text-gray-600 truncate max-w-[200px] sm:max-w-[250px]">
                             {getGroupedActivitiesSummary(grouped)}
                           </p>
                         </div>
@@ -184,7 +205,7 @@ export function ActivityFeed({
                         {/* Show first activity's notes if available */}
                         {firstActivity.notes && (
                           <div className="mt-1">
-                            <p className="text-xs text-gray-500 break-words line-clamp-1">
+                            <p className="text-xs text-gray-500 break-words line-clamp-1 truncate max-w-[200px] sm:max-w-[250px]">
                               {firstActivity.notes.length > 60
                                 ? `${firstActivity.notes.substring(0, 60)}...`
                                 : firstActivity.notes}
@@ -192,7 +213,6 @@ export function ActivityFeed({
                           </div>
                         )}
 
-                        {/* Show log type icons */}
                         {grouped.logTypes.length > 1 && (
                           <div className="flex items-center gap-1 mt-2">
                             {grouped.logTypes.slice(0, 4).map((type, typeIndex) => {
@@ -221,7 +241,8 @@ export function ActivityFeed({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation()
                             const dateForEdit = normalizeDateToYYYYMMDD(grouped.date)
                             if (dateForEdit) {
                               onEditDateGroup(dateForEdit, grouped.activities)
@@ -237,7 +258,13 @@ export function ActivityFeed({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => onDeleteDateGroup(grouped.date, grouped.activities)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            const dateForDelete = normalizeDateToYYYYMMDD(grouped.date)
+                            if (dateForDelete && onDeleteDateGroup) {
+                              onDeleteDateGroup(dateForDelete, grouped.activities)
+                            }
+                          }}
                           className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-100 flex-shrink-0"
                           title="Delete all logs for this date"
                         >

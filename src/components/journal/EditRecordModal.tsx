@@ -85,7 +85,7 @@ export interface IrrigationFormData extends BaseFormData {
 export interface SprayFormData extends BaseFormData {
   recordType: 'spray'
   water_volume: string
-  chemicals: Array<{ id: string; name: string; quantity: string; unit: string }>
+  chemicals: Array<{ id: string; name: string; quantity: number; unit: string }>
 }
 
 export interface HarvestFormData extends BaseFormData {
@@ -204,42 +204,33 @@ export function EditRecordModal({
       })
     } else if (recordType === 'spray') {
       const sprayRecord = record as SprayRecord
-      const pestDisease =
-        'pest_disease' in sprayRecord &&
-        typeof (sprayRecord as Record<string, unknown>).pest_disease === 'string'
-          ? ((sprayRecord as Record<string, unknown>).pest_disease as string)
-          : ''
-
       // Helper function to ensure spray chemicals format consistency
       const ensureSprayChemicalsFormat = (sprayRecord: SprayRecord) => {
         const generateChemicalId = () => {
           return `chem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         }
 
-        let waterVolume = ''
-        let chemicals: Array<{ id: string; name: string; quantity: string; unit: string }> = []
+        let chemicals: Array<{ id: string; name: string; quantity: number; unit: string }> = []
 
         if (
-          sprayRecord.water_volume &&
           sprayRecord.chemicals &&
-          Array.isArray(sprayRecord.chemicals)
+          Array.isArray(sprayRecord.chemicals) &&
+          sprayRecord.chemicals.length > 0
         ) {
-          // New format with water_volume and chemicals array
-          waterVolume = sprayRecord.water_volume.toString()
+          // Has chemicals array - use it (new format or partially migrated)
           chemicals = sprayRecord.chemicals.map((chem) => ({
             id: chem.id || generateChemicalId(),
             name: chem.name || '',
-            quantity: chem.quantity?.toString() || '',
+            quantity: chem.quantity,
             unit: chem.unit || 'gm/L'
           }))
         } else {
           // Old format - convert to new format
-          waterVolume = '1000' // Default water volume
           chemicals = [
             {
               id: generateChemicalId(),
               name: sprayRecord.chemical || '',
-              quantity: sprayRecord.dose || '',
+              quantity: +(sprayRecord.dose?.match(/(\d+)(?!gm\/L)/g)?.pop() ?? '') || 0,
               unit: 'gm/L'
             }
           ]
@@ -250,21 +241,21 @@ export function EditRecordModal({
           chemicals.push({
             id: generateChemicalId(),
             name: '',
-            quantity: '',
+            quantity: 0,
             unit: 'gm/L'
           })
         }
 
-        return { waterVolume, chemicals }
+        return chemicals
       }
 
-      const { waterVolume, chemicals } = ensureSprayChemicalsFormat(sprayRecord)
+      const chemicals = ensureSprayChemicalsFormat(sprayRecord)
 
       setFormData({
         recordType: 'spray',
         date: sprayRecord.date,
         notes: sprayRecord.notes || '',
-        water_volume: waterVolume,
+        water_volume: sprayRecord.water_volume?.toString() || '',
         chemicals: chemicals
       })
     } else if (recordType === 'harvest') {
@@ -486,8 +477,10 @@ export function EditRecordModal({
     setReportUploadError(null)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault()
+    }
     if (!record) return
 
     setIsSubmitting(true)
@@ -507,24 +500,30 @@ export function EditRecordModal({
         if (!sprayForm) throw new Error('Spray form is not ready')
 
         // Convert form data to the expected format
-        const validChemicals = sprayForm.chemicals.filter((chem) => chem.name.trim() !== '')
+        const validChemicals = sprayForm.chemicals.filter(
+          (chem) => chem.name.trim() !== '' && chem.quantity > 0
+        )
         const sprayData: SprayDataUpdate = {
           date: sprayForm.date,
           notes: sprayForm.notes
         }
 
-        // Handle new format with water_volume and chemicals array
-        if (sprayForm.water_volume && validChemicals.length > 0) {
+        // Always include water_volume if provided
+        if (sprayForm.water_volume) {
           sprayData.water_volume = toNum(sprayForm.water_volume)
+        }
+
+        // Handle new format with chemicals array
+        if (validChemicals.length > 0) {
           const processedChemicals = validChemicals
             .map((chem) => ({
               name: chem.name.trim(),
-              quantity: toNum(chem.quantity),
+              quantity: chem.quantity,
               unit: chem.unit as 'gm/L' | 'ml/L'
             }))
             .filter(
               (chem): chem is { name: string; quantity: number; unit: 'gm/L' | 'ml/L' } =>
-                chem.quantity !== undefined
+                chem.quantity !== undefined && chem.quantity > 0
             )
 
           if (processedChemicals.length > 0) {
@@ -532,9 +531,11 @@ export function EditRecordModal({
           }
         } else {
           // Fallback to old format for backward compatibility
-          const firstChemical = validChemicals[0]
-          sprayData.chemical = firstChemical?.name || ''
-          sprayData.dose = firstChemical?.quantity || ''
+          const firstChemical = sprayForm.chemicals[0]
+          if (firstChemical && firstChemical.name.trim()) {
+            sprayData.chemical = firstChemical.name.trim()
+            sprayData.dose = firstChemical.quantity.toString()
+          }
         }
 
         await SupabaseService.updateSprayRecord(record.id!, sprayData)
@@ -693,8 +694,7 @@ export function EditRecordModal({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto">
-          <form onSubmit={handleSubmit} className="space-y-4 pr-2">
-            {/* Date Input */}
+          <form id="edit-record-form" className="space-y-4 pr-2">
             <div>
               <Label htmlFor="date" className="text-sm font-medium text-gray-700">
                 Date *
@@ -845,7 +845,9 @@ export function EditRecordModal({
                                 updateFormData('spray', (current) => ({
                                   ...current,
                                   chemicals: current.chemicals.map((c) =>
-                                    c.id === chemical.id ? { ...c, quantity: e.target.value } : c
+                                    c.id === chemical.id
+                                      ? { ...c, quantity: parseFloat(e.target.value) || 0 }
+                                      : c
                                   )
                                 }))
                               }}
@@ -896,7 +898,7 @@ export function EditRecordModal({
                             {
                               id: `${Date.now()}_${current.chemicals.length}`,
                               name: '',
-                              quantity: '',
+                              quantity: 0,
                               unit: 'gm/L'
                             }
                           ]
@@ -1029,9 +1031,7 @@ export function EditRecordModal({
                       type="number"
                       step="0.1"
                       min="0"
-                      value={
-                        fertigationForm?.quantity === 0 ? '' : (fertigationForm?.quantity ?? '')
-                      }
+                      value={fertigationForm?.quantity}
                       onChange={(e) => {
                         const value = e.target.value
                         updateFormData('fertigation', (current) => ({
@@ -1048,7 +1048,7 @@ export function EditRecordModal({
                       Unit *
                     </Label>
                     <Select
-                      value={fertigationForm?.unit ?? 'kg/acre'}
+                      value={fertigationForm?.unit}
                       onValueChange={(value) =>
                         updateFormData('fertigation', (current) => ({
                           ...current,
@@ -1056,7 +1056,7 @@ export function EditRecordModal({
                         }))
                       }
                       required
-                      defaultValue={fertigationForm?.unit ?? 'kg/acre'}
+                      defaultValue={fertigationForm?.unit}
                     >
                       <SelectTrigger className="mt-1">
                         <SelectValue placeholder="Select unit" />
@@ -1220,7 +1220,7 @@ export function EditRecordModal({
                   </div>
 
                   {reportMeta && (
-                    <div className="space-y-1 rounded-md bg-white p-2 text-xs text-gray-700">
+                    <div className="space-y-1 rounded-md p-2 text-xs text-gray-700">
                       <div className="flex flex-wrap items-center gap-2">
                         <Paperclip className="h-3 w-3" />
                         <span className="font-medium truncate max-w-[180px]">
@@ -1304,28 +1304,34 @@ export function EditRecordModal({
                 rows={3}
               />
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 sticky bottom-0 bg-white border-t">
-              <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save Changes'
-                )}
-              </Button>
-            </div>
           </form>
+        </div>
+
+        {/* Sticky Footer with Action Buttons */}
+        <div className="flex-shrink-0 border-t p-4">
+          <div className="flex gap-3">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                handleSubmit()
+              }}
+              disabled={isSubmitting}
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
