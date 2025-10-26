@@ -46,9 +46,20 @@ export class SupabaseService {
   // Farm operations
   static async getAllFarms(): Promise<Farm[]> {
     const supabase = getTypedSupabaseClient()
+
+    // Get the current authenticated user
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser()
+    if (userError) throw userError
+    if (!user) throw new Error('User must be authenticated to get farms')
+
+    // SECURITY: Filter by user_id to only get current user's farms
     const { data, error } = await supabase
       .from('farms')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -60,7 +71,21 @@ export class SupabaseService {
 
   static async getFarmById(id: number): Promise<Farm | null> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase.from('farms').select('*').eq('id', id).single()
+
+    // SECURITY: Get authenticated user to ensure they can only access their own farm
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser()
+    if (userError) throw userError
+    if (!user) throw new Error('User must be authenticated to get farm')
+
+    const { data, error } = await supabase
+      .from('farms')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .single()
 
     if (error) {
       if (error.code === 'PGRST116') return null // Not found
@@ -98,12 +123,22 @@ export class SupabaseService {
 
   static async updateFarm(id: number, updates: Partial<Farm>): Promise<Farm> {
     const supabase = getTypedSupabaseClient()
+
+    // SECURITY: Get authenticated user to ensure they can only update their own farm
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser()
+    if (userError) throw userError
+    if (!user) throw new Error('User must be authenticated to update farm')
+
     const dbUpdates = toDatabaseFarmUpdate(updates)
 
     const { data, error } = await supabase
       .from('farms')
       .update(dbUpdates as any)
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single()
 
@@ -113,7 +148,16 @@ export class SupabaseService {
 
   static async deleteFarm(id: number): Promise<void> {
     const supabase = getTypedSupabaseClient()
-    const { error } = await supabase.from('farms').delete().eq('id', id)
+
+    // SECURITY: Get authenticated user to ensure they can only delete their own farm
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser()
+    if (userError) throw userError
+    if (!user) throw new Error('User must be authenticated to delete farm')
+
+    const { error } = await supabase.from('farms').delete().eq('id', id).eq('user_id', user.id)
 
     if (error) throw error
   }
@@ -1143,7 +1187,22 @@ export class SupabaseService {
     }
   }
 
-  // Dashboard summary
+  // Dashboard summary - LIGHTWEIGHT VERSION for portfolio view
+  static async getLightweightDashboardSummary(farmId: number) {
+    const [farm, pendingTasks] = await Promise.all([
+      this.getFarmById(farmId),
+      this.getPendingTasks(farmId)
+    ])
+
+    return {
+      farm,
+      pendingTasksCount: pendingTasks.length,
+      pendingTasks: pendingTasks.slice(0, 3), // Only top 3 for portfolio view
+      alerts: [] // Alerts are synthesized by portfolio-utils
+    }
+  }
+
+  // Dashboard summary - FULL VERSION for farm detail modal
   static async getDashboardSummary(farmId: number) {
     const [
       farm,

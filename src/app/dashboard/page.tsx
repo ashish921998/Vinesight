@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { FarmerDashboard } from '@/components/dashboard/FarmerDashboard'
+import { PortfolioHub } from '@/components/dashboard/PortfolioHub'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 export default function DashboardPage() {
@@ -33,5 +33,5 @@ export default function DashboardPage() {
     return null
   }
 
-  return <FarmerDashboard />
+  return <PortfolioHub />
 }

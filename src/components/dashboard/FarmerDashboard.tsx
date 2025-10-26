@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react'
 import { AlertsSection } from './AlertsSection'
 import { TodaysTasksSection } from './TodaysTasksSection'
 import { LiveFarmStatus } from './LiveFarmStatus'
+import { NoFarmsDashboard } from './NoFarmsDashboard'
+import { AIInsightsCard } from './AIInsightsCard'
+import { QuickStatsCards } from './QuickStatsCards'
+import { MarketInsightsCard } from './MarketInsightsCard'
+import { ActiveSprayScheduleCard } from './ActiveSprayScheduleCard'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -18,21 +23,7 @@ import { SupabaseService } from '@/lib/supabase-service'
 import { WeatherService, type WeatherData } from '@/lib/weather-service'
 import { type Farm } from '@/types/types'
 import { capitalize } from '@/lib/utils'
-
-// Helper function to calculate farm health status based on real data
-const calculateFarmStatus = (
-  farm: Farm,
-  tasks?: any[],
-  alerts?: any[]
-): 'healthy' | 'attention' | 'critical' => {
-  const criticalAlerts = alerts?.filter((alert) => alert.type === 'critical')?.length || 0
-  const overdueTasks =
-    tasks?.filter((task) => !task.completed && new Date(task.due_date) < new Date())?.length || 0
-
-  if (criticalAlerts > 0 || overdueTasks > 2) return 'critical'
-  if (overdueTasks > 0) return 'attention'
-  return 'healthy'
-}
+import { calculateDashboardMetrics, getFarmStatus } from '@/lib/dashboard-utils'
 
 interface FarmInfo {
   id: string
@@ -55,6 +46,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   const [dashboardData, setDashboardData] = useState<any>(null)
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [dashboardMetrics, setDashboardMetrics] = useState<any>(null)
 
   // Get selected farm info
   const selectedFarm = farms.find((farm) => farm.id === selectedFarmId)
@@ -66,11 +58,10 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
         crop: selectedFarm.crop,
         cropVariety: selectedFarm.cropVariety,
         totalAcres: selectedFarm.area,
-        status: calculateFarmStatus(
-          selectedFarm,
-          dashboardData?.pendingTasks,
-          dashboardData?.alerts
-        ) as 'healthy' | 'attention' | 'critical'
+        status: getFarmStatus(selectedFarm, dashboardData?.pendingTasks, dashboardData?.alerts) as
+          | 'healthy'
+          | 'attention'
+          | 'critical'
       }
     : null
 
@@ -93,9 +84,8 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
         // Select first farm by default
         if (userFarms.length > 0) {
           setSelectedFarmId(userFarms[0].id!)
-        } else {
-          setError('No farms found. Please add a farm first.')
         }
+        // Don't set error for no farms - let the NoFarmsDashboard component handle it
       } catch (err) {
         console.error('Error loading farms:', err)
         setError('Failed to load farms')
@@ -115,6 +105,12 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       try {
         const data = await SupabaseService.getDashboardSummary(selectedFarmId)
         setDashboardData(data)
+
+        // Calculate dashboard metrics
+        if (selectedFarm) {
+          const metrics = calculateDashboardMetrics(selectedFarm, data?.pendingTasks, data?.alerts)
+          setDashboardMetrics(metrics)
+        }
       } catch (err) {
         console.error('Error loading dashboard data:', err)
         // Continue with empty data rather than failing completely
@@ -229,18 +225,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
 
   // Show no farms state
   if (farms.length === 0) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center p-6">
-          <div className="text-6xl mb-4">🌱</div>
-          <h2 className="text-lg font-semibold mb-2">No Farms Found</h2>
-          <p className="text-muted-foreground mb-4">
-            Add your first farm to start tracking your agricultural data
-          </p>
-          <Button onClick={() => (window.location.href = '/farms')}>Add Your First Farm</Button>
-        </div>
-      </div>
-    )
+    return <NoFarmsDashboard />
   }
 
   return (
@@ -258,7 +243,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
               </SelectTrigger>
               <SelectContent>
                 {farms.map((farm) => {
-                  const status = calculateFarmStatus(
+                  const status = getFarmStatus(
                     farm,
                     dashboardData?.pendingTasks,
                     dashboardData?.alerts
@@ -362,6 +347,60 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
             </div>
           </div>
         )}
+        {/* Quick Stats Cards - NEW */}
+        <div className="py-4">
+          <QuickStatsCards
+            farmHealthScore={dashboardMetrics?.farmHealthScore}
+            waterLevel={dashboardMetrics?.waterLevel}
+            daysToHarvest={dashboardMetrics?.daysToHarvest}
+            pendingUrgentTasks={dashboardMetrics?.pendingUrgentTasks}
+            pendingTotalTasks={dashboardMetrics?.pendingTotalTasks}
+            seasonPhase={dashboardMetrics?.seasonPhase}
+            loading={!dashboardData}
+          />
+        </div>
+        {/* Today's Tasks - Prominent Position */}
+        <div className="px-4 py-2">
+          <TodaysTasksSection
+            tasks={
+              dashboardData?.pendingTasks?.map((task: any) => ({
+                id: task.id.toString(),
+                title: task.title,
+                type: task.category || 'maintenance',
+                priority: task.priority || 'medium',
+                scheduledTime: task.due_date
+                  ? new Date(task.due_date).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })
+                  : undefined,
+                farmBlock: task.location || (selectedFarm ? capitalize(selectedFarm.name) : ''),
+                estimatedDuration: task.estimated_duration || 60,
+                completed: task.completed || false,
+                description: task.description
+              })) || []
+            }
+            onTaskComplete={handleTaskComplete}
+            onTaskAction={handleTaskAction}
+            onAddTask={handleAddTask}
+            loading={!dashboardData}
+            farmName={farmInfo?.name}
+          />
+        </div>
+        {/* AI Insights - Enhanced */}
+        <div className="px-4 py-2">
+          <AIInsightsCard farmId={selectedFarmId || undefined} loading={!dashboardData} />
+        </div>
+        {/* Active Spray Schedule - NEW */}
+        <div className="px-4 py-2">
+          <ActiveSprayScheduleCard
+            farmId={selectedFarmId || undefined}
+            tasks={dashboardData?.pendingTasks}
+            loading={!dashboardData}
+            onStartSpray={(sprayId) => console.log('Start spray:', sprayId)}
+            onScheduleSpray={() => console.log('Schedule new spray')}
+          />
+        </div>
         {/* Enhanced Farm Status Overview - Expanded */}
         <div className="px-4 py-4">
           <LiveFarmStatus
@@ -404,32 +443,13 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
             farmName={farmInfo?.name}
           />
         </div>
-        {/* Today's Tasks - Prominent Position */}
+        {/* Market Insights - NEW */}
         <div className="px-4 py-2">
-          <TodaysTasksSection
-            tasks={
-              dashboardData?.pendingTasks?.map((task: any) => ({
-                id: task.id.toString(),
-                title: task.title,
-                type: task.category || 'maintenance',
-                priority: task.priority || 'medium',
-                scheduledTime: task.due_date
-                  ? new Date(task.due_date).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })
-                  : undefined,
-                farmBlock: task.location || (selectedFarm ? capitalize(selectedFarm.name) : ''),
-                estimatedDuration: task.estimated_duration || 60,
-                completed: task.completed || false,
-                description: task.description
-              })) || []
-            }
-            onTaskComplete={handleTaskComplete}
-            onTaskAction={handleTaskAction}
-            onAddTask={handleAddTask}
+          <MarketInsightsCard
+            farmId={selectedFarmId || undefined}
+            grapeVariety={selectedFarm?.cropVariety}
+            region={selectedFarm?.region || selectedFarm?.locationName}
             loading={!dashboardData}
-            farmName={farmInfo?.name}
           />
         </div>
         {/* All Alerts - Expandable */}

@@ -22,9 +22,20 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = getSupabaseClient()
+
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
     const { data, error } = await supabase
       .from('farms')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -101,9 +112,19 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getSupabaseClient()
+
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
     const { data, error } = await supabase
       .from('farms')
-      .insert(validation.data as any)
+      .insert({ ...validation.data, user_id: user.id } as any)
       .select()
       .single()
 
