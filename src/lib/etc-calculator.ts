@@ -115,20 +115,7 @@ export class ETcCalculator {
 
     // Debug output for troubleshooting (only in development)
     if (process.env.NODE_ENV === 'development') {
-      console.log('ETo Calculation Debug:', {
-        tmean,
-        es_tmax: 0.6108 * Math.exp((17.27 * temperatureMax) / (temperatureMax + 237.3)),
-        es_tmin: 0.6108 * Math.exp((17.27 * temperatureMin) / (temperatureMin + 237.3)),
-        es,
-        ea,
-        delta,
-        pressure: 101.3 * Math.pow((293 - 0.0065 * elevation) / 293, 5.26),
-        gamma,
-        rn,
-        numerator,
-        denominator,
-        eto: Math.max(0, eto)
-      })
+      // Development debug info available here
     }
 
     return Math.max(0, eto) // Ensure non-negative

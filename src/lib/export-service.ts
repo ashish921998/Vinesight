@@ -46,7 +46,6 @@ export class ExportService {
       try {
         const autoTable = (await import('jspdf-autotable')).default
         ;(pdf as any).autoTable = autoTable
-        console.log('AutoTable attached successfully:', typeof (pdf as any).autoTable)
       } catch (error) {
         console.error('Failed to load autoTable:', error)
         throw error

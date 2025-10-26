@@ -14,7 +14,7 @@ export function GlobalAuthErrorHandler() {
 
       // Check if this is a Supabase auth error
       if (error && isRefreshTokenError(error)) {
-        console.log('Caught unhandled refresh token error, handling...')
+        // Handling unhandled refresh token error
         event.preventDefault() // Prevent the error from showing in console
         await handleRefreshTokenError()
       }
@@ -25,7 +25,7 @@ export function GlobalAuthErrorHandler() {
 
       // Check if this is a Supabase auth error
       if (error && isRefreshTokenError(error)) {
-        console.log('Caught global auth error, handling...')
+        // Handling global auth error
         event.preventDefault() // Prevent the error from showing in console
         await handleRefreshTokenError()
       }

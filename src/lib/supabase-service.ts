@@ -46,9 +46,17 @@ export class SupabaseService {
   // Farm operations
   static async getAllFarms(): Promise<Farm[]> {
     const supabase = getTypedSupabaseClient()
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser()
+    if (userError) throw userError
+    if (!user) throw new Error('User must be authenticated to fetch farms')
+
     const { data, error } = await supabase
       .from('farms')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) {

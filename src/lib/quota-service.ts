@@ -87,7 +87,6 @@ export function resetQuota(): void {
 
   if (process.env.NODE_ENV === 'development') {
     localStorage.removeItem(QUOTA_KEY)
-    console.log('Quota reset for development')
   }
 }
 

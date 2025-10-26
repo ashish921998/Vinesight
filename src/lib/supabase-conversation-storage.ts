@@ -308,10 +308,7 @@ class SupabaseConversationStorage {
 
     // Log migration info in development only
     if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.log(
-        `Migrating ${localConversations.length} conversations from localStorage to Supabase...`
-      )
+      // Development: Migration logging available here
     }
 
     for (const conversation of localConversations) {
@@ -328,7 +325,6 @@ class SupabaseConversationStorage {
     // Log migration success in development only
     if (process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
-      console.log('Migration completed successfully')
     }
   }
 

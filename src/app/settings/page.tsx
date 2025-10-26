@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Languages, LogOut, User } from 'lucide-react'
@@ -9,6 +10,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 
 export default function SettingsPage() {
   const { user, signOut } = useSupabaseAuth()
+  const router = useRouter()
   const [language, setLanguage] = useState('en')
   const [signOutLoading, setSignOutLoading] = useState(false)
 
@@ -26,7 +28,10 @@ export default function SettingsPage() {
   const handleSignOut = async () => {
     try {
       setSignOutLoading(true)
-      await signOut()
+      const result = await signOut()
+      if (result.success) {
+        router.push('/')
+      }
     } catch (error) {
       alert('Failed to sign out. Please try again.')
     } finally {

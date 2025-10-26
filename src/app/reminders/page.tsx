@@ -53,12 +53,10 @@ export default function RemindersPage() {
     try {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.log('Reminders: Loading farms from CloudDataService...')
       }
       const farmList = await CloudDataService.getAllFarms()
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.log('Reminders: Loaded farms:', farmList.length, farmList)
       }
       setFarms(farmList)
       if (farmList.length > 0 && !selectedFarm) {
@@ -122,7 +120,6 @@ export default function RemindersPage() {
         // For editing, we'd need an update method in CloudDataService
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
-          console.log('Editing not implemented yet')
         }
       } else {
         await SupabaseService.addTaskReminder({
