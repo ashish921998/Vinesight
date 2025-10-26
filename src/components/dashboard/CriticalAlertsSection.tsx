@@ -3,7 +3,16 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, Droplets, CheckSquare, Bug, AlertCircle, ChevronRight } from 'lucide-react'
+import {
+  AlertTriangle,
+  Droplets,
+  CheckSquare,
+  Bug,
+  AlertCircle,
+  ChevronRight,
+  CloudRain,
+  Cpu
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { type CriticalAlert } from '@/lib/portfolio-utils'
 
@@ -39,6 +48,10 @@ export function CriticalAlertsSection({
         return <CheckSquare className="h-4 w-4" />
       case 'pest':
         return <Bug className="h-4 w-4" />
+      case 'weather':
+        return <CloudRain className="h-4 w-4" />
+      case 'system':
+        return <Cpu className="h-4 w-4" />
       default:
         return <AlertCircle className="h-4 w-4" />
     }
@@ -83,12 +96,12 @@ export function CriticalAlertsSection({
 
       {/* Alerts List */}
       <div className="space-y-2">
-        {criticalAlerts.slice(0, 5).map((alert, index) => {
+        {criticalAlerts.slice(0, 5).map((alert) => {
           const config = getSeverityConfig(alert.severity)
 
           return (
             <Card
-              key={index}
+              key={`${alert.farmId}-${alert.type}-${alert.timestamp.getTime()}`}
               className={cn(
                 'border-l-4 cursor-pointer transition-all hover:shadow-md',
                 config.borderColor,

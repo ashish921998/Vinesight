@@ -23,31 +23,31 @@ interface FarmCardProps {
   className?: string
 }
 
-export function FarmCard({ farm, onClick, className }: FarmCardProps) {
-  const statusConfig = {
-    healthy: {
-      color: 'bg-green-500',
-      borderColor: 'border-green-200',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-700',
-      label: 'Healthy'
-    },
-    attention: {
-      color: 'bg-amber-500',
-      borderColor: 'border-amber-200',
-      bgColor: 'bg-amber-50',
-      textColor: 'text-amber-700',
-      label: 'Attention'
-    },
-    critical: {
-      color: 'bg-red-500',
-      borderColor: 'border-red-200',
-      bgColor: 'bg-red-50',
-      textColor: 'text-red-700',
-      label: 'Critical'
-    }
+const statusConfig = {
+  healthy: {
+    color: 'bg-green-500',
+    borderColor: 'border-green-200',
+    bgColor: 'bg-green-50',
+    textColor: 'text-green-700',
+    label: 'Healthy'
+  },
+  attention: {
+    color: 'bg-amber-500',
+    borderColor: 'border-amber-200',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
+    label: 'Attention'
+  },
+  critical: {
+    color: 'bg-red-500',
+    borderColor: 'border-red-200',
+    bgColor: 'bg-red-50',
+    textColor: 'text-red-700',
+    label: 'Critical'
   }
+}
 
+export function FarmCard({ farm, onClick, className }: FarmCardProps) {
   const config = statusConfig[farm.status]
 
   const getHealthTrend = () => {

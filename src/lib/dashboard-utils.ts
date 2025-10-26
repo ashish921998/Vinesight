@@ -29,7 +29,7 @@ export function calculateFarmHealthScore(farm: Farm, tasks?: any[], alerts?: any
   score -= Math.min(overdueTasks.length * 5, 30)
 
   // Deduct points for critical alerts (max -20 points)
-  const criticalAlerts = alerts?.filter((alert) => alert.type === 'critical') || []
+  const criticalAlerts = alerts?.filter((alert) => alert.severity === 'critical') || []
   score -= Math.min(criticalAlerts.length * 10, 20)
 
   // Deduct points for low water level (max -15 points)

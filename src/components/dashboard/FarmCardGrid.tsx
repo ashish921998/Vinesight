@@ -195,7 +195,7 @@ export function FarmCardGrid({ farms, onFarmSelect, loading, className }: FarmCa
             <span className="text-xs text-muted-foreground">Filters:</span>
             {searchQuery && (
               <Badge variant="secondary" className="gap-1">
-                Search: "{searchQuery.substring(0, 20)}"
+                Search: &quot;{searchQuery.substring(0, 20)}&quot;
                 <X
                   className="h-3 w-3 cursor-pointer hover:text-destructive"
                   onClick={() => setSearchQuery('')}

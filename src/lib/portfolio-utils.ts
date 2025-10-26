@@ -269,6 +269,8 @@ export function getCriticalAlerts(farms: Farm[], farmsData: Map<number, any>): C
       ? ((farm.remainingWater || 0) / farm.totalTankCapacity) * 100
       : 0
     if (waterLevel < 30) {
+      // Use the farm's last updated timestamp or current time
+      const waterDetectionTime = farm.updatedAt ? new Date(farm.updatedAt) : new Date()
       alerts.push({
         farmId: farm.id!,
         farmName: farm.name,
@@ -277,16 +279,25 @@ export function getCriticalAlerts(farms: Farm[], farmsData: Map<number, any>): C
         title: 'Low Water Level',
         description: `Water level at ${Math.round(waterLevel)}%. Irrigation capacity limited.`,
         actionRequired: true,
-        timestamp: new Date()
+        timestamp: waterDetectionTime
       })
     }
 
     // Overdue tasks
+    const now = new Date()
     const overdueTasks =
       farmData.pendingTasks?.filter(
-        (task: any) => !task.completed && new Date(task.due_date) < new Date()
+        (task: any) => !task.completed && new Date(task.due_date) < now
       ) || []
     if (overdueTasks.length >= 3) {
+      // Use the oldest overdue task's due date as the detection timestamp
+      const oldestOverdueTask = overdueTasks.reduce((oldest: any, task: any) => {
+        const taskDate = new Date(task.due_date)
+        const oldestDate = new Date(oldest.due_date)
+        return taskDate < oldestDate ? task : oldest
+      }, overdueTasks[0])
+      const taskDetectionTime = oldestOverdueTask ? new Date(oldestOverdueTask.due_date) : now
+
       alerts.push({
         farmId: farm.id!,
         farmName: farm.name,
@@ -295,7 +306,7 @@ export function getCriticalAlerts(farms: Farm[], farmsData: Map<number, any>): C
         title: `${overdueTasks.length} Overdue Tasks`,
         description: 'Multiple tasks require immediate attention.',
         actionRequired: true,
-        timestamp: new Date()
+        timestamp: taskDetectionTime
       })
     }
 

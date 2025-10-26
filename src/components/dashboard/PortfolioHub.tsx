@@ -62,10 +62,13 @@ export function PortfolioHub({ className }: PortfolioHubProps) {
         setFarmsData(portfolioData.farmsData)
 
         // Calculate portfolio metrics with already-loaded financial data
-        const metrics = calculatePortfolioMetrics(portfolioData.farms, portfolioData.farmsData)
-        metrics.totalRevenue = portfolioData.financials.totalRevenue
-        metrics.totalExpenses = portfolioData.financials.totalExpenses
-        metrics.profitMargin = portfolioData.financials.profitMargin
+        const baseMetrics = calculatePortfolioMetrics(portfolioData.farms, portfolioData.farmsData)
+        const metrics = {
+          ...baseMetrics,
+          totalRevenue: portfolioData.financials.totalRevenue,
+          totalExpenses: portfolioData.financials.totalExpenses,
+          profitMargin: portfolioData.financials.profitMargin
+        }
 
         setPortfolioMetrics(metrics)
 
@@ -95,10 +98,13 @@ export function PortfolioHub({ className }: PortfolioHubProps) {
       setFarms(portfolioData.farms)
       setFarmsData(portfolioData.farmsData)
 
-      const metrics = calculatePortfolioMetrics(portfolioData.farms, portfolioData.farmsData)
-      metrics.totalRevenue = portfolioData.financials.totalRevenue
-      metrics.totalExpenses = portfolioData.financials.totalExpenses
-      metrics.profitMargin = portfolioData.financials.profitMargin
+      const baseMetrics = calculatePortfolioMetrics(portfolioData.farms, portfolioData.farmsData)
+      const metrics = {
+        ...baseMetrics,
+        totalRevenue: portfolioData.financials.totalRevenue,
+        totalExpenses: portfolioData.financials.totalExpenses,
+        profitMargin: portfolioData.financials.profitMargin
+      }
 
       setPortfolioMetrics(metrics)
 
@@ -215,9 +221,7 @@ export function PortfolioHub({ className }: PortfolioHubProps) {
           setShowFarmDetail(false)
           setSelectedFarmId(null)
         }}
-        preloadedFarm={
-          selectedFarmId ? farms.find((f) => f.id === selectedFarmId) : undefined
-        }
+        preloadedFarm={selectedFarmId ? farms.find((f) => f.id === selectedFarmId) : undefined}
         preloadedData={selectedFarmId ? farmsData.get(selectedFarmId) : undefined}
       />
     </div>

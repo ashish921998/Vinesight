@@ -35,6 +35,62 @@ interface QuickStatsCardsProps {
   className?: string
 }
 
+function getHealthStatus(score?: number): QuickStat['status'] {
+  if (!score) return 'neutral'
+  if (score >= 80) return 'healthy'
+  if (score >= 60) return 'warning'
+  return 'critical'
+}
+
+function getWaterStatus(level?: number): QuickStat['status'] {
+  if (!level) return 'neutral'
+  if (level >= 60) return 'healthy'
+  if (level >= 30) return 'warning'
+  return 'critical'
+}
+
+function getTasksStatus(urgent: number): QuickStat['status'] {
+  if (urgent === 0) return 'healthy'
+  if (urgent <= 2) return 'warning'
+  return 'critical'
+}
+
+function getSeasonPhaseLabel(phase?: string): {
+  label: string
+  color: string
+  bgColor: string
+} {
+  switch (phase) {
+    case 'germination':
+      return { label: 'Germination', color: 'text-green-700', bgColor: 'bg-green-50' }
+    case 'flowering':
+      return { label: 'Flowering', color: 'text-purple-700', bgColor: 'bg-purple-50' }
+    case 'veraison':
+      return { label: 'Veraison', color: 'text-blue-700', bgColor: 'bg-blue-50' }
+    case 'ripening':
+      return { label: 'Ripening', color: 'text-amber-700', bgColor: 'bg-amber-50' }
+    case 'harvest':
+      return { label: 'Harvest', color: 'text-red-700', bgColor: 'bg-red-50' }
+    case 'dormant':
+      return { label: 'Dormant', color: 'text-gray-700', bgColor: 'bg-gray-50' }
+    default:
+      return { label: 'Growing', color: 'text-green-700', bgColor: 'bg-green-50' }
+  }
+}
+
+function getStatusColor(status: QuickStat['status']): string {
+  switch (status) {
+    case 'healthy':
+      return 'bg-green-50 border-green-200 text-green-800'
+    case 'warning':
+      return 'bg-amber-50 border-amber-200 text-amber-800'
+    case 'critical':
+      return 'bg-red-50 border-red-200 text-red-800'
+    default:
+      return 'bg-gray-50 border-gray-200 text-gray-800'
+  }
+}
+
 export function QuickStatsCards({
   farmHealthScore,
   waterLevel,
@@ -45,60 +101,6 @@ export function QuickStatsCards({
   loading,
   className
 }: QuickStatsCardsProps) {
-  const getHealthStatus = (score?: number): QuickStat['status'] => {
-    if (!score) return 'neutral'
-    if (score >= 80) return 'healthy'
-    if (score >= 60) return 'warning'
-    return 'critical'
-  }
-
-  const getWaterStatus = (level?: number): QuickStat['status'] => {
-    if (!level) return 'neutral'
-    if (level >= 60) return 'healthy'
-    if (level >= 30) return 'warning'
-    return 'critical'
-  }
-
-  const getTasksStatus = (urgent: number): QuickStat['status'] => {
-    if (urgent === 0) return 'healthy'
-    if (urgent <= 2) return 'warning'
-    return 'critical'
-  }
-
-  const getSeasonPhaseLabel = (
-    phase?: string
-  ): { label: string; color: string; bgColor: string } => {
-    switch (phase) {
-      case 'germination':
-        return { label: 'Germination', color: 'text-green-700', bgColor: 'bg-green-50' }
-      case 'flowering':
-        return { label: 'Flowering', color: 'text-purple-700', bgColor: 'bg-purple-50' }
-      case 'veraison':
-        return { label: 'Veraison', color: 'text-blue-700', bgColor: 'bg-blue-50' }
-      case 'ripening':
-        return { label: 'Ripening', color: 'text-amber-700', bgColor: 'bg-amber-50' }
-      case 'harvest':
-        return { label: 'Harvest', color: 'text-red-700', bgColor: 'bg-red-50' }
-      case 'dormant':
-        return { label: 'Dormant', color: 'text-gray-700', bgColor: 'bg-gray-50' }
-      default:
-        return { label: 'Growing', color: 'text-green-700', bgColor: 'bg-green-50' }
-    }
-  }
-
-  const getStatusColor = (status: QuickStat['status']) => {
-    switch (status) {
-      case 'healthy':
-        return 'bg-green-50 border-green-200 text-green-800'
-      case 'warning':
-        return 'bg-amber-50 border-amber-200 text-amber-800'
-      case 'critical':
-        return 'bg-red-50 border-red-200 text-red-800'
-      default:
-        return 'bg-gray-50 border-gray-200 text-gray-800'
-    }
-  }
-
   const stats: QuickStat[] = [
     {
       id: 'health',

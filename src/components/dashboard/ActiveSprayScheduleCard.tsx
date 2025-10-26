@@ -67,10 +67,7 @@ export function ActiveSprayScheduleCard({
               status = 'completed'
             } else if (scheduledDate < today) {
               status = 'overdue'
-            } else if (
-              scheduledDate.toDateString() === today.toDateString() ||
-              scheduledDate <= new Date(today.getTime() + 24 * 60 * 60 * 1000)
-            ) {
+            } else if (scheduledDate.toDateString() === today.toDateString()) {
               status = 'today'
             }
 

@@ -319,7 +319,7 @@ export function FarmDetailModal({
 
               {/* Alerts */}
               <AlertsSection
-                alerts={[]}
+                alerts={dashboardData?.alerts || []}
                 onAlertAction={(alertId) => console.log('Alert action:', alertId)}
                 loading={!dashboardData}
               />

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TrendingUp, TrendingDown, Minus, ChevronRight, IndianRupee } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 interface MarketPrice {
@@ -44,6 +45,7 @@ export function MarketInsightsCard({
   loading,
   className
 }: MarketInsightsCardProps) {
+  const router = useRouter()
   const [marketData, setMarketData] = useState<{
     price: MarketPrice
     insight: MarketInsight
@@ -291,7 +293,7 @@ export function MarketInsightsCard({
           variant="ghost"
           size="sm"
           className="w-full text-sm font-medium"
-          onClick={() => console.log('Navigate to full market report')}
+          onClick={() => router.push('/market-report')}
         >
           View Full Market Report
           <ChevronRight className="h-4 w-4 ml-1" />
