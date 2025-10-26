@@ -228,7 +228,7 @@ export default function FarmsPage() {
                           </div>
 
                           <div className="mt-3 pt-3 border-t border-gray-100">
-                            <div className="grid grid-cols-3 gap-3 text-center">
+                            <div className="grid grid-cols-2 gap-3 text-center">
                               <div>
                                 <div className="text-lg font-semibold text-gray-900 truncate">
                                   {farm.area}
