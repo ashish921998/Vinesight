@@ -291,24 +291,19 @@ export default function UnifiedReportsPage() {
     try {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.log('Starting PDF export...')
         // eslint-disable-next-line no-console
-        console.log('Farm data:', farm)
         // eslint-disable-next-line no-console
-        console.log('Report data:', data)
       }
 
       // Simple PDF generation without autoTable to avoid compatibility issues
       const jsPDF = (await import('jspdf')).default
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.log('jsPDF imported successfully')
       }
 
       const pdf = new jsPDF()
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.log('PDF instance created')
       }
 
       // Add title
@@ -316,7 +311,6 @@ export default function UnifiedReportsPage() {
       pdf.text(`Farm Report - ${capitalize(farm.name)}`, 20, 20)
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.log('Title added')
       }
 
       pdf.setFontSize(12)
@@ -405,12 +399,10 @@ export default function UnifiedReportsPage() {
       // Save PDF
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.log('Saving PDF...')
       }
       pdf.save(`${farm.name}_report_${new Date().toISOString().split('T')[0]}.pdf`)
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.log('PDF saved successfully!')
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
@@ -436,26 +428,18 @@ export default function UnifiedReportsPage() {
 
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.log('Export handleExport debug:')
         // eslint-disable-next-line no-console
-        console.log('- isDevelopment:', isDevelopment)
         // eslint-disable-next-line no-console
-        console.log('- NEXT_PUBLIC_BYPASS_AUTH:', process.env.NEXT_PUBLIC_BYPASS_AUTH)
         // eslint-disable-next-line no-console
-        console.log('- bypassAuth:', bypassAuth)
         // eslint-disable-next-line no-console
-        console.log('- format:', format)
         // eslint-disable-next-line no-console
-        console.log('- selectedFarm:', selectedFarm)
         // eslint-disable-next-line no-console
-        console.log('- reportData:', reportData)
       }
 
       // Temporarily force bypass until we fix the env variable issue
       if (true || bypassAuth) {
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
-          console.log('Using FORCED bypass export path')
         }
         // Use already-loaded sample data for export
         if (format === 'csv') {
@@ -466,7 +450,6 @@ export default function UnifiedReportsPage() {
       } else {
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
-          console.log('Using ExportService path')
         }
         // Use ExportService for real data
         const options: ExportOptions = {

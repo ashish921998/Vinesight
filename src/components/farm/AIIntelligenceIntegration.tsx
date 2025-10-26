@@ -113,9 +113,6 @@ export function AIIntelligenceIntegration({
 
         // Remove from critical alerts
         setCriticalAlerts((prev) => prev.filter((alert) => alert.id !== alertId))
-
-        // Show success feedback
-        console.log('Alert acknowledged successfully')
       } else if (action === 'view_all') {
         // Navigate to comprehensive alerts page
         window.location.href = `/farms/${farmId}/ai-insights?filter=alerts`

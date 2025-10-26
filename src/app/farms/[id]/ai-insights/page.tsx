@@ -189,7 +189,6 @@ export default function AIInsightsPage() {
         if (result.success) {
           if (process.env.NODE_ENV === 'development') {
             // eslint-disable-next-line no-console
-            console.log(result.message)
           }
           // Refresh insights after execution
           await loadData()
@@ -704,7 +703,6 @@ export default function AIInsightsPage() {
                           onClick={() => {
                             if (process.env.NODE_ENV === 'development') {
                               // eslint-disable-next-line no-console
-                              console.log('Mark as read')
                             }
                           }}
                         >

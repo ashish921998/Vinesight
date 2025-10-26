@@ -122,7 +122,6 @@ export class IoTSensorService {
       this.startDataSimulation()
       this.isConnected = true
 
-      console.log('IoT Sensor Service initialized successfully')
       return true
     } catch (error) {
       console.error('Failed to initialize IoT service:', error)
@@ -345,7 +344,6 @@ export class IoTSensorService {
     try {
       // In production, this would send calibration command to physical sensor
       sensor.calibrationDate = new Date()
-      console.log(`Sensor ${sensorId} calibrated with reference value ${referenceValue}`)
       return true
     } catch (error) {
       console.error('Sensor calibration failed:', error)
@@ -359,7 +357,7 @@ export class IoTSensorService {
     if (!sensor) return false
 
     sensor.thresholds = thresholds
-    console.log(`Updated thresholds for sensor ${sensorId}`)
+    // Thresholds updated successfully
     return true
   }
 

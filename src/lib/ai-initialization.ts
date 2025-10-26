@@ -82,12 +82,9 @@ export class AIInitializationService {
     results: Record<string, any>
   }> {
     try {
-      console.log('🧪 Testing AI Services...')
-
       const results: Record<string, any> = {}
 
       // Test 1: AI Profile Service
-      console.log('Testing AI Profile Service...')
       const profile = await AIProfileService.getFarmerProfile(userId, farmId)
       results.profile = {
         exists: !!profile,
@@ -96,7 +93,6 @@ export class AIInitializationService {
       }
 
       // Test 2: Pest Prediction Service
-      console.log('Testing Pest Prediction Service...')
       const activePredictions = await PestPredictionService.getActivePredictions(farmId)
       results.pestPredictions = {
         count: activePredictions.length,
@@ -106,7 +102,6 @@ export class AIInitializationService {
       }
 
       // Test 3: Smart Task Generator
-      console.log('Testing Smart Task Generator...')
       const activeRecommendations = await SmartTaskGenerator.getActiveRecommendations(farmId)
       results.taskRecommendations = {
         count: activeRecommendations.length,
@@ -114,7 +109,6 @@ export class AIInitializationService {
       }
 
       // Test 4: Database connectivity
-      console.log('Testing Database Connectivity...')
       const { data: farmData, error } = await supabase
         .from('farms')
         .select('id, name, region')
@@ -126,8 +120,6 @@ export class AIInitializationService {
         farmFound: !!farmData,
         farmName: (farmData as any)?.name
       }
-
-      console.log('✅ AI Services Test Results:', results)
 
       return { success: true, results }
     } catch (error) {
@@ -194,8 +186,6 @@ export class AIInitializationService {
     userId: string
   ): Promise<{ success: boolean; message: string }> {
     try {
-      console.log('🌱 Seeding demo data for AI features...')
-
       // Create demo AI profile
       await AIProfileService.createDefaultProfile(userId, farmId)
 

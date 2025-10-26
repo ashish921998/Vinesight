@@ -36,10 +36,7 @@ export function usePerformanceMonitor(componentName: string) {
 
     // Log metrics in development
     if (process.env.NODE_ENV === 'development') {
-      console.log(`🔍 Performance [${componentName}]:`, {
-        loadTime: `${loadTime}ms`,
-        memoryUsage: memoryUsage ? `${(memoryUsage / 1024 / 1024).toFixed(2)}MB` : 'N/A'
-      })
+      // Performance metrics available here
     }
 
     // Send to analytics in production (placeholder)
@@ -63,7 +60,6 @@ export function usePerformanceMonitor(componentName: string) {
       const eventDuration = duration || timestamp - renderStartTime.current
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`⚡ Event [${componentName}/${eventName}]:`, `${eventDuration}ms`)
       }
     },
     [componentName]
@@ -88,7 +84,6 @@ export function useAsyncPerformance() {
         const duration = Date.now() - startTime
 
         if (process.env.NODE_ENV === 'development') {
-          console.log(`🚀 Async Operation [${operationName}]:`, `${duration}ms`)
         }
 
         return result
@@ -127,12 +122,7 @@ export function useBundleAnalyzer() {
         }
 
         if (process.env.NODE_ENV === 'development') {
-          console.log(`📦 Bundle [${chunkName}]:`, {
-            loadTime: `${metrics.loadTime.toFixed(2)}ms`,
-            transferSize: `${(metrics.transferSize / 1024).toFixed(2)}KB`,
-            encodedSize: `${(metrics.encodedBodySize / 1024).toFixed(2)}KB`,
-            decodedSize: `${(metrics.decodedBodySize / 1024).toFixed(2)}KB`
-          })
+          // Bundle metrics available here
         }
 
         return metrics
@@ -155,7 +145,6 @@ export function useCoreWebVitals() {
           const lastEntry = entries[entries.length - 1]
 
           if (process.env.NODE_ENV === 'development') {
-            console.log('🎯 LCP:', `${lastEntry.startTime.toFixed(2)}ms`)
           }
         })
 
@@ -170,7 +159,6 @@ export function useCoreWebVitals() {
           const entries = list.getEntries()
           entries.forEach((entry: any) => {
             if (process.env.NODE_ENV === 'development') {
-              console.log('👆 FID:', `${entry.processingStart - entry.startTime}ms`)
             }
           })
         })
@@ -193,7 +181,6 @@ export function useCoreWebVitals() {
           })
 
           if (process.env.NODE_ENV === 'development' && clsScore > 0) {
-            console.log('📐 CLS:', clsScore.toFixed(4))
           }
         })
 

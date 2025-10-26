@@ -98,7 +98,6 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
           if (process.env.NODE_ENV === 'development') {
             if (process.env.NODE_ENV === 'development') {
               // eslint-disable-next-line no-console
-              console.log(result.message)
             }
           }
           // Refresh insights after execution
@@ -486,7 +485,6 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
                           if (process.env.NODE_ENV === 'development') {
                             if (process.env.NODE_ENV === 'development') {
                               // eslint-disable-next-line no-console
-                              console.log('Insight acknowledged')
                             }
                           }
                         }}

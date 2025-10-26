@@ -38,15 +38,7 @@ export function validateEToCalculation(testData = FAO56_EXAMPLE_DATA) {
 
   const result = ETcCalculator.calculateETc(inputs)
 
-  console.log('=== ETo Validation Test ===')
-  console.log('Expected ETo:', testData.expectedETo, 'mm/day')
-  console.log('Calculated ETo:', result.eto.toFixed(2), 'mm/day')
-  console.log('Difference:', (result.eto - testData.expectedETo).toFixed(2), 'mm/day')
-  console.log(
-    'Percentage Error:',
-    (((result.eto - testData.expectedETo) / testData.expectedETo) * 100).toFixed(1) + '%'
-  )
-  console.log('============================')
+  // Validation test completed
 
   return {
     expected: testData.expectedETo,
@@ -128,8 +120,6 @@ export function testWithFylloData(
 
 // Test function for Fyllo data
 export function testFylloData() {
-  console.log('=== TESTING FYLLO DATA ===')
-
   // Test with lux assumption
   const inputs: ETcCalculationInputs = {
     farmId: 1,
@@ -143,16 +133,7 @@ export function testFylloData() {
 
   const result = ETcCalculator.calculateETc(inputs)
 
-  console.log('Fyllo Data Input:', FYLLO_TEST_DATA.weather)
-  console.log('Location:', FYLLO_TEST_DATA.location)
-  console.log('Expected ETo (Fyllo):', FYLLO_TEST_DATA.expectedETo, 'mm/day')
-  console.log('Calculated ETo (Our):', result.eto.toFixed(2), 'mm/day')
-  console.log('Difference:', (result.eto - FYLLO_TEST_DATA.expectedETo).toFixed(2), 'mm/day')
-  console.log(
-    'Percentage Error:',
-    (((result.eto - FYLLO_TEST_DATA.expectedETo) / FYLLO_TEST_DATA.expectedETo) * 100).toFixed(1) +
-      '%'
-  )
+  // Validation test completed
 
   return {
     expected: FYLLO_TEST_DATA.expectedETo,

@@ -160,7 +160,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   }
 
   const handleAlertAction = (alertId: string) => {
-    console.log('Alert action:', alertId)
+    // Handle alert action
     // Handle alert actions (navigate to specific screens, start workflows, etc.)
   }
 
@@ -178,12 +178,12 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   }
 
   const handleTaskAction = (taskId: string) => {
-    console.log('Task action:', taskId)
+    // Handle task action
     // Handle task actions (open task details, start workflow, etc.)
   }
 
   const handleAddTask = () => {
-    console.log('Add new task')
+    // Add new task
     // Navigate to add task screen
   }
 
