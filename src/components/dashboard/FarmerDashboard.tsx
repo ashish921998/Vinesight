@@ -18,6 +18,8 @@ import { SupabaseService } from '@/lib/supabase-service'
 import { WeatherService, type WeatherData } from '@/lib/weather-service'
 import { type Farm } from '@/types/types'
 import { capitalize } from '@/lib/utils'
+import { EmptyStateDashboard } from './EmptyStateDashboard'
+import { useRouter } from 'next/navigation'
 
 // Helper function to calculate farm health status based on real data
 const calculateFarmStatus = (
@@ -55,7 +57,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   const [dashboardData, setDashboardData] = useState<any>(null)
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
   const [error, setError] = useState<string | null>(null)
-
+  const router = useRouter()
   // Get selected farm info
   const selectedFarm = farms.find((farm) => farm.id === selectedFarmId)
   const farmInfo = selectedFarm
@@ -227,19 +229,12 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     )
   }
 
-  // Show no farms state
   if (farms.length === 0) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center p-6">
-          <div className="text-6xl mb-4">🌱</div>
-          <h2 className="text-lg font-semibold mb-2">No Farms Found</h2>
-          <p className="text-muted-foreground mb-4">
-            Add your first farm to start tracking your agricultural data
-          </p>
-          <Button onClick={() => (window.location.href = '/farms')}>Add Your First Farm</Button>
-        </div>
-      </div>
+      <EmptyStateDashboard
+        userName={user?.email?.split('@')[0]}
+        onCreateFarm={() => router.push('/farms')}
+      />
     )
   }
 
