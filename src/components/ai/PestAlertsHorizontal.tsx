@@ -263,7 +263,6 @@ export function PestAlertsHorizontal({ farmId, className }: PestAlertsHorizontal
                     <Progress
                       value={prediction.probabilityScore * 100}
                       className="h-1.5"
-                      // @ts-ignore
                       indicatorClassName={
                         prediction.riskLevel === 'critical'
                           ? 'bg-red-500'

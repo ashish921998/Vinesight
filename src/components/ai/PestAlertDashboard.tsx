@@ -259,7 +259,6 @@ export function PestAlertDashboard({ farmId, className }: PestAlertDashboardProp
                       <Progress
                         value={prediction.probabilityScore * 100}
                         className="h-2"
-                        // @ts-ignore
                         indicatorClassName={
                           prediction.riskLevel === 'critical'
                             ? 'bg-red-500'
