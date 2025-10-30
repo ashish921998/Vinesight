@@ -4,8 +4,45 @@
 
 import { formatChemicalData, formatChemicalsForDisplay, Chemical } from '@/lib/chemical-formatter'
 import { logger } from '@/lib/logger'
+import type { Activity } from '@/types/activities'
 
-interface ActivityLog {
+// Type guard to check if activity is the new unified Activity type
+function isUnifiedActivity(activity: Activity | ActivityLog): activity is Activity {
+  return 'metadata' in activity && activity.metadata !== undefined
+}
+
+// Helper functions to extract data from unified Activity type
+function getIrrigationDuration(activity: Activity): number | undefined {
+  return activity.irrigation?.duration
+}
+
+function getSprayChemicals(
+  activity: Activity
+): Array<{ name: string; quantity: number; unit: string }> | undefined {
+  return activity.spray?.chemicals
+}
+
+function getSprayChemical(activity: Activity): string | undefined {
+  return activity.spray?.chemical
+}
+
+function getSprayWaterVolume(activity: Activity): number | undefined {
+  return activity.spray?.water_volume
+}
+
+function getHarvestQuantity(activity: Activity): number | undefined {
+  return activity.harvest?.quantity
+}
+
+function getExpenseCost(activity: Activity): number | undefined {
+  return activity.expense?.cost
+}
+
+function getFertigationFertilizer(activity: Activity): string | undefined {
+  return activity.fertigation?.fertilizer
+}
+
+export interface ActivityLog {
   id: number
   type: string
   date: string
@@ -38,10 +75,10 @@ export interface GroupedActivities {
 
 /**
  * Get the most meaningful display text for an activity
- * @param activity - The activity log object
+ * @param activity - The activity object (new unified Activity or legacy ActivityLog)
  * @returns String to display as the main activity text
  */
-export function getActivityDisplayData(activity: ActivityLog): string {
+export function getActivityDisplayData(activity: Activity | ActivityLog): string {
   // Add null/undefined guard for activity
   if (!activity) {
     return 'Unknown Activity'
@@ -83,18 +120,16 @@ export function getActivityDisplayData(activity: ActivityLog): string {
 /**
  * Format irrigation duration display
  */
-function getIrrigationDisplayText(activity: ActivityLog): string {
+function getIrrigationDisplayText(activity: Activity | ActivityLog): string {
+  // Get duration from appropriate source based on activity type
+  const duration = isUnifiedActivity(activity) ? getIrrigationDuration(activity) : activity.duration
+
   // Add null/undefined guard and validation
-  if (
-    activity.duration !== undefined &&
-    activity.duration !== null &&
-    !isNaN(activity.duration) &&
-    activity.duration > 0
-  ) {
+  if (duration !== undefined && duration !== null && !isNaN(duration) && duration > 0) {
     // Ensure duration is a reasonable number
-    const duration = Number(activity.duration)
-    if (isFinite(duration)) {
-      return `${duration} hrs`
+    const durationNum = Number(duration)
+    if (isFinite(durationNum)) {
+      return `${durationNum} hrs`
     }
   }
   return 'Irrigation'
@@ -103,12 +138,15 @@ function getIrrigationDisplayText(activity: ActivityLog): string {
 /**
  * Format spray chemical display
  */
-function getSprayDisplayText(activity: ActivityLog): string {
+function getSprayDisplayText(activity: Activity | ActivityLog): string {
+  // Get chemicals from appropriate source based on activity type
+  const chemicals = isUnifiedActivity(activity) ? getSprayChemicals(activity) : activity.chemicals
+
   // Check for chemicals array first (new format)
-  if (activity.chemicals && Array.isArray(activity.chemicals) && activity.chemicals.length > 0) {
+  if (chemicals && Array.isArray(chemicals) && chemicals.length > 0) {
     try {
       // Validate chemicals array structure
-      const validChemicals = activity.chemicals.filter(
+      const validChemicals = chemicals.filter(
         (chem) =>
           chem &&
           typeof chem === 'object' &&
@@ -131,12 +169,15 @@ function getSprayDisplayText(activity: ActivityLog): string {
     }
   }
 
+  // Get chemical from appropriate source based on activity type
+  const chemical = isUnifiedActivity(activity) ? getSprayChemical(activity) : activity.chemical
+
   // Fallback to legacy chemical field
-  if (activity.chemical && typeof activity.chemical === 'string') {
-    const chemical = activity.chemical.trim()
-    if (chemical !== '') {
+  if (chemical && typeof chemical === 'string') {
+    const chemicalStr = chemical.trim()
+    if (chemicalStr !== '') {
       // Use the updated chemical formatter for legacy field
-      const formattedLegacy = formatChemicalData(chemical)
+      const formattedLegacy = formatChemicalData(chemicalStr)
       if (formattedLegacy && formattedLegacy.trim() !== '') {
         // Apply truncation if very long
         return formattedLegacy.length > 30
@@ -144,7 +185,7 @@ function getSprayDisplayText(activity: ActivityLog): string {
           : formattedLegacy
       }
       // If formatter returns empty, use the original value
-      return chemical.length > 30 ? chemical.substring(0, 27) + '...' : chemical
+      return chemicalStr.length > 30 ? chemicalStr.substring(0, 27) + '...' : chemicalStr
     }
   }
 
@@ -154,18 +195,16 @@ function getSprayDisplayText(activity: ActivityLog): string {
 /**
  * Format harvest quantity display
  */
-function getHarvestDisplayText(activity: ActivityLog): string {
+function getHarvestDisplayText(activity: Activity | ActivityLog): string {
+  // Get quantity from appropriate source based on activity type
+  const quantity = isUnifiedActivity(activity) ? getHarvestQuantity(activity) : activity.quantity
+
   // Add null/undefined guard and validation
-  if (
-    activity.quantity !== undefined &&
-    activity.quantity !== null &&
-    !isNaN(activity.quantity) &&
-    activity.quantity > 0
-  ) {
+  if (quantity !== undefined && quantity !== null && !isNaN(quantity) && quantity > 0) {
     // Ensure quantity is a reasonable number
-    const quantity = Number(activity.quantity)
-    if (isFinite(quantity)) {
-      return `${quantity} kg`
+    const quantityNum = Number(quantity)
+    if (isFinite(quantityNum)) {
+      return `${quantityNum} kg`
     }
   }
   return 'Harvest'
@@ -174,22 +213,20 @@ function getHarvestDisplayText(activity: ActivityLog): string {
 /**
  * Format expense cost display
  */
-function getExpenseDisplayText(activity: ActivityLog): string {
+function getExpenseDisplayText(activity: Activity | ActivityLog): string {
+  // Get cost from appropriate source based on activity type
+  const cost = isUnifiedActivity(activity) ? getExpenseCost(activity) : activity.cost
+
   // Add null/undefined guard and validation
-  if (
-    activity.cost !== undefined &&
-    activity.cost !== null &&
-    !isNaN(activity.cost) &&
-    activity.cost > 0
-  ) {
+  if (cost !== undefined && cost !== null && !isNaN(cost) && cost > 0) {
     // Ensure cost is a reasonable number
-    const cost = Number(activity.cost)
-    if (isFinite(cost)) {
+    const costNum = Number(cost)
+    if (isFinite(costNum)) {
       try {
-        return `₹${cost.toLocaleString('en-IN')}`
+        return `₹${costNum.toLocaleString('en-IN')}`
       } catch (error) {
         // Fallback if toLocaleString fails
-        return `₹${cost.toFixed(2)}`
+        return `₹${costNum.toFixed(2)}`
       }
     }
   }
@@ -199,13 +236,18 @@ function getExpenseDisplayText(activity: ActivityLog): string {
 /**
  * Format fertilizer display
  */
-function getFertigationDisplayText(activity: ActivityLog): string {
+function getFertigationDisplayText(activity: Activity | ActivityLog): string {
+  // Get fertilizer from appropriate source based on activity type
+  const fertilizer = isUnifiedActivity(activity)
+    ? getFertigationFertilizer(activity)
+    : activity.fertilizer
+
   // Add null/undefined guard and type checking
-  if (activity.fertilizer && typeof activity.fertilizer === 'string') {
-    const fertilizer = activity.fertilizer.trim()
-    if (fertilizer !== '') {
+  if (fertilizer && typeof fertilizer === 'string') {
+    const fertilizerStr = fertilizer.trim()
+    if (fertilizerStr !== '') {
       // Use the updated chemical formatter for consistency
-      const formattedFertilizer = formatChemicalData(fertilizer)
+      const formattedFertilizer = formatChemicalData(fertilizerStr)
       if (formattedFertilizer && formattedFertilizer.trim() !== '') {
         // Apply truncation if very long
         return formattedFertilizer.length > 25
@@ -213,7 +255,7 @@ function getFertigationDisplayText(activity: ActivityLog): string {
           : formattedFertilizer
       }
       // If formatter returns empty, use the original value
-      return fertilizer.length > 25 ? fertilizer.substring(0, 22) + '...' : fertilizer
+      return fertilizerStr.length > 25 ? fertilizerStr.substring(0, 22) + '...' : fertilizerStr
     }
   }
   return 'Fertigation'
@@ -222,7 +264,7 @@ function getFertigationDisplayText(activity: ActivityLog): string {
 /**
  * Format test date display for soil and petiole tests
  */
-function getTestDateDisplayText(activity: ActivityLog): string {
+function getTestDateDisplayText(activity: Activity | ActivityLog): string {
   // Add null/undefined guard for date
   if (!activity.date) {
     return activity.type ? activity.type.replace(/_/g, ' ') : 'Test'
@@ -292,7 +334,10 @@ export function groupActivitiesByDate(activities: ActivityLog[]): GroupedActivit
  * @param targetDate - The date to extract logs for
  * @returns Array of activities for the specified date
  */
-export function getLogsForDate(activities: ActivityLog[], targetDate: string): ActivityLog[] {
+export function getLogsForDate(
+  activities: (Activity | ActivityLog)[],
+  targetDate: string
+): (Activity | ActivityLog)[] {
   const targetDateKey = new Date(targetDate).toDateString()
   return activities.filter((activity) => {
     const activityDate = activity.date || activity.created_at
@@ -428,13 +473,13 @@ export function transformActivitiesToLogEntries(activities: ActivityLog[]): Arra
  * @param activities - Array of activity logs
  * @returns Array of summary objects with type, summary, and count
  */
-export function getActivitiesSummary(activities: ActivityLog[]): Array<{
+export function getActivitiesSummary(activities: (Activity | ActivityLog)[]): Array<{
   type: string
   summary: string
   count: number
 }> {
   // Group activities by type
-  const groupedByType: Record<string, ActivityLog[]> = {}
+  const groupedByType: Record<string, (Activity | ActivityLog)[]> = {}
 
   activities.forEach((activity) => {
     if (!groupedByType[activity.type]) {
@@ -444,83 +489,104 @@ export function getActivitiesSummary(activities: ActivityLog[]): Array<{
   })
 
   // Create summary items for each type
-  return Object.entries(groupedByType).map(([type, typeActivities]) => {
-    const count = typeActivities.length
-    let summary = ''
+  return Object.entries(groupedByType).map(
+    ([type, typeActivities]): {
+      type: string
+      summary: string
+      count: number
+    } => {
+      const count = typeActivities.length
+      let summary = ''
 
-    // Create type-specific summary
-    switch (type) {
-      case 'irrigation': {
-        const totalDuration = typeActivities.reduce((sum, act) => sum + (act.duration || 0), 0)
-        summary = totalDuration > 0 ? `${totalDuration} hrs irrigation` : 'Irrigation'
-        break
-      }
-
-      case 'spray': {
-        // Get unique chemicals
-        const chemicals = new Set<string>()
-        typeActivities.forEach((act) => {
-          if (act.chemical && act.chemical.trim()) {
-            chemicals.add(act.chemical.trim())
-          }
-          if (act.chemicals && Array.isArray(act.chemicals)) {
-            act.chemicals.forEach((chem) => {
-              if (chem.name && chem.name.trim()) {
-                chemicals.add(chem.name.trim())
-              }
-            })
-          }
-        })
-        if (chemicals.size > 0) {
-          summary = Array.from(chemicals).join(', ')
-        } else {
-          summary = 'Spray'
+      // Create type-specific summary
+      switch (type) {
+        case 'irrigation': {
+          const totalDuration = typeActivities.reduce((sum, act) => {
+            const duration = isUnifiedActivity(act) ? getIrrigationDuration(act) : act.duration
+            return sum + (duration || 0)
+          }, 0)
+          summary = totalDuration > 0 ? `${totalDuration} hrs irrigation` : 'Irrigation'
+          break
         }
-        break
-      }
 
-      case 'harvest': {
-        const totalQuantity = typeActivities.reduce((sum, act) => sum + (act.quantity || 0), 0)
-        summary = totalQuantity > 0 ? `${totalQuantity} kg harvested` : 'Harvest'
-        break
-      }
+        case 'spray': {
+          // Get unique chemicals
+          const chemicals = new Set<string>()
+          typeActivities.forEach((act) => {
+            const chemical = isUnifiedActivity(act) ? getSprayChemical(act) : act.chemical
+            const chemicalsArray = isUnifiedActivity(act) ? getSprayChemicals(act) : act.chemicals
 
-      case 'expense': {
-        const totalCost = typeActivities.reduce((sum, act) => sum + (act.cost || 0), 0)
-        summary = totalCost > 0 ? `₹${totalCost.toLocaleString('en-IN')} expenses` : 'Expense'
-        break
-      }
-
-      case 'fertigation': {
-        const fertilizers = new Set<string>()
-        typeActivities.forEach((act) => {
-          if (act.fertilizer && act.fertilizer.trim()) {
-            fertilizers.add(act.fertilizer.trim())
+            if (chemical && chemical.trim()) {
+              chemicals.add(chemical.trim())
+            }
+            if (chemicalsArray && Array.isArray(chemicalsArray)) {
+              chemicalsArray.forEach((chem) => {
+                if (chem.name && chem.name.trim()) {
+                  chemicals.add(chem.name.trim())
+                }
+              })
+            }
+          })
+          if (chemicals.size > 0) {
+            summary = Array.from(chemicals).join(', ')
+          } else {
+            summary = 'Spray'
           }
-        })
-        if (fertilizers.size > 0) {
-          summary = Array.from(fertilizers).join(', ')
-        } else {
-          summary = 'Fertigation'
+          break
         }
-        break
+
+        case 'harvest': {
+          const totalQuantity = typeActivities.reduce((sum, act) => {
+            const quantity = isUnifiedActivity(act) ? getHarvestQuantity(act) : act.quantity
+            return sum + (quantity || 0)
+          }, 0)
+          summary = totalQuantity > 0 ? `${totalQuantity} kg harvested` : 'Harvest'
+          break
+        }
+
+        case 'expense': {
+          const totalCost = typeActivities.reduce((sum, act) => {
+            const cost = isUnifiedActivity(act) ? getExpenseCost(act) : act.cost
+            return sum + (cost || 0)
+          }, 0)
+          summary = totalCost > 0 ? `₹${totalCost.toLocaleString('en-IN')} expenses` : 'Expense'
+          break
+        }
+
+        case 'fertigation': {
+          const fertilizers = new Set<string>()
+          typeActivities.forEach((act) => {
+            const fertilizer = isUnifiedActivity(act)
+              ? getFertigationFertilizer(act)
+              : act.fertilizer
+            if (fertilizer && fertilizer.trim()) {
+              fertilizers.add(fertilizer.trim())
+            }
+          })
+          if (fertilizers.size > 0) {
+            summary = Array.from(fertilizers).join(', ')
+          } else {
+            summary = 'Fertigation'
+          }
+          break
+        }
+
+        case 'soil_test':
+        case 'petiole_test':
+          summary = type.replace(/_/g, ' ')
+          break
+
+        default:
+          summary = type.replace(/_/g, ' ')
       }
 
-      case 'soil_test':
-      case 'petiole_test':
-        summary = type.replace(/_/g, ' ')
-        break
-
-      default:
-        summary = type.replace(/_/g, ' ')
+      return {
+        type,
+        summary,
+        count
+      }
     }
-
-    return {
-      type,
-      summary,
-      count
-    }
-  })
+  )
 }
 
 /**
