@@ -859,7 +859,7 @@ export function UnifiedDataLogsModal({
 
   const handleSaveAllLogs = () => {
     if (sessionLogs.length === 0) return
-    if (!farmId && farmOptions?.length) {
+    if (farmOptions !== undefined && farmOptions.length > 0 && !farmId) {
       toast.error('Select a farm before saving logs')
       return
     }
@@ -1958,7 +1958,9 @@ export function UnifiedDataLogsModal({
             <Button
               onClick={handleSaveAllLogs}
               disabled={
-                sessionLogs.length === 0 || isSubmitting || (!farmId && !!farmOptions?.length)
+                sessionLogs.length === 0 ||
+                isSubmitting ||
+                (farmOptions !== undefined && farmOptions.length > 0 && !farmId)
               }
               className="flex items-center gap-2"
             >

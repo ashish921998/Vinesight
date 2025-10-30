@@ -218,7 +218,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
 
           ;(summary.recentActivities || []).forEach((activity) => {
             activityList.push({
-              id: activity.id || 0, // Ensure id is present for AggregatedActivity
+              id: activity.id, // Preserve original id (allowing undefined)
               ...activity,
               type: activity.type as ActivityType, // Cast to proper ActivityType
               date: activity.date || '', // Ensure date is present
@@ -283,7 +283,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       setAllActivities((prev) => {
         const others = prev.filter((activity) => activity.farmId !== farmId)
         const updated = ((summary as DashboardSummary).recentActivities || []).map((activity) => ({
-          id: activity.id || 0, // Ensure id is present
+          id: activity.id, // Preserve original id (allowing undefined)
           ...activity,
           type: activity.type as ActivityType, // Cast to proper type
           date: activity.date || '', // Ensure date is present
@@ -347,56 +347,68 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     const farmId = farm.id
     if (!farmId) throw new Error('Invalid farm selected')
 
+    // Safe numeric parsing with defaults
+    const duration = Number.isFinite(parseFloat(data.duration)) ? parseFloat(data.duration) : 0
+    const area = Number.isFinite(parseFloat(data.area)) ? parseFloat(data.area) : farm.area || 0
+    const systemDischarge = Number.isFinite(farm.systemDischarge || 0)
+      ? farm.systemDischarge || 0
+      : 100
+
     const record = await SupabaseService.addIrrigationRecord({
       farm_id: farmId,
       date,
-      duration: parseFloat(data.duration || '0'),
-      area: parseFloat(data.area || '0') || farm.area || 0,
+      duration,
+      area,
       growth_stage: 'Active',
       moisture_status: 'Good',
-      system_discharge: farm.systemDischarge || 100,
+      system_discharge: systemDischarge,
       notes: dayNotes || '',
       date_of_pruning: farm.dateOfPruning
     })
 
-    if (record) {
-      const duration = parseFloat(data.duration || '0')
-      const systemDischarge = farm.systemDischarge || 100
+    if (record && duration > 0 && systemDischarge > 0) {
+      const waterAdded = duration * systemDischarge
+      const currentWaterLevel = Number.isFinite(farm.remainingWater || 0)
+        ? farm.remainingWater || 0
+        : 0
+      const newWaterLevel = currentWaterLevel + waterAdded
 
-      if (duration > 0 && systemDischarge > 0) {
-        const waterAdded = duration * systemDischarge
-        const currentWaterLevel = farm.remainingWater || 0
-        const newWaterLevel = currentWaterLevel + waterAdded
+      // Take snapshot of previous farms state for potential rollback
+      const previousFarmsSnapshot = [...farms]
 
+      // Perform optimistic local update using functional setFarms for atomic updates
+      setFarms((prevFarms) =>
+        prevFarms.map((item) =>
+          item.id === farmId ? { ...item, remainingWater: newWaterLevel } : item
+        )
+      )
+
+      try {
+        // Update database after optimistic update
+        await SupabaseService.updateFarm(farmId, {
+          remainingWater: newWaterLevel,
+          waterCalculationUpdatedAt: new Date().toISOString()
+        })
+
+        // Send notifications after successful DB update
         try {
-          // Update database first
-          await SupabaseService.updateFarm(farmId, {
-            remainingWater: newWaterLevel,
-            waterCalculationUpdatedAt: new Date().toISOString()
-          })
-
-          // Only update local state after successful DB update
-          setFarms((prev) =>
-            prev.map((item) =>
-              item.id === farmId ? { ...item, remainingWater: newWaterLevel } : item
-            )
-          )
-
-          // Send notifications after successful update
-          try {
-            const { NotificationService } = await import('@/lib/notification-service')
-            const notificationService = NotificationService.getInstance()
-            notificationService.checkWaterLevelAndAlert(capitalize(farm.name), newWaterLevel)
-          } catch (notificationError) {
-            // Don't fail the operation if notifications fail
-          }
-        } catch (dbError) {
-          // Roll back local state if DB update failed
-          // (In this case, we didn't update local state yet, so no rollback needed)
-          throw new Error(
-            `Failed to update water level: ${dbError instanceof Error ? dbError.message : 'Unknown error'}`
+          const { NotificationService } = await import('@/lib/notification-service')
+          const notificationService = NotificationService.getInstance()
+          notificationService.checkWaterLevelAndAlert(capitalize(farm.name), newWaterLevel)
+        } catch (notificationError) {
+          console.error(
+            'Notification service failed:',
+            notificationError instanceof Error
+              ? notificationError.message
+              : 'Unknown notification error'
           )
         }
+      } catch (dbError) {
+        // Revert to snapshot if DB call fails
+        setFarms(previousFarmsSnapshot)
+        const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error'
+        console.error('Failed to update water level in database:', errorMessage)
+        throw new Error(`Failed to update water level: ${errorMessage}`)
       }
     }
 
@@ -459,7 +471,9 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       farm_id: farmId,
       date,
       quantity: parseFloat(data.quantity || '0'),
-      quality: data.quality || 'Good',
+      grade: data.grade || 'Good',
+      buyer: data.buyer || '',
+      price: parseFloat(data.price || '0'),
       notes: dayNotes || ''
     }
 
@@ -826,7 +840,8 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
 
       for (let i = 0; i < logs.length; i++) {
         const logEntry = logs[i]
-        const record = await saveLogEntryForFarm(logEntry, date, dayNotes, targetFarm)
+        const res = await saveLogEntryForFarm(logEntry, date, dayNotes, targetFarm)
+        const { record } = res
 
         if (i === 0 && record?.id) {
           firstRecordId = record.id

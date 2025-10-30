@@ -193,38 +193,6 @@ export interface MonitoringActivityData {
 // ============================================================================
 
 /**
- * Convert database spray record to Activity
- */
-export function sprayRecordToActivity(record: DatabaseRow<'spray_records'>): Activity {
-  return {
-    id: record.id,
-    type: 'spray',
-    date: record.date,
-    created_at: record.created_at || undefined,
-    farm_id: record.farm_id,
-    farmId: record.farm_id,
-    notes: record.notes || undefined,
-    description: record.notes || undefined,
-    spray: {
-      area: record.area || undefined,
-      chemicals: Array.isArray(record.chemicals)
-        ? (record.chemicals as Array<{ name: string; quantity: number; unit: string }>)
-        : [],
-      chemical: record.chemical || undefined, // legacy field
-      operator: record.operator || undefined,
-      weather: record.weather || undefined,
-      water_volume: record.water_volume || undefined,
-      quantity_amount: record.quantity_amount || undefined,
-      quantity_unit: record.quantity_unit || undefined
-    },
-    metadata: {
-      database_type: 'spray_records',
-      record_id: record.id
-    }
-  }
-}
-
-/**
  * Convert database irrigation record to Activity
  */
 export function irrigationRecordToActivity(record: DatabaseRow<'irrigation_records'>): Activity {
@@ -325,9 +293,9 @@ export function soilTestRecordToActivity(record: DatabaseRow<'soil_test_records'
       report_type: record.report_type || undefined,
       extraction_status: record.extraction_status || undefined,
       extraction_error: record.extraction_error || undefined,
-      parsed_parameters: record.parsed_parameters || undefined,
+      parsed_parameters: record.parsed_parameters,
       raw_notes: record.raw_notes || undefined,
-      parameters: record.parameters || undefined,
+      parameters: record.parameters,
       recommendations: record.recommendations || undefined
     },
     metadata: {
