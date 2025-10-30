@@ -1744,6 +1744,7 @@ export function UnifiedDataLogsModal({
                                     <SelectContent>
                                       <SelectItem value="gm/L">gm/L</SelectItem>
                                       <SelectItem value="ml/L">ml/L</SelectItem>
+                                      <SelectItem value="ppm">PPM</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </div>

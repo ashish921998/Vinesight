@@ -238,7 +238,7 @@ export function toDatabaseIrrigationInsert(
 export function toDatabaseIrrigationUpdate(
   appUpdates: Partial<import('./supabase').IrrigationRecord>
 ): DatabaseIrrigationRecordUpdate {
-  const update: DatabaseIrrigationRecordUpdate = {}
+  const update: any = {}
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
@@ -252,7 +252,7 @@ export function toDatabaseIrrigationUpdate(
     update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
 
-  return update
+  return update as DatabaseIrrigationRecordUpdate
 }
 
 // Spray Record conversion functions
@@ -270,7 +270,7 @@ export function toApplicationSprayRecord(
         typeof c === 'object' &&
         typeof c.name === 'string' &&
         typeof c.quantity === 'number' &&
-        (c.unit === 'gm/L' || c.unit === 'ml/L')
+        (c.unit === 'gm/L' || c.unit === 'ml/L' || c.unit === 'ppm')
     )
     return isValid ? (chemicalsJson as unknown as import('./supabase').SprayChemical[]) : undefined
   }
@@ -282,7 +282,7 @@ export function toApplicationSprayRecord(
     chemical: dbRecord.chemical || undefined,
     dose: dbRecord.dose || undefined,
     quantity_amount: dbRecord.quantity_amount,
-    quantity_unit: dbRecord.quantity_unit as 'gm/L' | 'ml/L',
+    quantity_unit: dbRecord.quantity_unit as 'gm/L' | 'ml/L' | 'ppm',
     water_volume: dbRecord.water_volume,
     chemicals: parseChemicals(dbRecord.chemicals),
     area: dbRecord.area,
@@ -342,7 +342,7 @@ export function toDatabaseSprayUpdate(
     update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
 
-  return update
+  return update as DatabaseSprayRecordUpdate
 }
 
 // Fertigation Record conversion functions
@@ -385,21 +385,21 @@ export function toDatabaseFertigationInsert(
 export function toDatabaseFertigationUpdate(
   appUpdates: Partial<import('./supabase').FertigationRecord>
 ): DatabaseFertigationRecordUpdate {
-  const update: DatabaseFertigationRecordUpdate = {}
+  const update: any = {}
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.fertilizer !== undefined) update.fertilizer = appUpdates.fertilizer
   if (appUpdates.dose !== undefined) update.dose = appUpdates.dose ?? null
   if (appUpdates.purpose !== undefined) update.purpose = appUpdates.purpose as string | null
-  if (appUpdates.area !== undefined) update.area = appUpdates.area ?? null
+  if (appUpdates.area !== undefined) update.area = appUpdates.area
   if (appUpdates.quantity !== undefined) update.quantity = appUpdates.quantity
   if (appUpdates.unit !== undefined) update.unit = appUpdates.unit
   if (appUpdates.date_of_pruning !== undefined)
     update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
 
-  return update
+  return update as DatabaseFertigationRecordUpdate
 }
 
 // Harvest Record conversion functions
@@ -438,7 +438,7 @@ export function toDatabaseHarvestInsert(
 export function toDatabaseHarvestUpdate(
   appUpdates: Partial<import('./supabase').HarvestRecord>
 ): DatabaseHarvestRecordUpdate {
-  const update: DatabaseHarvestRecordUpdate = {}
+  const update: any = {}
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
@@ -450,7 +450,7 @@ export function toDatabaseHarvestUpdate(
     update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
 
-  return update
+  return update as DatabaseHarvestRecordUpdate
 }
 
 // Expense Record conversion functions
@@ -487,7 +487,7 @@ export function toDatabaseExpenseInsert(
 export function toDatabaseExpenseUpdate(
   appUpdates: Partial<import('./supabase').ExpenseRecord>
 ): DatabaseExpenseRecordUpdate {
-  const update: DatabaseExpenseRecordUpdate = {}
+  const update: any = {}
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
@@ -498,7 +498,7 @@ export function toDatabaseExpenseUpdate(
     update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.remarks !== undefined) update.remarks = appUpdates.remarks || null
 
-  return update
+  return update as DatabaseExpenseRecordUpdate
 }
 
 // Calculation History conversion functions
@@ -573,7 +573,7 @@ export function toDatabaseTaskReminderUpdate(
   if (appUpdates.priority !== undefined) update.priority = appUpdates.priority
   if (appUpdates.completedAt !== undefined) update.completed_at = appUpdates.completedAt
 
-  return update
+  return update as DatabaseTaskReminderUpdate
 }
 
 // Soil Test Record conversion functions
@@ -625,7 +625,7 @@ export function toDatabaseSoilTestInsert(
 export function toDatabaseSoilTestUpdate(
   appUpdates: Partial<import('./supabase').SoilTestRecord>
 ): DatabaseSoilTestRecordUpdate {
-  const update: DatabaseSoilTestRecordUpdate = {}
+  const update: any = {}
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
@@ -648,7 +648,7 @@ export function toDatabaseSoilTestUpdate(
   if (appUpdates.parsed_parameters !== undefined)
     update.parsed_parameters = appUpdates.parsed_parameters || null
   if (appUpdates.raw_notes !== undefined) update.raw_notes = appUpdates.raw_notes || null
-  return update
+  return update as DatabaseSoilTestRecordUpdate
 }
 
 // Petiole Test Record conversion functions
@@ -700,7 +700,7 @@ export function toDatabasePetioleTestInsert(
 export function toDatabasePetioleTestUpdate(
   appUpdates: Partial<import('./supabase').PetioleTestRecord>
 ): DatabasePetioleTestRecordUpdate {
-  const update: DatabasePetioleTestRecordUpdate = {}
+  const update: any = {}
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
@@ -728,5 +728,5 @@ export function toDatabasePetioleTestUpdate(
     update.parsed_parameters = appUpdates.parsed_parameters || null
   if (appUpdates.raw_notes !== undefined) update.raw_notes = appUpdates.raw_notes || null
 
-  return update
+  return update as DatabasePetioleTestRecordUpdate
 }

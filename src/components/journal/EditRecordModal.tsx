@@ -49,7 +49,7 @@ interface SprayDataUpdate {
   date: string
   notes?: string
   water_volume?: number
-  chemicals?: Array<{ name: string; quantity: number; unit: 'gm/L' | 'ml/L' }>
+  chemicals?: Array<{ name: string; quantity: number; unit: 'gm/L' | 'ml/L' | 'ppm' }>
   chemical?: string
   dose?: string
 }
@@ -519,10 +519,10 @@ export function EditRecordModal({
             .map((chem) => ({
               name: chem.name.trim(),
               quantity: chem.quantity,
-              unit: chem.unit as 'gm/L' | 'ml/L'
+              unit: chem.unit as 'gm/L' | 'ml/L' | 'ppm'
             }))
             .filter(
-              (chem): chem is { name: string; quantity: number; unit: 'gm/L' | 'ml/L' } =>
+              (chem): chem is { name: string; quantity: number; unit: 'gm/L' | 'ml/L' | 'ppm' } =>
                 chem.quantity !== undefined && chem.quantity > 0
             )
 
@@ -877,6 +877,7 @@ export function EditRecordModal({
                               <SelectContent>
                                 <SelectItem value="gm/L">gm/L</SelectItem>
                                 <SelectItem value="ml/L">ml/L</SelectItem>
+                                <SelectItem value="ppm">PPM</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>

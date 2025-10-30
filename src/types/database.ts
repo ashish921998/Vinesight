@@ -723,7 +723,7 @@ export type Database = {
           date: string
           date_of_pruning: string | null
           description: string
-          farm_id: number | null
+          farm_id: number
           id: number
           remarks: string | null
           type: string
@@ -734,7 +734,7 @@ export type Database = {
           date: string
           date_of_pruning?: string | null
           description: string
-          farm_id?: number | null
+          farm_id: number
           id?: number
           remarks?: string | null
           type: string
@@ -745,7 +745,7 @@ export type Database = {
           date?: string
           date_of_pruning?: string | null
           description?: string
-          farm_id?: number | null
+          farm_id: number
           id?: number
           remarks?: string | null
           type?: string
@@ -931,7 +931,7 @@ export type Database = {
           date: string
           date_of_pruning: string | null
           dose: string | null // Legacy field - kept for backward compatibility
-          farm_id: number | null
+          farm_id: number
           fertilizer: string
           id: number
           notes: string | null
@@ -945,7 +945,7 @@ export type Database = {
           date: string
           date_of_pruning?: string | null
           dose?: string | null // Legacy field - kept for backward compatibility
-          farm_id?: number | null
+          farm_id: number
           fertilizer: string
           id?: number
           notes?: string | null
@@ -959,7 +959,7 @@ export type Database = {
           date?: string
           date_of_pruning?: string | null
           dose?: string | null // Legacy field - kept for backward compatibility
-          farm_id?: number | null
+          farm_id: number
           fertilizer?: string
           id?: number
           notes?: string | null
@@ -983,7 +983,7 @@ export type Database = {
           created_at: string | null
           date: string
           date_of_pruning: string | null
-          farm_id: number | null
+          farm_id: number
           grade: string
           id: number
           notes: string | null
@@ -995,7 +995,7 @@ export type Database = {
           created_at?: string | null
           date: string
           date_of_pruning?: string | null
-          farm_id?: number | null
+          farm_id: number
           grade: string
           id?: number
           notes?: string | null
@@ -1007,7 +1007,7 @@ export type Database = {
           created_at?: string | null
           date?: string
           date_of_pruning?: string | null
-          farm_id?: number | null
+          farm_id: number
           grade?: string
           id?: number
           notes?: string | null
@@ -1087,7 +1087,7 @@ export type Database = {
           date: string
           date_of_pruning: string | null
           duration: number
-          farm_id: number | null
+          farm_id: number
           growth_stage: string
           id: number
           moisture_status: string
@@ -1100,7 +1100,7 @@ export type Database = {
           date: string
           date_of_pruning?: string | null
           duration: number
-          farm_id?: number | null
+          farm_id: number
           growth_stage: string
           id?: number
           moisture_status: string
@@ -1113,7 +1113,7 @@ export type Database = {
           date?: string
           date_of_pruning?: string | null
           duration?: number
-          farm_id?: number | null
+          farm_id: number
           growth_stage?: string
           id?: number
           moisture_status?: string
@@ -1409,25 +1409,25 @@ export type Database = {
           created_at: string | null
           date: string
           date_of_pruning: string | null
-          farm_id: number | null
+          farm_id: number
           id: number
           extraction_error: string | null
           extraction_status: string | null
           notes: string | null
-          parsed_parameters: Json | null
+          parsed_parameters: Record<string, number>
           raw_notes: string | null
           report_filename: string | null
           report_storage_path: string | null
           report_type: string | null
           report_url: string | null
-          parameters: Json
+          parameters: Record<string, number>
           recommendations: string | null
         }
         Insert: {
           created_at?: string | null
           date: string
           date_of_pruning?: string | null
-          farm_id?: number | null
+          farm_id: number
           id?: number
           extraction_error?: string | null
           extraction_status?: string | null
@@ -1445,7 +1445,7 @@ export type Database = {
           created_at?: string | null
           date?: string
           date_of_pruning?: string | null
-          farm_id?: number | null
+          farm_id: number
           id?: number
           extraction_error?: string | null
           extraction_status?: string | null
@@ -1474,25 +1474,25 @@ export type Database = {
           created_at: string | null
           date: string
           date_of_pruning: string | null
-          farm_id: number | null
+          farm_id: number
           id: number
           extraction_error: string | null
           extraction_status: string | null
           notes: string | null
-          parsed_parameters: Json | null
+          parsed_parameters: Record<string, number>
           raw_notes: string | null
           report_filename: string | null
           report_storage_path: string | null
           report_type: string | null
           report_url: string | null
-          parameters: Json
+          parameters: Record<string, number>
           recommendations: string | null
         }
         Insert: {
           created_at?: string | null
           date: string
           date_of_pruning?: string | null
-          farm_id?: number | null
+          farm_id: number
           id?: number
           extraction_error?: string | null
           extraction_status?: string | null
@@ -1510,7 +1510,7 @@ export type Database = {
           created_at?: string | null
           date?: string
           date_of_pruning?: string | null
-          farm_id?: number | null
+          farm_id: number
           id?: number
           extraction_error?: string | null
           extraction_status?: string | null
