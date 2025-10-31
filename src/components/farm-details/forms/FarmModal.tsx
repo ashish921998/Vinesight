@@ -351,15 +351,14 @@ export function FarmModal({
               </div>
             </div>
 
-            {/* Total Tank Capacity */}
             <div>
               <Label htmlFor="totalTankCapacity" className="text-sm font-medium text-gray-700">
-                Total Tank Capacity (liters)
+                Total Tank Capacity (mm)
               </Label>
               <Input
                 id="totalTankCapacity"
                 type="number"
-                step="1"
+                step="0.01"
                 min="0"
                 value={formData.totalTankCapacity}
                 onChange={(e) => handleInputChange('totalTankCapacity', e.target.value)}

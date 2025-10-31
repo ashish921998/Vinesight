@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, type ChangeEvent } from 'react'
+import { useState, useEffect, useMemo, type ChangeEvent } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -60,6 +60,9 @@ interface UnifiedDataLogsModalProps {
   mode?: 'add' | 'edit'
   existingLogs?: LogEntry[]
   selectedDate?: string
+  farmOptions?: Array<{ id: number; name: string }>
+  selectedFarmId?: number
+  onFarmChange?: (farmId: number) => void
 }
 
 // Use centralized logTypeConfigs from @/lib/log-type-config
@@ -76,9 +79,13 @@ export function UnifiedDataLogsModal({
   isSubmitting,
   farmId,
   mode = 'add',
-  existingLogs = [],
-  selectedDate
+  existingLogs,
+  selectedDate,
+  farmOptions,
+  selectedFarmId,
+  onFarmChange
 }: UnifiedDataLogsModalProps) {
+  const normalizedExistingLogs = useMemo<LogEntry[]>(() => existingLogs ?? [], [existingLogs])
   const [internalSelectedDate, setInternalSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   )
@@ -96,12 +103,12 @@ export function UnifiedDataLogsModal({
 
   // In edit mode, use the original date from the first log entry's data to preserve it
   const selectedDateToUse = toISO(
-    mode === 'edit' && existingLogs.length > 0
-      ? existingLogs[0]?.data?.date || selectedDate || internalSelectedDate
+    mode === 'edit' && normalizedExistingLogs.length > 0
+      ? normalizedExistingLogs[0]?.data?.date || selectedDate || internalSelectedDate
       : selectedDate || internalSelectedDate
   )
   const setSelectedDate =
-    selectedDate || (mode === 'edit' && existingLogs.length > 0)
+    selectedDate || (mode === 'edit' && normalizedExistingLogs.length > 0)
       ? () => {}
       : (v: string) => setInternalSelectedDate(toISO(v))
   const [currentLogType, setCurrentLogType] = useState<LogType | null>(null)
@@ -187,11 +194,11 @@ export function UnifiedDataLogsModal({
 
       // Then initialize based on mode after a brief delay to ensure reset is complete
       const timer = setTimeout(() => {
-        if (mode === 'edit' && existingLogs.length > 0) {
+        if (mode === 'edit' && normalizedExistingLogs.length > 0) {
           // Initialize with existing logs for edit mode
-          setSessionLogs(existingLogs)
+          setSessionLogs(normalizedExistingLogs)
           // Extract day notes from the first log if available
-          const firstLog = existingLogs[0]
+          const firstLog = normalizedExistingLogs[0]
           if (firstLog?.data?.notes) {
             setDayNotes(firstLog.data.notes)
           }
@@ -229,7 +236,7 @@ export function UnifiedDataLogsModal({
       setReportUploadError(null)
       setIsUploadingReport(false)
     }
-  }, [isOpen, mode, existingLogs, selectedDate])
+  }, [isOpen, mode, normalizedExistingLogs, selectedDate])
 
   // Reset current form when log type changes
   useEffect(() => {
@@ -785,7 +792,7 @@ export function UnifiedDataLogsModal({
 
     // Check if this is an existing log (has a real database ID)
     const isExistingLog =
-      mode === 'edit' && existingLogs.some((existingLog) => existingLog.id === logId)
+      mode === 'edit' && normalizedExistingLogs.some((existingLog) => existingLog.id === logId)
 
     if (isExistingLog) {
       // Show confirmation dialog for existing logs
@@ -826,8 +833,8 @@ export function UnifiedDataLogsModal({
 
       toast.success(`${getLogTypeLabel(deleteConfirm.logType)} record deleted successfully`)
     } catch (error) {
-      console.error('Error deleting record:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to delete record')
+      const message = error instanceof Error ? error.message : 'Failed to delete record'
+      toast.error(message)
       setDeleteConfirm((prev) => ({ ...prev, isLoading: false }))
     }
   }
@@ -852,6 +859,10 @@ export function UnifiedDataLogsModal({
 
   const handleSaveAllLogs = () => {
     if (sessionLogs.length === 0) return
+    if (farmOptions !== undefined && farmOptions.length > 0 && !farmId) {
+      toast.error('Select a farm before saving logs')
+      return
+    }
     onSubmit(sessionLogs, selectedDateToUse, dayNotes, dayPhotos)
   }
 
@@ -1305,6 +1316,28 @@ export function UnifiedDataLogsModal({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-4">
+          {farmOptions?.length ? (
+            <div className="space-y-1">
+              <Label className="text-sm font-medium text-gray-700">Farm</Label>
+              <Select
+                value={(farmId ?? selectedFarmId)?.toString() || ''}
+                onValueChange={(value) => onFarmChange?.(parseInt(value, 10))}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Select farm" />
+                </SelectTrigger>
+                <SelectContent>
+                  {farmOptions.map((farm) => (
+                    <SelectItem key={farm.id} value={farm.id.toString()}>
+                      {farm.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
+
           {/* Date Selector */}
           <div className="space-y-1">
             <Label className="text-sm font-medium text-gray-700">Date</Label>
@@ -1711,6 +1744,7 @@ export function UnifiedDataLogsModal({
                                     <SelectContent>
                                       <SelectItem value="gm/L">gm/L</SelectItem>
                                       <SelectItem value="ml/L">ml/L</SelectItem>
+                                      <SelectItem value="ppm">PPM</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </div>
@@ -1924,7 +1958,11 @@ export function UnifiedDataLogsModal({
             </Button>
             <Button
               onClick={handleSaveAllLogs}
-              disabled={sessionLogs.length === 0 || isSubmitting}
+              disabled={
+                sessionLogs.length === 0 ||
+                isSubmitting ||
+                (farmOptions !== undefined && farmOptions.length > 0 && !farmId)
+              }
               className="flex items-center gap-2"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}

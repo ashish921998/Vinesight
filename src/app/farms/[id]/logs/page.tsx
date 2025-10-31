@@ -34,10 +34,10 @@ import {
 } from '@/components/ui/dialog'
 import { UnifiedDataLogsModal } from '@/components/farm-details/UnifiedDataLogsModal'
 import { EditRecordModal } from '@/components/journal/EditRecordModal'
+import { ActivityLogRow } from '@/components/activity/ActivityLogRow'
 
 import { SupabaseService } from '@/lib/supabase-service'
 import { getActivityDisplayData, normalizeDateToYYYYMMDD } from '@/lib/activity-display-utils'
-import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
 import { PhotoService } from '@/lib/photo-service'
 import { cn, capitalize } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -892,60 +892,27 @@ export default function FarmLogsPage() {
             {paginatedLogs.length > 0 ? (
               <div className="space-y-2">
                 {paginatedLogs.map((log) => {
-                  const Icon = getLogTypeIcon(log.type)
                   const daysAfterPruning = getDaysAfterPruning(
                     currentFarm?.dateOfPruning,
                     log.created_at
                   )
 
                   return (
-                    <div
+                    <ActivityLogRow
                       key={`${log.type}-${log.id}`}
-                      className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-100"
-                      role="button"
-                      tabIndex={0}
-                      aria-label={`Edit ${log.type} log from ${log.date}`}
-                      onClick={() => handleEditRecord(log)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          handleEditRecord(log)
-                        }
-                      }}
-                      onKeyUp={(e) => {
-                        if (e.key === ' ') {
-                          e.preventDefault()
-                          handleEditRecord(log)
-                        }
-                      }}
-                    >
-                      <div className="grid grid-cols-[auto_1fr_auto] gap-3 items-start">
-                        <div
-                          className={`p-2 ${getLogTypeBgColor(log.type)} rounded-md flex-shrink-0`}
-                        >
-                          <Icon className={`h-4 w-4 ${getLogTypeColor(log.type)}`} />
-                        </div>
-
-                        <div className="min-w-0">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
-                            <h3 className="font-medium text-sm text-gray-900 capitalize truncate max-w-[200px] sm:max-w-[300px] md:max-w-[400px]">
-                              {getActivityDisplayData(log)}
-                            </h3>
-                            <span className="text-blue-600 text-xs font-medium">
-                              {formatLogDate(log.created_at)}
-                            </span>
+                      activityType={log.type}
+                      title={getActivityDisplayData(log)}
+                      topRight={formatLogDate(log.created_at)}
+                      footer={
+                        daysAfterPruning !== null && daysAfterPruning >= 0 ? (
+                          <div className="inline-flex items-center gap-1 rounded-full bg-green-500 px-2 py-1 text-xs font-medium text-white">
+                            <Scissors className="h-3 w-3" />
+                            {daysAfterPruning}d
                           </div>
-                          {daysAfterPruning !== null && daysAfterPruning >= 0 && (
-                            <div className="mt-2">
-                              <div className="inline-flex items-center gap-1 bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full cursor-help">
-                                <Scissors className="h-3 w-3" />
-                                {daysAfterPruning}d
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-1 flex-shrink-0">
+                        ) : null
+                      }
+                      actions={
+                        <>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -953,7 +920,7 @@ export default function FarmLogsPage() {
                               e.stopPropagation()
                               handleEditRecord(log)
                             }}
-                            className="h-7 w-7 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                            className="h-7 w-7 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-800"
                             title="Edit this log"
                           >
                             <Edit className="h-3 w-3" />
@@ -965,14 +932,26 @@ export default function FarmLogsPage() {
                               e.stopPropagation()
                               handleDeleteRecord(log)
                             }}
-                            className="h-7 w-7 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
+                            className="h-7 w-7 p-0 text-red-600 hover:bg-red-50 hover:text-red-800"
                             title="Delete this log"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
-                        </div>
-                      </div>
-                    </div>
+                        </>
+                      }
+                      variant="default"
+                      interactive
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Edit ${log.type} log from ${log.date}`}
+                      onClick={() => handleEditRecord(log)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleEditRecord(log)
+                        }
+                      }}
+                    />
                   )
                 })}
               </div>

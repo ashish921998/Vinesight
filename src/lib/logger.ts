@@ -36,13 +36,13 @@ class Logger {
 
   info(message: string, ...args: any[]): void {
     if (this.shouldLog(LogLevel.INFO)) {
-      // Info level logging - can be enabled in production if needed
+      console.info(`[INFO] ${message}`, ...args)
     }
   }
 
   debug(message: string, ...args: any[]): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
-      // Debug level logging - development only
+      console.debug(`[DEBUG] ${message}`, ...args)
     }
   }
 }
