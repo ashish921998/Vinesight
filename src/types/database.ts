@@ -1414,13 +1414,13 @@ export type Database = {
           extraction_error: string | null
           extraction_status: string | null
           notes: string | null
-          parsed_parameters: Record<string, number>
+          parsed_parameters: Json
           raw_notes: string | null
           report_filename: string | null
           report_storage_path: string | null
           report_type: string | null
           report_url: string | null
-          parameters: Record<string, number>
+          parameters: Json
           recommendations: string | null
         }
         Insert: {
@@ -1479,13 +1479,13 @@ export type Database = {
           extraction_error: string | null
           extraction_status: string | null
           notes: string | null
-          parsed_parameters: Record<string, number>
+          parsed_parameters: Json
           raw_notes: string | null
           report_filename: string | null
           report_storage_path: string | null
           report_type: string | null
           report_url: string | null
-          parameters: Record<string, number>
+          parameters: Json
           recommendations: string | null
         }
         Insert: {

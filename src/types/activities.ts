@@ -6,7 +6,7 @@
  * services, and utilities should import and use these types.
  */
 
-import type { Database } from './database'
+import type { Database, Json } from './database'
 
 export type DatabaseRow<T extends keyof Database['public']['Tables']> =
   Database['public']['Tables'][T]['Row']
@@ -143,9 +143,9 @@ export interface TestActivityData {
   report_type?: string
   extraction_status?: string
   extraction_error?: string
-  parsed_parameters?: Record<string, number>
+  parsed_parameters?: Json
   raw_notes?: string
-  parameters?: Record<string, unknown> // JSON data from database
+  parameters?: Json // JSON data from database
   recommendations?: string
 }
 
@@ -464,12 +464,22 @@ export function getActivityData<T extends ActivityType>(
 
 /**
  * Get a safe activity that includes all possible data fields (for legacy compatibility)
+ * This function creates a new object with only the defined properties from the input activity
  */
-export function getSafeActivity(activity: Activity): {
-  [K in keyof Activity]: Activity[K] extends undefined ? never : Activity[K]
-} {
-  // This ensures all fields are present for backward compatibility
-  return activity as any
+export function getSafeActivity(activity: Activity): Activity {
+  // Create a new object with only the defined properties
+  const result: Record<string, unknown> = {}
+
+  // Copy all defined properties from the activity
+  for (const key in activity) {
+    const value = activity[key as keyof Activity]
+    if (value !== undefined) {
+      result[key] = value
+    }
+  }
+
+  // Return as Activity since we've filtered out undefined values
+  return result as unknown as Activity
 }
 
 /**
@@ -507,7 +517,7 @@ export interface ActivityLog {
   report_type?: string
   extraction_status?: string
   extraction_error?: string
-  parsed_parameters?: Record<string, number>
+  parsed_parameters?: Json
   raw_notes?: string
 }
 

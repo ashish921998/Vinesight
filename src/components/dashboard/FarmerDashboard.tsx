@@ -444,11 +444,22 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     }
 
     if (data.chemicals && Array.isArray(data.chemicals) && data.chemicals.length > 0) {
-      sprayData.chemicals = data.chemicals.map((chemical: any) => ({
-        name: chemical.name || chemical.chemical || '',
-        quantity: chemical.quantity || '',
-        unit: chemical.unit || 'L'
-      }))
+      sprayData.chemicals = data.chemicals.map((chemical: any) => {
+        // Validate and normalize the unit to ensure it's one of the allowed values
+        let unit = chemical.unit || 'gm/L' // Default to 'gm/L' instead of 'L'
+        const allowedUnits = ['gm/L', 'ml/L', 'ppm']
+
+        // If the provided unit is not in the allowed set, use the default
+        if (!allowedUnits.includes(unit)) {
+          unit = 'gm/L'
+        }
+
+        return {
+          name: chemical.name || chemical.chemical || '',
+          quantity: chemical.quantity || '',
+          unit: unit
+        }
+      })
     }
 
     const record = await SupabaseService.addSprayRecord(sprayData)
