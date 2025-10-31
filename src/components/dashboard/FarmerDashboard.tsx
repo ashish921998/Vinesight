@@ -453,12 +453,19 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       sprayData.chemicals = data.chemicals
         .map((chemical: any) => {
           // Validate and normalize the unit to ensure it's one of the allowed values
-          let unit = chemical.unit || 'gm/L' // Default to 'gm/L' instead of 'L'
           const allowedUnits = ['gm/L', 'ml/L', 'ppm']
+          const trimmedUnit = (chemical.unit || '').trim()
 
-          // If the provided unit is not in the allowed set, use the default
-          if (!allowedUnits.includes(unit)) {
-            unit = 'gm/L'
+          // Require units - no default fallback
+          if (!trimmedUnit) {
+            toast.error('Chemical unit cannot be empty')
+            throw new Error('Empty chemical unit')
+          }
+
+          // Validate unit is in allowed set
+          if (!allowedUnits.includes(trimmedUnit)) {
+            toast.error(`Invalid chemical unit. Allowed units: ${allowedUnits.join(', ')}`)
+            throw new Error(`Invalid chemical unit: ${trimmedUnit}`)
           }
 
           // Validate and coerce quantity to number, preserve 0, convert invalid to null
@@ -471,23 +478,17 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
             return null
           }
 
-          const trimmedName = chemical.name.trim()
-          const trimmedUnit = chemical.unit.trim()
+          const trimmedName = (chemical.name || '').trim()
 
           if (!trimmedName) {
             toast.error('Chemical name cannot be empty')
             throw new Error('Empty chemical name')
           }
 
-          if (!trimmedUnit) {
-            toast.error('Chemical unit cannot be empty')
-            throw new Error('Empty chemical unit')
-          }
-
           return {
             name: trimmedName,
             quantity: validatedQuantity,
-            unit: unit
+            unit: trimmedUnit
           }
         })
         .filter(Boolean)

@@ -44,6 +44,7 @@ import type {
   SoilTestRecord,
   PetioleTestRecord
 } from '@/lib/supabase'
+import { mapSoilKey } from '@/lib/soil-test-utils'
 
 // Type for spray data update
 interface SprayDataUpdate {
@@ -381,14 +382,6 @@ export function EditRecordModal({
             if (isPetiole) {
               nextParameters[key] = value
             } else {
-              const mapSoilKey = (key: string) => {
-                const normalized = key.toLowerCase()
-                if (normalized === 'ph' || normalized === 'soilph') return 'pH'
-                if (normalized === 'nitrogen' || normalized === 'n') return 'nitrogen'
-                if (normalized === 'phosphorus' || normalized === 'p') return 'phosphorus'
-                if (normalized === 'potassium' || normalized === 'k') return 'potassium'
-                return key
-              }
               const mappedKey = mapSoilKey(key)
               nextParameters[mappedKey] = value
             }
