@@ -946,13 +946,7 @@ export default function FarmLogsPage() {
                       aria-label={`Edit ${log.type} log from ${log.date}`}
                       onClick={() => handleEditRecord(log)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          handleEditRecord(log)
-                        }
-                      }}
-                      onKeyUp={(e) => {
-                        if (e.key === ' ') {
+                        if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault()
                           handleEditRecord(log)
                         }

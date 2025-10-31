@@ -234,6 +234,18 @@ function getExpenseDisplayText(activity: Activity | ActivityLog): string {
 }
 
 /**
+ * Safely format cost with fallback for toLocaleString errors
+ */
+function getSafeFormattedCost(cost: number): string {
+  try {
+    return cost.toLocaleString('en-IN')
+  } catch (error) {
+    // Fallback if toLocaleString fails
+    return cost.toFixed(2)
+  }
+}
+
+/**
  * Format fertilizer display
  */
 function getFertigationDisplayText(activity: Activity | ActivityLog): string {
@@ -549,7 +561,7 @@ export function getActivitiesSummary(activities: (Activity | ActivityLog)[]): Ar
             const cost = isUnifiedActivity(act) ? getExpenseCost(act) : act.cost
             return sum + (cost || 0)
           }, 0)
-          summary = totalCost > 0 ? `₹${totalCost.toLocaleString('en-IN')} expenses` : 'Expense'
+          summary = totalCost > 0 ? `₹${getSafeFormattedCost(totalCost)} expenses` : 'Expense'
           break
         }
 

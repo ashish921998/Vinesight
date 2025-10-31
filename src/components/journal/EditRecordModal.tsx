@@ -60,6 +60,29 @@ function isPetioleRecord(record: SoilTestRecord | PetioleTestRecord): record is 
   return 'sample_id' in record
 }
 
+// Helper function to safely access numeric parameters from Json type
+function getNumericParameter(parameters: Json | null | undefined, key: string): number | undefined {
+  if (
+    parameters &&
+    typeof parameters === 'object' &&
+    !Array.isArray(parameters) &&
+    key in parameters
+  ) {
+    const value = parameters[key]
+    if (typeof value === 'number' && !isNaN(value)) {
+      return value
+    }
+    // Try to parse string values as numbers
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value)
+      if (!isNaN(parsed)) {
+        return parsed
+      }
+    }
+  }
+  return undefined
+}
+
 export type EditRecordType =
   | 'irrigation'
   | 'spray'
@@ -615,7 +638,13 @@ export function EditRecordModal({
         }
 
         // Only include parameters for soil tests or when petiole has non-empty parameters
-        if (!isPetiole || Object.keys(soilTestForm.parameters || {}).length > 0) {
+        if (
+          !isPetiole ||
+          (typeof soilTestForm.parameters === 'object' &&
+            !Array.isArray(soilTestForm.parameters) &&
+            soilTestForm.parameters !== null &&
+            Object.keys(soilTestForm.parameters).length > 0)
+        ) {
           payload.parameters = soilTestForm.parameters
         }
 
@@ -1172,9 +1201,8 @@ export function EditRecordModal({
                         min={field.min}
                         max={field.max}
                         value={
-                          (soilTestForm?.parameters as Record<string, number> | undefined)?.[
-                            field.name
-                          ] ?? ''
+                          getNumericParameter(soilTestForm?.parameters, field.name)?.toString() ??
+                          ''
                         }
                         onChange={(e) => {
                           const parsed = parseFloat(e.target.value)

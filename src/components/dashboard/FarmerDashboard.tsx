@@ -15,6 +15,13 @@ import { PhotoService } from '@/lib/photo-service'
 import { capitalize } from '@/lib/utils'
 import { getActivityDisplayData } from '@/lib/activity-display-utils'
 import { EmptyStateDashboard } from './EmptyStateDashboard'
+import { toast } from 'sonner'
+import {
+  mapSoilKey,
+  normalizeParsedParameters,
+  createParameterEntries,
+  addValidEntries
+} from '@/lib/soil-test-utils'
 import type { Farm, TaskReminder } from '@/types/types'
 import type { ReportAttachmentMeta } from '@/types/reports'
 import type { AggregatedActivity, ActivityType } from '@/types/activities'
@@ -350,9 +357,8 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     // Safe numeric parsing with defaults
     const duration = Number.isFinite(parseFloat(data.duration)) ? parseFloat(data.duration) : 0
     const area = Number.isFinite(parseFloat(data.area)) ? parseFloat(data.area) : farm.area || 0
-    const systemDischarge = Number.isFinite(farm.systemDischarge || 0)
-      ? farm.systemDischarge || 0
-      : 100
+    const systemDischarge =
+      farm.systemDischarge && Number.isFinite(farm.systemDischarge) ? farm.systemDischarge : 100
 
     const record = await SupabaseService.addIrrigationRecord({
       farm_id: farmId,
@@ -444,22 +450,47 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     }
 
     if (data.chemicals && Array.isArray(data.chemicals) && data.chemicals.length > 0) {
-      sprayData.chemicals = data.chemicals.map((chemical: any) => {
-        // Validate and normalize the unit to ensure it's one of the allowed values
-        let unit = chemical.unit || 'gm/L' // Default to 'gm/L' instead of 'L'
-        const allowedUnits = ['gm/L', 'ml/L', 'ppm']
+      sprayData.chemicals = data.chemicals
+        .map((chemical: any) => {
+          // Validate and normalize the unit to ensure it's one of the allowed values
+          let unit = chemical.unit || 'gm/L' // Default to 'gm/L' instead of 'L'
+          const allowedUnits = ['gm/L', 'ml/L', 'ppm']
 
-        // If the provided unit is not in the allowed set, use the default
-        if (!allowedUnits.includes(unit)) {
-          unit = 'gm/L'
-        }
+          // If the provided unit is not in the allowed set, use the default
+          if (!allowedUnits.includes(unit)) {
+            unit = 'gm/L'
+          }
 
-        return {
-          name: chemical.name || chemical.chemical || '',
-          quantity: chemical.quantity || '',
-          unit: unit
-        }
-      })
+          // Validate and coerce quantity to number, preserve 0, convert invalid to null
+          const q = Number(chemical.quantity)
+          const validatedQuantity = Number.isFinite(q) && q > 0 ? q : null
+
+          // Skip chemicals with invalid quantities
+          if (validatedQuantity === null) {
+            console.warn(`Skipping chemical "${chemical.name}" with invalid quantity`)
+            return null
+          }
+
+          const trimmedName = chemical.name.trim()
+          const trimmedUnit = chemical.unit.trim()
+
+          if (!trimmedName) {
+            toast.error('Chemical name cannot be empty')
+            throw new Error('Empty chemical name')
+          }
+
+          if (!trimmedUnit) {
+            toast.error('Chemical unit cannot be empty')
+            throw new Error('Empty chemical unit')
+          }
+
+          return {
+            name: trimmedName,
+            quantity: validatedQuantity,
+            unit: unit
+          }
+        })
+        .filter(Boolean)
     }
 
     const record = await SupabaseService.addSprayRecord(sprayData)
@@ -655,90 +686,40 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     const combineNotes = [dayNotes]
     if (reportMeta?.summary) combineNotes.push(reportMeta.summary)
 
-    const parsedParameters = reportMeta?.parsedParameters || {}
-    const combinedParameters: Record<string, number> = {}
+    const combinedParameters = normalizeParsedParameters(reportMeta?.parsedParameters || {})
 
-    const mapSoilKey = (key: string) => {
-      const normalized = key.toLowerCase()
-      const stripped = normalized.replace(/[_\-\s]/g, '')
+    // Manual entries (higher priority - will override parsed parameters)
+    const manualEntries = createParameterEntries(data, [
+      ['pH'],
+      ['ec'],
+      ['organicCarbon'],
+      ['organicMatter'],
+      ['nitrogen'],
+      ['phosphorus'],
+      ['potassium']
+    ])
 
-      if (normalized === 'ph' || normalized === 'soilph') return 'pH'
-      if (normalized === 'nitrogen' || normalized === 'n') return 'nitrogen'
-      if (normalized === 'phosphorus' || normalized === 'p') return 'phosphorus'
-      if (normalized === 'potassium' || normalized === 'k') return 'potassium'
-      if (normalized === 'ec' || stripped === 'electricalconductivity' || normalized === 'soilec')
-        return 'ec'
-      if (stripped === 'calciumcarbonate' || stripped === 'caco3') return 'calciumCarbonate'
-      if (stripped === 'organiccarbon' || normalized === 'oc') return 'organicCarbon'
-      if (stripped === 'organicmatter') return 'organicMatter'
-      if (stripped === 'calcium') return 'calcium'
-      if (stripped === 'magnesium') return 'magnesium'
-      if (stripped === 'sulphur' || stripped === 'sulfur' || normalized === 's') return 'sulfur'
-      if (stripped === 'iron' || stripped === 'ferrous') return 'iron'
-      if (stripped === 'manganese') return 'manganese'
-      if (stripped === 'zinc') return 'zinc'
-      if (stripped === 'copper') return 'copper'
-      if (stripped === 'boron') return 'boron'
-      if (stripped === 'molybdenum') return 'molybdenum'
-      if (stripped === 'sodium') return 'sodium'
-      if (stripped === 'chloride') return 'chloride'
-      if (stripped === 'bicarbonate' || normalized === 'hco3') return 'bicarbonate'
-      if (stripped === 'carbonate' || normalized === 'co3') return 'carbonate'
-      return key
-    }
+    // Additional entries with alternative field names
+    const additionalEntries = createParameterEntries(data, [
+      ['calcium'],
+      ['magnesium'],
+      ['sulfur', 'sulphur'],
+      ['iron', 'ferrous'],
+      ['manganese'],
+      ['zinc'],
+      ['copper'],
+      ['boron'],
+      ['molybdenum'],
+      ['sodium'],
+      ['chloride'],
+      ['calciumCarbonate'],
+      ['carbonate'],
+      ['bicarbonate']
+    ])
 
-    Object.entries(parsedParameters).forEach(([key, value]) => {
-      let numericValue: number | undefined
-      if (typeof value === 'number') {
-        numericValue = Number.isFinite(value) ? value : undefined
-      } else if (typeof value === 'string') {
-        const parsed = parseFloat(value)
-        numericValue = Number.isFinite(parsed) ? parsed : undefined
-      }
-
-      if (numericValue === undefined) return
-      const mappedKey = mapSoilKey(key)
-      combinedParameters[mappedKey] = numericValue
-    })
-
-    const manualEntries: Array<[string, number]> = [
-      ['pH', parseFloat(data.ph ?? '')],
-      ['ec', parseFloat(data.ec ?? '')],
-      ['organicCarbon', parseFloat(data.organicCarbon ?? '')],
-      ['organicMatter', parseFloat(data.organicMatter ?? '')],
-      ['nitrogen', parseFloat(data.nitrogen ?? '')],
-      ['phosphorus', parseFloat(data.phosphorus ?? '')],
-      ['potassium', parseFloat(data.potassium ?? '')]
-    ]
-
-    const additionalEntries: Array<[string, number]> = [
-      ['calcium', parseFloat(data.calcium ?? '')],
-      ['magnesium', parseFloat(data.magnesium ?? '')],
-      ['sulfur', parseFloat(data.sulfur ?? data.sulphur ?? '')],
-      ['iron', parseFloat(data.iron ?? data.ferrous ?? '')],
-      ['manganese', parseFloat(data.manganese ?? '')],
-      ['zinc', parseFloat(data.zinc ?? '')],
-      ['copper', parseFloat(data.copper ?? '')],
-      ['boron', parseFloat(data.boron ?? '')],
-      ['molybdenum', parseFloat(data.molybdenum ?? '')],
-      ['sodium', parseFloat(data.sodium ?? '')],
-      ['chloride', parseFloat(data.chloride ?? '')],
-      ['calciumCarbonate', parseFloat(data.calciumCarbonate ?? '')],
-      ['carbonate', parseFloat(data.carbonate ?? '')],
-      ['bicarbonate', parseFloat(data.bicarbonate ?? '')]
-    ]
-
-    additionalEntries.forEach(([key, value]) => {
-      if (Number.isFinite(value)) {
-        combinedParameters[key] = value
-      }
-    })
-
-    manualEntries.forEach(([key, value]) => {
-      if (Number.isFinite(value)) {
-        combinedParameters[key] = value
-      }
-    })
+    // Add entries with validation (manual entries override additional entries)
+    addValidEntries(combinedParameters, additionalEntries)
+    addValidEntries(combinedParameters, manualEntries)
 
     const record = await SupabaseService.addSoilTestRecord({
       farm_id: farmId,

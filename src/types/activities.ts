@@ -455,9 +455,9 @@ export function isExpenseActivity(
 export function getActivityData<T extends ActivityType>(
   activity: Activity,
   type: T
-): Activity & { [K in keyof Activity as ActivityType]: Activity[K] } {
+): Activity & { [K in T]: NonNullable<Activity[K]> } {
   if (activity.type === type) {
-    return activity as Activity & { [K in keyof Activity as ActivityType]: Activity[K] }
+    return activity as Activity & { [K in T]: NonNullable<Activity[K]> }
   }
   throw new Error(`Activity is not of type ${type}`)
 }
@@ -466,20 +466,20 @@ export function getActivityData<T extends ActivityType>(
  * Get a safe activity that includes all possible data fields (for legacy compatibility)
  * This function creates a new object with only the defined properties from the input activity
  */
-export function getSafeActivity(activity: Activity): Activity {
-  // Create a new object with only the defined properties
-  const result: Record<string, unknown> = {}
+export function getSafeActivity<T extends Activity>(activity: T): T {
+  const result: Partial<T> = {}
 
-  // Copy all defined properties from the activity
+  // Copy all defined properties from the activity with proper type narrowing
   for (const key in activity) {
-    const value = activity[key as keyof Activity]
+    const value = activity[key as keyof T]
     if (value !== undefined) {
-      result[key] = value
+      // Type assertion is safe here because we've checked for undefined
+      ;(result as any)[key] = value
     }
   }
 
-  // Return as Activity since we've filtered out undefined values
-  return result as unknown as Activity
+  // Return as T since we've preserved all defined properties with their types
+  return result as T
 }
 
 /**
@@ -529,7 +529,7 @@ export function activityToActivityLog(activity: Activity): ActivityLog {
   const safeActivity = getSafeActivity(activity)
 
   return {
-    id: safeActivity.id ?? 0, // Handle undefined/null id by defaulting to 0
+    id: safeActivity.id ?? -1, // Use -1 to indicate unassigned ID
     type: safeActivity.type,
     date: safeActivity.date,
     notes: safeActivity.notes || undefined,

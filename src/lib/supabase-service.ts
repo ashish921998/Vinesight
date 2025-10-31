@@ -121,7 +121,14 @@ export class SupabaseService {
 
   static async deleteFarm(id: number): Promise<void> {
     const supabase = getTypedSupabaseClient()
-    const { error } = await supabase.from('farms').delete().eq('id', id)
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser()
+    if (userError) throw userError
+    if (!user) throw new Error('User must be authenticated to delete farm')
+
+    const { error } = await supabase.from('farms').delete().eq('id', id).eq('user_id', user.id)
 
     if (error) throw error
   }
@@ -677,8 +684,8 @@ export class SupabaseService {
     }
 
     // Validate unit is one of the allowed values
-    if (!['kg/acre', 'liter/acre', 'ppm'].includes(unit)) {
-      throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre" or "ppm"')
+    if (!['kg/acre', 'liter/acre'].includes(unit)) {
+      throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre"')
     }
 
     // Validate area if provided
