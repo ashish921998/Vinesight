@@ -56,7 +56,7 @@ export function RemainingWaterCard({ farm, onCalculateClick }: RemainingWaterCar
         </div>
         <CardDescription className="text-xs">
           <div className="space-y-1">
-            <div>Tank Capacity: {farm.totalTankCapacity} mm</div>
+            <div>Tank Capacity: {farm.totalTankCapacity} L</div>
             {farm.systemDischarge && (
               <div>System Discharge: {farm.systemDischarge.toFixed(6)} L/h</div>
             )}

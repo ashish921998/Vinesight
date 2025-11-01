@@ -33,7 +33,6 @@ import {
 import { SupabaseService } from '@/lib/supabase-service'
 import { toast } from 'sonner'
 import type { ReportAttachmentMeta } from '@/types/reports'
-import type { Json } from '@/types/database'
 import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-config'
 import type {
   IrrigationRecord,
@@ -44,14 +43,13 @@ import type {
   SoilTestRecord,
   PetioleTestRecord
 } from '@/lib/supabase'
-import { mapSoilKey } from '@/lib/soil-test-utils'
 
 // Type for spray data update
 interface SprayDataUpdate {
   date: string
   notes?: string
   water_volume?: number
-  chemicals?: Array<{ name: string; quantity: number; unit: 'gm/L' | 'ml/L' | 'ppm' }>
+  chemicals?: Array<{ name: string; quantity: number; unit: 'gm/L' | 'ml/L' }>
   chemical?: string
   dose?: string
 }
@@ -59,29 +57,6 @@ interface SprayDataUpdate {
 // Type predicate function to distinguish PetioleTestRecord from SoilTestRecord
 function isPetioleRecord(record: SoilTestRecord | PetioleTestRecord): record is PetioleTestRecord {
   return 'sample_id' in record
-}
-
-// Helper function to safely access numeric parameters from Json type
-function getNumericParameter(parameters: Json | null | undefined, key: string): number | undefined {
-  if (
-    parameters &&
-    typeof parameters === 'object' &&
-    !Array.isArray(parameters) &&
-    key in parameters
-  ) {
-    const value = parameters[key]
-    if (typeof value === 'number' && !isNaN(value)) {
-      return value
-    }
-    // Try to parse string values as numbers
-    if (typeof value === 'string') {
-      const parsed = parseFloat(value)
-      if (!isNaN(parsed)) {
-        return parsed
-      }
-    }
-  }
-  return undefined
 }
 
 export type EditRecordType =
@@ -140,7 +115,7 @@ export interface ExpenseFormData extends BaseFormData {
 
 export interface SoilTestFormData extends BaseFormData {
   recordType: 'soil_test'
-  parameters: Json
+  parameters: Record<string, number>
   recommendations: string
 }
 
@@ -354,38 +329,34 @@ export function EditRecordModal({
     }
   }, [record, recordType])
 
-  const applyParsedParameters = (parameters?: Json) => {
+  const applyParsedParameters = (parameters?: Record<string, number>) => {
     if (!parameters || recordType !== 'soil_test') return
 
     const isPetiole = record && isPetioleRecord(record)
 
     updateFormData('soil_test', (current) => {
-      const nextParameters: Record<string, number> = {}
+      const nextParameters: Record<string, number> = { ...current.parameters }
 
-      // Copy existing parameters
-      if (
-        current.parameters &&
-        typeof current.parameters === 'object' &&
-        !Array.isArray(current.parameters)
-      ) {
-        Object.entries(current.parameters).forEach(([key, value]) => {
+      if (isPetiole) {
+        Object.entries(parameters).forEach(([key, value]) => {
           if (typeof value === 'number' && Number.isFinite(value)) {
             nextParameters[key] = value
           }
         })
-      }
+      } else {
+        const mapSoilKey = (key: string) => {
+          const normalized = key.toLowerCase()
+          if (normalized === 'ph' || normalized === 'soilph') return 'pH'
+          if (normalized === 'nitrogen' || normalized === 'n') return 'nitrogen'
+          if (normalized === 'phosphorus' || normalized === 'p') return 'phosphorus'
+          if (normalized === 'potassium' || normalized === 'k') return 'potassium'
+          return key
+        }
 
-      // Add new parameters
-      if (parameters && typeof parameters === 'object' && !Array.isArray(parameters)) {
         Object.entries(parameters).forEach(([key, value]) => {
-          if (typeof value === 'number' && Number.isFinite(value)) {
-            if (isPetiole) {
-              nextParameters[key] = value
-            } else {
-              const mappedKey = mapSoilKey(key)
-              nextParameters[mappedKey] = value
-            }
-          }
+          if (typeof value !== 'number' || !Number.isFinite(value)) return
+          const mappedKey = mapSoilKey(key)
+          nextParameters[mappedKey] = value
         })
       }
 
@@ -548,10 +519,10 @@ export function EditRecordModal({
             .map((chem) => ({
               name: chem.name.trim(),
               quantity: chem.quantity,
-              unit: chem.unit as 'gm/L' | 'ml/L' | 'ppm'
+              unit: chem.unit as 'gm/L' | 'ml/L'
             }))
             .filter(
-              (chem): chem is { name: string; quantity: number; unit: 'gm/L' | 'ml/L' | 'ppm' } =>
+              (chem): chem is { name: string; quantity: number; unit: 'gm/L' | 'ml/L' } =>
                 chem.quantity !== undefined && chem.quantity > 0
             )
 
@@ -631,13 +602,7 @@ export function EditRecordModal({
         }
 
         // Only include parameters for soil tests or when petiole has non-empty parameters
-        if (
-          !isPetiole ||
-          (typeof soilTestForm.parameters === 'object' &&
-            !Array.isArray(soilTestForm.parameters) &&
-            soilTestForm.parameters !== null &&
-            Object.keys(soilTestForm.parameters).length > 0)
-        ) {
+        if (!isPetiole || Object.keys(soilTestForm.parameters).length > 0) {
           payload.parameters = soilTestForm.parameters
         }
 
@@ -912,7 +877,6 @@ export function EditRecordModal({
                               <SelectContent>
                                 <SelectItem value="gm/L">gm/L</SelectItem>
                                 <SelectItem value="ml/L">ml/L</SelectItem>
-                                <SelectItem value="ppm">PPM</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1193,19 +1157,13 @@ export function EditRecordModal({
                         step={field.step}
                         min={field.min}
                         max={field.max}
-                        value={
-                          getNumericParameter(soilTestForm?.parameters, field.name)?.toString() ??
-                          ''
-                        }
+                        value={soilTestForm?.parameters?.[field.name] ?? ''}
                         onChange={(e) => {
                           const parsed = parseFloat(e.target.value)
                           updateFormData('soil_test', (current) => ({
                             ...current,
                             parameters: {
-                              ...(typeof current.parameters === 'object' &&
-                              !Array.isArray(current.parameters)
-                                ? (current.parameters as Record<string, number>)
-                                : {}),
+                              ...current.parameters,
                               [field.name]: Number.isNaN(parsed) ? 0 : parsed
                             }
                           }))
