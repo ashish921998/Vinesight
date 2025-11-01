@@ -1,85 +1,65 @@
 'use client'
 
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Plus, BarChart3, Brain } from 'lucide-react'
-import { useRouter, useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
+import { ArrowRight, BarChart3, Brain, ClipboardList } from 'lucide-react'
 
-interface QuickActionsProps {
-  onDataLogsClick: () => void
-}
-
-export function QuickActions({ onDataLogsClick }: QuickActionsProps) {
+export function QuickActions() {
   const router = useRouter()
   const params = useParams()
   const farmId = params.id as string
 
   const quickActions = [
     {
-      title: 'Add Data Logs',
-      description: 'Record all farm activities',
-      icon: Plus,
-      color: 'bg-green-100 text-green-600 hover:bg-green-200',
-      onClick: onDataLogsClick,
-      featured: true
-    },
-    {
-      title: 'AI Intelligence',
-      description: 'Pest predictions & smart insights',
+      title: 'AI intelligence',
+      description: 'Review pest risk predictions and tailored insights.',
       icon: Brain,
-      color: 'bg-purple-100 text-purple-600 hover:bg-purple-200',
-      onClick: () => router.push(`/farms/${farmId}/ai-insights`)
+      onClick: () => router.push(`/farms/${farmId}/ai-insights`),
+      iconClass: 'bg-accent/20 text-accent-foreground'
     },
     {
-      title: 'View Reports',
-      description: 'Generate & export reports',
+      title: 'Performance reports',
+      description: 'Generate seasonal summaries and share-ready exports.',
       icon: BarChart3,
-      color: 'bg-blue-100 text-blue-600 hover:bg-blue-200',
-      onClick: () => router.push('/reports')
+      onClick: () => router.push('/reports'),
+      iconClass: 'bg-secondary/30 text-secondary-foreground'
     }
   ]
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-gray-900">Quick Actions</h2>
-        <Plus className="h-5 w-5 text-gray-400" />
+    <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-base font-semibold text-foreground">Quick actions</h2>
       </div>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Keep the farm log updated in a couple of taps.
+      </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {quickActions.map((action: any) => {
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {quickActions.map((action) => {
           const Icon = action.icon
-
           return (
-            <Card
+            <button
               key={action.title}
-              className="border-gray-200 cursor-pointer hover:border-gray-300 transition-all active:scale-98 relative"
+              type="button"
               onClick={action.onClick}
+              className="group flex h-full w-full items-start gap-3 rounded-xl border border-border bg-muted/30 p-4 text-left transition hover:border-primary/30 hover:bg-primary/5"
             >
-              {action.badge && (
-                <Badge
-                  variant="secondary"
-                  className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs px-2 py-0.5 z-10"
-                >
-                  {action.badge}
-                </Badge>
-              )}
-              <CardContent className="p-4">
-                <div className="flex flex-col items-center text-center gap-3">
-                  <div className={`p-3 rounded-2xl ${action.color} transition-colors`}>
-                    <Icon className="h-6 w-6" />
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-gray-900 text-sm">{action.title}</h3>
-                    <p className="text-xs text-gray-600 mt-1">{action.description}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              <span
+                className={`flex h-10 w-10 items-center justify-center rounded-lg ${action.iconClass}`}
+              >
+                <Icon className="h-5 w-5" />
+              </span>
+              <div className="flex-1 space-y-1">
+                <h3 className="text-sm font-semibold text-foreground">{action.title}</h3>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {action.description}
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:text-primary" />
+            </button>
           )
         })}
       </div>
-    </div>
+    </section>
   )
 }
