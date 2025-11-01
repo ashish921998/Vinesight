@@ -1021,7 +1021,7 @@ export default function FarmDetailsPage() {
     let isMounted = true
 
     const fetchWeatherSummary = async () => {
-      if (!farm?.latitude || !farm?.longitude) {
+      if (farm?.latitude == null || farm?.longitude == null) {
         if (isMounted) {
           setWeatherSummary(null)
         }

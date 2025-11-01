@@ -194,7 +194,7 @@ export function FarmHeader({
   }
 
   const waterUsageCaption = totalWaterUsage
-    ? `Used ${formatWaterUsage(totalWaterUsage)} this season`
+    ? `${formatWaterUsage(totalWaterUsage)} this season`
     : 'Log irrigation to monitor water use'
 
   const logEntriesCaption =

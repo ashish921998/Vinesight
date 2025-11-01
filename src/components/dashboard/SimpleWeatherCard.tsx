@@ -18,7 +18,7 @@ export function SimpleWeatherCard({ farm }: SimpleWeatherCardProps) {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  const hasLocationData = farm.latitude && farm.longitude
+  const hasLocationData = farm.latitude != null && farm.longitude != null
 
   useEffect(() => {
     if (!hasLocationData) return
@@ -43,8 +43,13 @@ export function SimpleWeatherCard({ farm }: SimpleWeatherCardProps) {
         if (weatherDataArray.length > 0) {
           setWeatherData(weatherDataArray[0])
           setForecast(weatherDataArray.slice(1, 4))
+        } else {
+          setWeatherData(null)
+          setForecast([])
         }
       } catch (error) {
+        setWeatherData(null)
+        setForecast([])
         logger.error('Error fetching weather data:', error)
       } finally {
         setIsLoading(false)
