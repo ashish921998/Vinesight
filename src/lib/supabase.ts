@@ -45,7 +45,7 @@ export interface SprayChemical {
   id?: string // Optional ID for frontend tracking
   name: string
   quantity: number
-  unit: 'gm/L' | 'ml/L' | 'ppm'
+  unit: 'gm/L' | 'ml/L'
 }
 
 export interface SprayRecord {
@@ -55,7 +55,7 @@ export interface SprayRecord {
   chemical?: string | null // Made optional for backward compatibility
   dose?: string | null // Made optional for backward compatibility
   quantity_amount: number
-  quantity_unit: 'gm/L' | 'ml/L' | 'ppm'
+  quantity_unit: 'gm/L' | 'ml/L'
   water_volume: number | null // total water volume in liters, can be null
   chemicals?: SprayChemical[] // New array of chemicals for multiple chemicals support
   area: number // in acres

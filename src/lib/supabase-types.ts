@@ -237,8 +237,8 @@ export function toDatabaseIrrigationInsert(
 
 export function toDatabaseIrrigationUpdate(
   appUpdates: Partial<import('./supabase').IrrigationRecord>
-): Partial<DatabaseIrrigationRecordUpdate> {
-  const update: Partial<DatabaseIrrigationRecordUpdate> = {}
+): DatabaseIrrigationRecordUpdate {
+  const update: DatabaseIrrigationRecordUpdate = {}
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
@@ -270,7 +270,7 @@ export function toApplicationSprayRecord(
         typeof c === 'object' &&
         typeof c.name === 'string' &&
         typeof c.quantity === 'number' &&
-        (c.unit === 'gm/L' || c.unit === 'ml/L' || c.unit === 'ppm')
+        (c.unit === 'gm/L' || c.unit === 'ml/L')
     )
     return isValid ? (chemicalsJson as unknown as import('./supabase').SprayChemical[]) : undefined
   }
@@ -282,7 +282,7 @@ export function toApplicationSprayRecord(
     chemical: dbRecord.chemical || undefined,
     dose: dbRecord.dose || undefined,
     quantity_amount: dbRecord.quantity_amount,
-    quantity_unit: dbRecord.quantity_unit as 'gm/L' | 'ml/L' | 'ppm',
+    quantity_unit: dbRecord.quantity_unit as 'gm/L' | 'ml/L',
     water_volume: dbRecord.water_volume,
     chemicals: parseChemicals(dbRecord.chemicals),
     area: dbRecord.area,
@@ -319,8 +319,8 @@ export function toDatabaseSprayInsert(
 
 export function toDatabaseSprayUpdate(
   appUpdates: Partial<import('./supabase').SprayRecord>
-): Partial<DatabaseSprayRecordUpdate> {
-  const update: Partial<DatabaseSprayRecordUpdate> = {}
+): DatabaseSprayRecordUpdate {
+  const update: DatabaseSprayRecordUpdate = {}
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
@@ -384,15 +384,15 @@ export function toDatabaseFertigationInsert(
 
 export function toDatabaseFertigationUpdate(
   appUpdates: Partial<import('./supabase').FertigationRecord>
-): Partial<DatabaseFertigationRecordUpdate> {
-  const update: Partial<DatabaseFertigationRecordUpdate> = {}
+): DatabaseFertigationRecordUpdate {
+  const update: DatabaseFertigationRecordUpdate = {}
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.fertilizer !== undefined) update.fertilizer = appUpdates.fertilizer
   if (appUpdates.dose !== undefined) update.dose = appUpdates.dose ?? null
   if (appUpdates.purpose !== undefined) update.purpose = appUpdates.purpose as string | null
-  if (appUpdates.area !== undefined) update.area = appUpdates.area
+  if (appUpdates.area !== undefined) update.area = appUpdates.area ?? null
   if (appUpdates.quantity !== undefined) update.quantity = appUpdates.quantity
   if (appUpdates.unit !== undefined) update.unit = appUpdates.unit
   if (appUpdates.date_of_pruning !== undefined)
@@ -437,8 +437,8 @@ export function toDatabaseHarvestInsert(
 
 export function toDatabaseHarvestUpdate(
   appUpdates: Partial<import('./supabase').HarvestRecord>
-): Partial<DatabaseHarvestRecordUpdate> {
-  const update: Partial<DatabaseHarvestRecordUpdate> = {}
+): DatabaseHarvestRecordUpdate {
+  const update: DatabaseHarvestRecordUpdate = {}
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
@@ -486,8 +486,8 @@ export function toDatabaseExpenseInsert(
 
 export function toDatabaseExpenseUpdate(
   appUpdates: Partial<import('./supabase').ExpenseRecord>
-): Partial<DatabaseExpenseRecordUpdate> {
-  const update: Partial<DatabaseExpenseRecordUpdate> = {}
+): DatabaseExpenseRecordUpdate {
+  const update: DatabaseExpenseRecordUpdate = {}
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
@@ -561,8 +561,8 @@ export function toDatabaseTaskReminderInsert(
 
 export function toDatabaseTaskReminderUpdate(
   appUpdates: Partial<TaskReminder>
-): Partial<DatabaseTaskReminderUpdate> {
-  const update: Partial<DatabaseTaskReminderUpdate> = {}
+): DatabaseTaskReminderUpdate {
+  const update: DatabaseTaskReminderUpdate = {}
 
   if (appUpdates.farmId !== undefined) update.farm_id = appUpdates.farmId
   if (appUpdates.title !== undefined) update.title = appUpdates.title
@@ -624,8 +624,8 @@ export function toDatabaseSoilTestInsert(
 
 export function toDatabaseSoilTestUpdate(
   appUpdates: Partial<import('./supabase').SoilTestRecord>
-): Partial<DatabaseSoilTestRecordUpdate> {
-  const update: Partial<DatabaseSoilTestRecordUpdate> = {}
+): DatabaseSoilTestRecordUpdate {
+  const update: DatabaseSoilTestRecordUpdate = {}
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
@@ -699,8 +699,8 @@ export function toDatabasePetioleTestInsert(
 
 export function toDatabasePetioleTestUpdate(
   appUpdates: Partial<import('./supabase').PetioleTestRecord>
-): Partial<DatabasePetioleTestRecordUpdate> {
-  const update: Partial<DatabasePetioleTestRecordUpdate> = {}
+): DatabasePetioleTestRecordUpdate {
+  const update: DatabasePetioleTestRecordUpdate = {}
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date

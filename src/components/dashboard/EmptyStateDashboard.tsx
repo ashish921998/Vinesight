@@ -24,6 +24,8 @@ export function EmptyStateDashboard({ onCreateFarm, userName }: EmptyStateDashbo
   const handleCreateFarm = () => {
     if (onCreateFarm) {
       onCreateFarm()
+    } else {
+      router.push('/onboarding')
     }
   }
 
@@ -94,6 +96,12 @@ export function EmptyStateDashboard({ onCreateFarm, userName }: EmptyStateDashbo
       action: () => router.push('/ai-assistant')
     }
   ]
+
+  const heroTitle = userName
+    ? `${userName}, let’s set up your vineyard.`
+    : 'Let’s set up your vineyard.'
+  const heroSubtitle =
+    'Start by adding your farm profile, then log your first activities to unlock AI insights tailored to your context.'
 
   return (
     <div className="min-h-screen bg-background">

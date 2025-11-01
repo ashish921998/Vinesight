@@ -121,14 +121,7 @@ export class SupabaseService {
 
   static async deleteFarm(id: number): Promise<void> {
     const supabase = getTypedSupabaseClient()
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser()
-    if (userError) throw userError
-    if (!user) throw new Error('User must be authenticated to delete farm')
-
-    const { error } = await supabase.from('farms').delete().eq('id', id).eq('user_id', user.id)
+    const { error } = await supabase.from('farms').delete().eq('id', id)
 
     if (error) throw error
   }
@@ -405,12 +398,12 @@ export class SupabaseService {
         const unit = chemical.unit.trim()
 
         // Validate unit is one of the allowed values
-        if (!['gm/L', 'ml/L', 'ppm'].includes(unit)) {
-          throw new Error('Chemical unit must be either "gm/L" or "ml/L" or "ppm"')
+        if (!['gm/L', 'ml/L'].includes(unit)) {
+          throw new Error('Chemical unit must be either "gm/L" or "ml/L"')
         }
 
         // Assign/store sanitized trimmed value back to object with proper type assertion
-        chemical.unit = unit as 'gm/L' | 'ml/L' | 'ppm'
+        chemical.unit = unit as 'gm/L' | 'ml/L'
       }
     }
 
@@ -452,20 +445,20 @@ export class SupabaseService {
         throw new Error('Quantity unit cannot be empty when quantity amount is provided')
       }
 
-      if (!['gm/L', 'ml/L', 'ppm'].includes(unit)) {
-        throw new Error('Quantity unit must be either "gm/L" or "ml/L" or "ppm"')
+      if (!['gm/L', 'ml/L'].includes(unit)) {
+        throw new Error('Quantity unit must be either "gm/L" or "ml/L"')
       }
 
       // Assign/store sanitized trimmed value back to record with proper type assertion
-      record.quantity_unit = unit as 'gm/L' | 'ml/L' | 'ppm'
+      record.quantity_unit = unit as 'gm/L' | 'ml/L'
     } else if (record.quantity_unit) {
       // quantity_amount is not provided, but unit is - validate it anyway
       const unit = record.quantity_unit.trim()
-      if (unit && !['gm/L', 'ml/L', 'ppm'].includes(unit)) {
-        throw new Error('Quantity unit must be either "gm/L" or "ml/L" or "ppm"')
+      if (unit && !['gm/L', 'ml/L'].includes(unit)) {
+        throw new Error('Quantity unit must be either "gm/L" or "ml/L"')
       }
       // Assign/store sanitized trimmed value back to record with proper type assertion
-      record.quantity_unit = unit as 'gm/L' | 'ml/L' | 'ppm'
+      record.quantity_unit = unit as 'gm/L' | 'ml/L'
     }
 
     // Validate area if provided
@@ -534,12 +527,12 @@ export class SupabaseService {
         const unit = chemical.unit.trim()
 
         // Validate unit is one of the allowed values
-        if (!['gm/L', 'ml/L', 'ppm'].includes(unit)) {
-          throw new Error('Chemical unit must be either "gm/L" or "ml/L" or "ppm"')
+        if (!['gm/L', 'ml/L'].includes(unit)) {
+          throw new Error('Chemical unit must be either "gm/L" or "ml/L"')
         }
 
         // Assign/store sanitized trimmed value back to object with proper type assertion
-        chemical.unit = unit as 'gm/L' | 'ml/L' | 'ppm'
+        chemical.unit = unit as 'gm/L' | 'ml/L'
       }
     }
 
@@ -581,20 +574,20 @@ export class SupabaseService {
         throw new Error('Quantity unit cannot be empty when quantity amount is provided')
       }
 
-      if (!['gm/L', 'ml/L', 'ppm'].includes(unit)) {
-        throw new Error('Quantity unit must be either "gm/L" or "ml/L" or "ppm"')
+      if (!['gm/L', 'ml/L'].includes(unit)) {
+        throw new Error('Quantity unit must be either "gm/L" or "ml/L"')
       }
 
       // Assign/store sanitized trimmed value back to updates with proper type assertion
-      updates.quantity_unit = unit as 'gm/L' | 'ml/L' | 'ppm'
+      updates.quantity_unit = unit as 'gm/L' | 'ml/L'
     } else if (updates.quantity_unit) {
       // quantity_amount is not provided, but unit is - validate it anyway
       const unit = updates.quantity_unit.trim()
-      if (unit && !['gm/L', 'ml/L', 'ppm'].includes(unit)) {
-        throw new Error('Quantity unit must be either "gm/L" or "ml/L" or "ppm"')
+      if (unit && !['gm/L', 'ml/L'].includes(unit)) {
+        throw new Error('Quantity unit must be either "gm/L" or "ml/L"')
       }
       // Assign/store sanitized trimmed value back to updates with proper type assertion
-      updates.quantity_unit = unit as 'gm/L' | 'ml/L' | 'ppm'
+      updates.quantity_unit = unit as 'gm/L' | 'ml/L'
     }
 
     // Validate area if provided
@@ -774,8 +767,8 @@ export class SupabaseService {
       }
 
       // Validate unit is one of the allowed values
-      if (!['kg/acre', 'liter/acre', 'ppm'].includes(unit)) {
-        throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre" or "ppm"')
+      if (!['kg/acre', 'liter/acre'].includes(unit)) {
+        throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre"')
       }
 
       updates.unit = unit as 'kg/acre' | 'liter/acre'
