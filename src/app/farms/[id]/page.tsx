@@ -4,12 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { SupabaseService } from '@/lib/supabase-service'
 import { PhotoService } from '@/lib/photo-service'
-import { FarmHeader } from '@/components/farm-details/FarmHeader'
-import { FarmOverview } from '@/components/farm-details/FarmOverview'
+import { FarmHeader, type FarmWeatherSummary } from '@/components/farm-details/FarmHeader'
 import { QuickActions } from '@/components/farm-details/QuickActions'
 import { ActivityFeed } from '@/components/farm-details/ActivityFeed'
-import { SimpleWeatherCard } from '@/components/dashboard/SimpleWeatherCard'
-import { RemainingWaterCard } from '@/components/farm-details/RemainingWaterCard'
 import { UnifiedDataLogsModal } from '@/components/farm-details/UnifiedDataLogsModal'
 import type { ReportAttachmentMeta } from '@/types/reports'
 import { WaterCalculationModal } from '@/components/farm-details/WaterCalculationModal'
@@ -24,13 +21,15 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { AIInsightsCarousel } from '@/components/ai/AIInsightsCarousel'
 import { PestPredictionService } from '@/lib/pest-prediction-service'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Farm } from '@/types/types'
 import { capitalize } from '@/lib/utils'
 import { transformActivitiesToLogEntries } from '@/lib/activity-display-utils'
+import { logger } from '@/lib/logger'
+import { OpenMeteoWeatherService } from '@/lib/open-meteo-weather'
+import { WEATHER_THRESHOLDS } from '@/constants/weather'
 
 interface DashboardData {
   farm: Farm | null
@@ -60,6 +59,7 @@ export default function FarmDetailsPage() {
   const [dashboardData, setDashboardData] = useState<DashboardData>()
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [weatherSummary, setWeatherSummary] = useState<FarmWeatherSummary | null>(null)
 
   // Modal states
   const [showDataLogsModal, setShowDataLogsModal] = useState(false)
@@ -91,7 +91,7 @@ export default function FarmDetailsPage() {
         farm: data.farm
       })
     } catch (error) {
-      console.error('Error loading dashboard data:', error)
+      logger.error('Error loading dashboard data:', error)
     } finally {
       setLoading(false)
     }
@@ -128,7 +128,7 @@ export default function FarmDetailsPage() {
         // Clear the URL parameters
         router.replace(`/farms/${farmId}`, { scroll: false })
       } catch (error) {
-        console.error('Error parsing edit parameters:', error)
+        logger.error('Error parsing edit parameters:', error)
       }
     }
   }, [searchParams, farmId, router])
@@ -154,7 +154,7 @@ export default function FarmDetailsPage() {
       await SupabaseService.completeTask(taskId)
       await loadDashboardData()
     } catch (error) {
-      console.error('Error completing task:', error)
+      logger.error('Error completing task:', error)
     }
   }
 
@@ -190,7 +190,7 @@ export default function FarmDetailsPage() {
           try {
             await PhotoService.uploadPhoto(photo, 'day_photos', firstRecordId)
           } catch (photoError) {
-            console.error('Error uploading day photo:', photoError)
+            logger.error('Error uploading day photo:', photoError)
           }
         }
       }
@@ -198,7 +198,7 @@ export default function FarmDetailsPage() {
       setShowDataLogsModal(false)
       await loadDashboardData()
     } catch (error) {
-      console.error('Error saving data logs:', error)
+      logger.error('Error saving data logs:', error)
     } finally {
       setIsSubmitting(false)
     }
@@ -932,7 +932,7 @@ export default function FarmDetailsPage() {
 
       await loadDashboardData()
     } catch (error) {
-      console.error('Error deleting date group:', error)
+      logger.error('Error deleting date group:', error)
     } finally {
       setIsDeleting(false)
     }
@@ -969,7 +969,7 @@ export default function FarmDetailsPage() {
       setShowDeleteDialog(false)
       setDeletingRecord(null)
     } catch (error) {
-      console.error('Error deleting record:', error)
+      logger.error('Error deleting record:', error)
     } finally {
       setIsDeleting(false)
     }
@@ -996,7 +996,7 @@ export default function FarmDetailsPage() {
         await SupabaseService.deleteFarm(farmId)
         router.push('/farms') // Navigate back to farms list
       } catch (error) {
-        console.error('Error deleting farm:', error)
+        logger.error('Error deleting farm:', error)
       }
     }
   }
@@ -1008,76 +1008,136 @@ export default function FarmDetailsPage() {
       await loadDashboardData()
       setShowFarmModal(false)
     } catch (error) {
-      console.error('Error updating farm:', error)
+      logger.error('Error updating farm:', error)
       throw error
     } finally {
       setFarmSubmitLoading(false)
     }
   }
 
+  const farm = dashboardData?.farm
+
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchWeatherSummary = async () => {
+      if (farm?.latitude == null || farm?.longitude == null) {
+        if (isMounted) {
+          setWeatherSummary(null)
+        }
+        return
+      }
+
+      try {
+        const today = new Date()
+        const todayStr = today.toISOString().split('T')[0]
+        const dayAfterTomorrow = new Date(today)
+        dayAfterTomorrow.setDate(today.getDate() + 2)
+        const endDateStr = dayAfterTomorrow.toISOString().split('T')[0]
+
+        const weatherDataArray = await OpenMeteoWeatherService.getWeatherData(
+          farm.latitude,
+          farm.longitude,
+          todayStr,
+          endDateStr
+        )
+
+        if (!isMounted) return
+
+        if (weatherDataArray.length > 0) {
+          const todayWeather = weatherDataArray[0]
+          const temperature =
+            typeof todayWeather.temperatureMean === 'number'
+              ? Math.round(todayWeather.temperatureMean)
+              : null
+          const humidity =
+            typeof todayWeather.relativeHumidityMean === 'number'
+              ? Math.round(todayWeather.relativeHumidityMean)
+              : null
+          const precipitation =
+            typeof todayWeather.precipitationSum === 'number'
+              ? Number(todayWeather.precipitationSum.toFixed(1))
+              : null
+
+          const condition: FarmWeatherSummary['condition'] =
+            precipitation !== null && precipitation > WEATHER_THRESHOLDS.RAIN_MM
+              ? 'rain'
+              : humidity !== null && humidity > WEATHER_THRESHOLDS.HIGH_HUMIDITY_PERCENT
+                ? 'humid'
+                : 'clear'
+
+          setWeatherSummary({
+            temperature,
+            humidity,
+            precipitation,
+            condition
+          })
+        } else {
+          setWeatherSummary(null)
+        }
+      } catch (error) {
+        logger.error('Error fetching weather summary:', error)
+        if (isMounted) {
+          setWeatherSummary(null)
+        }
+      }
+    }
+
+    fetchWeatherSummary()
+
+    return () => {
+      isMounted = false
+    }
+  }, [farm?.latitude, farm?.longitude])
+
+  const totalLogs = dashboardData?.recordCounts
+    ? Object.values(dashboardData.recordCounts).reduce((sum, count) => sum + count, 0)
+    : 0
+
+  const openDataLogsModal = () => {
+    setEditMode('add')
+    setEditModeLogs([])
+    setEditModeDate('')
+    setShowDataLogsModal(true)
+  }
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
-        {/* Farm Header */}
-        {dashboardData?.farm && (
+        {farm && (
           <FarmHeader
-            farm={dashboardData?.farm}
+            farm={farm}
             loading={loading}
-            onEdit={handleEditFarm}
-            onDelete={handleDeleteFarm}
+            pendingTasksCount={dashboardData?.pendingTasksCount}
+            totalLogs={totalLogs}
+            totalHarvest={dashboardData?.totalHarvest}
+            totalWaterUsage={dashboardData?.totalWaterUsage}
+            onAddLogs={openDataLogsModal}
+            onOpenWaterCalculator={() => setShowWaterCalculationModal(true)}
+            onViewLogEntries={() => router.push(`/farms/${farmId}/logs`)}
+            weatherSummary={weatherSummary}
+            onOpenWeatherDetails={() => router.push('/weather')}
+            onEditFarm={handleEditFarm}
+            onDeleteFarm={handleDeleteFarm}
           />
         )}
 
-        {/* Farm Overview */}
-        <FarmOverview loading={loading} />
-
-        {/* Weather Card */}
-        {dashboardData?.farm && (
-          <div className="px-4 mt-6 mb-4">
-            <SimpleWeatherCard farm={dashboardData.farm} />
-          </div>
-        )}
-
-        {/* Phase 3A: AI-Powered Features */}
-        {/* {(dashboardData?.farm || process.env.NEXT_PUBLIC_BYPASS_AUTH) && (
-          <div className="px-4 mb-6 space-y-4">
-            <AIInsightsCarousel farmId={parseInt(farmId)} className="w-full" />
-          </div>
-        )} */}
-
-        {/* Water Level Card - Only show if farm has irrigation records */}
-        {dashboardData?.farm && dashboardData.recordCounts.irrigation > 0 && (
-          <div className="px-4 mb-4">
-            <RemainingWaterCard
-              farm={dashboardData.farm}
-              onCalculateClick={() => setShowWaterCalculationModal(true)}
+        <main className="relative z-10 mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <QuickActions />
+            <ActivityFeed
+              recentActivities={dashboardData?.recentActivities || []}
+              pendingTasks={dashboardData?.pendingTasks || []}
+              loading={loading}
+              onCompleteTask={completeTask}
+              onEditRecord={handleEditRecord}
+              onDeleteRecord={handleDeleteRecord}
+              onEditDateGroup={handleEditDateGroup}
+              onDeleteDateGroup={handleDeleteDateGroup}
+              farmId={farmId}
             />
           </div>
-        )}
-
-        {/* Quick Actions */}
-        <QuickActions
-          onDataLogsClick={() => {
-            // Reset edit mode state before opening modal for adding new logs
-            setEditMode('add')
-            setEditModeLogs([])
-            setEditModeDate('')
-            setShowDataLogsModal(true)
-          }}
-        />
-
-        {/* Activity Feed */}
-        <ActivityFeed
-          recentActivities={dashboardData?.recentActivities || []}
-          pendingTasks={dashboardData?.pendingTasks || []}
-          loading={loading}
-          onCompleteTask={completeTask}
-          onEditRecord={handleEditRecord}
-          onDeleteRecord={handleDeleteRecord}
-          onEditDateGroup={handleEditDateGroup}
-          onDeleteDateGroup={handleDeleteDateGroup}
-          farmId={farmId}
-        />
+        </main>
 
         {/* Unified Data Logs Modal */}
         <UnifiedDataLogsModal
