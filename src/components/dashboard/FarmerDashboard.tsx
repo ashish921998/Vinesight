@@ -464,7 +464,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
 
   const recentActivityWindow = recentActivities
     .filter((activity: any) => {
-      const rawDate = activity?.date || activity?.created_at
+      const rawDate = activity?.created_at || activity?.date
       if (!rawDate) return false
       const activityDate = new Date(rawDate)
       if (Number.isNaN(activityDate.getTime())) return false
@@ -958,11 +958,11 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
             <div className="mt-4 flex flex-col gap-3">
               {recentActivityWindow.length > 0 ? (
                 recentActivityWindow.map((activity: any, index: number) => {
-                  const rawDate = activity?.date || activity?.created_at
+                  const rawDate = activity?.created_at || activity?.date
                   const activityDate = rawDate ? new Date(rawDate) : null
                   const timestamp =
                     activityDate && !Number.isNaN(activityDate.getTime())
-                      ? formatRelativeTime(activityDate)
+                      ? activityDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
                       : ''
                   const meta = getActivityPresentation(activity)
                   const Icon = meta.icon

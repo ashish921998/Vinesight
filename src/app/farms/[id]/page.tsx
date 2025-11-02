@@ -110,6 +110,21 @@ export default function FarmDetailsPage() {
     const date = searchParams.get('date')
     const activitiesParam = searchParams.get('activities')
 
+    // Guard clause: Only proceed if we have the necessary data
+    if ((action === 'edit-log' || action === 'delete-log') && logIdParam) {
+      // For edit-log and delete-log actions, we need recentActivities to be available
+      if (!dashboardData?.recentActivities || dashboardData.recentActivities.length === 0) {
+        // Data not yet available, return early to let the effect re-run when data arrives
+        return
+      }
+    }
+
+    // Additional guard clause: Prevent router.replace() from clearing action parameters until dashboardData.recentActivities is loaded
+    if (!dashboardData?.recentActivities) {
+      // Data not yet available, return early to let the effect re-run when data arrives
+      return
+    }
+
     if (action === 'edit' && date && activitiesParam) {
       try {
         const activities = JSON.parse(decodeURIComponent(activitiesParam))
@@ -144,18 +159,36 @@ export default function FarmDetailsPage() {
         const activity = dashboardData?.recentActivities?.find((act: any) => act.id === logId)
         if (activity) {
           handleEditRecord(activity as any)
+          // Only clear URL parameters after successfully processing the action
+          router.replace(`/farms/${farmId}`, { scroll: false })
+        } else {
+          // Activity not found, log warning and clear URL parameters to prevent infinite loop
+          console.warn(`Activity with ID ${logId} not found`)
+          router.replace(`/farms/${farmId}`, { scroll: false })
         }
+      } else {
+        // Invalid logId, clear URL parameters
+        console.warn(`Invalid logId: ${logIdParam}`)
+        router.replace(`/farms/${farmId}`, { scroll: false })
       }
-      router.replace(`/farms/${farmId}`, { scroll: false })
     } else if (action === 'delete-log' && logIdParam) {
       const logId = Number.parseInt(logIdParam, 10)
       if (Number.isFinite(logId)) {
         const activity = dashboardData?.recentActivities?.find((act: any) => act.id === logId)
         if (activity) {
           handleDeleteRecord(activity as any)
+          // Only clear URL parameters after successfully processing the action
+          router.replace(`/farms/${farmId}`, { scroll: false })
+        } else {
+          // Activity not found, log warning and clear URL parameters to prevent infinite loop
+          console.warn(`Activity with ID ${logId} not found`)
+          router.replace(`/farms/${farmId}`, { scroll: false })
         }
+      } else {
+        // Invalid logId, clear URL parameters
+        console.warn(`Invalid logId: ${logIdParam}`)
+        router.replace(`/farms/${farmId}`, { scroll: false })
       }
-      router.replace(`/farms/${farmId}`, { scroll: false })
     }
   }, [searchParams, farmId, router, dashboardData])
 

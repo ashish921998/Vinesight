@@ -147,6 +147,7 @@ export function TodaysTasksSection({
               variant="outline"
               onClick={onAddTask}
               className="h-10 w-10 rounded-2xl border-border/60 bg-background/80 text-primary"
+              aria-label="Add task"
             >
               <Plus className="h-4 w-4" />
             </Button>
