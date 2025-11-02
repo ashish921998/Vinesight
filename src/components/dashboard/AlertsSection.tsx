@@ -3,7 +3,15 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { AlertTriangle, Droplets, CloudRain, Bug, Clock, CheckCircle, ArrowRight } from 'lucide-react'
+import {
+  AlertTriangle,
+  Droplets,
+  CloudRain,
+  Bug,
+  Clock,
+  CheckCircle,
+  ArrowRight
+} from 'lucide-react'
 
 interface Alert {
   id: string
@@ -27,11 +35,7 @@ interface AlertsSectionProps {
 export function AlertsSection({ alerts, onAlertAction, loading, className }: AlertsSectionProps) {
   const getAlertIcon = (category: string, type: string) => {
     const iconClass =
-      type === 'critical'
-        ? 'text-red-600'
-        : type === 'warning'
-          ? 'text-amber-600'
-          : 'text-primary'
+      type === 'critical' ? 'text-red-600' : type === 'warning' ? 'text-amber-600' : 'text-primary'
 
     switch (category) {
       case 'weather':

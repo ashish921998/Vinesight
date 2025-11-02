@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   MapPin,
   AlertTriangle,
@@ -90,6 +91,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   const [dashboardData, setDashboardData] = useState<any>(null)
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [activityExpanded, setActivityExpanded] = useState(false)
   const router = useRouter()
   // Get selected farm info
   const selectedFarm = farms.find((farm) => farm.id === selectedFarmId)
@@ -188,6 +190,14 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
 
     loadWeatherData()
   }, [selectedFarm])
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 768px)')
+    const syncExpansion = () => setActivityExpanded(mediaQuery.matches)
+    syncExpansion()
+    mediaQuery.addEventListener('change', syncExpansion)
+    return () => mediaQuery.removeEventListener('change', syncExpansion)
+  }, [])
 
   const handleFarmChange = (farmIdStr: string) => {
     const farmId = parseInt(farmIdStr)
@@ -471,6 +481,10 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       return activityDate >= twoDaysAgo
     })
     .slice(0, 4)
+  const displayedActivities = activityExpanded
+    ? recentActivityWindow
+    : recentActivityWindow.slice(0, 1)
+  const hasMoreActivities = recentActivityWindow.length > 1
 
   const highlightTiles: Array<{
     id: string
@@ -616,6 +630,154 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   ]
 
   metricTiles.forEach((tile) => highlightTiles.push(tile))
+
+  const ActivitySection = () => (
+    <section className="rounded-3xl border border-border/60 bg-background/95 px-4 py-4 shadow-sm backdrop-blur sm:px-5 sm:py-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:h-10 sm:w-10">
+            <History className="h-4 w-4 sm:h-5 sm:w-5" />
+          </span>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground md:text-base">
+              Field activity (48h)
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Snapshot of what changed since your last visit.
+            </p>
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleAddLog}
+          className="h-9 rounded-2xl border-border/60 bg-background/80 px-3 text-xs font-semibold text-primary hover:bg-primary/10 sm:h-10"
+        >
+          <Plus className="mr-2 h-3.5 w-3.5" />
+          Log
+        </Button>
+      </div>
+      <div className="mt-4 flex flex-col gap-3">
+        {displayedActivities.length > 0 ? (
+          displayedActivities.map((activity: any, index: number) => {
+            const rawDate = activity?.created_at || activity?.date
+            const activityDate = rawDate ? new Date(rawDate) : null
+            const timestamp =
+              activityDate && !Number.isNaN(activityDate.getTime())
+                ? activityDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+                : ''
+            const meta = getActivityPresentation(activity)
+            const Icon = meta.icon
+            return (
+              <div
+                key={`${activity?.id ?? activity?.title ?? 'activity'}-${index}`}
+                className="flex items-start gap-3 rounded-2xl border border-border/40 bg-background/80 px-3.5 py-3 sm:px-4"
+              >
+                <div
+                  className={cn(
+                    'mt-0.5 flex h-8 w-8 items-center justify-center rounded-xl border border-border/60 bg-background/70 sm:h-9 sm:w-9',
+                    meta.iconClass
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-sm font-semibold text-foreground">{meta.title}</p>
+                    {activityDate && (
+                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground sm:text-[11px]">
+                        {timestamp}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] leading-4 text-muted-foreground sm:text-xs">
+                    {meta.detail}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  {activity?.type !== 'petiole_test' && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-full text-primary hover:bg-primary/10"
+                      onClick={() => handleEditRecord(activity)}
+                      title="Edit log"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-red-600 hover:bg-red-100"
+                    onClick={() => handleDeleteRecord(activity)}
+                    title="Delete log"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )
+          })
+        ) : (
+          <div className="rounded-2xl border border-dashed border-border/60 bg-background/70 px-4 py-4 text-sm text-muted-foreground">
+            No logs in the past two days. Record irrigation, spray, or harvest updates to keep your
+            activity trail current.
+          </div>
+        )}
+      </div>
+      {hasMoreActivities && (
+        <div className="mt-2 flex justify-center md:hidden">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-4 text-xs"
+            onClick={() => setActivityExpanded((expanded) => !expanded)}
+          >
+            {activityExpanded ? 'Show fewer updates' : 'Show more updates'}
+          </Button>
+        </div>
+      )}
+    </section>
+  )
+
+  const tasksSection = (
+    <TodaysTasksSection
+      className="h-full"
+      tasks={
+        dashboardData?.pendingTasks?.map((task: any) => ({
+          id: task.id.toString(),
+          title: task.title,
+          type: task.category || 'maintenance',
+          priority: task.priority || 'medium',
+          scheduledTime: task.due_date
+            ? new Date(task.due_date).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+            : undefined,
+          farmBlock: task.location || (selectedFarm ? capitalize(selectedFarm.name) : ''),
+          estimatedDuration: task.estimated_duration || 60,
+          completed: task.completed || false,
+          description: task.description
+        })) || []
+      }
+      onTaskComplete={handleTaskComplete}
+      onTaskAction={handleTaskAction}
+      onAddTask={handleAddTask}
+      loading={!dashboardData}
+      farmName={farmInfo?.name}
+    />
+  )
+
+  const alertsSection = (
+    <AlertsSection
+      className="h-full"
+      alerts={alerts}
+      onAlertAction={handleAlertAction}
+      loading={!dashboardData}
+    />
+  )
 
   const handleOpenFarm = () => {
     if (farmInfo) {
@@ -798,18 +960,18 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     }
   }
   return (
-    <div className={cn('relative min-h-screen bg-background pb-12', className)}>
+    <div className={cn('relative min-h-screen bg-background pb-10 sm:pb-12', className)}>
       <div className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-x-0 top-[-140px] h-[360px] bg-gradient-to-b from-primary/30 via-primary/10 to-transparent opacity-60 blur-3xl" />
-        <div className="relative px-4 pt-6 pb-8 space-y-6 md:px-6 lg:px-10">
-          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
+        <div className="pointer-events-none absolute inset-x-0 top-[-110px] h-[260px] bg-gradient-to-b from-primary/25 via-primary/10 to-transparent opacity-60 blur-3xl sm:top-[-140px] sm:h-[360px]" />
+        <div className="relative px-3 pt-5 pb-6 space-y-5 sm:px-4 sm:pt-6 sm:pb-8 md:px-6 lg:px-10">
+          <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {farmInfo && (
                   <Badge
                     variant="outline"
                     className={cn(
-                      'rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide shadow-sm',
+                      'rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide shadow-sm sm:px-3 sm:py-1 sm:text-xs',
                       getStatusColor(farmInfo.status)
                     )}
                   >
@@ -822,12 +984,12 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                 )}
               </div>
               <div className="space-y-2">
-                <div className="flex flex-col gap-3 sm:flex-row md:flex-col md:items-end">
+                <div className="flex flex-col gap-2.5 sm:flex-row md:flex-col md:items-end">
                   <Select value={selectedFarmId?.toString() || ''} onValueChange={handleFarmChange}>
-                    <SelectTrigger className="h-11 w-full rounded-full border border-border/60 bg-background/80 text-sm sm:w-60">
+                    <SelectTrigger className="h-11 w-full rounded-full border border-border/60 bg-background/90 px-4 text-sm font-semibold leading-tight shadow-sm transition-all focus:ring-2 focus:ring-primary/40 sm:h-12 sm:w-64 sm:text-base">
                       <SelectValue placeholder="Select a farm" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-2xl border border-border/60 bg-background/95 text-sm shadow-lg sm:text-base">
                       {farms.map((farm) => {
                         const status = calculateFarmStatus(
                           farm,
@@ -835,7 +997,11 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                           dashboardData?.alerts
                         )
                         return (
-                          <SelectItem key={farm.id} value={farm.id!.toString()}>
+                          <SelectItem
+                            key={farm.id}
+                            value={farm.id!.toString()}
+                            className="text-sm font-medium sm:text-base"
+                          >
                             <div className="flex items-center gap-2">
                               <span
                                 className={cn(
@@ -854,17 +1020,17 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                       })}
                     </SelectContent>
                   </Select>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5">
                     <Button
                       variant="outline"
                       onClick={handleOpenFarm}
-                      className="h-11 flex-1 rounded-full border-border/60 text-sm sm:flex-none sm:px-6"
+                      className="h-9 flex-1 rounded-full border-border/60 text-xs sm:h-11 sm:flex-none sm:px-6 sm:text-sm"
                     >
                       View farm
                     </Button>
                     <Button
                       onClick={handleOpenLogs}
-                      className="h-11 flex-1 rounded-full text-sm sm:flex-none sm:px-6"
+                      className="h-9 flex-1 rounded-full text-xs sm:h-11 sm:flex-none sm:px-6 sm:text-sm"
                     >
                       Activity logs
                     </Button>
@@ -872,16 +1038,16 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                 </div>
               </div>
               {farmInfo && (
-                <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                  <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/80 px-3 py-1">
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground sm:text-sm">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/80 px-2.5 py-0.5 sm:px-3 sm:py-1">
                     <MapPin className="h-3.5 w-3.5 text-primary" />
                     {farmInfo.location}
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-3 py-1">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2.5 py-0.5 sm:px-3 sm:py-1">
                     <Sprout className="h-3.5 w-3.5 text-primary" />
                     {farmInfo.cropVariety}
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-3 py-1">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/70 px-2.5 py-0.5 sm:px-3 sm:py-1">
                     <BarChart2 className="h-3.5 w-3.5 text-primary" />
                     {farmInfo.totalAcres} acres
                   </span>
@@ -901,11 +1067,11 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                 Critical signals and upcoming work
               </span>
             </div>
-            <div className="grid grid-flow-col auto-cols-[minmax(220px,1fr)] gap-3 overflow-x-auto pb-2 md:auto-cols-auto md:grid-flow-row md:grid-cols-2 md:overflow-visible xl:grid-cols-4">
+            <div className="flex snap-x snap-mandatory overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] md:grid md:grid-cols-2 md:auto-rows-fr md:gap-3 md:overflow-visible xl:grid-cols-4">
               {highlightTiles.map(({ id, title, label, body, icon: Icon, accent, emphasis }) => (
                 <div
                   key={id}
-                  className="relative flex min-w-[220px] flex-col justify-between rounded-2xl border border-border/60 bg-background/90 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg md:min-w-0"
+                  className="relative mr-3 flex min-w-[200px] flex-col justify-between rounded-2xl border border-border/60 bg-background/90 p-3.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg last:mr-0 md:mr-0 md:min-w-0 md:p-4"
                 >
                   <div
                     className={cn(
@@ -914,149 +1080,66 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                     )}
                   />
                   <div className="relative flex items-start justify-between gap-3">
-                    <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                       {label}
                     </span>
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-background/80">
                       <Icon className={cn('h-4 w-4 text-muted-foreground', emphasis)} />
                     </div>
                   </div>
-                  <div className="relative mt-4 space-y-1.5">
-                    <p className={cn('text-lg font-semibold text-foreground', emphasis)}>{title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{body}</p>
+                  <div className="relative mt-3 space-y-1">
+                    <p className={cn('text-base font-semibold text-foreground', emphasis)}>
+                      {title}
+                    </p>
+                    <p className="text-[11px] leading-4 text-muted-foreground line-clamp-2">
+                      {body}
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
           </section>
 
-          <section className="rounded-3xl border border-border/60 bg-background/95 px-5 py-5 shadow-sm backdrop-blur">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <History className="h-5 w-5" />
-                </span>
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground md:text-base">
-                    Field activity (48h)
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    Snapshot of what changed since your last visit.
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAddLog}
-                className="h-10 rounded-2xl border-border/60 bg-background/80 px-3 text-xs font-semibold text-primary hover:bg-primary/10"
-              >
-                <Plus className="mr-2 h-3.5 w-3.5" />
-                Log
-              </Button>
-            </div>
-            <div className="mt-4 flex flex-col gap-3">
-              {recentActivityWindow.length > 0 ? (
-                recentActivityWindow.map((activity: any, index: number) => {
-                  const rawDate = activity?.created_at || activity?.date
-                  const activityDate = rawDate ? new Date(rawDate) : null
-                  const timestamp =
-                    activityDate && !Number.isNaN(activityDate.getTime())
-                      ? activityDate.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
-                      : ''
-                  const meta = getActivityPresentation(activity)
-                  const Icon = meta.icon
-                  return (
-                    <div
-                      key={`${activity?.id ?? activity?.title ?? 'activity'}-${index}`}
-                      className="flex items-start gap-3 rounded-2xl border border-border/40 bg-background/80 px-4 py-3"
-                    >
-                      <div
-                        className={cn(
-                          'mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-background/70',
-                          meta.iconClass
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-start justify-between gap-3">
-                          <p className="text-sm font-semibold text-foreground">{meta.title}</p>
-                          {activityDate && (
-                            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                              {timestamp}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground">{meta.detail}</p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {activity?.type !== 'petiole_test' && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-full text-primary hover:bg-primary/10"
-                            onClick={() => handleEditRecord(activity)}
-                            title="Edit log"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 rounded-full text-red-600 hover:bg-red-100"
-                          onClick={() => handleDeleteRecord(activity)}
-                          title="Delete log"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )
-                })
-              ) : (
-                <div className="rounded-2xl border border-dashed border-border/60 bg-background/70 px-4 py-4 text-sm text-muted-foreground">
-                  No logs in the past two days. Record irrigation, spray, or harvest updates to keep
-                  your activity trail current.
-                </div>
-              )}
-            </div>
-          </section>
+          <div className="hidden md:block">
+            <ActivitySection />
+          </div>
 
-          <div className="grid gap-4 xl:grid-cols-2">
-            <TodaysTasksSection
-              className="h-full"
-              tasks={
-                dashboardData?.pendingTasks?.map((task: any) => ({
-                  id: task.id.toString(),
-                  title: task.title,
-                  type: task.category || 'maintenance',
-                  priority: task.priority || 'medium',
-                  scheduledTime: task.due_date
-                    ? new Date(task.due_date).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })
-                    : undefined,
-                  farmBlock: task.location || (selectedFarm ? capitalize(selectedFarm.name) : ''),
-                  estimatedDuration: task.estimated_duration || 60,
-                  completed: task.completed || false,
-                  description: task.description
-                })) || []
-              }
-              onTaskComplete={handleTaskComplete}
-              onTaskAction={handleTaskAction}
-              onAddTask={handleAddTask}
-              loading={!dashboardData}
-              farmName={farmInfo?.name}
-            />
-            <AlertsSection
-              className="h-full"
-              alerts={alerts}
-              onAlertAction={handleAlertAction}
-              loading={!dashboardData}
-            />
+          <div className="space-y-4">
+            <Tabs defaultValue="activities" className="w-full md:hidden">
+              <TabsList className="w-full gap-1 rounded-full border border-border/60 bg-background/80 p-1">
+                <TabsTrigger
+                  value="activities"
+                  className="flex-1 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  Activities
+                </TabsTrigger>
+                <TabsTrigger
+                  value="tasks"
+                  className="flex-1 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  Tasks
+                </TabsTrigger>
+                <TabsTrigger
+                  value="alerts"
+                  className="flex-1 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  Alerts
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="activities" className="mt-3 focus:outline-none">
+                <ActivitySection />
+              </TabsContent>
+              <TabsContent value="tasks" className="mt-3 focus:outline-none">
+                {tasksSection}
+              </TabsContent>
+              <TabsContent value="alerts" className="mt-3 focus:outline-none">
+                {alertsSection}
+              </TabsContent>
+            </Tabs>
+            <div className="hidden gap-4 md:grid md:grid-cols-2 xl:grid-cols-2">
+              {tasksSection}
+              {alertsSection}
+            </div>
           </div>
         </div>
       </div>
