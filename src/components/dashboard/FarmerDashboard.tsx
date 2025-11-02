@@ -189,7 +189,11 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     syncExpansion()
 
     // Feature detection for cross-browser compatibility
-    if (typeof mediaQuery.addEventListener === 'function') {
+    // Check if addEventListener exists and is a function
+    const hasModernAPI =
+      mediaQuery.addEventListener && typeof mediaQuery.addEventListener === 'function'
+
+    if (hasModernAPI) {
       // Modern browsers: use addEventListener/removeEventListener
       mediaQuery.addEventListener('change', syncExpansion)
       return () => mediaQuery.removeEventListener('change', syncExpansion)
