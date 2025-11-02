@@ -106,8 +106,24 @@ export default function FarmDetailsPage() {
   // Handle edit parameters from logs page
   useEffect(() => {
     const action = searchParams.get('action')
+    const logIdParam = searchParams.get('logId')
     const date = searchParams.get('date')
     const activitiesParam = searchParams.get('activities')
+
+    // Guard clause: Only proceed if we have the necessary data
+    if ((action === 'edit-log' || action === 'delete-log') && logIdParam) {
+      // For edit-log and delete-log actions, we need recentActivities to be available
+      if (dashboardData?.recentActivities === undefined) {
+        // Data not yet available, return early to let the effect re-run when data arrives
+        return
+      }
+    }
+
+    // Additional guard clause: Prevent router.replace() from clearing action parameters until dashboardData.recentActivities is loaded
+    if (dashboardData?.recentActivities === undefined) {
+      // Data not yet available, return early to let the effect re-run when data arrives
+      return
+    }
 
     if (action === 'edit' && date && activitiesParam) {
       try {
@@ -130,8 +146,51 @@ export default function FarmDetailsPage() {
       } catch (error) {
         logger.error('Error parsing edit parameters:', error)
       }
+    } else if (action === 'add-log') {
+      const today = new Date().toISOString().split('T')[0]
+      setEditModeLogs([])
+      setEditModeDate(today)
+      setEditMode('add')
+      setShowDataLogsModal(true)
+      router.replace(`/farms/${farmId}`, { scroll: false })
+    } else if (action === 'edit-log' && logIdParam) {
+      const logId = Number.parseInt(logIdParam, 10)
+      if (Number.isFinite(logId)) {
+        const activity = dashboardData?.recentActivities?.find((act: any) => act.id === logId)
+        if (activity) {
+          handleEditRecord(activity as any)
+          // Only clear URL parameters after successfully processing the action
+          router.replace(`/farms/${farmId}`, { scroll: false })
+        } else {
+          // Activity not found, log warning and clear URL parameters to prevent infinite loop
+          console.warn(`Activity with ID ${logId} not found`)
+          router.replace(`/farms/${farmId}`, { scroll: false })
+        }
+      } else {
+        // Invalid logId, clear URL parameters
+        console.warn(`Invalid logId: ${logIdParam}`)
+        router.replace(`/farms/${farmId}`, { scroll: false })
+      }
+    } else if (action === 'delete-log' && logIdParam) {
+      const logId = Number.parseInt(logIdParam, 10)
+      if (Number.isFinite(logId)) {
+        const activity = dashboardData?.recentActivities?.find((act: any) => act.id === logId)
+        if (activity) {
+          handleDeleteRecord(activity as any)
+          // Only clear URL parameters after successfully processing the action
+          router.replace(`/farms/${farmId}`, { scroll: false })
+        } else {
+          // Activity not found, log warning and clear URL parameters to prevent infinite loop
+          console.warn(`Activity with ID ${logId} not found`)
+          router.replace(`/farms/${farmId}`, { scroll: false })
+        }
+      } else {
+        // Invalid logId, clear URL parameters
+        console.warn(`Invalid logId: ${logIdParam}`)
+        router.replace(`/farms/${farmId}`, { scroll: false })
+      }
     }
-  }, [searchParams, farmId, router])
+  }, [searchParams, farmId, router, dashboardData])
 
   // Generate AI predictions when farm data is loaded
   // useEffect(() => {
