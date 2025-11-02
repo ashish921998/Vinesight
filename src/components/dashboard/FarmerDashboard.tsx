@@ -13,14 +13,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   MapPin,
@@ -29,8 +21,6 @@ import {
   Droplet,
   Sprout,
   BarChart2,
-  Sparkles,
-  NotebookPen,
   ShieldAlert,
   CalendarClock,
   Activity,
@@ -45,7 +35,9 @@ import {
   Droplets,
   Plus,
   Trash2,
-  Edit
+  Edit,
+  Cloud,
+  Brain
 } from 'lucide-react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { SupabaseService } from '@/lib/supabase-service'
@@ -195,8 +187,17 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     const mediaQuery = window.matchMedia('(min-width: 768px)')
     const syncExpansion = () => setActivityExpanded(mediaQuery.matches)
     syncExpansion()
-    mediaQuery.addEventListener('change', syncExpansion)
-    return () => mediaQuery.removeEventListener('change', syncExpansion)
+
+    // Feature detection for cross-browser compatibility
+    if (typeof mediaQuery.addEventListener === 'function') {
+      // Modern browsers: use addEventListener/removeEventListener
+      mediaQuery.addEventListener('change', syncExpansion)
+      return () => mediaQuery.removeEventListener('change', syncExpansion)
+    } else {
+      // Legacy browsers: use addListener/removeListener
+      mediaQuery.addListener(syncExpansion)
+      return () => mediaQuery.removeListener(syncExpansion)
+    }
   }, [])
 
   const handleFarmChange = (farmIdStr: string) => {
@@ -386,7 +387,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
         weatherData.current.precipitation > 0
           ? 'Delay irrigation to harness natural rainfall and protect soil health.'
           : `Humidity at ${weatherData.current.humidity}%. Plan spray jobs for early mornings.`,
-      icon: Sparkles,
+      icon: Cloud,
       tone: 'info'
     })
   }
@@ -532,7 +533,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       title: 'AI insight',
       label: 'Recommendation',
       body: infoAlerts[0]?.title || 'New advisory available',
-      icon: Sparkles,
+      icon: Brain,
       accent: 'from-primary/15 via-background to-transparent',
       emphasis: 'text-primary'
     })
@@ -806,17 +807,6 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     if (!farmInfo || !activity?.id) return
     const params = new URLSearchParams({ action: 'delete-log', logId: String(activity.id) })
     router.push(`/farms/${farmInfo.id}?${params.toString()}`)
-  }
-
-  const formatRelativeTime = (date: Date) => {
-    const diffMs = Date.now() - date.getTime()
-    const diffMinutes = Math.round(diffMs / 60000)
-    const absMinutes = Math.max(Math.abs(diffMinutes), 1)
-    if (absMinutes < 60) return `${absMinutes}m ago`
-    const diffHours = Math.round(absMinutes / 60)
-    if (diffHours < 24) return `${diffHours}h ago`
-    const diffDays = Math.round(diffHours / 24)
-    return `${diffDays}d ago`
   }
 
   function getActivityPresentation(activity: any) {

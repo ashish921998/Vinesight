@@ -113,14 +113,14 @@ export default function FarmDetailsPage() {
     // Guard clause: Only proceed if we have the necessary data
     if ((action === 'edit-log' || action === 'delete-log') && logIdParam) {
       // For edit-log and delete-log actions, we need recentActivities to be available
-      if (!dashboardData?.recentActivities || dashboardData.recentActivities.length === 0) {
+      if (dashboardData?.recentActivities === undefined) {
         // Data not yet available, return early to let the effect re-run when data arrives
         return
       }
     }
 
     // Additional guard clause: Prevent router.replace() from clearing action parameters until dashboardData.recentActivities is loaded
-    if (!dashboardData?.recentActivities) {
+    if (dashboardData?.recentActivities === undefined) {
       // Data not yet available, return early to let the effect re-run when data arrives
       return
     }
