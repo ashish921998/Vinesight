@@ -1,9 +1,9 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { cn } from '@/lib/utils'
 import {
   Calendar,
   Droplets,
@@ -37,6 +37,7 @@ interface TodaysTasksSectionProps {
   onAddTask?: () => void
   loading?: boolean
   farmName?: string
+  className?: string
 }
 
 export function TodaysTasksSection({
@@ -45,7 +46,8 @@ export function TodaysTasksSection({
   onTaskAction,
   onAddTask,
   loading,
-  farmName
+  farmName,
+  className
 }: TodaysTasksSectionProps) {
   const getTaskIcon = (type: string) => {
     switch (type) {
@@ -65,9 +67,9 @@ export function TodaysTasksSection({
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'bg-red-100 text-red-800 border-red-200'
+        return 'bg-red-100/80 text-red-800 border-red-200'
       case 'medium':
-        return 'bg-amber-100 text-amber-800 border-amber-200'
+        return 'bg-amber-100/80 text-amber-800 border-amber-200'
       default:
         return 'bg-primary/10 text-primary border-primary/20'
     }
@@ -80,30 +82,35 @@ export function TodaysTasksSection({
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`
   }
 
+  const containerClass = cn(
+    'rounded-3xl border border-border/60 bg-background/95 px-5 py-5 shadow-sm backdrop-blur',
+    className
+  )
+
   if (loading) {
     return (
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="w-32 h-6 bg-gray-200 rounded animate-pulse" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg animate-pulse"
-              >
-                <div className="w-4 h-4 bg-gray-200 rounded" />
-                <div className="w-6 h-6 bg-gray-200 rounded-lg" />
-                <div className="flex-1">
-                  <div className="w-24 h-4 bg-gray-200 rounded mb-1" />
-                  <div className="w-16 h-3 bg-gray-200 rounded" />
-                </div>
-              </div>
-            ))}
+      <div className={containerClass}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/40">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 w-36 rounded-full bg-muted/40 animate-pulse" />
+              <div className="h-3 w-24 rounded-full bg-muted/20 animate-pulse" />
+            </div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="h-9 w-20 rounded-full bg-muted/30 animate-pulse" />
+        </div>
+        <div className="mt-4 space-y-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-[88px] rounded-2xl border border-border/40 bg-muted/10 animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
     )
   }
 
@@ -116,225 +123,228 @@ export function TodaysTasksSection({
   })
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-3">
-        {/* Mobile-optimized header */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
-              <Calendar className="h-4 w-4 text-primary" />
-              {farmName ? `${farmName} - Today's Tasks` : "Today's Tasks"}
-            </CardTitle>
-
-            {onAddTask && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onAddTask}
-                className="h-9 px-3 text-xs touch-manipulation rounded-full"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Add
-              </Button>
-            )}
-          </div>
-
-          {/* Status badges row */}
-          {(pendingTasks.length > 0 || overdueTasks.length > 0) && (
-            <div className="flex gap-2">
-              {pendingTasks.length > 0 && (
-                <Badge
-                  variant="outline"
-                  className="bg-primary/10 text-primary border-primary/20 text-xs px-2"
-                >
-                  {pendingTasks.length} pending
-                </Badge>
-              )}
-              {overdueTasks.length > 0 && (
-                <Badge
-                  variant="outline"
-                  className="bg-red-100 text-red-800 border-red-200 text-xs px-2"
-                >
-                  {overdueTasks.length} overdue
-                </Badge>
-              )}
+    <div className={containerClass}>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Calendar className="h-4 w-4" />
+            </span>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground md:text-base">
+                {farmName ? `${farmName} — today's work` : "Today's work"}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {pendingTasks.length > 0
+                  ? `Stay on pace — ${pendingTasks.length} item${pendingTasks.length > 1 ? 's' : ''} queued for today.`
+                  : 'Nothing on the board yet. Plan the next priority.'}
+              </p>
             </div>
+          </div>
+          {onAddTask && (
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={onAddTask}
+              className="h-10 w-10 rounded-2xl border-border/60 bg-background/80 text-primary"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
           )}
         </div>
-      </CardHeader>
 
-      <CardContent className="pt-0">
-        {pendingTasks.length === 0 && completedTasks.length === 0 ? (
-          <div className="text-center py-8">
-            <CheckCircle2 className="h-12 w-12 mx-auto text-primary mb-3" />
-            <h3 className="font-semibold text-foreground mb-1">No tasks scheduled</h3>
-            <p className="text-sm text-muted-foreground mb-3">Your schedule is clear for today</p>
+        <div className="flex flex-wrap gap-2">
+          <Badge
+            variant="outline"
+            className="rounded-full border-border/60 bg-background/80 px-2.5 py-1 text-[11px] uppercase tracking-wide text-muted-foreground"
+          >
+            {pendingTasks.length} active
+          </Badge>
+          {overdueTasks.length > 0 && (
+            <Badge
+              variant="outline"
+              className="rounded-full border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] uppercase tracking-wide text-amber-700"
+            >
+              {overdueTasks.length} overdue
+            </Badge>
+          )}
+          {completedTasks.length > 0 && (
+            <Badge
+              variant="outline"
+              className="rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] uppercase tracking-wide text-emerald-700"
+            >
+              {completedTasks.length} done
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      {pendingTasks.length === 0 && completedTasks.length === 0 ? (
+        <div className="mt-4 rounded-2xl border border-dashed border-border/60 bg-background/70 px-5 py-6">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                <CheckCircle2 className="h-4 w-4" />
+              </span>
+              <div>
+                <h4 className="text-sm font-semibold text-foreground">Desk is clear</h4>
+                <p className="text-xs text-muted-foreground">
+                  Use the window to capture the next task before the day fills up.
+                </p>
+              </div>
+            </div>
             {onAddTask && (
-              <Button size="sm" onClick={onAddTask}>
-                <Plus className="h-4 w-4 mr-1" />
-                Schedule a Task
+              <Button
+                variant="secondary"
+                size="sm"
+                className="rounded-full bg-primary/10 text-primary shadow-none"
+                onClick={onAddTask}
+              >
+                <Plus className="mr-2 h-3.5 w-3.5" />
+                New task
               </Button>
             )}
           </div>
-        ) : (
-          <div className="space-y-3">
-            {/* Pending Tasks */}
-            {pendingTasks.map((task) => {
-              const isOverdue = overdueTasks.includes(task)
+        </div>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {pendingTasks.map((task) => {
+            const isOverdue = overdueTasks.includes(task)
 
-              return (
-                <div
-                  key={task.id}
-                  className={`p-4 rounded-xl border transition-all hover:shadow-md touch-manipulation ${
-                    isOverdue ? 'bg-red-50 border-red-200' : 'bg-card border-border'
-                  }`}
-                >
-                  {/* Task header with checkbox and main info */}
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="flex-shrink-0 pt-0.5">
-                      <Checkbox
-                        checked={task.completed}
-                        onCheckedChange={() => onTaskComplete?.(task.id)}
-                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary w-5 h-5"
-                      />
-                    </div>
+            return (
+              <div
+                key={task.id}
+                className={cn(
+                  'relative overflow-hidden rounded-2xl border border-border/60 bg-background/90 px-4 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg',
+                  isOverdue && 'border-red-200/70 bg-red-50/80'
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    checked={task.completed}
+                    onCheckedChange={() => onTaskComplete?.(task.id)}
+                    className="mt-1 h-5 w-5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
 
-                    <div className="flex-shrink-0">
-                      <div className="p-2 rounded-lg bg-primary/10">{getTaskIcon(task.type)}</div>
-                    </div>
+                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    {getTaskIcon(task.type)}
+                  </div>
 
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-base text-foreground mb-1">{task.title}</h4>
-
-                      {/* Priority and status badges */}
-                      <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-1 space-y-3">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="text-base font-semibold text-foreground">{task.title}</h4>
                         <Badge
                           variant="outline"
-                          className={`text-xs ${getPriorityColor(task.priority)} px-2 py-0.5`}
+                          className={cn(
+                            'rounded-full px-2.5 py-0.5 text-xs capitalize',
+                            getPriorityColor(task.priority)
+                          )}
                         >
                           {task.priority}
                         </Badge>
                         {isOverdue && (
                           <Badge
                             variant="outline"
-                            className="text-xs bg-red-100 text-red-800 border-red-200 px-2 py-0.5"
+                            className="rounded-full border-red-200 bg-red-100/80 px-2.5 py-0.5 text-xs uppercase tracking-wide text-red-800"
                           >
                             overdue
                           </Badge>
                         )}
                       </div>
+                      {task.description && (
+                        <p className="text-sm text-muted-foreground">{task.description}</p>
+                      )}
                     </div>
-                  </div>
 
-                  {/* Task description */}
-                  {task.description && (
-                    <p className="text-sm text-muted-foreground mb-3 ml-11">{task.description}</p>
-                  )}
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                      {task.scheduledTime && (
+                        <span className="inline-flex items-center gap-1 text-foreground">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span className={isOverdue ? 'font-semibold text-red-600' : undefined}>
+                            {task.scheduledTime}
+                          </span>
+                        </span>
+                      )}
 
-                  {/* Task details in organized layout */}
-                  <div className="ml-11 space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-4">
-                        {task.scheduledTime && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            <span
-                              className={isOverdue ? 'text-red-600 font-medium' : 'text-foreground'}
-                            >
-                              {task.scheduledTime}
-                            </span>
-                          </div>
-                        )}
-
-                        {(task.location || task.farmBlock) && (
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-foreground">
-                              {task.farmBlock || task.location}
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                      {(task.location || task.farmBlock) && (
+                        <span className="inline-flex items-center gap-1 text-muted-foreground">
+                          <MapPin className="h-4 w-4" />
+                          <span className="text-foreground">{task.farmBlock || task.location}</span>
+                        </span>
+                      )}
 
                       {task.estimatedDuration && (
-                        <span className="text-muted-foreground">
+                        <span className="ml-auto text-xs uppercase tracking-wide text-muted-foreground">
                           ~{formatDuration(task.estimatedDuration)}
                         </span>
                       )}
                     </div>
 
-                    {/* Action button */}
                     {onTaskAction && (
-                      <div className="pt-2">
+                      <div className="pt-1">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-9 px-4 text-sm touch-manipulation rounded-full"
+                          className="h-9 rounded-full border-border/60 bg-background/80 px-4 text-xs font-medium"
                           onClick={() => onTaskAction(task.id)}
                         >
-                          Start Task
+                          Start task
                         </Button>
                       </div>
                     )}
                   </div>
                 </div>
-              )
-            })}
-
-            {/* Completed Tasks */}
-            {completedTasks.length > 0 && (
-              <div className="pt-4 border-t border-border">
-                <h4 className="text-base font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Completed ({completedTasks.length})
-                </h4>
-
-                <div className="space-y-3">
-                  {completedTasks.slice(0, 2).map((task) => (
-                    <div
-                      key={task.id}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20"
-                    >
-                      <Checkbox
-                        checked={true}
-                        disabled
-                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary w-5 h-5"
-                      />
-
-                      <div className="flex-shrink-0">
-                        <div className="p-2 rounded-lg bg-primary/10 opacity-60">
-                          {getTaskIcon(task.type)}
-                        </div>
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm text-muted-foreground line-through">
-                          {task.title}
-                        </h4>
-                        {task.farmBlock && (
-                          <p className="text-xs text-muted-foreground mt-1">{task.farmBlock}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {completedTasks.length > 2 && (
-                  <div className="text-center mt-3">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-sm text-muted-foreground h-9 px-4 touch-manipulation"
-                    >
-                      View all {completedTasks.length} completed tasks
-                    </Button>
-                  </div>
-                )}
               </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            )
+          })}
+
+          {completedTasks.length > 0 && (
+            <div className="rounded-2xl border border-dashed border-border/60 bg-background/60 px-4 py-4">
+              <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                <CheckCircle2 className="h-4 w-4" />
+                Completed ({completedTasks.length})
+              </div>
+              <div className="mt-3 space-y-3">
+                {completedTasks.slice(0, 2).map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/10 px-3 py-3"
+                  >
+                    <Checkbox
+                      checked
+                      disabled
+                      className="h-5 w-5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/20 text-primary/80">
+                      {getTaskIcon(task.type)}
+                    </div>
+                    <div className="flex-1">
+                      <h5 className="text-sm font-medium text-muted-foreground line-through">
+                        {task.title}
+                      </h5>
+                      {task.farmBlock && (
+                        <p className="text-xs text-muted-foreground/80">{task.farmBlock}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {completedTasks.length > 2 && (
+                <div className="mt-3 text-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 rounded-full px-4 text-xs text-muted-foreground"
+                  >
+                    View all {completedTasks.length} completed tasks
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   )
 }

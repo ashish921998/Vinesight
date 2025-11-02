@@ -106,6 +106,7 @@ export default function FarmDetailsPage() {
   // Handle edit parameters from logs page
   useEffect(() => {
     const action = searchParams.get('action')
+    const logIdParam = searchParams.get('logId')
     const date = searchParams.get('date')
     const activitiesParam = searchParams.get('activities')
 
@@ -130,8 +131,33 @@ export default function FarmDetailsPage() {
       } catch (error) {
         console.error('Error parsing edit parameters:', error)
       }
+    } else if (action === 'add-log') {
+      const today = new Date().toISOString().split('T')[0]
+      setEditModeLogs([])
+      setEditModeDate(today)
+      setEditMode('add')
+      setShowDataLogsModal(true)
+      router.replace(`/farms/${farmId}`, { scroll: false })
+    } else if (action === 'edit-log' && logIdParam) {
+      const logId = Number.parseInt(logIdParam, 10)
+      if (Number.isFinite(logId)) {
+        const activity = dashboardData?.recentActivities?.find((act: any) => act.id === logId)
+        if (activity) {
+          handleEditRecord(activity as any)
+        }
+      }
+      router.replace(`/farms/${farmId}`, { scroll: false })
+    } else if (action === 'delete-log' && logIdParam) {
+      const logId = Number.parseInt(logIdParam, 10)
+      if (Number.isFinite(logId)) {
+        const activity = dashboardData?.recentActivities?.find((act: any) => act.id === logId)
+        if (activity) {
+          handleDeleteRecord(activity as any)
+        }
+      }
+      router.replace(`/farms/${farmId}`, { scroll: false })
     }
-  }, [searchParams, farmId, router])
+  }, [searchParams, farmId, router, dashboardData])
 
   // Generate AI predictions when farm data is loaded
   // useEffect(() => {
