@@ -265,12 +265,12 @@ export default function FarmDetailsPage() {
 
       await loadDashboardData()
       toast.success('Data logs saved successfully')
+      setShowDataLogsModal(false)
     } catch (error) {
       toast.error('Error saving data logs. Please try again.')
       logger.error('Error saving data logs:', error)
     } finally {
       setIsSubmitting(false)
-      setShowDataLogsModal(false)
     }
   }
 
