@@ -850,80 +850,19 @@ export function UnifiedDataLogsModal({
     setDayPhotos((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleSaveAllLogs = () => {
-    if (sessionLogs.length === 0) return
-    onSubmit(sessionLogs, selectedDateToUse, dayNotes, dayPhotos)
-  }
+  const handleSaveAllLogs = async () => {
+    if (sessionLogs.length === 0) {
+      toast.error('No logs to save. Please add at least one log entry.')
+      return
+    }
 
-  const renderSprayEntryField = (
-    entry: { id: string; data: Record<string, any>; isValid: boolean },
-    field: FormField
-  ) => {
-    const value = entry.data[field.name] || ''
-
-    switch (field.type) {
-      case 'select':
-        return (
-          <div key={field.name} className="space-y-1">
-            <Label className="text-sm font-medium text-gray-700">
-              {field.label}
-              {field.required && <span className="text-red-500 ml-1">*</span>}
-            </Label>
-            <Select
-              value={value}
-              onValueChange={(newValue) => handleSprayEntryChange(entry.id, field.name, newValue)}
-            >
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
-              </SelectTrigger>
-              <SelectContent>
-                {field.options?.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )
-
-      case 'number':
-        return (
-          <div key={field.name} className="space-y-1">
-            <Label className="text-sm font-medium text-gray-700">
-              {field.label}
-              {field.required && <span className="text-red-500 ml-1">*</span>}
-            </Label>
-            <Input
-              type="number"
-              value={value}
-              onChange={(e) => handleSprayEntryChange(entry.id, field.name, e.target.value)}
-              placeholder={field.placeholder}
-              min={field.min}
-              max={field.max}
-              step={field.step}
-              className="h-9"
-            />
-          </div>
-        )
-
-      default:
-        return (
-          <div key={field.name} className="space-y-1">
-            <Label className="text-sm font-medium text-gray-700">
-              {field.label}
-              {field.required && <span className="text-red-500 ml-1">*</span>}
-            </Label>
-            <Input
-              type="text"
-              value={value}
-              onChange={(e) => handleSprayEntryChange(entry.id, field.name, e.target.value)}
-              placeholder={field.placeholder}
-              maxLength={field.maxLength}
-              className="h-9"
-            />
-          </div>
-        )
+    try {
+      await onSubmit(sessionLogs, selectedDateToUse, dayNotes, dayPhotos)
+    } catch (error) {
+      console.error('Error saving logs:', error)
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to save logs. Please try again.'
+      toast.error(errorMessage)
     }
   }
 

@@ -30,6 +30,7 @@ import { transformActivitiesToLogEntries } from '@/lib/activity-display-utils'
 import { logger } from '@/lib/logger'
 import { OpenMeteoWeatherService } from '@/lib/open-meteo-weather'
 import { WEATHER_THRESHOLDS } from '@/constants/weather'
+import { toast } from 'sonner'
 
 interface DashboardData {
   farm: Farm | null
@@ -230,16 +231,23 @@ export default function FarmDetailsPage() {
 
       for (let i = 0; i < logs.length; i++) {
         const logEntry = logs[i]
-        // For edit mode, use the original date from the log entry data to preserve it
-        const dateToUse = editMode === 'edit' ? logEntry.data?.date || date : date
-        const record =
-          editMode === 'edit'
-            ? await updateLogEntry(logEntry, dateToUse, dayNotes)
-            : await saveLogEntry(logEntry, dateToUse, dayNotes)
+        try {
+          // For edit mode, use the original date from the log entry data to preserve it
+          const dateToUse = editMode === 'edit' ? logEntry.data?.date || date : date
+          const record =
+            editMode === 'edit'
+              ? await updateLogEntry(logEntry, dateToUse, dayNotes)
+              : await saveLogEntry(logEntry, dateToUse, dayNotes)
 
-        // Store first record ID for photo upload
-        if (i === 0 && record?.id) {
-          firstRecordId = record.id
+          // Store first record ID for photo upload
+          if (i === 0 && record?.id) {
+            firstRecordId = record.id
+          }
+        } catch (logError) {
+          logger.error(`Error saving ${logEntry.type} log entry:`, logError)
+          const errorMsg = logError instanceof Error ? logError.message : 'Unknown error'
+          const logTypeLabel = logEntry.type.replace('_', ' ')
+          throw new Error(`Failed to save ${logTypeLabel} record: ${errorMsg}`)
         }
       }
 
@@ -250,16 +258,19 @@ export default function FarmDetailsPage() {
             await PhotoService.uploadPhoto(photo, 'day_photos', firstRecordId)
           } catch (photoError) {
             logger.error('Error uploading day photo:', photoError)
+            toast.error('Photo upload failed, but logs were saved')
           }
         }
       }
 
-      setShowDataLogsModal(false)
       await loadDashboardData()
+      toast.success('Data logs saved successfully')
     } catch (error) {
+      toast.error('Error saving data logs. Please try again.')
       logger.error('Error saving data logs:', error)
     } finally {
       setIsSubmitting(false)
+      setShowDataLogsModal(false)
     }
   }
 
@@ -268,17 +279,32 @@ export default function FarmDetailsPage() {
     let record
 
     switch (type) {
-      case 'irrigation':
+      case 'irrigation': {
+        // Validate required farm data is available
+        if (!dashboardData?.farm) {
+          throw new Error('Farm data not loaded. Please refresh the page and try again.')
+        }
+
+        const duration = parseFloat(data.duration || '')
+        if (!Number.isFinite(duration) || duration <= 0) {
+          throw new Error('Irrigation duration is required and must be greater than 0')
+        }
+
+        const area = parseFloat(data.area || '') || dashboardData.farm.area
+        if (!Number.isFinite(area) || area <= 0) {
+          throw new Error('Irrigation area must be greater than 0')
+        }
+
         record = await SupabaseService.addIrrigationRecord({
           farm_id: parseInt(farmId),
           date: date,
-          duration: parseFloat(data.duration || '0'),
-          area: parseFloat(data.area || '0') || dashboardData?.farm?.area || 0,
+          duration: duration,
+          area: area,
           growth_stage: 'Active',
           moisture_status: 'Good',
           system_discharge: dashboardData?.farm?.systemDischarge || 100,
           notes: dayNotes || '',
-          date_of_pruning: dashboardData?.farm?.dateOfPruning
+          date_of_pruning: dashboardData.farm.dateOfPruning
         })
 
         // Update soil water level when irrigation is added
@@ -307,18 +333,24 @@ export default function FarmDetailsPage() {
           }
         }
         break
+      }
 
       case 'spray': {
+        // Validate required farm data is available
+        if (!dashboardData?.farm) {
+          throw new Error('Farm data not loaded. Please refresh the page and try again.')
+        }
+
         // Handle spray record with chemicals array (new format) or single chemical (old format)
         const sprayData: any = {
           farm_id: parseInt(farmId),
           date: date,
-          chemicals: data.chemicals || [],
-          area: dashboardData?.farm?.area || 0,
+          chemicals: [],
+          area: dashboardData.farm.area,
           weather: 'Clear',
           operator: 'Farm Owner',
           notes: dayNotes || '',
-          date_of_pruning: dashboardData?.farm?.dateOfPruning
+          date_of_pruning: dashboardData.farm.dateOfPruning
         }
 
         // Only add water_volume if it's a valid positive number
@@ -329,12 +361,30 @@ export default function FarmDetailsPage() {
 
         // Handle legacy single chemical format for backward compatibility
         if (data.chemicals && Array.isArray(data.chemicals) && data.chemicals.length > 0) {
-          // New format: use chemicals array, set first chemical as primary for backward compatibility
-          const firstChemical = data.chemicals[0]
+          // New format: use chemicals array, ensure quantities are numbers
+          sprayData.chemicals = data.chemicals.map((chem: any) => {
+            const isString = typeof chem.quantity === 'string'
+            const qty = isString ? parseFloat(chem.quantity) : chem.quantity
+
+            if (!Number.isFinite(qty) || qty <= 0) {
+              const chemName = chem.name || 'Unknown'
+              const msg = `Chemical "${chemName}" quantity must be a valid number greater than 0`
+              throw new Error(msg)
+            }
+
+            return {
+              name: chem.name,
+              quantity: qty,
+              unit: chem.unit
+            }
+          })
+
+          // Set first chemical as primary for backward compatibility
+          const firstChemical = sprayData.chemicals[0]
           sprayData.chemical = firstChemical.name || 'Unknown'
-          sprayData.quantity_amount = firstChemical.quantity || 0
+          sprayData.quantity_amount = firstChemical.quantity
           sprayData.quantity_unit = firstChemical.unit || 'gm/L'
-          sprayData.dose = `${firstChemical.quantity || 0}${firstChemical.unit || 'gm/L'}`
+          sprayData.dose = `${firstChemical.quantity}${firstChemical.unit || 'gm/L'}`
         } else {
           // Old format: single chemical
           sprayData.chemical = data.chemical?.trim() || 'Unknown'
@@ -574,31 +624,52 @@ export default function FarmDetailsPage() {
     const originalDate = data.date || date
 
     switch (type) {
-      case 'irrigation':
+      case 'irrigation': {
+        // Validate required farm data is available
+        if (!dashboardData?.farm) {
+          throw new Error('Farm data not loaded. Please refresh the page and try again.')
+        }
+
+        const duration = parseFloat(data.duration || '')
+        if (!Number.isFinite(duration) || duration <= 0) {
+          throw new Error('Irrigation duration is required and must be greater than 0')
+        }
+
+        const area = parseFloat(data.area || '') || dashboardData.farm.area
+        if (!Number.isFinite(area) || area <= 0) {
+          throw new Error('Irrigation area must be greater than 0')
+        }
+
         record = await SupabaseService.updateIrrigationRecord(originalId, {
           farm_id: parseInt(farmId),
           date: originalDate,
-          duration: parseFloat(data.duration || '0'),
-          area: parseFloat(data.area || '0') || dashboardData?.farm?.area || 0,
+          duration: duration,
+          area: area,
           growth_stage: 'Active',
           moisture_status: 'Good',
-          system_discharge: dashboardData?.farm?.systemDischarge || 100,
+          system_discharge: dashboardData.farm.systemDischarge,
           notes: dayNotes || '',
-          date_of_pruning: dashboardData?.farm?.dateOfPruning
+          date_of_pruning: dashboardData.farm.dateOfPruning
         })
         break
+      }
 
       case 'spray': {
+        // Validate required farm data is available
+        if (!dashboardData?.farm) {
+          throw new Error('Farm data not loaded. Please refresh the page and try again.')
+        }
+
         // Handle spray record with chemicals array (new format) or single chemical (old format)
         const sprayData: any = {
           farm_id: parseInt(farmId),
           date: originalDate,
-          chemicals: data.chemicals || [],
-          area: dashboardData?.farm?.area || 0,
+          chemicals: [],
+          area: dashboardData.farm.area,
           weather: 'Clear',
           operator: 'Farm Owner',
           notes: dayNotes || '',
-          date_of_pruning: dashboardData?.farm?.dateOfPruning
+          date_of_pruning: dashboardData.farm.dateOfPruning
         }
 
         // Only add water_volume if it's a valid positive number
@@ -609,12 +680,30 @@ export default function FarmDetailsPage() {
 
         // Handle legacy single chemical format for backward compatibility
         if (data.chemicals && Array.isArray(data.chemicals) && data.chemicals.length > 0) {
-          // New format: use chemicals array, set first chemical as primary for backward compatibility
-          const firstChemical = data.chemicals[0]
+          // New format: use chemicals array, ensure quantities are numbers
+          sprayData.chemicals = data.chemicals.map((chem: any) => {
+            const isString = typeof chem.quantity === 'string'
+            const qty = isString ? parseFloat(chem.quantity) : chem.quantity
+
+            if (!Number.isFinite(qty) || qty <= 0) {
+              const chemName = chem.name || 'Unknown'
+              const msg = `Chemical "${chemName}" quantity must be a valid number greater than 0`
+              throw new Error(msg)
+            }
+
+            return {
+              name: chem.name,
+              quantity: qty,
+              unit: chem.unit
+            }
+          })
+
+          // Set first chemical as primary for backward compatibility
+          const firstChemical = sprayData.chemicals[0]
           sprayData.chemical = firstChemical.name || 'Unknown'
-          sprayData.quantity_amount = firstChemical.quantity || 0
+          sprayData.quantity_amount = firstChemical.quantity
           sprayData.quantity_unit = firstChemical.unit || 'gm/L'
-          sprayData.dose = `${firstChemical.quantity || 0}${firstChemical.unit || 'gm/L'}`
+          sprayData.dose = `${firstChemical.quantity}${firstChemical.unit || 'gm/L'}`
         } else {
           // Old format: single chemical
           sprayData.chemical = data.chemical?.trim() || 'Unknown'
