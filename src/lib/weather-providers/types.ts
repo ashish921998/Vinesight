@@ -3,7 +3,7 @@
  * All weather providers must implement this interface
  */
 
-export type WeatherProvider = 'open-meteo' | 'visual-crossing'
+export type WeatherProvider = 'open-meteo' | 'visual-crossing' | 'weatherbit'
 
 export interface WeatherData {
   date: string
@@ -116,6 +116,20 @@ export const WEATHER_PROVIDERS: Record<WeatherProvider, WeatherProviderInfo> = {
       '50 years historical data',
       'Growing degree days',
       'Free tier: 1000 calls/day'
+    ],
+    isFree: false,
+    requiresApiKey: true
+  },
+  'weatherbit': {
+    id: 'weatherbit',
+    name: 'Weatherbit Agriculture',
+    description: 'Dedicated agriculture API with soil data and 8-day forecasts',
+    features: [
+      'Soil temperature & moisture',
+      '8-day agriculture forecast',
+      'ETo calculations',
+      'Free tier: 500 calls/day',
+      'Affordable paid plans'
     ],
     isFree: false,
     requiresApiKey: true

@@ -28,6 +28,18 @@ VineSight now supports multiple weather data providers, allowing farmers to choo
 - **Best For**: Users needing premium accuracy, historical analysis
 - **API Docs**: https://www.visualcrossing.com/weather-api
 
+### 3. Weatherbit Agriculture
+- **Status**: Free tier (500 calls/day), requires API key
+- **Features**:
+  - Dedicated agriculture API
+  - Soil temperature at 0-10cm depth
+  - Soil moisture measurements
+  - 8-day agriculture-specific forecasts
+  - ETo calculations
+  - Global coverage
+- **Best For**: Users needing soil data, short-term agricultural forecasts
+- **API Docs**: https://www.weatherbit.io/api/ag-weather-api-forecast
+
 ## How to Use
 
 ### For Farmers
@@ -38,7 +50,7 @@ VineSight now supports multiple weather data providers, allowing farmers to choo
 
 2. **Switch Weather Provider**
    - Look for "Data Source" dropdown in the weather card
-   - Select between "Open-Meteo" (Free) or "Visual Crossing"
+   - Select between "Open-Meteo" (Free), "Visual Crossing", or "Weatherbit Agriculture"
    - Weather data will automatically refresh with the new provider
 
 3. **Compare Accuracy**
@@ -48,7 +60,11 @@ VineSight now supports multiple weather data providers, allowing farmers to choo
 
 ### For Developers
 
-#### Setup Visual Crossing
+#### Setup Weather Provider API Keys
+
+**Open-Meteo**: No setup needed - works out of the box!
+
+**Visual Crossing**:
 
 1. **Get API Key**
    ```bash
@@ -63,6 +79,20 @@ VineSight now supports multiple weather data providers, allowing farmers to choo
 
    # Add your Visual Crossing API key
    NEXT_PUBLIC_VISUAL_CROSSING_API_KEY=your_api_key_here
+   ```
+
+**Weatherbit**:
+
+1. **Get API Key**
+   ```bash
+   # Sign up at https://www.weatherbit.io/account/create
+   # Free tier: 500 calls/day
+   ```
+
+2. **Add to Environment**
+   ```bash
+   # Add your Weatherbit API key to .env.local
+   NEXT_PUBLIC_WEATHERBIT_API_KEY=your_api_key_here
    ```
 
 3. **Restart Development Server**

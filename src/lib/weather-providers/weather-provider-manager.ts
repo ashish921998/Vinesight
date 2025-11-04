@@ -6,11 +6,13 @@
 import type { IWeatherProvider, WeatherProvider, WeatherData, HourlySolarData } from './types'
 import { OpenMeteoProvider } from './open-meteo-provider'
 import { VisualCrossingProvider } from './visual-crossing-provider'
+import { WeatherbitProvider } from './weatherbit-provider'
 
 export class WeatherProviderManager {
   private static providers: Map<WeatherProvider, IWeatherProvider> = new Map([
     ['open-meteo', new OpenMeteoProvider()],
-    ['visual-crossing', new VisualCrossingProvider()]
+    ['visual-crossing', new VisualCrossingProvider()],
+    ['weatherbit', new WeatherbitProvider()]
   ])
 
   private static defaultProvider: WeatherProvider = 'open-meteo'
