@@ -182,7 +182,7 @@ export default function AIInsightsPage() {
 
   const handleInsightAction = async (insight: AIInsight) => {
     try {
-      if (insight.actionType === 'navigate' && insight.actionData?.route) {
+      if (insight.actionType === 'navigate' && typeof insight.actionData?.route === 'string') {
         router.push(insight.actionData.route)
       } else {
         const result = await AIInsightsService.executeInsightAction(insight)

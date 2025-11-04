@@ -274,7 +274,7 @@ export function BottomNavigation() {
             chemical: formData.product?.trim() || 'Unknown',
             dose: 'Not specified',
             quantity_amount: 0,
-            quantity_unit: 'Not specified',
+            quantity_unit: 'gm/L',
             water_volume: 0,
             area: 0,
             weather: 'Not specified',
@@ -290,6 +290,8 @@ export function BottomNavigation() {
             date: currentDate,
             fertilizer: formData.fertilizer?.trim() || 'Unknown',
             dose: formData.quantity || '0',
+            quantity: 0,
+            unit: 'kg/acre',
             purpose: '', // Default value
             area: 0,
             notes: formData.notes || '',

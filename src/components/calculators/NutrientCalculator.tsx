@@ -128,8 +128,8 @@ export function NutrientCalculatorComponent() {
         farm_id: selectedFarm.id!,
         calculation_type: 'nutrients',
         date: new Date().toISOString().split('T')[0],
-        inputs: inputs,
-        outputs: calculationResults
+        inputs: inputs as any,
+        outputs: calculationResults as any
       })
     } catch (error) {
       console.error('Error calculating nutrient requirements:', error)
@@ -226,7 +226,7 @@ export function NutrientCalculatorComponent() {
                     <div>
                       <h4 className="font-medium text-gray-900 text-sm">{capitalize(farm.name)}</h4>
                       <p className="text-xs text-gray-500">
-                        {farm.area}ha • {farm.grapeVariety}
+                        {farm.area}ha • {farm.cropVariety}
                       </p>
                     </div>
                     {selectedFarm?.id === farm.id && (

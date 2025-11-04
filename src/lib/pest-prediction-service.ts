@@ -657,18 +657,20 @@ export class PestPredictionService {
         risk_level: prediction.riskLevel,
         probability_score: prediction.probabilityScore,
         predicted_onset_date: prediction.predictedOnsetDate.toISOString().split('T')[0],
-        weather_triggers: prediction.weatherTriggers,
-        prevention_window: {
-          startDate: prediction.preventionWindow.startDate.toISOString(),
-          endDate: prediction.preventionWindow.endDate.toISOString(),
-          optimalTiming: prediction.preventionWindow.optimalTiming
-        },
-        recommended_treatments: prediction.recommendedTreatments,
+        weather_triggers: JSON.parse(JSON.stringify(prediction.weatherTriggers)),
+        prevention_window: JSON.parse(
+          JSON.stringify({
+            startDate: prediction.preventionWindow.startDate.toISOString(),
+            endDate: prediction.preventionWindow.endDate.toISOString(),
+            optimalTiming: prediction.preventionWindow.optimalTiming
+          })
+        ),
+        recommended_treatments: JSON.parse(JSON.stringify(prediction.recommendedTreatments)),
         community_reports: prediction.communityReports,
         status: prediction.status
       }))
 
-      const { error } = await supabase.from('pest_disease_predictions').insert(insertData)
+      const { error } = await supabase.from('pest_disease_predictions').insert(insertData as any)
 
       if (error) {
         console.error('Error saving predictions:', error)

@@ -374,6 +374,16 @@ export interface ProfitabilityInsightDetails {
   implementationEffort: ImplementationEffort
 }
 
+export interface InsightActionData {
+  route?: string
+  taskId?: string
+  pestId?: string
+  expiresAt?: Date | string
+  analysis?: unknown
+  recommendations?: unknown
+  [key: string]: unknown
+}
+
 export interface AIInsight {
   id: string
   type: AIInsightType
@@ -385,7 +395,7 @@ export interface AIInsight {
   confidence: number
   timeRelevant: boolean
   actionType: ActionType
-  actionData?: Record<string, unknown>
+  actionData?: InsightActionData
   actionLabel: string
   tags?: string[]
   pestDetails?: PestInsightDetails

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { SEOSchema } from '@/components/SEOSchema'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -57,11 +57,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState<'30d' | '90d' | '1y'>('30d')
 
-  useEffect(() => {
-    loadData()
-  }, [timeRange])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true)
     try {
       const farmList = await CloudDataService.getAllFarms()
@@ -214,7 +210,11 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedFarm, timeRange])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-IN', {

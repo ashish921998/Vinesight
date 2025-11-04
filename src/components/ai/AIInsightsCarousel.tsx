@@ -89,7 +89,7 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
 
   const handleInsightAction = async (insight: AIInsight) => {
     try {
-      if (insight.actionType === 'navigate' && insight.actionData?.route) {
+      if (insight.actionType === 'navigate' && typeof insight.actionData?.route === 'string') {
         router.push(insight.actionData.route)
       } else if (insight.actionType === 'execute') {
         const result = await AIInsightsService.executeInsightAction(insight)

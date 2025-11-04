@@ -1,6 +1,6 @@
 import { Database } from './database'
 import type { TaskType, Priority, LocationSource } from './common'
-import { isValidEnum, TaskType as TaskTypeEnum, Priority as PriorityEnum } from './common'
+import { isValidEnum, TASK_TYPE, PRIORITY } from './common'
 
 // Task Reminder type matching the database schema (application layer - camelCase)
 export interface TaskReminder {
@@ -17,17 +17,17 @@ export interface TaskReminder {
 }
 
 const toTaskType = (value: string | null): TaskType => {
-  if (value && isValidEnum(TaskTypeEnum, value)) {
+  if (value && isValidEnum(TASK_TYPE, value)) {
     return value as TaskType
   }
-  return TaskTypeEnum.OTHER
+  return TASK_TYPE.OTHER
 }
 
 const toPriority = (value: string | null): Priority | null => {
   if (!value) {
     return null
   }
-  if (isValidEnum(PriorityEnum, value)) {
+  if (isValidEnum(PRIORITY, value)) {
     return value as Priority
   }
   return null
@@ -79,8 +79,8 @@ export interface Farm {
   userId?: string // For multi-user support
 }
 
-// Weather data interface
-export interface WeatherData {
+// Simple weather data interface (for calculators)
+export interface SimpleWeatherData {
   temperature: number
   humidity: number
   precipitation: number

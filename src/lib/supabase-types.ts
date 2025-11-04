@@ -1,5 +1,6 @@
 // Type adapters to bridge application types with Supabase database types
 import { Database, Json } from '@/types/database'
+import { isValidEnum, TASK_TYPE, PRIORITY, EXTRACTION_STATUS } from '@/types/common'
 
 // Import application types from both sources
 import type {
@@ -14,6 +15,7 @@ import type {
   PetioleTestRecord
 } from './supabase'
 import type { TaskReminder, Farm } from '@/types/types'
+import type { TestReportType } from '@/types/reports'
 
 // Re-export application types
 export type {
@@ -530,15 +532,24 @@ export function toDatabaseCalculationHistoryInsert(
 
 // Task Reminder conversion functions
 export function toApplicationTaskReminder(dbRecord: DatabaseTaskReminder): TaskReminder {
+  // Convert database string types to application types
+  const taskType = isValidEnum(TASK_TYPE, dbRecord.type)
+    ? (dbRecord.type as TaskReminder['type'])
+    : TASK_TYPE.OTHER
+  const priority =
+    dbRecord.priority && isValidEnum(PRIORITY, dbRecord.priority)
+      ? (dbRecord.priority as TaskReminder['priority'])
+      : null
+
   return {
     id: dbRecord.id,
     farmId: dbRecord.farm_id,
     title: dbRecord.title,
     description: dbRecord.description || null,
     dueDate: dbRecord.due_date,
-    type: dbRecord.type,
+    type: taskType,
     completed: dbRecord.completed || false,
-    priority: dbRecord.priority || null,
+    priority: priority,
     createdAt: dbRecord.created_at || null,
     completedAt: dbRecord.completed_at || null
   }
@@ -591,9 +602,14 @@ export function toApplicationSoilTestRecord(
     report_url: dbRecord.report_url || undefined,
     report_storage_path: dbRecord.report_storage_path || undefined,
     report_filename: dbRecord.report_filename || undefined,
-    report_type: dbRecord.report_type || undefined,
+    report_type:
+      dbRecord.report_type && isValidEnum({ IMAGE: 'image', PDF: 'pdf' }, dbRecord.report_type)
+        ? (dbRecord.report_type as TestReportType)
+        : undefined,
     extraction_status:
-      (dbRecord.extraction_status as 'pending' | 'success' | 'failed' | null) || undefined,
+      dbRecord.extraction_status && isValidEnum(EXTRACTION_STATUS, dbRecord.extraction_status)
+        ? (dbRecord.extraction_status as import('./supabase').SoilTestRecord['extraction_status'])
+        : undefined,
     extraction_error: dbRecord.extraction_error || undefined,
     parsed_parameters: (dbRecord.parsed_parameters as Record<string, number>) || undefined,
     raw_notes: dbRecord.raw_notes || undefined,
@@ -612,13 +628,13 @@ export function toDatabaseSoilTestInsert(
     recommendations: appRecord.recommendations || null,
     notes: appRecord.notes || null,
     report_url: appRecord.report_url || null,
-    report_storage_path: appRecord.report_storage_path || null,
-    report_filename: appRecord.report_filename || null,
-    report_type: appRecord.report_type || null,
-    extraction_status: appRecord.extraction_status || null,
-    extraction_error: appRecord.extraction_error || null,
-    parsed_parameters: appRecord.parsed_parameters || null,
-    raw_notes: appRecord.raw_notes || null
+    report_storage_path: appRecord.report_storage_path ?? null,
+    report_filename: appRecord.report_filename ?? null,
+    report_type: appRecord.report_type ?? null,
+    extraction_status: appRecord.extraction_status ?? null,
+    extraction_error: appRecord.extraction_error ?? null,
+    parsed_parameters: appRecord.parsed_parameters ?? null,
+    raw_notes: appRecord.raw_notes ?? null
   } as DatabaseSoilTestRecordInsert
 }
 
@@ -666,9 +682,14 @@ export function toApplicationPetioleTestRecord(
     report_url: dbRecord.report_url || undefined,
     report_storage_path: dbRecord.report_storage_path || undefined,
     report_filename: dbRecord.report_filename || undefined,
-    report_type: dbRecord.report_type || undefined,
+    report_type:
+      dbRecord.report_type && isValidEnum({ IMAGE: 'image', PDF: 'pdf' }, dbRecord.report_type)
+        ? (dbRecord.report_type as TestReportType)
+        : undefined,
     extraction_status:
-      (dbRecord.extraction_status as 'pending' | 'success' | 'failed' | null) || undefined,
+      dbRecord.extraction_status && isValidEnum(EXTRACTION_STATUS, dbRecord.extraction_status)
+        ? (dbRecord.extraction_status as import('./supabase').PetioleTestRecord['extraction_status'])
+        : undefined,
     extraction_error: dbRecord.extraction_error || undefined,
     parsed_parameters: (dbRecord.parsed_parameters as Record<string, number>) || undefined,
     raw_notes: dbRecord.raw_notes || undefined,

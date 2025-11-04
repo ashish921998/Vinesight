@@ -288,10 +288,11 @@ export interface SeasonalPattern {
   activityCount: number
   averageEffectiveness: number
   commonOperations: string[]
+  [activityType: string]: any // Allow flexible activity tracking
 }
 
 export interface SeasonalPatterns {
-  [monthKey: string]: SeasonalPattern
+  [monthKey: string]: SeasonalPattern | any // Allow flexible monthly patterns
 }
 
 // ===== BENCHMARKING =====

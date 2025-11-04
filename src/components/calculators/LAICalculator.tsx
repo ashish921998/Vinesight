@@ -93,8 +93,8 @@ export function LAICalculatorComponent() {
         farm_id: selectedFarm.id!,
         calculation_type: 'lai',
         date: new Date().toISOString().split('T')[0],
-        inputs: inputs,
-        outputs: calculationResults
+        inputs: inputs as any,
+        outputs: calculationResults as any
       })
     } catch (error) {
       console.error('Error calculating LAI:', error)
