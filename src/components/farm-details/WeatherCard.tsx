@@ -15,9 +15,18 @@ import {
   RefreshCw,
   AlertCircle,
   Calendar,
-  MapPin
+  MapPin,
+  Settings2
 } from 'lucide-react'
-import { OpenMeteoWeatherService, type OpenMeteoWeatherData } from '@/lib/open-meteo-weather'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import { WeatherProviderManager } from '@/lib/weather-providers/weather-provider-manager'
+import { WEATHER_PROVIDERS, type WeatherProvider, type WeatherData } from '@/lib/weather-providers/types'
 import type { Farm } from '@/types/types'
 
 interface WeatherCardProps {
@@ -25,13 +34,22 @@ interface WeatherCardProps {
 }
 
 export function WeatherCard({ farm }: WeatherCardProps) {
-  const [weatherData, setWeatherData] = useState<OpenMeteoWeatherData | null>(null)
-  const [weeklyWeatherData, setWeeklyWeatherData] = useState<OpenMeteoWeatherData[]>([])
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
+  const [weeklyWeatherData, setWeeklyWeatherData] = useState<WeatherData[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [activeProvider, setActiveProvider] = useState<WeatherProvider>('open-meteo')
 
   const hasLocationData = farm.latitude && farm.longitude
+
+  // Initialize active provider from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const providerId = WeatherProviderManager.getActiveProviderId(farm.id)
+      setActiveProvider(providerId)
+    }
+  }, [farm.id])
 
   const fetchWeatherData = async () => {
     if (!hasLocationData) {
@@ -51,14 +69,21 @@ export function WeatherCard({ farm }: WeatherCardProps) {
       weekAgo.setDate(today.getDate() - 6)
       const weekAgoStr = weekAgo.toISOString().split('T')[0]
 
-      // Fetch both today's data and weekly data
+      // Fetch both today's data and weekly data using the selected provider
       const [todayData, weeklyData] = await Promise.all([
-        OpenMeteoWeatherService.getWeatherData(farm.latitude!, farm.longitude!, todayStr, todayStr),
-        OpenMeteoWeatherService.getWeatherData(
+        WeatherProviderManager.getWeatherData(
+          farm.latitude!,
+          farm.longitude!,
+          todayStr,
+          todayStr,
+          farm.id
+        ),
+        WeatherProviderManager.getWeatherData(
           farm.latitude!,
           farm.longitude!,
           weekAgoStr,
-          todayStr
+          todayStr,
+          farm.id
         )
       ])
 
@@ -67,12 +92,13 @@ export function WeatherCard({ farm }: WeatherCardProps) {
         setWeeklyWeatherData(weeklyData)
         setLastUpdated(new Date())
 
-        // Fetch hourly solar radiation data for today
+        // Fetch hourly solar radiation data for today (if provider supports it)
         try {
-          const luxData = await OpenMeteoWeatherService.getHourlySolarRadiation(
+          const luxData = await WeatherProviderManager.getHourlySolarRadiation(
             farm.latitude!,
             farm.longitude!,
-            todayData[0].date
+            todayData[0].date,
+            farm.id
           )
           setSolarLuxData(luxData)
         } catch (luxError) {
@@ -97,6 +123,13 @@ export function WeatherCard({ farm }: WeatherCardProps) {
     }
   }
 
+  const handleProviderChange = (providerId: WeatherProvider) => {
+    setActiveProvider(providerId)
+    WeatherProviderManager.setProviderPreference(providerId, farm.id)
+    // Immediately fetch data from the new provider
+    fetchWeatherData()
+  }
+
   useEffect(() => {
     if (hasLocationData) {
       fetchWeatherData()
@@ -118,33 +151,6 @@ export function WeatherCard({ farm }: WeatherCardProps) {
     avgLux: number
     hourlyLux: number[]
   } | null>(null)
-
-  // Fetch hourly solar radiation data for accurate lux measurements
-  const fetchSolarRadiationData = async () => {
-    if (!hasLocationData || !weatherData) return
-
-    try {
-      const luxData = await OpenMeteoWeatherService.getHourlySolarRadiation(
-        farm.latitude!,
-        farm.longitude!,
-        weatherData.date
-      )
-      setSolarLuxData(luxData)
-    } catch (error) {
-      // Log error for debugging in development only
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.error('Error fetching hourly solar radiation:', error)
-      }
-    }
-  }
-
-  // Fetch solar radiation data when weather data is available
-  useEffect(() => {
-    if (weatherData && hasLocationData) {
-      fetchSolarRadiationData()
-    }
-  }, [weatherData, farm.latitude, farm.longitude])
 
   if (!hasLocationData) {
     return (
@@ -263,11 +269,51 @@ export function WeatherCard({ farm }: WeatherCardProps) {
             </Button>
           </div>
         </div>
+
         <CardDescription className="text-xs flex items-center gap-1 mt-1">
           <Calendar className="h-3 w-3" />
           {weatherData.date} •{' '}
           {farm.locationName || `${farm.latitude?.toFixed(3)}, ${farm.longitude?.toFixed(3)}`}
         </CardDescription>
+
+        {/* Weather Provider Selector */}
+        <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-100">
+          <Settings2 className="h-3 w-3 text-gray-500" />
+          <span className="text-xs text-gray-600 font-medium">Data Source:</span>
+          <Select value={activeProvider} onValueChange={handleProviderChange}>
+            <SelectTrigger className="h-7 w-[180px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.values(WEATHER_PROVIDERS).map((provider) => (
+                <SelectItem key={provider.id} value={provider.id} className="text-xs">
+                  <div className="flex items-center gap-2">
+                    <span>{provider.name}</span>
+                    {provider.isFree && (
+                      <Badge variant="outline" className="text-[10px] px-1 py-0">
+                        Free
+                      </Badge>
+                    )}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Provider Info Badge */}
+        <div className="mt-2">
+          <div className="flex items-start gap-2 p-2 bg-blue-50 rounded-lg">
+            <div className="flex-1">
+              <div className="text-xs font-medium text-blue-800">
+                {WEATHER_PROVIDERS[activeProvider].name}
+              </div>
+              <div className="text-[10px] text-blue-600 mt-0.5">
+                {WEATHER_PROVIDERS[activeProvider].description}
+              </div>
+            </div>
+          </div>
+        </div>
       </CardHeader>
 
       <CardContent className="pt-0 px-3 pb-3 space-y-3">
