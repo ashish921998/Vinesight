@@ -1,5 +1,17 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { Database } from '@/types/database'
+import type {
+  TaskType,
+  Priority,
+  ChemicalUnit,
+  FertilizerUnit,
+  ExpenseType,
+  CalculationType,
+  CalculationInputs,
+  CalculationOutputs,
+  ExtractionStatus,
+  TestReportType
+} from '@/types'
 
 // Client-side Supabase client for React components
 export const createClient = () =>
@@ -45,7 +57,7 @@ export interface SprayChemical {
   id?: string // Optional ID for frontend tracking
   name: string
   quantity: number
-  unit: 'gm/L' | 'ml/L' | 'ppm'
+  unit: ChemicalUnit
 }
 
 export interface SprayRecord {
@@ -55,7 +67,7 @@ export interface SprayRecord {
   chemical?: string | null // Made optional for backward compatibility
   dose?: string | null // Made optional for backward compatibility
   quantity_amount: number
-  quantity_unit: 'gm/L' | 'ml/L' | 'ppm'
+  quantity_unit: ChemicalUnit
   water_volume: number | null // total water volume in liters, can be null
   chemicals?: SprayChemical[] // New array of chemicals for multiple chemicals support
   area: number // in acres
@@ -73,7 +85,7 @@ export interface FertigationRecord {
   fertilizer: string
   dose?: string | null // Legacy field - kept for backward compatibility
   quantity: number // Quantity of fertilizer applied
-  unit: 'kg/acre' | 'liter/acre' // Unit of measurement
+  unit: FertilizerUnit // Unit of measurement
   purpose?: string | null // Legacy field - made optional for backward compatibility
   area?: number | null // Legacy field - made optional for backward compatibility
   date_of_pruning?: Date // Date object of pruning when this record was created (snapshot from farm level)
@@ -98,7 +110,7 @@ export interface ExpenseRecord {
   id?: number
   farm_id: number
   date: string
-  type: 'labor' | 'materials' | 'equipment' | 'other'
+  type: ExpenseType
   description: string
   cost: number
   date_of_pruning?: Date // Date object of pruning when this record was created (snapshot from farm level)
@@ -109,22 +121,23 @@ export interface ExpenseRecord {
 export interface CalculationHistory {
   id?: number
   farm_id: number
-  calculation_type: 'etc' | 'nutrients' | 'lai' | 'discharge'
-  inputs: Record<string, any>
-  outputs: Record<string, any>
+  calculation_type: CalculationType
+  inputs: CalculationInputs
+  outputs: CalculationOutputs
   date: string
   created_at?: string
 }
 
+// Database layer TaskReminder (snake_case)
 export interface TaskReminder {
   id?: number
   farm_id: number
   title: string
   description?: string
   due_date: string
-  type: 'irrigation' | 'spray' | 'fertigation' | 'training' | 'harvest' | 'other'
+  type: TaskType
   completed: boolean
-  priority: 'low' | 'medium' | 'high'
+  priority: Priority
   created_at?: string
   completed_at?: string
 }
@@ -140,8 +153,8 @@ export interface SoilTestRecord {
   report_url?: string | null
   report_storage_path?: string | null
   report_filename?: string | null
-  report_type?: string | null
-  extraction_status?: 'pending' | 'success' | 'failed' | null
+  report_type?: TestReportType | null
+  extraction_status?: ExtractionStatus | null
   extraction_error?: string | null
   parsed_parameters?: Record<string, number> | null
   raw_notes?: string | null
@@ -160,8 +173,8 @@ export interface PetioleTestRecord {
   report_url?: string | null
   report_storage_path?: string | null
   report_filename?: string | null
-  report_type?: string | null
-  extraction_status?: 'pending' | 'success' | 'failed' | null
+  report_type?: TestReportType | null
+  extraction_status?: ExtractionStatus | null
   extraction_error?: string | null
   parsed_parameters?: Record<string, number> | null
   raw_notes?: string | null

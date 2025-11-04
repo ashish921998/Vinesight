@@ -3,8 +3,23 @@ import { PestPredictionService } from './pest-prediction-service'
 import { SmartTaskGenerator } from './smart-task-generator'
 import { WeatherService } from './weather-service'
 import { AIInsight } from '../types/ai'
+import {
+  AI_INSIGHT_TYPE,
+  PRIORITY,
+  ACTION_TYPE,
+  RISK_LEVEL,
+  isValidEnum,
+  type AIInsightType,
+  type Priority,
+  type ActionType,
+  type RiskLevel
+} from '../types/common'
 
 export type { AIInsight }
+
+const priorityFromString = (value: unknown, fallback: Priority = PRIORITY.MEDIUM): Priority => {
+  return typeof value === 'string' && isValidEnum(PRIORITY, value) ? (value as Priority) : fallback
+}
 
 export class AIInsightsService {
   // Simple in-memory cache for insights (5 minute TTL)
@@ -65,7 +80,7 @@ export class AIInsightsService {
       // 1. Pest & Disease Alerts
       const pestPredictions = await PestPredictionService.getActivePredictions(farmId)
       const criticalPests = pestPredictions.filter(
-        (p) => p.riskLevel === 'critical' || p.riskLevel === 'high'
+        (p) => p.riskLevel === RISK_LEVEL.CRITICAL || p.riskLevel === RISK_LEVEL.HIGH
       )
 
       criticalPests.forEach((pest) => {
@@ -74,14 +89,14 @@ export class AIInsightsService {
         )
         insights.push({
           id: `pest_${pest.id}`,
-          type: 'pest_prediction',
-          priority: pest.riskLevel === 'critical' ? 'critical' : 'high',
+          type: AI_INSIGHT_TYPE.PEST_PREDICTION,
+          priority: pest.riskLevel === RISK_LEVEL.CRITICAL ? PRIORITY.CRITICAL : PRIORITY.HIGH,
           title: `${pest.pestDiseaseType.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())} Risk`,
           subtitle:
             daysUntil > 0 ? `Prevention window: ${daysUntil} days` : 'Immediate action needed',
           icon: 'AlertTriangle',
-          actionLabel: pest.riskLevel === 'critical' ? 'Apply Treatment' : 'View Prevention',
-          actionType: 'navigate',
+          actionLabel: pest.riskLevel === RISK_LEVEL.CRITICAL ? 'Apply Treatment' : 'View Prevention',
+          actionType: ACTION_TYPE.NAVIGATE,
           actionData: {
             route: `/farms/${farmId}/pest-alerts`,
             pestId: pest.id,
@@ -100,14 +115,18 @@ export class AIInsightsService {
       highPriorityTasks.slice(0, 3).forEach((task) => {
         insights.push({
           id: `task_${task.id}`,
-          type: 'task_recommendation',
+          type: AI_INSIGHT_TYPE.TASK_RECOMMENDATION,
           priority:
-            task.priorityScore >= 0.9 ? 'critical' : task.priorityScore >= 0.8 ? 'high' : 'medium',
+            task.priorityScore >= 0.9
+              ? PRIORITY.CRITICAL
+              : task.priorityScore >= 0.8
+                ? PRIORITY.HIGH
+                : PRIORITY.MEDIUM,
           title: this.getTaskTitle(task.taskType),
           subtitle: task.reasoning.substring(0, 60) + '...',
           icon: this.getTaskIcon(task.taskType),
           actionLabel: task.weatherDependent ? 'Check Weather & Execute' : 'Execute Now',
-          actionType: 'execute',
+          actionType: ACTION_TYPE.EXECUTE,
           actionData: {
             taskId: task.id,
             taskType: task.taskType,
@@ -142,13 +161,13 @@ export class AIInsightsService {
         aiWeatherInsights.forEach((aiInsight: any, index: number) => {
           insights.push({
             id: `ai_weather_${index}`,
-            type: 'weather_alert',
-            priority: aiInsight.priority,
+            type: AI_INSIGHT_TYPE.WEATHER_ALERT,
+            priority: priorityFromString(aiInsight.priority),
             title: aiInsight.title,
             subtitle: aiInsight.subtitle,
             icon: 'CloudRain',
             actionLabel: aiInsight.actionLabel,
-            actionType: 'navigate',
+            actionType: ACTION_TYPE.NAVIGATE,
             actionData: { route: `/farms/${farmId}/weather` },
             confidence: aiInsight.confidence,
             timeRelevant: aiInsight.timeRelevant,
@@ -176,7 +195,12 @@ export class AIInsightsService {
       insights.push(...growthInsights)
 
       // Sort by priority and time relevance
-      const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
+      const priorityOrder: Record<Priority, number> = {
+        [PRIORITY.CRITICAL]: 0,
+        [PRIORITY.HIGH]: 1,
+        [PRIORITY.MEDIUM]: 2,
+        [PRIORITY.LOW]: 3
+      }
 
       const sortedInsights = insights
         .sort((a, b) => {
@@ -213,13 +237,13 @@ export class AIInsightsService {
     if (weatherData.humidity > 80 && weatherData.temperature > 20) {
       insights.push({
         id: 'weather_fungal_risk',
-        type: 'weather_alert',
-        priority: 'high',
+        type: AI_INSIGHT_TYPE.WEATHER_ALERT,
+        priority: PRIORITY.HIGH,
         title: 'High Fungal Disease Risk',
         subtitle: `${weatherData.humidity}% humidity, ${weatherData.temperature}°C`,
         icon: 'CloudRain',
         actionLabel: 'Check Prevention Plan',
-        actionType: 'navigate',
+        actionType: ACTION_TYPE.NAVIGATE,
         actionData: { route: `/farms/${farm.id}/pest-alerts` },
         confidence: 0.85,
         timeRelevant: true,
@@ -230,13 +254,13 @@ export class AIInsightsService {
     if (weatherData.wind_speed > 15) {
       insights.push({
         id: 'weather_spray_warning',
-        type: 'weather_alert',
-        priority: 'medium',
+        type: AI_INSIGHT_TYPE.WEATHER_ALERT,
+        priority: PRIORITY.MEDIUM,
         title: 'High Wind - Avoid Spraying',
         subtitle: `Wind speed: ${weatherData.wind_speed} km/h`,
         icon: 'Wind',
         actionLabel: 'Check Forecast',
-        actionType: 'navigate',
+        actionType: ACTION_TYPE.NAVIGATE,
         actionData: { route: `/farms/${farm.id}/weather` },
         confidence: 0.9,
         timeRelevant: true,
@@ -289,11 +313,12 @@ export class AIInsightsService {
 
       // Create insights based on AI analysis
       if (aiAnalysis.confidence > 0.7) {
-        const priority = Math.abs(aiAnalysis.varianceFromAverage) > 25 ? 'high' : 'medium'
+        const priority =
+          Math.abs(aiAnalysis.varianceFromAverage) > 25 ? PRIORITY.HIGH : PRIORITY.MEDIUM
 
         insights.push({
           id: 'ai_financial_analysis',
-          type: 'profitability_insight',
+          type: AI_INSIGHT_TYPE.PROFITABILITY_INSIGHT,
           priority,
           title: this.getFinancialInsightTitle(aiAnalysis.trend, aiAnalysis.varianceFromAverage),
           subtitle: aiAnalysis.recommendation.substring(0, 60) + '...',
@@ -304,7 +329,7 @@ export class AIInsightsService {
                 ? 'TrendingDown'
                 : 'DollarSign',
           actionLabel: 'View Analysis',
-          actionType: 'navigate',
+          actionType: ACTION_TYPE.NAVIGATE,
           actionData: {
             route: `/farms/${farmId}/reports`,
             analysis: aiAnalysis
@@ -320,13 +345,13 @@ export class AIInsightsService {
         aiAnalysis.riskFactors.slice(0, 2).forEach((risk: any, index: number) => {
           insights.push({
             id: `financial_risk_${index}`,
-            type: 'profitability_insight',
-            priority: 'medium',
+            type: AI_INSIGHT_TYPE.PROFITABILITY_INSIGHT,
+            priority: PRIORITY.MEDIUM,
             title: 'Financial Risk Detected',
             subtitle: risk.substring(0, 60) + '...',
             icon: 'AlertTriangle',
             actionLabel: 'Review Risk',
-            actionType: 'navigate',
+            actionType: ACTION_TYPE.NAVIGATE,
             actionData: { route: `/farms/${farmId}/reports` },
             confidence: aiAnalysis.confidence,
             timeRelevant: true,
@@ -358,13 +383,13 @@ export class AIInsightsService {
         if (totalSpent > avgMonthlySpend * 1.2) {
           insights.push({
             id: 'financial_overspend_fallback',
-            type: 'profitability_insight',
-            priority: 'medium',
+            type: AI_INSIGHT_TYPE.PROFITABILITY_INSIGHT,
+            priority: PRIORITY.MEDIUM,
             title: `Spending Above Average: ₹${totalSpent.toLocaleString()}`,
             subtitle: 'Basic analysis - consider detailed review',
             icon: 'DollarSign',
             actionLabel: 'View Breakdown',
-            actionType: 'navigate',
+            actionType: ACTION_TYPE.NAVIGATE,
             actionData: { route: `/farms/${farmId}/reports` },
             confidence: 0.6,
             timeRelevant: true,
@@ -434,13 +459,13 @@ export class AIInsightsService {
       if (growthAnalysis.confidence > 0.6) {
         insights.push({
           id: 'ai_growth_stage',
-          type: 'general_advice',
-          priority: growthAnalysis.timeRelevant ? 'high' : 'medium',
+          type: AI_INSIGHT_TYPE.GENERAL_ADVICE,
+          priority: growthAnalysis.timeRelevant ? PRIORITY.HIGH : PRIORITY.MEDIUM,
           title: this.getGrowthStageTitle(growthAnalysis.stage),
           subtitle: growthAnalysis.description,
           icon: 'Sprout',
           actionLabel: 'View Recommendations',
-          actionType: 'navigate',
+          actionType: ACTION_TYPE.NAVIGATE,
           actionData: {
             route: `/farms/${farmId}/growth-guide`,
             recommendations: growthAnalysis.recommendations,
@@ -460,13 +485,13 @@ export class AIInsightsService {
         // March-May: Flowering/Fruit Set
         insights.push({
           id: 'growth_flowering_fallback',
-          type: 'general_advice',
-          priority: 'high',
+          type: AI_INSIGHT_TYPE.GENERAL_ADVICE,
+          priority: PRIORITY.HIGH,
           title: 'Critical Flowering Stage',
           subtitle: 'Traditional seasonal analysis - optimize pollination',
           icon: 'Sprout',
           actionLabel: 'View Care Plan',
-          actionType: 'navigate',
+          actionType: ACTION_TYPE.NAVIGATE,
           actionData: { route: `/farms/${farmId}/growth-guide` },
           confidence: 0.6,
           timeRelevant: true,

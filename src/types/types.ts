@@ -1,17 +1,36 @@
 import { Database } from './database'
+import type { TaskType, Priority, LocationSource } from './common'
+import { isValidEnum, TaskType as TaskTypeEnum, Priority as PriorityEnum } from './common'
 
-// Task Reminder type matching the database schema
+// Task Reminder type matching the database schema (application layer - camelCase)
 export interface TaskReminder {
   id: number
   farmId: number | null
   title: string
   description: string | null
   dueDate: string
-  type: string
+  type: TaskType
   completed: boolean | null
   completedAt: string | null
-  priority: string | null
+  priority: Priority | null
   createdAt: string | null
+}
+
+const toTaskType = (value: string | null): TaskType => {
+  if (value && isValidEnum(TaskTypeEnum, value)) {
+    return value as TaskType
+  }
+  return TaskTypeEnum.OTHER
+}
+
+const toPriority = (value: string | null): Priority | null => {
+  if (!value) {
+    return null
+  }
+  if (isValidEnum(PriorityEnum, value)) {
+    return value as Priority
+  }
+  return null
 }
 
 // Convert database row to TaskReminder
@@ -24,10 +43,10 @@ export function taskReminderFromDB(
     title: row.title,
     description: row.description,
     dueDate: row.due_date,
-    type: row.type,
+    type: toTaskType(row.type),
     completed: row.completed,
     completedAt: row.completed_at,
-    priority: row.priority,
+    priority: toPriority(row.priority),
     createdAt: row.created_at
   }
 }
@@ -52,7 +71,7 @@ export interface Farm {
   elevation?: number // meters above sea level
   locationName?: string // human readable location name
   timezone?: string // timezone identifier
-  locationSource?: 'manual' | 'search' | 'current' // how location was set
+  locationSource?: LocationSource // how location was set
   locationUpdatedAt?: string // when location was last updated
   dateOfPruning?: Date // Date object when pruning was done
   createdAt?: string
