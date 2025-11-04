@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import {
   Select,
   SelectContent,
@@ -226,7 +225,7 @@ export function NutrientCalculatorComponent() {
                     <div>
                       <h4 className="font-medium text-gray-900 text-sm">{capitalize(farm.name)}</h4>
                       <p className="text-xs text-gray-500">
-                        {farm.area}ha • {farm.grapeVariety}
+                        {farm.area}acre • {farm.cropVariety}
                       </p>
                     </div>
                     {selectedFarm?.id === farm.id && (

@@ -78,7 +78,7 @@ export class ETcCalculator {
     this.validateLocationData(location)
 
     const { temperatureMax, temperatureMin, humidity, windSpeed } = weather
-    const { latitude, elevation } = location
+    const { elevation } = location
 
     // Step 1: Basic calculations
     const tmean = (temperatureMax + temperatureMin) / 2
@@ -112,11 +112,6 @@ export class ETcCalculator {
     const denominator = delta + gamma * (1 + 0.34 * windSpeed)
 
     const eto = numerator / denominator
-
-    // Debug output for troubleshooting (only in development)
-    if (process.env.NODE_ENV === 'development') {
-      // Development debug info available here
-    }
 
     return Math.max(0, eto) // Ensure non-negative
   }
