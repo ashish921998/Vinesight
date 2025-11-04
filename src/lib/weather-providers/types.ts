@@ -3,7 +3,7 @@
  * All weather providers must implement this interface
  */
 
-export type WeatherProvider = 'open-meteo' | 'visual-crossing' | 'weatherbit'
+export type WeatherProvider = 'open-meteo' | 'visual-crossing' | 'weatherbit' | 'tomorrow-io'
 
 export interface WeatherData {
   date: string
@@ -130,6 +130,20 @@ export const WEATHER_PROVIDERS: Record<WeatherProvider, WeatherProviderInfo> = {
       'ETo calculations',
       'Free tier: 500 calls/day',
       'Affordable paid plans'
+    ],
+    isFree: false,
+    requiresApiKey: true
+  },
+  'tomorrow-io': {
+    id: 'tomorrow-io',
+    name: 'Tomorrow.io',
+    description: 'Hyper-accurate weather with minute-by-minute forecasts and 80+ data fields',
+    features: [
+      'Minute-by-minute forecasts',
+      'Soil moisture & temperature',
+      'Direct evapotranspiration data',
+      '14-day forecasts',
+      'Free tier available'
     ],
     isFree: false,
     requiresApiKey: true

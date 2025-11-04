@@ -40,6 +40,18 @@ VineSight now supports multiple weather data providers, allowing farmers to choo
 - **Best For**: Users needing soil data, short-term agricultural forecasts
 - **API Docs**: https://www.weatherbit.io/api/ag-weather-api-forecast
 
+### 4. Tomorrow.io
+- **Status**: Free tier available, requires API key
+- **Features**:
+  - Hyper-accurate minute-by-minute forecasts
+  - 80+ weather data fields
+  - Soil moisture and temperature
+  - Direct evapotranspiration data
+  - 14-day forecasts
+  - Global coverage with high precision
+- **Best For**: Users needing maximum accuracy, real-time updates, comprehensive data
+- **API Docs**: https://www.tomorrow.io/weather-api/
+
 ## How to Use
 
 ### For Farmers
@@ -50,11 +62,11 @@ VineSight now supports multiple weather data providers, allowing farmers to choo
 
 2. **Switch Weather Provider**
    - Look for "Data Source" dropdown in the weather card
-   - Select between "Open-Meteo" (Free), "Visual Crossing", or "Weatherbit Agriculture"
+   - Select between "Open-Meteo" (Free), "Visual Crossing", "Weatherbit Agriculture", or "Tomorrow.io"
    - Weather data will automatically refresh with the new provider
 
 3. **Compare Accuracy**
-   - Test both providers to see which matches your local conditions better
+   - Test all providers to see which matches your local conditions better
    - Your preference is saved per farm
    - You can switch anytime
 
@@ -93,6 +105,20 @@ VineSight now supports multiple weather data providers, allowing farmers to choo
    ```bash
    # Add your Weatherbit API key to .env.local
    NEXT_PUBLIC_WEATHERBIT_API_KEY=your_api_key_here
+   ```
+
+**Tomorrow.io**:
+
+1. **Get API Key**
+   ```bash
+   # Sign up at https://www.tomorrow.io/weather-api/
+   # Free tier available
+   ```
+
+2. **Add to Environment**
+   ```bash
+   # Add your Tomorrow.io API key to .env.local
+   NEXT_PUBLIC_TOMORROW_IO_API_KEY=your_api_key_here
    ```
 
 3. **Restart Development Server**

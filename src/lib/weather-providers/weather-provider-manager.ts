@@ -7,12 +7,14 @@ import type { IWeatherProvider, WeatherProvider, WeatherData, HourlySolarData } 
 import { OpenMeteoProvider } from './open-meteo-provider'
 import { VisualCrossingProvider } from './visual-crossing-provider'
 import { WeatherbitProvider } from './weatherbit-provider'
+import { TomorrowIOProvider } from './tomorrow-io-provider'
 
 export class WeatherProviderManager {
   private static providers: Map<WeatherProvider, IWeatherProvider> = new Map([
     ['open-meteo', new OpenMeteoProvider()],
     ['visual-crossing', new VisualCrossingProvider()],
-    ['weatherbit', new WeatherbitProvider()]
+    ['weatherbit', new WeatherbitProvider()],
+    ['tomorrow-io', new TomorrowIOProvider()]
   ])
 
   private static defaultProvider: WeatherProvider = 'open-meteo'
