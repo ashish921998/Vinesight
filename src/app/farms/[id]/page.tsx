@@ -265,16 +265,13 @@ export default function FarmDetailsPage() {
 
       await loadDashboardData()
       toast.success('Data logs saved successfully')
+      setShowDataLogsModal(false)
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       toast.error(`Error saving data logs: ${errorMsg}`)
       logger.error('Error saving data logs:', error)
     } finally {
       setIsSubmitting(false)
-      setShowDataLogsModal(false)
-      setEditMode('add')
-      setEditModeLogs([])
-      setEditModeDate('')
     }
   }
 
