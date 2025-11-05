@@ -13,6 +13,7 @@ export interface DailyNoteOperation {
   date: string
   notes: string
   existingId?: number | null
+  forceCreate?: boolean // Force creation even with empty notes (e.g., for photo attachment)
 }
 
 export interface DailyNoteResult {
@@ -27,9 +28,9 @@ export interface DailyNoteResult {
 export async function handleDailyNoteOperation(
   operation: DailyNoteOperation
 ): Promise<DailyNoteResult> {
-  const { farmId, date, notes, existingId } = operation
+  const { farmId, date, notes, existingId, forceCreate = false } = operation
   const trimmedNotes = notes.trim()
-  const shouldPersistDailyNote = trimmedNotes.length > 0
+  const shouldPersistDailyNote = trimmedNotes.length > 0 || forceCreate
   let dailyNoteRecordId: number | null = null
 
   try {
@@ -98,23 +99,42 @@ export async function processDailyNotesAndPhotos(
   photos: File[],
   firstRecordId: number | null
 ): Promise<{ success: boolean; message?: string }> {
+  const hasPhotos = photos.length > 0
+  const hasNotes = operation.notes.trim().length > 0
+
+  // If photos are provided but no firstRecordId exists and no notes,
+  // we must create a daily note to attach photos to
+  if (hasPhotos && !firstRecordId && !hasNotes) {
+    operation.forceCreate = true // Force creation of empty note for photo attachment
+  }
+
   // Handle daily note operation
   const noteResult = await handleDailyNoteOperation(operation)
+
+  // If note operation failed, immediately return failure
   if (!noteResult.success) {
-    toast.error(noteResult.error || 'Failed to save daily note.')
+    const errorMessage = noteResult.error || 'Failed to save daily note.'
+    toast.error(errorMessage)
+    return { success: false, message: errorMessage }
   }
 
-  // Determine photo target ID
-  let photoTargetId = firstRecordId
-  if (!photoTargetId && noteResult.dailyNoteId) {
-    photoTargetId = noteResult.dailyNoteId
+  // Determine photo target ID from firstRecordId or noteResult.dailyNoteId
+  let photoTargetId = firstRecordId ?? noteResult.dailyNoteId
+
+  // If we have photos but still no target ID after note operation, this is an error
+  if (hasPhotos && !photoTargetId) {
+    const errorMessage = 'Cannot upload photos: no record ID available.'
+    toast.error(errorMessage)
+    return { success: false, message: errorMessage }
   }
 
-  // Handle photo uploads
-  if (photoTargetId && photos.length > 0) {
+  // Handle photo uploads if we have photos and a valid target ID
+  if (hasPhotos && photoTargetId) {
     const photoResult = await handleDayPhotoUpload(photos, photoTargetId)
     if (!photoResult.success) {
-      toast.error(`${photoResult.errorCount} photo(s) failed to upload, but other data was saved.`)
+      const errorMessage = `${photoResult.errorCount} photo(s) failed to upload.`
+      toast.error(errorMessage)
+      return { success: false, message: errorMessage }
     }
   }
 

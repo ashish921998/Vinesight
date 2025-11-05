@@ -200,31 +200,24 @@ export function UnifiedDataLogsModal({
       // Reset state immediately
       resetState()
 
-      // Then initialize based on mode after a brief delay to ensure reset is complete
-      const timer = setTimeout(() => {
-        setActiveDailyNoteId(existingDayNoteId ?? null)
+      // Initialize state based on mode
+      // No setTimeout needed - React will batch these state updates
+      setActiveDailyNoteId(existingDayNoteId ?? null)
 
-        if (mode === 'edit') {
-          setSessionLogs(existingLogs)
-        }
+      if (mode === 'edit') {
+        setSessionLogs(existingLogs)
+      }
 
-        if (selectedDate) {
-          setInternalSelectedDate(selectedDate)
-        } else if (mode !== 'edit') {
-          setInternalSelectedDate(new Date().toISOString().split('T')[0])
-        }
+      if (selectedDate) {
+        setInternalSelectedDate(selectedDate)
+      } else if (mode !== 'edit') {
+        setInternalSelectedDate(new Date().toISOString().split('T')[0])
+      }
 
-        if (existingDayNote !== undefined) {
-          setDayNotes(existingDayNote || '')
-        } else if (mode === 'edit' && existingLogs.length > 0) {
-          const firstLog = existingLogs[0]
-          if (firstLog?.data?.notes) {
-            setDayNotes(firstLog.data.notes)
-          }
-        }
-      }, 0) // Use setTimeout to ensure state reset completes before initialization
-
-      return () => clearTimeout(timer)
+      // Only use existingDayNote for daily notes - no fallback to log notes
+      if (existingDayNote !== undefined) {
+        setDayNotes(existingDayNote || '')
+      }
     } else {
       // Reset state when closing
       setCurrentLogType(null)

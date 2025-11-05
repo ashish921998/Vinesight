@@ -4,6 +4,7 @@
 
 // Number system constants
 export const NUMBER_SYSTEM = {
+  // Used for parseInt() to ensure base-10 parsing and avoid octal interpretation
   RADIX_DECIMAL: 10 as const
 } as const
 
