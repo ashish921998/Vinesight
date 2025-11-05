@@ -18,6 +18,10 @@
     "perf": "npm run build && npm run start",
     "size": "npm run build && du -sh .next/static",
     "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "prepare": "husky || true",
     "postinstall": "[ -n \"$CI\" ] || husky install || true"
   },
@@ -87,19 +91,28 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@vitejs/plugin-react": "^5.1.0",
+    "@vitest/coverage-v8": "^4.0.7",
+    "@vitest/ui": "^4.0.7",
     "eslint": "^9.36.0",
     "eslint-config-next": "15.5.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
+    "happy-dom": "^20.0.10",
     "husky": "^9.1.7",
+    "jsdom": "^27.1.0",
     "prettier": "^3.6.2",
     "shadcn": "^3.0.0",
     "supabase": "^2.40.7",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.7"
   }
 }
