@@ -35,7 +35,7 @@ export function ActivityFeed({
   pendingTasks,
   loading,
   onCompleteTask,
-  onDeleteRecord: _onDeleteRecord,
+  onDeleteRecord,
   onEditDateGroup,
   onDeleteDateGroup,
   farmId
