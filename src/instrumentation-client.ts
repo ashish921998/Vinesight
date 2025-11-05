@@ -9,7 +9,7 @@ Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   // Add optional integrations for additional features
-  integrations: [Sentry.replayIntegration()],
+  integrations: [Sentry.replayIntegration(), Sentry.captureConsoleIntegration()],
 
   // Define how likely traces are sampled. Read from environment with safe production defaults.
   // Use NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE env var or fallback to 0.1 in production, 1.0 in development
