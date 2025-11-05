@@ -246,7 +246,7 @@ export default function FarmDetailsPage() {
         } catch (logError) {
           logger.error(`Error saving ${logEntry.type} log entry:`, logError)
           const errorMsg = logError instanceof Error ? logError.message : 'Unknown error'
-          const logTypeLabel = logEntry.type.replace('_', ' ')
+          const logTypeLabel = logEntry.type.replace(/_/g, ' ')
           throw new Error(`Failed to save ${logTypeLabel} record: ${errorMsg}`)
         }
       }
@@ -267,7 +267,8 @@ export default function FarmDetailsPage() {
       toast.success('Data logs saved successfully')
       setShowDataLogsModal(false)
     } catch (error) {
-      toast.error('Error saving data logs. Please try again.')
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      toast.error(`Error saving data logs: ${errorMsg}`)
       logger.error('Error saving data logs:', error)
     } finally {
       setIsSubmitting(false)
