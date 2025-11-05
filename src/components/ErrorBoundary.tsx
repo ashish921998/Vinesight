@@ -32,31 +32,8 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo
     })
 
-    // Log error to monitoring service in production
-    if (process.env.NODE_ENV === 'production') {
-      console.error('Error caught by boundary:', error, errorInfo)
-
-      // Mobile-specific error logging
-      if (typeof window !== 'undefined' && 'navigator' in window) {
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        )
-        const isChrome = /Chrome/i.test(navigator.userAgent)
-
-        console.error('Device info:', {
-          isMobile,
-          isChrome,
-          userAgent: navigator.userAgent,
-          url: window.location.href,
-          timestamp: new Date().toISOString()
-        })
-      }
-
-      // Here you would send to error monitoring service like Sentry
-      // Sentry.captureException(error, { contexts: { react: errorInfo } });
-    } else {
-      console.error('Error caught by boundary:', error, errorInfo)
-    }
+    // Log error locally for debugging (Sentry reporting handled by SentryErrorBoundary)
+    console.error('Error caught by boundary:', error, errorInfo)
   }
 
   private handleReload = () => {
@@ -169,10 +146,7 @@ export function AsyncErrorBoundary({ children }: { children: ReactNode }) {
   React.useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error('Unhandled promise rejection:', event.reason)
-      // In production, send to error monitoring service
-      if (process.env.NODE_ENV === 'production') {
-        // Sentry.captureException(event.reason);
-      }
+      // Sentry reporting handled by SentryErrorBoundary
     }
 
     window.addEventListener('unhandledrejection', handleUnhandledRejection)

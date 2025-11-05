@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Montserrat, Merriweather, Source_Code_Pro } from 'ne
 import './globals.css'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { AsyncErrorBoundary } from '@/components/ErrorBoundary'
+import { SentryErrorBoundary } from '@/components/SentryErrorBoundary'
 import { Suspense } from 'react'
 import { GlobalAuthErrorHandler } from '@/components/auth/GlobalAuthErrorHandler'
 import { Analytics } from '@vercel/analytics/next'
@@ -156,23 +157,25 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${merriweather.variable} ${sourceCodePro.variable} antialiased`}
       >
-        <AsyncErrorBoundary>
-          <Suspense
-            fallback={
-              <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">Loading VineSight...</p>
+        <SentryErrorBoundary>
+          <AsyncErrorBoundary>
+            <Suspense
+              fallback={
+                <div className="min-h-screen flex items-center justify-center bg-background">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading VineSight...</p>
+                  </div>
                 </div>
-              </div>
-            }
-          >
-            <GlobalAuthErrorHandler />
-            <I18nProvider>
-              <LayoutContent>{children}</LayoutContent>
-            </I18nProvider>
-          </Suspense>
-        </AsyncErrorBoundary>
+              }
+            >
+              <GlobalAuthErrorHandler />
+              <I18nProvider>
+                <LayoutContent>{children}</LayoutContent>
+              </I18nProvider>
+            </Suspense>
+          </AsyncErrorBoundary>
+        </SentryErrorBoundary>
         <GoogleAnalytics />
         <Analytics />
       </body>

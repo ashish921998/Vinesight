@@ -8,7 +8,7 @@ import { parseEnvFloat, parseEnvBoolean } from '@/lib/sentry-env-helpers'
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
-
+  integrations: [Sentry.vercelAIIntegration()],
   // Define how likely traces are sampled. Read from environment with safe production defaults.
   // Use SENTRY_TRACES_SAMPLE_RATE env var or fallback to 0.1 in production, 1.0 in development
   tracesSampleRate: parseEnvFloat(
