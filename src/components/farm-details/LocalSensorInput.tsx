@@ -35,6 +35,7 @@ import type { Farm } from '@/types/farm'
 import type { LocalSensorData, EnhancedEToResult } from '@/lib/weather-providers/eto-accuracy-enhancement-service'
 import { SensorFusionService, AccuracyEnhancementService } from '@/lib/weather-providers/eto-accuracy-enhancement-service'
 import { WeatherProviderManager } from '@/lib/weather-providers/weather-provider-manager'
+import { EToAccuracyService } from '@/lib/services/eto-accuracy-service'
 
 interface LocalSensorInputProps {
   farm: Farm
@@ -92,6 +93,37 @@ export function LocalSensorInput({ farm }: LocalSensorInputProps) {
   }
 
   const handleRefineETo = async () => {
+    // Validation
+    if (!reading.temperatureMax || !reading.temperatureMin) {
+      setError('Temperature max and min are required')
+      return
+    }
+
+    if (reading.temperatureMax <= reading.temperatureMin) {
+      setError('Maximum temperature must be greater than minimum temperature')
+      return
+    }
+
+    if (reading.temperatureMax < -10 || reading.temperatureMax > 55) {
+      setError('Maximum temperature seems unrealistic (should be between -10°C and 55°C)')
+      return
+    }
+
+    if (reading.temperatureMin < -20 || reading.temperatureMin > 45) {
+      setError('Minimum temperature seems unrealistic (should be between -20°C and 45°C)')
+      return
+    }
+
+    if (reading.humidity !== undefined && (reading.humidity < 0 || reading.humidity > 100)) {
+      setError('Humidity must be between 0% and 100%')
+      return
+    }
+
+    if (reading.windSpeed !== undefined && (reading.windSpeed < 0 || reading.windSpeed > 50)) {
+      setError('Wind speed seems unrealistic (should be between 0 and 50 m/s)')
+      return
+    }
+
     setLoading(true)
     setError(null)
     setSuccess(false)
@@ -124,8 +156,8 @@ export function LocalSensorInput({ farm }: LocalSensorInputProps) {
       const enhanced = await SensorFusionService.refineWithSensors(weatherData[0], sensorData)
       setRefinedETo(enhanced)
 
-      // Save to database (implement this)
-      // await saveSensorData(farm.id, reading)
+      // Save to database
+      await EToAccuracyService.LocalSensorData.saveSensorData(farm.id, sensorData)
 
       setSuccess(true)
     } catch (err) {
@@ -136,16 +168,54 @@ export function LocalSensorInput({ farm }: LocalSensorInputProps) {
   }
 
   const handleValidate = async () => {
+    if (!apiETo || !refinedETo) {
+      setError('Please refine ETo first before validating')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
     try {
+      // Get current provider
+      const provider = WeatherProviderManager.getActiveProviderId(farm.id)
+
       // Save validation data to database
-      // This will be used for regional calibration
-      // await saveValidation(farm.id, reading, apiETo, refinedETo?.eto)
+      await EToAccuracyService.Validation.saveValidation(
+        farm.id,
+        provider,
+        apiETo,
+        refinedETo.eto,
+        farm.location.coordinates.lat,
+        farm.location.coordinates.lng,
+        reading.date,
+        'sensor_calculation',
+        {
+          weatherConditions: {
+            temperatureMax: reading.temperatureMax,
+            temperatureMin: reading.temperatureMin,
+            humidity: reading.humidity,
+            windSpeed: reading.windSpeed
+          },
+          confidence: refinedETo.confidence
+        }
+      )
+
+      // Update regional calibration
+      const validations = await EToAccuracyService.Validation.getValidationsByProvider(
+        farm.id,
+        provider
+      )
+
+      await EToAccuracyService.RegionalCalibration.updateCalibration(
+        farm.location.coordinates.lat,
+        farm.location.coordinates.lng,
+        provider,
+        validations
+      )
 
       setSuccess(true)
-      alert('Validation saved! This will improve accuracy for future readings.')
+      alert('Validation saved! Regional calibration has been updated to improve future accuracy.')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save validation')
     } finally {

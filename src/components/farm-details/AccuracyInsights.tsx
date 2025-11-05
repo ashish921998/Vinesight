@@ -31,6 +31,7 @@ import {
 import type { Farm } from '@/types/farm'
 import type { WeatherProvider } from '@/lib/weather-providers/types'
 import { AccuracyEnhancementService } from '@/lib/weather-providers/eto-accuracy-enhancement-service'
+import { EToAccuracyService } from '@/lib/services/eto-accuracy-service'
 
 interface AccuracyInsightsProps {
   farm: Farm
@@ -82,39 +83,38 @@ export function AccuracyInsights({ farm, currentProvider }: AccuracyInsightsProp
   const [hasLocalSensors, setHasLocalSensors] = useState(false)
   const [useMultipleProviders, setUseMultipleProviders] = useState(false)
   const [recommendations, setRecommendations] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     assessCurrentAccuracy()
   }, [farm.id, currentProvider])
 
   const assessCurrentAccuracy = async () => {
-    // Load validation history (would query Supabase in production)
-    const validations = 0 // TODO: Load from eto_validations table
-    setValidationCount(validations)
+    setLoading(true)
 
-    // Check for local sensor data
-    const sensors = false // TODO: Check local_sensor_data table
-    setHasLocalSensors(sensors)
+    try {
+      // Load accuracy level from service
+      const accuracyData = await EToAccuracyService.AccuracyInsights.getAccuracyLevel(farm.id)
 
-    // Check if using multiple providers
-    const multiProvider = false // TODO: Check user settings
-    setUseMultipleProviders(multiProvider)
+      setValidationCount(accuracyData.validationCount)
+      setHasLocalSensors(accuracyData.hasSensorData)
 
-    // Determine current accuracy level
-    let level: AccuracyLevel = ACCURACY_LEVELS.basic
+      // Set accuracy level
+      const level = ACCURACY_LEVELS[accuracyData.level]
+      setCurrentLevel(level)
 
-    if (hasLocalSensors && validations >= 20) {
-      level = ACCURACY_LEVELS.professional
-    } else if (hasLocalSensors || validations >= 10) {
-      level = ACCURACY_LEVELS.excellent
-    } else if (multiProvider || validations >= 5) {
-      level = ACCURACY_LEVELS.good
+      // Check if using multiple providers (from localStorage)
+      const multiProvider = false // TODO: Implement multi-provider setting check
+      setUseMultipleProviders(multiProvider)
+
+      // Generate recommendations
+      generateRecommendations(level, accuracyData.validationCount, accuracyData.hasSensorData, multiProvider)
+    } catch (error) {
+      console.error('Error assessing accuracy:', error)
+      // Keep default values on error
+    } finally {
+      setLoading(false)
     }
-
-    setCurrentLevel(level)
-
-    // Generate recommendations
-    generateRecommendations(level, validations, hasLocalSensors, multiProvider)
   }
 
   const generateRecommendations = (
@@ -149,27 +149,11 @@ export function AccuracyInsights({ farm, currentProvider }: AccuracyInsightsProp
   }
 
   const getProgressToNext = (): number => {
-    const levels = ['basic', 'good', 'excellent', 'professional']
-    const currentIndex = levels.indexOf(currentLevel.level)
-    const nextIndex = Math.min(currentIndex + 1, levels.length - 1)
-
-    if (currentIndex === nextIndex) return 100 // Already at max
-
-    // Calculate progress based on validations and sensors
-    if (currentLevel.level === 'basic') {
-      // Progress to 'good': need either 5 validations or multi-provider
-      return Math.min(100, (validationCount / 5) * 100)
-    } else if (currentLevel.level === 'good') {
-      // Progress to 'excellent': need sensors or 10 validations
-      if (hasLocalSensors) return 100
-      return Math.min(100, (validationCount / 10) * 100)
-    } else if (currentLevel.level === 'excellent') {
-      // Progress to 'professional': need sensors + 20 validations
-      if (!hasLocalSensors) return 0
-      return Math.min(100, (validationCount / 20) * 100)
-    }
-
-    return 100
+    return EToAccuracyService.AccuracyInsights.getProgressToNextLevel(
+      currentLevel.level,
+      validationCount,
+      hasLocalSensors
+    )
   }
 
   const getNextLevelName = (): string => {
