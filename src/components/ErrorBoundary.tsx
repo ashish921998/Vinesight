@@ -1,7 +1,6 @@
 'use client'
 
 import React, { Component, ErrorInfo, ReactNode } from 'react'
-import * as Sentry from '@sentry/nextjs'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -33,35 +32,7 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo
     })
 
-    // Send error to Sentry with additional context
-    Sentry.captureException(error, {
-      contexts: {
-        react: {
-          componentStack: errorInfo.componentStack
-        }
-      },
-      tags: {
-        errorBoundary: true
-      },
-      extra: {
-        errorInfo,
-        // Mobile-specific error logging
-        deviceInfo:
-          typeof window !== 'undefined' && 'navigator' in window
-            ? {
-                isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-                  navigator.userAgent
-                ),
-                isChrome: /Chrome/i.test(navigator.userAgent),
-                userAgent: navigator.userAgent,
-                url: window.location.href,
-                timestamp: new Date().toISOString()
-              }
-            : undefined
-      }
-    })
-
-    // Log error locally for debugging
+    // Log error locally for debugging (Sentry reporting handled by SentryErrorBoundary)
     console.error('Error caught by boundary:', error, errorInfo)
   }
 
@@ -175,12 +146,7 @@ export function AsyncErrorBoundary({ children }: { children: ReactNode }) {
   React.useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error('Unhandled promise rejection:', event.reason)
-      // Send to Sentry
-      Sentry.captureException(event.reason, {
-        tags: {
-          errorType: 'unhandledRejection'
-        }
-      })
+      // Sentry reporting handled by SentryErrorBoundary
     }
 
     window.addEventListener('unhandledrejection', handleUnhandledRejection)

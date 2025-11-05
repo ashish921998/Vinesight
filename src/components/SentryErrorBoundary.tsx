@@ -2,9 +2,51 @@
 
 import * as Sentry from '@sentry/nextjs'
 import { ReactNode } from 'react'
+import * as React from 'react'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+/**
+ * Simple error boundary to catch errors in the main error boundary's fallback
+ */
+class SimpleErrorBoundary extends React.Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error boundary fallback failed:', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-red-600 mb-4">Something went wrong</h2>
+            <p className="text-muted-foreground mb-4">
+              An unexpected error occurred. Please refresh the page.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
 
 interface ErrorFallbackProps {
   error: Error
@@ -98,37 +140,34 @@ function ErrorFallback({ error, componentStack, eventId, resetError }: ErrorFall
  */
 export function SentryErrorBoundary({ children }: { children: ReactNode }) {
   return (
-    <Sentry.ErrorBoundary
-      fallback={({ error, componentStack, eventId, resetError }) => (
-        <ErrorFallback
-          error={error instanceof Error ? error : new Error(String(error))}
-          componentStack={componentStack}
-          eventId={eventId}
-          resetError={resetError}
-        />
-      )}
-      showDialog={false} // We handle the dialog manually via the Report Feedback button
-      beforeCapture={(scope) => {
-        // Add custom tags and context before capturing the error
-        scope.setTag('location', 'error-boundary')
-        scope.setLevel('error')
+    <SimpleErrorBoundary>
+      <Sentry.ErrorBoundary
+        fallback={({ error, componentStack, eventId, resetError }) => (
+          <ErrorFallback
+            error={error instanceof Error ? error : new Error(String(error))}
+            componentStack={componentStack}
+            eventId={eventId}
+            resetError={resetError}
+          />
+        )}
+        showDialog={false} // We handle the dialog manually via the Report Feedback button
+        beforeCapture={(scope) => {
+          // Add custom tags
+          scope.setTag('location', 'error-boundary')
+          scope.setLevel('error')
 
-        // Add device and browser information
-        if (typeof window !== 'undefined' && 'navigator' in window) {
-          scope.setContext('device', {
-            isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-              navigator.userAgent
-            ),
-            isChrome: /Chrome/i.test(navigator.userAgent),
-            userAgent: navigator.userAgent,
-            url: window.location.href,
-            timestamp: new Date().toISOString()
-          })
-        }
-      }}
-    >
-      {children}
-    </Sentry.ErrorBoundary>
+          // Add dynamic error context (device info set globally)
+          if (typeof window !== 'undefined') {
+            scope.setContext('errorContext', {
+              url: window.location.href,
+              timestamp: new Date().toISOString()
+            })
+          }
+        }}
+      >
+        {children}
+      </Sentry.ErrorBoundary>
+    </SimpleErrorBoundary>
   )
 }
 

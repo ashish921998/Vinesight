@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 
 export default function Error({
   error,
@@ -14,6 +14,9 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  // Cache timestamp to prevent hydration mismatch
+  const errorTimestamp = useMemo(() => new Date().toISOString(), [])
+
   useEffect(() => {
     // Log error to console
     console.error('Error boundary:', error)
@@ -22,7 +25,7 @@ export default function Error({
     Sentry.captureException(error, {
       tags: {
         location: 'page-error',
-        digest: error.digest
+        digest: error.digest ?? 'unknown'
       }
     })
   }, [error])
@@ -74,7 +77,7 @@ export default function Error({
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>What you were doing when the error occurred</li>
               <li>Browser and device information</li>
-              <li>Time: {new Date().toISOString()}</li>
+              <li>Time: {errorTimestamp}</li>
               {error.digest && <li>Error ID: {error.digest}</li>}
             </ul>
           </div>

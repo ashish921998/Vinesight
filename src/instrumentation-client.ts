@@ -6,17 +6,66 @@ import * as Sentry from '@sentry/nextjs'
 import { parseEnvFloat, parseEnvBoolean } from '@/lib/sentry-env-helpers'
 import { createClient } from '@/lib/supabase'
 
-const supabaseClient = createClient()
+// Lazy-load Supabase client for Sentry integration
+// This ensures the client is only created when Sentry initializes,
+// reducing unnecessary connections and allowing proper error handling
+let supabaseClient: ReturnType<typeof createClient> | null = null
+
+const getSupabaseClient = () => {
+  if (!supabaseClient) {
+    try {
+      supabaseClient = createClient()
+    } catch (error) {
+      // Capture error with Sentry instead of console
+      if (typeof window !== 'undefined') {
+        Sentry.captureException(error, {
+          tags: { context: 'supabase-client-initialization' }
+        })
+      }
+      // Return null to prevent Sentry initialization failure
+      // Sentry will still work, just without Supabase integration
+      return null
+    }
+  }
+  return supabaseClient
+}
+
+// Base integrations for all environments
+const baseIntegrations = [
+  Sentry.replayIntegration(),
+  Sentry.captureConsoleIntegration(),
+  // Only add Supabase integration if client was successfully created
+  ...(getSupabaseClient()
+    ? [Sentry.supabaseIntegration({ supabaseClient: getSupabaseClient()! })]
+    : [])
+]
+
+// Development-only integrations
+const devIntegrations =
+  process.env.NODE_ENV !== 'production'
+    ? [
+        Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
+        Sentry.spotlightBrowserIntegration(),
+        Sentry.browserTracingIntegration()
+      ]
+    : []
+
+// Set static device context globally for all Sentry events
+if (typeof window !== 'undefined' && 'navigator' in window) {
+  Sentry.setContext('device', {
+    isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    ),
+    isChrome: /Chrome/i.test(navigator.userAgent),
+    userAgent: navigator.userAgent
+  })
+}
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Add optional integrations for additional features
-  integrations: [
-    Sentry.replayIntegration(),
-    Sentry.captureConsoleIntegration(),
-    Sentry.supabaseIntegration({ supabaseClient })
-  ],
+  // Merge base integrations with development-specific integrations
+  integrations: [...baseIntegrations, ...devIntegrations],
 
   // Define how likely traces are sampled. Read from environment with safe production defaults.
   // Use NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE env var or fallback to 0.1 in production, 1.0 in development
@@ -43,18 +92,14 @@ Sentry.init({
     'NEXT_PUBLIC_SENTRY_SEND_DEFAULT_PII',
     process.env.NODE_ENV !== 'production'
   ),
+
+  // Development-specific configuration
   ...(process.env.NODE_ENV !== 'production'
     ? {
         spotlight: true, // Enable Spotlight
         sampleRate: 1.0, // Capture all errors in dev
         tracesSampleRate: 1.0, // Capture all traces in dev
-        enableLogs: true,
-        integrations: [
-          Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
-          // For frontend apps, add:
-          Sentry.spotlightBrowserIntegration(),
-          Sentry.browserTracingIntegration()
-        ]
+        enableLogs: true
       }
     : {})
 })
