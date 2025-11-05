@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -64,19 +65,42 @@ export function WaterCalculationModal({
 
   const handleSave = async () => {
     let finalWaterLevel: number | null = null
+    let errorMessage = ''
 
+    // Validate input based on mode
     if (useManualMode) {
-      if (!manualWaterLevel) return
+      if (!manualWaterLevel.trim()) {
+        errorMessage = 'Please enter a water level value'
+        toast.error(errorMessage)
+        return
+      }
       finalWaterLevel = parseFloat(manualWaterLevel)
+      if (isNaN(finalWaterLevel)) {
+        errorMessage = 'Please enter a valid number for water level'
+        toast.error(errorMessage)
+        return
+      }
     } else {
-      if (calculationResult === null) return
+      if (calculationResult === null) {
+        errorMessage = 'Please calculate water level first'
+        toast.error(errorMessage)
+        return
+      }
       finalWaterLevel = calculationResult
     }
 
-    if (finalWaterLevel === null || isNaN(finalWaterLevel)) return
+    // Additional validation
+    if (finalWaterLevel === null || isNaN(finalWaterLevel)) {
+      errorMessage = 'Invalid water level value'
+      toast.error(errorMessage)
+      return
+    }
 
     // Ensure farm.id exists and is valid
     if (!farm.id || typeof farm.id !== 'number') {
+      errorMessage = 'Invalid farm ID. Please try again.'
+      toast.error(errorMessage)
+      // eslint-disable-next-line no-console
       console.error('Invalid farm ID:', farm.id)
       return
     }
@@ -93,14 +117,17 @@ export function WaterCalculationModal({
       const notificationService = NotificationService.getInstance()
       notificationService.checkWaterLevelAndAlert(capitalize(farm.name), finalWaterLevel)
 
+      // Show success toast
+      toast.success(`${useManualMode ? 'Manual' : 'Calculated'} water level saved successfully!`)
+
       onCalculationComplete()
       handleClose()
     } catch (error) {
-      // Log error for debugging in development only
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.error('Error saving water calculation:', error)
-      }
+      errorMessage =
+        error instanceof Error ? error.message : 'Failed to save water level. Please try again.'
+
+      // Show error toast
+      toast.error(errorMessage)
     } finally {
       setIsCalculating(false)
     }
@@ -119,11 +146,11 @@ export function WaterCalculationModal({
 
   const isFormValid = formData.cropCoefficient && formData.evapotranspiration
   const canSave =
-    (useManualMode && manualWaterLevel) || (!useManualMode && calculationResult !== null)
+    (useManualMode && manualWaterLevel.trim()) || (!useManualMode && calculationResult !== null)
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[400px] w-[95vw] mx-auto">
+      <DialogContent className="sm:max-w-[400px] w-[95vw] mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-green-700">
             <div className="p-2 bg-green-100 rounded-xl">
@@ -165,8 +192,10 @@ export function WaterCalculationModal({
                 type="button"
                 variant={!useManualMode ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setUseManualMode(false)}
-                className="text-xs h-8 flex-1"
+                onClick={() => {
+                  setUseManualMode(false)
+                }}
+                className="text-xs h-10 flex-1 min-h-[44px] touch-manipulation"
               >
                 <Calculator className="h-3 w-3 mr-1" />
                 Calculate
@@ -175,8 +204,10 @@ export function WaterCalculationModal({
                 type="button"
                 variant={useManualMode ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setUseManualMode(true)}
-                className="text-xs h-8 flex-1"
+                onClick={() => {
+                  setUseManualMode(true)
+                }}
+                className="text-xs h-10 flex-1 min-h-[44px] touch-manipulation"
               >
                 <Edit3 className="h-3 w-3 mr-1" />
                 Manual Entry
@@ -195,9 +226,13 @@ export function WaterCalculationModal({
                 type="number"
                 step="0.1"
                 value={manualWaterLevel}
-                onChange={(e) => setManualWaterLevel(e.target.value)}
+                onChange={(e) => {
+                  setManualWaterLevel(e.target.value)
+                }}
                 placeholder="Enter water level in mm"
-                className="mt-1 h-11"
+                className="mt-1 h-12 text-base touch-manipulation"
+                inputMode="decimal"
+                autoComplete="off"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Enter the current water level in your soil
@@ -215,11 +250,11 @@ export function WaterCalculationModal({
                 </Label>
                 <Select
                   value={formData.cropCoefficient}
-                  onValueChange={(value) =>
+                  onValueChange={(value) => {
                     setFormData((prev) => ({ ...prev, cropCoefficient: value }))
-                  }
+                  }}
                 >
-                  <SelectTrigger className="mt-1 h-11">
+                  <SelectTrigger className="mt-1 h-12 text-base touch-manipulation">
                     <SelectValue placeholder="Select growth stage" />
                   </SelectTrigger>
                   <SelectContent className="max-h-60 overflow-y-auto">
@@ -251,11 +286,13 @@ export function WaterCalculationModal({
                   step="0.1"
                   min="0"
                   value={formData.evapotranspiration}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setFormData((prev) => ({ ...prev, evapotranspiration: e.target.value }))
-                  }
+                  }}
                   placeholder="4.5"
-                  className="mt-1 h-11"
+                  className="mt-1 h-12 text-base touch-manipulation"
+                  inputMode="decimal"
+                  autoComplete="off"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -269,7 +306,7 @@ export function WaterCalculationModal({
                   type="button"
                   onClick={handleCalculate}
                   disabled={!isFormValid}
-                  className="w-full h-11 bg-green-600 hover:bg-green-700"
+                  className="w-full h-12 bg-green-600 hover:bg-green-700 text-base min-h-[44px] touch-manipulation"
                 >
                   <Calculator className="h-4 w-4 mr-2" />
                   Calculate Water Level
@@ -283,7 +320,7 @@ export function WaterCalculationModal({
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <Droplets className="h-5 w-5 text-green-600" />
+                  <Droplets className="h-5 w-5 text-green-600 flex-shrink-0" />
                   <span className="text-sm font-medium text-green-700">Water Level Result</span>
                 </div>
 
@@ -319,14 +356,19 @@ export function WaterCalculationModal({
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-4">
-          <Button type="button" variant="outline" onClick={handleClose} className="flex-1 h-11">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleClose}
+            className="flex-1 h-12 text-base min-h-[44px] touch-manipulation"
+          >
             Cancel
           </Button>
           <Button
             type="button"
             onClick={handleSave}
             disabled={!canSave || isCalculating}
-            className="flex-1 h-11 bg-green-600 hover:bg-green-700"
+            className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-base min-h-[44px] touch-manipulation"
           >
             {isCalculating ? (
               <>
