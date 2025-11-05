@@ -4,7 +4,7 @@
 
 import * as Sentry from '@sentry/nextjs'
 import { parseEnvFloat, parseEnvBoolean } from '@/lib/sentry-env-helpers'
-import { createClient } from './lib/supabase'
+import { createClient } from '@/lib/supabase'
 
 const supabaseClient = createClient()
 
@@ -15,7 +15,6 @@ Sentry.init({
   integrations: [
     Sentry.replayIntegration(),
     Sentry.captureConsoleIntegration(),
-    Sentry.vercelAIIntegration(),
     Sentry.supabaseIntegration({ supabaseClient })
   ],
 
@@ -43,7 +42,21 @@ Sentry.init({
   sendDefaultPii: parseEnvBoolean(
     'NEXT_PUBLIC_SENTRY_SEND_DEFAULT_PII',
     process.env.NODE_ENV !== 'production'
-  )
+  ),
+  ...(process.env.NODE_ENV !== 'production'
+    ? {
+        spotlight: true, // Enable Spotlight
+        sampleRate: 1.0, // Capture all errors in dev
+        tracesSampleRate: 1.0, // Capture all traces in dev
+        enableLogs: true,
+        integrations: [
+          Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
+          // For frontend apps, add:
+          Sentry.spotlightBrowserIntegration(),
+          Sentry.browserTracingIntegration()
+        ]
+      }
+    : {})
 })
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart

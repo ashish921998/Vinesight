@@ -49,7 +49,6 @@ import { useRouter } from 'next/navigation'
 
 // Helper function to calculate farm health status based on real data
 const calculateFarmStatus = (
-  farm: Farm,
   tasks?: any[],
   alerts?: any[]
 ): 'healthy' | 'attention' | 'critical' => {
@@ -95,11 +94,10 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
         crop: selectedFarm.crop,
         cropVariety: selectedFarm.cropVariety,
         totalAcres: selectedFarm.area,
-        status: calculateFarmStatus(
-          selectedFarm,
-          dashboardData?.pendingTasks,
-          dashboardData?.alerts
-        ) as 'healthy' | 'attention' | 'critical'
+        status: calculateFarmStatus(dashboardData?.pendingTasks, dashboardData?.alerts) as
+          | 'healthy'
+          | 'attention'
+          | 'critical'
       }
     : null
 
@@ -986,7 +984,6 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                     <SelectContent className="rounded-2xl border border-border/60 bg-background/95 text-sm shadow-lg sm:text-base">
                       {farms.map((farm) => {
                         const status = calculateFarmStatus(
-                          farm,
                           dashboardData?.pendingTasks,
                           dashboardData?.alerts
                         )

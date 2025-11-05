@@ -157,8 +157,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${merriweather.variable} ${sourceCodePro.variable} antialiased`}
       >
-        <SentryErrorBoundary>
-          <AsyncErrorBoundary>
+        <AsyncErrorBoundary>
+          <SentryErrorBoundary>
             <Suspense
               fallback={
                 <div className="min-h-screen flex items-center justify-center bg-background">
@@ -174,8 +174,8 @@ export default function RootLayout({
                 <LayoutContent>{children}</LayoutContent>
               </I18nProvider>
             </Suspense>
-          </AsyncErrorBoundary>
-        </SentryErrorBoundary>
+          </SentryErrorBoundary>
+        </AsyncErrorBoundary>
         <GoogleAnalytics />
         <Analytics />
       </body>
