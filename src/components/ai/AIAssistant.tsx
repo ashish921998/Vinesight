@@ -27,6 +27,7 @@ import { toast } from 'sonner'
 import { getQuotaStatus, incrementQuestionCount } from '@/lib/quota-service'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
   supabaseConversationStorage,
@@ -1092,7 +1093,7 @@ export function AIAssistant({
           )}
 
           <div className={cn('flex-shrink-0 p-4 bg-white border-t')}>
-            <input
+            <Input
               ref={fileInputRef}
               type="file"
               accept="image/*"
