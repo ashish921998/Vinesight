@@ -32,6 +32,23 @@ interface WaterCalculationModalProps {
   onCalculationComplete: () => void
 }
 
+// Growth stage data structure with unique IDs
+const GROWTH_STAGES = [
+  { id: 'beginning_budbreak', value: 0.25, label: 'Beginning budbreak' },
+  { id: 'shoot_30cm', value: 0.3, label: 'Shoot 30cm' },
+  { id: 'shoot_50cm', value: 0.4, label: 'Shoot 50cm' },
+  { id: 'shoot_80cm', value: 0.5, label: 'Shoot 80cm' },
+  { id: 'beginning_bloom', value: 0.6, label: 'Beginning Bloom' },
+  { id: 'fruit_set', value: 0.7, label: 'Fruit set' },
+  { id: 'berry_6_8mm', value: 0.8, label: 'Berry size 6-8mm' },
+  { id: 'berry_12mm', value: 0.85, label: 'Berry size 12mm' },
+  { id: 'closing_bunches', value: 1.0, label: 'Closing bunches' },
+  { id: 'beginning_veraison', value: 1.0, label: 'Beginning veraison' },
+  { id: 'beginning_harvest', value: 0.8, label: 'Beginning harvest' },
+  { id: 'end_harvest', value: 0.6, label: 'End harvest' },
+  { id: 'after_harvest', value: 0.5, label: 'After harvest' }
+] as const
+
 export function WaterCalculationModal({
   isOpen,
   onClose,
@@ -53,14 +70,41 @@ export function WaterCalculationModal({
       return
     }
 
-    const cropCoefficientValue = parseFloat(formData.cropCoefficient)
+    // Resolve crop coefficient value from selected stage ID
+    const selectedStage = GROWTH_STAGES.find((stage) => stage.id === formData.cropCoefficient)
+    const cropCoefficientValue = selectedStage?.value ?? 0
+
+    if (cropCoefficientValue === 0) {
+      toast.error('Invalid crop coefficient selected')
+      return
+    }
+
+    // Parse and validate other values
     const evapotranspirationValue = parseFloat(formData.evapotranspiration)
     const rainfallValue = formData.rainfall ? parseFloat(formData.rainfall) : 0
     const currentRemainingWater = farm.remainingWater || 0
 
+    // Validate parsed values to prevent NaN propagation
+    if (!Number.isFinite(evapotranspirationValue)) {
+      toast.error('Invalid evapotranspiration value')
+      return
+    }
+    // Validate rainfall even when empty string defaults to 0, catch any invalid parsed values
+    if (!Number.isFinite(rainfallValue)) {
+      toast.error('Invalid rainfall value')
+      return
+    }
+
     // Updated Formula: current remaining water + rainfall - (crop_coefficient * evapotranspiration)
     const result =
       currentRemainingWater + rainfallValue - cropCoefficientValue * evapotranspirationValue
+
+    // Validate result
+    if (!Number.isFinite(result)) {
+      toast.error('Calculation resulted in invalid value')
+      return
+    }
+
     setCalculationResult(result)
     setUseManualMode(false)
     setManualWaterLevel(result.toString())
@@ -261,84 +305,14 @@ export function WaterCalculationModal({
                     <SelectValue placeholder="Select growth stage" />
                   </SelectTrigger>
                   <SelectContent className="max-h-60 overflow-y-auto">
-                    <SelectItem value="0.25">
-                      <div className="flex flex-col items-start">
-                        <span>0.25</span>
-                        <span className="text-xs text-gray-500">Beginning budbreak</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="0.3">
-                      <div className="flex flex-col items-start">
-                        <span>0.3</span>
-                        <span className="text-xs text-gray-500">Shoot 30cm</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="0.4">
-                      <div className="flex flex-col items-start">
-                        <span>0.4</span>
-                        <span className="text-xs text-gray-500">Shoot 50cm</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="0.5">
-                      <div className="flex flex-col items-start">
-                        <span>0.5</span>
-                        <span className="text-xs text-gray-500">Shoot 80cm</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="0.6">
-                      <div className="flex flex-col items-start">
-                        <span>0.6</span>
-                        <span className="text-xs text-gray-500">Beginning Bloom</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="0.7">
-                      <div className="flex flex-col items-start">
-                        <span>0.7</span>
-                        <span className="text-xs text-gray-500">Fruit set</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="0.80">
-                      <div className="flex flex-col items-start">
-                        <span>0.8</span>
-                        <span className="text-xs text-gray-500">Berry size 6-8mm</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="0.85">
-                      <div className="flex flex-col items-start">
-                        <span>0.85</span>
-                        <span className="text-xs text-gray-500">Berry size 12mm</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="1.0">
-                      <div className="flex flex-col items-start">
-                        <span>1.0</span>
-                        <span className="text-xs text-gray-500">Closing bunches</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="1">
-                      <div className="flex flex-col items-start">
-                        <span>1.0</span>
-                        <span className="text-xs text-gray-500">Beginning veraison</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="0.801">
-                      <div className="flex flex-col items-start">
-                        <span>0.8</span>
-                        <span className="text-xs text-gray-500">Beginning harvest</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="0.601">
-                      <div className="flex flex-col items-start">
-                        <span>0.6</span>
-                        <span className="text-xs text-gray-500">End harvest</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="0.501">
-                      <div className="flex flex-col items-start">
-                        <span>0.5</span>
-                        <span className="text-xs text-gray-500">After harvest</span>
-                      </div>
-                    </SelectItem>
+                    {GROWTH_STAGES.map((stage) => (
+                      <SelectItem key={stage.id} value={stage.id}>
+                        <div className="flex flex-col items-start">
+                          <span>{stage.value}</span>
+                          <span className="text-xs text-gray-500">{stage.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -435,7 +409,7 @@ export function WaterCalculationModal({
                       <div className="break-all">
                         {(farm.remainingWater || 0).toFixed(1)} +{' '}
                         {(parseFloat(formData.rainfall) || 0).toFixed(1)} - (
-                        {parseFloat(formData.cropCoefficient)} ×{' '}
+                        {GROWTH_STAGES.find((s) => s.id === formData.cropCoefficient)?.value ?? 0} ×{' '}
                         {parseFloat(formData.evapotranspiration)})
                       </div>
                       <div>= {calculationResult.toFixed(1)} mm</div>
