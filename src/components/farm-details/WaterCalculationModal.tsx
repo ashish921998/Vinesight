@@ -100,7 +100,6 @@ export function WaterCalculationModal({
     if (!farm.id || typeof farm.id !== 'number') {
       errorMessage = 'Invalid farm ID. Please try again.'
       toast.error(errorMessage)
-      // eslint-disable-next-line no-console
       console.error('Invalid farm ID:', farm.id)
       return
     }
@@ -114,8 +113,8 @@ export function WaterCalculationModal({
       })
 
       // Check water level and send notification if needed
-      const notificationService = NotificationService.getInstance()
-      notificationService.checkWaterLevelAndAlert(capitalize(farm.name), finalWaterLevel)
+      // const notificationService = NotificationService.getInstance()
+      // notificationService.checkWaterLevelAndAlert(capitalize(farm.name), finalWaterLevel)
 
       // Show success toast
       toast.success(`${useManualMode ? 'Manual' : 'Calculated'} water level saved successfully!`)
