@@ -760,6 +760,41 @@ export type Database = {
           }
         ]
       }
+      daily_notes: {
+        Row: {
+          created_at: string | null
+          date: string
+          farm_id: number
+          id: number
+          notes: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          farm_id: number
+          id?: number
+          notes?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          farm_id?: number
+          id?: number
+          notes?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'daily_notes_farm_id_fkey'
+            columns: ['farm_id']
+            isOneToOne: false
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       farmer_ai_profiles: {
         Row: {
           created_at: string | null

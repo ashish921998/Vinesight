@@ -18,7 +18,6 @@ interface ActivityFeedProps {
   pendingTasks: any[]
   loading: boolean
   onCompleteTask: (taskId: number) => Promise<void>
-  onEditRecord: (record: any, recordType: string) => void
   onDeleteRecord: (record: any, recordType: string) => void
   onEditDateGroup?: (date: string, activities: any[]) => void
   onDeleteDateGroup?: (date: string, activities: any[]) => void
@@ -36,7 +35,6 @@ export function ActivityFeed({
   pendingTasks,
   loading,
   onCompleteTask,
-  onEditRecord: _onEditRecord,
   onDeleteRecord: _onDeleteRecord,
   onEditDateGroup,
   onDeleteDateGroup,

@@ -10,7 +10,6 @@ import { ActivityFeed } from '@/components/farm-details/ActivityFeed'
 import { UnifiedDataLogsModal } from '@/components/farm-details/UnifiedDataLogsModal'
 import type { ReportAttachmentMeta } from '@/types/reports'
 import { WaterCalculationModal } from '@/components/farm-details/WaterCalculationModal'
-import { EditRecordModal } from '@/components/journal/EditRecordModal'
 import { FarmModal } from '@/components/farm-details/forms/FarmModal'
 import {
   Dialog,
@@ -31,6 +30,12 @@ import { logger } from '@/lib/logger'
 import { OpenMeteoWeatherService } from '@/lib/open-meteo-weather'
 import { WEATHER_THRESHOLDS } from '@/constants/weather'
 import { toast } from 'sonner'
+import {
+  processDailyNotesAndPhotos,
+  parseFarmId,
+  shouldUseSingleEditModal,
+  extractDailyNoteFromActivities
+} from '@/lib/daily-note-utils'
 
 interface DashboardData {
   farm: Farm | null
@@ -47,6 +52,8 @@ interface DashboardData {
     harvest: number
     expense: number
     soilTest: number
+    petioleTest: number
+    dailyNotes: number
   }
 }
 
@@ -65,8 +72,6 @@ export default function FarmDetailsPage() {
   // Modal states
   const [showDataLogsModal, setShowDataLogsModal] = useState(false)
   const [showWaterCalculationModal, setShowWaterCalculationModal] = useState(false)
-  const [editingRecord, setEditingRecord] = useState<any>(null)
-  const [showEditModal, setShowEditModal] = useState(false)
   const [deletingRecord, setDeletingRecord] = useState<any>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -75,6 +80,10 @@ export default function FarmDetailsPage() {
   const [editModeLogs, setEditModeLogs] = useState<any[]>([])
   const [editModeDate, setEditModeDate] = useState<string>('')
   const [editMode, setEditMode] = useState<'add' | 'edit'>('add')
+  const [editModeDayNote, setEditModeDayNote] = useState<{
+    id: number | null
+    notes: string
+  } | null>(null)
 
   // Farm edit modal states
   const [showFarmModal, setShowFarmModal] = useState(false)
@@ -129,7 +138,17 @@ export default function FarmDetailsPage() {
     if (action === 'edit' && date && activitiesParam) {
       try {
         const activities = JSON.parse(decodeURIComponent(activitiesParam))
-        const existingLogs = transformActivitiesToLogEntries(activities)
+        const dayNoteActivity = activities.find((act: any) => act.type === 'daily_note')
+        if (dayNoteActivity) {
+          setEditModeDayNote({
+            id: dayNoteActivity.id ?? null,
+            notes: dayNoteActivity.notes || ''
+          })
+        } else {
+          setEditModeDayNote(null)
+        }
+        const logActivities = activities.filter((act: any) => act.type !== 'daily_note')
+        const existingLogs = transformActivitiesToLogEntries(logActivities)
 
         // Normalize date to ISO format (YYYY-MM-DD) for proper handling
         const normalizedDate = date
@@ -152,6 +171,7 @@ export default function FarmDetailsPage() {
       setEditModeLogs([])
       setEditModeDate(today)
       setEditMode('add')
+      setEditModeDayNote(null)
       setShowDataLogsModal(true)
       router.replace(`/farms/${farmId}`, { scroll: false })
     } else if (action === 'edit-log' && logIdParam) {
@@ -159,7 +179,8 @@ export default function FarmDetailsPage() {
       if (Number.isFinite(logId)) {
         const activity = dashboardData?.recentActivities?.find((act: any) => act.id === logId)
         if (activity) {
-          handleEditRecord(activity as any)
+          // Open the unified modal with the single activity
+          handleEditDateGroup(activity.date, [activity])
           // Only clear URL parameters after successfully processing the action
           router.replace(`/farms/${farmId}`, { scroll: false })
         } else {
@@ -223,10 +244,12 @@ export default function FarmDetailsPage() {
     logs: any[],
     date: string,
     dayNotes: string,
-    dayPhotos: File[]
+    dayPhotos: File[],
+    existingDailyNoteId?: number | null
   ) => {
     setIsSubmitting(true)
     try {
+      const farmIdNum = parseFarmId(farmId)
       let firstRecordId: number | null = null
 
       for (let i = 0; i < logs.length; i++) {
@@ -251,21 +274,22 @@ export default function FarmDetailsPage() {
         }
       }
 
-      // Upload day photos only once, associated with the first record
-      if (firstRecordId && dayPhotos && dayPhotos.length > 0) {
-        for (const photo of dayPhotos) {
-          try {
-            await PhotoService.uploadPhoto(photo, 'day_photos', firstRecordId)
-          } catch (photoError) {
-            logger.error('Error uploading day photo:', photoError)
-            toast.error('Photo upload failed, but logs were saved')
-          }
-        }
-      }
+      // Use utility function to handle daily notes and photos
+      await processDailyNotesAndPhotos(
+        {
+          farmId: farmIdNum,
+          date,
+          notes: dayNotes,
+          existingId: existingDailyNoteId
+        },
+        dayPhotos,
+        firstRecordId
+      )
 
       await loadDashboardData()
       toast.success('Data logs saved successfully')
       setShowDataLogsModal(false)
+      setEditModeDayNote(null)
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       toast.error(`Error saving data logs: ${errorMsg}`)
@@ -936,11 +960,6 @@ export default function FarmDetailsPage() {
     return record
   }
 
-  const handleEditRecord = (record: any) => {
-    setEditingRecord(record)
-    setShowEditModal(true)
-  }
-
   const handleDeleteRecord = (record: any) => {
     setDeletingRecord(record)
     setShowDeleteDialog(true)
@@ -953,83 +972,24 @@ export default function FarmDetailsPage() {
       ? new Date(date).toISOString().split('T')[0]
       : new Date().toISOString().split('T')[0]
 
-    // Check if there's only one activity - if so, use the dedicated edit modal
-    if (activities.length === 1) {
-      const activity = activities[0]
+    // Extract daily note using utility function
+    const dailyNote = extractDailyNoteFromActivities(activities)
+    setEditModeDayNote(dailyNote)
 
-      // Transform activity to record format for EditRecordModal
-      // Only include fields that EditRecordModal expects
-      const record = {
-        id: activity.id,
-        type: activity.type,
-        date: activity.date,
-        notes: activity.notes || '',
-        // Include type-specific fields that EditRecordModal handles
-        ...(activity.type === 'irrigation' && {
-          duration: activity.duration,
-          area: activity.area,
-          growth_stage: activity.growth_stage,
-          moisture_status: activity.moisture_status,
-          system_discharge: activity.system_discharge
-        }),
-        ...(activity.type === 'spray' && {
-          chemical: activity.chemical,
-          chemicals: activity.chemicals,
-          water_volume: activity.water_volume,
-          dose: activity.dose,
-          quantity_amount: activity.quantity_amount,
-          quantity_unit: activity.quantity_unit
-        }),
-        ...(activity.type === 'harvest' && {
-          quantity: activity.quantity,
-          grade: activity.grade,
-          price: activity.price,
-          buyer: activity.buyer
-        }),
-        ...(activity.type === 'fertigation' && {
-          fertilizer: activity.fertilizer,
-          quantity: activity.quantity,
-          unit: activity.unit,
-          purpose: activity.purpose,
-          area: activity.area
-        }),
-        ...(activity.type === 'expense' && {
-          type: activity.type,
-          description: activity.description,
-          cost: activity.cost,
-          remarks: activity.remarks
-        }),
-        ...(activity.type === 'soil_test' && {
-          parameters: activity.parameters,
-          recommendations: activity.recommendations,
-          report_url: activity.report_url,
-          report_storage_path: activity.report_storage_path,
-          report_filename: activity.report_filename,
-          report_type: activity.report_type,
-          extraction_status: activity.extraction_status,
-          extraction_error: activity.extraction_error,
-          parsed_parameters: activity.parsed_parameters,
-          raw_notes: activity.raw_notes
-        }),
-        ...(activity.type === 'petiole_test' && {
-          sample_id: activity.sample_id,
-          parameters: activity.parameters,
-          recommendations: activity.recommendations,
-          report_url: activity.report_url,
-          report_storage_path: activity.report_storage_path,
-          report_filename: activity.report_filename,
-          report_type: activity.report_type,
-          extraction_status: activity.extraction_status,
-          extraction_error: activity.extraction_error,
-          parsed_parameters: activity.parsed_parameters,
-          raw_notes: activity.raw_notes
-        })
-      }
+    // Check if should use single edit modal using utility function
+    if (shouldUseSingleEditModal(activities)) {
+      // Single non-note activity - open UnifiedDataLogsModal
+      const nonNoteActivities = activities.filter((activity) => activity.type !== 'daily_note')
+      const existingLogs = transformActivitiesToLogEntries(nonNoteActivities)
 
-      handleEditRecord(record)
+      setEditModeLogs(existingLogs)
+      setEditModeDate(normalizedDate)
+      setEditMode('edit')
+      setShowDataLogsModal(true)
     } else {
       // Multiple activities - use UnifiedDataLogsModal
-      const existingLogs = transformActivitiesToLogEntries(activities)
+      const nonNoteActivities = activities.filter((activity) => activity.type !== 'daily_note')
+      const existingLogs = transformActivitiesToLogEntries(nonNoteActivities)
 
       // Set up the edit modal with existing logs
       setEditModeLogs(existingLogs)
@@ -1076,6 +1036,9 @@ export default function FarmDetailsPage() {
           case 'petiole_test':
             await SupabaseService.deletePetioleTestRecord(activity.id)
             break
+          case 'daily_note':
+            await SupabaseService.deleteDailyNote(activity.id)
+            break
         }
       }
 
@@ -1112,6 +1075,12 @@ export default function FarmDetailsPage() {
         case 'soil_test':
           await SupabaseService.deleteSoilTestRecord(deletingRecord.id)
           break
+        case 'petiole_test':
+          await SupabaseService.deletePetioleTestRecord(deletingRecord.id)
+          break
+        case 'daily_note':
+          await SupabaseService.deleteDailyNote(deletingRecord.id)
+          break
       }
 
       await loadDashboardData()
@@ -1122,12 +1091,6 @@ export default function FarmDetailsPage() {
     } finally {
       setIsDeleting(false)
     }
-  }
-
-  const handleSaveRecord = () => {
-    setShowEditModal(false)
-    setEditingRecord(null)
-    loadDashboardData()
   }
 
   // Farm edit and delete handlers
@@ -1243,10 +1206,28 @@ export default function FarmDetailsPage() {
     ? Object.values(dashboardData.recordCounts).reduce((sum, count) => sum + count, 0)
     : 0
 
-  const openDataLogsModal = () => {
+  const openDataLogsModal = async () => {
+    const today = new Date().toISOString().split('T')[0]
     setEditMode('add')
     setEditModeLogs([])
-    setEditModeDate('')
+    setEditModeDate(today)
+
+    // Check if there's already a daily note for today
+    try {
+      const existingDailyNote = await SupabaseService.getDailyNoteByDate(parseFarmId(farmId), today)
+      if (existingDailyNote) {
+        setEditModeDayNote({
+          id: existingDailyNote.id ?? null,
+          notes: existingDailyNote.notes || ''
+        })
+      } else {
+        setEditModeDayNote(null)
+      }
+    } catch (error) {
+      console.error('Error fetching existing daily note:', error)
+      setEditModeDayNote(null)
+    }
+
     setShowDataLogsModal(true)
   }
 
@@ -1279,7 +1260,6 @@ export default function FarmDetailsPage() {
               pendingTasks={dashboardData?.pendingTasks || []}
               loading={loading}
               onCompleteTask={completeTask}
-              onEditRecord={handleEditRecord}
               onDeleteRecord={handleDeleteRecord}
               onEditDateGroup={handleEditDateGroup}
               onDeleteDateGroup={handleDeleteDateGroup}
@@ -1296,6 +1276,7 @@ export default function FarmDetailsPage() {
             setEditMode('add')
             setEditModeLogs([])
             setEditModeDate('')
+            setEditModeDayNote(null)
           }}
           onSubmit={handleDataLogsSubmit}
           isSubmitting={isSubmitting}
@@ -1303,6 +1284,8 @@ export default function FarmDetailsPage() {
           mode={editMode}
           existingLogs={editModeLogs}
           selectedDate={editModeDate}
+          existingDayNote={editModeDayNote?.notes}
+          existingDayNoteId={editModeDayNote?.id ?? null}
         />
 
         {/* Water Calculation Modal */}
@@ -1312,28 +1295,6 @@ export default function FarmDetailsPage() {
             onClose={() => setShowWaterCalculationModal(false)}
             farm={dashboardData.farm}
             onCalculationComplete={loadDashboardData}
-          />
-        )}
-
-        {/* Edit Record Modal */}
-        {editingRecord && (
-          <EditRecordModal
-            isOpen={showEditModal}
-            onClose={() => {
-              setShowEditModal(false)
-              setEditingRecord(null)
-            }}
-            onSave={handleSaveRecord}
-            record={editingRecord}
-            recordType={
-              editingRecord.type as
-                | 'irrigation'
-                | 'spray'
-                | 'harvest'
-                | 'fertigation'
-                | 'expense'
-                | 'soil_test'
-            }
           />
         )}
 

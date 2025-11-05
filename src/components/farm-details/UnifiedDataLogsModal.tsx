@@ -40,6 +40,7 @@ import { toast } from 'sonner'
 import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-config'
 import { formatChemicalsArray, type Chemical } from '@/lib/chemical-formatter'
 import { SupabaseService } from '@/lib/supabase-service'
+import { generateSaveButtonLabel } from '@/lib/daily-note-utils'
 
 interface LogEntry {
   id: string // temporary ID for session
@@ -54,12 +55,20 @@ interface LogEntry {
 interface UnifiedDataLogsModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (logs: LogEntry[], date: string, dayNotes: string, dayPhotos: File[]) => void
+  onSubmit: (
+    logs: LogEntry[],
+    date: string,
+    dayNotes: string,
+    dayPhotos: File[],
+    existingDailyNoteId?: number | null
+  ) => void
   isSubmitting: boolean
   farmId?: number
   mode?: 'add' | 'edit'
   existingLogs?: LogEntry[]
   selectedDate?: string
+  existingDayNote?: string
+  existingDayNoteId?: number | null
 }
 
 // Use centralized logTypeConfigs from @/lib/log-type-config
@@ -77,7 +86,9 @@ export function UnifiedDataLogsModal({
   farmId,
   mode = 'add',
   existingLogs = [],
-  selectedDate
+  selectedDate,
+  existingDayNote,
+  existingDayNoteId = null
 }: UnifiedDataLogsModalProps) {
   const [internalSelectedDate, setInternalSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
@@ -115,6 +126,9 @@ export function UnifiedDataLogsModal({
   // Shared day-level data
   const [dayNotes, setDayNotes] = useState('')
   const [dayPhotos, setDayPhotos] = useState<File[]>([])
+  const [activeDailyNoteId, setActiveDailyNoteId] = useState<number | null>(
+    existingDayNoteId ?? null
+  )
 
   // Multiple spray entries state
   const [multipleSprayMode, setMultipleSprayMode] = useState(false)
@@ -180,6 +194,7 @@ export function UnifiedDataLogsModal({
         setCurrentReport(null)
         setReportUploadError(null)
         setIsUploadingReport(false)
+        setActiveDailyNoteId(null)
       }
 
       // Reset state immediately
@@ -187,22 +202,24 @@ export function UnifiedDataLogsModal({
 
       // Then initialize based on mode after a brief delay to ensure reset is complete
       const timer = setTimeout(() => {
-        if (mode === 'edit' && existingLogs.length > 0) {
-          // Initialize with existing logs for edit mode
+        setActiveDailyNoteId(existingDayNoteId ?? null)
+
+        if (mode === 'edit') {
           setSessionLogs(existingLogs)
-          // Extract day notes from the first log if available
+        }
+
+        if (selectedDate) {
+          setInternalSelectedDate(selectedDate)
+        } else if (mode !== 'edit') {
+          setInternalSelectedDate(new Date().toISOString().split('T')[0])
+        }
+
+        if (existingDayNote !== undefined) {
+          setDayNotes(existingDayNote || '')
+        } else if (mode === 'edit' && existingLogs.length > 0) {
           const firstLog = existingLogs[0]
           if (firstLog?.data?.notes) {
             setDayNotes(firstLog.data.notes)
-          }
-          // Set the internal date if selectedDate is provided
-          if (selectedDate) {
-            setInternalSelectedDate(selectedDate)
-          }
-        } else {
-          // For add mode, ensure we have a fresh date
-          if (!selectedDate) {
-            setInternalSelectedDate(new Date().toISOString().split('T')[0])
           }
         }
       }, 0) // Use setTimeout to ensure state reset completes before initialization
@@ -228,8 +245,9 @@ export function UnifiedDataLogsModal({
       setCurrentReport(null)
       setReportUploadError(null)
       setIsUploadingReport(false)
+      setActiveDailyNoteId(null)
     }
-  }, [isOpen, mode, existingLogs, selectedDate])
+  }, [isOpen, mode, existingLogs, selectedDate, existingDayNote, existingDayNoteId])
 
   // Reset current form when log type changes
   useEffect(() => {
@@ -850,14 +868,19 @@ export function UnifiedDataLogsModal({
     setDayPhotos((prev) => prev.filter((_, i) => i !== index))
   }
 
+  const hasLogs = sessionLogs.length > 0
+  const hasNotes = dayNotes.trim().length > 0
+  const hasPhotos = dayPhotos.length > 0
+  const saveButtonLabel = generateSaveButtonLabel(hasLogs, sessionLogs.length)
+
   const handleSaveAllLogs = async () => {
-    if (sessionLogs.length === 0) {
-      toast.error('No logs to save. Please add at least one log entry.')
+    if (!hasLogs && !hasNotes && !hasPhotos) {
+      toast.error('Add at least one log, note, or photo before saving.')
       return
     }
 
     try {
-      await onSubmit(sessionLogs, selectedDateToUse, dayNotes, dayPhotos)
+      await onSubmit(sessionLogs, selectedDateToUse, dayNotes, dayPhotos, activeDailyNoteId)
     } catch (error) {
       console.error('Error saving logs:', error)
       const errorMessage =
@@ -1783,76 +1806,76 @@ export function UnifiedDataLogsModal({
           )}
 
           {/* Day-level Notes and Photos */}
-          {sessionLogs.length > 0 && (
-            <Card className="border-2 border-dashed border-gray-300">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  📝 Day Notes & Photos
-                  <Badge variant="outline" className="ml-2">
-                    Shared for all logs
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {/* Day Notes */}
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium text-gray-700">Notes for the Day</Label>
-                  <Textarea
-                    value={dayNotes}
-                    onChange={(e) => setDayNotes(e.target.value)}
-                    placeholder="Add general notes for all activities on this date..."
-                    className="min-h-[80px]"
-                  />
-                </div>
+          <Card className="border-2 border-dashed border-gray-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                📝 Day Notes & Photos
+                <Badge variant="outline" className="ml-2">
+                  {hasLogs ? 'Shared for all logs' : 'Standalone entry'}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* Day Notes */}
+              <div className="space-y-1">
+                <Label className="text-sm font-medium text-gray-700">Notes for the Day</Label>
+                <Textarea
+                  value={dayNotes}
+                  onChange={(e) => setDayNotes(e.target.value)}
+                  placeholder={
+                    hasLogs
+                      ? 'Add general notes for all activities on this date...'
+                      : 'Add notes or context for this date even without logs...'
+                  }
+                  className="min-h-[80px]"
+                />
+              </div>
 
-                {/* Day Photos */}
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium text-gray-700">Photos for the Day</Label>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handlePhotoAdd}
-                        className="h-9"
-                      />
-                      <Upload className="h-4 w-4 text-gray-400" />
-                    </div>
-                    {dayPhotos.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {dayPhotos.map((photo, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="flex items-center gap-1"
-                          >
-                            {photo.name.slice(0, 10)}...
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handlePhotoRemove(index)}
-                              className="h-3 w-3 p-0 ml-1"
-                            >
-                              <X className="h-2 w-2" />
-                            </Button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+              {/* Day Photos */}
+              <div className="space-y-1">
+                <Label className="text-sm font-medium text-gray-700">Photos for the Day</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handlePhotoAdd}
+                      className="h-9"
+                    />
+                    <Upload className="h-4 w-4 text-gray-400" />
                   </div>
+                  {dayPhotos.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {dayPhotos.map((photo, index) => (
+                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                          {photo.name.slice(0, 10)}...
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handlePhotoRemove(index)}
+                            className="h-3 w-3 p-0 ml-1"
+                          >
+                            <X className="h-2 w-2" />
+                          </Button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Footer Actions */}
         <div className="flex-shrink-0 flex items-center justify-between pt-4 border-t">
           <div className="text-sm text-gray-500">
-            {sessionLogs.length} log{sessionLogs.length !== 1 ? 's' : ''} ready to save
-            {dayNotes && <span className="ml-2">• Notes included</span>}
-            {dayPhotos.length > 0 && (
+            {hasLogs
+              ? `${sessionLogs.length} log${sessionLogs.length !== 1 ? 's' : ''} ready to save`
+              : 'No log entries selected yet'}
+            {hasNotes && <span className="ml-2">• Notes included</span>}
+            {hasPhotos && (
               <span className="ml-2">
                 • {dayPhotos.length} photo{dayPhotos.length !== 1 ? 's' : ''} included
               </span>
@@ -1864,11 +1887,11 @@ export function UnifiedDataLogsModal({
             </Button>
             <Button
               onClick={handleSaveAllLogs}
-              disabled={sessionLogs.length === 0 || isSubmitting}
+              disabled={isSubmitting || (!hasLogs && !hasNotes && !hasPhotos)}
               className="flex items-center gap-2"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              Save All Logs ({sessionLogs.length})
+              {saveButtonLabel}
             </Button>
           </div>
         </div>

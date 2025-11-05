@@ -4,7 +4,7 @@
  */
 
 import { toast } from 'sonner'
-import { NUMBER_SYSTEM, TEXT_LIMITS } from './constants'
+import { NUMBER_SYSTEM } from './constants'
 import { SupabaseService } from './supabase-service'
 import { PhotoService } from './photo-service'
 
@@ -34,11 +34,20 @@ export async function handleDailyNoteOperation(
 
   try {
     if (shouldPersistDailyNote) {
-      const dailyNote = await SupabaseService.upsertDailyNote({
-        farm_id: farmId,
-        date,
-        notes: trimmedNotes
-      })
+      let dailyNote
+      if (existingId) {
+        // Update existing note (PATCH equivalent)
+        dailyNote = await SupabaseService.updateDailyNote(existingId, {
+          notes: trimmedNotes
+        })
+      } else {
+        // Create new note (POST equivalent)
+        dailyNote = await SupabaseService.upsertDailyNote({
+          farm_id: farmId,
+          date,
+          notes: trimmedNotes
+        })
+      }
       dailyNoteRecordId = dailyNote?.id ?? null
     } else if (existingId) {
       await SupabaseService.deleteDailyNote(existingId)
