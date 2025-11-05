@@ -3,8 +3,22 @@
  * Used across the application to maintain consistency in log type display
  */
 
-import { Droplets, SprayCan, Scissors, IndianRupee, TestTube, Beaker } from 'lucide-react'
+import {
+  Droplets,
+  SprayCan,
+  Scissors,
+  IndianRupee,
+  TestTube,
+  Beaker,
+  StickyNote
+} from 'lucide-react'
 
+/**
+ * Log types that represent structured farm activities.
+ * Note: 'daily_note' is handled separately as it's not a structured activity type
+ * but rather a free-form note attached to a date. It's handled via special cases
+ * in the helper functions below rather than being part of this union type.
+ */
 export type LogType =
   | 'irrigation'
   | 'spray'
@@ -489,6 +503,9 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
  * Get the icon component for a given log type
  */
 export function getLogTypeIcon(type: string): any {
+  if (type === 'daily_note') {
+    return StickyNote
+  }
   const config = logTypeConfigs[type as LogType]
   return config?.icon || TestTube // Fallback icon
 }
@@ -497,6 +514,9 @@ export function getLogTypeIcon(type: string): any {
  * Get the color class for a given log type
  */
 export function getLogTypeColor(type: string): string {
+  if (type === 'daily_note') {
+    return 'text-amber-600'
+  }
   const config = logTypeConfigs[type as LogType]
   return config?.color || 'text-gray-600'
 }
@@ -505,6 +525,9 @@ export function getLogTypeColor(type: string): string {
  * Get the background color class for a given log type
  */
 export function getLogTypeBgColor(type: string): string {
+  if (type === 'daily_note') {
+    return 'bg-amber-50'
+  }
   const config = logTypeConfigs[type as LogType]
   return config?.bgColor || 'bg-gray-50'
 }
@@ -513,6 +536,9 @@ export function getLogTypeBgColor(type: string): string {
  * Get the border color class for a given log type
  */
 export function getLogTypeBorderColor(type: string): string {
+  if (type === 'daily_note') {
+    return 'border-amber-200'
+  }
   const config = logTypeConfigs[type as LogType]
   return config?.borderColor || 'border-gray-200'
 }

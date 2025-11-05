@@ -7,7 +7,8 @@ import {
   type ExpenseRecord,
   type CalculationHistory,
   type SoilTestRecord,
-  type PetioleTestRecord
+  type PetioleTestRecord,
+  type DailyNoteRecord
 } from './supabase'
 import { type Farm, type TaskReminder } from '@/types/types'
 import {
@@ -39,7 +40,10 @@ import {
   toDatabaseSoilTestUpdate,
   toApplicationPetioleTestRecord,
   toDatabasePetioleTestInsert,
-  toDatabasePetioleTestUpdate
+  toDatabasePetioleTestUpdate,
+  toApplicationDailyNote,
+  toDatabaseDailyNoteInsert,
+  toDatabaseDailyNoteUpdate
 } from './supabase-types'
 
 export class SupabaseService {
@@ -925,6 +929,99 @@ export class SupabaseService {
     if (error) throw error
   }
 
+  // Daily note operations
+  static async getDailyNotes(farmId: number, limit?: number): Promise<DailyNoteRecord[]> {
+    const supabase = getTypedSupabaseClient()
+    let query = supabase
+      .from('daily_notes')
+      .select('*')
+      .eq('farm_id', farmId)
+      .order('date', { ascending: false })
+
+    if (limit !== undefined) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
+    if (error) throw error
+    return (data || []).map(toApplicationDailyNote)
+  }
+
+  static async getDailyNoteByDate(farmId: number, date: string): Promise<DailyNoteRecord | null> {
+    const supabase = getTypedSupabaseClient()
+    const { data, error } = await supabase
+      .from('daily_notes')
+      .select('*')
+      .eq('farm_id', farmId)
+      .eq('date', date)
+      .maybeSingle()
+
+    if (error) throw error
+    return data ? toApplicationDailyNote(data) : null
+  }
+
+  static async upsertDailyNote(note: {
+    farm_id: number
+    date: string
+    notes?: string | null
+  }): Promise<DailyNoteRecord> {
+    const supabase = getTypedSupabaseClient()
+    const sanitizedNotes = note.notes?.trim() ?? ''
+
+    const { data, error } = await supabase
+      .from('daily_notes')
+      .upsert(
+        {
+          ...toDatabaseDailyNoteInsert({
+            farm_id: note.farm_id,
+            date: note.date,
+            notes: sanitizedNotes
+          }),
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: 'farm_id,date' }
+      )
+      .select()
+      .single()
+
+    if (error) throw error
+    return toApplicationDailyNote(data)
+  }
+
+  static async updateDailyNote(
+    id: number,
+    updates: Partial<DailyNoteRecord>
+  ): Promise<DailyNoteRecord> {
+    const supabase = getTypedSupabaseClient()
+    const dbUpdates = toDatabaseDailyNoteUpdate(updates)
+
+    const { data, error } = await supabase
+      .from('daily_notes')
+      .update(dbUpdates as any)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return toApplicationDailyNote(data)
+  }
+
+  static async deleteDailyNote(id: number): Promise<void> {
+    const supabase = getTypedSupabaseClient()
+    const { error } = await supabase.from('daily_notes').delete().eq('id', id)
+    if (error) throw error
+  }
+
+  static async deleteDailyNoteForDate(farmId: number, date: string): Promise<void> {
+    const supabase = getTypedSupabaseClient()
+    const { error } = await supabase
+      .from('daily_notes')
+      .delete()
+      .eq('farm_id', farmId)
+      .eq('date', date)
+    if (error) throw error
+  }
+
   // Calculation history operations
   static async getCalculationHistory(farmId: number): Promise<CalculationHistory[]> {
     const supabase = getTypedSupabaseClient()
@@ -1162,7 +1259,8 @@ export class SupabaseService {
       harvestRecords,
       expenseRecords,
       soilTestRecords,
-      petioleTestRecords
+      petioleTestRecords,
+      dailyNotes
     ] = await Promise.all([
       this.getFarmById(farmId),
       this.getPendingTasks(farmId),
@@ -1172,7 +1270,8 @@ export class SupabaseService {
       this.getHarvestRecords(farmId),
       this.getExpenseRecords(farmId),
       this.getSoilTestRecords(farmId),
-      this.getPetioleTestRecords(farmId)
+      this.getPetioleTestRecords(farmId),
+      this.getDailyNotes(farmId)
     ])
 
     const totalHarvest = harvestRecords.reduce((sum, record) => sum + record.quantity, 0)
@@ -1191,7 +1290,8 @@ export class SupabaseService {
       ...harvestRecords.slice(0, 3).map((record) => ({ ...record, type: 'harvest' })),
       ...expenseRecords.slice(0, 3).map((record) => ({ ...record, type: 'expense' })),
       ...soilTestRecords.slice(0, 3).map((record) => ({ ...record, type: 'soil_test' })),
-      ...petioleTestRecords.slice(0, 3).map((record) => ({ ...record, type: 'petiole_test' }))
+      ...petioleTestRecords.slice(0, 3).map((record) => ({ ...record, type: 'petiole_test' })),
+      ...dailyNotes.slice(0, 3).map((record) => ({ ...record, type: 'daily_note' }))
     ]
       .sort(
         (a, b) =>
@@ -1215,7 +1315,8 @@ export class SupabaseService {
         harvest: harvestRecords.length,
         expense: expenseRecords.length,
         soilTest: soilTestRecords.length,
-        petioleTest: petioleTestRecords.length
+        petioleTest: petioleTestRecords.length,
+        dailyNotes: dailyNotes.length
       }
     }
   }
@@ -1280,6 +1381,9 @@ export class SupabaseService {
         break
       case 'petiole_test':
         await this.deletePetioleTestRecord(logId)
+        break
+      case 'daily_note':
+        await this.deleteDailyNote(logId)
         break
       default:
         throw new Error(`Unknown log type: ${logType}`)

@@ -38,9 +38,9 @@ import { EditRecordModal } from '@/components/journal/EditRecordModal'
 import { SupabaseService } from '@/lib/supabase-service'
 import { getActivityDisplayData, normalizeDateToYYYYMMDD } from '@/lib/activity-display-utils'
 import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
-import { PhotoService } from '@/lib/photo-service'
 import { cn, capitalize } from '@/lib/utils'
 import { toast } from 'sonner'
+import { processDailyNotesAndPhotos, parseFarmId } from '@/lib/daily-note-utils'
 
 import { type Farm } from '@/types/types'
 
@@ -172,9 +172,12 @@ export default function FarmLogsPage() {
   const [multiSelectOpen, setMultiSelectOpen] = useState(false)
   const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_ITEMS_PER_PAGE)
   const [showUnifiedModal, setShowUnifiedModal] = useState(false)
-  const [editMode, setEditMode] = useState<'add' | 'edit'>('add')
   const [selectedDate, setSelectedDate] = useState<string>('')
   const [existingLogsForEdit, setExistingLogsForEdit] = useState<any[]>([])
+  const [existingDayNoteForEdit, setExistingDayNoteForEdit] = useState<{
+    id: number | null
+    notes: string
+  } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [deletingRecord, setDeletingRecord] = useState<ActivityLog | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -202,16 +205,25 @@ export default function FarmLogsPage() {
 
       const farmIdNum = parseInt(selectedFarm)
 
-      const [irrigation, spray, harvest, expenses, fertigation, soilTests, petioleTests] =
-        await Promise.all([
-          SupabaseService.getIrrigationRecords(farmIdNum),
-          SupabaseService.getSprayRecords(farmIdNum),
-          SupabaseService.getHarvestRecords(farmIdNum),
-          SupabaseService.getExpenseRecords(farmIdNum),
-          SupabaseService.getFertigationRecords(farmIdNum),
-          SupabaseService.getSoilTestRecords(farmIdNum),
-          SupabaseService.getPetioleTestRecords(farmIdNum)
-        ])
+      const [
+        irrigation,
+        spray,
+        harvest,
+        expenses,
+        fertigation,
+        soilTests,
+        petioleTests,
+        dailyNotes
+      ] = await Promise.all([
+        SupabaseService.getIrrigationRecords(farmIdNum),
+        SupabaseService.getSprayRecords(farmIdNum),
+        SupabaseService.getHarvestRecords(farmIdNum),
+        SupabaseService.getExpenseRecords(farmIdNum),
+        SupabaseService.getFertigationRecords(farmIdNum),
+        SupabaseService.getSoilTestRecords(farmIdNum),
+        SupabaseService.getPetioleTestRecords(farmIdNum),
+        SupabaseService.getDailyNotes(farmIdNum)
+      ])
 
       const combinedLogs: ActivityLog[] = [
         ...irrigation
@@ -285,6 +297,15 @@ export default function FarmLogsPage() {
             date: log.date,
             notes: log.notes,
             created_at: log.created_at || log.date
+          })),
+        ...dailyNotes
+          .filter((note) => note.id != null)
+          .map((note) => ({
+            id: note.id!,
+            type: 'daily_note',
+            date: note.date,
+            notes: note.notes || '',
+            created_at: note.created_at || note.date
           }))
       ]
 
@@ -373,7 +394,8 @@ export default function FarmLogsPage() {
     { value: 'expense', label: 'Expense' },
     { value: 'fertigation', label: 'Fertigation' },
     { value: 'soil_test', label: 'Soil Test' },
-    { value: 'petiole_test', label: 'Petiole Test' }
+    { value: 'petiole_test', label: 'Petiole Test' },
+    { value: 'daily_note', label: 'Daily Note' }
   ]
 
   const handleActivityTypeToggle = (activityType: string, checked: boolean) => {
@@ -406,7 +428,7 @@ export default function FarmLogsPage() {
     let record
 
     // Create a single parsed farmId with explicit radix
-    const farmIdNum = Number.parseInt(selectedFarm, 10)
+    const farmIdNum = parseFarmId(selectedFarm)
 
     switch (type) {
       case 'irrigation':
@@ -522,10 +544,12 @@ export default function FarmLogsPage() {
     logs: any[],
     date: string,
     dayNotes: string,
-    dayPhotos: File[]
+    dayPhotos: File[],
+    existingDailyNoteId?: number | null
   ) => {
     setIsSubmitting(true)
     try {
+      const farmIdNum = parseFarmId(selectedFarm)
       let firstRecordId: number | null = null
 
       for (let i = 0; i < logs.length; i++) {
@@ -537,20 +561,23 @@ export default function FarmLogsPage() {
         }
       }
 
-      if (firstRecordId && dayPhotos && dayPhotos.length > 0) {
-        for (const photo of dayPhotos) {
-          try {
-            await PhotoService.uploadPhoto(photo, 'day_photos', firstRecordId)
-          } catch (photoError) {
-            console.error('Error uploading day photo:', photoError)
-          }
-        }
-      }
+      // Use utility function to handle daily notes and photos
+      await processDailyNotesAndPhotos(
+        {
+          farmId: farmIdNum,
+          date,
+          notes: dayNotes,
+          existingId: existingDailyNoteId
+        },
+        dayPhotos,
+        firstRecordId
+      )
 
       await loadLogs()
       setShowUnifiedModal(false)
       setExistingLogsForEdit([])
       setSelectedDate('')
+      setExistingDayNoteForEdit(null)
     } catch (error) {
       console.error('Error saving logs:', error)
       toast.error('Failed to save logs. Please try again.')
@@ -562,6 +589,10 @@ export default function FarmLogsPage() {
   const handleEditRecord = (log: ActivityLog) => {
     if (log.type === 'petiole_test') {
       toast.info('Editing Petiole Test is not supported here.')
+      return
+    }
+    if (log.type === 'daily_note') {
+      toast.info('Edit daily notes using the Edit Day action.')
       return
     }
     setEditingRecord(log)
@@ -603,6 +634,9 @@ export default function FarmLogsPage() {
           break
         case 'petiole_test':
           await SupabaseService.deletePetioleTestRecord(deletingRecord.id)
+          break
+        case 'daily_note':
+          await SupabaseService.deleteDailyNote(deletingRecord.id)
           break
         default:
           throw new Error(`Unsupported record type: ${deletingRecord.type}`)
@@ -1078,13 +1112,16 @@ export default function FarmLogsPage() {
             setShowUnifiedModal(false)
             setExistingLogsForEdit([])
             setSelectedDate('')
+            setExistingDayNoteForEdit(null)
           }}
           onSubmit={handleSubmitLogs}
           isSubmitting={isSubmitting}
           farmId={Number.parseInt(selectedFarm, 10)}
-          mode={editMode}
+          mode={'add'}
           existingLogs={existingLogsForEdit}
           selectedDate={selectedDate}
+          existingDayNote={existingDayNoteForEdit?.notes}
+          existingDayNoteId={existingDayNoteForEdit?.id ?? null}
         />
 
         {editingRecord && editingRecord.type !== 'petiole_test' && (

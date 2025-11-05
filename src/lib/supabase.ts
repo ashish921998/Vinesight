@@ -106,6 +106,15 @@ export interface ExpenseRecord {
   created_at?: string
 }
 
+export interface DailyNoteRecord {
+  id?: number
+  farm_id: number
+  date: string
+  notes?: string | null
+  created_at?: string | null
+  updated_at?: string | null
+}
+
 export interface CalculationHistory {
   id?: number
   farm_id: number

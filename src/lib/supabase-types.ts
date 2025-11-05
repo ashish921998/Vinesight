@@ -11,7 +11,8 @@ import type {
   ExpenseRecord,
   CalculationHistory,
   SoilTestRecord,
-  PetioleTestRecord
+  PetioleTestRecord,
+  DailyNoteRecord
 } from './supabase'
 import type { TaskReminder, Farm } from '@/types/types'
 
@@ -26,7 +27,8 @@ export type {
   ExpenseRecord,
   CalculationHistory,
   SoilTestRecord,
-  PetioleTestRecord
+  PetioleTestRecord,
+  DailyNoteRecord
 }
 
 // Extract database table types
@@ -57,6 +59,10 @@ export type DatabaseHarvestRecordUpdate = Database['public']['Tables']['harvest_
 export type DatabaseExpenseRecord = Database['public']['Tables']['expense_records']['Row']
 export type DatabaseExpenseRecordInsert = Database['public']['Tables']['expense_records']['Insert']
 export type DatabaseExpenseRecordUpdate = Database['public']['Tables']['expense_records']['Update']
+
+export type DatabaseDailyNoteRecord = Database['public']['Tables']['daily_notes']['Row']
+export type DatabaseDailyNoteRecordInsert = Database['public']['Tables']['daily_notes']['Insert']
+export type DatabaseDailyNoteRecordUpdate = Database['public']['Tables']['daily_notes']['Update']
 
 export type DatabaseCalculationHistory = Database['public']['Tables']['calculation_history']['Row']
 export type DatabaseCalculationHistoryInsert =
@@ -497,6 +503,42 @@ export function toDatabaseExpenseUpdate(
   if (appUpdates.date_of_pruning !== undefined)
     update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.remarks !== undefined) update.remarks = appUpdates.remarks || null
+
+  return update
+}
+
+// Daily Note conversion functions
+export function toApplicationDailyNote(dbRecord: DatabaseDailyNoteRecord): DailyNoteRecord {
+  return {
+    id: dbRecord.id,
+    farm_id: dbRecord.farm_id,
+    date: dbRecord.date,
+    notes: dbRecord.notes,
+    created_at: dbRecord.created_at || undefined,
+    updated_at: dbRecord.updated_at || undefined
+  }
+}
+
+export function toDatabaseDailyNoteInsert(
+  appRecord: Omit<DailyNoteRecord, 'id' | 'created_at' | 'updated_at'>
+): DatabaseDailyNoteRecordInsert {
+  return {
+    farm_id: appRecord.farm_id,
+    date: appRecord.date,
+    notes: appRecord.notes ?? null
+  } as DatabaseDailyNoteRecordInsert
+}
+
+export function toDatabaseDailyNoteUpdate(
+  appUpdates: Partial<DailyNoteRecord>
+): DatabaseDailyNoteRecordUpdate {
+  const update: DatabaseDailyNoteRecordUpdate = {}
+
+  if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
+  if (appUpdates.date !== undefined) update.date = appUpdates.date
+  if (appUpdates.notes !== undefined) update.notes = appUpdates.notes ?? null
+  if (appUpdates.created_at !== undefined) update.created_at = appUpdates.created_at
+  if (appUpdates.updated_at !== undefined) update.updated_at = appUpdates.updated_at
 
   return update
 }

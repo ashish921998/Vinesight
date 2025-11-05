@@ -17,7 +17,9 @@
     "format": "prettier --write .",
     "perf": "npm run build && npm run start",
     "size": "npm run build && du -sh .next/static",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky || true",
+    "postinstall": "[ -n \"$CI\" ] || husky install || true"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.11",
@@ -93,6 +95,7 @@
     "eslint-config-next": "15.5.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
+    "husky": "^9.1.7",
     "prettier": "^3.6.2",
     "shadcn": "^3.0.0",
     "supabase": "^2.40.7",
