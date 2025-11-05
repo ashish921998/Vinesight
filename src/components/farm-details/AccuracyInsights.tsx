@@ -178,6 +178,24 @@ export function AccuracyInsights({ farm, currentProvider }: AccuracyInsightsProp
 
   const Icon = currentLevel.icon
 
+  // Loading state
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Accuracy Insights</CardTitle>
+          <CardDescription>Loading your accuracy data...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center space-y-4">
+            <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
+            <p className="text-sm text-muted-foreground">Analyzing accuracy metrics...</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <div className="space-y-4">
       {/* Current Accuracy Level */}

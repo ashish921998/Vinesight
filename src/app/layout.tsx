@@ -9,6 +9,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { GoogleAnalytics, SearchConsoleVerification } from '@/components/GoogleAnalytics'
 import dynamic from 'next/dynamic'
 import { SEO_KEYWORDS } from '@/lib/seo-constants'
+import { Toaster } from 'sonner'
 
 const LayoutContent = dynamic(
   () => import('@/components/layout/LayoutContent').then((mod) => ({ default: mod.LayoutContent })),
@@ -173,6 +174,13 @@ export default function RootLayout({
             </I18nProvider>
           </Suspense>
         </AsyncErrorBoundary>
+        <Toaster
+          position="top-right"
+          expand={false}
+          richColors
+          closeButton
+          duration={4000}
+        />
         <GoogleAnalytics />
         <Analytics />
       </body>
