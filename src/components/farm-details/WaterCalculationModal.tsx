@@ -59,7 +59,8 @@ export function WaterCalculationModal({
     const currentRemainingWater = farm.remainingWater || 0
 
     // Updated Formula: current remaining water + rainfall - (crop_coefficient * evapotranspiration)
-    const result = currentRemainingWater + rainfallValue - cropCoefficientValue * evapotranspirationValue
+    const result =
+      currentRemainingWater + rainfallValue - cropCoefficientValue * evapotranspirationValue
     setCalculationResult(result)
     setUseManualMode(false)
     setManualWaterLevel(result.toString())
@@ -432,7 +433,8 @@ export function WaterCalculationModal({
                     <div className="font-medium mb-1">Calculation:</div>
                     <div className="flex flex-col space-y-1 text-center">
                       <div className="break-all">
-                        {(farm.remainingWater || 0).toFixed(1)} + {(parseFloat(formData.rainfall) || 0).toFixed(1)} - (
+                        {(farm.remainingWater || 0).toFixed(1)} +{' '}
+                        {(parseFloat(formData.rainfall) || 0).toFixed(1)} - (
                         {parseFloat(formData.cropCoefficient)} ×{' '}
                         {parseFloat(formData.evapotranspiration)})
                       </div>
