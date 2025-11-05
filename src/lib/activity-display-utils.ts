@@ -4,6 +4,7 @@
 
 import { formatChemicalData, formatChemicalsForDisplay, Chemical } from '@/lib/chemical-formatter'
 import { logger } from '@/lib/logger'
+import { TEXT_LIMITS } from './constants'
 
 interface ActivityLog {
   id: number
@@ -73,6 +74,16 @@ export function getActivityDisplayData(activity: ActivityLog): string {
 
     case 'petiole_test':
       return getTestDateDisplayText(activity)
+
+    case 'daily_note': {
+      const note = activity.notes?.trim()
+      if (note) {
+        return note.length > TEXT_LIMITS.DAILY_NOTE_PREVIEW
+          ? `${note.slice(0, TEXT_LIMITS.DAILY_NOTE_PREVIEW - 3)}…`
+          : note
+      }
+      return 'Daily note'
+    }
 
     default:
       // Add null/undefined guard for type replacement
@@ -309,6 +320,10 @@ export function getLogsForDate(activities: ActivityLog[], targetDate: string): A
 export function getGroupedActivitiesSummary(grouped: GroupedActivities): string {
   const { totalCount, logTypes } = grouped
 
+  if (logTypes.length === 1 && logTypes[0] === 'daily_note') {
+    return totalCount === 1 ? 'Daily note added' : `${totalCount} daily notes added`
+  }
+
   if (totalCount === 1) {
     return `1 log: ${logTypes[0].replace(/_/g, ' ')}`
   }
@@ -510,6 +525,19 @@ export function getActivitiesSummary(activities: ActivityLog[]): Array<{
       case 'petiole_test':
         summary = type.replace(/_/g, ' ')
         break
+
+      case 'daily_note': {
+        const sampleNote = typeActivities[0]?.notes?.trim()
+        if (sampleNote) {
+          summary =
+            sampleNote.length > TEXT_LIMITS.ACTIVITY_DISPLAY_PREVIEW
+              ? `${sampleNote.slice(0, TEXT_LIMITS.ACTIVITY_DISPLAY_PREVIEW - 3)}…`
+              : sampleNote
+        } else {
+          summary = 'Daily note'
+        }
+        break
+      }
 
       default:
         summary = type.replace(/_/g, ' ')
