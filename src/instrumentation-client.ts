@@ -3,20 +3,7 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from '@sentry/nextjs'
-
-// Helper function to safely parse environment variables
-const parseEnvFloat = (key: string, defaultValue: number): number => {
-  const value = process.env[key]
-  if (value === undefined) return defaultValue
-  const parsed = parseFloat(value)
-  return isNaN(parsed) ? defaultValue : parsed
-}
-
-const parseEnvBoolean = (key: string, defaultValue: boolean): boolean => {
-  const value = process.env[key]
-  if (value === undefined) return defaultValue
-  return value.toLowerCase() === 'true'
-}
+import { parseEnvFloat, parseEnvBoolean } from '@/lib/sentry-env-helpers'
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
@@ -26,7 +13,10 @@ Sentry.init({
 
   // Define how likely traces are sampled. Read from environment with safe production defaults.
   // Use NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE env var or fallback to 0.1 in production, 1.0 in development
-  tracesSampleRate: parseEnvFloat('NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE', process.env.NODE_ENV === 'production' ? 0.1 : 1.0),
+  tracesSampleRate: parseEnvFloat(
+    'NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE',
+    process.env.NODE_ENV === 'production' ? 0.1 : 1.0
+  ),
 
   // Enable logs to be sent to Sentry
   enableLogs: true,
@@ -42,7 +32,10 @@ Sentry.init({
   // Enable sending user PII (Personally Identifiable Information) only with explicit consent
   // Use NEXT_PUBLIC_SENTRY_SEND_DEFAULT_PII env var or default to false in production
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
-  sendDefaultPii: parseEnvBoolean('NEXT_PUBLIC_SENTRY_SEND_DEFAULT_PII', process.env.NODE_ENV !== 'production')
+  sendDefaultPii: parseEnvBoolean(
+    'NEXT_PUBLIC_SENTRY_SEND_DEFAULT_PII',
+    process.env.NODE_ENV !== 'production'
+  )
 })
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart

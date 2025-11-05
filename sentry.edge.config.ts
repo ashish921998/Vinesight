@@ -4,20 +4,7 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from '@sentry/nextjs'
-
-// Helper function to safely parse environment variables
-const parseEnvFloat = (key: string, defaultValue: number): number => {
-  const value = process.env[key]
-  if (value === undefined) return defaultValue
-  const parsed = parseFloat(value)
-  return isNaN(parsed) ? defaultValue : parsed
-}
-
-const parseEnvBoolean = (key: string, defaultValue: boolean): boolean => {
-  const value = process.env[key]
-  if (value === undefined) return defaultValue
-  return value.toLowerCase() === 'true'
-}
+import { parseEnvFloat, parseEnvBoolean } from '@/lib/sentry-env-helpers'
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
