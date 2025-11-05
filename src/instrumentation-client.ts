@@ -4,12 +4,20 @@
 
 import * as Sentry from '@sentry/nextjs'
 import { parseEnvFloat, parseEnvBoolean } from '@/lib/sentry-env-helpers'
+import { createClient } from './lib/supabase'
+
+const supabaseClient = createClient()
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   // Add optional integrations for additional features
-  integrations: [Sentry.replayIntegration(), Sentry.captureConsoleIntegration()],
+  integrations: [
+    Sentry.replayIntegration(),
+    Sentry.captureConsoleIntegration(),
+    Sentry.vercelAIIntegration(),
+    Sentry.supabaseIntegration({ supabaseClient })
+  ],
 
   // Define how likely traces are sampled. Read from environment with safe production defaults.
   // Use NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE env var or fallback to 0.1 in production, 1.0 in development
