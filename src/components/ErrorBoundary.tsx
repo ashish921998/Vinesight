@@ -1,6 +1,7 @@
 'use client'
 
 import React, { Component, ErrorInfo, ReactNode } from 'react'
+import * as Sentry from '@sentry/nextjs'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -32,31 +33,36 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo
     })
 
-    // Log error to monitoring service in production
-    if (process.env.NODE_ENV === 'production') {
-      console.error('Error caught by boundary:', error, errorInfo)
-
-      // Mobile-specific error logging
-      if (typeof window !== 'undefined' && 'navigator' in window) {
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        )
-        const isChrome = /Chrome/i.test(navigator.userAgent)
-
-        console.error('Device info:', {
-          isMobile,
-          isChrome,
-          userAgent: navigator.userAgent,
-          url: window.location.href,
-          timestamp: new Date().toISOString()
-        })
+    // Send error to Sentry with additional context
+    Sentry.captureException(error, {
+      contexts: {
+        react: {
+          componentStack: errorInfo.componentStack
+        }
+      },
+      tags: {
+        errorBoundary: true
+      },
+      extra: {
+        errorInfo,
+        // Mobile-specific error logging
+        deviceInfo:
+          typeof window !== 'undefined' && 'navigator' in window
+            ? {
+                isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+                  navigator.userAgent
+                ),
+                isChrome: /Chrome/i.test(navigator.userAgent),
+                userAgent: navigator.userAgent,
+                url: window.location.href,
+                timestamp: new Date().toISOString()
+              }
+            : undefined
       }
+    })
 
-      // Here you would send to error monitoring service like Sentry
-      // Sentry.captureException(error, { contexts: { react: errorInfo } });
-    } else {
-      console.error('Error caught by boundary:', error, errorInfo)
-    }
+    // Log error locally for debugging
+    console.error('Error caught by boundary:', error, errorInfo)
   }
 
   private handleReload = () => {
@@ -169,10 +175,12 @@ export function AsyncErrorBoundary({ children }: { children: ReactNode }) {
   React.useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error('Unhandled promise rejection:', event.reason)
-      // In production, send to error monitoring service
-      if (process.env.NODE_ENV === 'production') {
-        // Sentry.captureException(event.reason);
-      }
+      // Send to Sentry
+      Sentry.captureException(event.reason, {
+        tags: {
+          errorType: 'unhandledRejection'
+        }
+      })
     }
 
     window.addEventListener('unhandledrejection', handleUnhandledRejection)
