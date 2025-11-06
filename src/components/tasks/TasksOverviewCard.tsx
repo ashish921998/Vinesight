@@ -139,7 +139,7 @@ export function TasksOverviewCard({
         type: mapTaskTypeForCard(task),
         priority: task.priority || 'medium',
         scheduledTime,
-        farmBlock: task.location || '',
+        location: task.location || '',
         estimatedDuration: task.estimatedDurationMinutes ?? undefined,
         completed: task.completed,
         description: task.description || undefined

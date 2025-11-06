@@ -126,11 +126,10 @@ export default function RemindersPage() {
           farmId: selectedFarm.id!,
           title: formData.title,
           description: formData.description || null,
-          dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null,
+          dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : '',
           type: formData.type,
           priority: formData.priority,
-          status: 'pending',
-          metadata: { source: 'reminders-page' }
+          status: 'pending'
         })
       }
 
@@ -168,11 +167,10 @@ export default function RemindersPage() {
         farmId: selectedFarm.id!,
         title: templateData.title,
         description: templateData.description || null,
-        dueDate: templateData.dueDate ? new Date(templateData.dueDate).toISOString() : null,
+        dueDate: templateData.dueDate ? new Date(templateData.dueDate).toISOString() : '',
         type: templateData.type,
         priority: templateData.priority,
-        status: 'pending',
-        metadata: { source: 'reminders-template' }
+        status: 'pending'
       })
 
       setShowTemplateSelector(false)
