@@ -59,7 +59,7 @@ export function TaskTemplateSelector({
     title: '',
     description: '',
     dueDate: '',
-    type: 'other',
+    type: 'note',
     priority: 'medium',
     isRecurring: false,
     customInstructions: ''
@@ -71,14 +71,17 @@ export function TaskTemplateSelector({
         return <Droplets className="h-4 w-4 text-blue-500" />
       case 'spray':
         return <SprayCan className="h-4 w-4 text-green-500" />
-      case 'training':
-        return <Scissors className="h-4 w-4 text-purple-500" />
       case 'harvest':
         return <Grape className="h-4 w-4 text-red-500" />
       case 'fertigation':
         return <TestTube className="h-4 w-4 text-orange-500" />
       case 'soil_test':
+      case 'petiole_test':
         return <TestTube className="h-4 w-4 text-brown-500" />
+      case 'expense':
+        return <AlertCircle className="h-4 w-4 text-green-600" />
+      case 'note':
+        return <AlertCircle className="h-4 w-4 text-blue-600" />
       default:
         return <AlertCircle className="h-4 w-4 text-gray-500" />
     }
@@ -141,9 +144,11 @@ export function TaskTemplateSelector({
     { value: 'irrigation', label: 'Irrigation', icon: <Droplets className="h-4 w-4" /> },
     { value: 'spray', label: 'Spray', icon: <SprayCan className="h-4 w-4" /> },
     { value: 'fertigation', label: 'Fertigation', icon: <TestTube className="h-4 w-4" /> },
-    { value: 'training', label: 'Training', icon: <Scissors className="h-4 w-4" /> },
     { value: 'harvest', label: 'Harvest', icon: <Grape className="h-4 w-4" /> },
-    { value: 'soil_test', label: 'Soil Test', icon: <TestTube className="h-4 w-4" /> }
+    { value: 'soil_test', label: 'Soil Test', icon: <TestTube className="h-4 w-4" /> },
+    { value: 'petiole_test', label: 'Petiole Test', icon: <TestTube className="h-4 w-4" /> },
+    { value: 'expense', label: 'Expense', icon: <AlertCircle className="h-4 w-4" /> },
+    { value: 'note', label: 'Note', icon: <AlertCircle className="h-4 w-4" /> }
   ]
 
   return (

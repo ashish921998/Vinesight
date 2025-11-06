@@ -123,7 +123,12 @@ CREATE TABLE task_reminders (
   completed BOOLEAN DEFAULT FALSE,
   completed_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  -- Ensure consistency between completed boolean and status field
+  CONSTRAINT task_status_consistency CHECK (
+    (completed = TRUE AND status = 'completed') OR
+    (completed = FALSE AND status IN ('pending', 'in_progress', 'cancelled'))
+  )
 );
 
 -- Create indexes for task_reminders
@@ -147,6 +152,70 @@ CREATE TRIGGER update_task_reminders_updated_at_trigger
   BEFORE UPDATE ON task_reminders
   FOR EACH ROW
   EXECUTE FUNCTION update_task_reminders_updated_at();
+
+-- Function to validate linked_record references
+CREATE OR REPLACE FUNCTION validate_task_linked_record()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- If linked_record_type is set, linked_record_id must also be set
+  IF NEW.linked_record_type IS NOT NULL AND NEW.linked_record_id IS NULL THEN
+    RAISE EXCEPTION 'linked_record_id must be set when linked_record_type is specified';
+  END IF;
+
+  -- If linked_record_id is set, linked_record_type must also be set
+  IF NEW.linked_record_id IS NOT NULL AND NEW.linked_record_type IS NULL THEN
+    RAISE EXCEPTION 'linked_record_type must be set when linked_record_id is specified';
+  END IF;
+
+  -- Validate that the linked record exists based on type
+  IF NEW.linked_record_type IS NOT NULL AND NEW.linked_record_id IS NOT NULL THEN
+    CASE NEW.linked_record_type
+      WHEN 'irrigation' THEN
+        IF NOT EXISTS (SELECT 1 FROM irrigation_records WHERE id = NEW.linked_record_id) THEN
+          RAISE EXCEPTION 'Referenced irrigation record % does not exist', NEW.linked_record_id;
+        END IF;
+      WHEN 'spray' THEN
+        IF NOT EXISTS (SELECT 1 FROM spray_records WHERE id = NEW.linked_record_id) THEN
+          RAISE EXCEPTION 'Referenced spray record % does not exist', NEW.linked_record_id;
+        END IF;
+      WHEN 'fertigation' THEN
+        IF NOT EXISTS (SELECT 1 FROM fertigation_records WHERE id = NEW.linked_record_id) THEN
+          RAISE EXCEPTION 'Referenced fertigation record % does not exist', NEW.linked_record_id;
+        END IF;
+      WHEN 'harvest' THEN
+        IF NOT EXISTS (SELECT 1 FROM harvest_records WHERE id = NEW.linked_record_id) THEN
+          RAISE EXCEPTION 'Referenced harvest record % does not exist', NEW.linked_record_id;
+        END IF;
+      WHEN 'expense' THEN
+        IF NOT EXISTS (SELECT 1 FROM expense_records WHERE id = NEW.linked_record_id) THEN
+          RAISE EXCEPTION 'Referenced expense record % does not exist', NEW.linked_record_id;
+        END IF;
+      WHEN 'soil_test' THEN
+        IF NOT EXISTS (SELECT 1 FROM soil_test_records WHERE id = NEW.linked_record_id) THEN
+          RAISE EXCEPTION 'Referenced soil test record % does not exist', NEW.linked_record_id;
+        END IF;
+      WHEN 'petiole_test' THEN
+        IF NOT EXISTS (SELECT 1 FROM petiole_test_records WHERE id = NEW.linked_record_id) THEN
+          RAISE EXCEPTION 'Referenced petiole test record % does not exist', NEW.linked_record_id;
+        END IF;
+      WHEN 'note' THEN
+        IF NOT EXISTS (SELECT 1 FROM daily_notes WHERE id = NEW.linked_record_id) THEN
+          RAISE EXCEPTION 'Referenced daily note % does not exist', NEW.linked_record_id;
+        END IF;
+      ELSE
+        -- For other types, just log a warning but allow it
+        RAISE NOTICE 'Unknown linked_record_type: %', NEW.linked_record_type;
+    END CASE;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER validate_task_linked_record_trigger
+  BEFORE INSERT OR UPDATE ON task_reminders
+  FOR EACH ROW
+  EXECUTE FUNCTION validate_task_linked_record();
 
 -- Enable Row Level Security
 ALTER TABLE task_reminders ENABLE ROW LEVEL SECURITY;
@@ -195,9 +264,6 @@ CREATE INDEX idx_expense_records_date ON expense_records(date);
 CREATE INDEX idx_expense_records_date_of_pruning ON expense_records(date_of_pruning);
 CREATE INDEX idx_calculation_history_farm_id ON calculation_history(farm_id);
 CREATE INDEX idx_calculation_history_date ON calculation_history(date);
-CREATE INDEX idx_task_reminders_farm_id ON task_reminders(farm_id);
-CREATE INDEX idx_task_reminders_due_date ON task_reminders(due_date);
-CREATE INDEX idx_task_reminders_completed ON task_reminders(completed);
 CREATE INDEX idx_soil_test_records_farm_id ON soil_test_records(farm_id);
 CREATE INDEX idx_soil_test_records_date ON soil_test_records(date);
 CREATE INDEX idx_soil_test_records_date_of_pruning ON soil_test_records(date_of_pruning);
@@ -330,17 +396,19 @@ CREATE POLICY "Users can insert farm tasks" ON task_reminders FOR INSERT WITH CH
 
 -- Farm owners can update their tasks
 CREATE POLICY "Users can update farm tasks" ON task_reminders FOR UPDATE USING (
+  -- Allow farm owners OR assigned users to update tasks
   EXISTS (
     SELECT 1 FROM farms
     WHERE farms.id = task_reminders.farm_id
     AND farms.user_id = auth.uid()
-  )
+  ) OR task_reminders.assigned_to_user_id = auth.uid()
 ) WITH CHECK (
+  -- Allow farm owners OR assigned users to update tasks
   EXISTS (
     SELECT 1 FROM farms
     WHERE farms.id = task_reminders.farm_id
     AND farms.user_id = auth.uid()
-  )
+  ) OR task_reminders.assigned_to_user_id = auth.uid()
 );
 
 -- Farm owners can delete their tasks

@@ -108,7 +108,11 @@ export default function FarmTasksPage() {
         setFarmName(capitalize(farm.name))
       }
     } catch (error) {
-      toast.error('Unable to load tasks for this farm.')
+      const errorMessage =
+        error instanceof Error
+          ? `Unable to load tasks: ${error.message}`
+          : 'Unable to load tasks for this farm.'
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -122,7 +126,11 @@ export default function FarmTasksPage() {
     setRefreshing(true)
     try {
       await loadTasks()
-      toast.success('Task list refreshed.')
+      // Silent refresh - no toast notification
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? `Failed to refresh: ${error.message}` : 'Failed to refresh tasks'
+      toast.error(errorMessage)
     } finally {
       setRefreshing(false)
     }
@@ -178,13 +186,17 @@ export default function FarmTasksPage() {
     try {
       const taskRecord = await SupabaseService.getTaskById(taskId)
       if (!taskRecord) {
-        toast.error('Task not found.')
+        toast.error('Task not found. It may have been deleted.')
         return
       }
       setSelectedTask(taskRecord)
       setTaskModalOpen(true)
     } catch (error) {
-      toast.error('Unable to load the selected task.')
+      const errorMessage =
+        error instanceof Error
+          ? `Unable to load task: ${error.message}`
+          : 'Unable to load the selected task.'
+      toast.error(errorMessage)
     }
   }
 
@@ -194,7 +206,11 @@ export default function FarmTasksPage() {
       toast.success('Task marked as completed.')
       await loadTasks()
     } catch (error) {
-      toast.error('Failed to update task status.')
+      const errorMessage =
+        error instanceof Error
+          ? `Failed to complete task: ${error.message}`
+          : 'Failed to update task status.'
+      toast.error(errorMessage)
     }
   }
 
@@ -204,7 +220,11 @@ export default function FarmTasksPage() {
       toast.success('Task moved back to pending.')
       await loadTasks()
     } catch (error) {
-      toast.error('Failed to reopen task.')
+      const errorMessage =
+        error instanceof Error
+          ? `Failed to reopen task: ${error.message}`
+          : 'Failed to reopen task.'
+      toast.error(errorMessage)
     }
   }
 
@@ -215,7 +235,11 @@ export default function FarmTasksPage() {
       toast.success('Task deleted.')
       await loadTasks()
     } catch (error) {
-      toast.error('Unable to delete this task.')
+      const errorMessage =
+        error instanceof Error
+          ? `Failed to delete task: ${error.message}`
+          : 'Unable to delete this task.'
+      toast.error(errorMessage)
     } finally {
       setTaskToDelete(null)
     }
@@ -518,7 +542,7 @@ export default function FarmTasksPage() {
         currentUserId={user?.id}
         task={selectedTask}
         onSaved={async () => {
-          toast.success(selectedTask ? 'Task updated successfully.' : 'Task created.')
+          // Toast is already shown by TaskModal, just refresh the list
           await loadTasks()
         }}
       />

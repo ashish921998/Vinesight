@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/auth-utils'
 import { TaskReminderSchema, validateAndSanitize, globalRateLimiter } from '@/lib/validation'
 import {
   TaskReminderUpdateInput,
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       return NextResponse.json({ error: 'Invalid task id' }, { status: 400 })
     }
 
-    const supabase = getSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     const {
       data: { user },
       error: userError
@@ -87,7 +87,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       return NextResponse.json({ error: 'Invalid task id' }, { status: 400 })
     }
 
-    const supabase = getSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     const {
       data: { user },
       error: userError
@@ -120,7 +120,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (data.task_type !== undefined) updates.type = data.task_type
     if (data.status !== undefined) updates.status = data.status
     if (data.priority !== undefined) updates.priority = data.priority
-    if (data.due_date !== undefined) updates.dueDate = data.due_date ?? null
+    if (data.due_date !== undefined) updates.dueDate = data.due_date ?? undefined
     if (data.estimated_duration_minutes !== undefined)
       updates.estimatedDurationMinutes = data.estimated_duration_minutes ?? null
     if (data.location !== undefined) updates.location = data.location ?? null
@@ -182,7 +182,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
       return NextResponse.json({ error: 'Invalid task id' }, { status: 400 })
     }
 
-    const supabase = getSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     const {
       data: { user },
       error: userError

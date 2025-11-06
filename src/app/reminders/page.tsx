@@ -45,7 +45,7 @@ export default function RemindersPage() {
     title: '',
     description: '',
     dueDate: '',
-    type: 'other' as const,
+    type: 'note' as const,
     priority: 'medium' as const
   })
 
@@ -195,7 +195,7 @@ export default function RemindersPage() {
       title: '',
       description: '',
       dueDate: '',
-      type: 'other',
+      type: 'note',
       priority: 'medium'
     })
     setShowAddForm(false)
@@ -211,7 +211,6 @@ export default function RemindersPage() {
 
   const getFilteredTasks = () => {
     const now = new Date()
-    now.setHours(23, 59, 59, 999) // End of today
 
     return tasks.filter((task) => {
       switch (filter) {
@@ -253,10 +252,15 @@ export default function RemindersPage() {
         return '🌿'
       case 'fertigation':
         return '🧪'
-      case 'training':
-        return '✂️'
       case 'harvest':
         return '🍇'
+      case 'soil_test':
+      case 'petiole_test':
+        return '🔬'
+      case 'expense':
+        return '💰'
+      case 'note':
+        return '📝'
       default:
         return '📋'
     }
@@ -266,8 +270,7 @@ export default function RemindersPage() {
     if (!dueDate) return false
     const parsed = new Date(dueDate)
     if (Number.isNaN(parsed.getTime())) return false
-    const now = new Date()
-    now.setHours(23, 59, 59, 999)
+    const now = new Date() // Current timestamp
     return parsed < now
   }
 
@@ -341,11 +344,13 @@ export default function RemindersPage() {
                           ? '💧'
                           : template.type === 'spray'
                             ? '🌿'
-                            : template.type === 'training'
-                              ? '✂️'
+                            : template.type === 'fertigation'
+                              ? '🧪'
                               : template.type === 'harvest'
                                 ? '🍇'
-                                : '📋'}
+                                : template.type === 'soil_test'
+                                  ? '🔬'
+                                  : '📋'}
                       </span>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm truncate">{template.title}</h4>

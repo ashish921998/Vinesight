@@ -1,3 +1,5 @@
+'use client'
+
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -65,7 +67,6 @@ export function TasksOverviewCard({
         await onTasksUpdated()
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
           console.error('Failed to refresh tasks:', error)
         }
       }
@@ -81,9 +82,10 @@ export function TasksOverviewCard({
       toast.success('Task marked as completed.')
       await notifyRefresh()
     } catch (error) {
-      toast.error('Unable to complete the task right now.')
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unable to complete the task right now.'
+      toast.error(errorMessage)
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('completeTask error', error)
       }
     }
@@ -104,15 +106,18 @@ export function TasksOverviewCard({
     try {
       const taskRecord = await SupabaseService.getTaskById(numericId)
       if (!taskRecord) {
-        toast.error('Task not found.')
+        toast.error('Task not found. It may have been deleted.')
         return
       }
       setSelectedTask(taskRecord)
       setModalOpen(true)
     } catch (error) {
-      toast.error('Failed to load task details.')
+      const errorMessage =
+        error instanceof Error
+          ? `Failed to load task: ${error.message}`
+          : 'Failed to load task details.'
+      toast.error(errorMessage)
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('getTaskById error', error)
       }
     } finally {
@@ -171,11 +176,11 @@ export function TasksOverviewCard({
         currentUserId={user?.id}
         task={selectedTask}
         onSaved={async () => {
-          toast.success(selectedTask ? 'Task updated successfully.' : 'Task created.')
+          // Toast is already shown by TaskModal, just refresh the list
           await notifyRefresh()
         }}
         onDeleted={async () => {
-          toast.success('Task deleted.')
+          // Toast is already shown by TaskModal, just refresh the list
           await notifyRefresh()
         }}
       />

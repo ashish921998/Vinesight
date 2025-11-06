@@ -212,7 +212,10 @@ export class PaginatedQueries {
       status?: ('pending' | 'in_progress' | 'completed' | 'cancelled')[]
     }
   ): Promise<PaginatedResult<any>> {
-    let query = supabase.from('tasks').select('*', { count: 'exact' }).eq('farm_id', farmId)
+    let query = supabase
+      .from('task_reminders')
+      .select('*', { count: 'exact' })
+      .eq('farm_id', farmId)
 
     // Apply filters
     if (filters?.completed !== undefined) {

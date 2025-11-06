@@ -2,7 +2,15 @@ export interface TaskTemplate {
   id: string
   title: string
   description: string
-  type: 'irrigation' | 'spray' | 'fertigation' | 'training' | 'harvest' | 'soil_test' | 'other'
+  type:
+    | 'irrigation'
+    | 'spray'
+    | 'fertigation'
+    | 'harvest'
+    | 'soil_test'
+    | 'petiole_test'
+    | 'expense'
+    | 'note'
   priority: 'low' | 'medium' | 'high'
   estimatedDuration?: string
   frequency?: 'once' | 'weekly' | 'biweekly' | 'monthly' | 'seasonal' | 'yearly'
@@ -63,12 +71,12 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
       'Use imidacloprid or spinosad. Check weather conditions - avoid spraying before rain.'
   },
 
-  // Training & Pruning Tasks
+  // Training & Pruning Tasks (using 'note' type for planning)
   {
     id: 'winter_pruning',
     title: 'Winter Pruning',
     description: 'Annual dormant season pruning to shape vines and control yield',
-    type: 'training',
+    type: 'note',
     priority: 'high',
     estimatedDuration: '8 hours per acre',
     frequency: 'yearly',
@@ -81,7 +89,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     id: 'summer_topping',
     title: 'Summer Topping',
     description: 'Trim shoot tips to redirect energy to fruit development',
-    type: 'training',
+    type: 'note',
     priority: 'medium',
     estimatedDuration: '4 hours per acre',
     frequency: 'monthly',
@@ -173,7 +181,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     id: 'leaf_removal_veraison',
     title: 'Leaf Removal at Veraison',
     description: 'Remove leaves around grape clusters for better air circulation',
-    type: 'training',
+    type: 'note',
     priority: 'medium',
     estimatedDuration: '6 hours per acre',
     frequency: 'once',
@@ -187,7 +195,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     id: 'disease_scouting',
     title: 'Weekly Disease Scouting',
     description: 'Scout vineyard for early signs of diseases',
-    type: 'other',
+    type: 'note',
     priority: 'high',
     estimatedDuration: '2 hours',
     frequency: 'weekly',

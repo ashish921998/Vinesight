@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/auth-utils'
 import { TaskReminderSchema, validateAndSanitize, globalRateLimiter } from '@/lib/validation'
 import {
   TaskReminderCreateInput,
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: rateLimit.reason || 'Too many requests' }, { status: 429 })
     }
 
-    const supabase = getSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     const {
       data: { user },
       error: userError
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = getSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     const {
       data: { user },
       error: userError
@@ -129,6 +129,10 @@ export async function POST(request: NextRequest) {
     }
 
     const data = validation.data
+    // Default to 7 days from now if no due date provided
+    const defaultDueDate = new Date()
+    defaultDueDate.setDate(defaultDueDate.getDate() + 7)
+
     const createInput: TaskReminderCreateInput = {
       farmId: data.farm_id,
       title: data.title,
@@ -136,7 +140,7 @@ export async function POST(request: NextRequest) {
       type: data.task_type,
       status: data.status ?? 'pending',
       priority: data.priority ?? 'medium',
-      dueDate: data.due_date ?? '',
+      dueDate: data.due_date ?? defaultDueDate.toISOString(),
       estimatedDurationMinutes: data.estimated_duration_minutes ?? null,
       location: data.location ?? null,
       assignedToUserId: data.assigned_to_user_id ?? null,
