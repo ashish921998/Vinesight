@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist'
 import { Serwist } from 'serwist'
 

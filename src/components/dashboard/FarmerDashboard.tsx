@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { AlertsSection } from './AlertsSection'
-import { TodaysTasksSection } from './TodaysTasksSection'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import type { LucideIcon } from 'lucide-react'
@@ -46,6 +45,8 @@ import { type Farm } from '@/types/types'
 import { capitalize, cn } from '@/lib/utils'
 import { EmptyStateDashboard } from './EmptyStateDashboard'
 import { useRouter } from 'next/navigation'
+import { TasksOverviewCard } from '@/components/tasks/TasksOverviewCard'
+import type { TaskReminder } from '@/types/types'
 
 // Helper function to calculate farm health status based on real data
 const calculateFarmStatus = (
@@ -54,7 +55,13 @@ const calculateFarmStatus = (
 ): 'healthy' | 'attention' | 'critical' => {
   const criticalAlerts = alerts?.filter((alert) => alert.type === 'critical')?.length || 0
   const overdueTasks =
-    tasks?.filter((task) => !task.completed && new Date(task.due_date) < new Date())?.length || 0
+    tasks?.filter((task) => {
+      const dueDateValue = (task as any)?.dueDate
+      if (!dueDateValue || (task as any)?.completed) return false
+      const dueDate = new Date(dueDateValue)
+      if (Number.isNaN(dueDate.getTime())) return false
+      return dueDate < new Date()
+    })?.length || 0
 
   if (criticalAlerts > 0 || overdueTasks > 2) return 'critical'
   if (overdueTasks > 0) return 'attention'
@@ -212,29 +219,6 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     // Handle alert actions (navigate to specific screens, start workflows, etc.)
   }
 
-  const handleTaskComplete = async (taskId: string) => {
-    try {
-      await SupabaseService.completeTask(parseInt(taskId))
-      // Refresh dashboard data
-      if (selectedFarmId) {
-        const data = await SupabaseService.getDashboardSummary(selectedFarmId)
-        setDashboardData(data)
-      }
-    } catch (err) {
-      console.error('Error completing task:', err)
-    }
-  }
-
-  const handleTaskAction = (taskId: string) => {
-    // Handle task action
-    // Handle task actions (open task details, start workflow, etc.)
-  }
-
-  const handleAddTask = () => {
-    // Add new task
-    // Navigate to add task screen
-  }
-
   // Get status color for farm identification
   const getStatusColor = (status?: string) => {
     switch (status) {
@@ -284,13 +268,17 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     )
   }
 
-  const pendingTasks = dashboardData?.pendingTasks ?? []
-  const overdueTasks = pendingTasks.filter(
-    (task: any) => !task.completed && new Date(task.due_date) < new Date()
-  )
-  const todaysTasks = pendingTasks.filter((task: any) => {
-    if (!task.due_date) return false
-    const dueDate = new Date(task.due_date)
+  const pendingTasks = (dashboardData?.pendingTasks ?? []) as TaskReminder[]
+  const overdueTasks = pendingTasks.filter((task) => {
+    if (!task.dueDate || task.completed) return false
+    const dueDate = new Date(task.dueDate)
+    if (Number.isNaN(dueDate.getTime())) return false
+    return dueDate < new Date()
+  })
+  const todaysTasks = pendingTasks.filter((task) => {
+    if (!task.dueDate || task.completed) return false
+    const dueDate = new Date(task.dueDate)
+    if (Number.isNaN(dueDate.getTime())) return false
     const now = new Date()
     return (
       dueDate.getDate() === now.getDate() &&
@@ -459,9 +447,9 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   const endOfTomorrow = new Date(startOfToday)
   endOfTomorrow.setDate(endOfTomorrow.getDate() + 2)
 
-  const tasksDueSoon = (dashboardData?.pendingTasks ?? []).filter((task: any) => {
-    if (!task?.due_date) return false
-    const dueDate = new Date(task.due_date)
+  const tasksDueSoon = ((dashboardData?.pendingTasks ?? []) as TaskReminder[]).filter((task) => {
+    if (!task?.dueDate || task.completed) return false
+    const dueDate = new Date(task.dueDate)
     if (Number.isNaN(dueDate.getTime())) return false
     return dueDate >= startOfToday && dueDate < endOfTomorrow
   })
@@ -500,9 +488,9 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   }> = []
 
   if (tasksDueSoon.length > 0) {
-    const urgent = tasksDueSoon.filter((task: any) => {
-      if (!task?.due_date) return false
-      const dueDate = new Date(task.due_date)
+    const urgent = tasksDueSoon.filter((task) => {
+      if (!task.dueDate) return false
+      const dueDate = new Date(task.dueDate)
       const todayCutoff = new Date(startOfToday)
       todayCutoff.setDate(todayCutoff.getDate() + 1)
       return dueDate < todayCutoff
@@ -744,34 +732,20 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     </section>
   )
 
-  const tasksSection = (
-    <TodaysTasksSection
+  const tasksSection = selectedFarmId ? (
+    <TasksOverviewCard
       className="h-full"
-      tasks={
-        dashboardData?.pendingTasks?.map((task: any) => ({
-          id: task.id.toString(),
-          title: task.title,
-          type: task.category || 'maintenance',
-          priority: task.priority || 'medium',
-          scheduledTime: task.due_date
-            ? new Date(task.due_date).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit'
-              })
-            : undefined,
-          farmBlock: task.location || (selectedFarm ? capitalize(selectedFarm.name) : ''),
-          estimatedDuration: task.estimated_duration || 60,
-          completed: task.completed || false,
-          description: task.description
-        })) || []
-      }
-      onTaskComplete={handleTaskComplete}
-      onTaskAction={handleTaskAction}
-      onAddTask={handleAddTask}
-      loading={!dashboardData}
+      farmId={selectedFarmId}
+      tasks={pendingTasks}
       farmName={farmInfo?.name}
+      loading={!dashboardData}
+      onTasksUpdated={async () => {
+        if (!selectedFarmId) return
+        const data = await SupabaseService.getDashboardSummary(selectedFarmId)
+        setDashboardData(data)
+      }}
     />
-  )
+  ) : null
 
   const alertsSection = (
     <AlertsSection

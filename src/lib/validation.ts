@@ -161,22 +161,48 @@ export const HarvestSchema = z.object({
   notes: z.string().max(500, 'Notes too long').optional()
 })
 
-// Task reminder validation
+const dateTimeString = z.string().refine((value) => {
+  if (!value) return false
+  return !Number.isNaN(Date.parse(value))
+}, 'Invalid date format')
+
+// Task validation
 export const TaskReminderSchema = z.object({
   farm_id: z.number().int().positive('Invalid farm ID'),
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
-  description: z.string().max(1000, 'Description too long').optional(),
-  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
-  type: z.enum(['irrigation', 'spray', 'fertigation', 'training', 'harvest', 'other']),
-  priority: z.enum(['low', 'medium', 'high']),
-  completed: z.boolean()
+  description: z.string().max(2000, 'Description too long').optional().nullable(),
+  task_type: z.enum([
+    'irrigation',
+    'spray',
+    'fertigation',
+    'harvest',
+    'soil_test',
+    'petiole_test',
+    'expense',
+    'note'
+  ]),
+  status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']).default('pending'),
+  priority: z.enum(['low', 'medium', 'high']).default('medium'),
+  due_date: dateTimeString.optional().nullable(),
+  estimated_duration_minutes: z
+    .number()
+    .int()
+    .min(0, 'Duration cannot be negative')
+    .max(24 * 60, 'Duration seems too long')
+    .optional()
+    .nullable(),
+  location: z.string().max(200, 'Location name too long').optional().nullable(),
+  assigned_to_user_id: z.string().uuid('Invalid assignee').optional().nullable(),
+  linked_record_type: z.string().max(50, 'Linked type too long').optional().nullable(),
+  linked_record_id: z.number().int().positive('Linked record id invalid').optional().nullable(),
+  completed_at: dateTimeString.optional().nullable()
 })
 
 // Expense record validation
 export const ExpenseSchema = z.object({
   farm_id: z.number().int().positive('Invalid farm ID'),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
-  type: z.enum(['labor', 'materials', 'equipment', 'other']),
+  type: z.enum(['labor', 'materials', 'equipment']),
   description: z.string().min(1, 'Description is required').max(200, 'Description too long'),
   cost: z.number().min(0, 'Cost cannot be negative').max(10000000, 'Cost too high'),
   remarks: z.string().max(500, 'Remarks too long').optional()

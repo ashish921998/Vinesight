@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -13,7 +14,8 @@ import {
   Clock,
   MapPin,
   CheckCircle2,
-  Plus
+  Plus,
+  ArrowRight
 } from 'lucide-react'
 
 interface Task {
@@ -37,6 +39,7 @@ interface TodaysTasksSectionProps {
   onAddTask?: () => void
   loading?: boolean
   farmName?: string
+  farmId?: number
   className?: string
 }
 
@@ -47,8 +50,10 @@ export function TodaysTasksSection({
   onAddTask,
   loading,
   farmName,
+  farmId,
   className
 }: TodaysTasksSectionProps) {
+  const router = useRouter()
   const getTaskIcon = (type: string) => {
     switch (type) {
       case 'irrigation':
@@ -337,6 +342,7 @@ export function TodaysTasksSection({
                     variant="ghost"
                     size="sm"
                     className="h-9 rounded-full px-4 text-xs text-muted-foreground"
+                    onClick={() => farmId && router.push(`/farms/${farmId}/tasks`)}
                   >
                     View all {completedTasks.length} completed tasks
                   </Button>
@@ -344,6 +350,20 @@ export function TodaysTasksSection({
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {farmId && tasks.length > 0 && (
+        <div className="mt-4 border-t border-border/40 pt-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full rounded-2xl text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+            onClick={() => router.push(`/farms/${farmId}/tasks`)}
+          >
+            View all tasks
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
         </div>
       )}
     </div>

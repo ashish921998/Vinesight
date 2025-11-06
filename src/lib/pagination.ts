@@ -209,27 +209,35 @@ export class PaginatedQueries {
       completed?: boolean
       priority?: 'low' | 'medium' | 'high'
       type?: string
+      status?: ('pending' | 'in_progress' | 'completed' | 'cancelled')[]
     }
   ): Promise<PaginatedResult<any>> {
-    let query = supabase
-      .from('task_reminders')
-      .select('*', { count: 'exact' })
-      .eq('farm_id', farmId)
+    let query = supabase.from('tasks').select('*', { count: 'exact' }).eq('farm_id', farmId)
 
     // Apply filters
     if (filters?.completed !== undefined) {
-      query = query.eq('completed', filters.completed)
+      query = filters.completed
+        ? query.eq('status', 'completed')
+        : query.in('status', ['pending', 'in_progress', 'cancelled'])
     }
     if (filters?.priority) {
       query = query.eq('priority', filters.priority)
     }
     if (filters?.type) {
-      query = query.eq('type', filters.type)
+      query = query.eq('task_type', filters.type)
+    }
+    if (filters?.status && filters.status.length > 0) {
+      query = query.in('status', filters.status as string[])
     }
 
-    query = query.order(params.sortBy || 'due_date', {
-      ascending: params.sortOrder === 'asc'
+    const sortBy = params.sortBy || 'due_date'
+    query = query.order(sortBy, {
+      ascending: params.sortOrder === 'asc',
+      nullsLast: true
     })
+    if (sortBy !== 'created_at') {
+      query = query.order('created_at', { ascending: true })
+    }
 
     const offset = PaginationHelper.getOffset(params.page, params.pageSize)
     query = query.range(offset, offset + params.pageSize - 1)

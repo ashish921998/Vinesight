@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button'
 import { PestPredictionService } from '@/lib/pest-prediction-service'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { Farm } from '@/types/types'
+import type { Farm, TaskReminder } from '@/types/types'
 import { capitalize } from '@/lib/utils'
 import { transformActivitiesToLogEntries } from '@/lib/activity-display-utils'
 import { logger } from '@/lib/logger'
@@ -36,6 +36,7 @@ import {
   shouldUseSingleEditModal,
   extractDailyNoteFromActivities
 } from '@/lib/daily-note-utils'
+import { TasksOverviewCard } from '@/components/tasks/TasksOverviewCard'
 
 interface DashboardData {
   farm: Farm | null
@@ -44,7 +45,7 @@ interface DashboardData {
   recentActivities: any[]
   totalHarvest: number
   totalWaterUsage: number
-  pendingTasks: any[]
+  pendingTasks: TaskReminder[]
   recordCounts: {
     irrigation: number
     spray: number
@@ -229,15 +230,6 @@ export default function FarmDetailsPage() {
 
   //   generateAIPredictions()
   // }, [dashboardData, farmId, user, aiPredictionsGenerated])
-
-  const completeTask = async (taskId: number) => {
-    try {
-      await SupabaseService.completeTask(taskId)
-      await loadDashboardData()
-    } catch (error) {
-      logger.error('Error completing task:', error)
-    }
-  }
 
   // Unified handler for all data logs
   const handleDataLogsSubmit = async (
@@ -1255,11 +1247,16 @@ export default function FarmDetailsPage() {
         <main className="relative z-10 mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
           <div className="space-y-6">
             <QuickActions />
+            <TasksOverviewCard
+              farmId={Number.parseInt(farmId, 10)}
+              tasks={dashboardData?.pendingTasks || []}
+              farmName={farm?.name ? capitalize(farm.name) : undefined}
+              loading={loading}
+              onTasksUpdated={loadDashboardData}
+            />
             <ActivityFeed
               recentActivities={dashboardData?.recentActivities || []}
-              pendingTasks={dashboardData?.pendingTasks || []}
               loading={loading}
-              onCompleteTask={completeTask}
               onDeleteRecord={handleDeleteRecord}
               onEditDateGroup={handleEditDateGroup}
               onDeleteDateGroup={handleDeleteDateGroup}

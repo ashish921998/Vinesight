@@ -1686,42 +1686,92 @@ export type Database = {
       }
       task_reminders: {
         Row: {
+          assigned_to_user_id: string | null
           completed: boolean | null
           completed_at: string | null
           created_at: string | null
+          created_by: string | null
+
           description: string | null
           due_date: string
+          estimated_duration_minutes: number | null
+          farm_block: string | null
           farm_id: number | null
           id: number
+          linked_record_id: number | null
+          linked_record_type: string | null
+          location: string | null
+          metadata: Json
           priority: string | null
+          scheduled_start: string | null
+          status: string
           title: string
           type: string
+          updated_at: string | null
         }
         Insert: {
+          assigned_to_user_id?: string | null
           completed?: boolean | null
           completed_at?: string | null
           created_at?: string | null
+          created_by?: string | null
+          dependency_log_type?: string | null
           description?: string | null
           due_date: string
+          estimated_duration_minutes?: number | null
+          farm_block?: string | null
           farm_id?: number | null
           id?: number
+          linked_record_id?: number | null
+          linked_record_type?: string | null
+          location?: string | null
+          metadata?: Json
           priority?: string | null
+          scheduled_start?: string | null
+          status?: string
           title: string
           type: string
+          updated_at?: string | null
         }
         Update: {
+          assigned_to_user_id?: string | null
           completed?: boolean | null
           completed_at?: string | null
           created_at?: string | null
+          created_by?: string | null
+          dependency_log_type?: string | null
           description?: string | null
           due_date?: string
+          estimated_duration_minutes?: number | null
+          farm_block?: string | null
           farm_id?: number | null
           id?: number
+          linked_record_id?: number | null
+          linked_record_type?: string | null
+          location?: string | null
+          metadata?: Json
           priority?: string | null
+          scheduled_start?: string | null
+          status?: string
           title?: string
           type?: string
+          updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: 'task_reminders_assigned_to_user_id_fkey'
+            columns: ['assigned_to_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'task_reminders_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'task_reminders_farm_id_fkey'
             columns: ['farm_id']
