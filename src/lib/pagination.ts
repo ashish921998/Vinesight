@@ -227,7 +227,7 @@ export class PaginatedQueries {
       query = query.eq('priority', filters.priority)
     }
     if (filters?.type) {
-      query = query.eq('task_type', filters.type)
+      query = query.eq('type', filters.type)
     }
     if (filters?.status && filters.status.length > 0) {
       query = query.in('status', filters.status as string[])

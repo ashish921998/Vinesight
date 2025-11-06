@@ -167,41 +167,40 @@ BEGIN
     RAISE EXCEPTION 'linked_record_type must be set when linked_record_id is specified';
   END IF;
 
-  -- Validate that the linked record exists based on type
+  -- Validate that the linked record exists and belongs to the same farm
   IF NEW.linked_record_type IS NOT NULL AND NEW.linked_record_id IS NOT NULL THEN
     CASE NEW.linked_record_type
       WHEN 'irrigation' THEN
-        IF NOT EXISTS (SELECT 1 FROM irrigation_records WHERE id = NEW.linked_record_id) THEN
-          RAISE EXCEPTION 'Referenced irrigation record % does not exist', NEW.linked_record_id;
+        IF NOT EXISTS (SELECT 1 FROM irrigation_records WHERE id = NEW.linked_record_id AND farm_id = NEW.farm_id) THEN
+          RAISE EXCEPTION 'Referenced irrigation record % does not exist in this farm', NEW.linked_record_id;
         END IF;
       WHEN 'spray' THEN
-        IF NOT EXISTS (SELECT 1 FROM spray_records WHERE id = NEW.linked_record_id) THEN
-          RAISE EXCEPTION 'Referenced spray record % does not exist', NEW.linked_record_id;
+        IF NOT EXISTS (SELECT 1 FROM spray_records WHERE id = NEW.linked_record_id AND farm_id = NEW.farm_id) THEN
+          RAISE EXCEPTION 'Referenced spray record % does not exist in this farm', NEW.linked_record_id;
         END IF;
       WHEN 'fertigation' THEN
-        IF NOT EXISTS (SELECT 1 FROM fertigation_records WHERE id = NEW.linked_record_id) THEN
-          RAISE EXCEPTION 'Referenced fertigation record % does not exist', NEW.linked_record_id;
+        IF NOT EXISTS (SELECT 1 FROM fertigation_records WHERE id = NEW.linked_record_id AND farm_id = NEW.farm_id) THEN
+          RAISE EXCEPTION 'Referenced fertigation record % does not exist in this farm', NEW.linked_record_id;
         END IF;
       WHEN 'harvest' THEN
-        IF NOT EXISTS (SELECT 1 FROM harvest_records WHERE id = NEW.linked_record_id) THEN
-          RAISE EXCEPTION 'Referenced harvest record % does not exist', NEW.linked_record_id;
+        IF NOT EXISTS (SELECT 1 FROM harvest_records WHERE id = NEW.linked_record_id AND farm_id = NEW.farm_id) THEN
+          RAISE EXCEPTION 'Referenced harvest record % does not exist in this farm', NEW.linked_record_id;
         END IF;
       WHEN 'expense' THEN
-        IF NOT EXISTS (SELECT 1 FROM expense_records WHERE id = NEW.linked_record_id) THEN
-          RAISE EXCEPTION 'Referenced expense record % does not exist', NEW.linked_record_id;
+        IF NOT EXISTS (SELECT 1 FROM expense_records WHERE id = NEW.linked_record_id AND farm_id = NEW.farm_id) THEN
+          RAISE EXCEPTION 'Referenced expense record % does not exist in this farm', NEW.linked_record_id;
         END IF;
       WHEN 'soil_test' THEN
-        IF NOT EXISTS (SELECT 1 FROM soil_test_records WHERE id = NEW.linked_record_id) THEN
-          RAISE EXCEPTION 'Referenced soil test record % does not exist', NEW.linked_record_id;
+        IF NOT EXISTS (SELECT 1 FROM soil_test_records WHERE id = NEW.linked_record_id AND farm_id = NEW.farm_id) THEN
+          RAISE EXCEPTION 'Referenced soil test record % does not exist in this farm', NEW.linked_record_id;
         END IF;
       WHEN 'petiole_test' THEN
-        IF NOT EXISTS (SELECT 1 FROM petiole_test_records WHERE id = NEW.linked_record_id) THEN
-          RAISE EXCEPTION 'Referenced petiole test record % does not exist', NEW.linked_record_id;
+        IF NOT EXISTS (SELECT 1 FROM petiole_test_records WHERE id = NEW.linked_record_id AND farm_id = NEW.farm_id) THEN
+          RAISE EXCEPTION 'Referenced petiole test record % does not exist in this farm', NEW.linked_record_id;
         END IF;
       WHEN 'note' THEN
-        IF NOT EXISTS (SELECT 1 FROM daily_notes WHERE id = NEW.linked_record_id) THEN
-          RAISE EXCEPTION 'Referenced daily note % does not exist', NEW.linked_record_id;
-        END IF;
+        -- Note type tasks don't link to specific records, skip validation
+        RAISE NOTICE 'Note type tasks do not support linked records';
       ELSE
         -- For other types, just log a warning but allow it
         RAISE NOTICE 'Unknown linked_record_type: %', NEW.linked_record_type;

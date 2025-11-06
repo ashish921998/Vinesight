@@ -108,11 +108,13 @@ export default function FarmTasksPage() {
         setFarmName(capitalize(farm.name))
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? `Unable to load tasks: ${error.message}`
-          : 'Unable to load tasks for this farm.'
-      toast.error(errorMessage)
+      // Log detailed error for debugging without exposing to user
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Failed to load tasks:', error)
+      }
+      // Show generic error message to user (don't expose internal error details)
+      toast.error('Unable to load tasks for this farm.')
     } finally {
       setLoading(false)
     }

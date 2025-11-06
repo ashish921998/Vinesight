@@ -120,7 +120,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (data.task_type !== undefined) updates.type = data.task_type
     if (data.status !== undefined) updates.status = data.status
     if (data.priority !== undefined) updates.priority = data.priority
-    if (data.due_date !== undefined) updates.dueDate = data.due_date ?? undefined
+    if (data.due_date !== undefined) updates.dueDate = data.due_date ?? null
     if (data.estimated_duration_minutes !== undefined)
       updates.estimatedDurationMinutes = data.estimated_duration_minutes ?? null
     if (data.location !== undefined) updates.location = data.location ?? null
