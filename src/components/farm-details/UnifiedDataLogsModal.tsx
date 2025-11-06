@@ -38,7 +38,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-config'
-import { formatChemicalsArray, type Chemical } from '@/lib/chemical-formatter'
+import { type Chemical } from '@/lib/chemical-formatter'
 import { SupabaseService } from '@/lib/supabase-service'
 import { generateSaveButtonLabel } from '@/lib/daily-note-utils'
 

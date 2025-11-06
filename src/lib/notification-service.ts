@@ -98,7 +98,10 @@ export class NotificationService {
   }
 
   sendTaskReminder(task: TaskReminder, type: 'due_today' | 'overdue' | 'upcoming'): void {
-    if (!this.canSendNotifications()) return
+    if (!this.canSendNotifications() || !task.dueDate) return
+
+    const dueDate = new Date(task.dueDate)
+    if (Number.isNaN(dueDate.getTime())) return
 
     let title: string
     let body: string
@@ -112,13 +115,11 @@ export class NotificationService {
         break
       case 'overdue':
         title = `Overdue Task: ${task.title}`
-        body = `Task "${task.title}" was due on ${new Date(task.dueDate).toLocaleDateString()}.`
+        body = `Task "${task.title}" was due on ${dueDate.toLocaleDateString()}.`
         icon = '⚠️'
         break
       case 'upcoming':
-        const daysUntil = Math.ceil(
-          (new Date(task.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-        )
+        const daysUntil = Math.ceil((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
         title = `Upcoming Task: ${task.title}`
         body = `Task "${task.title}" is due in ${daysUntil} day${daysUntil === 1 ? '' : 's'}.`
         icon = '📋'
@@ -141,9 +142,11 @@ export class NotificationService {
     const now = new Date()
 
     tasks.forEach((task) => {
-      if (task.completed) return
+      if (task.completed || !task.dueDate) return
 
       const dueDate = new Date(task.dueDate)
+      if (Number.isNaN(dueDate.getTime())) return
+
       const timeDiff = dueDate.getTime() - now.getTime()
       const daysUntil = Math.ceil(timeDiff / (1000 * 60 * 60 * 24))
 

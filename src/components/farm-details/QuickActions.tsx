@@ -10,6 +10,13 @@ export function QuickActions() {
 
   const quickActions = [
     {
+      title: 'Tasks board',
+      description: 'Plan, assign, and close farm work faster.',
+      icon: ClipboardList,
+      onClick: () => router.push(`/farms/${farmId}/tasks`),
+      iconClass: 'bg-primary/10 text-primary'
+    },
+    {
       title: 'AI intelligence',
       description: 'Review pest risk predictions and tailored insights.',
       icon: Brain,

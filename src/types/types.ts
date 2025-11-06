@@ -1,34 +1,58 @@
 import { Database } from './database'
 
-// Task Reminder type matching the database schema
+// Task type matching the task_reminders table schema
 export interface TaskReminder {
   id: number
-  farmId: number | null
+  farmId: number
   title: string
   description: string | null
-  dueDate: string
-  type: string
-  completed: boolean | null
+  type:
+    | 'irrigation'
+    | 'spray'
+    | 'fertigation'
+    | 'harvest'
+    | 'soil_test'
+    | 'petiole_test'
+    | 'expense'
+    | 'note'
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+  priority: 'low' | 'medium' | 'high'
+  dueDate: string | null
+  estimatedDurationMinutes: number | null
+  location: string | null
+  completed: boolean
   completedAt: string | null
-  priority: string | null
-  createdAt: string | null
+  createdAt: string
+  updatedAt: string
+  assignedToUserId: string | null
+  createdBy: string | null
+  linkedRecordType: string | null
+  linkedRecordId: number | null
 }
 
-// Convert database row to TaskReminder
+// Convert database row to TaskReminder (task_reminders table)
 export function taskReminderFromDB(
   row: Database['public']['Tables']['task_reminders']['Row']
 ): TaskReminder {
   return {
     id: row.id,
-    farmId: row.farm_id,
+    farmId: row.farm_id ?? 0,
     title: row.title,
     description: row.description,
+    type: row.type as TaskReminder['type'],
+    status: (row.status as TaskReminder['status']) || 'pending',
+    priority: (row.priority as TaskReminder['priority']) || 'medium',
     dueDate: row.due_date,
-    type: row.type,
-    completed: row.completed,
+    estimatedDurationMinutes: row.estimated_duration_minutes,
+    location: row.location,
+    completed: row.completed ?? row.status === 'completed',
     completedAt: row.completed_at,
-    priority: row.priority,
-    createdAt: row.created_at
+    createdAt: row.created_at ?? new Date().toISOString(),
+    updatedAt: row.updated_at ?? new Date().toISOString(),
+    assignedToUserId: row.assigned_to_user_id,
+    createdBy: row.created_by,
+    linkedRecordType: row.linked_record_type,
+    linkedRecordId: row.linked_record_id
   }
 }
 

@@ -129,13 +129,34 @@ export interface TaskReminder {
   id?: number
   farm_id: number
   title: string
-  description?: string
-  due_date: string
-  type: 'irrigation' | 'spray' | 'fertigation' | 'training' | 'harvest' | 'other'
-  completed: boolean
-  priority: 'low' | 'medium' | 'high'
+  description?: string | null
+  task_type:
+    | 'irrigation'
+    | 'spray'
+    | 'fertigation'
+    | 'harvest'
+    | 'maintenance'
+    | 'scouting'
+    | 'soil_test'
+    | 'expense'
+    | 'training'
+    | 'other'
+  dependency_log_type?: string | null
+  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+  priority?: 'low' | 'medium' | 'high'
+  due_date?: string | null
+  scheduled_start?: string | null
+  estimated_duration_minutes?: number | null
+  location?: string | null
+  farm_block?: string | null
+  assigned_to_user_id?: string | null
+  created_by?: string | null
+  metadata?: Record<string, unknown>
+  linked_record_type?: string | null
+  linked_record_id?: number | null
   created_at?: string
-  completed_at?: string
+  updated_at?: string
+  completed_at?: string | null
 }
 
 export interface SoilTestRecord {

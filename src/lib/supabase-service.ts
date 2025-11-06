@@ -35,6 +35,8 @@ import {
   toApplicationTaskReminder,
   toDatabaseTaskReminderInsert,
   toDatabaseTaskReminderUpdate,
+  TaskReminderCreateInput,
+  TaskReminderUpdateInput,
   toApplicationSoilTestRecord,
   toDatabaseSoilTestInsert,
   toDatabaseSoilTestUpdate,
@@ -1051,37 +1053,59 @@ export class SupabaseService {
     return toApplicationCalculationHistory(data)
   }
 
-  // Task and reminder operations
-  static async getTaskReminders(farmId: number): Promise<TaskReminder[]> {
+  // Task operations
+  static async getTaskReminders(
+    farmId: number,
+    options: { status?: TaskReminder['status'][] } = {}
+  ): Promise<TaskReminder[]> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
+    let query = supabase
       .from('task_reminders')
       .select('*')
       .eq('farm_id', farmId)
       .order('due_date', { ascending: true })
+      .order('priority', { ascending: false })
+      .order('created_at', { ascending: true })
+
+    if (options.status && options.status.length > 0) {
+      query = query.in('status', options.status as string[])
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return (data || []).map(toApplicationTaskReminder)
   }
 
   static async getPendingTasks(farmId: number): Promise<TaskReminder[]> {
+    return this.getTaskReminders(farmId, { status: ['pending', 'in_progress'] })
+  }
+
+  static async getTaskById(id: number): Promise<TaskReminder | null> {
     const supabase = getTypedSupabaseClient()
     const { data, error } = await supabase
       .from('task_reminders')
       .select('*')
-      .eq('farm_id', farmId)
-      .eq('completed', false)
-      .order('due_date', { ascending: true })
+      .eq('id', id)
+      .maybeSingle()
 
     if (error) throw error
-    return (data || []).map(toApplicationTaskReminder)
+    return data ? toApplicationTaskReminder(data) : null
   }
 
-  static async addTaskReminder(
-    task: Omit<TaskReminder, 'id' | 'createdAt'>
-  ): Promise<TaskReminder> {
+  static async addTaskReminder(task: TaskReminderCreateInput): Promise<TaskReminder> {
     const supabase = getTypedSupabaseClient()
-    const dbTask = toDatabaseTaskReminderInsert(task)
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+
+    const dbTask = toDatabaseTaskReminderInsert({
+      ...task,
+      status: task.status ?? 'pending',
+      priority: task.priority ?? 'medium',
+      createdBy: task.createdBy ?? user?.id ?? null,
+      metadata: task.metadata ?? {}
+    })
 
     const { data, error } = await supabase
       .from('task_reminders')
@@ -1093,12 +1117,9 @@ export class SupabaseService {
     return toApplicationTaskReminder(data)
   }
 
-  static async completeTask(id: number): Promise<TaskReminder> {
+  static async updateTask(id: number, updates: TaskReminderUpdateInput): Promise<TaskReminder> {
     const supabase = getTypedSupabaseClient()
-    const dbUpdates = toDatabaseTaskReminderUpdate({
-      completed: true,
-      completedAt: new Date().toISOString()
-    })
+    const dbUpdates = toDatabaseTaskReminderUpdate(updates)
 
     const { data, error } = await supabase
       .from('task_reminders')
@@ -1109,6 +1130,26 @@ export class SupabaseService {
 
     if (error) throw error
     return toApplicationTaskReminder(data)
+  }
+
+  static async completeTask(id: number): Promise<TaskReminder> {
+    return this.updateTask(id, {
+      status: 'completed',
+      completedAt: new Date().toISOString()
+    })
+  }
+
+  static async reopenTask(id: number): Promise<TaskReminder> {
+    return this.updateTask(id, {
+      status: 'pending',
+      completedAt: null
+    })
+  }
+
+  static async deleteTask(id: number): Promise<void> {
+    const supabase = getTypedSupabaseClient()
+    const { error } = await supabase.from('task_reminders').delete().eq('id', id)
+    if (error) throw error
   }
 
   // Soil test operations

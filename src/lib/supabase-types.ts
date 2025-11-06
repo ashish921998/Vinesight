@@ -14,6 +14,7 @@ import type {
   PetioleTestRecord,
   DailyNoteRecord
 } from './supabase'
+import { taskReminderFromDB } from '@/types/types'
 import type { TaskReminder, Farm } from '@/types/types'
 
 // Re-export application types
@@ -73,6 +74,30 @@ export type DatabaseCalculationHistoryUpdate =
 export type DatabaseTaskReminder = Database['public']['Tables']['task_reminders']['Row']
 export type DatabaseTaskReminderInsert = Database['public']['Tables']['task_reminders']['Insert']
 export type DatabaseTaskReminderUpdate = Database['public']['Tables']['task_reminders']['Update']
+
+export interface TaskReminderCreateInput {
+  farmId: number
+  title: string
+  description?: string | null
+  type: string
+  status?: TaskReminder['status']
+  priority?: TaskReminder['priority']
+  dueDate: string
+  estimatedDurationMinutes?: number | null
+  location?: string | null
+  farmBlock?: string | null
+  assignedToUserId?: string | null
+  createdBy?: string | null
+  metadata?: Record<string, unknown>
+  linkedRecordType?: string | null
+  linkedRecordId?: number | null
+  completedAt?: string | null
+}
+
+export interface TaskReminderUpdateInput extends Partial<TaskReminderCreateInput> {
+  status?: TaskReminder['status']
+  completedAt?: string | null
+}
 
 export type DatabaseSoilTestRecord = Database['public']['Tables']['soil_test_records']['Row']
 export type DatabaseSoilTestRecordInsert =
@@ -570,49 +595,58 @@ export function toDatabaseCalculationHistoryInsert(
   }
 }
 
-// Task Reminder conversion functions
+// Task conversion functions
 export function toApplicationTaskReminder(dbRecord: DatabaseTaskReminder): TaskReminder {
-  return {
-    id: dbRecord.id,
-    farmId: dbRecord.farm_id,
-    title: dbRecord.title,
-    description: dbRecord.description || null,
-    dueDate: dbRecord.due_date,
-    type: dbRecord.type,
-    completed: dbRecord.completed || false,
-    priority: dbRecord.priority || null,
-    createdAt: dbRecord.created_at || null,
-    completedAt: dbRecord.completed_at || null
-  }
+  return taskReminderFromDB(dbRecord as Database['public']['Tables']['task_reminders']['Row'])
 }
 
 export function toDatabaseTaskReminderInsert(
-  appRecord: Omit<TaskReminder, 'id' | 'createdAt'>
+  appRecord: TaskReminderCreateInput
 ): DatabaseTaskReminderInsert {
   return {
     farm_id: appRecord.farmId,
     title: appRecord.title,
-    description: appRecord.description,
-    due_date: appRecord.dueDate,
+    description: appRecord.description ?? null,
     type: appRecord.type,
-    completed: appRecord.completed,
-    priority: appRecord.priority,
-    completed_at: appRecord.completedAt
+    status: appRecord.status ?? 'pending',
+    priority: appRecord.priority ?? 'medium',
+    due_date: appRecord.dueDate,
+    estimated_duration_minutes: appRecord.estimatedDurationMinutes ?? null,
+    location: appRecord.location ?? null,
+    farm_block: appRecord.farmBlock ?? null,
+    assigned_to_user_id: appRecord.assignedToUserId ?? null,
+    created_by: appRecord.createdBy ?? null,
+    metadata: (appRecord.metadata as Json) ?? {},
+    linked_record_type: appRecord.linkedRecordType ?? null,
+    linked_record_id: appRecord.linkedRecordId ?? null,
+    completed_at: appRecord.completedAt ?? null
   }
 }
 
 export function toDatabaseTaskReminderUpdate(
-  appUpdates: Partial<TaskReminder>
+  appUpdates: TaskReminderUpdateInput
 ): DatabaseTaskReminderUpdate {
   const update: DatabaseTaskReminderUpdate = {}
 
   if (appUpdates.farmId !== undefined) update.farm_id = appUpdates.farmId
   if (appUpdates.title !== undefined) update.title = appUpdates.title
-  if (appUpdates.description !== undefined) update.description = appUpdates.description
-  if (appUpdates.dueDate !== undefined) update.due_date = appUpdates.dueDate
+  if (appUpdates.description !== undefined) update.description = appUpdates.description ?? null
   if (appUpdates.type !== undefined) update.type = appUpdates.type
-  if (appUpdates.completed !== undefined) update.completed = appUpdates.completed
+  if (appUpdates.status !== undefined) update.status = appUpdates.status
   if (appUpdates.priority !== undefined) update.priority = appUpdates.priority
+  if (appUpdates.dueDate !== undefined) update.due_date = appUpdates.dueDate
+  if (appUpdates.estimatedDurationMinutes !== undefined)
+    update.estimated_duration_minutes = appUpdates.estimatedDurationMinutes ?? null
+  if (appUpdates.location !== undefined) update.location = appUpdates.location ?? null
+  if (appUpdates.farmBlock !== undefined) update.farm_block = appUpdates.farmBlock ?? null
+  if (appUpdates.assignedToUserId !== undefined)
+    update.assigned_to_user_id = appUpdates.assignedToUserId ?? null
+  if (appUpdates.createdBy !== undefined) update.created_by = appUpdates.createdBy ?? null
+  if (appUpdates.metadata !== undefined) update.metadata = (appUpdates.metadata as Json) ?? {}
+  if (appUpdates.linkedRecordType !== undefined)
+    update.linked_record_type = appUpdates.linkedRecordType ?? null
+  if (appUpdates.linkedRecordId !== undefined)
+    update.linked_record_id = appUpdates.linkedRecordId ?? null
   if (appUpdates.completedAt !== undefined) update.completed_at = appUpdates.completedAt
 
   return update

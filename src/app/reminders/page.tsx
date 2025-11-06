@@ -125,12 +125,12 @@ export default function RemindersPage() {
         await SupabaseService.addTaskReminder({
           farmId: selectedFarm.id!,
           title: formData.title,
-          description: formData.description,
-          dueDate: formData.dueDate,
+          description: formData.description || null,
+          dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null,
           type: formData.type,
           priority: formData.priority,
-          completed: false,
-          completedAt: null
+          status: 'pending',
+          metadata: { source: 'reminders-page' }
         })
       }
 
@@ -167,12 +167,12 @@ export default function RemindersPage() {
       await SupabaseService.addTaskReminder({
         farmId: selectedFarm.id!,
         title: templateData.title,
-        description: templateData.description,
-        dueDate: templateData.dueDate,
+        description: templateData.description || null,
+        dueDate: templateData.dueDate ? new Date(templateData.dueDate).toISOString() : null,
         type: templateData.type,
         priority: templateData.priority,
-        completed: false,
-        completedAt: null
+        status: 'pending',
+        metadata: { source: 'reminders-template' }
       })
 
       setShowTemplateSelector(false)
@@ -221,8 +221,12 @@ export default function RemindersPage() {
           return !task.completed
         case 'completed':
           return task.completed
-        case 'overdue':
-          return !task.completed && new Date(task.dueDate) < now
+        case 'overdue': {
+          if (task.completed || !task.dueDate) return false
+          const dueDate = new Date(task.dueDate)
+          if (Number.isNaN(dueDate.getTime())) return false
+          return dueDate < now
+        }
         default:
           return true
       }
@@ -260,10 +264,13 @@ export default function RemindersPage() {
     }
   }
 
-  const isOverdue = (dueDate: string) => {
+  const isOverdue = (dueDate: string | null) => {
+    if (!dueDate) return false
+    const parsed = new Date(dueDate)
+    if (Number.isNaN(parsed.getTime())) return false
     const now = new Date()
     now.setHours(23, 59, 59, 999)
-    return new Date(dueDate) < now
+    return parsed < now
   }
 
   const filteredTasks = getFilteredTasks()
@@ -605,7 +612,12 @@ export default function RemindersPage() {
                             )}
 
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                              <span>
+                                Due:{' '}
+                                {task.dueDate
+                                  ? new Date(task.dueDate).toLocaleDateString()
+                                  : 'Not scheduled'}
+                              </span>
                               <Badge variant="outline">{task.type}</Badge>
                             </div>
                           </div>

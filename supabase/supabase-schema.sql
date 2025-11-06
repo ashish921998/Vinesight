@@ -103,18 +103,53 @@ CREATE TABLE calculation_history (
 );
 
 -- Create task_reminders table
+-- Enhanced task_reminders table for tracking farm tasks
+-- Supports all data log types: irrigation, spray, fertigation, harvest, soil_test, petiole_test, note
 CREATE TABLE task_reminders (
   id BIGSERIAL PRIMARY KEY,
   farm_id BIGINT REFERENCES farms(id) ON DELETE CASCADE,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  assigned_to_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   title VARCHAR(255) NOT NULL,
   description TEXT,
-  due_date DATE NOT NULL,
-  type VARCHAR(20) CHECK (type IN ('irrigation', 'spray', 'fertigation', 'training', 'harvest', 'other')) NOT NULL,
-  completed BOOLEAN DEFAULT FALSE,
+  type VARCHAR(50) CHECK (type IN ('irrigation', 'spray', 'fertigation', 'harvest', 'soil_test', 'petiole_test', 'expense', 'note')) NOT NULL,
+  status VARCHAR(20) CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled')) DEFAULT 'pending' NOT NULL,
   priority VARCHAR(10) CHECK (priority IN ('low', 'medium', 'high')) DEFAULT 'medium',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  completed_at TIMESTAMP WITH TIME ZONE
+  due_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  estimated_duration_minutes INTEGER CHECK (estimated_duration_minutes IS NULL OR estimated_duration_minutes >= 0),
+  location TEXT,
+  linked_record_type VARCHAR(50),
+  linked_record_id BIGINT,
+  completed BOOLEAN DEFAULT FALSE,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+
+-- Create indexes for task_reminders
+CREATE INDEX idx_task_reminders_farm_id ON task_reminders(farm_id);
+CREATE INDEX idx_task_reminders_status ON task_reminders(status);
+CREATE INDEX idx_task_reminders_farm_status_due ON task_reminders(farm_id, status, due_date);
+CREATE INDEX idx_task_reminders_assignee_status ON task_reminders(assigned_to_user_id, status);
+CREATE INDEX idx_task_reminders_farm_type ON task_reminders(farm_id, type);
+CREATE INDEX idx_task_reminders_linked_record ON task_reminders(linked_record_type, linked_record_id);
+
+-- Trigger to auto-update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_task_reminders_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = CURRENT_TIMESTAMP;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_task_reminders_updated_at_trigger
+  BEFORE UPDATE ON task_reminders
+  FOR EACH ROW
+  EXECUTE FUNCTION update_task_reminders_updated_at();
+
+-- Enable Row Level Security
+ALTER TABLE task_reminders ENABLE ROW LEVEL SECURITY;
 
 -- Create soil_test_records table
 CREATE TABLE soil_test_records (
@@ -273,18 +308,48 @@ CREATE POLICY "Users can delete calculation history for their farms" ON calculat
   EXISTS (SELECT 1 FROM farms WHERE farms.id = calculation_history.farm_id AND farms.user_id = auth.uid())
 );
 
--- Task reminders
-CREATE POLICY "Users can view their farm task reminders" ON task_reminders FOR SELECT USING (
-  EXISTS (SELECT 1 FROM farms WHERE farms.id = task_reminders.farm_id AND farms.user_id = auth.uid())
+-- Task reminders RLS policies
+-- Farm owners and assignees can view tasks
+CREATE POLICY "Users can view farm tasks" ON task_reminders FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM farms
+    WHERE farms.id = task_reminders.farm_id
+    AND farms.user_id = auth.uid()
+  )
+  OR assigned_to_user_id = auth.uid()
 );
-CREATE POLICY "Users can insert task reminders for their farms" ON task_reminders FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM farms WHERE farms.id = task_reminders.farm_id AND farms.user_id = auth.uid())
+
+-- Farm owners can insert tasks
+CREATE POLICY "Users can insert farm tasks" ON task_reminders FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM farms
+    WHERE farms.id = task_reminders.farm_id
+    AND farms.user_id = auth.uid()
+  )
 );
-CREATE POLICY "Users can update task reminders for their farms" ON task_reminders FOR UPDATE USING (
-  EXISTS (SELECT 1 FROM farms WHERE farms.id = task_reminders.farm_id AND farms.user_id = auth.uid())
+
+-- Farm owners can update their tasks
+CREATE POLICY "Users can update farm tasks" ON task_reminders FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM farms
+    WHERE farms.id = task_reminders.farm_id
+    AND farms.user_id = auth.uid()
+  )
+) WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM farms
+    WHERE farms.id = task_reminders.farm_id
+    AND farms.user_id = auth.uid()
+  )
 );
-CREATE POLICY "Users can delete task reminders for their farms" ON task_reminders FOR DELETE USING (
-  EXISTS (SELECT 1 FROM farms WHERE farms.id = task_reminders.farm_id AND farms.user_id = auth.uid())
+
+-- Farm owners can delete their tasks
+CREATE POLICY "Users can delete farm tasks" ON task_reminders FOR DELETE USING (
+  EXISTS (
+    SELECT 1 FROM farms
+    WHERE farms.id = task_reminders.farm_id
+    AND farms.user_id = auth.uid()
+  )
 );
 
 -- Soil test records
