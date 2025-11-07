@@ -15,7 +15,8 @@ import {
   Copy,
   Check,
   ArrowRight,
-  Trash2
+  Trash2,
+  FileText
 } from 'lucide-react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -81,7 +82,13 @@ export function AIAssistant({
   const savingInProgressRef = useRef<boolean>(false)
   const lastSavedSnapshotRef = useRef<string | null>(null)
   const [pendingAttachments, setPendingAttachments] = useState<
-    Array<{ type: 'image'; name: string; url: string; size?: number }>
+    Array<{
+      type: 'image' | 'document'
+      name: string
+      url: string
+      size?: number
+      mimeType?: string
+    }>
   >([])
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -94,10 +101,14 @@ export function AIAssistant({
   const attachmentFromFilePart = useCallback((part: FileUIPart) => {
     const name = part.filename || 'Attachment'
     const url = part.url
+    const mimeType = part.mediaType
+    const isPDF = mimeType === 'application/pdf' || name.toLowerCase().endsWith('.pdf')
+
     return {
-      type: 'image' as const,
+      type: (isPDF ? 'document' : 'image') as 'image' | 'document',
       name,
-      url
+      url,
+      mimeType
     }
   }, [])
 
@@ -126,9 +137,14 @@ export function AIAssistant({
           }
         : undefined
 
-      const effectiveContent =
-        content ||
-        (attachments.length > 0 && uiMessage.role === 'user' ? 'Shared an image' : content)
+      let effectiveContent = content
+      if (!effectiveContent && attachments.length > 0 && uiMessage.role === 'user') {
+        const firstAttachment = attachments[0]
+        effectiveContent =
+          firstAttachment && 'type' in firstAttachment && firstAttachment.type === 'document'
+            ? 'Shared a document'
+            : 'Shared an image'
+      }
 
       if (!effectiveContent && attachments.length === 0 && uiMessage.role === 'assistant') {
         return null
@@ -157,9 +173,29 @@ export function AIAssistant({
 
       if (message.attachments) {
         message.attachments.forEach((attachment) => {
-          const mediaType = attachment.url.startsWith('data:')
-            ? attachment.url.slice(5, attachment.url.indexOf(';'))
-            : 'image/png'
+          let mediaType = 'image/png' // default
+
+          // Try to extract from data URL
+          if (attachment.url.startsWith('data:')) {
+            const match = attachment.url.match(/^data:(.*?);/)
+            if (match?.[1]) {
+              mediaType = match[1]
+            }
+          }
+
+          // Use stored mimeType if available
+          if (attachment.mimeType) {
+            mediaType = attachment.mimeType
+          }
+
+          // Fallback based on attachment type
+          if (!mediaType || mediaType === 'image/png') {
+            if (attachment.type === 'document') {
+              mediaType = 'application/pdf'
+            } else if (attachment.name?.toLowerCase().endsWith('.pdf')) {
+              mediaType = 'application/pdf'
+            }
+          }
 
           parts.push({
             type: 'file',
@@ -329,55 +365,86 @@ export function AIAssistant({
     return true
   }, [])
 
+  // Use ref to track if we're currently processing to prevent infinite loops
+  const isProcessingMessagesRef = useRef(false)
+
   useEffect(() => {
-    if (chatMessages.length === 0) {
-      setMessages((prev) => {
-        const welcome: Message = {
-          id: 'welcome',
-          content: getWelcomeMessage(),
-          role: 'assistant',
-          timestamp: new Date(),
-          language: i18n.language
-        }
-        if (prev.length === 1 && prev[0].id === 'welcome' && prev[0].language === i18n.language) {
-          return prev
-        }
-        return [welcome]
-      })
+    // Prevent re-entrant calls during streaming
+    if (isProcessingMessagesRef.current) {
       return
     }
 
-    const mapped = chatMessages
-      .map(uiMessageToAppMessage)
-      .filter((msg): msg is Message => msg !== null)
+    isProcessingMessagesRef.current = true
 
-    if (mapped.length === 0) {
-      setMessages((prev) => {
-        const welcome: Message = {
-          id: 'welcome',
-          content: getWelcomeMessage(),
-          role: 'assistant',
-          timestamp: new Date(),
-          language: i18n.language
-        }
-        if (prev.length === 1 && prev[0].id === 'welcome' && prev[0].language === i18n.language) {
-          return prev
-        }
-        return [welcome]
-      })
-      return
-    }
-
-    setMessages((prev) => {
-      if (areMessagesEqual(prev, mapped)) {
-        return prev
+    try {
+      if (chatMessages.length === 0) {
+        setMessages((prev) => {
+          const welcome: Message = {
+            id: 'welcome',
+            content: getWelcomeMessage(),
+            role: 'assistant',
+            timestamp: new Date(),
+            language: i18n.language
+          }
+          if (prev.length === 1 && prev[0].id === 'welcome' && prev[0].language === i18n.language) {
+            return prev
+          }
+          return [welcome]
+        })
+        return
       }
-      return mapped
-    })
+
+      const mapped = chatMessages
+        .map(uiMessageToAppMessage)
+        .filter((msg): msg is Message => msg !== null)
+
+      if (mapped.length === 0) {
+        setMessages((prev) => {
+          const welcome: Message = {
+            id: 'welcome',
+            content: getWelcomeMessage(),
+            role: 'assistant',
+            timestamp: new Date(),
+            language: i18n.language
+          }
+          if (prev.length === 1 && prev[0].id === 'welcome' && prev[0].language === i18n.language) {
+            return prev
+          }
+          return [welcome]
+        })
+        return
+      }
+
+      setMessages((prev) => {
+        if (areMessagesEqual(prev, mapped)) {
+          return prev
+        }
+        return mapped
+      })
+    } finally {
+      // Use RAF to ensure we're not blocking the main thread
+      requestAnimationFrame(() => {
+        isProcessingMessagesRef.current = false
+      })
+    }
   }, [chatMessages, uiMessageToAppMessage, getWelcomeMessage, i18n.language, areMessagesEqual])
 
+  // Throttle scroll to avoid excessive rerenders during streaming
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current)
+    }
+
+    scrollTimeoutRef.current = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, 100)
+
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
+    }
   }, [messages])
 
   const analyzeQuery = useCallback((text: string) => {
@@ -506,6 +573,7 @@ export function AIAssistant({
   )
 
   useEffect(() => {
+    // Only save when streaming is complete
     if (status !== 'ready') {
       return
     }
@@ -527,15 +595,20 @@ export function AIAssistant({
 
     lastSavedSnapshotRef.current = signature
 
-    void (async () => {
-      try {
-        await saveMessageImmediately(filteredMessages)
-      } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Failed to save assistant message:', error)
+    // Debounce the save to avoid rapid successive calls
+    const timeoutId = setTimeout(() => {
+      void (async () => {
+        try {
+          await saveMessageImmediately(filteredMessages)
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Failed to save assistant message:', error)
+          }
         }
-      }
-    })()
+      })()
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(timeoutId)
   }, [messages, saveMessageImmediately, status])
 
   const handleSendMessage = useCallback(
@@ -550,7 +623,11 @@ export function AIAssistant({
 
       const userMessageForContext: Message = {
         id: `user-${now.getTime()}`,
-        content: messageText || 'Shared an image',
+        content:
+          messageText ||
+          (pendingAttachments.length > 0 && pendingAttachments[0].type === 'document'
+            ? 'Shared a document'
+            : 'Shared an image'),
         role: 'user',
         timestamp: now,
         attachments: pendingAttachments.length > 0 ? [...pendingAttachments] : undefined,
@@ -565,7 +642,19 @@ export function AIAssistant({
 
       const fileParts: FileUIPart[] = pendingAttachments.map((attachment) => {
         const mediaMatch = attachment.url.match(/^data:(.*?);/)
-        const mediaType = mediaMatch?.[1] || 'image/png'
+        let mediaType = mediaMatch?.[1]
+
+        // Fallback to mimeType from attachment or infer from type
+        if (!mediaType) {
+          if (attachment.mimeType) {
+            mediaType = attachment.mimeType
+          } else if (attachment.type === 'document') {
+            mediaType = 'application/pdf'
+          } else {
+            mediaType = 'image/png'
+          }
+        }
+
         return {
           type: 'file',
           url: attachment.url,
@@ -660,28 +749,50 @@ export function AIAssistant({
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file && file.type.startsWith('image/')) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size must be less than 5MB')
-        return
-      }
+    if (!file) return
 
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const imageUrl = e.target?.result as string
-        const attachment = {
-          type: 'image' as const,
-          name: file.name,
-          url: imageUrl,
-          size: file.size
-        }
+    const isImage = file.type.startsWith('image/')
+    const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
 
-        setPendingAttachments((prev) => [...prev, attachment])
+    if (!isImage && !isPDF) {
+      toast.error('Only image and PDF files are supported')
+      if (event.target) {
+        event.target.value = ''
       }
-      reader.readAsDataURL(file)
-    } else if (file) {
-      toast.error('Only image files are supported')
+      return
     }
+
+    // Size validation: 5MB for images, 10MB for PDFs
+    const maxSize = isPDF ? 10 * 1024 * 1024 : 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      const sizeLimitText = isPDF ? '10MB' : '5MB'
+      toast.error(`File size must be less than ${sizeLimitText}`)
+      if (event.target) {
+        event.target.value = ''
+      }
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const fileUrl = e.target?.result as string
+      const attachment: {
+        type: 'image' | 'document'
+        name: string
+        url: string
+        size: number
+        mimeType?: string
+      } = {
+        type: isPDF ? 'document' : 'image',
+        name: file.name,
+        url: fileUrl,
+        size: file.size,
+        mimeType: file.type || (isPDF ? 'application/pdf' : undefined)
+      }
+
+      setPendingAttachments((prev) => [...prev, attachment])
+    }
+    reader.readAsDataURL(file)
 
     if (event.target) {
       event.target.value = ''
@@ -993,7 +1104,7 @@ export function AIAssistant({
                             message.role === 'user' ? 'border-blue-200' : 'border-gray-200'
                           )}
                         >
-                          {attachment.type === 'image' && (
+                          {attachment.type === 'image' ? (
                             <Image
                               src={attachment.url}
                               alt={attachment.name}
@@ -1002,7 +1113,19 @@ export function AIAssistant({
                               className="w-full h-auto object-cover max-h-64"
                               loading="lazy"
                             />
-                          )}
+                          ) : attachment.type === 'document' ? (
+                            <div className="p-4 bg-gray-50 flex items-center gap-3">
+                              <div className="flex-shrink-0 w-12 h-12 bg-red-100 rounded flex items-center justify-center">
+                                <FileText className="w-6 h-6 text-red-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {attachment.name}
+                                </p>
+                                <p className="text-xs text-gray-500">PDF Document</p>
+                              </div>
+                            </div>
+                          ) : null}
                           <div className="p-2 bg-gray-50 text-xs text-gray-600 flex items-center justify-between">
                             <span className="truncate">{attachment.name}</span>
                             {attachment.size && (
@@ -1067,15 +1190,21 @@ export function AIAssistant({
                 {pendingAttachments.map((attachment, index) => (
                   <div
                     key={index}
-                    className="relative max-w-24 rounded-lg overflow-hidden border border-gray-200 bg-white"
+                    className="relative max-w-32 rounded-lg overflow-hidden border border-gray-200 bg-white"
                   >
-                    <Image
-                      src={attachment.url}
-                      alt={attachment.name}
-                      width={96}
-                      height={64}
-                      className="w-full h-16 object-cover"
-                    />
+                    {attachment.type === 'image' ? (
+                      <Image
+                        src={attachment.url}
+                        alt={attachment.name}
+                        width={96}
+                        height={64}
+                        className="w-full h-16 object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-16 flex items-center justify-center bg-red-50">
+                        <FileText className="w-8 h-8 text-red-600" />
+                      </div>
+                    )}
                     <Button
                       onClick={() => removeAttachment(index)}
                       variant="destructive"
@@ -1095,7 +1224,7 @@ export function AIAssistant({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,application/pdf,.pdf"
               onChange={handleFileSelect}
               className="hidden"
             />
