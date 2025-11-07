@@ -98,6 +98,33 @@ export function AIAssistant({
   const handleSendMessageRef = useRef<((message?: string) => Promise<void>) | null>(null)
   const isAssistantProcessing = status === 'submitted' || status === 'streaming'
 
+  // Helper to infer media type from various sources
+  const inferMediaType = useCallback(
+    (url: string, mimeType?: string, attachmentType?: 'image' | 'document', name?: string) => {
+      // Try to extract from data URL first
+      if (url.startsWith('data:')) {
+        const match = url.match(/^data:(.*?);/)
+        if (match?.[1]) {
+          return match[1]
+        }
+      }
+
+      // Use provided mimeType if available
+      if (mimeType) {
+        return mimeType
+      }
+
+      // Fallback based on attachment type or file extension
+      if (attachmentType === 'document' || name?.toLowerCase().endsWith('.pdf')) {
+        return 'application/pdf'
+      }
+
+      // Default to PNG for images
+      return 'image/png'
+    },
+    []
+  )
+
   const attachmentFromFilePart = useCallback((part: FileUIPart) => {
     const name = part.filename || 'Attachment'
     const url = part.url
@@ -141,9 +168,7 @@ export function AIAssistant({
       if (!effectiveContent && attachments.length > 0 && uiMessage.role === 'user') {
         const firstAttachment = attachments[0]
         effectiveContent =
-          firstAttachment && 'type' in firstAttachment && firstAttachment.type === 'document'
-            ? 'Shared a document'
-            : 'Shared an image'
+          firstAttachment?.type === 'document' ? 'Shared a document' : 'Shared an image'
       }
 
       if (!effectiveContent && attachments.length === 0 && uiMessage.role === 'assistant') {
@@ -173,29 +198,12 @@ export function AIAssistant({
 
       if (message.attachments) {
         message.attachments.forEach((attachment) => {
-          let mediaType = 'image/png' // default
-
-          // Try to extract from data URL
-          if (attachment.url.startsWith('data:')) {
-            const match = attachment.url.match(/^data:(.*?);/)
-            if (match?.[1]) {
-              mediaType = match[1]
-            }
-          }
-
-          // Use stored mimeType if available
-          if (attachment.mimeType) {
-            mediaType = attachment.mimeType
-          }
-
-          // Fallback based on attachment type
-          if (!mediaType || mediaType === 'image/png') {
-            if (attachment.type === 'document') {
-              mediaType = 'application/pdf'
-            } else if (attachment.name?.toLowerCase().endsWith('.pdf')) {
-              mediaType = 'application/pdf'
-            }
-          }
+          const mediaType = inferMediaType(
+            attachment.url,
+            attachment.mimeType,
+            attachment.type,
+            attachment.name
+          )
 
           parts.push({
             type: 'file',
@@ -218,7 +226,7 @@ export function AIAssistant({
         }
       }
     },
-    [i18n.language]
+    [i18n.language, inferMediaType]
   )
 
   useEffect(() => {
@@ -331,6 +339,23 @@ export function AIAssistant({
     }
   }, [i18n.language])
 
+  // Helper to ensure welcome message is set correctly
+  const ensureWelcomeMessage = useCallback(() => {
+    setMessages((prev) => {
+      const welcome: Message = {
+        id: 'welcome',
+        content: getWelcomeMessage(),
+        role: 'assistant',
+        timestamp: new Date(),
+        language: i18n.language
+      }
+      if (prev.length === 1 && prev[0].id === 'welcome' && prev[0].language === i18n.language) {
+        return prev
+      }
+      return [welcome]
+    })
+  }, [getWelcomeMessage, i18n.language])
+
   const areMessagesEqual = useCallback((a: Message[], b: Message[]) => {
     if (a.length !== b.length) return false
     for (let i = 0; i < a.length; i += 1) {
@@ -378,19 +403,8 @@ export function AIAssistant({
 
     try {
       if (chatMessages.length === 0) {
-        setMessages((prev) => {
-          const welcome: Message = {
-            id: 'welcome',
-            content: getWelcomeMessage(),
-            role: 'assistant',
-            timestamp: new Date(),
-            language: i18n.language
-          }
-          if (prev.length === 1 && prev[0].id === 'welcome' && prev[0].language === i18n.language) {
-            return prev
-          }
-          return [welcome]
-        })
+        ensureWelcomeMessage()
+        isProcessingMessagesRef.current = false
         return
       }
 
@@ -399,19 +413,8 @@ export function AIAssistant({
         .filter((msg): msg is Message => msg !== null)
 
       if (mapped.length === 0) {
-        setMessages((prev) => {
-          const welcome: Message = {
-            id: 'welcome',
-            content: getWelcomeMessage(),
-            role: 'assistant',
-            timestamp: new Date(),
-            language: i18n.language
-          }
-          if (prev.length === 1 && prev[0].id === 'welcome' && prev[0].language === i18n.language) {
-            return prev
-          }
-          return [welcome]
-        })
+        ensureWelcomeMessage()
+        isProcessingMessagesRef.current = false
         return
       }
 
@@ -422,12 +425,10 @@ export function AIAssistant({
         return mapped
       })
     } finally {
-      // Use RAF to ensure we're not blocking the main thread
-      requestAnimationFrame(() => {
-        isProcessingMessagesRef.current = false
-      })
+      // Release lock immediately after processing completes
+      isProcessingMessagesRef.current = false
     }
-  }, [chatMessages, uiMessageToAppMessage, getWelcomeMessage, i18n.language, areMessagesEqual])
+  }, [chatMessages, uiMessageToAppMessage, ensureWelcomeMessage, areMessagesEqual])
 
   // Throttle scroll to avoid excessive rerenders during streaming
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -641,19 +642,12 @@ export function AIAssistant({
       ]
 
       const fileParts: FileUIPart[] = pendingAttachments.map((attachment) => {
-        const mediaMatch = attachment.url.match(/^data:(.*?);/)
-        let mediaType = mediaMatch?.[1]
-
-        // Fallback to mimeType from attachment or infer from type
-        if (!mediaType) {
-          if (attachment.mimeType) {
-            mediaType = attachment.mimeType
-          } else if (attachment.type === 'document') {
-            mediaType = 'application/pdf'
-          } else {
-            mediaType = 'image/png'
-          }
-        }
+        const mediaType = inferMediaType(
+          attachment.url,
+          attachment.mimeType,
+          attachment.type,
+          attachment.name
+        )
 
         return {
           type: 'file',
@@ -723,7 +717,8 @@ export function AIAssistant({
       buildConversationContext,
       saveMessageImmediately,
       sendChatMessage,
-      user?.id
+      user?.id,
+      inferMediaType
     ]
   )
 
