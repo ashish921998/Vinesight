@@ -75,6 +75,40 @@ export async function handleRefreshTokenError(): Promise<void> {
 }
 
 /**
+ * Create a server-side Supabase client for API routes
+ * This client can access request cookies for authentication
+ */
+export async function createServerSupabaseClient() {
+  const { createServerClient } = await import('@supabase/ssr')
+  const { cookies } = await import('next/headers')
+
+  const cookieStore = await cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch (error) {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        }
+      }
+    }
+  )
+}
+
+/**
  * Server-side authentication middleware for API routes
  * Validates user session using Supabase auth
  */
@@ -82,33 +116,7 @@ export async function validateUserSession(
   request: Request
 ): Promise<{ user: any; error?: string }> {
   try {
-    const { createServerClient } = await import('@supabase/ssr')
-    const { cookies } = await import('next/headers')
-
-    const cookieStore = await cookies()
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              )
-            } catch (error) {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          }
-        }
-      }
-    )
+    const supabase = await createServerSupabaseClient()
 
     const {
       data: { session },

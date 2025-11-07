@@ -85,10 +85,8 @@ export interface TaskReminderCreateInput {
   dueDate: string
   estimatedDurationMinutes?: number | null
   location?: string | null
-  farmBlock?: string | null
   assignedToUserId?: string | null
   createdBy?: string | null
-  metadata?: Record<string, unknown>
   linkedRecordType?: string | null
   linkedRecordId?: number | null
   completedAt?: string | null
@@ -613,10 +611,8 @@ export function toDatabaseTaskReminderInsert(
     due_date: appRecord.dueDate,
     estimated_duration_minutes: appRecord.estimatedDurationMinutes ?? null,
     location: appRecord.location ?? null,
-    farm_block: appRecord.farmBlock ?? null,
     assigned_to_user_id: appRecord.assignedToUserId ?? null,
     created_by: appRecord.createdBy ?? null,
-    metadata: (appRecord.metadata as Json) ?? {},
     linked_record_type: appRecord.linkedRecordType ?? null,
     linked_record_id: appRecord.linkedRecordId ?? null,
     completed_at: appRecord.completedAt ?? null
@@ -638,11 +634,9 @@ export function toDatabaseTaskReminderUpdate(
   if (appUpdates.estimatedDurationMinutes !== undefined)
     update.estimated_duration_minutes = appUpdates.estimatedDurationMinutes ?? null
   if (appUpdates.location !== undefined) update.location = appUpdates.location ?? null
-  if (appUpdates.farmBlock !== undefined) update.farm_block = appUpdates.farmBlock ?? null
   if (appUpdates.assignedToUserId !== undefined)
     update.assigned_to_user_id = appUpdates.assignedToUserId ?? null
   if (appUpdates.createdBy !== undefined) update.created_by = appUpdates.createdBy ?? null
-  if (appUpdates.metadata !== undefined) update.metadata = (appUpdates.metadata as Json) ?? {}
   if (appUpdates.linkedRecordType !== undefined)
     update.linked_record_type = appUpdates.linkedRecordType ?? null
   if (appUpdates.linkedRecordId !== undefined)

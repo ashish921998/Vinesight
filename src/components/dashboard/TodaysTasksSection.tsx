@@ -25,7 +25,6 @@ interface Task {
   priority: 'high' | 'medium' | 'low'
   scheduledTime?: string
   location?: string
-  farmBlock?: string
   estimatedDuration?: number // in minutes
   completed: boolean
   description?: string
@@ -273,10 +272,10 @@ export function TodaysTasksSection({
                         </span>
                       )}
 
-                      {(task.location || task.farmBlock) && (
+                      {task.location && (
                         <span className="inline-flex items-center gap-1 text-muted-foreground">
                           <MapPin className="h-4 w-4" />
-                          <span className="text-foreground">{task.farmBlock || task.location}</span>
+                          <span className="text-foreground">{task.location}</span>
                         </span>
                       )}
 
@@ -329,8 +328,8 @@ export function TodaysTasksSection({
                       <h5 className="text-sm font-medium text-muted-foreground line-through">
                         {task.title}
                       </h5>
-                      {task.farmBlock && (
-                        <p className="text-xs text-muted-foreground/80">{task.farmBlock}</p>
+                      {task.location && (
+                        <p className="text-xs text-muted-foreground/80">{task.location}</p>
                       )}
                     </div>
                   </div>

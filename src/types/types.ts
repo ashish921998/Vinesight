@@ -34,9 +34,13 @@ export interface TaskReminder {
 export function taskReminderFromDB(
   row: Database['public']['Tables']['task_reminders']['Row']
 ): TaskReminder {
+  if (!row.farm_id) {
+    throw new Error(`Task ${row.id} has invalid farm_id: ${row.farm_id}`)
+  }
+
   return {
     id: row.id,
-    farmId: row.farm_id ?? 0,
+    farmId: row.farm_id,
     title: row.title,
     description: row.description,
     type: row.type as TaskReminder['type'],

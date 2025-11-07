@@ -1691,19 +1691,15 @@ export type Database = {
           completed_at: string | null
           created_at: string | null
           created_by: string | null
-
           description: string | null
           due_date: string
           estimated_duration_minutes: number | null
-          farm_block: string | null
           farm_id: number | null
           id: number
           linked_record_id: number | null
           linked_record_type: string | null
           location: string | null
-          metadata: Json
           priority: string | null
-          scheduled_start: string | null
           status: string
           title: string
           type: string
@@ -1715,19 +1711,15 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           created_by?: string | null
-          dependency_log_type?: string | null
           description?: string | null
           due_date: string
           estimated_duration_minutes?: number | null
-          farm_block?: string | null
           farm_id?: number | null
           id?: number
           linked_record_id?: number | null
           linked_record_type?: string | null
           location?: string | null
-          metadata?: Json
           priority?: string | null
-          scheduled_start?: string | null
           status?: string
           title: string
           type: string
@@ -1739,19 +1731,15 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           created_by?: string | null
-          dependency_log_type?: string | null
           description?: string | null
           due_date?: string
           estimated_duration_minutes?: number | null
-          farm_block?: string | null
           farm_id?: number | null
           id?: number
           linked_record_id?: number | null
           linked_record_type?: string | null
           location?: string | null
-          metadata?: Json
           priority?: string | null
-          scheduled_start?: string | null
           status?: string
           title?: string
           type?: string

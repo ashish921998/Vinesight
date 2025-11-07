@@ -135,23 +135,18 @@ export interface TaskReminder {
     | 'spray'
     | 'fertigation'
     | 'harvest'
-    | 'maintenance'
-    | 'scouting'
     | 'soil_test'
+    | 'petiole_test'
     | 'expense'
-    | 'training'
-    | 'other'
+    | 'note'
   dependency_log_type?: string | null
   status?: 'pending' | 'in_progress' | 'completed' | 'cancelled'
   priority?: 'low' | 'medium' | 'high'
   due_date?: string | null
-  scheduled_start?: string | null
   estimated_duration_minutes?: number | null
   location?: string | null
-  farm_block?: string | null
   assigned_to_user_id?: string | null
   created_by?: string | null
-  metadata?: Record<string, unknown>
   linked_record_type?: string | null
   linked_record_id?: number | null
   created_at?: string

@@ -1103,8 +1103,7 @@ export class SupabaseService {
       ...task,
       status: task.status ?? 'pending',
       priority: task.priority ?? 'medium',
-      createdBy: task.createdBy ?? user?.id ?? null,
-      metadata: task.metadata ?? {}
+      createdBy: task.createdBy ?? user?.id ?? null
     })
 
     const { data, error } = await supabase

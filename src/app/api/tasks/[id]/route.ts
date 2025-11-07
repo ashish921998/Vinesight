@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/auth-utils'
 import { TaskReminderSchema, validateAndSanitize, globalRateLimiter } from '@/lib/validation'
 import {
   TaskReminderUpdateInput,
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       return NextResponse.json({ error: 'Invalid task id' }, { status: 400 })
     }
 
-    const supabase = getSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     const {
       data: { user },
       error: userError
@@ -87,7 +87,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       return NextResponse.json({ error: 'Invalid task id' }, { status: 400 })
     }
 
-    const supabase = getSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     const {
       data: { user },
       error: userError
@@ -182,7 +182,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
       return NextResponse.json({ error: 'Invalid task id' }, { status: 400 })
     }
 
-    const supabase = getSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     const {
       data: { user },
       error: userError
