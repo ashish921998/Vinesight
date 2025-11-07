@@ -24,6 +24,7 @@ import { PestPredictionService } from '@/lib/pest-prediction-service'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Farm } from '@/types/types'
+import { usePermissions } from '@/hooks/usePermissions'
 import { capitalize } from '@/lib/utils'
 import { transformActivitiesToLogEntries } from '@/lib/activity-display-utils'
 import { logger } from '@/lib/logger'
@@ -63,6 +64,7 @@ export default function FarmDetailsPage() {
   const searchParams = useSearchParams()
   const farmId = params.id as string
   const { user } = useSupabaseAuth()
+  const { hasPermission } = usePermissions()
 
   const [dashboardData, setDashboardData] = useState<DashboardData>()
   const [loading, setLoading] = useState(true)
@@ -1231,6 +1233,13 @@ export default function FarmDetailsPage() {
     setShowDataLogsModal(true)
   }
 
+  // Check permissions for farm operations
+  const canCreateRecords = hasPermission('records', 'create', parseInt(farmId))
+  const canUpdateRecords = hasPermission('records', 'update', parseInt(farmId))
+  const canDeleteRecords = hasPermission('records', 'delete', parseInt(farmId))
+  const canUpdateFarm = hasPermission('farms', 'update', parseInt(farmId))
+  const canDeleteFarm = hasPermission('farms', 'delete', parseInt(farmId))
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
@@ -1242,13 +1251,13 @@ export default function FarmDetailsPage() {
             totalLogs={totalLogs}
             totalHarvest={dashboardData?.totalHarvest}
             totalWaterUsage={dashboardData?.totalWaterUsage}
-            onAddLogs={openDataLogsModal}
+            onAddLogs={canCreateRecords ? openDataLogsModal : undefined}
             onOpenWaterCalculator={() => setShowWaterCalculationModal(true)}
             onViewLogEntries={() => router.push(`/farms/${farmId}/logs`)}
             weatherSummary={weatherSummary}
             onOpenWeatherDetails={() => router.push('/weather')}
-            onEditFarm={handleEditFarm}
-            onDeleteFarm={handleDeleteFarm}
+            onEditFarm={canUpdateFarm ? handleEditFarm : undefined}
+            onDeleteFarm={canDeleteFarm ? handleDeleteFarm : undefined}
           />
         )}
 
@@ -1260,9 +1269,9 @@ export default function FarmDetailsPage() {
               pendingTasks={dashboardData?.pendingTasks || []}
               loading={loading}
               onCompleteTask={completeTask}
-              onDeleteRecord={handleDeleteRecord}
-              onEditDateGroup={handleEditDateGroup}
-              onDeleteDateGroup={handleDeleteDateGroup}
+              onDeleteRecord={canDeleteRecords ? handleDeleteRecord : undefined}
+              onEditDateGroup={canUpdateRecords ? handleEditDateGroup : undefined}
+              onDeleteDateGroup={canDeleteRecords ? handleDeleteDateGroup : undefined}
               farmId={farmId}
             />
           </div>

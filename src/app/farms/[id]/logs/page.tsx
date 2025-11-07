@@ -41,6 +41,7 @@ import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-ty
 import { cn, capitalize } from '@/lib/utils'
 import { toast } from 'sonner'
 import { processDailyNotesAndPhotos, parseFarmId } from '@/lib/daily-note-utils'
+import { usePermissions } from '@/hooks/usePermissions'
 
 import { type Farm } from '@/types/types'
 
@@ -153,6 +154,7 @@ export default function FarmLogsPage() {
   const params = useParams()
   const router = useRouter()
   const farmId = params.id as string
+  const { hasPermission } = usePermissions()
 
   const [selectedFarm, setSelectedFarm] = useState<string>(farmId)
   const [farms, setFarms] = useState<Farm[]>([])
@@ -931,6 +933,8 @@ export default function FarmLogsPage() {
                     currentFarm?.dateOfPruning,
                     log.created_at
                   )
+                  const canUpdate = hasPermission('records', 'update', parseInt(selectedFarm))
+                  const canDelete = hasPermission('records', 'delete', parseInt(selectedFarm))
 
                   return (
                     <div
@@ -939,17 +943,17 @@ export default function FarmLogsPage() {
                       role="button"
                       tabIndex={0}
                       aria-label={`Edit ${log.type} log from ${log.date}`}
-                      onClick={() => handleEditRecord(log)}
+                      onClick={() => canUpdate && handleEditRecord(log)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault()
-                          handleEditRecord(log)
+                          canUpdate && handleEditRecord(log)
                         }
                       }}
                       onKeyUp={(e) => {
                         if (e.key === ' ') {
                           e.preventDefault()
-                          handleEditRecord(log)
+                          canUpdate && handleEditRecord(log)
                         }
                       }}
                     >
@@ -980,30 +984,34 @@ export default function FarmLogsPage() {
                         </div>
 
                         <div className="flex items-center gap-1 flex-shrink-0">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleEditRecord(log)
-                            }}
-                            className="h-7 w-7 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                            title="Edit this log"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDeleteRecord(log)
-                            }}
-                            className="h-7 w-7 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
-                            title="Delete this log"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                          {canUpdate && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEditRecord(log)
+                              }}
+                              className="h-7 w-7 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                              title="Edit this log"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteRecord(log)
+                              }}
+                              className="h-7 w-7 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
+                              title="Delete this log"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -17,6 +17,7 @@ import {
 import { LoginButton } from './auth/LoginButton'
 import { UserMenu } from './auth/UserMenu'
 import { LanguageSwitcher } from './ui/language-switcher'
+import { OrganizationSelector } from './organization/OrganizationSelector'
 import { useTranslation } from 'react-i18next'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
@@ -85,6 +86,11 @@ export default function Navigation() {
             </ul>
           </nav>
           <div className="border-t border-border pt-4 space-y-3">
+            {user && (
+              <div className="px-2">
+                <OrganizationSelector />
+              </div>
+            )}
             <div className="px-2">
               <LanguageSwitcher />
             </div>
