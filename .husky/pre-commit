@@ -1,29 +1,22 @@
+#!/usr/bin/env sh
 # Get list of staged files using null-delimited format for safety
 # This prevents command injection via malicious filenames
-has_files=false
 
+# Create a temporary file to store the list of files
+TEMP_FILE=$(mktemp)
+trap 'rm -f "$TEMP_FILE"' EXIT
+
+# Get staged files and store them
 git diff --cached --name-only -z --diff-filter=ACM | \
-  grep -zE '\.(js|jsx|ts|tsx|json|css|scss|md)$' | \
-  while IFS= read -r -d '' file; do
-    has_files=true
-    break
-  done
+  grep -zE '\.(js|jsx|ts|tsx|json|css|scss|md)$' > "$TEMP_FILE"
 
-if [ "$has_files" = true ]; then
+# Check if we have any files to process
+if [ -s "$TEMP_FILE" ]; then
   echo "Running Prettier on staged files..."
 
   # Process each file safely with proper quoting
-  git diff --cached --name-only -z --diff-filter=ACM | \
-    grep -zE '\.(js|jsx|ts|tsx|json|css|scss|md)$' | \
-    while IFS= read -r -d '' file; do
-      if ! npx prettier --write "$file"; then
-        echo "Prettier formatting failed on: $file"
-        exit 1
-      fi
-      git add "$file"
-    done
-
-  if [ $? -eq 0 ]; then
+  # Read from temp file using xargs for proper handling
+  if xargs -0 -I {} sh -c 'npx prettier --write "$1" && git add "$1"' _ {} < "$TEMP_FILE"; then
     echo "Prettier formatting applied to staged files."
   else
     echo "Prettier formatting failed. Please fix errors and try again."
