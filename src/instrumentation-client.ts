@@ -92,6 +92,7 @@ Sentry.init({
     'NEXT_PUBLIC_SENTRY_SEND_DEFAULT_PII',
     process.env.NODE_ENV !== 'production'
   ),
+  environment: process.env.NODE_ENV === 'development' ? 'development' : 'production',
 
   // Development-specific configuration
   ...(process.env.NODE_ENV !== 'production'
