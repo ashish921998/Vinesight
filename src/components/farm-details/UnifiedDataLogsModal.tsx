@@ -791,6 +791,9 @@ export function UnifiedDataLogsModal({
       // Set water volume
       setWaterVolume(log.data.water_volume?.toString() || '')
 
+      // Set spray notes
+      setSprayNotes(log.data.notes || '')
+
       // Convert chemicals array to form format
       const formChemicals = (log.data.chemicals as Chemical[]).map((chem) => ({
         id:
@@ -802,6 +805,10 @@ export function UnifiedDataLogsModal({
       }))
       setChemicals(formChemicals)
       setMultipleSprayMode(true)
+    } else if (log.type === 'fertigation') {
+      // Handle fertigation records
+      setFertigationNotes(log.data.notes || '')
+      setCurrentFormData({ ...log.data })
     } else {
       setCurrentFormData({ ...log.data })
     }
