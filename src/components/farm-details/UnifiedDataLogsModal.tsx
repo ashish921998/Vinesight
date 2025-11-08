@@ -138,6 +138,7 @@ export function UnifiedDataLogsModal({
 
   // Water volume and chemicals state for spray
   const [waterVolume, setWaterVolume] = useState('')
+  const [sprayNotes, setSprayNotes] = useState('') // Universal spray notes
 
   // Helper to create a blank chemical row with stable ID (pure function)
   // Moved before state declarations to avoid TDZ issues
@@ -160,6 +161,7 @@ export function UnifiedDataLogsModal({
   const [fertigationEntries, setFertigationEntries] = useState<
     Array<{ id: string; data: Record<string, any>; isValid: boolean }>
   >([])
+  const [fertigationNotes, setFertigationNotes] = useState('') // Universal fertigation notes
 
   // Delete confirmation state
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -188,9 +190,11 @@ export function UnifiedDataLogsModal({
         setMultipleSprayMode(false)
         setSprayEntries([])
         setWaterVolume('')
+        setSprayNotes('')
         setChemicals([makeEmptyChemical()])
         setMultipleFertigationMode(false)
         setFertigationEntries([])
+        setFertigationNotes('')
         setCurrentReport(null)
         setReportUploadError(null)
         setIsUploadingReport(false)
@@ -232,9 +236,11 @@ export function UnifiedDataLogsModal({
       setMultipleSprayMode(false)
       setSprayEntries([])
       setWaterVolume('')
+      setSprayNotes('')
       setChemicals([makeEmptyChemical()])
       setMultipleFertigationMode(false)
       setFertigationEntries([])
+      setFertigationNotes('')
       setCurrentReport(null)
       setReportUploadError(null)
       setIsUploadingReport(false)
@@ -252,7 +258,9 @@ export function UnifiedDataLogsModal({
         setMultipleFertigationMode(false)
         setFertigationEntries([])
         setWaterVolume('')
+        setSprayNotes('')
         setChemicals([makeEmptyChemical()])
+        setFertigationNotes('')
       } else if (currentLogType === 'fertigation') {
         setFertigationEntries([
           { id: Date.now().toString(), data: { unit: 'kg/acre' }, isValid: false }
@@ -260,13 +268,17 @@ export function UnifiedDataLogsModal({
         setMultipleFertigationMode(true)
         setMultipleSprayMode(false)
         setSprayEntries([])
+        setSprayNotes('')
+        setFertigationNotes('')
       } else {
         setMultipleSprayMode(false)
         setSprayEntries([])
         setWaterVolume('')
+        setSprayNotes('')
         setChemicals([makeEmptyChemical()])
         setMultipleFertigationMode(false)
         setFertigationEntries([])
+        setFertigationNotes('')
       }
     }
   }, [currentLogType, editingLogId])
@@ -642,6 +654,7 @@ export function UnifiedDataLogsModal({
       type SprayData = {
         water_volume: number
         chemicals: { name: string; quantity: number; unit: string }[]
+        notes?: string
       }
 
       // Validate water volume again before processing
@@ -653,6 +666,7 @@ export function UnifiedDataLogsModal({
 
       const sprayData: SprayData = {
         water_volume: water,
+        notes: sprayNotes.trim() || undefined,
         chemicals: validChemicals.map(
           (chem: { id: string; name: string; quantity: string; unit: string }) => {
             const qty = parseFloat(chem.quantity || '')
@@ -706,6 +720,7 @@ export function UnifiedDataLogsModal({
       setMultipleSprayMode(false)
       setSprayEntries([])
       setWaterVolume('')
+      setSprayNotes('')
       setChemicals([makeEmptyChemical()])
       return
     }
@@ -713,11 +728,15 @@ export function UnifiedDataLogsModal({
     if (currentLogType === 'fertigation' && multipleFertigationMode) {
       // Handle multiple fertigation entries
       const validFertigationEntries = fertigationEntries.filter((entry) => entry.isValid)
+      const trimmedFertigationNotes = fertigationNotes.trim()
 
       const newFertigationLogs: LogEntry[] = validFertigationEntries.map((entry) => ({
         id: entry.id + '_fertigation',
         type: 'fertigation',
-        data: { ...entry.data },
+        data: {
+          ...entry.data,
+          notes: trimmedFertigationNotes || undefined
+        },
         isValid: true
       }))
 
@@ -727,6 +746,7 @@ export function UnifiedDataLogsModal({
       setCurrentLogType(null)
       setMultipleFertigationMode(false)
       setFertigationEntries([])
+      setFertigationNotes('')
       return
     }
 
@@ -1529,38 +1549,36 @@ export function UnifiedDataLogsModal({
               <CardContent className="space-y-3">
                 {/* Multiple Spray Entries */}
                 {currentLogType === 'spray' && multipleSprayMode ? (
-                  <div className="space-y-4">
+                  <div className="space-y-2.5">
                     {/* Water Volume Field */}
-                    <div className="space-y-2">
-                      <div className="space-y-1">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Water Volume (L)
-                          <span className="text-red-500 ml-1">*</span>
-                        </Label>
-                        <Input
-                          type="number"
-                          value={waterVolume}
-                          onChange={(e) => setWaterVolume(e.target.value)}
-                          placeholder="e.g., 1000"
-                          min={0.1}
-                          step={0.1}
-                          className="h-9"
-                        />
-                        {waterVolume &&
-                          (!Number.isFinite(parseFloat(waterVolume)) ||
-                            parseFloat(waterVolume) <= 0) && (
-                            <p className="text-xs text-red-600 mt-1">
-                              Water volume must be a valid number greater than 0
-                            </p>
-                          )}
-                      </div>
+                    <div className="space-y-1">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Water Volume (L)
+                        <span className="text-red-500 ml-1">*</span>
+                      </Label>
+                      <Input
+                        type="number"
+                        value={waterVolume}
+                        onChange={(e) => setWaterVolume(e.target.value)}
+                        placeholder="e.g., 1000"
+                        min={0.1}
+                        step={0.1}
+                        className="h-9 rounded-md"
+                      />
+                      {waterVolume &&
+                        (!Number.isFinite(parseFloat(waterVolume)) ||
+                          parseFloat(waterVolume) <= 0) && (
+                          <p className="text-xs text-red-600 mt-0.5">
+                            Water volume must be a valid number greater than 0
+                          </p>
+                        )}
                     </div>
 
                     {/* Chemicals Section */}
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm font-medium text-gray-700">
-                          Chemical Elements
+                          Chemicals
                           <span className="text-red-500 ml-1">*</span>
                         </Label>
                         <Badge variant="outline" className="text-xs">
@@ -1575,15 +1593,15 @@ export function UnifiedDataLogsModal({
                         ) => (
                           <Card
                             key={chemical.id}
-                            className="bg-gray-50 border-2 border-dashed border-gray-200"
+                            className="bg-gray-50 border border-gray-200 shadow-none rounded-md"
                           >
-                            <CardHeader className="pb-2">
+                            <CardHeader className="py-2 px-3">
                               <div className="flex items-center justify-between">
-                                <CardTitle className="text-sm flex items-center gap-2">
+                                <CardTitle className="text-xs flex items-center gap-1.5">
                                   <span className="text-green-600">🧪</span>
                                   Chemical {index + 1}
                                   {chemical.name.trim() && chemical.quantity && (
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                    <CheckCircle className="h-3.5 w-3.5 text-green-600" />
                                   )}
                                 </CardTitle>
                                 {chemicals.length > 1 && (
@@ -1591,19 +1609,18 @@ export function UnifiedDataLogsModal({
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleRemoveChemical(chemical.id)}
-                                    className="h-6 w-6 p-0 text-red-600 hover:text-red-800"
+                                    className="h-5 w-5 p-0 text-red-600 hover:text-red-800"
                                   >
                                     <X className="h-3 w-3" />
                                   </Button>
                                 )}
                               </div>
                             </CardHeader>
-                            <CardContent className="space-y-2">
+                            <CardContent className="space-y-1.5 px-3 pb-2">
                               {/* Chemical Name */}
-                              <div className="space-y-1">
+                              <div>
                                 <Label className="text-xs font-medium text-gray-600">
-                                  Chemical Name
-                                  <span className="text-red-500 ml-1">*</span>
+                                  Name<span className="text-red-500 ml-1">*</span>
                                 </Label>
                                 <Input
                                   type="text"
@@ -1613,21 +1630,15 @@ export function UnifiedDataLogsModal({
                                   }
                                   placeholder="e.g., Sulfur fungicide"
                                   maxLength={1000}
-                                  className="h-8 text-sm"
+                                  className="h-8 text-sm mt-1 rounded-md"
                                 />
-                                {chemical.name && chemical.name.trim() === '' && (
-                                  <p className="text-xs text-red-600 mt-1">
-                                    Chemical name cannot be empty
-                                  </p>
-                                )}
                               </div>
 
                               {/* Quantity and Unit Row */}
-                              <div className="grid grid-cols-2 gap-2">
-                                <div className="space-y-1">
+                              <div className="grid grid-cols-[1fr_110px] gap-2 items-start">
+                                <div>
                                   <Label className="text-xs font-medium text-gray-600">
-                                    Quantity
-                                    <span className="text-red-500 ml-1">*</span>
+                                    Qty<span className="text-red-500 ml-1">*</span>
                                   </Label>
                                   <Input
                                     type="number"
@@ -1635,24 +1646,16 @@ export function UnifiedDataLogsModal({
                                     onChange={(e) =>
                                       handleChemicalChange(chemical.id, 'quantity', e.target.value)
                                     }
-                                    placeholder="e.g., 500"
+                                    placeholder="500"
                                     min={0.1}
                                     step={0.1}
-                                    className="h-8 text-sm"
+                                    className="h-8 text-sm mt-1 rounded-md"
                                   />
-                                  {chemical.quantity &&
-                                    (!Number.isFinite(parseFloat(chemical.quantity)) ||
-                                      parseFloat(chemical.quantity) <= 0) && (
-                                      <p className="text-xs text-red-600 mt-1">
-                                        Quantity must be a valid number greater than 0
-                                      </p>
-                                    )}
                                 </div>
 
-                                <div className="space-y-1">
+                                <div>
                                   <Label className="text-xs font-medium text-gray-600">
-                                    Unit
-                                    <span className="text-red-500 ml-1">*</span>
+                                    Unit<span className="text-red-500 ml-1">*</span>
                                   </Label>
                                   <Select
                                     value={chemical.unit}
@@ -1660,7 +1663,16 @@ export function UnifiedDataLogsModal({
                                       handleChemicalChange(chemical.id, 'unit', value)
                                     }
                                   >
-                                    <SelectTrigger className="h-8 text-sm">
+                                    <SelectTrigger
+                                      className="h-8 min-h-[2rem] max-h-8 text-sm mt-1 rounded-md !py-0 !px-3 flex items-center [&>svg]:h-3 [&>svg]:w-3 [&>svg]:shrink-0"
+                                      style={{
+                                        height: '2rem',
+                                        minHeight: '2rem',
+                                        maxHeight: '2rem',
+                                        padding: '0 0.75rem',
+                                        lineHeight: '2rem'
+                                      }}
+                                    >
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -1682,22 +1694,34 @@ export function UnifiedDataLogsModal({
                           variant="outline"
                           size="sm"
                           onClick={handleAddChemical}
-                          className="w-full border-dashed"
+                          className="w-full border-dashed h-8 text-xs"
                         >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Add Another Chemical
+                          <Plus className="h-3.5 w-3.5 mr-1" />
+                          Add Chemical
                         </Button>
                       )}
+                    </div>
+
+                    {/* Universal Notes for Spray */}
+                    <div className="space-y-1">
+                      <Label className="text-sm font-medium text-gray-700">Notes (Optional)</Label>
+                      <Textarea
+                        value={sprayNotes}
+                        onChange={(e) => setSprayNotes(e.target.value)}
+                        placeholder="e.g., Applied to north section only..."
+                        className="min-h-[60px] text-sm"
+                        maxLength={2000}
+                      />
                     </div>
 
                     {/* Save Spray Button */}
                     <Button
                       onClick={handleAddLogEntry}
                       disabled={!validateCurrentForm()}
-                      className="w-full"
+                      className="w-full h-9"
                     >
-                      Save Spray Record ({chemicals.filter((c) => c.name.trim() !== '').length}{' '}
-                      chemicals)
+                      Save ({chemicals.filter((c) => c.name.trim() !== '').length} chem
+                      {chemicals.filter((c) => c.name.trim() !== '').length !== 1 ? 's' : ''})
                     </Button>
                   </div>
                 ) : currentLogType === 'fertigation' && multipleFertigationMode ? (
@@ -1755,6 +1779,18 @@ export function UnifiedDataLogsModal({
                       </Card>
                     ))}
 
+                    {/* Universal Notes for Fertigation */}
+                    <div className="space-y-1">
+                      <Label className="text-sm font-medium text-gray-700">Notes (Optional)</Label>
+                      <Textarea
+                        value={fertigationNotes}
+                        onChange={(e) => setFertigationNotes(e.target.value)}
+                        placeholder="e.g., Applied during flowering stage, increased concentration..."
+                        className="min-h-[80px]"
+                        maxLength={2000}
+                      />
+                    </div>
+
                     {/* Save Multiple Fertigation Entries Button */}
                     <Button
                       onClick={handleAddLogEntry}
@@ -1802,23 +1838,25 @@ export function UnifiedDataLogsModal({
           <Card className="border-2 border-dashed border-gray-300">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
-                📝 Day Notes & Photos
-                <Badge variant="outline" className="ml-2">
-                  {hasLogs ? 'Shared for all logs' : 'Standalone entry'}
+                📔 General Day Notes & Photos
+                <Badge variant="outline" className="ml-2 text-xs">
+                  {hasLogs ? 'Optional - for general observations' : 'Standalone entry'}
                 </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {/* Day Notes */}
               <div className="space-y-1">
-                <Label className="text-sm font-medium text-gray-700">Notes for the Day</Label>
+                <Label className="text-sm font-medium text-gray-700">
+                  General Notes for the Day (Optional)
+                </Label>
                 <Textarea
                   value={dayNotes}
                   onChange={(e) => setDayNotes(e.target.value)}
                   placeholder={
                     hasLogs
-                      ? 'Add general notes for all activities on this date...'
-                      : 'Add notes or context for this date even without logs...'
+                      ? 'Add general observations not tied to specific activities (e.g., "Labor did pruning work", "Noticed pest damage in Row 5")...'
+                      : 'Add notes for this date...'
                   }
                   className="min-h-[80px]"
                 />
