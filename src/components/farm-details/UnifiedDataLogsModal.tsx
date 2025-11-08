@@ -108,11 +108,11 @@ export function UnifiedDataLogsModal({
   // In edit mode, use the original date from the first log entry's data to preserve it
   const selectedDateToUse = toISO(
     mode === 'edit' && existingLogs.length > 0
-      ? existingLogs[0]?.data?.date || selectedDate || internalSelectedDate
-      : selectedDate || internalSelectedDate
+      ? existingLogs[0]?.data?.date || internalSelectedDate
+      : internalSelectedDate
   )
   const setSelectedDate =
-    selectedDate || (mode === 'edit' && existingLogs.length > 0)
+    mode === 'edit' && existingLogs.length > 0
       ? () => {}
       : (v: string) => setInternalSelectedDate(toISO(v))
   const [currentLogType, setCurrentLogType] = useState<LogType | null>(null)
