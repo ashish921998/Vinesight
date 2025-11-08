@@ -4,6 +4,13 @@ import { forwardRef } from 'react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
@@ -86,25 +93,29 @@ export const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Form
             />
           )
 
-        case 'select':
+        case 'select': {
+          const selectValue =
+            value === undefined || value === null || value === '' ? undefined : String(value)
+
           return (
-            <select
-              id={id}
-              value={value}
-              onChange={handleChange}
-              required={required}
+            <Select
+              value={selectValue}
+              onValueChange={(newValue) => onChange(newValue)}
               disabled={disabled}
-              className={inputClassName}
-              {...props}
             >
-              <option value="">Select {label.toLowerCase()}</option>
-              {options.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id={id} className={inputClassName} aria-required={required}>
+                <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
+              </SelectTrigger>
+              <SelectContent>
+                {options.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )
+        }
 
         default:
           return (

@@ -1,68 +1,65 @@
 'use client'
 
-import { useState } from 'react'
+import { forwardRef, useState } from 'react'
+import type { InputHTMLAttributes } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 
-interface PasswordInputProps {
-  id: string
-  value: string
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  required?: boolean
-  minLength?: number
-  placeholder?: string
-  className?: string
+import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+
+type PasswordInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & {
   label?: string
   error?: string
+  id: string
 }
 
-export function PasswordInput({
-  id,
-  value,
-  onChange,
-  required = false,
-  minLength,
-  placeholder,
-  className = '',
-  label,
-  error
-}: PasswordInputProps) {
-  const [showPassword, setShowPassword] = useState(false)
+const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
+  ({ label, error, className, id, ...props }, ref) => {
+    const [showPassword, setShowPassword] = useState(false)
+    const errorId = error ? `${id}-error` : undefined
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword)
-  }
-
-  const baseInputClasses = `w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px] pr-10 ${className}`
-  const errorInputClasses = error ? 'border-red-500 focus:ring-red-500' : ''
-
-  return (
-    <div>
-      {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-card-foreground mb-2">
-          {label}
-        </label>
-      )}
-      <div className="relative">
-        <input
-          id={id}
-          type={showPassword ? 'text' : 'password'}
-          value={value}
-          onChange={onChange}
-          required={required}
-          minLength={minLength}
-          placeholder={placeholder}
-          className={`${baseInputClasses} ${errorInputClasses}`}
-        />
-        <button
-          type="button"
-          onClick={togglePasswordVisibility}
-          className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground focus:outline-none"
-          aria-label={showPassword ? 'Hide password' : 'Show password'}
-        >
-          {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-        </button>
+    return (
+      <div>
+        {label ? (
+          <Label htmlFor={id} className="mb-2 block text-sm font-medium text-card-foreground">
+            {label}
+          </Label>
+        ) : null}
+        <div className="relative">
+          <Input
+            id={id}
+            ref={ref}
+            type={showPassword ? 'text' : 'password'}
+            className={cn(
+              'pr-10',
+              error &&
+                'border-destructive text-destructive focus-visible:border-destructive focus-visible:ring-destructive/40 dark:focus-visible:ring-destructive/30',
+              className
+            )}
+            aria-invalid={Boolean(error)}
+            aria-describedby={errorId}
+            {...props}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground focus:outline-none"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+          >
+            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </button>
+        </div>
+        {error ? (
+          <p id={errorId} className="mt-1 text-xs text-red-600">
+            {error}
+          </p>
+        ) : null}
       </div>
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-    </div>
-  )
-}
+    )
+  }
+)
+
+PasswordInput.displayName = 'PasswordInput'
+
+export { PasswordInput }
