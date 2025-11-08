@@ -40,7 +40,11 @@ import { getActivityDisplayData, normalizeDateToYYYYMMDD } from '@/lib/activity-
 import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
 import { cn, capitalize } from '@/lib/utils'
 import { toast } from 'sonner'
-import { processDailyNotesAndPhotos, parseFarmId } from '@/lib/daily-note-utils'
+import {
+  processDailyNotesAndPhotos,
+  parseFarmId,
+  handleDayPhotoUpload
+} from '@/lib/daily-note-utils'
 
 import { type Farm } from '@/types/types'
 
@@ -423,7 +427,7 @@ export default function FarmLogsPage() {
           growth_stage: 'Active',
           moisture_status: 'Good',
           system_discharge: currentFarm?.systemDischarge || 100,
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: currentFarm?.dateOfPruning
         })
         break
@@ -437,7 +441,7 @@ export default function FarmLogsPage() {
           area: currentFarm?.area || 0,
           weather: 'Clear',
           operator: 'Farm Owner',
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: currentFarm?.dateOfPruning
         }
 
@@ -469,7 +473,7 @@ export default function FarmLogsPage() {
           grade: data.grade || 'Standard',
           price: data.price ? parseFloat(data.price) : undefined,
           buyer: data.buyer?.trim() || undefined,
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: currentFarm?.dateOfPruning
         })
         break
@@ -481,7 +485,7 @@ export default function FarmLogsPage() {
           type: data.type || 'other',
           description: data.description || '',
           cost: parseFloat(data.cost || '0'),
-          remarks: dayNotes || '',
+          remarks: data.notes || '',
           date_of_pruning: currentFarm?.dateOfPruning
         })
         break
@@ -493,7 +497,7 @@ export default function FarmLogsPage() {
           fertilizer: data.fertilizer?.trim() || 'Unknown',
           quantity: data.quantity ? parseFloat(String(data.quantity)) : 0,
           unit: data.unit || 'kg/acre',
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: currentFarm?.dateOfPruning
         })
         break
@@ -503,7 +507,7 @@ export default function FarmLogsPage() {
           farm_id: farmIdNum,
           date,
           parameters: {},
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: currentFarm?.dateOfPruning
         })
         break
@@ -514,7 +518,7 @@ export default function FarmLogsPage() {
           date,
           sample_id: data.sample_id || '',
           parameters: {},
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: currentFarm?.dateOfPruning
         })
         break
@@ -544,17 +548,55 @@ export default function FarmLogsPage() {
         }
       }
 
-      // Use utility function to handle daily notes and photos
-      await processDailyNotesAndPhotos(
-        {
-          farmId: farmIdNum,
-          date,
-          notes: dayNotes,
-          existingId: existingDailyNoteId
-        },
-        dayPhotos,
-        firstRecordId
-      )
+      // Handle daily notes and photos based on whether logs exist
+      const hasLogs = logs.length > 0
+
+      if (hasLogs) {
+        // When logs exist:
+        // 1. Log-specific notes are already saved in individual log records
+        // 2. Photos attach to first log record
+        // 3. General day notes (if provided) are saved separately in daily_notes table
+
+        if (dayPhotos.length > 0 && firstRecordId) {
+          const photoResult = await handleDayPhotoUpload(dayPhotos, firstRecordId)
+          if (!photoResult.success) {
+            toast.error(`${photoResult.errorCount} photo(s) failed to upload.`)
+          }
+        }
+
+        // Save general day notes separately if provided
+        if (dayNotes.trim().length > 0) {
+          await processDailyNotesAndPhotos(
+            {
+              farmId: farmIdNum,
+              date,
+              notes: dayNotes,
+              existingId: existingDailyNoteId
+            },
+            [], // Photos already handled above
+            null
+          )
+        } else if (existingDailyNoteId) {
+          // Delete existing daily_note if general notes were removed
+          try {
+            await SupabaseService.deleteDailyNote(existingDailyNoteId)
+          } catch (error) {
+            // Silently fail - not critical if daily note deletion fails
+          }
+        }
+      } else {
+        // No logs - create/update daily_notes entry for standalone notes
+        await processDailyNotesAndPhotos(
+          {
+            farmId: farmIdNum,
+            date,
+            notes: dayNotes,
+            existingId: existingDailyNoteId
+          },
+          dayPhotos,
+          null // No firstRecordId since there are no logs
+        )
+      }
 
       await loadLogs()
       setShowUnifiedModal(false)

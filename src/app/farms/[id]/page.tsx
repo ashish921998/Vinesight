@@ -34,7 +34,8 @@ import {
   processDailyNotesAndPhotos,
   parseFarmId,
   shouldUseSingleEditModal,
-  extractDailyNoteFromActivities
+  extractDailyNoteFromActivities,
+  handleDayPhotoUpload
 } from '@/lib/daily-note-utils'
 import { TasksOverviewCard } from '@/components/tasks/TasksOverviewCard'
 
@@ -266,17 +267,55 @@ export default function FarmDetailsPage() {
         }
       }
 
-      // Use utility function to handle daily notes and photos
-      await processDailyNotesAndPhotos(
-        {
-          farmId: farmIdNum,
-          date,
-          notes: dayNotes,
-          existingId: existingDailyNoteId
-        },
-        dayPhotos,
-        firstRecordId
-      )
+      // Handle daily notes and photos based on whether logs exist
+      const hasLogs = logs.length > 0
+
+      if (hasLogs) {
+        // When logs exist:
+        // 1. Log-specific notes are already saved in individual log records
+        // 2. Photos attach to first log record
+        // 3. General day notes (if provided) are saved separately in daily_notes table
+
+        if (dayPhotos.length > 0 && firstRecordId) {
+          const photoResult = await handleDayPhotoUpload(dayPhotos, firstRecordId)
+          if (!photoResult.success) {
+            toast.error(`${photoResult.errorCount} photo(s) failed to upload.`)
+          }
+        }
+
+        // Save general day notes separately if provided
+        if (dayNotes.trim().length > 0) {
+          await processDailyNotesAndPhotos(
+            {
+              farmId: farmIdNum,
+              date,
+              notes: dayNotes,
+              existingId: existingDailyNoteId
+            },
+            [], // Photos already handled above
+            null
+          )
+        } else if (existingDailyNoteId) {
+          // Delete existing daily_note if general notes were removed
+          try {
+            await SupabaseService.deleteDailyNote(existingDailyNoteId)
+          } catch (error) {
+            logger.error('Error deleting daily note:', error)
+          }
+        }
+      } else {
+        // No logs - create/update daily_notes entry for standalone notes
+        await processDailyNotesAndPhotos(
+          {
+            farmId: farmIdNum,
+            date,
+            notes: dayNotes,
+            existingId: existingDailyNoteId
+          },
+          dayPhotos,
+          null // No firstRecordId since there are no logs
+        )
+      }
 
       await loadDashboardData()
       toast.success('Data logs saved successfully')
@@ -320,7 +359,7 @@ export default function FarmDetailsPage() {
           growth_stage: 'Active',
           moisture_status: 'Good',
           system_discharge: dashboardData?.farm?.systemDischarge || 100,
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: dashboardData.farm.dateOfPruning
         })
 
@@ -366,7 +405,7 @@ export default function FarmDetailsPage() {
           area: dashboardData.farm.area,
           weather: 'Clear',
           operator: 'Farm Owner',
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: dashboardData.farm.dateOfPruning
         }
 
@@ -425,7 +464,7 @@ export default function FarmDetailsPage() {
           grade: data.grade || 'Standard',
           price: 0,
           buyer: '',
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
@@ -437,7 +476,7 @@ export default function FarmDetailsPage() {
           type: data.type || 'other',
           description: data.description || '',
           cost: parseFloat(data.cost || '0'),
-          remarks: dayNotes || '',
+          remarks: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
@@ -451,7 +490,7 @@ export default function FarmDetailsPage() {
           unit: data.unit || 'kg/acre',
           area: dashboardData?.farm?.area || 0,
           purpose: data.purpose || 'General',
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
@@ -459,7 +498,7 @@ export default function FarmDetailsPage() {
       case 'soil_test': {
         const reportMeta = (logEntry.meta?.report || null) as ReportAttachmentMeta | null
 
-        const combineNotes = [dayNotes]
+        const combineNotes = [data.notes || '']
         if (reportMeta?.summary) combineNotes.push(reportMeta.summary)
 
         const parsedParameters = reportMeta?.parsedParameters || {}
@@ -580,7 +619,7 @@ export default function FarmDetailsPage() {
         // Create parameters object with all the nutrient values
         const reportMeta = (logEntry.meta?.report || null) as ReportAttachmentMeta | null
 
-        const combineNotes = [dayNotes]
+        const combineNotes = [data.notes || '']
         if (reportMeta?.summary) combineNotes.push(reportMeta.summary)
 
         const parameters: Record<string, number> = { ...(reportMeta?.parsedParameters || {}) }
@@ -665,7 +704,7 @@ export default function FarmDetailsPage() {
           growth_stage: 'Active',
           moisture_status: 'Good',
           system_discharge: dashboardData.farm.systemDischarge,
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: dashboardData.farm.dateOfPruning
         })
         break
@@ -685,7 +724,7 @@ export default function FarmDetailsPage() {
           area: dashboardData.farm.area,
           weather: 'Clear',
           operator: 'Farm Owner',
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: dashboardData.farm.dateOfPruning
         }
 
@@ -747,7 +786,7 @@ export default function FarmDetailsPage() {
               ? parseFloat(data.price.toString())
               : logEntry.data?.price || 0,
           buyer: data.buyer !== undefined ? data.buyer : logEntry.data?.buyer || '',
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
@@ -759,7 +798,7 @@ export default function FarmDetailsPage() {
           type: data.type || 'other',
           description: data.description || '',
           cost: parseFloat(data.cost || '0'),
-          remarks: dayNotes || '',
+          remarks: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
@@ -773,7 +812,7 @@ export default function FarmDetailsPage() {
           unit: data.unit || 'kg/acre',
           area: data.area || dashboardData?.farm?.area || 0,
           purpose: data.purpose || 'General',
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
@@ -781,7 +820,7 @@ export default function FarmDetailsPage() {
       case 'soil_test': {
         const reportMeta = (logEntry.meta?.report || null) as ReportAttachmentMeta | null
 
-        const combineNotes = [dayNotes]
+        const combineNotes = [data.notes || '']
         if (reportMeta?.summary) combineNotes.push(reportMeta.summary)
 
         const parsedParameters = reportMeta?.parsedParameters || {}
@@ -902,7 +941,7 @@ export default function FarmDetailsPage() {
         // Create parameters object with all the nutrient values
         const reportMeta = (logEntry.meta?.report || null) as ReportAttachmentMeta | null
 
-        const combineNotes = [dayNotes]
+        const combineNotes = [data.notes || '']
         if (reportMeta?.summary) combineNotes.push(reportMeta.summary)
 
         const parameters: Record<string, number> = { ...(reportMeta?.parsedParameters || {}) }

@@ -65,6 +65,14 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         required: true,
         min: 0,
         step: 0.1
+      },
+      {
+        name: 'notes',
+        type: 'textarea',
+        label: 'Notes (Optional)',
+        required: false,
+        placeholder: 'e.g., Irrigated north section only, reduced duration due to rain forecast...',
+        maxLength: 2000
       }
     ]
   },
@@ -83,6 +91,14 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         min: 0,
         step: 0.1,
         placeholder: 'e.g., 1000'
+      },
+      {
+        name: 'notes',
+        type: 'textarea',
+        label: 'Notes (Optional)',
+        required: false,
+        placeholder: 'e.g., Applied to north section only, weather conditions favorable...',
+        maxLength: 2000
       }
     ]
   },
@@ -123,6 +139,14 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         required: false,
         placeholder: 'Buyer name',
         maxLength: 1000
+      },
+      {
+        name: 'notes',
+        type: 'textarea',
+        label: 'Notes (Optional)',
+        required: false,
+        placeholder: 'e.g., Harvested from rows 1-5, quality excellent...',
+        maxLength: 2000
       }
     ]
   },
@@ -163,6 +187,14 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         required: false,
         placeholder: 'Vendor name (optional)',
         maxLength: 1000
+      },
+      {
+        name: 'notes',
+        type: 'textarea',
+        label: 'Notes (Optional)',
+        required: false,
+        placeholder: 'e.g., Additional details about this expense...',
+        maxLength: 2000
       }
     ]
   },
@@ -359,6 +391,14 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         label: 'Bicarbonate (ppm)',
         required: false,
         min: 0
+      },
+      {
+        name: 'notes',
+        type: 'textarea',
+        label: 'Notes (Optional)',
+        required: false,
+        placeholder: 'e.g., Lab observations, sample location, recommendations...',
+        maxLength: 2000
       }
     ]
   },
@@ -494,6 +534,14 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         label: 'Bicarbonate (PPM)',
         required: false,
         min: 0
+      },
+      {
+        name: 'notes',
+        type: 'textarea',
+        label: 'Notes (Optional)',
+        required: false,
+        placeholder: 'e.g., Lab observations, sample location, growth stage, recommendations...',
+        maxLength: 2000
       }
     ]
   }
