@@ -60,50 +60,33 @@ import {
 } from 'lucide-react'
 
 const formatLogDate = (dateString: string): string => {
-  try {
-    const date = new Date(dateString)
-    if (isNaN(date.getTime())) {
-      return 'Invalid date'
-    }
+  if (!dateString) return 'Invalid date'
 
-    const now = new Date()
-    const isToday = date.toDateString() === now.toDateString()
-    const isYesterday =
-      new Date(now.getTime() - 24 * 60 * 60 * 1000).toDateString() === date.toDateString()
+  const [datePart] = dateString.split('T')
+  const [yearStr, monthStr, dayStr] = (datePart || '').split('-')
+  const year = Number(yearStr)
+  const month = Number(monthStr)
+  const day = Number(dayStr)
 
-    if (isToday) {
-      return `Today, ${date
-        .toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        })
-        .toLowerCase()
-        .replace(' ', '')}`
-    } else if (isYesterday) {
-      return `Yesterday, ${date
-        .toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        })
-        .toLowerCase()
-        .replace(' ', '')}`
-    } else {
-      return date
-        .toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        })
-        .replace(',', ',')
-        .replace(/\s+/g, ' ')
-    }
-  } catch (error) {
+  if (Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day)) {
+    const date = new Date(year, month - 1, day)
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
+
+  const fallback = new Date(dateString)
+  if (Number.isNaN(fallback.getTime())) {
     return 'Invalid date'
   }
+
+  return fallback.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })
 }
 
 const getDaysAfterPruning = (
@@ -966,7 +949,7 @@ export default function FarmLogsPage() {
                               {getActivityDisplayData(log)}
                             </h3>
                             <span className="text-blue-600 text-xs font-medium">
-                              {formatLogDate(log.created_at)}
+                              {formatLogDate(log.date)}
                             </span>
                           </div>
                           {daysAfterPruning !== null && daysAfterPruning >= 0 && (
