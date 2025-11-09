@@ -15,8 +15,10 @@ import {
   MapPin,
   CheckCircle2,
   Plus,
-  ArrowRight
+  ArrowRight,
+  Circle
 } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface Task {
   id: string
@@ -212,37 +214,72 @@ export function TodaysTasksSection({
           </div>
         </div>
       ) : (
-        <div className="mt-4 space-y-3">
-          {pendingTasks.map((task) => {
-            const isOverdue = overdueTasks.includes(task)
+        <TooltipProvider delayDuration={300}>
+          <div className="mt-4 space-y-2.5">
+            {pendingTasks.map((task) => {
+              const isOverdue = overdueTasks.includes(task)
 
-            return (
-              <div
-                key={task.id}
-                className={cn(
-                  'relative overflow-hidden rounded-2xl border border-border/60 bg-background/90 px-4 py-4 transition-all hover:-translate-y-0.5 hover:shadow-lg',
-                  isOverdue && 'border-red-200/70 bg-red-50/80'
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  <Checkbox
-                    checked={task.completed}
-                    onCheckedChange={() => onTaskComplete?.(task.id)}
-                    className="mt-1 h-5 w-5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                  />
+              return (
+                <div
+                  key={task.id}
+                  className={cn(
+                    'group relative overflow-hidden rounded-xl border bg-card transition-all hover:shadow-md',
+                    isOverdue
+                      ? 'border-red-200 bg-red-50/50'
+                      : 'border-border/50 hover:border-border'
+                  )}
+                >
+                  <div className="flex items-center gap-3 px-3 py-3">
+                    {/* Complete Button with Tooltip */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onTaskComplete?.(task.id)}
+                          className={cn(
+                            'group/complete relative h-9 w-9 flex-shrink-0 rounded-full border-2 transition-all hover:scale-110 active:scale-95 hover:bg-transparent',
+                            isOverdue
+                              ? 'border-red-400 hover:border-red-500 hover:!bg-red-500 active:!bg-red-600'
+                              : 'border-primary/40 hover:border-emerald-500 hover:!bg-emerald-500 active:!bg-emerald-600'
+                          )}
+                          aria-label="Mark task as complete"
+                        >
+                          <Circle
+                            className={cn(
+                              'h-5 w-5 transition-all md:group-hover/complete:opacity-0',
+                              isOverdue ? 'text-red-400' : 'text-primary/40'
+                            )}
+                          />
+                          <CheckCircle2
+                            className={cn(
+                              'absolute h-6 w-6 md:h-5 md:w-5 opacity-40 transition-all md:opacity-0 md:group-hover/complete:opacity-100',
+                              isOverdue ? 'text-red-400' : 'text-primary'
+                            )}
+                          />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="font-medium">
+                        <p>Mark as complete</p>
+                      </TooltipContent>
+                    </Tooltip>
 
-                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    {getTaskIcon(task.type)}
-                  </div>
+                    {/* Task Icon */}
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                      {getTaskIcon(task.type)}
+                    </div>
 
-                  <div className="flex-1 space-y-3">
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="text-base font-semibold text-foreground">{task.title}</h4>
+                    {/* Task Content */}
+                    <div className="flex-1 min-w-0">
+                      {/* Title and Priority Row */}
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="text-sm font-semibold text-foreground truncate">
+                          {task.title}
+                        </h4>
                         <Badge
                           variant="outline"
                           className={cn(
-                            'rounded-full px-2.5 py-0.5 text-xs capitalize',
+                            'rounded-md px-2 py-0 text-[11px] font-medium capitalize flex-shrink-0',
                             getPriorityColor(task.priority)
                           )}
                         >
@@ -251,105 +288,112 @@ export function TodaysTasksSection({
                         {isOverdue && (
                           <Badge
                             variant="outline"
-                            className="rounded-full border-red-200 bg-red-100/80 px-2.5 py-0.5 text-xs uppercase tracking-wide text-red-800"
+                            className="rounded-md border-red-300 bg-red-100 px-2 py-0 text-[11px] font-medium uppercase text-red-700 flex-shrink-0"
                           >
                             overdue
                           </Badge>
                         )}
                       </div>
+
+                      {/* Description */}
                       {task.description && (
-                        <p className="text-sm text-muted-foreground">{task.description}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
+                          {task.description}
+                        </p>
                       )}
-                    </div>
 
-                    <div className="flex flex-wrap items-center gap-3 text-sm">
-                      {task.scheduledTime && (
-                        <span className="inline-flex items-center gap-1 text-foreground">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span className={isOverdue ? 'font-semibold text-red-600' : undefined}>
-                            {task.scheduledTime}
+                      {/* Metadata Row */}
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        {task.scheduledTime && (
+                          <span className="inline-flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span className={cn(isOverdue && 'font-semibold text-red-600')}>
+                              {task.scheduledTime}
+                            </span>
                           </span>
-                        </span>
-                      )}
+                        )}
 
-                      {task.location && (
-                        <span className="inline-flex items-center gap-1 text-muted-foreground">
-                          <MapPin className="h-4 w-4" />
-                          <span className="text-foreground">{task.location}</span>
-                        </span>
-                      )}
+                        {task.location && (
+                          <span className="inline-flex items-center gap-1">
+                            <MapPin className="h-3.5 w-3.5" />
+                            <span className="truncate max-w-[120px]">{task.location}</span>
+                          </span>
+                        )}
 
-                      {task.estimatedDuration && (
-                        <span className="ml-auto text-xs uppercase tracking-wide text-muted-foreground">
-                          ~{formatDuration(task.estimatedDuration)}
-                        </span>
-                      )}
+                        {task.estimatedDuration && (
+                          <span className="ml-auto text-[11px] font-medium">
+                            {formatDuration(task.estimatedDuration)}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
+                    {/* Action Button */}
                     {onTaskAction && (
-                      <div className="pt-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-9 rounded-full border-border/60 bg-background/80 px-4 text-xs font-medium"
-                          onClick={() => onTaskAction(task.id)}
-                        >
-                          Start task
-                        </Button>
-                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-9 rounded-lg px-3 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => onTaskAction(task.id)}
+                      >
+                        Start
+                        <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                      </Button>
                     )}
                   </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
 
-          {completedTasks.length > 0 && (
-            <div className="rounded-2xl border border-dashed border-border/60 bg-background/60 px-4 py-4">
-              <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4" />
-                Completed ({completedTasks.length})
-              </div>
-              <div className="mt-3 space-y-3">
-                {completedTasks.slice(0, 2).map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/10 px-3 py-3"
-                  >
-                    <Checkbox
-                      checked
-                      disabled
-                      className="h-5 w-5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                    />
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/20 text-primary/80">
-                      {getTaskIcon(task.type)}
-                    </div>
-                    <div className="flex-1">
-                      <h5 className="text-sm font-medium text-muted-foreground line-through">
-                        {task.title}
-                      </h5>
-                      {task.location && (
-                        <p className="text-xs text-muted-foreground/80">{task.location}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {completedTasks.length > 2 && (
-                <div className="mt-3 text-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-9 rounded-full px-4 text-xs text-muted-foreground"
-                    onClick={() => farmId && router.push(`/farms/${farmId}/tasks`)}
-                  >
-                    View all {completedTasks.length} completed tasks
-                  </Button>
+            {completedTasks.length > 0 && (
+              <div className="rounded-2xl border border-dashed border-border/60 bg-background/60 px-4 py-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Completed ({completedTasks.length})
                 </div>
-              )}
-            </div>
-          )}
-        </div>
+                <div className="mt-3 space-y-2">
+                  {completedTasks.slice(0, 2).map((task) => (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-3 rounded-xl border border-emerald-200/50 bg-emerald-50/30 px-3 py-2.5"
+                    >
+                      {/* Completed Check Icon */}
+                      <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500">
+                        <CheckCircle2 className="h-4 w-4 text-white" />
+                      </div>
+
+                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-100/50 text-emerald-600/70">
+                        {getTaskIcon(task.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h5 className="text-sm font-medium text-muted-foreground/80 line-through truncate">
+                          {task.title}
+                        </h5>
+                        {task.location && (
+                          <p className="text-xs text-muted-foreground/60 truncate">
+                            {task.location}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {completedTasks.length > 2 && (
+                  <div className="mt-3 text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 rounded-full px-4 text-xs text-muted-foreground"
+                      onClick={() => farmId && router.push(`/farms/${farmId}/tasks`)}
+                    >
+                      View all {completedTasks.length} completed tasks
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </TooltipProvider>
       )}
 
       {farmId && tasks.length > 0 && (

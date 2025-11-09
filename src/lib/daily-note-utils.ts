@@ -142,6 +142,71 @@ export async function processDailyNotesAndPhotos(
 }
 
 /**
+ * Unified handler for daily notes and photos after log submission
+ * This consolidates the duplicate logic from page.tsx and logs/page.tsx
+ */
+export async function handleDailyNotesAndPhotosAfterLogs(params: {
+  logs: any[]
+  dayNotes: string
+  dayPhotos: File[]
+  firstRecordId: number | null
+  existingDailyNoteId: number | null
+  farmId: number
+  date: string
+}): Promise<void> {
+  const { logs, dayNotes, dayPhotos, firstRecordId, existingDailyNoteId, farmId, date } = params
+  const hasLogs = logs.length > 0
+
+  if (hasLogs) {
+    // When logs exist:
+    // 1. Log-specific notes are already saved in individual log records
+    // 2. Photos attach to first log record
+    // 3. General day notes (if provided) are saved separately in daily_notes table
+
+    if (dayPhotos.length > 0 && firstRecordId) {
+      const photoResult = await handleDayPhotoUpload(dayPhotos, firstRecordId)
+      if (!photoResult.success) {
+        toast.error(`${photoResult.errorCount} photo(s) failed to upload.`)
+      }
+    }
+
+    // Save general day notes separately if provided
+    if (dayNotes.trim().length > 0) {
+      await processDailyNotesAndPhotos(
+        {
+          farmId,
+          date,
+          notes: dayNotes,
+          existingId: existingDailyNoteId
+        },
+        [], // Photos already handled above
+        null
+      )
+    } else if (existingDailyNoteId) {
+      // Delete existing daily_note if general notes were removed
+      try {
+        await SupabaseService.deleteDailyNote(existingDailyNoteId)
+      } catch (error) {
+        console.error('Error deleting daily note:', error)
+        // Don't throw - this is not critical
+      }
+    }
+  } else {
+    // No logs - create/update daily_notes entry for standalone notes
+    await processDailyNotesAndPhotos(
+      {
+        farmId,
+        date,
+        notes: dayNotes,
+        existingId: existingDailyNoteId
+      },
+      dayPhotos,
+      null // No firstRecordId since there are no logs
+    )
+  }
+}
+
+/**
  * Parse farm ID safely
  */
 export function parseFarmId(farmId: string): number {

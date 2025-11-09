@@ -807,6 +807,9 @@ export function UnifiedDataLogsModal({
       setMultipleSprayMode(true)
     } else if (log.type === 'fertigation') {
       // Handle fertigation records
+      // Force exit multi-entry mode to ensure UI uses single-entry form
+      setMultipleFertigationMode(false)
+      setFertigationEntries([])
       setFertigationNotes(log.data.notes || '')
       setCurrentFormData({ ...log.data })
     } else {
@@ -845,7 +848,7 @@ export function UnifiedDataLogsModal({
     setDeleteConfirm((prev) => ({ ...prev, isLoading: true }))
 
     try {
-      // Extract the real database ID from the log ID
+      // Extract real database ID from the log ID
       const realLogId = deleteConfirm.logId.replace(/_spray$|_fertigation$/, '')
 
       // Use the unified deletion helper

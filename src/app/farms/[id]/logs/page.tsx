@@ -40,11 +40,7 @@ import { getActivityDisplayData, normalizeDateToYYYYMMDD } from '@/lib/activity-
 import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
 import { cn, capitalize } from '@/lib/utils'
 import { toast } from 'sonner'
-import {
-  processDailyNotesAndPhotos,
-  parseFarmId,
-  handleDayPhotoUpload
-} from '@/lib/daily-note-utils'
+import { parseFarmId, handleDailyNotesAndPhotosAfterLogs } from '@/lib/daily-note-utils'
 
 import { type Farm } from '@/types/types'
 
@@ -549,54 +545,15 @@ export default function FarmLogsPage() {
       }
 
       // Handle daily notes and photos based on whether logs exist
-      const hasLogs = logs.length > 0
-
-      if (hasLogs) {
-        // When logs exist:
-        // 1. Log-specific notes are already saved in individual log records
-        // 2. Photos attach to first log record
-        // 3. General day notes (if provided) are saved separately in daily_notes table
-
-        if (dayPhotos.length > 0 && firstRecordId) {
-          const photoResult = await handleDayPhotoUpload(dayPhotos, firstRecordId)
-          if (!photoResult.success) {
-            toast.error(`${photoResult.errorCount} photo(s) failed to upload.`)
-          }
-        }
-
-        // Save general day notes separately if provided
-        if (dayNotes.trim().length > 0) {
-          await processDailyNotesAndPhotos(
-            {
-              farmId: farmIdNum,
-              date,
-              notes: dayNotes,
-              existingId: existingDailyNoteId
-            },
-            [], // Photos already handled above
-            null
-          )
-        } else if (existingDailyNoteId) {
-          // Delete existing daily_note if general notes were removed
-          try {
-            await SupabaseService.deleteDailyNote(existingDailyNoteId)
-          } catch (error) {
-            // Silently fail - not critical if daily note deletion fails
-          }
-        }
-      } else {
-        // No logs - create/update daily_notes entry for standalone notes
-        await processDailyNotesAndPhotos(
-          {
-            farmId: farmIdNum,
-            date,
-            notes: dayNotes,
-            existingId: existingDailyNoteId
-          },
-          dayPhotos,
-          null // No firstRecordId since there are no logs
-        )
-      }
+      await handleDailyNotesAndPhotosAfterLogs({
+        logs,
+        dayNotes,
+        dayPhotos,
+        firstRecordId,
+        existingDailyNoteId: existingDailyNoteId ?? null,
+        farmId: farmIdNum,
+        date
+      })
 
       await loadLogs()
       setShowUnifiedModal(false)

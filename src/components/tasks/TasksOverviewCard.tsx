@@ -132,11 +132,21 @@ export function TasksOverviewCard({
 
   const mappedTasks = useMemo(() => {
     return tasks.map((task) => {
-      const dueDate = task.dueDate ? new Date(task.dueDate) : null
-      const scheduledTime =
-        dueDate && !Number.isNaN(dueDate.getTime())
-          ? dueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          : undefined
+      // Only show time if the dueDate contains actual time information (not just a date)
+      // If dueDate is just a date like "2025-11-09", don't show a time
+      let scheduledTime: string | undefined = undefined
+
+      if (task.dueDate) {
+        // Check if the dueDate contains time information (has 'T' or time component)
+        const hasTimeComponent = task.dueDate.includes('T') || task.dueDate.includes(':')
+
+        if (hasTimeComponent) {
+          const dueDate = new Date(task.dueDate)
+          if (!Number.isNaN(dueDate.getTime())) {
+            scheduledTime = dueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }
+        }
+      }
 
       return {
         id: task.id.toString(),
