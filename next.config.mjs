@@ -14,8 +14,29 @@ const nextConfig = {
       'lucide-react',
       '@radix-ui/react-select',
       '@radix-ui/react-progress',
-      'jspdf'
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-tooltip',
+      'jspdf',
+      'framer-motion',
+      'react-markdown',
+      'date-fns',
+      '@ai-sdk/react',
+      '@ai-sdk/google',
+      '@ai-sdk/openai'
     ]
+  },
+
+  // Modularize imports for better tree shaking
+  modularizeImports: {
+    '@radix-ui/react-icons': {
+      transform: '@radix-ui/react-icons/dist/{{member}}'
+    },
+    'date-fns': {
+      transform: 'date-fns/{{member}}'
+    }
   },
 
   // Compiler optimizations
