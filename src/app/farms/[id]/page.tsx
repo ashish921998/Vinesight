@@ -336,21 +336,12 @@ export default function FarmDetailsPage() {
               remainingWater: newWaterLevel,
               waterCalculationUpdatedAt: new Date().toISOString()
             })
-
-            // Check if new water level needs alert
-            const { NotificationService } = await import('@/lib/notification-service')
-            const notificationService = NotificationService.getInstance()
-            notificationService.checkWaterLevelAndAlert(
-              capitalize(dashboardData.farm.name),
-              newWaterLevel
-            )
           }
         }
         break
       }
 
       case 'spray': {
-        // Validate required farm data is available
         if (!dashboardData?.farm) {
           throw new Error('Farm data not loaded. Please refresh the page and try again.')
         }
