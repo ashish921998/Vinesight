@@ -94,6 +94,7 @@ export interface TaskReminderCreateInput {
 
 export interface TaskReminderUpdateInput extends Partial<TaskReminderCreateInput> {
   status?: TaskReminder['status']
+  completed?: boolean
   completedAt?: string | null
 }
 
@@ -615,6 +616,7 @@ export function toDatabaseTaskReminderInsert(
     created_by: appRecord.createdBy ?? null,
     linked_record_type: appRecord.linkedRecordType ?? null,
     linked_record_id: appRecord.linkedRecordId ?? null,
+    completed: false, // Always false on creation
     completed_at: appRecord.completedAt ?? null
   }
 }
@@ -641,6 +643,7 @@ export function toDatabaseTaskReminderUpdate(
     update.linked_record_type = appUpdates.linkedRecordType ?? null
   if (appUpdates.linkedRecordId !== undefined)
     update.linked_record_id = appUpdates.linkedRecordId ?? null
+  if (appUpdates.completed !== undefined) update.completed = appUpdates.completed
   if (appUpdates.completedAt !== undefined) update.completed_at = appUpdates.completedAt
 
   return update

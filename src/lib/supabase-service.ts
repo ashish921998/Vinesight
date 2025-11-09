@@ -1120,6 +1120,13 @@ export class SupabaseService {
     const supabase = getTypedSupabaseClient()
     const dbUpdates = toDatabaseTaskReminderUpdate(updates)
 
+    // Debug logging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('updateTask - ID:', id)
+      console.log('updateTask - App Updates:', updates)
+      console.log('updateTask - DB Updates:', dbUpdates)
+    }
+
     const { data, error } = await supabase
       .from('task_reminders')
       .update(dbUpdates as any)
@@ -1127,13 +1134,19 @@ export class SupabaseService {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('updateTask - Error:', error)
+      }
+      throw error
+    }
     return toApplicationTaskReminder(data)
   }
 
   static async completeTask(id: number): Promise<TaskReminder> {
     return this.updateTask(id, {
       status: 'completed',
+      completed: true,
       completedAt: new Date().toISOString()
     })
   }
@@ -1141,6 +1154,7 @@ export class SupabaseService {
   static async reopenTask(id: number): Promise<TaskReminder> {
     return this.updateTask(id, {
       status: 'pending',
+      completed: false,
       completedAt: null
     })
   }
