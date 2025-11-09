@@ -233,29 +233,31 @@ export function TodaysTasksSection({
                     {/* Complete Button with Tooltip */}
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => onTaskComplete?.(task.id)}
                           className={cn(
-                            'group/complete relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all hover:scale-110',
+                            'group/complete relative h-9 w-9 flex-shrink-0 rounded-full border-2 transition-all hover:scale-110 active:scale-95 hover:bg-transparent',
                             isOverdue
-                              ? 'border-red-400 hover:border-red-500 hover:bg-red-500'
-                              : 'border-primary/40 hover:border-emerald-500 hover:bg-emerald-500'
+                              ? 'border-red-400 hover:border-red-500 hover:!bg-red-500 active:!bg-red-600'
+                              : 'border-primary/40 hover:border-emerald-500 hover:!bg-emerald-500 active:!bg-emerald-600'
                           )}
                           aria-label="Mark task as complete"
                         >
                           <Circle
                             className={cn(
-                              'absolute h-5 w-5 transition-all group-hover/complete:opacity-0',
+                              'h-5 w-5 transition-all md:group-hover/complete:opacity-0',
                               isOverdue ? 'text-red-400' : 'text-primary/40'
                             )}
                           />
                           <CheckCircle2
                             className={cn(
-                              'h-5 w-5 opacity-0 transition-all group-hover/complete:opacity-100',
-                              'text-white'
+                              'absolute h-6 w-6 md:h-5 md:w-5 opacity-40 transition-all md:opacity-0 md:group-hover/complete:opacity-100',
+                              isOverdue ? 'text-red-400' : 'text-primary'
                             )}
                           />
-                        </button>
+                        </Button>
                       </TooltipTrigger>
                       <TooltipContent side="right" className="font-medium">
                         <p>Mark as complete</p>
