@@ -19,8 +19,6 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { PestPredictionService } from '@/lib/pest-prediction-service'
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import type { Farm, TaskReminder } from '@/types/types'
 import { capitalize } from '@/lib/utils'
@@ -321,22 +319,48 @@ export default function FarmDetailsPage() {
           date_of_pruning: dashboardData.farm.dateOfPruning
         })
 
-        // Update soil water level when irrigation is added
         if (record && dashboardData?.farm) {
-          const duration = parseFloat(data.duration || '0')
-          const systemDischarge = dashboardData.farm.systemDischarge || 100
-
-          if (duration > 0 && systemDischarge > 0) {
-            // Calculate water added from this irrigation (in mm)
+          try {
+            const duration = parseFloat(data.duration || '0')
+            const systemDischarge = Number(
+              record.system_discharge ?? dashboardData.farm.systemDischarge ?? 100
+            )
             const waterAdded = duration * systemDischarge
-            const currentWaterLevel = dashboardData.farm.remainingWater || 0
+            const currentWaterLevel = Number(dashboardData.farm.remainingWater ?? 0)
             const newWaterLevel = currentWaterLevel + waterAdded
 
             await SupabaseService.updateFarm(parseInt(farmId), {
               remainingWater: newWaterLevel,
               waterCalculationUpdatedAt: new Date().toISOString()
             })
+
+            logger.info('Water level updated successfully', {
+              farmId,
+              duration,
+              systemDischarge,
+              waterAdded,
+              currentWaterLevel,
+              newWaterLevel
+            })
+          } catch (waterError) {
+            logger.error('Failed to update soil water level:', {
+              error: waterError,
+              farmId,
+              irrigationRecord: record
+            })
+            toast.error(
+              'Irrigation saved but failed to update soil water level. Please report this issue.'
+            )
           }
+        } else {
+          logger.error('Cannot update soil water level - missing record or farm data', {
+            hasRecord: !!record,
+            hasFarm: !!dashboardData?.farm,
+            farmId
+          })
+          toast.error(
+            'Irrigation saved but soil water level was not updated. Please report this issue.'
+          )
         }
         break
       }
