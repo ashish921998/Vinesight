@@ -1,15 +1,31 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { SupabaseService } from '@/lib/supabase-service'
 import { FarmHeader, type FarmWeatherSummary } from '@/components/farm-details/FarmHeader'
 import { QuickActions } from '@/components/farm-details/QuickActions'
 import { ActivityFeed } from '@/components/farm-details/ActivityFeed'
-import { UnifiedDataLogsModal } from '@/components/farm-details/UnifiedDataLogsModal'
 import type { ReportAttachmentMeta } from '@/types/reports'
-import { WaterCalculationModal } from '@/components/farm-details/WaterCalculationModal'
-import { FarmModal } from '@/components/farm-details/forms/FarmModal'
+
+// Lazy load heavy modals for better initial page load
+const UnifiedDataLogsModal = lazy(() =>
+  import('@/components/farm-details/UnifiedDataLogsModal').then((mod) => ({
+    default: mod.UnifiedDataLogsModal
+  }))
+)
+
+const WaterCalculationModal = lazy(() =>
+  import('@/components/farm-details/WaterCalculationModal').then((mod) => ({
+    default: mod.WaterCalculationModal
+  }))
+)
+
+const FarmModal = lazy(() =>
+  import('@/components/farm-details/forms/FarmModal').then((mod) => ({
+    default: mod.FarmModal
+  }))
+)
 import {
   Dialog,
   DialogContent,
@@ -1277,34 +1293,52 @@ export default function FarmDetailsPage() {
           </div>
         </main>
 
-        {/* Unified Data Logs Modal */}
-        <UnifiedDataLogsModal
-          isOpen={showDataLogsModal}
-          onClose={() => {
-            setShowDataLogsModal(false)
-            setEditMode('add')
-            setEditModeLogs([])
-            setEditModeDate('')
-            setEditModeDayNote(null)
-          }}
-          onSubmit={handleDataLogsSubmit}
-          isSubmitting={isSubmitting}
-          farmId={parseInt(farmId)}
-          mode={editMode}
-          existingLogs={editModeLogs}
-          selectedDate={editModeDate}
-          existingDayNote={editModeDayNote?.notes}
-          existingDayNoteId={editModeDayNote?.id ?? null}
-        />
+        {/* Unified Data Logs Modal - Lazy Loaded */}
+        {showDataLogsModal && (
+          <Suspense
+            fallback={
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+              </div>
+            }
+          >
+            <UnifiedDataLogsModal
+              isOpen={showDataLogsModal}
+              onClose={() => {
+                setShowDataLogsModal(false)
+                setEditMode('add')
+                setEditModeLogs([])
+                setEditModeDate('')
+                setEditModeDayNote(null)
+              }}
+              onSubmit={handleDataLogsSubmit}
+              isSubmitting={isSubmitting}
+              farmId={parseInt(farmId)}
+              mode={editMode}
+              existingLogs={editModeLogs}
+              selectedDate={editModeDate}
+              existingDayNote={editModeDayNote?.notes}
+              existingDayNoteId={editModeDayNote?.id ?? null}
+            />
+          </Suspense>
+        )}
 
-        {/* Water Calculation Modal */}
-        {dashboardData?.farm && (
-          <WaterCalculationModal
-            isOpen={showWaterCalculationModal}
-            onClose={() => setShowWaterCalculationModal(false)}
-            farm={dashboardData.farm}
-            onCalculationComplete={loadDashboardData}
-          />
+        {/* Water Calculation Modal - Lazy Loaded */}
+        {showWaterCalculationModal && dashboardData?.farm && (
+          <Suspense
+            fallback={
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+              </div>
+            }
+          >
+            <WaterCalculationModal
+              isOpen={showWaterCalculationModal}
+              onClose={() => setShowWaterCalculationModal(false)}
+              farm={dashboardData.farm}
+              onCalculationComplete={loadDashboardData}
+            />
+          </Suspense>
         )}
 
         {/* Delete Confirmation Dialog */}
@@ -1335,15 +1369,23 @@ export default function FarmDetailsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Farm Edit Modal */}
-        {dashboardData?.farm && (
-          <FarmModal
-            isOpen={showFarmModal}
-            onClose={() => setShowFarmModal(false)}
-            onSubmit={handleFarmSubmit}
-            editingFarm={dashboardData.farm}
-            isSubmitting={farmSubmitLoading}
-          />
+        {/* Farm Edit Modal - Lazy Loaded */}
+        {showFarmModal && dashboardData?.farm && (
+          <Suspense
+            fallback={
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+              </div>
+            }
+          >
+            <FarmModal
+              isOpen={showFarmModal}
+              onClose={() => setShowFarmModal(false)}
+              onSubmit={handleFarmSubmit}
+              editingFarm={dashboardData.farm}
+              isSubmitting={farmSubmitLoading}
+            />
+          </Suspense>
         )}
       </div>
     </ProtectedRoute>
