@@ -127,8 +127,6 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
         // Select first farm by default
         if (userFarms.length > 0) {
           setSelectedFarmId(userFarms[0].id!)
-        } else {
-          setError('No farms found. Please add a farm first.')
         }
       } catch (err) {
         console.error('Error loading farms:', err)
