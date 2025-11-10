@@ -40,12 +40,20 @@ export interface IrrigationRecord {
   created_at?: string
 }
 
-// Chemical object type for the chemicals array
+// Chemical object type for chemicals array
 export interface SprayChemical {
   id?: string // Optional ID for frontend tracking
   name: string
   quantity: number
   unit: 'gm/L' | 'ml/L' | 'ppm'
+}
+
+// Fertilizer object type for fertilizers array
+export interface Fertilizer {
+  id?: string // Optional ID for frontend tracking
+  name: string
+  quantity: number
+  unit: 'kg/acre' | 'liter/acre'
 }
 
 export interface SprayRecord {
@@ -70,12 +78,8 @@ export interface FertigationRecord {
   id?: number
   farm_id: number
   date: string
-  fertilizer: string
-  dose?: string | null // Legacy field - kept for backward compatibility
-  quantity: number // Quantity of fertilizer applied
-  unit: 'kg/acre' | 'liter/acre' // Unit of measurement
-  purpose?: string | null // Legacy field - made optional for backward compatibility
-  area?: number | null // Legacy field - made optional for backward compatibility
+  fertilizers?: Fertilizer[] // Array of fertilizers with name, quantity, and unit
+  area?: number
   date_of_pruning?: Date // Date object of pruning when this record was created (snapshot from farm level)
   notes?: string
   created_at?: string

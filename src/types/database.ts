@@ -965,42 +965,30 @@ export type Database = {
           created_at: string | null
           date: string
           date_of_pruning: string | null
-          dose: string | null // Legacy field - kept for backward compatibility
           farm_id: number | null
-          fertilizer: string
+          fertilizers: Json | null
           id: number
           notes: string | null
-          purpose: string
-          quantity: number
-          unit: string
         }
         Insert: {
           area: number
           created_at?: string | null
           date: string
           date_of_pruning?: string | null
-          dose?: string | null // Legacy field - kept for backward compatibility
           farm_id?: number | null
-          fertilizer: string
+          fertilizers?: Json[] | null
           id?: number
           notes?: string | null
-          purpose: string
-          quantity: number
-          unit: string
         }
         Update: {
-          area?: number | null
+          area?: number
           created_at?: string | null
           date?: string
           date_of_pruning?: string | null
-          dose?: string | null // Legacy field - kept for backward compatibility
           farm_id?: number | null
-          fertilizer?: string
+          fertilizers?: Json[] | null
           id?: number
           notes?: string | null
-          purpose?: string | null
-          quantity?: number
-          unit?: string
         }
         Relationships: [
           {

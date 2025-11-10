@@ -127,8 +127,6 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
         // Select first farm by default
         if (userFarms.length > 0) {
           setSelectedFarmId(userFarms[0].id!)
-        } else {
-          setError('No farms found. Please add a farm first.')
         }
       } catch (err) {
         console.error('Error loading farms:', err)
@@ -846,18 +844,61 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       case 'fertigation': {
         Icon = FlaskConical
         iconClass = 'text-amber-600'
-        const fertilizer = activity?.fertilizer || 'Fertigation'
-        const quantity = activity?.quantity
-        const unit = activity?.unit
-        if (quantity) {
-          detailParts.push(`${formatNumber(quantity, quantity >= 100 ? 0 : 1)} ${unit || ''}`)
+
+        // Handle new fertilizers array format
+        const fertilizers = activity?.fertilizers as Array<{
+          name: string
+          quantity: number
+          unit: string
+        }>
+
+        if (fertilizers && Array.isArray(fertilizers) && fertilizers.length > 0) {
+          const validFertilizers = fertilizers.filter(
+            (fert) => fert && fert.name && fert.name.trim()
+          )
+          if (validFertilizers.length > 0) {
+            const firstFert = validFertilizers[0]
+            const title =
+              validFertilizers.length === 1
+                ? firstFert.name
+                : `${firstFert.name} +${validFertilizers.length - 1} more`
+
+            detailParts.push(
+              `${formatNumber(firstFert.quantity, firstFert.quantity >= 100 ? 0 : 1)} ${firstFert.unit || ''}`
+            )
+
+            // Group by unit and calculate per-unit totals
+            if (validFertilizers.length > 1) {
+              const totalsByUnit = new Map<string, number>()
+              validFertilizers.forEach((fert) => {
+                const unit = fert.unit || 'units'
+                const currentTotal = totalsByUnit.get(unit) || 0
+                totalsByUnit.set(unit, currentTotal + (fert.quantity || 0))
+              })
+
+              // Add per-unit totals to details (only if multiple units exist)
+              if (totalsByUnit.size > 1) {
+                const unitTotals: string[] = []
+                totalsByUnit.forEach((total, unit) => {
+                  unitTotals.push(`${formatNumber(total, 1)} ${unit}`)
+                })
+                detailParts.push(`Total: ${unitTotals.join(' + ')}`)
+              }
+            }
+
+            return {
+              title,
+              detail: detailParts.join(' • ') || 'Fertigation event recorded',
+              icon: Icon,
+              iconClass
+            }
+          }
         }
-        if (activity?.purpose) {
-          detailParts.push(activity.purpose)
-        }
+
+        // Fallback for records without valid data
         return {
-          title: fertilizer,
-          detail: detailParts.join(' • ') || 'Fertigation event recorded',
+          title: 'Fertigation',
+          detail: 'Fertigation event recorded',
           icon: Icon,
           iconClass
         }
