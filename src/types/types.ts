@@ -71,8 +71,8 @@ export interface Farm {
   plantingDate: string
   vineSpacing?: number // in meters
   rowSpacing?: number // in meters
-  totalTankCapacity?: number // in liters
-  systemDischarge?: number // in liters per hour (farm-level default)
+  totalTankCapacity?: number // in mm
+  systemDischarge?: number // in mm per hour (farm-level default)
   remainingWater?: number // in mm (calculated value)
   waterCalculationUpdatedAt?: string // when water calculation was last done
   latitude?: number // coordinates (decimal degrees)

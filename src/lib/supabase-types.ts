@@ -196,15 +196,13 @@ export function toDatabaseFarmUpdate(appFarmUpdates: Partial<Farm>): DatabaseFar
     update.total_tank_capacity = appFarmUpdates.totalTankCapacity ?? null
   if (appFarmUpdates.systemDischarge !== undefined)
     update.system_discharge = appFarmUpdates.systemDischarge ?? null
-  if (appFarmUpdates.remainingWater !== undefined) {
-    // Use nullish coalescing to preserve 0 as valid value
+  if (appFarmUpdates.remainingWater !== undefined)
     update.remaining_water = appFarmUpdates.remainingWater ?? null
-  }
   if (appFarmUpdates.waterCalculationUpdatedAt !== undefined)
     update.water_calculation_updated_at = appFarmUpdates.waterCalculationUpdatedAt ?? null
-  if (appFarmUpdates.latitude !== undefined) update.latitude = appFarmUpdates.latitude || null
-  if (appFarmUpdates.longitude !== undefined) update.longitude = appFarmUpdates.longitude || null
-  if (appFarmUpdates.elevation !== undefined) update.elevation = appFarmUpdates.elevation || null
+  if (appFarmUpdates.latitude !== undefined) update.latitude = appFarmUpdates.latitude ?? null
+  if (appFarmUpdates.longitude !== undefined) update.longitude = appFarmUpdates.longitude ?? null
+  if (appFarmUpdates.elevation !== undefined) update.elevation = appFarmUpdates.elevation ?? null
   if (appFarmUpdates.locationName !== undefined)
     update.location_name = appFarmUpdates.locationName || null
   if (appFarmUpdates.timezone !== undefined) update.timezone = appFarmUpdates.timezone || null
