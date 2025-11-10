@@ -594,11 +594,39 @@ export function EditRecordModal({
           throw new Error('At least one fertilizer with valid name and quantity is required')
         }
 
-        const processedFertilizers = validFertilizers.map((fert) => ({
-          name: fert.name.trim(),
-          quantity: fert.quantity,
-          unit: fert.unit as 'kg/acre' | 'liter/acre'
-        }))
+        const normalizeUnit = (unit: string): 'kg/acre' | 'liter/acre' | null => {
+          if (!unit) return null
+          const normalized = unit.trim().toLowerCase().replace(/\s+/g, '')
+          if (normalized.includes('kg') && normalized.includes('acre')) {
+            return 'kg/acre'
+          } else if (normalized.includes('liter') && normalized.includes('acre')) {
+            return 'liter/acre'
+          }
+          return null
+        }
+
+        const processedFertilizers = validFertilizers
+          .map((fert) => {
+            const normalizedUnit = normalizeUnit(fert.unit)
+            return normalizedUnit
+              ? {
+                  name: fert.name.trim(),
+                  quantity: fert.quantity,
+                  unit: normalizedUnit
+                }
+              : null
+          })
+          .filter((fert) => fert !== null) as Array<{
+          name: string
+          quantity: number
+          unit: 'kg/acre' | 'liter/acre'
+        }>
+
+        if (processedFertilizers.length === 0) {
+          throw new Error(
+            'No valid fertilizers with recognized units (kg/acre or liter/acre) found'
+          )
+        }
 
         await SupabaseService.updateFertigationRecord(record.id!, {
           date: fertigationForm.date,

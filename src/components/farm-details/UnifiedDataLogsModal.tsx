@@ -809,6 +809,12 @@ export function UnifiedDataLogsModal({
     }
 
     if (currentLogType === 'fertigation' && multipleFertigationMode) {
+      // Validate farm is selected
+      if (!farmId) {
+        toast.error('Select a farm before saving fertigation record')
+        return
+      }
+
       // Handle fertigation with multiple fertilizers (similar to spray with chemicals)
       const validFertilizers = fertilizers.filter(
         (fert: { id: string; name: string; quantity: string; unit: string }) =>
@@ -830,7 +836,7 @@ export function UnifiedDataLogsModal({
       }
 
       const fertigationData: FertigationData = {
-        farm_id: farmId || 0,
+        farm_id: farmId,
         date: selectedDateToUse,
         notes: fertigationNotes.trim() || undefined,
         fertilizers: validFertilizers.map(

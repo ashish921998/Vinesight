@@ -488,14 +488,22 @@ export default function FarmDetailsPage() {
         )
 
         // Create a single fertigation record with the fertilizers array
-        record = await SupabaseService.addFertigationRecord({
+        // Only include area if it's a valid positive number
+        const farmArea = dashboardData?.farm?.area
+        const payload: any = {
           farm_id: parseInt(farmId),
           date: date,
           fertilizers: validatedFertilizers,
-          area: dashboardData?.farm?.area || 0,
           notes: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
-        })
+        }
+
+        // Only include area if it's a valid positive number
+        if (typeof farmArea === 'number' && farmArea > 0) {
+          payload.area = farmArea
+        }
+
+        record = await SupabaseService.addFertigationRecord(payload)
         break
       }
 
@@ -851,14 +859,22 @@ export default function FarmDetailsPage() {
         )
 
         // Update the single fertigation record with the fertilizers array
-        record = await SupabaseService.updateFertigationRecord(originalId, {
+        // Only include area if it's a valid positive number
+        const updateFarmArea = dashboardData?.farm?.area
+        const updatePayload: any = {
           farm_id: parseInt(farmId),
           date: originalDate,
           fertilizers: validatedFertilizers,
-          area: dashboardData?.farm?.area || 0,
           notes: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
-        })
+        }
+
+        // Only include area if it's a valid positive number
+        if (typeof updateFarmArea === 'number' && updateFarmArea > 0) {
+          updatePayload.area = updateFarmArea
+        }
+
+        record = await SupabaseService.updateFertigationRecord(originalId, updatePayload)
         break
       }
 

@@ -976,7 +976,7 @@ export type Database = {
           date: string
           date_of_pruning?: string | null
           farm_id?: number | null
-          fertilizers?: Json | null
+          fertilizers?: Json[] | null
           id?: number
           notes?: string | null
         }
@@ -986,7 +986,7 @@ export type Database = {
           date?: string
           date_of_pruning?: string | null
           farm_id?: number | null
-          fertilizers?: Json | null
+          fertilizers?: Json[] | null
           id?: number
           notes?: string | null
         }

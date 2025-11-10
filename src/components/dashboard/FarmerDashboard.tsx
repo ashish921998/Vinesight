@@ -866,12 +866,24 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
             detailParts.push(
               `${formatNumber(firstFert.quantity, firstFert.quantity >= 100 ? 0 : 1)} ${firstFert.unit || ''}`
             )
+
+            // Group by unit and calculate per-unit totals
             if (validFertilizers.length > 1) {
-              const totalQuantity = validFertilizers.reduce(
-                (sum, fert) => sum + (fert.quantity || 0),
-                0
-              )
-              detailParts.push(`Total: ${formatNumber(totalQuantity, 1)} units`)
+              const totalsByUnit = new Map<string, number>()
+              validFertilizers.forEach((fert) => {
+                const unit = fert.unit || 'units'
+                const currentTotal = totalsByUnit.get(unit) || 0
+                totalsByUnit.set(unit, currentTotal + (fert.quantity || 0))
+              })
+
+              // Add per-unit totals to details (only if multiple units exist)
+              if (totalsByUnit.size > 1) {
+                const unitTotals: string[] = []
+                totalsByUnit.forEach((total, unit) => {
+                  unitTotals.push(`${formatNumber(total, 1)} ${unit}`)
+                })
+                detailParts.push(`Total: ${unitTotals.join(' + ')}`)
+              }
             }
 
             return {
