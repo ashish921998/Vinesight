@@ -3,7 +3,7 @@ import {
   ETcCalculator,
   type WeatherData,
   type ETcCalculationInputs,
-  type GrapeGrowthStage,
+  type GrapeGrowthStage
 } from '../etc-calculator'
 
 describe('ETcCalculator', () => {
@@ -14,13 +14,13 @@ describe('ETcCalculator', () => {
     humidity: 60,
     windSpeed: 2.5,
     rainfall: 0,
-    solarRadiation: 20,
+    solarRadiation: 20
   }
 
   const validLocation: ETcCalculationInputs['location'] = {
     latitude: 19.9975,
     longitude: 73.7898,
-    elevation: 500,
+    elevation: 500
   }
 
   const validInputs: ETcCalculationInputs = {
@@ -30,7 +30,7 @@ describe('ETcCalculator', () => {
     plantingDate: '2023-01-15',
     location: validLocation,
     irrigationMethod: 'drip',
-    soilType: 'loamy',
+    soilType: 'loamy'
   }
 
   describe('calculateETo', () => {
@@ -70,7 +70,7 @@ describe('ETcCalculator', () => {
       const extremeWeather = {
         ...validWeatherData,
         temperatureMax: 45,
-        temperatureMin: 25,
+        temperatureMin: 25
       }
       const eto = ETcCalculator.calculateETo(extremeWeather, validLocation)
       expect(eto).toBeGreaterThan(0)
@@ -91,7 +91,7 @@ describe('ETcCalculator', () => {
       const invalidWeather = {
         ...validWeatherData,
         temperatureMax: 10,
-        temperatureMin: 20,
+        temperatureMin: 20
       }
       expect(() => ETcCalculator.calculateETo(invalidWeather, validLocation)).toThrow()
     })
@@ -119,7 +119,7 @@ describe('ETcCalculator', () => {
         'fruit_set',
         'veraison',
         'harvest',
-        'post_harvest',
+        'post_harvest'
       ]
 
       stages.forEach((stage) => {
@@ -159,11 +159,11 @@ describe('ETcCalculator', () => {
     it('should account for rainfall in irrigation need', () => {
       const withRain = {
         ...validInputs,
-        weatherData: { ...validWeatherData, rainfall: 10 },
+        weatherData: { ...validWeatherData, rainfall: 10 }
       }
       const withoutRain = {
         ...validInputs,
-        weatherData: { ...validWeatherData, rainfall: 0 },
+        weatherData: { ...validWeatherData, rainfall: 0 }
       }
 
       const result1 = ETcCalculator.calculateETc(withRain)
@@ -193,12 +193,12 @@ describe('ETcCalculator', () => {
       const highNeedWeather = {
         ...validWeatherData,
         temperatureMax: 40,
-        rainfall: 0,
+        rainfall: 0
       }
       const highNeedInputs = {
         ...validInputs,
         weatherData: highNeedWeather,
-        growthStage: 'fruit_set' as GrapeGrowthStage,
+        growthStage: 'fruit_set' as GrapeGrowthStage
       }
       const result = ETcCalculator.calculateETc(highNeedInputs)
 
@@ -273,9 +273,7 @@ describe('ETcCalculator', () => {
       expect(ETcCalculator.determineGrowthStage(plantingDate, '2025-05-15')).toBe('fruit_set')
       expect(ETcCalculator.determineGrowthStage(plantingDate, '2025-07-15')).toBe('veraison')
       expect(ETcCalculator.determineGrowthStage(plantingDate, '2025-09-15')).toBe('harvest')
-      expect(ETcCalculator.determineGrowthStage(plantingDate, '2025-11-15')).toBe(
-        'post_harvest'
-      )
+      expect(ETcCalculator.determineGrowthStage(plantingDate, '2025-11-15')).toBe('post_harvest')
     })
 
     it('should return dormant for winter months', () => {
@@ -287,11 +285,7 @@ describe('ETcCalculator', () => {
 
   describe('calculateSeasonalRequirements', () => {
     it('should calculate requirements for all growth stages', () => {
-      const results = ETcCalculator.calculateSeasonalRequirements(
-        '2023-01-15',
-        validLocation,
-        {}
-      )
+      const results = ETcCalculator.calculateSeasonalRequirements('2023-01-15', validLocation, {})
 
       expect(results.length).toBe(7)
       results.forEach((result) => {
@@ -303,11 +297,7 @@ describe('ETcCalculator', () => {
     })
 
     it('should have different water requirements for different stages', () => {
-      const results = ETcCalculator.calculateSeasonalRequirements(
-        '2023-01-15',
-        validLocation,
-        {}
-      )
+      const results = ETcCalculator.calculateSeasonalRequirements('2023-01-15', validLocation, {})
 
       const dormant = results.find((r) => r.stage === 'dormant')
       const fruitSet = results.find((r) => r.stage === 'fruit_set')
@@ -320,7 +310,7 @@ describe('ETcCalculator', () => {
     it('should reject extreme temperature values', () => {
       const extremeTemp = {
         ...validWeatherData,
-        temperatureMax: 100,
+        temperatureMax: 100
       }
       expect(() => ETcCalculator.calculateETo(extremeTemp, validLocation)).toThrow()
     })
@@ -328,7 +318,7 @@ describe('ETcCalculator', () => {
     it('should reject negative humidity', () => {
       const negativeHumidity = {
         ...validWeatherData,
-        humidity: -10,
+        humidity: -10
       }
       expect(() => ETcCalculator.calculateETo(negativeHumidity, validLocation)).toThrow()
     })
@@ -336,7 +326,7 @@ describe('ETcCalculator', () => {
     it('should reject negative wind speed', () => {
       const negativeWind = {
         ...validWeatherData,
-        windSpeed: -5,
+        windSpeed: -5
       }
       expect(() => ETcCalculator.calculateETo(negativeWind, validLocation)).toThrow()
     })
@@ -344,7 +334,7 @@ describe('ETcCalculator', () => {
     it('should reject extreme rainfall values', () => {
       const extremeRainfall = {
         ...validWeatherData,
-        rainfall: 1000,
+        rainfall: 1000
       }
       expect(() => ETcCalculator.calculateETo(extremeRainfall, validLocation)).toThrow()
     })
@@ -352,7 +342,7 @@ describe('ETcCalculator', () => {
     it('should reject out of range solar radiation', () => {
       const extremeSolar = {
         ...validWeatherData,
-        solarRadiation: 100,
+        solarRadiation: 100
       }
       expect(() => ETcCalculator.calculateETo(extremeSolar, validLocation)).toThrow()
     })
@@ -371,9 +361,7 @@ describe('ETcCalculator', () => {
 
     it('should accept negative elevation (below sea level)', () => {
       const belowSeaLevel = { ...validLocation, elevation: -100 }
-      expect(() =>
-        ETcCalculator.calculateETo(validWeatherData, belowSeaLevel)
-      ).not.toThrow()
+      expect(() => ETcCalculator.calculateETo(validWeatherData, belowSeaLevel)).not.toThrow()
     })
   })
 
@@ -403,7 +391,7 @@ describe('ETcCalculator', () => {
     it('should add critical stage note for flowering', () => {
       const floweringInputs = {
         ...validInputs,
-        growthStage: 'flowering' as GrapeGrowthStage,
+        growthStage: 'flowering' as GrapeGrowthStage
       }
       const result = ETcCalculator.calculateETc(floweringInputs)
 
@@ -419,7 +407,7 @@ describe('ETcCalculator', () => {
       const veraisonInputs = {
         ...validInputs,
         growthStage: 'veraison' as GrapeGrowthStage,
-        weatherData: { ...validWeatherData, rainfall: 0 },
+        weatherData: { ...validWeatherData, rainfall: 0 }
       }
       const result = ETcCalculator.calculateETc(veraisonInputs)
 
@@ -449,7 +437,7 @@ describe('ETcCalculator', () => {
         humidity: 0,
         windSpeed: 0,
         rainfall: 0,
-        solarRadiation: 0.1,
+        solarRadiation: 0.1
       }
       expect(() => ETcCalculator.calculateETo(minWeather, validLocation)).not.toThrow()
     })

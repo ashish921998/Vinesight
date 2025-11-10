@@ -8,12 +8,12 @@ import type {
   FertigationRecord,
   ExpenseRecord,
   SoilTestRecord,
-  PetioleTestRecord,
+  PetioleTestRecord
 } from '../supabase'
 
 // Mock the Supabase client
 vi.mock('../supabase', () => ({
-  getTypedSupabaseClient: vi.fn(() => mockSupabaseClient),
+  getTypedSupabaseClient: vi.fn(() => mockSupabaseClient)
 }))
 
 // Create a comprehensive mock Supabase client
@@ -26,55 +26,55 @@ describe('SupabaseService - Form Submissions', () => {
       auth: {
         getUser: vi.fn(() => ({
           data: { user: { id: 'test-user-123' } },
-          error: null,
-        })),
+          error: null
+        }))
       },
       from: vi.fn((table: string) => ({
         insert: vi.fn(() => ({
           select: vi.fn(() => ({
             single: vi.fn(() => ({
               data: { id: 1, ...mockData[table] },
-              error: null,
-            })),
-          })),
+              error: null
+            }))
+          }))
         })),
         update: vi.fn(() => ({
           eq: vi.fn(() => ({
             select: vi.fn(() => ({
               single: vi.fn(() => ({
                 data: { id: 1, ...mockData[table] },
-                error: null,
-              })),
-            })),
-          })),
+                error: null
+              }))
+            }))
+          }))
         })),
         delete: vi.fn(() => ({
           eq: vi.fn(() => ({
             select: vi.fn(() => ({
               single: vi.fn(() => ({
                 data: mockData[table],
-                error: null,
-              })),
-            })),
-          })),
+                error: null
+              }))
+            }))
+          }))
         })),
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
             single: vi.fn(() => ({
               data: mockData[table],
-              error: null,
+              error: null
             })),
             order: vi.fn(() => ({
               data: [mockData[table]],
-              error: null,
-            })),
+              error: null
+            }))
           })),
           order: vi.fn(() => ({
             data: [mockData[table]],
-            error: null,
-          })),
-        })),
-      })),
+            error: null
+          }))
+        }))
+      }))
     }
   })
 
@@ -93,7 +93,7 @@ describe('SupabaseService - Form Submissions', () => {
       grape_variety: 'Thompson Seedless',
       planting_date: '2023-01-15',
       created_at: '2023-01-01T00:00:00Z',
-      updated_at: '2025-01-15T00:00:00Z',
+      updated_at: '2025-01-15T00:00:00Z'
     },
     irrigation_records: {
       id: 1,
@@ -105,7 +105,7 @@ describe('SupabaseService - Form Submissions', () => {
       moisture_status: 'moderate',
       system_discharge: 500,
       notes: 'Test irrigation',
-      created_at: '2025-01-15T00:00:00Z',
+      created_at: '2025-01-15T00:00:00Z'
     },
     spray_records: {
       id: 1,
@@ -114,7 +114,7 @@ describe('SupabaseService - Form Submissions', () => {
       water_volume: 100,
       chemicals: [{ name: 'Test Chemical', quantity: 2, unit: 'gm/L' }],
       notes: 'Test spray',
-      created_at: '2025-01-15T00:00:00Z',
+      created_at: '2025-01-15T00:00:00Z'
     },
     harvest_records: {
       id: 1,
@@ -125,7 +125,7 @@ describe('SupabaseService - Form Submissions', () => {
       price_per_kg: 50,
       buyer: 'Test Buyer',
       notes: 'Test harvest',
-      created_at: '2025-01-15T00:00:00Z',
+      created_at: '2025-01-15T00:00:00Z'
     },
     fertigation_records: {
       id: 1,
@@ -133,7 +133,7 @@ describe('SupabaseService - Form Submissions', () => {
       date: '2025-01-15',
       fertilizers: [{ type: 'NPK', quantity: 10, unit: 'kg/acre' }],
       notes: 'Test fertigation',
-      created_at: '2025-01-15T00:00:00Z',
+      created_at: '2025-01-15T00:00:00Z'
     },
     expense_records: {
       id: 1,
@@ -143,7 +143,7 @@ describe('SupabaseService - Form Submissions', () => {
       description: 'Worker wages',
       cost: 5000,
       remarks: 'Test expense',
-      created_at: '2025-01-15T00:00:00Z',
+      created_at: '2025-01-15T00:00:00Z'
     },
     soil_test_records: {
       id: 1,
@@ -155,7 +155,7 @@ describe('SupabaseService - Form Submissions', () => {
       nitrogen: 250,
       phosphorus: 25,
       potassium: 300,
-      created_at: '2025-01-15T00:00:00Z',
+      created_at: '2025-01-15T00:00:00Z'
     },
     petiole_test_records: {
       id: 1,
@@ -164,8 +164,8 @@ describe('SupabaseService - Form Submissions', () => {
       nitrogen: 2.5,
       phosphorus: 0.3,
       potassium: 1.5,
-      created_at: '2025-01-15T00:00:00Z',
-    },
+      created_at: '2025-01-15T00:00:00Z'
+    }
   }
 
   describe('Farm Creation', () => {
@@ -176,7 +176,7 @@ describe('SupabaseService - Form Submissions', () => {
         area: 5,
         area_unit: 'acre',
         grape_variety: 'Thompson Seedless',
-        planting_date: '2023-01-15',
+        planting_date: '2023-01-15'
       } as any
 
       const result = await SupabaseService.createFarm(farmData)
@@ -189,12 +189,12 @@ describe('SupabaseService - Form Submissions', () => {
     it('should require authentication to create farm', async () => {
       mockSupabaseClient.auth.getUser = vi.fn(() => ({
         data: { user: null },
-        error: null,
+        error: null
       }))
 
       const farmData: any = {
         name: 'Test Farm',
-        location: 'Nashik',
+        location: 'Nashik'
       }
 
       await expect(SupabaseService.createFarm(farmData)).rejects.toThrow('authenticated')
@@ -211,7 +211,7 @@ describe('SupabaseService - Form Submissions', () => {
         growth_stage: 'flowering',
         moisture_status: 'moderate',
         system_discharge: 500,
-        notes: 'Regular irrigation',
+        notes: 'Regular irrigation'
       } as any
 
       const result = await SupabaseService.addIrrigationRecord(record)
@@ -225,7 +225,7 @@ describe('SupabaseService - Form Submissions', () => {
         farm_id: 1,
         date: '2025-01-15',
         duration: 25,
-        area: 5,
+        area: 5
       }
 
       await expect(SupabaseService.addIrrigationRecord(record)).rejects.toThrow(
@@ -238,7 +238,7 @@ describe('SupabaseService - Form Submissions', () => {
         farm_id: 1,
         date: '2025-01-15',
         duration: -1,
-        area: 5,
+        area: 5
       }
 
       await expect(SupabaseService.addIrrigationRecord(record)).rejects.toThrow(
@@ -251,7 +251,7 @@ describe('SupabaseService - Form Submissions', () => {
         farm_id: 1,
         date: '2025-01-15',
         duration: 0,
-        area: 5,
+        area: 5
       }
 
       await expect(SupabaseService.addIrrigationRecord(record)).rejects.toThrow(
@@ -264,7 +264,7 @@ describe('SupabaseService - Form Submissions', () => {
         farm_id: 1,
         date: '2025-01-15',
         duration: 2,
-        area: 30000,
+        area: 30000
       }
 
       await expect(SupabaseService.addIrrigationRecord(record)).rejects.toThrow(
@@ -277,7 +277,7 @@ describe('SupabaseService - Form Submissions', () => {
         farm_id: 1,
         date: '2025-01-15',
         duration: 2,
-        area: -5,
+        area: -5
       }
 
       await expect(SupabaseService.addIrrigationRecord(record)).rejects.toThrow(
@@ -291,7 +291,7 @@ describe('SupabaseService - Form Submissions', () => {
         date: '2025-01-15',
         duration: 2,
         area: 5,
-        system_discharge: 15000,
+        system_discharge: 15000
       }
 
       await expect(SupabaseService.addIrrigationRecord(record)).rejects.toThrow(
@@ -305,7 +305,7 @@ describe('SupabaseService - Form Submissions', () => {
         date: '2025-01-15',
         duration: 2,
         area: 5,
-        system_discharge: -100,
+        system_discharge: -100
       }
 
       await expect(SupabaseService.addIrrigationRecord(record)).rejects.toThrow(
@@ -318,7 +318,7 @@ describe('SupabaseService - Form Submissions', () => {
         farm_id: 1,
         date: '2025-01-15',
         duration: NaN,
-        area: 5,
+        area: 5
       }
 
       await expect(SupabaseService.addIrrigationRecord(record)).rejects.toThrow(
@@ -331,7 +331,7 @@ describe('SupabaseService - Form Submissions', () => {
         farm_id: 1,
         date: '2025-01-15',
         duration: Infinity,
-        area: 5,
+        area: 5
       }
 
       await expect(SupabaseService.addIrrigationRecord(record)).rejects.toThrow()
@@ -342,7 +342,7 @@ describe('SupabaseService - Form Submissions', () => {
     it('should update irrigation record with valid data', async () => {
       const updates: Partial<IrrigationRecord> = {
         duration: 3,
-        notes: 'Updated notes',
+        notes: 'Updated notes'
       }
 
       const result = await SupabaseService.updateIrrigationRecord(1, updates)
@@ -353,7 +353,7 @@ describe('SupabaseService - Form Submissions', () => {
 
     it('should validate duration on update', async () => {
       const updates: any = {
-        duration: 30,
+        duration: 30
       }
 
       await expect(SupabaseService.updateIrrigationRecord(1, updates)).rejects.toThrow(
@@ -363,7 +363,7 @@ describe('SupabaseService - Form Submissions', () => {
 
     it('should validate area on update', async () => {
       const updates: any = {
-        area: -10,
+        area: -10
       }
 
       await expect(SupabaseService.updateIrrigationRecord(1, updates)).rejects.toThrow(
@@ -373,7 +373,7 @@ describe('SupabaseService - Form Submissions', () => {
 
     it('should validate system discharge on update', async () => {
       const updates: any = {
-        system_discharge: 20000,
+        system_discharge: 20000
       }
 
       await expect(SupabaseService.updateIrrigationRecord(1, updates)).rejects.toThrow(
@@ -390,9 +390,9 @@ describe('SupabaseService - Form Submissions', () => {
         water_volume: 100,
         chemicals: [
           { name: 'Metalaxyl', quantity: 2, unit: 'gm/L' },
-          { name: 'Bordeaux', quantity: 5, unit: 'ml/L' },
+          { name: 'Bordeaux', quantity: 5, unit: 'ml/L' }
         ],
-        notes: 'Disease prevention',
+        notes: 'Disease prevention'
       } as any
 
       const result = await SupabaseService.addSprayRecord(record)
@@ -411,7 +411,7 @@ describe('SupabaseService - Form Submissions', () => {
         grade: 'Grade A',
         price_per_kg: 50,
         buyer: 'Local Market',
-        notes: 'Good quality harvest',
+        notes: 'Good quality harvest'
       } as any
 
       const result = await SupabaseService.addHarvestRecord(record)
@@ -429,7 +429,7 @@ describe('SupabaseService - Form Submissions', () => {
         fertilizer: 'NPK 19:19:19',
         quantity: 10,
         unit: 'kg/acre',
-        notes: 'Regular fertigation',
+        notes: 'Regular fertigation'
       } as any
 
       const result = await SupabaseService.addFertigationRecord(record)
@@ -447,7 +447,7 @@ describe('SupabaseService - Form Submissions', () => {
         category: 'labor',
         description: 'Worker wages',
         cost: 5000,
-        remarks: 'Monthly payment',
+        remarks: 'Monthly payment'
       } as any
 
       const result = await SupabaseService.addExpenseRecord(record)
@@ -465,7 +465,7 @@ describe('SupabaseService - Form Submissions', () => {
           date: '2025-01-15',
           category,
           description: `${category} expense`,
-          cost: 1000,
+          cost: 1000
         }
 
         const result = await SupabaseService.addExpenseRecord(record)
@@ -486,7 +486,7 @@ describe('SupabaseService - Form Submissions', () => {
         phosphorus: 25,
         potassium: 300,
         calcium: 1500,
-        magnesium: 200,
+        magnesium: 200
       } as any
 
       const result = await SupabaseService.addSoilTestRecord(record)
@@ -506,8 +506,8 @@ describe('SupabaseService - Form Submissions', () => {
           phosphorus: 0.3,
           potassium: 1.5,
           calcium: 1.8,
-          magnesium: 0.5,
-        },
+          magnesium: 0.5
+        }
       } as any
 
       const result = await SupabaseService.addPetioleTestRecord(record)
@@ -521,7 +521,7 @@ describe('SupabaseService - Form Submissions', () => {
     it('should update farm with partial data', async () => {
       const updates: Partial<Farm> = {
         name: 'Updated Farm Name',
-        area: 10,
+        area: 10
       }
 
       const result = await SupabaseService.updateFarm(1, updates)
@@ -552,17 +552,17 @@ describe('SupabaseService - Form Submissions', () => {
           select: vi.fn(() => ({
             single: vi.fn(() => ({
               data: null,
-              error: { message: 'Database error', code: 'DB_ERROR' },
-            })),
-          })),
-        })),
+              error: { message: 'Database error', code: 'DB_ERROR' }
+            }))
+          }))
+        }))
       }))
 
       const record: any = {
         farm_id: 1,
         date: '2025-01-15',
         duration: 2,
-        area: 5,
+        area: 5
       }
 
       await expect(SupabaseService.addIrrigationRecord(record)).rejects.toThrow()
@@ -571,11 +571,11 @@ describe('SupabaseService - Form Submissions', () => {
     it('should handle authentication errors', async () => {
       mockSupabaseClient.auth.getUser = vi.fn(() => ({
         data: { user: null },
-        error: { message: 'Not authenticated' },
+        error: { message: 'Not authenticated' }
       }))
 
       const farmData: any = {
-        name: 'Test Farm',
+        name: 'Test Farm'
       }
 
       await expect(SupabaseService.createFarm(farmData)).rejects.toThrow()
@@ -587,7 +587,7 @@ describe('SupabaseService - Form Submissions', () => {
       const record: any = {
         farm_id: 1,
         date: '2025-01-15',
-        duration: 2,
+        duration: 2
         // area, system_discharge, notes are optional
       }
 
@@ -601,7 +601,7 @@ describe('SupabaseService - Form Submissions', () => {
         date: '2025-01-15',
         duration: 2,
         area: 5,
-        notes: '',
+        notes: ''
       }
 
       const result = await SupabaseService.addIrrigationRecord(record)
@@ -613,7 +613,7 @@ describe('SupabaseService - Form Submissions', () => {
         farm_id: 1,
         date: '2025-01-15',
         duration: 0.1,
-        area: 5,
+        area: 5
       }
 
       const result = await SupabaseService.addIrrigationRecord(record)
@@ -625,7 +625,7 @@ describe('SupabaseService - Form Submissions', () => {
         farm_id: 1,
         date: '2025-01-15',
         duration: 24,
-        area: 5,
+        area: 5
       }
 
       const result = await SupabaseService.addIrrigationRecord(record)

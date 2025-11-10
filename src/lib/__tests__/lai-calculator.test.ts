@@ -13,7 +13,7 @@ describe('LAICalculator', () => {
     canopyWidth: 1.5,
     leafShape: 'heart',
     trellisSystem: 'vsp',
-    season: 'summer',
+    season: 'summer'
   }
 
   describe('calculateLAI', () => {
@@ -30,9 +30,7 @@ describe('LAICalculator', () => {
 
     it('should return proper canopy density classifications', () => {
       const result = LAICalculator.calculateLAI(validInputs)
-      expect(['sparse', 'optimal', 'dense', 'overcrowded']).toContain(
-        result.canopyDensity
-      )
+      expect(['sparse', 'optimal', 'dense', 'overcrowded']).toContain(result.canopyDensity)
     })
 
     it('should return quality metrics', () => {
@@ -42,9 +40,7 @@ describe('LAICalculator', () => {
       expect(['poor', 'adequate', 'good', 'excellent']).toContain(
         result.qualityMetrics.fruitExposure
       )
-      expect(['poor', 'adequate', 'good', 'excellent']).toContain(
-        result.qualityMetrics.airflow
-      )
+      expect(['poor', 'adequate', 'good', 'excellent']).toContain(result.qualityMetrics.airflow)
       expect(['low', 'moderate', 'high']).toContain(result.qualityMetrics.diseaseRisk)
     })
 
@@ -61,7 +57,7 @@ describe('LAICalculator', () => {
       const sparseInputs = {
         ...validInputs,
         leavesPerShoot: 5,
-        shootsPerVine: 10,
+        shootsPerVine: 10
       }
       const result = LAICalculator.calculateLAI(sparseInputs)
       expect(result.canopyDensity).toBe('sparse')
@@ -71,7 +67,7 @@ describe('LAICalculator', () => {
       const optimalInputs = {
         ...validInputs,
         leavesPerShoot: 12,
-        shootsPerVine: 20,
+        shootsPerVine: 20
       }
       const result = LAICalculator.calculateLAI(optimalInputs)
       // The calculated LAI should fall into a valid category
@@ -83,7 +79,7 @@ describe('LAICalculator', () => {
       const overcrowdedInputs = {
         ...validInputs,
         leavesPerShoot: 25,
-        shootsPerVine: 40,
+        shootsPerVine: 40
       }
       const result = LAICalculator.calculateLAI(overcrowdedInputs)
       // The calculated LAI should fall into a valid category
@@ -94,15 +90,15 @@ describe('LAICalculator', () => {
     it('should handle different leaf shapes', () => {
       const heartResult = LAICalculator.calculateLAI({
         ...validInputs,
-        leafShape: 'heart',
+        leafShape: 'heart'
       })
       const roundResult = LAICalculator.calculateLAI({
         ...validInputs,
-        leafShape: 'round',
+        leafShape: 'round'
       })
       const lobedResult = LAICalculator.calculateLAI({
         ...validInputs,
-        leafShape: 'lobed',
+        leafShape: 'lobed'
       })
 
       expect(roundResult.leafAreaPerVine).toBeGreaterThan(lobedResult.leafAreaPerVine)
@@ -112,26 +108,24 @@ describe('LAICalculator', () => {
     it('should apply seasonal adjustments', () => {
       const summerResult = LAICalculator.calculateLAI({
         ...validInputs,
-        season: 'summer',
+        season: 'summer'
       })
       const dormantResult = LAICalculator.calculateLAI({
         ...validInputs,
-        season: 'dormant',
+        season: 'dormant'
       })
 
-      expect(summerResult.leafAreaPerVine).toBeGreaterThan(
-        dormantResult.leafAreaPerVine
-      )
+      expect(summerResult.leafAreaPerVine).toBeGreaterThan(dormantResult.leafAreaPerVine)
     })
 
     it('should handle different trellis systems', () => {
       const vspResult = LAICalculator.calculateLAI({
         ...validInputs,
-        trellisSystem: 'vsp',
+        trellisSystem: 'vsp'
       })
       const lyreResult = LAICalculator.calculateLAI({
         ...validInputs,
-        trellisSystem: 'lyre',
+        trellisSystem: 'lyre'
       })
 
       expect(lyreResult.leafAreaPerVine).toBeGreaterThan(vspResult.leafAreaPerVine)
@@ -165,7 +159,7 @@ describe('LAICalculator', () => {
       const sparseInputs = {
         ...validInputs,
         leavesPerShoot: 5,
-        shootsPerVine: 10,
+        shootsPerVine: 10
       }
       const result = LAICalculator.calculateLAI(sparseInputs)
 
@@ -179,7 +173,7 @@ describe('LAICalculator', () => {
       const optimalInputs = {
         ...validInputs,
         leavesPerShoot: 12,
-        shootsPerVine: 20,
+        shootsPerVine: 20
       }
       const result = LAICalculator.calculateLAI(optimalInputs)
 
@@ -193,15 +187,15 @@ describe('LAICalculator', () => {
       const overcrowdedInputs = {
         ...validInputs,
         leavesPerShoot: 25,
-        shootsPerVine: 40,
+        shootsPerVine: 40
       }
       const result = LAICalculator.calculateLAI(overcrowdedInputs)
 
       if (result.canopyDensity === 'overcrowded') {
         const recommendations = result.recommendations.canopyManagement.join(' ')
-        expect(
-          recommendations.includes('thinning') || recommendations.includes('Remove')
-        ).toBe(true)
+        expect(recommendations.includes('thinning') || recommendations.includes('Remove')).toBe(
+          true
+        )
       }
     })
 
@@ -210,7 +204,7 @@ describe('LAICalculator', () => {
         ...validInputs,
         leavesPerShoot: 25,
         shootsPerVine: 35,
-        trellisSystem: 'vsp' as const,
+        trellisSystem: 'vsp' as const
       }
       const result = LAICalculator.calculateLAI(highLAIInputs)
 
@@ -227,7 +221,7 @@ describe('LAICalculator', () => {
       const lowLightInputs = {
         ...validInputs,
         leavesPerShoot: 3,
-        shootsPerVine: 5,
+        shootsPerVine: 5
       }
       const result = LAICalculator.calculateLAI(lowLightInputs)
 
@@ -243,7 +237,7 @@ describe('LAICalculator', () => {
       const sparseInputs = {
         ...validInputs,
         leavesPerShoot: 3,
-        shootsPerVine: 5,
+        shootsPerVine: 5
       }
       const result = LAICalculator.calculateLAI(sparseInputs)
 
@@ -256,7 +250,7 @@ describe('LAICalculator', () => {
       const overcrowdedInputs = {
         ...validInputs,
         leavesPerShoot: 25,
-        shootsPerVine: 40,
+        shootsPerVine: 40
       }
       const result = LAICalculator.calculateLAI(overcrowdedInputs)
 
@@ -270,7 +264,7 @@ describe('LAICalculator', () => {
       const optimalInputs = {
         ...validInputs,
         leavesPerShoot: 13,
-        shootsPerVine: 22,
+        shootsPerVine: 22
       }
       const result = LAICalculator.calculateLAI(optimalInputs)
 
@@ -284,7 +278,7 @@ describe('LAICalculator', () => {
       const balancedInputs = {
         ...validInputs,
         leavesPerShoot: 12,
-        shootsPerVine: 20,
+        shootsPerVine: 20
       }
       const result = LAICalculator.calculateLAI(balancedInputs)
 
@@ -388,7 +382,7 @@ describe('LAICalculator', () => {
         leavesPerShoot: 1,
         shootsPerVine: 1,
         avgLeafLength: 1,
-        avgLeafWidth: 1,
+        avgLeafWidth: 1
       }
       expect(() => LAICalculator.calculateLAI(minInputs)).not.toThrow()
     })
@@ -399,7 +393,7 @@ describe('LAICalculator', () => {
         leavesPerShoot: 30,
         shootsPerVine: 50,
         avgLeafLength: 20,
-        avgLeafWidth: 18,
+        avgLeafWidth: 18
       }
       expect(() => LAICalculator.calculateLAI(maxInputs)).not.toThrow()
     })
@@ -410,7 +404,7 @@ describe('LAICalculator', () => {
         'geneva',
         'scott-henry',
         'lyre',
-        'pergola',
+        'pergola'
       ]
 
       systems.forEach((system) => {
@@ -430,7 +424,7 @@ describe('LAICalculator', () => {
         'fruit_set',
         'veraison',
         'harvest',
-        'post_harvest',
+        'post_harvest'
       ]
 
       seasons.forEach((season) => {

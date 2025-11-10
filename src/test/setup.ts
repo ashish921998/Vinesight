@@ -18,14 +18,14 @@ vi.mock('@/lib/supabase/client', () => ({
       select: vi.fn(() => ({ data: [], error: null })),
       insert: vi.fn(() => ({ data: [], error: null })),
       update: vi.fn(() => ({ data: [], error: null })),
-      delete: vi.fn(() => ({ data: [], error: null })),
+      delete: vi.fn(() => ({ data: [], error: null }))
     })),
     auth: {
       getUser: vi.fn(() => ({ data: { user: null }, error: null })),
       signIn: vi.fn(),
-      signOut: vi.fn(),
-    },
-  })),
+      signOut: vi.fn()
+    }
+  }))
 }))
 
 // Mock Next.js router
@@ -34,10 +34,10 @@ vi.mock('next/navigation', () => ({
     push: vi.fn(),
     replace: vi.fn(),
     prefetch: vi.fn(),
-    back: vi.fn(),
+    back: vi.fn()
   }),
   usePathname: () => '/',
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams()
 }))
 
 // Mock window.matchMedia
@@ -51,8 +51,8 @@ Object.defineProperty(window, 'matchMedia', {
     removeListener: vi.fn(),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
+    dispatchEvent: vi.fn()
+  }))
 })
 
 // Mock IntersectionObserver

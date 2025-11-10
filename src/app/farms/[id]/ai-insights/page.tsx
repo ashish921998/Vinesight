@@ -188,7 +188,6 @@ export default function AIInsightsPage() {
         const result = await AIInsightsService.executeInsightAction(insight)
         if (result.success) {
           if (process.env.NODE_ENV === 'development') {
-            // eslint-disable-next-line no-console
           }
           // Refresh insights after execution
           await loadData()
@@ -702,7 +701,6 @@ export default function AIInsightsPage() {
                           className="px-3"
                           onClick={() => {
                             if (process.env.NODE_ENV === 'development') {
-                              // eslint-disable-next-line no-console
                             }
                           }}
                         >

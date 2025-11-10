@@ -13,7 +13,7 @@ import {
   validateAndSanitize,
   SecurityRateLimiter,
   generateCSRFToken,
-  validateFileContent,
+  validateFileContent
 } from '../validation'
 
 describe('sanitizeString', () => {
@@ -29,9 +29,7 @@ describe('sanitizeString', () => {
   })
 
   it('should remove data: URIs', () => {
-    expect(sanitizeString('data:text/html,<script>alert(1)</script>')).toBe(
-      'text/html,alert(1)'
-    )
+    expect(sanitizeString('data:text/html,<script>alert(1)</script>')).toBe('text/html,alert(1)')
   })
 
   it('should remove vbscript: URIs', () => {
@@ -88,9 +86,7 @@ describe('sanitizeForSQL', () => {
   })
 
   it('should combine sanitizeString and SQL-specific sanitization', () => {
-    expect(sanitizeForSQL("<script>SELECT * FROM users; --</script>")).toBe(
-      ' * FROM users '
-    )
+    expect(sanitizeForSQL('<script>SELECT * FROM users; --</script>')).toBe(' * FROM users ')
   })
 })
 
@@ -136,7 +132,7 @@ describe('FarmSchema', () => {
     crop_variety: 'Thompson Seedless',
     planting_date: '2023-01-15',
     vine_spacing: 2.5,
-    row_spacing: 8,
+    row_spacing: 8
   }
 
   it('should validate valid farm data', () => {
@@ -152,9 +148,7 @@ describe('FarmSchema', () => {
   })
 
   it('should reject farm name longer than 50 characters', () => {
-    expect(() =>
-      FarmSchema.parse({ ...validFarm, name: 'a'.repeat(51) })
-    ).toThrow()
+    expect(() => FarmSchema.parse({ ...validFarm, name: 'a'.repeat(51) })).toThrow()
   })
 
   it('should reject negative area', () => {
@@ -166,30 +160,24 @@ describe('FarmSchema', () => {
   })
 
   it('should reject invalid date format', () => {
-    expect(() =>
-      FarmSchema.parse({ ...validFarm, planting_date: '15-01-2023' })
-    ).toThrow()
+    expect(() => FarmSchema.parse({ ...validFarm, planting_date: '15-01-2023' })).toThrow()
   })
 
   it('should reject future planting dates', () => {
     const futureDate = new Date()
     futureDate.setFullYear(futureDate.getFullYear() + 1)
     const futureDateStr = futureDate.toISOString().split('T')[0]
-    expect(() =>
-      FarmSchema.parse({ ...validFarm, planting_date: futureDateStr })
-    ).toThrow()
+    expect(() => FarmSchema.parse({ ...validFarm, planting_date: futureDateStr })).toThrow()
   })
 
   it('should reject planting dates older than 100 years', () => {
-    expect(() =>
-      FarmSchema.parse({ ...validFarm, planting_date: '1900-01-01' })
-    ).toThrow()
+    expect(() => FarmSchema.parse({ ...validFarm, planting_date: '1900-01-01' })).toThrow()
   })
 
   it('should sanitize farm name', () => {
     const result = FarmSchema.parse({
       ...validFarm,
-      name: 'TestFarm',
+      name: 'TestFarm'
     })
     expect(result.name).toBe('TestFarm')
   })
@@ -209,7 +197,7 @@ describe('IrrigationSchema', () => {
     growth_stage: 'flowering' as const,
     moisture_status: 'moderate',
     system_discharge: 500,
-    notes: 'Regular irrigation',
+    notes: 'Regular irrigation'
   }
 
   it('should validate valid irrigation data', () => {
@@ -225,9 +213,7 @@ describe('IrrigationSchema', () => {
   })
 
   it('should reject invalid growth stage', () => {
-    expect(() =>
-      IrrigationSchema.parse({ ...validIrrigation, growth_stage: 'invalid' })
-    ).toThrow()
+    expect(() => IrrigationSchema.parse({ ...validIrrigation, growth_stage: 'invalid' })).toThrow()
   })
 
   it('should accept valid growth stages', () => {
@@ -238,7 +224,7 @@ describe('IrrigationSchema', () => {
       'fruit_set',
       'veraison',
       'harvest',
-      'post_harvest',
+      'post_harvest'
     ]
     stages.forEach((stage) => {
       expect(() =>
@@ -253,9 +239,7 @@ describe('IrrigationSchema', () => {
   })
 
   it('should reject notes longer than 500 characters', () => {
-    expect(() =>
-      IrrigationSchema.parse({ ...validIrrigation, notes: 'a'.repeat(501) })
-    ).toThrow()
+    expect(() => IrrigationSchema.parse({ ...validIrrigation, notes: 'a'.repeat(501) })).toThrow()
   })
 })
 
@@ -269,7 +253,7 @@ describe('SpraySchema', () => {
     area: 5.5,
     weather: 'Cloudy, no rain',
     operator: 'John Doe',
-    notes: 'Morning application',
+    notes: 'Morning application'
   }
 
   it('should validate valid spray data', () => {
@@ -285,9 +269,7 @@ describe('SpraySchema', () => {
   })
 
   it('should reject pest_disease longer than 100 characters', () => {
-    expect(() =>
-      SpraySchema.parse({ ...validSpray, pest_disease: 'a'.repeat(101) })
-    ).toThrow()
+    expect(() => SpraySchema.parse({ ...validSpray, pest_disease: 'a'.repeat(101) })).toThrow()
   })
 })
 
@@ -299,7 +281,7 @@ describe('HarvestSchema', () => {
     grade: 'Grade A',
     price: 50,
     buyer: 'Local Market',
-    notes: 'Good quality',
+    notes: 'Good quality'
   }
 
   it('should validate valid harvest data', () => {
@@ -311,9 +293,7 @@ describe('HarvestSchema', () => {
   })
 
   it('should reject quantity exceeding maximum', () => {
-    expect(() =>
-      HarvestSchema.parse({ ...validHarvest, quantity: 2000000 })
-    ).toThrow()
+    expect(() => HarvestSchema.parse({ ...validHarvest, quantity: 2000000 })).toThrow()
   })
 
   it('should reject negative price', () => {
@@ -334,7 +314,7 @@ describe('TaskReminderSchema', () => {
     due_date: '2025-01-20',
     type: 'irrigation' as const,
     priority: 'high' as const,
-    completed: false,
+    completed: false
   }
 
   it('should validate valid task data', () => {
@@ -346,9 +326,7 @@ describe('TaskReminderSchema', () => {
   })
 
   it('should reject title longer than 200 characters', () => {
-    expect(() =>
-      TaskReminderSchema.parse({ ...validTask, title: 'a'.repeat(201) })
-    ).toThrow()
+    expect(() => TaskReminderSchema.parse({ ...validTask, title: 'a'.repeat(201) })).toThrow()
   })
 
   it('should accept valid task types', () => {
@@ -361,9 +339,7 @@ describe('TaskReminderSchema', () => {
   it('should accept valid priority levels', () => {
     const priorities = ['low', 'medium', 'high']
     priorities.forEach((priority) => {
-      expect(() =>
-        TaskReminderSchema.parse({ ...validTask, priority })
-      ).not.toThrow()
+      expect(() => TaskReminderSchema.parse({ ...validTask, priority })).not.toThrow()
     })
   })
 })
@@ -375,7 +351,7 @@ describe('ExpenseSchema', () => {
     type: 'labor' as const,
     description: 'Worker wages',
     cost: 5000,
-    remarks: 'Monthly payment',
+    remarks: 'Monthly payment'
   }
 
   it('should validate valid expense data', () => {
@@ -387,9 +363,7 @@ describe('ExpenseSchema', () => {
   })
 
   it('should reject cost exceeding maximum', () => {
-    expect(() =>
-      ExpenseSchema.parse({ ...validExpense, cost: 20000000 })
-    ).toThrow()
+    expect(() => ExpenseSchema.parse({ ...validExpense, cost: 20000000 })).toThrow()
   })
 
   it('should accept valid expense types', () => {
@@ -406,7 +380,7 @@ describe('ETcInputSchema', () => {
     temperatureMin: 15,
     humidity: 60,
     windSpeed: 2.5,
-    rainfall: 10,
+    rainfall: 10
   }
 
   it('should validate valid ETc input data', () => {
@@ -414,33 +388,23 @@ describe('ETcInputSchema', () => {
   })
 
   it('should reject temperature exceeding maximum', () => {
-    expect(() =>
-      ETcInputSchema.parse({ ...validETcInput, temperatureMax: 70 })
-    ).toThrow()
+    expect(() => ETcInputSchema.parse({ ...validETcInput, temperatureMax: 70 })).toThrow()
   })
 
   it('should reject temperature below minimum', () => {
-    expect(() =>
-      ETcInputSchema.parse({ ...validETcInput, temperatureMin: -30 })
-    ).toThrow()
+    expect(() => ETcInputSchema.parse({ ...validETcInput, temperatureMin: -30 })).toThrow()
   })
 
   it('should reject humidity above 100', () => {
-    expect(() =>
-      ETcInputSchema.parse({ ...validETcInput, humidity: 110 })
-    ).toThrow()
+    expect(() => ETcInputSchema.parse({ ...validETcInput, humidity: 110 })).toThrow()
   })
 
   it('should reject negative humidity', () => {
-    expect(() =>
-      ETcInputSchema.parse({ ...validETcInput, humidity: -1 })
-    ).toThrow()
+    expect(() => ETcInputSchema.parse({ ...validETcInput, humidity: -1 })).toThrow()
   })
 
   it('should reject negative wind speed', () => {
-    expect(() =>
-      ETcInputSchema.parse({ ...validETcInput, windSpeed: -1 })
-    ).toThrow()
+    expect(() => ETcInputSchema.parse({ ...validETcInput, windSpeed: -1 })).toThrow()
   })
 
   it('should accept optional rainfall', () => {
@@ -475,7 +439,7 @@ describe('validateAndSanitize', () => {
       area: 5,
       crop: 'Grapes',
       crop_variety: 'Thompson',
-      planting_date: '2023-01-15',
+      planting_date: '2023-01-15'
     }
     const result = validateAndSanitize(FarmSchema, data)
     expect(result.success).toBe(true)
@@ -575,7 +539,7 @@ describe('validateFileContent', () => {
       'graphic.png',
       'document.pdf',
       'data.csv',
-      'spreadsheet.xlsx',
+      'spreadsheet.xlsx'
     ]
 
     validFiles.forEach((fileName) => {

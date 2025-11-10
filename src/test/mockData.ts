@@ -9,7 +9,7 @@ export const mockWeatherData: WeatherData = {
   humidity: 60,
   windSpeed: 2.5,
   rainfall: 0,
-  solarRadiation: 20,
+  solarRadiation: 20
 }
 
 export const mockWeatherDataArray: WeatherData[] = [
@@ -20,7 +20,7 @@ export const mockWeatherDataArray: WeatherData[] = [
     humidity: 60,
     windSpeed: 2.5,
     rainfall: 0,
-    solarRadiation: 20,
+    solarRadiation: 20
   },
   {
     date: '2025-01-16',
@@ -29,7 +29,7 @@ export const mockWeatherDataArray: WeatherData[] = [
     humidity: 55,
     windSpeed: 3.0,
     rainfall: 5,
-    solarRadiation: 22,
+    solarRadiation: 22
   },
   {
     date: '2025-01-17',
@@ -38,8 +38,8 @@ export const mockWeatherDataArray: WeatherData[] = [
     humidity: 70,
     windSpeed: 2.0,
     rainfall: 10,
-    solarRadiation: 18,
-  },
+    solarRadiation: 18
+  }
 ]
 
 // Mock farm data
@@ -58,7 +58,7 @@ export const mockFarm = {
   latitude: 19.9975,
   longitude: 73.7898,
   created_at: '2023-01-01T00:00:00Z',
-  updated_at: '2025-01-15T00:00:00Z',
+  updated_at: '2025-01-15T00:00:00Z'
 }
 
 // Mock soil test results
@@ -80,7 +80,7 @@ export const mockSoilTestResult = {
   zinc: 1.2,
   copper: 0.8,
   boron: 0.5,
-  created_at: '2025-01-01T00:00:00Z',
+  created_at: '2025-01-01T00:00:00Z'
 }
 
 // Mock AI profile
@@ -93,22 +93,22 @@ export const mockAIProfile = {
     preferredTiming: 'early_morning',
     riskAversion: 0.4,
     adoptionSpeed: 'moderate' as const,
-    communicationStyle: 'detailed' as const,
+    communicationStyle: 'detailed' as const
   },
   successMetrics: {
     averageYield: 15000,
     costEfficiency: 0.75,
     profitability: 0.6,
-    waterUseEfficiency: 0.8,
+    waterUseEfficiency: 0.8
   },
   learningPreferences: {
     preferredChannels: ['text', 'visual'] as const,
     bestResponseTimes: ['08:00', '18:00'],
-    languagePreference: 'en' as const,
+    languagePreference: 'en' as const
   },
   seasonalPatterns: {},
   createdAt: new Date('2025-01-01'),
-  updatedAt: new Date('2025-01-15'),
+  updatedAt: new Date('2025-01-15')
 }
 
 // Mock pest prediction
@@ -123,12 +123,12 @@ export const mockPestPrediction = {
   weatherTriggers: {
     temperature: { min: 15, max: 25 },
     humidity: { threshold: 85 },
-    rainfall: { days: 3, amount: 10 },
+    rainfall: { days: 3, amount: 10 }
   },
   preventionWindow: {
     startDate: new Date('2025-01-18'),
     endDate: new Date('2025-01-22'),
-    optimalTiming: 'Early morning application recommended',
+    optimalTiming: 'Early morning application recommended'
   },
   recommendedTreatments: {
     chemical: [
@@ -136,21 +136,21 @@ export const mockPestPrediction = {
         product: 'Metalaxyl',
         dosage: '2g/L',
         cost: 500,
-        effectiveness: 0.9,
-      },
+        effectiveness: 0.9
+      }
     ],
     organic: [
       {
         method: 'Bordeaux mixture',
         description: 'Apply 1% solution',
-        effectiveness: 0.7,
-      },
+        effectiveness: 0.7
+      }
     ],
-    cultural: ['Improve air circulation', 'Remove infected leaves'],
+    cultural: ['Improve air circulation', 'Remove infected leaves']
   },
   communityReports: 5,
   status: 'active' as const,
-  createdAt: new Date('2025-01-15'),
+  createdAt: new Date('2025-01-15')
 }
 
 // Mock task recommendation
@@ -170,9 +170,9 @@ export const mockTaskRecommendation = {
     duration: 120,
     resources: ['Drip irrigation system', 'Water pump'],
     conditions: ['Early morning recommended', 'Check system pressure'],
-    alternatives: ['Manual irrigation if system unavailable'],
+    alternatives: ['Manual irrigation if system unavailable']
   },
-  createdAt: new Date('2025-01-15'),
+  createdAt: new Date('2025-01-15')
 }
 
 // Mock Supabase client
@@ -182,23 +182,23 @@ export const createMockSupabaseClient = () => ({
       data: [],
       error: null,
       eq: vi.fn(() => ({ data: [], error: null })),
-      single: vi.fn(() => ({ data: null, error: null })),
+      single: vi.fn(() => ({ data: null, error: null }))
     })),
     insert: vi.fn(() => ({ data: [], error: null })),
     update: vi.fn(() => ({ data: [], error: null })),
     delete: vi.fn(() => ({ data: [], error: null })),
-    upsert: vi.fn(() => ({ data: [], error: null })),
+    upsert: vi.fn(() => ({ data: [], error: null }))
   })),
   auth: {
     getUser: vi.fn(() => ({ data: { user: { id: 'test-user-id' } }, error: null })),
     signIn: vi.fn(),
     signOut: vi.fn(),
-    signUp: vi.fn(),
+    signUp: vi.fn()
   },
   storage: {
     from: vi.fn(() => ({
       upload: vi.fn(() => ({ data: { path: 'test-path' }, error: null })),
-      download: vi.fn(() => ({ data: new Blob(), error: null })),
-    })),
-  },
+      download: vi.fn(() => ({ data: new Blob(), error: null }))
+    }))
+  }
 })
