@@ -480,7 +480,7 @@ export default function FarmDetailsPage() {
             // Validate unit against whitelist
             const validatedUnit = validateFertigationUnit(fertilizer.unit || 'kg/acre')
 
-            await SupabaseService.addFertigationRecord({
+            const createdRecord = await SupabaseService.addFertigationRecord({
               farm_id: parseInt(farmId),
               date: date,
               fertilizer: fertilizer.name?.trim() || 'Unknown',
@@ -491,6 +491,11 @@ export default function FarmDetailsPage() {
               notes: data.notes || '',
               date_of_pruning: dashboardData?.farm?.dateOfPruning
             })
+
+            // Capture the first record for photo/attachment association
+            if (!record && createdRecord) {
+              record = createdRecord
+            }
           }
         } else {
           // Handle legacy format with single fertilizer
@@ -861,21 +866,29 @@ export default function FarmDetailsPage() {
               })
             }
 
-            // Delete all related fertigation records
-            for (const recordId of recordIdsToDelete) {
-              await SupabaseService.deleteFertigationRecord(recordId)
-            }
-
-            // Create new records for each fertilizer
+            // TRANSACTIONAL SAFETY: Validate and prepare all records BEFORE any database operations
+            // This prevents partial updates if validation fails mid-process
+            const newRecordsToCreate = []
             for (const fertilizer of data.fertilizers) {
-              // Validate unit against whitelist
+              // Validate unit against whitelist (will throw if invalid)
               const validatedUnit = validateFertigationUnit(fertilizer.unit || 'kg/acre')
 
-              await SupabaseService.addFertigationRecord({
+              // Validate fertilizer name
+              if (!fertilizer.name || !fertilizer.name.trim()) {
+                throw new Error('Fertilizer name cannot be empty')
+              }
+
+              // Validate quantity
+              if (!fertilizer.quantity || fertilizer.quantity <= 0) {
+                throw new Error(`Invalid quantity for fertilizer "${fertilizer.name}"`)
+              }
+
+              // Prepare record data (validate first, create later)
+              newRecordsToCreate.push({
                 farm_id: parseInt(farmId),
                 date: originalDate,
-                fertilizer: fertilizer.name?.trim() || 'Unknown',
-                quantity: fertilizer.quantity || 0,
+                fertilizer: fertilizer.name.trim(),
+                quantity: fertilizer.quantity,
                 unit: validatedUnit,
                 area: dashboardData?.farm?.area || 0,
                 purpose: 'General',
@@ -884,13 +897,38 @@ export default function FarmDetailsPage() {
               })
             }
 
-            logger.info('Successfully updated fertigation records', {
+            // Step 1: Create ALL new records first (before deleting old ones)
+            // This ensures data exists before removal, preventing data loss
+            const createdRecordIds: number[] = []
+            for (const recordData of newRecordsToCreate) {
+              const newRecord = await SupabaseService.addFertigationRecord(recordData)
+              if (newRecord?.id) {
+                createdRecordIds.push(newRecord.id)
+              }
+
+              // Capture the first record for photo/attachment association
+              if (!record && newRecord) {
+                record = newRecord
+              }
+            }
+
+            // Step 2: Only delete old records after ALL new records are created successfully
+            // If creation failed, we never reach this point (throw exits the try block)
+            for (const recordId of recordIdsToDelete) {
+              await SupabaseService.deleteFertigationRecord(recordId)
+            }
+
+            logger.info('Successfully updated fertigation records (transactional)', {
               deletedCount: recordIdsToDelete.length,
-              createdCount: data.fertilizers.length
+              createdCount: createdRecordIds.length,
+              deletedIds: recordIdsToDelete,
+              createdIds: createdRecordIds
             })
           } catch (error) {
             logger.error('Error updating fertigation records:', error)
-            throw new Error('Failed to update fertigation records. Please try again.')
+            // Provide more specific error message based on error type
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+            throw new Error(`Failed to update fertigation records: ${errorMessage}`)
           }
         } else {
           // Handle legacy format with single fertilizer
