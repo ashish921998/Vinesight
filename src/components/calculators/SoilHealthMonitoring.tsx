@@ -35,6 +35,7 @@ import {
   Minus,
   Sprout
 } from 'lucide-react'
+import { DatePicker } from '@/components/ui/date-picker'
 import {
   SoilHealthAnalyzer,
   type SoilHealthInputs,
@@ -222,13 +223,12 @@ export function SoilHealthMonitoringComponent() {
               <CardContent className="space-y-4">
                 <div>
                   <Label>Test Date</Label>
-                  <Input
-                    type="date"
+                  <DatePicker
                     value={inputs.testData.testDate.toISOString().split('T')[0]}
-                    onChange={(e) =>
+                    onChange={(date) =>
                       setInputs((prev) => ({
                         ...prev,
-                        testData: { ...prev.testData, testDate: new Date(e.target.value) }
+                        testData: { ...prev.testData, testDate: new Date(date) }
                       }))
                     }
                   />

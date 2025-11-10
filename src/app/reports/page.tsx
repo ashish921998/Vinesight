@@ -33,6 +33,7 @@ import { CloudDataService } from '@/lib/cloud-data-service'
 import { ExportService, type ExportOptions } from '@/lib/export-service'
 import type { Farm } from '@/types/types'
 import { capitalize } from '@/lib/utils'
+import { DatePicker } from '@/components/ui/date-picker'
 
 interface RecordData {
   irrigation: any[]
@@ -565,14 +566,13 @@ export default function UnifiedReportsPage() {
 
             <div>
               <Label>From Date</Label>
-              <Input
-                type="date"
+              <DatePicker
                 max={new Date().toISOString().split('T')[0]} // Prevent future dates
                 value={exportOptions.dateRange?.from}
-                onChange={(e) =>
+                onChange={(date) =>
                   setExportOptions((prev) => ({
                     ...prev,
-                    dateRange: { ...prev.dateRange!, from: e.target.value }
+                    dateRange: { ...prev.dateRange!, from: date }
                   }))
                 }
               />
@@ -580,15 +580,14 @@ export default function UnifiedReportsPage() {
 
             <div>
               <Label>To Date</Label>
-              <Input
-                type="date"
+              <DatePicker
                 max={new Date().toISOString().split('T')[0]} // Prevent future dates
                 min={exportOptions.dateRange?.from} // Ensure to date is not before from date
                 value={exportOptions.dateRange?.to}
-                onChange={(e) =>
+                onChange={(date) =>
                   setExportOptions((prev) => ({
                     ...prev,
-                    dateRange: { ...prev.dateRange!, to: e.target.value }
+                    dateRange: { ...prev.dateRange!, to: date }
                   }))
                 }
               />

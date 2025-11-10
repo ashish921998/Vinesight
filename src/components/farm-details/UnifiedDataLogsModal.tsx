@@ -41,6 +41,7 @@ import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-con
 import { type Chemical } from '@/lib/chemical-formatter'
 import { SupabaseService } from '@/lib/supabase-service'
 import { generateSaveButtonLabel } from '@/lib/daily-note-utils'
+import { DatePicker } from '@/components/ui/date-picker'
 
 interface LogEntry {
   id: string // temporary ID for session
@@ -1293,10 +1294,9 @@ export function UnifiedDataLogsModal({
           {/* Date Selector */}
           <div className="space-y-1">
             <Label className="text-sm font-medium text-gray-700">Date</Label>
-            <Input
-              type="date"
+            <DatePicker
               value={selectedDateToUse}
-              onChange={(e) => setSelectedDate(e.target.value)}
+              onChange={(date) => setSelectedDate(date)}
               max={new Date().toISOString().split('T')[0]}
               className="h-9"
               disabled={mode === 'edit' && existingLogs.length > 0}

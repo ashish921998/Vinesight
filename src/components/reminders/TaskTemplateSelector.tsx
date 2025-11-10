@@ -13,6 +13,7 @@ import {
   getTemplatesByType,
   getCurrentSeasonTemplates
 } from '@/lib/task-templates'
+import { DatePicker } from '@/components/ui/date-picker'
 import {
   Search,
   Filter,
@@ -299,11 +300,10 @@ export function TaskTemplateSelector({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="dueDate">Due Date</Label>
-                      <Input
+                      <DatePicker
                         id="dueDate"
-                        type="date"
                         value={formData.dueDate}
-                        onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                        onChange={(date) => handleInputChange('dueDate', date)}
                         required
                       />
                     </div>
@@ -354,11 +354,10 @@ export function TaskTemplateSelector({
                         </div>
                         <div>
                           <Label htmlFor="endDate">End Date (optional)</Label>
-                          <Input
+                          <DatePicker
                             id="endDate"
-                            type="date"
                             value={formData.endDate || ''}
-                            onChange={(e) => handleInputChange('endDate', e.target.value)}
+                            onChange={(date) => handleInputChange('endDate', date)}
                           />
                         </div>
                       </div>

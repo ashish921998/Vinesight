@@ -26,6 +26,7 @@ import { NotificationSettings } from '@/components/reminders/NotificationSetting
 import { NotificationService } from '@/lib/notification-service'
 import { getCurrentSeasonTemplates } from '@/lib/task-templates'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { DatePicker } from '@/components/ui/date-picker'
 
 export default function RemindersPage() {
   const [farms, setFarms] = useState<Farm[]>([])
@@ -461,11 +462,10 @@ export default function RemindersPage() {
                       </div>
                       <div>
                         <Label htmlFor="dueDate">Due Date</Label>
-                        <Input
+                        <DatePicker
                           id="dueDate"
-                          type="date"
                           value={formData.dueDate}
-                          onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                          onChange={(date) => handleInputChange('dueDate', date)}
                           required
                         />
                       </div>

@@ -34,6 +34,7 @@ import { SupabaseService } from '@/lib/supabase-service'
 import { toast } from 'sonner'
 import type { ReportAttachmentMeta } from '@/types/reports'
 import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-config'
+import { DatePicker } from '@/components/ui/date-picker'
 import type {
   IrrigationRecord,
   SprayRecord,
@@ -700,21 +701,18 @@ export function EditRecordModal({
                 Date *
               </Label>
               {recordType === 'irrigation' ? (
-                <Input
+                <DatePicker
                   id="date"
-                  type="date"
                   value={formData?.date ?? ''}
                   disabled
                   className="mt-1 bg-gray-50 text-gray-600"
-                  readOnly
                 />
               ) : (
-                <Input
+                <DatePicker
                   id="date"
-                  type="date"
                   value={formData?.date ?? ''}
-                  onChange={(e) =>
-                    setFormData((prev) => (prev ? { ...prev, date: e.target.value } : prev))
+                  onChange={(date) =>
+                    setFormData((prev) => (prev ? { ...prev, date } : prev))
                   }
                   max={new Date().toISOString().split('T')[0]}
                   className="mt-1"

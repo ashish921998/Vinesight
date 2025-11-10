@@ -17,6 +17,7 @@ import { Combobox } from '@/components/ui/combobox'
 import { getAllCrops, getVarietiesForCrop, getDefaultVariety } from '@/lib/crop-data'
 import type { LocationResult } from '@/lib/open-meteo-geocoding'
 import type { Farm } from '@/types/types'
+import { DatePicker } from '@/components/ui/date-picker'
 
 interface FarmModalProps {
   isOpen: boolean
@@ -305,11 +306,10 @@ export function FarmModal({
               <Label htmlFor="plantingDate" className="text-sm font-medium text-gray-700">
                 Planting Date *
               </Label>
-              <Input
+              <DatePicker
                 id="plantingDate"
-                type="date"
                 value={formData.plantingDate}
-                onChange={(e) => handleInputChange('plantingDate', e.target.value)}
+                onChange={(date) => handleInputChange('plantingDate', date)}
                 required
                 className="mt-1 h-11"
               />
@@ -402,13 +402,12 @@ export function FarmModal({
                 <Label htmlFor="dateOfPruning" className="text-sm font-medium text-gray-700">
                   Date of Pruning
                 </Label>
-                <Input
+                <DatePicker
                   id="dateOfPruning"
-                  type="date"
                   value={
                     formData.dateOfPruning ? formData.dateOfPruning.toISOString().split('T')[0] : ''
                   }
-                  onChange={(e) => handleInputChange('dateOfPruning', e.target.value)}
+                  onChange={(date) => handleInputChange('dateOfPruning', date)}
                   max={new Date().toISOString().split('T')[0]}
                   className="mt-1 h-11"
                 />

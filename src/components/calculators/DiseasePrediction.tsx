@@ -39,6 +39,7 @@ import {
   type DiseasePredictionResults,
   type WeatherData
 } from '@/lib/disease-prediction'
+import { DatePicker } from '@/components/ui/date-picker'
 
 export function DiseasePredictionComponent() {
   const [inputs, setInputs] = useState<DiseaseRiskInputs>({
@@ -314,15 +315,14 @@ export function DiseasePredictionComponent() {
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="fungicide">Last Fungicide Application</Label>
-                <Input
-                  type="date"
+                <DatePicker
                   value={inputs.previousTreatments.fungicide?.toISOString().split('T')[0] || ''}
-                  onChange={(e) =>
+                  onChange={(date) =>
                     setInputs((prev) => ({
                       ...prev,
                       previousTreatments: {
                         ...prev.previousTreatments,
-                        fungicide: e.target.value ? new Date(e.target.value) : null
+                        fungicide: date ? new Date(date) : null
                       }
                     }))
                   }
@@ -331,15 +331,14 @@ export function DiseasePredictionComponent() {
 
               <div>
                 <Label htmlFor="bactericide">Last Bactericide Application</Label>
-                <Input
-                  type="date"
+                <DatePicker
                   value={inputs.previousTreatments.bactericide?.toISOString().split('T')[0] || ''}
-                  onChange={(e) =>
+                  onChange={(date) =>
                     setInputs((prev) => ({
                       ...prev,
                       previousTreatments: {
                         ...prev.previousTreatments,
-                        bactericide: e.target.value ? new Date(e.target.value) : null
+                        bactericide: date ? new Date(date) : null
                       }
                     }))
                   }
@@ -348,15 +347,14 @@ export function DiseasePredictionComponent() {
 
               <div>
                 <Label htmlFor="insecticide">Last Insecticide Application</Label>
-                <Input
-                  type="date"
+                <DatePicker
                   value={inputs.previousTreatments.insecticide?.toISOString().split('T')[0] || ''}
-                  onChange={(e) =>
+                  onChange={(date) =>
                     setInputs((prev) => ({
                       ...prev,
                       previousTreatments: {
                         ...prev.previousTreatments,
-                        insecticide: e.target.value ? new Date(e.target.value) : null
+                        insecticide: date ? new Date(date) : null
                       }
                     }))
                   }
@@ -382,11 +380,10 @@ export function DiseasePredictionComponent() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="date">Date</Label>
-                    <Input
-                      type="date"
+                    <DatePicker
                       value={weatherInput.date}
-                      onChange={(e) =>
-                        setWeatherInput((prev) => ({ ...prev, date: e.target.value }))
+                      onChange={(date) =>
+                        setWeatherInput((prev) => ({ ...prev, date }))
                       }
                     />
                   </div>

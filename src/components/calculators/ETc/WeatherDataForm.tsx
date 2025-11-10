@@ -13,6 +13,7 @@ import {
 import { ThermometerSun, CloudSun, Download, Loader2 } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import { OpenMeteoWeatherService, type OpenMeteoWeatherData } from '@/lib/open-meteo-weather'
+import { DatePicker } from '@/components/ui/date-picker'
 
 interface WeatherDataFormProps {
   formData: {
@@ -144,10 +145,9 @@ export function WeatherDataForm({
         <div className="grid grid-cols-1 gap-3">
           <div>
             <Label className="text-sm font-medium text-gray-700">Date</Label>
-            <Input
-              type="date"
+            <DatePicker
               value={formData.date}
-              onChange={(e) => onInputChange('date', e.target.value)}
+              onChange={(date) => onInputChange('date', date)}
               className="h-11 text-base mt-1"
             />
           </div>

@@ -41,6 +41,7 @@ import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-ty
 import { cn, capitalize } from '@/lib/utils'
 import { toast } from 'sonner'
 import { parseFarmId, handleDailyNotesAndPhotosAfterLogs } from '@/lib/daily-note-utils'
+import { DatePicker } from '@/components/ui/date-picker'
 
 import { type Farm } from '@/types/types'
 
@@ -839,11 +840,10 @@ export default function FarmLogsPage() {
                     <Label className="text-xs font-medium text-gray-700 mb-1 block">
                       From Date
                     </Label>
-                    <Input
-                      type="date"
+                    <DatePicker
                       value={dateFrom}
-                      onChange={(e) => {
-                        setDateFrom(e.target.value)
+                      onChange={(date) => {
+                        setDateFrom(date)
                         setCurrentPage(1)
                       }}
                       className="h-9"
@@ -852,11 +852,10 @@ export default function FarmLogsPage() {
                   </div>
                   <div>
                     <Label className="text-xs font-medium text-gray-700 mb-1 block">To Date</Label>
-                    <Input
-                      type="date"
+                    <DatePicker
                       value={dateTo}
-                      onChange={(e) => {
-                        setDateTo(e.target.value)
+                      onChange={(date) => {
+                        setDateTo(date)
                         setCurrentPage(1)
                       }}
                       className="h-9"
