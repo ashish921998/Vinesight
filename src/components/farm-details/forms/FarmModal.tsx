@@ -351,10 +351,9 @@ export function FarmModal({
               </div>
             </div>
 
-            {/* Total Tank Capacity */}
             <div>
               <Label htmlFor="totalTankCapacity" className="text-sm font-medium text-gray-700">
-                Total Tank Capacity (liters)
+                Total Tank Capacity (mm)
               </Label>
               <Input
                 id="totalTankCapacity"

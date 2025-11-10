@@ -133,22 +133,22 @@ export function toApplicationFarm(dbFarm: DatabaseFarm): Farm {
     crop: dbFarm.crop,
     cropVariety: dbFarm.crop_variety,
     plantingDate: dbFarm.planting_date,
-    vineSpacing: dbFarm.vine_spacing || undefined,
-    rowSpacing: dbFarm.row_spacing || undefined,
-    totalTankCapacity: dbFarm.total_tank_capacity || undefined,
-    systemDischarge: dbFarm.system_discharge || undefined,
-    remainingWater: dbFarm.remaining_water || undefined,
-    waterCalculationUpdatedAt: dbFarm.water_calculation_updated_at || undefined,
-    latitude: dbFarm.latitude || undefined,
-    longitude: dbFarm.longitude || undefined,
-    elevation: dbFarm.elevation || undefined,
-    locationName: dbFarm.location_name || undefined,
-    timezone: dbFarm.timezone || undefined,
-    locationSource: (dbFarm.location_source as 'manual' | 'search' | 'current') || undefined,
-    locationUpdatedAt: dbFarm.location_updated_at || undefined,
-    createdAt: dbFarm.created_at || undefined,
-    updatedAt: dbFarm.updated_at || undefined,
-    userId: dbFarm.user_id || undefined,
+    vineSpacing: dbFarm.vine_spacing ?? undefined,
+    rowSpacing: dbFarm.row_spacing ?? undefined,
+    totalTankCapacity: dbFarm.total_tank_capacity ?? undefined,
+    systemDischarge: dbFarm.system_discharge ?? undefined,
+    remainingWater: dbFarm.remaining_water ?? undefined,
+    waterCalculationUpdatedAt: dbFarm.water_calculation_updated_at ?? undefined,
+    latitude: dbFarm.latitude ?? undefined,
+    longitude: dbFarm.longitude ?? undefined,
+    elevation: dbFarm.elevation ?? undefined,
+    locationName: dbFarm.location_name ?? undefined,
+    timezone: dbFarm.timezone ?? undefined,
+    locationSource: (dbFarm.location_source as 'manual' | 'search' | 'current') ?? undefined,
+    locationUpdatedAt: dbFarm.location_updated_at ?? undefined,
+    createdAt: dbFarm.created_at ?? undefined,
+    updatedAt: dbFarm.updated_at ?? undefined,
+    userId: dbFarm.user_id ?? undefined,
     dateOfPruning: dbFarm.date_of_pruning ? new Date(dbFarm.date_of_pruning) : undefined
   }
 }
@@ -193,16 +193,16 @@ export function toDatabaseFarmUpdate(appFarmUpdates: Partial<Farm>): DatabaseFar
   if (appFarmUpdates.vineSpacing !== undefined) update.vine_spacing = appFarmUpdates.vineSpacing
   if (appFarmUpdates.rowSpacing !== undefined) update.row_spacing = appFarmUpdates.rowSpacing
   if (appFarmUpdates.totalTankCapacity !== undefined)
-    update.total_tank_capacity = appFarmUpdates.totalTankCapacity || null
+    update.total_tank_capacity = appFarmUpdates.totalTankCapacity ?? null
   if (appFarmUpdates.systemDischarge !== undefined)
-    update.system_discharge = appFarmUpdates.systemDischarge || null
+    update.system_discharge = appFarmUpdates.systemDischarge ?? null
   if (appFarmUpdates.remainingWater !== undefined)
-    update.remaining_water = appFarmUpdates.remainingWater || null
+    update.remaining_water = appFarmUpdates.remainingWater ?? null
   if (appFarmUpdates.waterCalculationUpdatedAt !== undefined)
-    update.water_calculation_updated_at = appFarmUpdates.waterCalculationUpdatedAt || null
-  if (appFarmUpdates.latitude !== undefined) update.latitude = appFarmUpdates.latitude || null
-  if (appFarmUpdates.longitude !== undefined) update.longitude = appFarmUpdates.longitude || null
-  if (appFarmUpdates.elevation !== undefined) update.elevation = appFarmUpdates.elevation || null
+    update.water_calculation_updated_at = appFarmUpdates.waterCalculationUpdatedAt ?? null
+  if (appFarmUpdates.latitude !== undefined) update.latitude = appFarmUpdates.latitude ?? null
+  if (appFarmUpdates.longitude !== undefined) update.longitude = appFarmUpdates.longitude ?? null
+  if (appFarmUpdates.elevation !== undefined) update.elevation = appFarmUpdates.elevation ?? null
   if (appFarmUpdates.locationName !== undefined)
     update.location_name = appFarmUpdates.locationName || null
   if (appFarmUpdates.timezone !== undefined) update.timezone = appFarmUpdates.timezone || null
