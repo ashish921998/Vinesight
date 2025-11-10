@@ -17,6 +17,7 @@ interface ActivityLog {
   quantity?: number
   cost?: number
   fertilizer?: string
+  fertilizers?: Array<{ name: string; quantity: number; unit: string }>
   created_at: string
   // Report-related properties for soil and petiole tests
   report_url?: string
@@ -211,7 +212,38 @@ function getExpenseDisplayText(activity: ActivityLog): string {
  * Format fertilizer display
  */
 function getFertigationDisplayText(activity: ActivityLog): string {
-  // Add null/undefined guard and type checking
+  // Check for fertilizers array first (new format)
+  if (
+    activity.fertilizers &&
+    Array.isArray(activity.fertilizers) &&
+    activity.fertilizers.length > 0
+  ) {
+    try {
+      // Validate fertilizers array structure
+      const validFertilizers = activity.fertilizers.filter(
+        (fert) =>
+          fert &&
+          typeof fert === 'object' &&
+          typeof fert.name === 'string' &&
+          fert.name.trim() !== '' &&
+          typeof fert.quantity === 'number' &&
+          isFinite(fert.quantity) &&
+          fert.quantity > 0
+      ) as Chemical[]
+
+      if (validFertilizers.length > 0) {
+        const formattedFertilizers = formatChemicalsForDisplay(validFertilizers, 25)
+        if (formattedFertilizers && formattedFertilizers.trim() !== '') {
+          return formattedFertilizers
+        }
+      }
+    } catch (error) {
+      // If formatting fails, continue to fallback
+      logger.warn('Error formatting fertilizers array:', error)
+    }
+  }
+
+  // Fallback to legacy fertilizer field
   if (activity.fertilizer && typeof activity.fertilizer === 'string') {
     const fertilizer = activity.fertilizer.trim()
     if (fertilizer !== '') {
@@ -393,19 +425,34 @@ export function transformActivitiesToLogEntries(activities: ActivityLog[]): Arra
     }
   }
 }> {
-  return activities
+  // First, group fertigation records by date and notes
+  const fertigationGroups = new Map<string, ActivityLog[]>()
+  const nonFertigationActivities: ActivityLog[] = []
+
+  activities.forEach((activity) => {
+    if (activity.type === 'fertigation') {
+      // Create a unique key for grouping: date + notes
+      const groupKey = `${activity.date}_${activity.notes || ''}`
+      if (!fertigationGroups.has(groupKey)) {
+        fertigationGroups.set(groupKey, [])
+      }
+      fertigationGroups.get(groupKey)!.push(activity)
+    } else {
+      nonFertigationActivities.push(activity)
+    }
+  })
+
+  // Transform non-fertigation activities
+  const transformedNonFertigation = nonFertigationActivities
     .map((activity) => {
       // Validate activity type
       const validatedType = validateActivityType(activity.type)
       if (!validatedType) {
-        // Log warning for invalid activity type
         logger.warn(`Invalid activity type detected: ${activity.type}`, {
           activityId: activity.id,
           activityType: activity.type,
           date: activity.date
         })
-
-        // Filter out invalid types instead of coercing to irrigation
         return null
       }
 
@@ -436,6 +483,50 @@ export function transformActivitiesToLogEntries(activities: ActivityLog[]): Arra
       }
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+
+  // Transform grouped fertigation activities
+  const transformedFertigation = Array.from(fertigationGroups.values()).map((group) => {
+    // Use the first activity's ID and data as the base
+    const firstActivity = group[0]
+
+    // If there's only one fertigation record, return it as-is (legacy format)
+    if (group.length === 1) {
+      return {
+        id: firstActivity.id.toString(),
+        type: 'fertigation' as ValidActivityType,
+        data: { ...firstActivity },
+        isValid: true
+      }
+    }
+
+    // Multiple fertigation records - combine into new format with fertilizers array
+    const fertilizers = group.map((activity) => ({
+      name: activity.fertilizer || '',
+      quantity: activity.quantity || 0,
+      unit: activity.unit || 'kg/acre'
+    }))
+
+    // Store all related record IDs for proper deletion during updates
+    const relatedRecordIds = group.map((activity) => activity.id)
+
+    return {
+      id: firstActivity.id.toString(),
+      type: 'fertigation' as ValidActivityType,
+      data: {
+        ...firstActivity,
+        fertilizers,
+        // Store the IDs of all related records for update/delete operations
+        _groupedRecordIds: relatedRecordIds,
+        // Remove legacy fields to avoid confusion
+        fertilizer: undefined,
+        quantity: undefined,
+        unit: undefined
+      },
+      isValid: true
+    }
+  })
+
+  return [...transformedNonFertigation, ...transformedFertigation]
 }
 
 /**
@@ -509,6 +600,15 @@ export function getActivitiesSummary(activities: ActivityLog[]): Array<{
       case 'fertigation': {
         const fertilizers = new Set<string>()
         typeActivities.forEach((act) => {
+          // Check new fertilizers array format
+          if (act.fertilizers && Array.isArray(act.fertilizers)) {
+            act.fertilizers.forEach((fert) => {
+              if (fert.name && fert.name.trim()) {
+                fertilizers.add(fert.name.trim())
+              }
+            })
+          }
+          // Fallback to legacy fertilizer field
           if (act.fertilizer && act.fertilizer.trim()) {
             fertilizers.add(act.fertilizer.trim())
           }

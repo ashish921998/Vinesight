@@ -206,27 +206,12 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
     label: 'Fertigation',
     fields: [
       {
-        name: 'fertilizer',
-        type: 'text',
-        label: 'Fertilizer Type',
-        required: true,
-        placeholder: 'e.g., NPK 19:19:19',
-        maxLength: 1000
-      },
-      {
-        name: 'quantity',
-        type: 'number',
-        label: 'Quantity',
+        name: 'notes',
+        type: 'textarea',
+        label: 'Notes (Optional)',
         required: false,
-        min: 0,
-        step: 0.1
-      },
-      {
-        name: 'unit',
-        type: 'select',
-        label: 'Unit',
-        required: false,
-        options: ['kg/acre', 'liter/acre']
+        placeholder: 'e.g., Applied to all sections, timing details, observations...',
+        maxLength: 2000
       }
     ]
   },

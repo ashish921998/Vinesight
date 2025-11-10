@@ -454,19 +454,63 @@ export default function FarmDetailsPage() {
         })
         break
 
-      case 'fertigation':
-        record = await SupabaseService.addFertigationRecord({
-          farm_id: parseInt(farmId),
-          date: date,
-          fertilizer: data.fertilizer?.trim() || 'Unknown',
-          quantity: data.quantity || 0,
-          unit: data.unit || 'kg/acre',
-          area: dashboardData?.farm?.area || 0,
-          purpose: data.purpose || 'General',
-          notes: data.notes || '',
-          date_of_pruning: dashboardData?.farm?.dateOfPruning
-        })
+      case 'fertigation': {
+        // Whitelist of allowed units for fertigation (defense-in-depth)
+        const ALLOWED_FERTIGATION_UNITS = ['kg/acre', 'liter/acre'] as const
+
+        const validateFertigationUnit = (unit: string): 'kg/acre' | 'liter/acre' => {
+          const normalized = unit.trim().toLowerCase()
+
+          // Find matching allowed unit (case-insensitive)
+          for (const allowedUnit of ALLOWED_FERTIGATION_UNITS) {
+            if (allowedUnit.toLowerCase() === normalized) {
+              // Return the canonical allowed unit
+              return allowedUnit
+            }
+          }
+
+          // If no match found, throw error
+          throw new Error(`Invalid fertigation unit: "${unit}". Allowed units: kg/acre, liter/acre`)
+        }
+
+        // Handle new format with fertilizers array
+        if (data.fertilizers && Array.isArray(data.fertilizers) && data.fertilizers.length > 0) {
+          // Create separate fertigation records for each fertilizer
+          for (const fertilizer of data.fertilizers) {
+            // Validate unit against whitelist
+            const validatedUnit = validateFertigationUnit(fertilizer.unit || 'kg/acre')
+
+            await SupabaseService.addFertigationRecord({
+              farm_id: parseInt(farmId),
+              date: date,
+              fertilizer: fertilizer.name?.trim() || 'Unknown',
+              quantity: fertilizer.quantity || 0,
+              unit: validatedUnit,
+              area: dashboardData?.farm?.area || 0,
+              purpose: 'General',
+              notes: data.notes || '',
+              date_of_pruning: dashboardData?.farm?.dateOfPruning
+            })
+          }
+        } else {
+          // Handle legacy format with single fertilizer
+          // Validate unit against whitelist
+          const validatedUnit = validateFertigationUnit(data.unit || 'kg/acre')
+
+          record = await SupabaseService.addFertigationRecord({
+            farm_id: parseInt(farmId),
+            date: date,
+            fertilizer: data.fertilizer?.trim() || 'Unknown',
+            quantity: data.quantity || 0,
+            unit: validatedUnit,
+            area: dashboardData?.farm?.area || 0,
+            purpose: data.purpose || 'General',
+            notes: data.notes || '',
+            date_of_pruning: dashboardData?.farm?.dateOfPruning
+          })
+        }
         break
+      }
 
       case 'soil_test': {
         const reportMeta = (logEntry.meta?.report || null) as ReportAttachmentMeta | null
@@ -776,19 +820,97 @@ export default function FarmDetailsPage() {
         })
         break
 
-      case 'fertigation':
-        record = await SupabaseService.updateFertigationRecord(originalId, {
-          farm_id: parseInt(farmId),
-          date: originalDate,
-          fertilizer: data.fertilizer?.trim() || 'Unknown',
-          quantity: data.quantity || 0,
-          unit: data.unit || 'kg/acre',
-          area: data.area || dashboardData?.farm?.area || 0,
-          purpose: data.purpose || 'General',
-          notes: data.notes || '',
-          date_of_pruning: dashboardData?.farm?.dateOfPruning
-        })
+      case 'fertigation': {
+        // Whitelist of allowed units for fertigation (defense-in-depth)
+        const ALLOWED_FERTIGATION_UNITS = ['kg/acre', 'liter/acre'] as const
+
+        const validateFertigationUnit = (unit: string): 'kg/acre' | 'liter/acre' => {
+          const normalized = unit.trim().toLowerCase()
+
+          // Find matching allowed unit (case-insensitive)
+          for (const allowedUnit of ALLOWED_FERTIGATION_UNITS) {
+            if (allowedUnit.toLowerCase() === normalized) {
+              // Return the canonical allowed unit
+              return allowedUnit
+            }
+          }
+
+          // If no match found, throw error
+          throw new Error(`Invalid fertigation unit: "${unit}". Allowed units: kg/acre, liter/acre`)
+        }
+
+        // Handle new format with fertilizers array
+        if (data.fertilizers && Array.isArray(data.fertilizers) && data.fertilizers.length > 0) {
+          try {
+            // Use stored group IDs if available (safer approach)
+            let recordIdsToDelete: number[] = []
+
+            if (data._groupedRecordIds && Array.isArray(data._groupedRecordIds)) {
+              // Use the explicitly tracked record IDs from the grouped data
+              recordIdsToDelete = data._groupedRecordIds
+              logger.info('Using tracked record IDs for fertigation update', {
+                recordIds: recordIdsToDelete
+              })
+            } else {
+              // Fallback: use the original single record ID
+              // This handles the case where a user edits a legacy single-fertilizer record
+              // and converts it to multi-fertilizer format
+              recordIdsToDelete = [originalId]
+              logger.info('Using original record ID for fertigation update', {
+                recordId: originalId
+              })
+            }
+
+            // Delete all related fertigation records
+            for (const recordId of recordIdsToDelete) {
+              await SupabaseService.deleteFertigationRecord(recordId)
+            }
+
+            // Create new records for each fertilizer
+            for (const fertilizer of data.fertilizers) {
+              // Validate unit against whitelist
+              const validatedUnit = validateFertigationUnit(fertilizer.unit || 'kg/acre')
+
+              await SupabaseService.addFertigationRecord({
+                farm_id: parseInt(farmId),
+                date: originalDate,
+                fertilizer: fertilizer.name?.trim() || 'Unknown',
+                quantity: fertilizer.quantity || 0,
+                unit: validatedUnit,
+                area: dashboardData?.farm?.area || 0,
+                purpose: 'General',
+                notes: data.notes || '',
+                date_of_pruning: dashboardData?.farm?.dateOfPruning
+              })
+            }
+
+            logger.info('Successfully updated fertigation records', {
+              deletedCount: recordIdsToDelete.length,
+              createdCount: data.fertilizers.length
+            })
+          } catch (error) {
+            logger.error('Error updating fertigation records:', error)
+            throw new Error('Failed to update fertigation records. Please try again.')
+          }
+        } else {
+          // Handle legacy format with single fertilizer
+          // Validate unit against whitelist
+          const validatedUnit = validateFertigationUnit(data.unit || 'kg/acre')
+
+          record = await SupabaseService.updateFertigationRecord(originalId, {
+            farm_id: parseInt(farmId),
+            date: originalDate,
+            fertilizer: data.fertilizer?.trim() || 'Unknown',
+            quantity: data.quantity || 0,
+            unit: validatedUnit,
+            area: data.area || dashboardData?.farm?.area || 0,
+            purpose: data.purpose || 'General',
+            notes: data.notes || '',
+            date_of_pruning: dashboardData?.farm?.dateOfPruning
+          })
+        }
         break
+      }
 
       case 'soil_test': {
         const reportMeta = (logEntry.meta?.report || null) as ReportAttachmentMeta | null

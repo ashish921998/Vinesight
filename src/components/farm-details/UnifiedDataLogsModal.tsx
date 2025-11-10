@@ -152,16 +152,33 @@ export function UnifiedDataLogsModal({
       unit: 'gm/L'
     }
   }
+
+  // Helper to create a blank fertilizer row with stable ID
+  const makeEmptyFertilizer = (): { id: string; name: string; quantity: string; unit: string } => {
+    return {
+      id:
+        globalThis.crypto?.randomUUID?.() ?? `${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      name: '',
+      quantity: '',
+      unit: 'kg/acre'
+    }
+  }
+
   const [chemicals, setChemicals] = useState<
     Array<{ id: string; name: string; quantity: string; unit: string }>
   >([makeEmptyChemical()])
 
-  // Multiple fertigation entries state
+  // Fertigation state (similar to spray)
   const [multipleFertigationMode, setMultipleFertigationMode] = useState(false)
+  const [fertilizers, setFertilizers] = useState<
+    Array<{ id: string; name: string; quantity: string; unit: string }>
+  >([makeEmptyFertilizer()])
+  const [fertigationNotes, setFertigationNotes] = useState('')
+
+  // Legacy fertigation entries state (kept for backwards compatibility during migration)
   const [fertigationEntries, setFertigationEntries] = useState<
     Array<{ id: string; data: Record<string, any>; isValid: boolean }>
   >([])
-  const [fertigationNotes, setFertigationNotes] = useState('') // Universal fertigation notes
 
   // Delete confirmation state
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -194,6 +211,7 @@ export function UnifiedDataLogsModal({
         setChemicals([makeEmptyChemical()])
         setMultipleFertigationMode(false)
         setFertigationEntries([])
+        setFertilizers([makeEmptyFertilizer()])
         setFertigationNotes('')
         setCurrentReport(null)
         setReportUploadError(null)
@@ -326,7 +344,46 @@ export function UnifiedDataLogsModal({
     }
 
     if (currentLogType === 'fertigation' && multipleFertigationMode) {
-      return fertigationEntries.some((entry) => entry.isValid)
+      // Allowed units for fertigation (whitelist)
+      const ALLOWED_FERTIGATION_UNITS = ['kg/acre', 'liter/acre']
+
+      // At least one fertilizer must be valid (have a name and quantity)
+      const validFertilizers = fertilizers.filter(
+        (fertilizer) => fertilizer.name && fertilizer.name.trim() !== ''
+      )
+      if (validFertilizers.length === 0) return false
+
+      // Validate each fertilizer has required fields with stronger checks
+      for (const fertilizer of validFertilizers) {
+        // Name validation
+        if (!fertilizer.name || fertilizer.name.trim() === '') {
+          return false
+        }
+
+        // Quantity validation
+        const qty = parseFloat(fertilizer.quantity || '')
+        if (!Number.isFinite(qty) || qty <= 0) return false
+
+        // Unit validation with whitelist enforcement (defense-in-depth)
+        if (!fertilizer.unit || typeof fertilizer.unit !== 'string') {
+          return false
+        }
+
+        const normalizedUnit = fertilizer.unit.trim().toLowerCase()
+        if (normalizedUnit === '') {
+          return false
+        }
+
+        // Enforce whitelist of allowed units (case-insensitive)
+        const isValidUnit = ALLOWED_FERTIGATION_UNITS.some(
+          (allowedUnit) => allowedUnit.toLowerCase() === normalizedUnit
+        )
+        if (!isValidUnit) {
+          return false
+        }
+      }
+
+      return true
     }
 
     const config = logTypeConfigs[currentLogType]
@@ -583,6 +640,32 @@ export function UnifiedDataLogsModal({
     )
   }
 
+  // Fertilizer management functions (similar to chemicals)
+  const handleAddFertilizer = () => {
+    if (fertilizers.length >= 10) return
+    setFertilizers((prev) => [...prev, makeEmptyFertilizer()])
+  }
+
+  const handleRemoveFertilizer = (id: string) => {
+    if (fertilizers.length === 1) return
+    setFertilizers((prev) => prev.filter((fert) => fert.id !== id))
+  }
+
+  const handleFertilizerChange = (
+    id: string,
+    field: 'name' | 'quantity' | 'unit',
+    value: string
+  ) => {
+    setFertilizers((prev) =>
+      prev.map((fert) => {
+        if (fert.id === id) {
+          return { ...fert, [field]: value }
+        }
+        return fert
+      })
+    )
+  }
+
   const validateFertigationEntry = (data: Record<string, any>): boolean => {
     const config = logTypeConfigs['fertigation']
     for (const field of config.fields) {
@@ -726,26 +809,93 @@ export function UnifiedDataLogsModal({
     }
 
     if (currentLogType === 'fertigation' && multipleFertigationMode) {
-      // Handle multiple fertigation entries
-      const validFertigationEntries = fertigationEntries.filter((entry) => entry.isValid)
-      const trimmedFertigationNotes = fertigationNotes.trim()
+      // Handle fertigation with multiple fertilizers (similar to spray with chemicals)
+      const validFertilizers = fertilizers.filter(
+        (fert: { id: string; name: string; quantity: string; unit: string }) =>
+          fert.name.trim() !== ''
+      )
 
-      const newFertigationLogs: LogEntry[] = validFertigationEntries.map((entry) => ({
-        id: entry.id + '_fertigation',
+      // Check if there are any valid fertilizers
+      if (validFertilizers.length === 0) {
+        toast.error('Please add at least one fertilizer with a name, quantity, and unit')
+        return
+      }
+
+      type FertigationData = {
+        fertilizers: { name: string; quantity: number; unit: string }[]
+        notes?: string
+      }
+
+      const fertigationData: FertigationData = {
+        notes: fertigationNotes.trim() || undefined,
+        fertilizers: validFertilizers.map(
+          (fert: { id: string; name: string; quantity: string; unit: string }) => {
+            const qty = parseFloat(fert.quantity || '')
+            if (!Number.isFinite(qty) || qty <= 0) {
+              toast.error(
+                `Fertilizer quantity for "${fert.name}" must be a valid number greater than 0`
+              )
+              throw new Error(`Invalid fertilizer quantity: ${fert.quantity}`)
+            }
+
+            const trimmedName = fert.name.trim()
+            const trimmedUnit = fert.unit.trim()
+
+            if (!trimmedName) {
+              toast.error('Fertilizer name cannot be empty')
+              throw new Error('Empty fertilizer name')
+            }
+
+            if (!trimmedUnit) {
+              toast.error('Fertilizer unit cannot be empty')
+              throw new Error('Empty fertilizer unit')
+            }
+
+            // Whitelist validation for units (defense-in-depth)
+            const ALLOWED_FERTIGATION_UNITS = ['kg/acre', 'liter/acre']
+            const normalizedUnit = trimmedUnit.toLowerCase()
+            const isValidUnit = ALLOWED_FERTIGATION_UNITS.some(
+              (allowedUnit) => allowedUnit.toLowerCase() === normalizedUnit
+            )
+            if (!isValidUnit) {
+              toast.error(
+                `Invalid unit "${trimmedUnit}" for "${fert.name}". Allowed units: kg/acre, liter/acre`
+              )
+              throw new Error(`Invalid fertilizer unit: ${trimmedUnit}`)
+            }
+
+            return {
+              name: trimmedName,
+              quantity: qty,
+              unit: trimmedUnit
+            }
+          }
+        )
+      }
+
+      const newFertigationLog: LogEntry = {
+        id: editingLogId || Date.now().toString() + '_fertigation',
         type: 'fertigation',
-        data: {
-          ...entry.data,
-          notes: trimmedFertigationNotes || undefined
-        },
+        data: fertigationData,
         isValid: true
-      }))
+      }
 
-      setSessionLogs((prev) => [...prev, ...newFertigationLogs])
+      if (editingLogId) {
+        // Update existing fertigation log
+        setSessionLogs((prev) =>
+          prev.map((log) => (log.id === editingLogId ? newFertigationLog : log))
+        )
+        setEditingLogId(null)
+      } else {
+        // Add new fertigation log
+        setSessionLogs((prev) => [...prev, newFertigationLog])
+      }
 
       // Reset fertigation mode
       setCurrentLogType(null)
       setMultipleFertigationMode(false)
       setFertigationEntries([])
+      setFertilizers([makeEmptyFertilizer()])
       setFertigationNotes('')
       return
     }
@@ -806,12 +956,31 @@ export function UnifiedDataLogsModal({
       setChemicals(formChemicals)
       setMultipleSprayMode(true)
     } else if (log.type === 'fertigation') {
-      // Handle fertigation records
-      // Force exit multi-entry mode to ensure UI uses single-entry form
-      setMultipleFertigationMode(false)
-      setFertigationEntries([])
-      setFertigationNotes(log.data.notes || '')
-      setCurrentFormData({ ...log.data })
+      // Handle fertigation records with fertilizers array
+      if (log.data.fertilizers && Array.isArray(log.data.fertilizers)) {
+        // New format: fertilizers array
+        setFertigationNotes(log.data.notes || '')
+
+        // Convert fertilizers array to form format
+        const formFertilizers = log.data.fertilizers.map((fert: any) => ({
+          id:
+            globalThis.crypto?.randomUUID?.() ??
+            `${Date.now()}_${Math.random().toString(36).slice(2)}`,
+          name: fert.name || '',
+          quantity: fert.quantity?.toString() || '',
+          unit: fert.unit || 'kg/acre'
+        }))
+        setFertilizers(formFertilizers)
+        setMultipleFertigationMode(true)
+      } else {
+        // Legacy format: single fertilizer fields
+        // Force exit multi-entry mode to ensure UI uses single-entry form
+        setMultipleFertigationMode(false)
+        setFertigationEntries([])
+        setFertilizers([makeEmptyFertilizer()])
+        setFertigationNotes(log.data.notes || '')
+        setCurrentFormData({ ...log.data })
+      }
     } else {
       setCurrentFormData({ ...log.data })
     }
@@ -1367,6 +1536,54 @@ export function UnifiedDataLogsModal({
                                 }
                               }
 
+                              // Handle fertigation records with meaningful display
+                              if (log.type === 'fertigation') {
+                                const fertilizers = log.data.fertilizers as Array<{
+                                  name: string
+                                  quantity: number
+                                  unit: string
+                                }>
+                                if (
+                                  fertilizers &&
+                                  Array.isArray(fertilizers) &&
+                                  fertilizers.length > 0
+                                ) {
+                                  const fertilizerNames = fertilizers
+                                    .filter((fert) => fert.name && fert.name.trim())
+                                    .map((fert) => fert.name.trim())
+                                  if (fertilizerNames.length > 0) {
+                                    // Show 1-2 fertilizers with truncation for mobile
+                                    const displayFertilizers = fertilizerNames.slice(0, 2)
+                                    let fertilizerDisplay = displayFertilizers.join(', ')
+
+                                    // Add indicator if there are more fertilizers
+                                    if (fertilizerNames.length > 2) {
+                                      fertilizerDisplay += ` +${fertilizerNames.length - 2}`
+                                    }
+
+                                    // Truncate if too long for mobile
+                                    const maxLength = 25 // Mobile-friendly length
+                                    if (fertilizerDisplay.length > maxLength) {
+                                      fertilizerDisplay =
+                                        fertilizerDisplay.substring(0, maxLength - 3) + '...'
+                                    }
+
+                                    return fertilizerDisplay
+                                  }
+                                }
+                                // Fallback for old format
+                                if (log.data.fertilizer && log.data.fertilizer.trim()) {
+                                  let fertilizerDisplay = log.data.fertilizer.trim()
+                                  // Truncate if too long for mobile
+                                  const maxLength = 25 // Mobile-friendly length
+                                  if (fertilizerDisplay.length > maxLength) {
+                                    fertilizerDisplay =
+                                      fertilizerDisplay.substring(0, maxLength - 3) + '...'
+                                  }
+                                  return fertilizerDisplay
+                                }
+                              }
+
                               // For other log types, use the standard label
                               return getLogTypeLabel(log.type)
                             })()}
@@ -1402,6 +1619,38 @@ export function UnifiedDataLogsModal({
                                 return parts.join(' • ') || 'Spray record'
                               }
 
+                              // Handle fertigation records with additional details
+                              if (log.type === 'fertigation') {
+                                const fertilizers = log.data.fertilizers as Array<{
+                                  name: string
+                                  quantity: number
+                                  unit: string
+                                }>
+                                const parts = []
+
+                                if (
+                                  fertilizers &&
+                                  Array.isArray(fertilizers) &&
+                                  fertilizers.length > 0
+                                ) {
+                                  const validFertilizers = fertilizers.filter(
+                                    (fert) => fert.name && fert.name.trim()
+                                  )
+                                  if (validFertilizers.length > 0) {
+                                    // Show quantities for the first fertilizer only to save space
+                                    const firstFert = validFertilizers[0]
+                                    parts.push(`${firstFert.quantity} ${firstFert.unit}`)
+                                    if (validFertilizers.length > 1) {
+                                      parts.push(`${validFertilizers.length} fertilizers`)
+                                    }
+                                  }
+                                } else if (log.data.fertilizer && log.data.fertilizer.trim()) {
+                                  parts.push(log.data.fertilizer.trim())
+                                }
+
+                                return parts.join(' • ') || 'Fertigation record'
+                              }
+
                               // Handle other log types
                               const entries = Object.entries(log.data).filter(([, value]) => value)
                               return entries
@@ -1415,7 +1664,8 @@ export function UnifiedDataLogsModal({
                                       'updated_at',
                                       'chemicals',
                                       'chemical',
-                                      'water_volume'
+                                      'water_volume',
+                                      'fertilizers'
                                     ].includes(key)
                                   ) {
                                     return null
@@ -1735,59 +1985,136 @@ export function UnifiedDataLogsModal({
                     </Button>
                   </div>
                 ) : currentLogType === 'fertigation' && multipleFertigationMode ? (
-                  <div className="space-y-4">
-                    {fertigationEntries.map((entry, index) => (
-                      <Card
-                        key={entry.id}
-                        className="bg-gray-50 border-2 border-dashed border-gray-200"
-                      >
-                        <CardHeader className="pb-2">
-                          <div className="flex items-center justify-between">
-                            <CardTitle className="text-sm flex items-center gap-2">
-                              {(() => {
-                                const Icon = logTypeConfigs['fertigation'].icon
-                                return (
-                                  <Icon
-                                    className={`h-4 w-4 ${logTypeConfigs['fertigation'].color}`}
-                                  />
-                                )
-                              })()}
-                              Fertigation {index + 1}
-                              {entry.isValid && <CheckCircle className="h-4 w-4 text-green-600" />}
-                            </CardTitle>
-                            {fertigationEntries.length > 1 && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveFertigationEntry(entry.id)}
-                                className="h-6 w-6 p-0 text-red-600 hover:text-red-800"
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            )}
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                          {logTypeConfigs[currentLogType].fields.map((field) =>
-                            renderFertigationEntryField(entry, field)
-                          )}
+                  <div className="space-y-3">
+                    {/* Fertilizers Section */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Fertilizers<span className="text-red-500 ml-1">*</span>
+                        </Label>
+                        <Badge variant="outline" className="text-xs">
+                          {fertilizers.length}/10
+                        </Badge>
+                      </div>
 
-                          {/* Add button after last field */}
-                          {index === fertigationEntries.length - 1 &&
-                            fertigationEntries.length < 10 && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleAddFertigationEntry}
-                                className="w-full mt-2 border-dashed"
-                              >
-                                <Plus className="h-4 w-4 mr-1" />
-                                Add Another Fertigation
-                              </Button>
-                            )}
-                        </CardContent>
-                      </Card>
-                    ))}
+                      {fertilizers.map(
+                        (
+                          fertilizer: { id: string; name: string; quantity: string; unit: string },
+                          index: number
+                        ) => (
+                          <Card
+                            key={fertilizer.id}
+                            className="bg-gray-50 border border-gray-200 shadow-none rounded-md"
+                          >
+                            <CardHeader className="py-2 px-3">
+                              <div className="flex items-center justify-between">
+                                <CardTitle className="text-xs flex items-center gap-1.5">
+                                  <span className="text-purple-600">🧪</span>
+                                  Fertilizer {index + 1}
+                                  {fertilizer.name.trim() && fertilizer.quantity && (
+                                    <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                                  )}
+                                </CardTitle>
+                                {fertilizers.length > 1 && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleRemoveFertilizer(fertilizer.id)}
+                                    className="h-5 w-5 p-0 text-red-600 hover:text-red-800"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            </CardHeader>
+                            <CardContent className="space-y-1.5 px-3 pb-2">
+                              {/* Fertilizer Name */}
+                              <div>
+                                <Label className="text-xs font-medium text-gray-600">
+                                  Name<span className="text-red-500 ml-1">*</span>
+                                </Label>
+                                <Input
+                                  type="text"
+                                  value={fertilizer.name}
+                                  onChange={(e) =>
+                                    handleFertilizerChange(fertilizer.id, 'name', e.target.value)
+                                  }
+                                  placeholder="e.g., NPK 19:19:19"
+                                  maxLength={1000}
+                                  className="h-8 text-sm mt-1 rounded-md"
+                                />
+                              </div>
+
+                              {/* Quantity and Unit Row */}
+                              <div className="grid grid-cols-[1fr_110px] gap-2 items-start">
+                                <div>
+                                  <Label className="text-xs font-medium text-gray-600">
+                                    Qty<span className="text-red-500 ml-1">*</span>
+                                  </Label>
+                                  <Input
+                                    type="number"
+                                    value={fertilizer.quantity}
+                                    onChange={(e) =>
+                                      handleFertilizerChange(
+                                        fertilizer.id,
+                                        'quantity',
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="10"
+                                    min={0.1}
+                                    step={0.1}
+                                    className="h-8 text-sm mt-1 rounded-md"
+                                  />
+                                </div>
+
+                                <div>
+                                  <Label className="text-xs font-medium text-gray-600">
+                                    Unit<span className="text-red-500 ml-1">*</span>
+                                  </Label>
+                                  <Select
+                                    value={fertilizer.unit}
+                                    onValueChange={(value) =>
+                                      handleFertilizerChange(fertilizer.id, 'unit', value)
+                                    }
+                                  >
+                                    <SelectTrigger
+                                      className="h-8 min-h-[2rem] max-h-8 text-sm mt-1 rounded-md !py-0 !px-3 flex items-center [&>svg]:h-3 [&>svg]:w-3 [&>svg]:shrink-0"
+                                      style={{
+                                        height: '2rem',
+                                        minHeight: '2rem',
+                                        maxHeight: '2rem',
+                                        padding: '0 0.75rem',
+                                        lineHeight: '2rem'
+                                      }}
+                                    >
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="kg/acre">kg/acre</SelectItem>
+                                      <SelectItem value="liter/acre">liter/acre</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )
+                      )}
+
+                      {/* Add Fertilizer Button */}
+                      {fertilizers.length < 10 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAddFertilizer}
+                          className="w-full border-dashed h-8 text-xs"
+                        >
+                          <Plus className="h-3.5 w-3.5 mr-1" />
+                          Add Fertilizer
+                        </Button>
+                      )}
+                    </div>
 
                     {/* Universal Notes for Fertigation */}
                     <div className="space-y-1">
@@ -1795,20 +2122,20 @@ export function UnifiedDataLogsModal({
                       <Textarea
                         value={fertigationNotes}
                         onChange={(e) => setFertigationNotes(e.target.value)}
-                        placeholder="e.g., Applied during flowering stage, increased concentration..."
-                        className="min-h-[80px]"
+                        placeholder="e.g., Applied during flowering stage, timing details..."
+                        className="min-h-[60px] text-sm"
                         maxLength={2000}
                       />
                     </div>
 
-                    {/* Save Multiple Fertigation Entries Button */}
+                    {/* Save Fertigation Button */}
                     <Button
                       onClick={handleAddLogEntry}
                       disabled={!validateCurrentForm()}
-                      className="w-full"
+                      className="w-full h-9"
                     >
-                      Save All Fertigation Entries (
-                      {fertigationEntries.filter((e) => e.isValid).length})
+                      Save ({fertilizers.filter((f) => f.name.trim() !== '').length} fert
+                      {fertilizers.filter((f) => f.name.trim() !== '').length !== 1 ? 's' : ''})
                     </Button>
                   </div>
                 ) : (
