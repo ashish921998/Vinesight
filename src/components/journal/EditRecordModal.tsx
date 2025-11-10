@@ -98,9 +98,7 @@ export interface HarvestFormData extends BaseFormData {
 
 export interface FertigationFormData extends BaseFormData {
   recordType: 'fertigation'
-  fertilizer: string
-  quantity: number
-  unit: 'kg/acre' | 'liter/acre'
+  fertilizers: Array<{ id: string; name: string; quantity: number; unit: string }>
 }
 
 type ExpenseCategory = 'labor' | 'materials' | 'equipment' | 'other'
@@ -271,13 +269,48 @@ export function EditRecordModal({
       })
     } else if (recordType === 'fertigation') {
       const fertigationRecord = record as FertigationRecord
+      // Helper function to ensure fertigation fertilizers format consistency
+      const ensureFertigationFertilizersFormat = (fertigationRecord: FertigationRecord) => {
+        const generateFertilizerId = () => {
+          return `fert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        }
+
+        let fertilizers: Array<{ id: string; name: string; quantity: number; unit: string }> = []
+
+        if (
+          fertigationRecord.fertilizers &&
+          Array.isArray(fertigationRecord.fertilizers) &&
+          fertigationRecord.fertilizers.length > 0
+        ) {
+          // Has fertilizers array - use it (new format)
+          fertilizers = fertigationRecord.fertilizers.map((fert) => ({
+            id: generateFertilizerId(),
+            name: fert.name || '',
+            quantity: fert.quantity,
+            unit: fert.unit || 'kg/acre'
+          }))
+        }
+
+        // Ensure at least one fertilizer
+        if (fertilizers.length === 0) {
+          fertilizers.push({
+            id: generateFertilizerId(),
+            name: '',
+            quantity: 0,
+            unit: 'kg/acre'
+          })
+        }
+
+        return fertilizers
+      }
+
+      const fertilizers = ensureFertigationFertilizersFormat(fertigationRecord)
+
       setFormData({
         recordType: 'fertigation',
         date: fertigationRecord.date,
         notes: fertigationRecord.notes || '',
-        fertilizer: fertigationRecord.fertilizer || '',
-        quantity: fertigationRecord.quantity,
-        unit: (fertigationRecord.unit as 'kg/acre' | 'liter/acre') || 'kg/acre'
+        fertilizers: fertilizers
       })
     } else if (recordType === 'expense') {
       const expenseRecord = record as ExpenseRecord
@@ -551,11 +584,25 @@ export function EditRecordModal({
         })
       } else if (recordType === 'fertigation') {
         if (!fertigationForm) throw new Error('Fertigation form is not ready')
+
+        // Convert form data to the expected format
+        const validFertilizers = fertigationForm.fertilizers.filter(
+          (fert) => fert.name.trim() !== '' && fert.quantity > 0
+        )
+
+        if (validFertilizers.length === 0) {
+          throw new Error('At least one fertilizer with valid name and quantity is required')
+        }
+
+        const processedFertilizers = validFertilizers.map((fert) => ({
+          name: fert.name.trim(),
+          quantity: fert.quantity,
+          unit: fert.unit as 'kg/acre' | 'liter/acre'
+        }))
+
         await SupabaseService.updateFertigationRecord(record.id!, {
           date: fertigationForm.date,
-          fertilizer: fertigationForm.fertilizer,
-          quantity: fertigationForm.quantity,
-          unit: fertigationForm.unit,
+          fertilizers: processedFertilizers,
           notes: fertigationForm.notes
         })
       } else if (recordType === 'expense') {
@@ -1005,69 +1052,139 @@ export function EditRecordModal({
 
             {recordType === 'fertigation' && (
               <>
-                <div>
-                  <Label htmlFor="fertilizer" className="text-sm font-medium text-gray-700">
-                    Fertilizer Type *
-                  </Label>
-                  <Input
-                    id="fertilizer"
-                    value={fertigationForm?.fertilizer ?? ''}
-                    onChange={(e) =>
-                      updateFormData('fertigation', (current) => ({
-                        ...current,
-                        fertilizer: e.target.value
-                      }))
-                    }
-                    className="mt-1"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label htmlFor="quantity" className="text-sm font-medium text-gray-700">
-                      Quantity *
-                    </Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      value={fertigationForm?.quantity}
-                      onChange={(e) => {
-                        const value = e.target.value
+                {/* Fertilizers Section */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium text-gray-700">Fertilizers *</Label>
+                    <Badge variant="outline" className="text-xs">
+                      {fertigationForm?.fertilizers?.length || 0}/10
+                    </Badge>
+                  </div>
+
+                  {fertigationForm?.fertilizers?.map((fertilizer, index) => (
+                    <div
+                      key={fertilizer.id}
+                      className="space-y-2 p-3 border border-gray-200 rounded-lg"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">
+                          Fertilizer {index + 1}
+                        </span>
+                        {fertigationForm.fertilizers.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              updateFormData('fertigation', (current) => ({
+                                ...current,
+                                fertilizers: current.fertilizers.filter(
+                                  (f) => f.id !== fertilizer.id
+                                )
+                              }))
+                            }}
+                            className="h-6 w-6 p-0 text-red-600 hover:text-red-800"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <div>
+                          <Label className="text-xs font-medium text-gray-600">
+                            Fertilizer Name *
+                          </Label>
+                          <Input
+                            value={fertilizer.name}
+                            onChange={(e) => {
+                              updateFormData('fertigation', (current) => ({
+                                ...current,
+                                fertilizers: current.fertilizers.map((f) =>
+                                  f.id === fertilizer.id ? { ...f, name: e.target.value } : f
+                                )
+                              }))
+                            }}
+                            placeholder="e.g., NPK 19-19-19"
+                            className="h-8 text-sm"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-xs font-medium text-gray-600">Quantity *</Label>
+                            <Input
+                              type="number"
+                              value={fertilizer.quantity}
+                              onChange={(e) => {
+                                updateFormData('fertigation', (current) => ({
+                                  ...current,
+                                  fertilizers: current.fertilizers.map((f) =>
+                                    f.id === fertilizer.id
+                                      ? { ...f, quantity: parseFloat(e.target.value) || 0 }
+                                      : f
+                                  )
+                                }))
+                              }}
+                              placeholder="e.g., 50"
+                              min={0.1}
+                              step={0.1}
+                              className="h-8 text-sm"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs font-medium text-gray-600">Unit *</Label>
+                            <Select
+                              value={fertilizer.unit}
+                              onValueChange={(value) => {
+                                updateFormData('fertigation', (current) => ({
+                                  ...current,
+                                  fertilizers: current.fertilizers.map((f) =>
+                                    f.id === fertilizer.id ? { ...f, unit: value } : f
+                                  )
+                                }))
+                              }}
+                            >
+                              <SelectTrigger className="h-8 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="kg/acre">kg/acre</SelectItem>
+                                <SelectItem value="liter/acre">liter/acre</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {fertigationForm && fertigationForm.fertilizers.length < 10 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
                         updateFormData('fertigation', (current) => ({
                           ...current,
-                          quantity: value === '' ? 0 : parseFloat(value) || 0
+                          fertilizers: [
+                            ...current.fertilizers,
+                            {
+                              id: `${Date.now()}_${current.fertilizers.length}`,
+                              name: '',
+                              quantity: 0,
+                              unit: 'kg/acre'
+                            }
+                          ]
                         }))
                       }}
-                      className="mt-1"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="unit" className="text-sm font-medium text-gray-700">
-                      Unit *
-                    </Label>
-                    <Select
-                      value={fertigationForm?.unit}
-                      onValueChange={(value) =>
-                        updateFormData('fertigation', (current) => ({
-                          ...current,
-                          unit: value as 'kg/acre' | 'liter/acre'
-                        }))
-                      }
-                      required
-                      defaultValue={fertigationForm?.unit}
+                      className="w-full border-dashed"
                     >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select unit" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="kg/acre">kg/acre</SelectItem>
-                        <SelectItem value="liter/acre">liter/acre</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Another Fertilizer
+                    </Button>
+                  )}
                 </div>
               </>
             )}

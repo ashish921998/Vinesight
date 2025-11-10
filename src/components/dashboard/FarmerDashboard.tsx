@@ -844,18 +844,49 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       case 'fertigation': {
         Icon = FlaskConical
         iconClass = 'text-amber-600'
-        const fertilizer = activity?.fertilizer || 'Fertigation'
-        const quantity = activity?.quantity
-        const unit = activity?.unit
-        if (quantity) {
-          detailParts.push(`${formatNumber(quantity, quantity >= 100 ? 0 : 1)} ${unit || ''}`)
+
+        // Handle new fertilizers array format
+        const fertilizers = activity?.fertilizers as Array<{
+          name: string
+          quantity: number
+          unit: string
+        }>
+
+        if (fertilizers && Array.isArray(fertilizers) && fertilizers.length > 0) {
+          const validFertilizers = fertilizers.filter(
+            (fert) => fert && fert.name && fert.name.trim()
+          )
+          if (validFertilizers.length > 0) {
+            const firstFert = validFertilizers[0]
+            const title =
+              validFertilizers.length === 1
+                ? firstFert.name
+                : `${firstFert.name} +${validFertilizers.length - 1} more`
+
+            detailParts.push(
+              `${formatNumber(firstFert.quantity, firstFert.quantity >= 100 ? 0 : 1)} ${firstFert.unit || ''}`
+            )
+            if (validFertilizers.length > 1) {
+              const totalQuantity = validFertilizers.reduce(
+                (sum, fert) => sum + (fert.quantity || 0),
+                0
+              )
+              detailParts.push(`Total: ${formatNumber(totalQuantity, 1)} units`)
+            }
+
+            return {
+              title,
+              detail: detailParts.join(' • ') || 'Fertigation event recorded',
+              icon: Icon,
+              iconClass
+            }
+          }
         }
-        if (activity?.purpose) {
-          detailParts.push(activity.purpose)
-        }
+
+        // Fallback for records without valid data
         return {
-          title: fertilizer,
-          detail: detailParts.join(' • ') || 'Fertigation event recorded',
+          title: 'Fertigation',
+          detail: 'Fertigation event recorded',
           icon: Icon,
           iconClass
         }

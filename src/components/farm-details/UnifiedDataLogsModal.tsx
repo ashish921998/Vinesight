@@ -822,11 +822,16 @@ export function UnifiedDataLogsModal({
       }
 
       type FertigationData = {
+        farm_id: number
+        date: string
         fertilizers: { name: string; quantity: number; unit: string }[]
         notes?: string
+        date_of_pruning?: string
       }
 
       const fertigationData: FertigationData = {
+        farm_id: farmId || 0,
+        date: selectedDateToUse,
         notes: fertigationNotes.trim() || undefined,
         fertilizers: validFertilizers.map(
           (fert: { id: string; name: string; quantity: string; unit: string }) => {
@@ -871,6 +876,11 @@ export function UnifiedDataLogsModal({
             }
           }
         )
+      }
+
+      // Add date_of_pruning if it exists in currentFormData
+      if (currentFormData.date_of_pruning) {
+        fertigationData.date_of_pruning = currentFormData.date_of_pruning
       }
 
       const newFertigationLog: LogEntry = {

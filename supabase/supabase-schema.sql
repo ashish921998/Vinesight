@@ -55,14 +55,19 @@ CREATE TABLE fertigation_records (
   id BIGSERIAL PRIMARY KEY,
   farm_id BIGINT REFERENCES farms(id) ON DELETE CASCADE,
   date DATE NOT NULL,
-  fertilizer VARCHAR(255) NOT NULL,
-  dose VARCHAR(100) NOT NULL,
-  purpose VARCHAR(255) NOT NULL,
+  fertilizers JSONB, -- Array of fertilizer objects: [{name: string, unit: "kg/acre"|"liter/acre", quantity: number}]
   area DECIMAL(10,2) NOT NULL, -- in hectares
   date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT valid_fertilizers_array CHECK (
+    fertilizers IS NULL OR
+    jsonb_typeof(fertilizers) = 'array'
+  )
 );
+
+-- Add comment to document the fertilizers column structure
+COMMENT ON COLUMN fertigation_records.fertilizers IS 'Array of fertilizer objects with structure: [{name: string, unit: "kg/acre"|"liter/acre", quantity: number}]';
 
 -- Create harvest_records table
 CREATE TABLE harvest_records (
@@ -255,6 +260,7 @@ CREATE INDEX idx_spray_records_date_of_pruning ON spray_records(date_of_pruning)
 CREATE INDEX idx_fertigation_records_farm_id ON fertigation_records(farm_id);
 CREATE INDEX idx_fertigation_records_date ON fertigation_records(date);
 CREATE INDEX idx_fertigation_records_date_of_pruning ON fertigation_records(date_of_pruning);
+CREATE INDEX idx_fertigation_records_fertilizers ON fertigation_records USING GIN (fertilizers);
 CREATE INDEX idx_harvest_records_farm_id ON harvest_records(farm_id);
 CREATE INDEX idx_harvest_records_date ON harvest_records(date);
 CREATE INDEX idx_harvest_records_date_of_pruning ON harvest_records(date_of_pruning);

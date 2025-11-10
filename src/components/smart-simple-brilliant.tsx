@@ -1,4 +1,5 @@
 import type React from 'react'
+import Image from 'next/image'
 
 interface SmartSimpleBrilliantProps {
   /** Fixed width from Figma: 482px */
@@ -129,10 +130,11 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                           position: 'relative'
                         }}
                       >
-                        <img
+                        <Image
                           src={img || '/placeholder.svg'}
                           alt="crop"
-                          style={{ position: 'absolute', inset: '20% 10% 20% 10%' }}
+                          fill
+                          style={{ objectFit: 'contain' }}
                         />
                       </div>
                     </div>
@@ -193,10 +195,11 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                           position: 'relative'
                         }}
                       >
-                        <img
+                        <Image
                           src={img1 || '/placeholder.svg'}
                           alt="irrigation"
-                          style={{ position: 'absolute', inset: '20% 10% 20% 10%' }}
+                          fill
+                          style={{ objectFit: 'contain' }}
                         />
                       </div>
                     </div>
@@ -320,10 +323,11 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                           position: 'relative'
                         }}
                       >
-                        <img
+                        <Image
                           src={img2 || '/placeholder.svg'}
                           alt="equipment"
-                          style={{ position: 'absolute', inset: '20% 10% 20% 10%' }}
+                          fill
+                          style={{ objectFit: 'contain' }}
                         />
                       </div>
                     </div>
@@ -384,10 +388,11 @@ const SmartSimpleBrilliant: React.FC<SmartSimpleBrilliantProps> = ({
                           position: 'relative'
                         }}
                       >
-                        <img
+                        <Image
                           src={img3 || '/placeholder.svg'}
                           alt="harvest"
-                          style={{ position: 'absolute', inset: '20% 10% 20% 10%' }}
+                          fill
+                          style={{ objectFit: 'contain' }}
                         />
                       </div>
                     </div>

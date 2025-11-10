@@ -647,44 +647,54 @@ export class SupabaseService {
   ): Promise<FertigationRecord> {
     const supabase = getTypedSupabaseClient()
 
-    // Validate fertilizer name
-    if (!record.fertilizer || !record.fertilizer.trim()) {
-      throw new Error('Fertilizer name is required and cannot be empty')
+    // Validate fertilizers array
+    if (!record.fertilizers || record.fertilizers.length === 0) {
+      throw new Error('At least one fertilizer is required')
     }
 
-    const trimmedFertilizer = record.fertilizer.trim()
-    if (trimmedFertilizer.length > 100) {
-      throw new Error('Fertilizer name must be less than 100 characters')
-    }
+    // Ensure each fertilizer has the required fields
+    for (const fertilizer of record.fertilizers) {
+      // Validate fertilizer name
+      const trimmedName = fertilizer.name.trim()
+      if (!trimmedName) {
+        throw new Error('Fertilizer name is required and cannot be empty')
+      }
 
-    // Validate quantity is provided and is a valid number
-    if (record.quantity === undefined || record.quantity === null) {
-      throw new Error('Fertilizer quantity is required')
-    }
+      // Validate fertilizer name length
+      if (trimmedName.length > 100) {
+        throw new Error('Fertilizer name must be less than 100 characters')
+      }
 
-    // Check for NaN and Infinity
-    if (isNaN(record.quantity) || !isFinite(record.quantity)) {
-      throw new Error('Fertilizer quantity must be a valid number')
-    }
+      // Validate quantity is provided and is a valid number
+      if (fertilizer.quantity === undefined || fertilizer.quantity === null) {
+        throw new Error('Fertilizer quantity is required')
+      }
 
-    // Validate quantity is strictly greater than 0
-    if (record.quantity <= 0) {
-      throw new Error('Fertilizer quantity must be greater than 0')
-    }
+      // Check for NaN and Infinity
+      if (isNaN(fertilizer.quantity) || !isFinite(fertilizer.quantity)) {
+        throw new Error('Fertilizer quantity must be a valid number')
+      }
 
-    // Validate unit is provided
-    if (!record.unit) {
-      throw new Error('Fertilizer unit is required')
-    }
+      // Validate quantity is strictly greater than 0
+      if (fertilizer.quantity <= 0) {
+        throw new Error('Fertilizer quantity must be greater than 0')
+      }
 
-    const unit = record.unit.trim()
-    if (!unit) {
-      throw new Error('Fertilizer unit cannot be empty')
-    }
+      // Validate unit is provided
+      if (!fertilizer.unit) {
+        throw new Error('Fertilizer unit is required')
+      }
 
-    // Validate unit is one of the allowed values
-    if (!['kg/acre', 'liter/acre'].includes(unit)) {
-      throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre"')
+      // Trim unit once into local variable
+      const unit = fertilizer.unit.trim()
+
+      // Validate unit is one of the allowed values
+      if (!['kg/acre', 'liter/acre'].includes(unit)) {
+        throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre"')
+      }
+
+      // Assign/store sanitized trimmed value back to object with proper type assertion
+      fertilizer.unit = unit as 'kg/acre' | 'liter/acre'
     }
 
     // Validate area if provided
@@ -705,14 +715,7 @@ export class SupabaseService {
       }
     }
 
-    // Sanitize the record
-    const sanitizedRecord = {
-      ...record,
-      fertilizer: trimmedFertilizer,
-      unit: unit as 'kg/acre' | 'liter/acre'
-    }
-
-    const dbRecord = toDatabaseFertigationInsert(sanitizedRecord)
+    const dbRecord = toDatabaseFertigationInsert(record)
 
     const { data, error } = await supabase
       .from('fertigation_records')
@@ -735,49 +738,51 @@ export class SupabaseService {
   ): Promise<FertigationRecord> {
     const supabase = getTypedSupabaseClient()
 
-    // Validate fertilizer name if provided
-    if (updates.fertilizer !== undefined) {
-      if (!updates.fertilizer || !updates.fertilizer.trim()) {
-        throw new Error('Fertilizer name is required and cannot be empty')
-      }
+    // Validate fertilizers array if provided
+    if (updates.fertilizers && updates.fertilizers.length > 0) {
+      // Ensure each fertilizer has the required fields
+      for (const fertilizer of updates.fertilizers) {
+        // Validate fertilizer name
+        if (!fertilizer.name || !fertilizer.name.trim()) {
+          throw new Error('Fertilizer name is required and cannot be empty')
+        }
 
-      const trimmedFertilizer = updates.fertilizer.trim()
-      if (trimmedFertilizer.length > 100) {
-        throw new Error('Fertilizer name must be less than 100 characters')
-      }
-      updates.fertilizer = trimmedFertilizer
-    }
+        // Validate fertilizer name length
+        if (fertilizer.name.trim().length > 100) {
+          throw new Error('Fertilizer name must be less than 100 characters')
+        }
 
-    // Validate quantity if provided
-    if (updates.quantity !== undefined && updates.quantity !== null) {
-      // Check for NaN and Infinity
-      if (isNaN(updates.quantity) || !isFinite(updates.quantity)) {
-        throw new Error('Fertilizer quantity must be a valid number')
-      }
+        // Validate quantity is provided and is a valid number
+        if (fertilizer.quantity === undefined || fertilizer.quantity === null) {
+          throw new Error('Fertilizer quantity is required')
+        }
 
-      // Validate quantity is strictly greater than 0
-      if (updates.quantity <= 0) {
-        throw new Error('Fertilizer quantity must be greater than 0')
-      }
-    }
+        // Check for NaN and Infinity
+        if (isNaN(fertilizer.quantity) || !isFinite(fertilizer.quantity)) {
+          throw new Error('Fertilizer quantity must be a valid number')
+        }
 
-    // Validate unit if provided
-    if (updates.unit !== undefined) {
-      if (!updates.unit) {
-        throw new Error('Fertilizer unit cannot be empty')
-      }
+        // Validate quantity is strictly greater than 0
+        if (fertilizer.quantity <= 0) {
+          throw new Error('Fertilizer quantity must be greater than 0')
+        }
 
-      const unit = updates.unit.trim()
-      if (!unit) {
-        throw new Error('Fertilizer unit cannot be empty')
-      }
+        // Validate unit is provided
+        if (!fertilizer.unit) {
+          throw new Error('Fertilizer unit is required')
+        }
 
-      // Validate unit is one of the allowed values
-      if (!['kg/acre', 'liter/acre'].includes(unit)) {
-        throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre"')
-      }
+        // Trim unit once into local variable
+        const unit = fertilizer.unit.trim()
 
-      updates.unit = unit as 'kg/acre' | 'liter/acre'
+        // Validate unit is one of the allowed values
+        if (!['kg/acre', 'liter/acre'].includes(unit)) {
+          throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre"')
+        }
+
+        // Assign/store sanitized trimmed value back to object with proper type assertion
+        fertilizer.unit = unit as 'kg/acre' | 'liter/acre'
+      }
     }
 
     // Validate area if provided

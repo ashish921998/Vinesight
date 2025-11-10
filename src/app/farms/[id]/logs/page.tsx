@@ -258,9 +258,7 @@ export default function FarmLogsPage() {
             type: 'fertigation',
             date: log.date,
             notes: log.notes,
-            fertilizer: log.fertilizer,
-            quantity: log.quantity,
-            unit: log.unit,
+            fertilizers: log.fertilizers,
             created_at: log.created_at || log.date
           })),
         ...soilTests
@@ -490,11 +488,9 @@ export default function FarmLogsPage() {
         record = await SupabaseService.addFertigationRecord({
           farm_id: farmIdNum,
           date: date,
-          fertilizer: data.fertilizer?.trim() || 'Unknown',
-          quantity: data.quantity ? parseFloat(String(data.quantity)) : 0,
-          unit: data.unit || 'kg/acre',
+          fertilizers: data.fertilizers,
           notes: data.notes || '',
-          date_of_pruning: currentFarm?.dateOfPruning
+          date_of_pruning: data.date_of_pruning || currentFarm?.dateOfPruning
         })
         break
 

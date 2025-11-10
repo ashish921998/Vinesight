@@ -473,47 +473,29 @@ export default function FarmDetailsPage() {
           throw new Error(`Invalid fertigation unit: "${unit}". Allowed units: kg/acre, liter/acre`)
         }
 
-        // Handle new format with fertilizers array
-        if (data.fertilizers && Array.isArray(data.fertilizers) && data.fertilizers.length > 0) {
-          // Create separate fertigation records for each fertilizer
-          for (const fertilizer of data.fertilizers) {
+        // Validate all fertilizers before creating the record
+        const validatedFertilizers = data.fertilizers.map(
+          (fertilizer: { name: string; quantity: number; unit: string }) => {
             // Validate unit against whitelist
             const validatedUnit = validateFertigationUnit(fertilizer.unit || 'kg/acre')
 
-            const createdRecord = await SupabaseService.addFertigationRecord({
-              farm_id: parseInt(farmId),
-              date: date,
-              fertilizer: fertilizer.name?.trim() || 'Unknown',
+            return {
+              name: fertilizer.name?.trim() || 'Unknown',
               quantity: fertilizer.quantity || 0,
-              unit: validatedUnit,
-              area: dashboardData?.farm?.area || 0,
-              purpose: 'General',
-              notes: data.notes || '',
-              date_of_pruning: dashboardData?.farm?.dateOfPruning
-            })
-
-            // Capture the first record for photo/attachment association
-            if (!record && createdRecord) {
-              record = createdRecord
+              unit: validatedUnit
             }
           }
-        } else {
-          // Handle legacy format with single fertilizer
-          // Validate unit against whitelist
-          const validatedUnit = validateFertigationUnit(data.unit || 'kg/acre')
+        )
 
-          record = await SupabaseService.addFertigationRecord({
-            farm_id: parseInt(farmId),
-            date: date,
-            fertilizer: data.fertilizer?.trim() || 'Unknown',
-            quantity: data.quantity || 0,
-            unit: validatedUnit,
-            area: dashboardData?.farm?.area || 0,
-            purpose: data.purpose || 'General',
-            notes: data.notes || '',
-            date_of_pruning: dashboardData?.farm?.dateOfPruning
-          })
-        }
+        // Create a single fertigation record with the fertilizers array
+        record = await SupabaseService.addFertigationRecord({
+          farm_id: parseInt(farmId),
+          date: date,
+          fertilizers: validatedFertilizers,
+          area: dashboardData?.farm?.area || 0,
+          notes: data.notes || '',
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
+        })
         break
       }
 
@@ -844,109 +826,39 @@ export default function FarmDetailsPage() {
           throw new Error(`Invalid fertigation unit: "${unit}". Allowed units: kg/acre, liter/acre`)
         }
 
-        // Handle new format with fertilizers array
-        if (data.fertilizers && Array.isArray(data.fertilizers) && data.fertilizers.length > 0) {
-          try {
-            // Use stored group IDs if available (safer approach)
-            let recordIdsToDelete: number[] = []
+        // Validate all fertilizers before updating the record
+        const validatedFertilizers = data.fertilizers.map(
+          (fertilizer: { name: string; quantity: number; unit: string }) => {
+            // Validate unit against whitelist
+            const validatedUnit = validateFertigationUnit(fertilizer.unit || 'kg/acre')
 
-            if (data._groupedRecordIds && Array.isArray(data._groupedRecordIds)) {
-              // Use the explicitly tracked record IDs from the grouped data
-              recordIdsToDelete = data._groupedRecordIds
-              logger.info('Using tracked record IDs for fertigation update', {
-                recordIds: recordIdsToDelete
-              })
-            } else {
-              // Fallback: use the original single record ID
-              // This handles the case where a user edits a legacy single-fertilizer record
-              // and converts it to multi-fertilizer format
-              recordIdsToDelete = [originalId]
-              logger.info('Using original record ID for fertigation update', {
-                recordId: originalId
-              })
+            // Validate fertilizer name
+            if (!fertilizer.name || !fertilizer.name.trim()) {
+              throw new Error('Fertilizer name cannot be empty')
             }
 
-            // TRANSACTIONAL SAFETY: Validate and prepare all records BEFORE any database operations
-            // This prevents partial updates if validation fails mid-process
-            const newRecordsToCreate = []
-            for (const fertilizer of data.fertilizers) {
-              // Validate unit against whitelist (will throw if invalid)
-              const validatedUnit = validateFertigationUnit(fertilizer.unit || 'kg/acre')
-
-              // Validate fertilizer name
-              if (!fertilizer.name || !fertilizer.name.trim()) {
-                throw new Error('Fertilizer name cannot be empty')
-              }
-
-              // Validate quantity
-              if (!fertilizer.quantity || fertilizer.quantity <= 0) {
-                throw new Error(`Invalid quantity for fertilizer "${fertilizer.name}"`)
-              }
-
-              // Prepare record data (validate first, create later)
-              newRecordsToCreate.push({
-                farm_id: parseInt(farmId),
-                date: originalDate,
-                fertilizer: fertilizer.name.trim(),
-                quantity: fertilizer.quantity,
-                unit: validatedUnit,
-                area: dashboardData?.farm?.area || 0,
-                purpose: 'General',
-                notes: data.notes || '',
-                date_of_pruning: dashboardData?.farm?.dateOfPruning
-              })
+            // Validate quantity
+            if (!fertilizer.quantity || fertilizer.quantity <= 0) {
+              throw new Error(`Invalid quantity for fertilizer "${fertilizer.name}"`)
             }
 
-            // Step 1: Create ALL new records first (before deleting old ones)
-            // This ensures data exists before removal, preventing data loss
-            const createdRecordIds: number[] = []
-            for (const recordData of newRecordsToCreate) {
-              const newRecord = await SupabaseService.addFertigationRecord(recordData)
-              if (newRecord?.id) {
-                createdRecordIds.push(newRecord.id)
-              }
-
-              // Capture the first record for photo/attachment association
-              if (!record && newRecord) {
-                record = newRecord
-              }
+            return {
+              name: fertilizer.name.trim(),
+              quantity: fertilizer.quantity,
+              unit: validatedUnit
             }
-
-            // Step 2: Only delete old records after ALL new records are created successfully
-            // If creation failed, we never reach this point (throw exits the try block)
-            for (const recordId of recordIdsToDelete) {
-              await SupabaseService.deleteFertigationRecord(recordId)
-            }
-
-            logger.info('Successfully updated fertigation records (transactional)', {
-              deletedCount: recordIdsToDelete.length,
-              createdCount: createdRecordIds.length,
-              deletedIds: recordIdsToDelete,
-              createdIds: createdRecordIds
-            })
-          } catch (error) {
-            logger.error('Error updating fertigation records:', error)
-            // Provide more specific error message based on error type
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-            throw new Error(`Failed to update fertigation records: ${errorMessage}`)
           }
-        } else {
-          // Handle legacy format with single fertilizer
-          // Validate unit against whitelist
-          const validatedUnit = validateFertigationUnit(data.unit || 'kg/acre')
+        )
 
-          record = await SupabaseService.updateFertigationRecord(originalId, {
-            farm_id: parseInt(farmId),
-            date: originalDate,
-            fertilizer: data.fertilizer?.trim() || 'Unknown',
-            quantity: data.quantity || 0,
-            unit: validatedUnit,
-            area: data.area || dashboardData?.farm?.area || 0,
-            purpose: data.purpose || 'General',
-            notes: data.notes || '',
-            date_of_pruning: dashboardData?.farm?.dateOfPruning
-          })
-        }
+        // Update the single fertigation record with the fertilizers array
+        record = await SupabaseService.updateFertigationRecord(originalId, {
+          farm_id: parseInt(farmId),
+          date: originalDate,
+          fertilizers: validatedFertilizers,
+          area: dashboardData?.farm?.area || 0,
+          notes: data.notes || '',
+          date_of_pruning: dashboardData?.farm?.dateOfPruning
+        })
         break
       }
 

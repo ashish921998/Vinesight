@@ -379,16 +379,28 @@ export function toDatabaseSprayUpdate(
 export function toApplicationFertigationRecord(
   dbRecord: DatabaseFertigationRecord
 ): import('./supabase').FertigationRecord {
+  // Helper to safely parse fertilizers from Json
+  const parseFertilizers = (
+    fertilizersJson: Json
+  ): import('./supabase').Fertilizer[] | undefined => {
+    if (!fertilizersJson || !Array.isArray(fertilizersJson)) return undefined
+    // Validate structure
+    const isValid = fertilizersJson.every(
+      (f: any) =>
+        typeof f === 'object' &&
+        typeof f.name === 'string' &&
+        typeof f.quantity === 'number' &&
+        (f.unit === 'kg/acre' || f.unit === 'liter/acre')
+    )
+    return isValid ? (fertilizersJson as unknown as import('./supabase').Fertilizer[]) : undefined
+  }
+
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
-    fertilizer: dbRecord.fertilizer,
-    dose: dbRecord.dose || undefined, // Handle null dose for backward compatibility
-    purpose: dbRecord.purpose || undefined, // Handle null purpose for backward compatibility
-    area: dbRecord.area || undefined, // Handle null area for backward compatibility
-    quantity: dbRecord.quantity,
-    unit: dbRecord.unit as 'kg/acre' | 'liter/acre', // Cast to specific type
+    fertilizers: parseFertilizers(dbRecord.fertilizers),
+    area: dbRecord.area || undefined,
     date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
     notes: dbRecord.notes || undefined,
     created_at: dbRecord.created_at || undefined
@@ -401,12 +413,8 @@ export function toDatabaseFertigationInsert(
   return {
     farm_id: appRecord.farm_id,
     date: appRecord.date,
-    fertilizer: appRecord.fertilizer,
-    dose: appRecord.dose ?? null, // Handle undefined dose for backward compatibility
-    purpose: appRecord.purpose ?? null, // Handle undefined purpose for backward compatibility
-    area: appRecord.area ?? null, // Handle undefined area for backward compatibility
-    quantity: appRecord.quantity,
-    unit: appRecord.unit,
+    fertilizers: appRecord.fertilizers ? (appRecord.fertilizers as unknown as Json) : null,
+    area: appRecord.area ?? 0,
     date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
     notes: appRecord.notes || null
   } as DatabaseFertigationRecordInsert
@@ -419,12 +427,10 @@ export function toDatabaseFertigationUpdate(
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
-  if (appUpdates.fertilizer !== undefined) update.fertilizer = appUpdates.fertilizer
-  if (appUpdates.dose !== undefined) update.dose = appUpdates.dose ?? null
-  if (appUpdates.purpose !== undefined) update.purpose = appUpdates.purpose as string | null
-  if (appUpdates.area !== undefined) update.area = appUpdates.area ?? null
-  if (appUpdates.quantity !== undefined) update.quantity = appUpdates.quantity
-  if (appUpdates.unit !== undefined) update.unit = appUpdates.unit
+  if (appUpdates.area !== undefined) update.area = appUpdates.area
+  if (appUpdates.fertilizers !== undefined) {
+    update.fertilizers = appUpdates.fertilizers ? (appUpdates.fertilizers as unknown as Json) : null
+  }
   if (appUpdates.date_of_pruning !== undefined)
     update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.notes !== undefined) update.notes = appUpdates.notes || null
