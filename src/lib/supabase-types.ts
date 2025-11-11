@@ -413,7 +413,7 @@ export function toDatabaseFertigationInsert(
   return {
     farm_id: appRecord.farm_id,
     date: appRecord.date,
-    fertilizers: appRecord.fertilizers ? (appRecord.fertilizers as unknown as Json) : null,
+    fertilizers: appRecord.fertilizers ? (appRecord.fertilizers as unknown as Json[]) : null,
     area: appRecord.area ?? 0,
     date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
     notes: appRecord.notes || null
@@ -429,7 +429,9 @@ export function toDatabaseFertigationUpdate(
   if (appUpdates.date !== undefined) update.date = appUpdates.date
   if (appUpdates.area !== undefined) update.area = appUpdates.area
   if (appUpdates.fertilizers !== undefined) {
-    update.fertilizers = appUpdates.fertilizers ? (appUpdates.fertilizers as unknown as Json) : null
+    update.fertilizers = appUpdates.fertilizers
+      ? (appUpdates.fertilizers as unknown as Json[])
+      : null
   }
   if (appUpdates.date_of_pruning !== undefined)
     update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
