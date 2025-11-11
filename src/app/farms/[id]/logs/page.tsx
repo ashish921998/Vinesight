@@ -905,10 +905,7 @@ export default function FarmLogsPage() {
               <div className="space-y-2">
                 {paginatedLogs.map((log) => {
                   const Icon = getLogTypeIcon(log.type)
-                  const daysAfterPruning = getDaysAfterPruning(
-                    currentFarm?.dateOfPruning,
-                    log.created_at
-                  )
+                  const daysAfterPruning = getDaysAfterPruning(currentFarm?.dateOfPruning, log.date)
 
                   return (
                     <div
