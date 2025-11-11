@@ -1,6 +1,8 @@
 'use client'
 
+import { initializePerformanceMonitoring } from '@/lib/performance-monitor'
 import { usePathname } from 'next/navigation'
+import { useEffect } from 'react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import Navigation from '@/components/navigation'
 import { BottomNavigation } from '@/components/mobile/BottomNavigation'
@@ -13,6 +15,13 @@ interface LayoutContentProps {
 export function LayoutContent({ children }: LayoutContentProps) {
   const pathname = usePathname()
   const { user, loading } = useSupabaseAuth()
+
+  // Initialize performance monitoring only in production
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') {
+      initializePerformanceMonitoring()
+    }
+  }, [])
 
   // Routes that should never show the sidebar (public pages)
   const publicRoutes = [
