@@ -90,12 +90,11 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
   sendDefaultPii: parseEnvBoolean(
     'NEXT_PUBLIC_SENTRY_SEND_DEFAULT_PII',
-    process.env.NODE_ENV !== 'production'
+    process.env.NODE_ENV === 'development'
   ),
-  environment: process.env.NODE_ENV === 'production' ? 'production' : 'development',
 
   // Development-specific configuration
-  ...(process.env.NODE_ENV !== 'production'
+  ...(process.env.NODE_ENV === 'development'
     ? {
         spotlight: true, // Enable Spotlight
         sampleRate: 1.0, // Capture all errors in dev
