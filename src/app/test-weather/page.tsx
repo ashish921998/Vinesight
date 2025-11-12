@@ -7,17 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 const mockFarm = {
   id: 1,
   name: 'Test Vineyard',
-  location: 'Nashik, Maharashtra',
+  region: 'Nashik, Maharashtra',
+  area: 5, // acres
+  crop: 'Grapes',
+  cropVariety: 'Thompson Seedless',
+  plantingDate: '2022-01-15',
   latitude: 19.9975,
   longitude: 73.7898,
   locationName: 'Nashik',
-  location: {
-    coordinates: {
-      lat: 19.9975,
-      lng: 73.7898
-    }
-  },
-  user_id: 'test-user'
+  userId: 'test-user'
 }
 
 export default function TestWeatherPage() {

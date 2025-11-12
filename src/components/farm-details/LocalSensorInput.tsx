@@ -29,9 +29,10 @@ import {
   CheckCircle2,
   AlertCircle,
   Info,
-  Zap
+  Zap,
+  RefreshCw
 } from 'lucide-react'
-import type { Farm } from '@/types/farm'
+import type { Farm } from '@/types/types'
 import type { LocalSensorData, EnhancedEToResult } from '@/lib/weather-providers/eto-accuracy-enhancement-service'
 import { SensorFusionService, AccuracyEnhancementService } from '@/lib/weather-providers/eto-accuracy-enhancement-service'
 import { WeatherProviderManager } from '@/lib/weather-providers/weather-provider-manager'
@@ -72,9 +73,14 @@ export function LocalSensorInput({ farm }: LocalSensorInputProps) {
 
   const loadApiETo = async () => {
     try {
+      if (!farm.latitude || !farm.longitude) {
+        console.warn('Farm coordinates not available')
+        return
+      }
+
       const data = await WeatherProviderManager.getWeatherData(
-        farm.location.coordinates.lat,
-        farm.location.coordinates.lng,
+        farm.latitude,
+        farm.longitude,
         reading.date,
         reading.date
       )
@@ -95,6 +101,11 @@ export function LocalSensorInput({ farm }: LocalSensorInputProps) {
 
   const handleRefineETo = async () => {
     // Validation
+    if (!farm.id) {
+      setError('Farm ID is required')
+      return
+    }
+
     if (!reading.temperatureMax || !reading.temperatureMin) {
       setError('Temperature max and min are required')
       return
@@ -131,9 +142,13 @@ export function LocalSensorInput({ farm }: LocalSensorInputProps) {
 
     try {
       // Get API weather data
+      if (!farm.latitude || !farm.longitude) {
+        throw new Error('Farm coordinates not available')
+      }
+
       const weatherData = await WeatherProviderManager.getWeatherData(
-        farm.location.coordinates.lat,
-        farm.location.coordinates.lng,
+        farm.latitude,
+        farm.longitude,
         reading.date,
         reading.date
       )
@@ -181,6 +196,11 @@ export function LocalSensorInput({ farm }: LocalSensorInputProps) {
       return
     }
 
+    if (!farm.id) {
+      setError('Farm ID is required')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -188,14 +208,18 @@ export function LocalSensorInput({ farm }: LocalSensorInputProps) {
       // Get current provider
       const provider = WeatherProviderManager.getActiveProviderId(farm.id)
 
+      if (!farm.latitude || !farm.longitude) {
+        throw new Error('Farm coordinates not available')
+      }
+
       // Save validation data to database
       await EToAccuracyService.Validation.saveValidation(
         farm.id,
         provider,
         apiETo,
         refinedETo.eto,
-        farm.location.coordinates.lat,
-        farm.location.coordinates.lng,
+        farm.latitude,
+        farm.longitude,
         reading.date,
         'sensor_calculation',
         {
@@ -216,8 +240,8 @@ export function LocalSensorInput({ farm }: LocalSensorInputProps) {
       )
 
       const calibration = await EToAccuracyService.RegionalCalibration.updateCalibration(
-        farm.location.coordinates.lat,
-        farm.location.coordinates.lng,
+        farm.latitude,
+        farm.longitude,
         provider,
         validations
       )

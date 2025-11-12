@@ -26,9 +26,10 @@ import {
   Lightbulb,
   Award,
   LineChart,
-  Activity
+  Activity,
+  RefreshCw
 } from 'lucide-react'
-import type { Farm } from '@/types/farm'
+import type { Farm } from '@/types/types'
 import type { WeatherProvider } from '@/lib/weather-providers/types'
 import { AccuracyEnhancementService } from '@/lib/weather-providers/eto-accuracy-enhancement-service'
 import { EToAccuracyService } from '@/lib/services/eto-accuracy-service'
@@ -93,6 +94,12 @@ export function AccuracyInsights({ farm, currentProvider }: AccuracyInsightsProp
     setLoading(true)
 
     try {
+      if (!farm.id) {
+        console.error('Farm ID is required')
+        setLoading(false)
+        return
+      }
+
       // Load accuracy level from service
       const accuracyData = await EToAccuracyService.AccuracyInsights.getAccuracyLevel(farm.id)
 
