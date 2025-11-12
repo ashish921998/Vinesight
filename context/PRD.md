@@ -42,7 +42,38 @@ A progressive web and mobile app designed to digitize grape farming operations f
 #### **4.2 Scientific Calculators & Data Entry**
 
 - **Irrigation/Water Use Module:**
-  - Evapotranspiration (ETc) calculator: `ETc = ETo * Kc`
+  - **Evapotranspiration (ETc) Calculator:**
+    - **FAO-56 Penman-Monteith Equation:**
+      ```
+      ET₀ = [0.408 × Δ × (Rₙ - G) + γ × (900/(T + 273)) × u₂ × (eₛ - eₐ)] / [Δ + γ × (1 + 0.34 × u₂)]
+      ```
+      Where:
+      - **ET₀**: Reference evapotranspiration (mm day⁻¹)
+      - **Δ**: Slope of saturation vapor pressure curve (kPa °C⁻¹)
+      - **Rₙ**: Net radiation at crop surface (MJ m⁻² day⁻¹)
+      - **G**: Soil heat flux density (≈ 0 for daily timestep) (MJ m⁻² day⁻¹)
+      - **γ**: Psychrometric constant (kPa °C⁻¹)
+      - **T**: Mean daily air temperature at 2m height (°C)
+      - **u₂**: Wind speed at 2m height (m s⁻¹)
+      - **eₛ**: Saturation vapor pressure (kPa)
+      - **eₐ**: Actual vapor pressure (kPa)
+      - **(eₛ - eₐ)**: Vapor pressure deficit (VPD) (kPa)
+    - **Dual ET0 Sources:**
+      - **Primary**: Open-Meteo API ET0 (professional meteorological calculations)
+      - **Secondary**: Local FAO Penman-Monteith calculation (fallback)
+    - **ETc Calculation**: `ETc = ET₀ × Kc`
+      - **Kc**: Crop coefficient based on growth stage
+      - **Grape Growth Stages**: Budbreak (0.3), Leaf development (0.5), Flowering (0.7), Fruit set (0.8), Veraison (0.8), Harvest (0.6), Post-harvest (0.4), Dormant (0.2)
+    - **Key Vapor Pressure Calculations:**
+      - **Saturation vapor pressure**: `eₛ = 0.6108 × exp((17.27 × T) / (T + 237.3))`
+      - **Actual vapor pressure**: `eₐ = (RH/100) × eₛ`
+      - **Psychrometric constant**: `γ = 0.000665 × P` (where P is atmospheric pressure in kPa)
+      - **Slope of saturation curve**: `Δ = (4098 × eₛ) / (T + 237.3)²`
+    - **Net Radiation Components:**
+      - **Net shortwave radiation**: `Rₙₛ = (1 - α) × Rₛ` (where α = 0.23 for crop albedo)
+      - **Net longwave radiation**: `Rₙₗ = σ × T⁴ × (0.34 - 0.14 × √eₐ) × (1.35 × Rₛ/Rₛ₀ - 0.35)`
+      - **Net radiation**: `Rₙ = Rₙₛ - Rₙₗ`
+
   - **MAD (Maximum Allowable Deficit) Calculator:**
     - Inputs: Distance Between Lines (DBL/vine spacing), Root Depth, Root Width, Water Retention
     - Formula: `(100/(DBL) * Root Depth * Root Width * Water Retention * 100) / 10000`
@@ -58,6 +89,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
       - Formula: `((100 / DBL) * (100/ DBD) * Discharge per hour) / 10000`
       - Inputs: Distance Between Dripper (DBD), Discharge per hour
   - Drip irrigation planner: Complete irrigation scheduling with hours and intervals
+
 - **Nutrient Calculator:**
   - Micronutrient and secondary nutrient recommendations (Zn, B, Fe, Mn, Cu, Mo, Ca, Mg, S) with per acre guidance.
   - NPK recommendations according to yield target and growth stage, with split application schedule.
@@ -321,7 +353,15 @@ A progressive web and mobile app designed to digitize grape farming operations f
 
 ### **Scientific Calculations**
 
-- **Evapotranspiration:** `ETc = ETo * Kc`
+- **Evapotranspiration (ETc):**
+  - **Primary Formula**: `ETc = ET₀ × Kc`
+  - **FAO-56 Penman-Monteith ET₀**:
+    ```
+    ET₀ = [0.408 × Δ × (Rₙ - G) + γ × (900/(T + 273)) × u₂ × (eₛ - eₐ)] / [Δ + γ × (1 + 0.34 × u₂)]
+    ```
+  - **Unit Requirements**: ET₀ (mm day⁻¹), Rₙ (MJ m⁻² day⁻¹), T (°C), u₂ (m s⁻¹), eₛ/eₐ (kPa), Δ/γ (kPa °C⁻¹)
+  - **Dual Source ET₀**: Open-Meteo API (primary) + Local calculation (fallback)
+  - **Crop Coefficients**: Growth stage-specific Kc values for grapes
 - **System Discharge:** see `"System Discharge formula No2"` in notes
 - **Water use per vine:** `ETc (mm/day) * area (m^2) = liters/day`
 - **MAD, Refill Tank, Irrigation Interval:** all formulas as per lab notes

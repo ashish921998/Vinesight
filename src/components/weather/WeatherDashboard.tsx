@@ -12,9 +12,6 @@ import {
   Droplets,
   Wind,
   Eye,
-  Gauge,
-  Sunrise,
-  Sunset,
   Calendar,
   AlertTriangle,
   CheckCircle,
@@ -42,6 +39,7 @@ export function WeatherDashboard({
   const [irrigationSchedule, setIrrigationSchedule] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadWeatherData()
@@ -53,6 +51,7 @@ export function WeatherDashboard({
   const loadWeatherData = async () => {
     try {
       setLoading(true)
+      setError(null)
       const weatherData = await WeatherService.getCurrentWeather(
         farmLocation?.latitude,
         farmLocation?.longitude
@@ -69,6 +68,11 @@ export function WeatherDashboard({
       setLastUpdated(new Date())
     } catch (error) {
       console.error('Error loading weather data:', error)
+      setError(error instanceof Error ? error.message : 'Failed to load weather data')
+      setWeather(null)
+      setEtc(null)
+      setAlerts(null)
+      setIrrigationSchedule(null)
     } finally {
       setLoading(false)
     }
@@ -131,6 +135,19 @@ export function WeatherDashboard({
     )
   }
 
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <AlertTriangle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Weather Data Error</h3>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={loadWeatherData}>Try Again</Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
   if (!weather || !etc || !alerts) {
     return (
       <Card>
@@ -138,7 +155,8 @@ export function WeatherDashboard({
           <AlertTriangle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">Weather Data Unavailable</h3>
           <p className="text-muted-foreground mb-4">
-            Unable to fetch weather data. Please check your internet connection.
+            Unable to fetch weather data. Please check your internet connection and API
+            configuration.
           </p>
           <Button onClick={loadWeatherData}>Try Again</Button>
         </CardContent>
@@ -248,12 +266,32 @@ export function WeatherDashboard({
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Daily ETc</p>
-                  <p className="text-xl font-bold text-green-600">{etc.dailyETc} mm/day</p>
+                  <div className="text-sm text-muted-foreground flex items-center gap-2">
+                    ETc (Open-Meteo)
+                    <Badge
+                      variant="outline"
+                      className="text-xs px-1 py-0 bg-blue-50 text-blue-700 border-blue-200"
+                    >
+                      API
+                    </Badge>
+                  </div>
+                  <div className="text-xl font-bold text-blue-600">
+                    {etc.dailyETcOpenMeteo > 0 ? `${etc.dailyETcOpenMeteo} mm/day` : 'N/A'}
+                  </div>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Weekly ETc</p>
-                  <p className="text-xl font-bold text-green-600">{etc.weeklyETc} mm/week</p>
+                  <div className="text-sm text-muted-foreground flex items-center gap-2">
+                    ETc (Calculated)
+                    <Badge
+                      variant="outline"
+                      className="text-xs px-1 py-0 bg-green-50 text-green-700 border-green-200"
+                    >
+                      Formula
+                    </Badge>
+                  </div>
+                  <div className="text-xl font-bold text-green-600">
+                    {etc.dailyETcCalculated} mm/day
+                  </div>
                 </div>
               </div>
               <div className="border-t pt-4">
@@ -267,12 +305,108 @@ export function WeatherDashboard({
                     <span className="ml-2 font-medium">{etc.cropCoefficient}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Reference ET:</span>
-                    <span className="ml-2 font-medium">{etc.referenceET} mm/day</span>
-                  </div>
-                  <div>
                     <span className="text-muted-foreground">Monthly Need:</span>
                     <span className="ml-2 font-medium">{etc.monthlyETc} mm</span>
+                  </div>
+                </div>
+
+                {/* ETc Calculation Details */}
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                  <h5 className="font-medium text-sm mb-3 text-gray-700">
+                    ETc Calculation Details
+                  </h5>
+                  <div className="space-y-3 text-xs">
+                    {/* Formula Display */}
+                    <div className="bg-white p-2 rounded border border-gray-200">
+                      <div className="font-mono text-center text-gray-700 mb-2">ETc = ET₀ × Kc</div>
+                      <div className="text-center text-muted-foreground">
+                        <span className="font-medium">ETc</span>: Crop Evapotranspiration |
+                        <span className="font-medium"> ET₀</span>: Reference Evapotranspiration |
+                        <span className="font-medium"> Kc</span>: Crop Coefficient
+                      </div>
+                    </div>
+
+                    {/* Current Values */}
+                    <div className="grid grid-cols-1 gap-2">
+                      <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                        <div className="font-medium text-blue-700 mb-1">
+                          Open-Meteo API Calculation
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>ET₀ (API):</span>
+                            <span className="font-medium">{etc.referenceET} mm/day</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Kc ({etc.growthStage}):</span>
+                            <span className="font-medium">{etc.cropCoefficient}</span>
+                          </div>
+                          <div className="flex justify-between border-t pt-1">
+                            <span>
+                              ETc = {etc.referenceET} × {etc.cropCoefficient}:
+                            </span>
+                            <span className="font-bold text-blue-600">
+                              {etc.dailyETcOpenMeteo} mm/day
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-green-50 p-2 rounded border border-green-200">
+                        <div className="font-medium text-green-700 mb-1">
+                          Penman-Monteith Calculation
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>ET₀ (Calculated):</span>
+                            <span className="font-medium">{etc.referenceETCalculated} mm/day</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Kc ({etc.growthStage}):</span>
+                            <span className="font-medium">{etc.cropCoefficient}</span>
+                          </div>
+                          <div className="flex justify-between border-t pt-1">
+                            <span>
+                              ETc = {etc.referenceETCalculated} × {etc.cropCoefficient}:
+                            </span>
+                            <span className="font-bold text-green-600">
+                              {etc.dailyETcCalculated} mm/day
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Comparison */}
+                    {etc.dailyETcOpenMeteo > 0 && (
+                      <div className="bg-purple-50 p-2 rounded border border-purple-200">
+                        <div className="font-medium text-purple-700 mb-1">Comparison Analysis</div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>Primary ETc (Active):</span>
+                            <span className="font-bold text-purple-600">{etc.dailyETc} mm/day</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Difference:</span>
+                            <span className="font-medium">
+                              {Math.abs(etc.dailyETcOpenMeteo - etc.dailyETcCalculated).toFixed(2)}{' '}
+                              mm/day
+                              {etc.dailyETcOpenMeteo !== etc.dailyETcCalculated && (
+                                <span className="text-muted-foreground ml-1">
+                                  (
+                                  {(
+                                    (Math.abs(etc.dailyETcOpenMeteo - etc.dailyETcCalculated) /
+                                      etc.dailyETcOpenMeteo) *
+                                    100
+                                  ).toFixed(1)}
+                                  % variance)
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
