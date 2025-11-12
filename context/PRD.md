@@ -71,7 +71,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
       - **Slope of saturation curve**: `Δ = (4098 × eₛ) / (T + 237.3)²`
     - **Net Radiation Components:**
       - **Net shortwave radiation**: `Rₙₛ = (1 - α) × Rₛ` (where α = 0.23 for crop albedo)
-      - **Net longwave radiation**: `Rₙₗ = σ × T⁴ × (0.34 - 0.14 × √eₐ) × (1.35 × Rₛ/Rₛ₀ - 0.35)`
+      - **Net longwave radiation**: `Rₙₗ = σ × [(Tmax,K⁴ + Tmin,K⁴)/2] × (0.34 - 0.14 × √eₐ) × (1.35 × Rₛ/Rₛ₀ - 0.35)`
       - **Net radiation**: `Rₙ = Rₙₛ - Rₙₗ`
 
   - **MAD (Maximum Allowable Deficit) Calculator:**

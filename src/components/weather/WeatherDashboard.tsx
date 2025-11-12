@@ -21,6 +21,7 @@ import {
   TrendingUp
 } from 'lucide-react'
 import { WeatherService, WeatherData, ETc, WeatherAlerts } from '@/lib/weather-service'
+import { OpenMeteoWeatherService, OpenMeteoWeatherData } from '@/lib/open-meteo-weather'
 
 interface WeatherDashboardProps {
   farmLocation?: { latitude: number; longitude: number; name?: string }
@@ -40,6 +41,7 @@ export function WeatherDashboard({
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [openMeteoData, setOpenMeteoData] = useState<OpenMeteoWeatherData[]>([])
 
   useEffect(() => {
     loadWeatherData()
@@ -52,12 +54,23 @@ export function WeatherDashboard({
     try {
       setLoading(true)
       setError(null)
+
+      // Get raw Open-Meteo data first
+      const rawOpenMeteoData = await OpenMeteoWeatherService.getWeatherForecast(
+        farmLocation?.latitude || 19.0825,
+        farmLocation?.longitude || 73.1963,
+        7
+      )
+      setOpenMeteoData(rawOpenMeteoData)
+
+      // Get processed weather data
       const weatherData = await WeatherService.getCurrentWeather(
         farmLocation?.latitude,
         farmLocation?.longitude
       )
 
-      const etcData = WeatherService.calculateETc(weatherData, growthStage)
+      // Calculate ETc using both processed weather data and raw Open-Meteo data
+      const etcData = WeatherService.calculateETc(weatherData, growthStage, rawOpenMeteoData)
       const alertsData = WeatherService.generateWeatherAlerts(weatherData, etcData)
       const scheduleData = WeatherService.generateIrrigationSchedule(weatherData, etcData, soilType)
 
@@ -328,29 +341,48 @@ export function WeatherDashboard({
 
                     {/* Current Values */}
                     <div className="grid grid-cols-1 gap-2">
-                      <div className="bg-blue-50 p-2 rounded border border-blue-200">
-                        <div className="font-medium text-blue-700 mb-1">
-                          Open-Meteo API Calculation
+                      {etc.referenceETOpenMeteo !== null &&
+                      etc.referenceETOpenMeteo !== undefined ? (
+                        <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                          <div className="font-medium text-blue-700 mb-1">
+                            Open-Meteo API Calculation
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex justify-between">
+                              <span>ET₀ (API):</span>
+                              <span className="font-medium">{etc.referenceETOpenMeteo} mm/day</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Kc ({etc.growthStage}):</span>
+                              <span className="font-medium">{etc.cropCoefficient}</span>
+                            </div>
+                            {etc.referenceETOpenMeteo !== null &&
+                            etc.referenceETOpenMeteo !== undefined ? (
+                              <div className="flex justify-between border-t pt-1">
+                                <span>
+                                  ETc = {etc.referenceETOpenMeteo} × {etc.cropCoefficient}:
+                                </span>
+                                <span className="font-bold text-blue-600">
+                                  {(etc.referenceETOpenMeteo * etc.cropCoefficient).toFixed(2)}{' '}
+                                  mm/day
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex justify-between border-t pt-1">
+                                <span className="text-gray-500">ETc calculation unavailable</span>
+                                <span className="font-medium text-gray-500">N/A</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="space-y-1">
-                          <div className="flex justify-between">
-                            <span>ET₀ (API):</span>
-                            <span className="font-medium">{etc.referenceET} mm/day</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Kc ({etc.growthStage}):</span>
-                            <span className="font-medium">{etc.cropCoefficient}</span>
-                          </div>
-                          <div className="flex justify-between border-t pt-1">
-                            <span>
-                              ETc = {etc.referenceET} × {etc.cropCoefficient}:
-                            </span>
-                            <span className="font-bold text-blue-600">
-                              {etc.dailyETcOpenMeteo} mm/day
-                            </span>
+                      ) : (
+                        <div className="bg-gray-50 p-2 rounded border border-gray-200">
+                          <div className="font-medium text-gray-700 mb-1">API Unavailable</div>
+                          <div className="text-xs text-gray-600">
+                            Open-Meteo API data not available. Using local calculation only.
                           </div>
                         </div>
-                      </div>
+                      )}
 
                       <div className="bg-green-50 p-2 rounded border border-green-200">
                         <div className="font-medium text-green-700 mb-1">

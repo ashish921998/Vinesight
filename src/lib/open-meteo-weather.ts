@@ -20,6 +20,7 @@ export interface OpenMeteoWeatherData {
 
   // Wind data (m/s)
   windSpeed10m: number
+  windDirection10m: number // degrees (0-360)
   windSpeedMax: number
 
   // Precipitation (mm)
@@ -60,14 +61,16 @@ export class OpenMeteoWeatherService {
     const end = endDate || today.toISOString().split('T')[0]
 
     try {
-      // Calculate forecast days
+      // Determine if this is a forecast request (future dates) or historical/current request
+      const today = new Date()
+      today.setHours(0, 0, 0, 0) // Set to start of day for accurate comparison
       const startDateObj = new Date(start)
-      const endDateObj = new Date(end)
-      const forecastDays =
-        Math.ceil((endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      startDateObj.setHours(0, 0, 0, 0)
+
+      const isFutureRequest = startDateObj > today
 
       // Parameters for comprehensive weather data including ET0
-      const params = {
+      const params: any = {
         latitude: latitude,
         longitude: longitude,
         daily: [
@@ -78,6 +81,7 @@ export class OpenMeteoWeatherService {
           'relative_humidity_2m_min',
           'relative_humidity_2m_mean',
           'wind_speed_10m_max',
+          'wind_direction_10m_dominant',
           'precipitation_sum',
           'shortwave_radiation_sum',
           'sunshine_duration',
@@ -87,18 +91,27 @@ export class OpenMeteoWeatherService {
           'temperature_2m',
           'relative_humidity_2m',
           'wind_speed_10m',
+          'wind_direction_10m',
           'direct_radiation',
           'diffuse_radiation',
           'global_tilted_irradiance',
           'evapotranspiration',
           'et0_fao_evapotranspiration'
         ],
-        timezone: 'auto',
-        forecast_days: forecastDays
+        timezone: 'auto'
       }
 
-      const url = 'https://api.open-meteo.com/v1/forecast'
-      const responses = await fetchWeatherApi(url, params)
+      // Use forecast_days for future requests, start_date/end_date for current/historical
+      if (isFutureRequest) {
+        const forecastDays =
+          Math.ceil((new Date(end).getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24)) + 1
+        params.forecast_days = Math.min(forecastDays, 16) // Open-Meteo limit is 16 days
+      } else {
+        params.start_date = start
+        params.end_date = end
+      }
+
+      const responses = await fetchWeatherApi(OpenMeteoWeatherService.BASE_URL, params)
 
       // Process first location
       const response = responses[0]
@@ -135,10 +148,11 @@ export class OpenMeteoWeatherService {
         relative_humidity_2m_min: daily.variables(4)!.valuesArray(),
         relative_humidity_2m_mean: daily.variables(5)!.valuesArray(),
         wind_speed_10m_max: daily.variables(6)!.valuesArray(),
-        precipitation_sum: daily.variables(7)!.valuesArray(),
-        shortwave_radiation_sum: daily.variables(8)!.valuesArray(),
-        sunshine_duration: daily.variables(9)!.valuesArray(),
-        et0_fao_evapotranspiration: daily.variables(10)!.valuesArray()
+        wind_direction_10m_dominant: daily.variables(7)!.valuesArray(),
+        precipitation_sum: daily.variables(8)!.valuesArray(),
+        shortwave_radiation_sum: daily.variables(9)!.valuesArray(),
+        sunshine_duration: daily.variables(10)!.valuesArray(),
+        et0_fao_evapotranspiration: daily.variables(11)!.valuesArray()
       }
 
       // Process hourly data for more precise ET0
@@ -151,11 +165,12 @@ export class OpenMeteoWeatherService {
         temperature_2m: hourly.variables(0)!.valuesArray(),
         relative_humidity_2m: hourly.variables(1)!.valuesArray(),
         wind_speed_10m: hourly.variables(2)!.valuesArray(),
-        direct_radiation: hourly.variables(3)!.valuesArray(),
-        diffuse_radiation: hourly.variables(4)!.valuesArray(),
-        global_tilted_irradiance: hourly.variables(5)!.valuesArray(),
-        evapotranspiration: hourly.variables(6)!.valuesArray(),
-        et0_fao_evapotranspiration: hourly.variables(7)!.valuesArray()
+        wind_direction_10m: hourly.variables(3)!.valuesArray(),
+        direct_radiation: hourly.variables(4)!.valuesArray(),
+        diffuse_radiation: hourly.variables(5)!.valuesArray(),
+        global_tilted_irradiance: hourly.variables(6)!.valuesArray(),
+        evapotranspiration: hourly.variables(7)!.valuesArray(),
+        et0_fao_evapotranspiration: hourly.variables(8)!.valuesArray()
       }
 
       console.log('\nDaily data:\n', dailyData)
@@ -165,19 +180,18 @@ export class OpenMeteoWeatherService {
       const result: OpenMeteoWeatherData[] = []
 
       for (let i = 0; i < dailyData.time.length; i++) {
-        // Convert shortwave radiation from Wh/m² to MJ/m²/day
-        const shortwaveWh = dailyData.shortwave_radiation_sum?.[i] || 0
-        const shortwave_MJ = this.convertWhToMJ(shortwaveWh)
+        // Use shortwave radiation directly from Open-Meteo (already in MJ/m²/day)
+        const shortwave_MJ = dailyData.shortwave_radiation_sum?.[i] || 0
 
         // Convert sunshine duration from seconds to hours
         const sunshineDurationHours = (dailyData.sunshine_duration?.[i] || 0) / 3600
 
         // Get hourly ET0 data for this day (24 hours)
         const hourlyEt0Array = Array.from(hourlyData.et0_fao_evapotranspiration || [])
-        const hourlyEt0ForDay = hourlyEt0Array.slice(
-          i * 24,
-          Math.min((i + 1) * 24, hourlyEt0Array.length)
-        )
+        const startIdx = i * 24
+        const endIdx = Math.min((i + 1) * 24, hourlyEt0Array.length)
+        const hourlyEt0ForDay =
+          startIdx < hourlyEt0Array.length ? hourlyEt0Array.slice(startIdx, endIdx) : []
 
         result.push({
           date: dailyData.time[i].toISOString().split('T')[0],
@@ -192,14 +206,15 @@ export class OpenMeteoWeatherService {
           relativeHumidityMin: dailyData.relative_humidity_2m_min?.[i] || 0,
           relativeHumidityMean: dailyData.relative_humidity_2m_mean?.[i] || 0,
 
-          // Wind (m/s)
-          windSpeed10m: dailyData.wind_speed_10m_max?.[i] || 0,
-          windSpeedMax: dailyData.wind_speed_10m_max?.[i] || 0,
+          // Wind (convert km/h to m/s)
+          windSpeed10m: (dailyData.wind_speed_10m_max?.[i] || 0) / 3.6,
+          windDirection10m: dailyData.wind_direction_10m_dominant?.[i] || 0,
+          windSpeedMax: (dailyData.wind_speed_10m_max?.[i] || 0) / 3.6,
 
           // Precipitation (mm)
           precipitationSum: dailyData.precipitation_sum?.[i] || 0,
 
-          // Solar data
+          // Solar data - use actual shortwave radiation from Open-Meteo
           shortwaveRadiationSum: shortwave_MJ,
           sunshineDuration: sunshineDurationHours,
 
@@ -253,14 +268,6 @@ export class OpenMeteoWeatherService {
     const endDateStr = endDate.toISOString().split('T')[0]
 
     return this.getWeatherData(latitude, longitude, startDateStr, endDateStr)
-  }
-
-  /**
-   * Convert shortwave radiation from Wh/m² to MJ/m²/day
-   */
-  private static convertWhToMJ(whPerSqM: number): number {
-    // 1 Wh/m² = 0.0036 MJ/m²
-    return whPerSqM * 0.0036
   }
 
   /**

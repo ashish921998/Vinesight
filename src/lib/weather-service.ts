@@ -34,6 +34,7 @@ export interface ForecastDay {
   precipitation: number // mm
   precipitationProbability: number // %
   windSpeed: number // km/h
+  windDirection: string
   condition: string
   conditionCode: number
   uvIndex: number
@@ -50,6 +51,7 @@ export interface LocationData {
   latitude: number
   longitude: number
   timezone: string
+  elevation?: number // Elevation in meters above sea level
 }
 
 export interface WeatherAlerts {
@@ -135,7 +137,7 @@ export class WeatherService {
       temperature: Math.round(current.temperatureMean),
       humidity: Math.round(current.relativeHumidityMean),
       windSpeed: Math.round(current.windSpeed10m * 3.6), // Convert m/s to km/h
-      windDirection: this.getWindDirection(current.windSpeed10m),
+      windDirection: this.getWindDirection(current.windDirection10m),
       pressure: 1013, // Open-Meteo doesn't provide pressure in free tier, use standard
       visibility: 10, // Open-Meteo doesn't provide visibility in free tier, use standard
       uvIndex: this.estimateUVIndex(current.shortwaveRadiationSum),
@@ -158,6 +160,7 @@ export class WeatherService {
       precipitation: day.precipitationSum,
       precipitationProbability: this.estimatePrecipitationProbability(day.precipitationSum),
       windSpeed: Math.round(day.windSpeed10m * 3.6), // Convert m/s to km/h
+      windDirection: this.getWindDirection(day.windDirection10m),
       condition: this.getWeatherCondition(day.temperatureMean, day.precipitationSum),
       conditionCode: this.getConditionCode(day.temperatureMean, day.precipitationSum),
       uvIndex: this.estimateUVIndex(day.shortwaveRadiationSum),
@@ -176,7 +179,8 @@ export class WeatherService {
         country: coords.country,
         latitude: coords.latitude,
         longitude: coords.longitude,
-        timezone: forecast[0]?.timezone || 'UTC'
+        timezone: forecast[0]?.timezone || 'UTC',
+        elevation: forecast[0]?.elevation // Add elevation from Open-Meteo
       },
       lastUpdated: new Date()
     }
@@ -201,13 +205,38 @@ export class WeatherService {
     return 1009 // Overcast
   }
 
-  private static getWindDirection(windSpeed: number): string {
-    // Simplified wind direction based on speed
-    if (windSpeed < 2) return 'N'
-    if (windSpeed < 4) return 'NE'
-    if (windSpeed < 6) return 'E'
-    if (windSpeed < 8) return 'SE'
-    return 'S'
+  private static getWindDirection(windDirection: number): string {
+    // Convert wind direction angle (0-360°) to compass direction
+    // Normalize angle to 0-360 range
+    const normalizedAngle = ((windDirection % 360) + 360) % 360
+
+    // Handle missing/null values
+    if (windDirection === null || windDirection === undefined || isNaN(windDirection)) {
+      return 'Unknown'
+    }
+
+    // 16-point compass directions (22.5° each)
+    const directions = [
+      'N',
+      'NNE',
+      'NE',
+      'ENE',
+      'E',
+      'ESE',
+      'SE',
+      'SSE',
+      'S',
+      'SSW',
+      'SW',
+      'WSW',
+      'W',
+      'WNW',
+      'NW',
+      'NNW'
+    ]
+
+    const index = Math.round(normalizedAngle / 22.5) % 16
+    return directions[index]
   }
 
   private static estimateUVIndex(solarRadiation: number): number {
@@ -235,8 +264,69 @@ export class WeatherService {
     return 90
   }
 
+  /**
+   * FAO-56 Equation 7: Calculate atmospheric pressure at given elevation
+   * P = 101.3 × [(293 - 0.0065 × z) / 293]^5.26
+   * where z is elevation in meters above sea level
+   */
+  private static calculateAtmosphericPressure(elevation: number): number {
+    // Standard atmospheric pressure at sea level = 101.3 kPa
+    const pressure = 101.3 * Math.pow((293 - 0.0065 * elevation) / 293, 5.26)
+    return pressure
+  }
+
+  /**
+   * FAO-56 Equations 21-25: Calculate extraterrestrial radiation (Ra)
+   * Ra = 24 × 60 × Gsc × dr × [ωs × sin(φ) × sin(δ) + cos(φ) × cos(δ) × sin(ωs)]
+   * where Gsc = 0.0820 MJ m⁻² min⁻¹ (solar constant)
+   */
+  private static calculateExtraterrestrialRadiation(latitude: number, dayOfYear: number): number {
+    const Gsc = 0.082 // Solar constant in MJ m⁻² min⁻¹
+
+    // Convert latitude to radians
+    const phi = (latitude * Math.PI) / 180
+
+    // Inverse relative distance Earth-Sun (dr)
+    const dr = 1 + 0.033 * Math.cos((2 * Math.PI * dayOfYear) / 365)
+
+    // Solar declination (δ) in radians
+    const delta = 0.409 * Math.sin((2 * Math.PI * dayOfYear) / 365 - 1.39)
+
+    // Sunset hour angle (ωs) in radians
+    const omega_s = Math.acos(-Math.tan(phi) * Math.tan(delta))
+
+    // Extraterrestrial radiation (Ra) in MJ m⁻² day⁻¹
+    const Ra =
+      ((24 * 60 * Gsc * dr) / Math.PI) *
+      (omega_s * Math.sin(phi) * Math.sin(delta) +
+        Math.cos(phi) * Math.cos(delta) * Math.sin(omega_s))
+
+    return Ra
+  }
+
+  /**
+   * Calculate clear-sky radiation (Rso) for validation
+   * Rso = (0.75 + 2×10⁻⁵ × z) × Ra
+   * where z is elevation in meters and Ra is extraterrestrial radiation
+   */
+  private static calculateClearSkyRadiation(latitude: number, elevation: number): number {
+    const today = new Date()
+    const dayOfYear = Math.floor(
+      (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
+    )
+
+    const Ra = this.calculateExtraterrestrialRadiation(latitude, dayOfYear)
+    const Rso = (0.75 + 2e-5 * elevation) * Ra
+
+    return Rso
+  }
+
   // Calculate Evapotranspiration (ETc) for grapes using Open-Meteo ET0
-  static calculateETc(weather: WeatherData, growthStage: string): ETc {
+  static calculateETc(
+    weather: WeatherData,
+    growthStage: string,
+    openMeteoData?: OpenMeteoWeatherData[]
+  ): ETc {
     const current = weather.current
     const forecast = weather.forecast
 
@@ -274,11 +364,16 @@ export class WeatherService {
     const humidity = current.humidity // %
     const windSpeed = current.windSpeed // km/h
     const pressure = current.pressure // hPa
-    const altitude = 200 // Default altitude in meters (should be configurable)
+    const altitude = weather.location.elevation || 200 // Use actual elevation from Open-Meteo
 
     // Convert units properly
     const pressureKpa = pressure / 10 // Convert hPa to kPa
-    const u2 = windSpeed * 0.277778 // Convert km/h to m/s
+
+    // FAO-56 Equation 47: Convert wind speed from 10m height to 2m height
+    // u₂ = u_z × [4.87 / ln(67.8 × z - 5.42)] where z=10m
+    // For z=10m: u₂ = u₁₀ × 0.748
+    const windSpeedMs = windSpeed * 0.277778 // Convert km/h to m/s
+    const u2 = windSpeedMs * 0.748 // Convert from 10m to 2m height (FAO-56 Eq. 47)
 
     // Validate input ranges
     if (temp < -50 || temp > 60) {
@@ -300,27 +395,52 @@ export class WeatherService {
     // 3. Calculate vapor pressure deficit (es - ea) in kPa
     const vpd = es - ea
 
-    // 4. Calculate psychrometric constant (gamma) in kPa/°C
+    // 4. Calculate psychrometric constant (gamma) in kPa/°C using FAO-56 Equation 8
+    // γ = 0.000665 × P where P is atmospheric pressure in kPa
     const gamma = 0.000665 * pressureKpa
 
     // 5. Calculate slope of saturation vapor pressure curve (delta) in kPa/°C
     const delta = (4098 * es) / Math.pow(temp + 237.3, 2)
 
-    // 6. Estimate net radiation (Rn) in MJ/m²/day
-    // Using improved solar radiation estimation
-    const solarRadiation = this.estimateSolarRadiationImproved(
-      current.uvIndex,
-      current.cloudCover,
-      temp
-    )
+    // 6. Use actual solar radiation data from Open-Meteo instead of estimation
+    let solarRadiation = 0
+    if (openMeteoData && openMeteoData[0]) {
+      // Use actual shortwave radiation data from Open-Meteo
+      solarRadiation = openMeteoData[0].shortwaveRadiationSum
+      console.log('Using actual solar radiation from Open-Meteo:', solarRadiation, 'MJ/m²/day')
+    } else {
+      // Fallback to improved estimation if Open-Meteo data not available
+      solarRadiation = this.estimateSolarRadiationImproved(
+        current.uvIndex,
+        current.cloudCover,
+        temp
+      )
+      console.log('Using estimated solar radiation:', solarRadiation, 'MJ/m²/day')
+    }
+
+    // Get max/min temperatures for accurate net longwave radiation calculation
+    const maxTemp = forecast[0]?.maxTemp || temp
+    const minTemp = forecast[0]?.minTemp || temp
 
     // Estimate net shortwave radiation (assuming clear sky albedo = 0.23)
     const rns = (1 - 0.23) * solarRadiation
 
-    // Estimate net longwave radiation (simplified)
-    // Rnl = σ * [(Tmax+273.16)^4 + (Tmin+273.16)^4]/2 * (0.34 - 0.14*sqrt(ea)) * (1.35*Rs/Rso - 0.35)
+    // FAO-56 Equation 39: Net longwave radiation calculation
+    // Rnl = σ × [(Tmax,K⁴ + Tmin,K⁴)/2] × (0.34 - 0.14√ea) × (1.35 × Rs/Rso - 0.35)
     const stefanBoltzmann = 4.903e-9 // MJ K^-4 m^-2 day^-1
-    const rnl = stefanBoltzmann * Math.pow(temp + 273.16, 4) * (0.34 - 0.14 * Math.sqrt(ea)) * 0.75
+
+    // Convert temperatures to Kelvin with proper precision (+273.15)
+    const maxTempK = maxTemp + 273.15
+    const minTempK = minTemp + 273.15
+
+    // Calculate clear-sky radiation (Rso) for validation
+    const rso = this.calculateClearSkyRadiation(weather.location.latitude, altitude)
+
+    // Net longwave radiation with proper FAO-56 Equation 39
+    const rnl =
+      ((stefanBoltzmann * (Math.pow(maxTempK, 4) + Math.pow(minTempK, 4))) / 2) *
+      (0.34 - 0.14 * Math.sqrt(ea)) *
+      (1.35 * Math.min(solarRadiation / rso, 1) - 0.35)
 
     // Net radiation
     const rn = rns - rnl
@@ -328,8 +448,8 @@ export class WeatherService {
     // 7. Soil heat flux (G) - assumed negligible for daily calculations
     const G = 0
 
-    // 8. FAO Penman-Monteith equation
-    // ET0 = [0.408 * Δ * (Rn - G) + γ * (900/(T + 273)) * u2 * (es - ea)] / [Δ + γ * (1 + 0.34 * u2)]
+    // 8. FAO Penman-Monteith equation with proper Kelvin conversion
+    // ET0 = [0.408 * Δ * (Rn - G) + γ * (900/(T + 273.15)) * u2 * (es - ea)] / [Δ + γ * (1 + 0.34 * u2)]
     const denominator = delta + gamma * (1 + 0.34 * u2)
 
     // Prevent division by zero or very small numbers
@@ -338,7 +458,7 @@ export class WeatherService {
     }
 
     const et0Calculated =
-      (0.408 * delta * (rn - G) + gamma * (900 / (temp + 273)) * u2 * vpd) / denominator
+      (0.408 * delta * (rn - G) + gamma * (900 / (temp + 273.15)) * u2 * vpd) / denominator
 
     // Validate ET0 result - should be reasonable for most conditions
     const et0Final = Math.max(0, Math.min(15, et0Calculated)) // Limit to 0-15 mm/day
@@ -352,12 +472,14 @@ export class WeatherService {
       humidity,
       windSpeed,
       pressure,
+      altitude,
       es: es.toFixed(3),
       ea: ea.toFixed(3),
       vpd: vpd.toFixed(3),
       delta: delta.toFixed(4),
       gamma: gamma.toFixed(4),
       rn: rn.toFixed(2),
+      rso: rso.toFixed(2),
       denominator: denominator.toFixed(4),
       et0Calculated: et0Calculated.toFixed(2),
       et0Final: et0Final.toFixed(2)
