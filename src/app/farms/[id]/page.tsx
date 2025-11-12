@@ -1357,7 +1357,6 @@ export default function FarmDetailsPage() {
             <ActivityFeed
               recentActivities={dashboardData?.recentActivities || []}
               loading={loading}
-              onDeleteRecord={handleDeleteRecord}
               onEditDateGroup={handleEditDateGroup}
               onDeleteDateGroup={handleDeleteDateGroup}
               farmId={farmId}

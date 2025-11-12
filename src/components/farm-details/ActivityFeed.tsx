@@ -16,7 +16,6 @@ import { getLogTypeIcon } from '@/lib/log-type-config'
 interface ActivityFeedProps {
   recentActivities: any[]
   loading: boolean
-  onDeleteRecord: (record: any, recordType: string) => void
   onEditDateGroup?: (date: string, activities: any[]) => void
   onDeleteDateGroup?: (date: string, activities: any[]) => void
   farmId?: string
@@ -31,7 +30,6 @@ const formatLogTypeLabel = (type: string) =>
 export function ActivityFeed({
   recentActivities,
   loading,
-  onDeleteRecord,
   onEditDateGroup,
   onDeleteDateGroup,
   farmId
