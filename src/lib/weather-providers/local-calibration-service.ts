@@ -156,11 +156,11 @@ export class LocalCalibrationService {
       return `Excellent accuracy! ${provider} matches local station very well. Use without correction.`
     }
 
-    if (absPercent < 10 && rmse < 1.0 && r2 > 0.90) {
+    if (absPercent < 10 && rmse < 1.0 && r2 > 0.9) {
       return `Good accuracy. ${provider} shows ${meanBiasPercent > 0 ? 'slight overestimation' : 'slight underestimation'} of ${absPercent.toFixed(1)}%. Consider applying correction factor.`
     }
 
-    if (absPercent < 20 && rmse < 1.5 && r2 > 0.80) {
+    if (absPercent < 20 && rmse < 1.5 && r2 > 0.8) {
       return `Moderate accuracy. ${provider} ${meanBiasPercent > 0 ? 'overestimates' : 'underestimates'} by ${absPercent.toFixed(1)}%. Correction factor recommended for precision irrigation.`
     }
 
@@ -298,7 +298,8 @@ export class LocalCalibrationService {
     report += `├──────────────────┼──────────┼──────────┼─────────┼─────────┤\n`
 
     for (const v of validations) {
-      const bias = v.meanBiasPercent >= 0 ? `+${v.meanBiasPercent.toFixed(1)}` : v.meanBiasPercent.toFixed(1)
+      const bias =
+        v.meanBiasPercent >= 0 ? `+${v.meanBiasPercent.toFixed(1)}` : v.meanBiasPercent.toFixed(1)
       const rating = this.getRating(v.rmse, v.r2)
       const isBest = v.provider === bestProvider ? ' ⭐' : '   '
 
@@ -326,9 +327,9 @@ export class LocalCalibrationService {
    */
   private static getRating(rmse: number, r2: number): string {
     if (rmse < 0.5 && r2 > 0.95) return '⭐⭐⭐⭐⭐'
-    if (rmse < 1.0 && r2 > 0.90) return '⭐⭐⭐⭐ '
-    if (rmse < 1.5 && r2 > 0.80) return '⭐⭐⭐  '
-    if (rmse < 2.0 && r2 > 0.70) return '⭐⭐   '
+    if (rmse < 1.0 && r2 > 0.9) return '⭐⭐⭐⭐ '
+    if (rmse < 1.5 && r2 > 0.8) return '⭐⭐⭐  '
+    if (rmse < 2.0 && r2 > 0.7) return '⭐⭐   '
     return '⭐    '
   }
 

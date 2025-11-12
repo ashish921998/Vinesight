@@ -73,7 +73,7 @@ export default function TestWeatherPage() {
                 <ul className="list-disc list-inside ml-4 text-muted-foreground">
                   <li>Form renders correctly</li>
                   <li>Enter temp (max: 35, min: 22)</li>
-                  <li>Click "Refine ETo" → spinner appears</li>
+                  <li>Click &quot;Refine ETo&quot; → spinner appears</li>
                   <li>Toast notification appears (top-right)</li>
                   <li>Results tab shows comparison</li>
                 </ul>

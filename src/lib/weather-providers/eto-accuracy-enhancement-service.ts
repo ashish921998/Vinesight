@@ -97,19 +97,19 @@ export class EnsembleEToService {
     longitude: number,
     date: string
   ): Promise<EnhancedEToResult> {
-    const providers: WeatherProvider[] = ['open-meteo', 'visual-crossing', 'weatherbit', 'tomorrow-io']
+    const providers: WeatherProvider[] = [
+      'open-meteo',
+      'visual-crossing',
+      'weatherbit',
+      'tomorrow-io'
+    ]
     const results: { provider: WeatherProvider; eto: number }[] = []
 
     // Fetch from all providers in parallel
     await Promise.all(
       providers.map(async (provider) => {
         try {
-          const data = await WeatherProviderManager.getWeatherData(
-            latitude,
-            longitude,
-            date,
-            date
-          )
+          const data = await WeatherProviderManager.getWeatherData(latitude, longitude, date, date)
           if (data[0]) {
             results.push({
               provider,
@@ -149,7 +149,7 @@ export class EnsembleEToService {
         providersUsed: results.length,
         hasLocalSensors: false,
         hasRegionalCalibration: false,
-        estimatedError: stdDev / averageETo * 100 // % error estimate
+        estimatedError: (stdDev / averageETo) * 100 // % error estimate
       }
     }
   }
@@ -163,18 +163,18 @@ export class EnsembleEToService {
     date: string,
     providerWeights: Record<WeatherProvider, number>
   ): Promise<EnhancedEToResult> {
-    const providers: WeatherProvider[] = ['open-meteo', 'visual-crossing', 'weatherbit', 'tomorrow-io']
+    const providers: WeatherProvider[] = [
+      'open-meteo',
+      'visual-crossing',
+      'weatherbit',
+      'tomorrow-io'
+    ]
     const results: { provider: WeatherProvider; eto: number; weight: number }[] = []
 
     await Promise.all(
       providers.map(async (provider) => {
         try {
-          const data = await WeatherProviderManager.getWeatherData(
-            latitude,
-            longitude,
-            date,
-            date
-          )
+          const data = await WeatherProviderManager.getWeatherData(latitude, longitude, date, date)
           if (data[0]) {
             results.push({
               provider,
@@ -213,7 +213,7 @@ export class EnsembleEToService {
         providersUsed: results.length,
         hasLocalSensors: false,
         hasRegionalCalibration: false,
-        estimatedError: weightedStdDev / weightedETo * 100
+        estimatedError: (weightedStdDev / weightedETo) * 100
       }
     }
   }
@@ -372,8 +372,8 @@ export class SensorFusionService {
 
     // Replace with sensor data if available (higher trust)
     if (sensorData.temperatureMax !== undefined && sensorData.temperatureMin !== undefined) {
-      const tempDiff = (sensorData.temperatureMax + sensorData.temperatureMin) / 2 -
-                       (tempMax + tempMin) / 2
+      const tempDiff =
+        (sensorData.temperatureMax + sensorData.temperatureMin) / 2 - (tempMax + tempMin) / 2
       tempMax = sensorData.temperatureMax
       tempMin = sensorData.temperatureMin
       corrections.push({
@@ -449,13 +449,15 @@ export class SensorFusionService {
     const ea = es * (humidity / 100)
 
     // Slope of saturation vapor pressure curve
-    const delta = (4098 * 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3))) / Math.pow(temp + 237.3, 2)
+    const delta =
+      (4098 * 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3))) / Math.pow(temp + 237.3, 2)
 
     // Psychrometric constant (standard atmospheric pressure)
     const gamma = 0.067
 
     // FAO-56 Penman-Monteith
-    const numerator = 0.408 * delta * solarRadiation + (gamma * 900 * windSpeed * (es - ea)) / (temp + 273)
+    const numerator =
+      0.408 * delta * solarRadiation + (gamma * 900 * windSpeed * (es - ea)) / (temp + 273)
     const denominator = delta + gamma * (1 + 0.34 * windSpeed)
 
     return Math.max(0, numerator / denominator)
@@ -745,7 +747,10 @@ export class AccuracyEnhancementService {
           reason: `Regional calibration applied (${calibrated.confidence * 100}% confidence)`
         })
         result.metadata.hasRegionalCalibration = true
-        result.metadata.estimatedError = Math.max(5, result.metadata.estimatedError * (1 - calibrated.confidence))
+        result.metadata.estimatedError = Math.max(
+          5,
+          result.metadata.estimatedError * (1 - calibrated.confidence)
+        )
       }
     }
 
@@ -803,7 +808,7 @@ export class AccuracyEnhancementService {
           reason: `Regional calibration applied to ensemble`
         })
         result.metadata.hasRegionalCalibration = true
-        result.metadata.estimatedError *= (1 - calibrated.confidence * 0.5)
+        result.metadata.estimatedError *= 1 - calibrated.confidence * 0.5
       }
     }
 

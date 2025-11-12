@@ -115,7 +115,12 @@ export function AccuracyInsights({ farm, currentProvider }: AccuracyInsightsProp
       setUseMultipleProviders(multiProvider)
 
       // Generate recommendations
-      generateRecommendations(level, accuracyData.validationCount, accuracyData.hasSensorData, multiProvider)
+      generateRecommendations(
+        level,
+        accuracyData.validationCount,
+        accuracyData.hasSensorData,
+        multiProvider
+      )
     } catch (error) {
       console.error('Error assessing accuracy:', error)
       // Keep default values on error
@@ -211,7 +216,8 @@ export function AccuracyInsights({ farm, currentProvider }: AccuracyInsightsProp
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Icon className={`h-5 w-5 ${currentLevel.color}`} />
-              Current Accuracy: {currentLevel.level.charAt(0).toUpperCase() + currentLevel.level.slice(1)}
+              Current Accuracy:{' '}
+              {currentLevel.level.charAt(0).toUpperCase() + currentLevel.level.slice(1)}
             </div>
             <Badge variant="outline" className={currentLevel.color}>
               {currentLevel.errorRange}
@@ -264,9 +270,7 @@ export function AccuracyInsights({ farm, currentProvider }: AccuracyInsightsProp
               <div className="flex items-center gap-3">
                 <CheckCircle2
                   className={`h-5 w-5 ${
-                    currentLevel.level !== 'basic'
-                      ? 'text-green-600'
-                      : 'text-gray-300'
+                    currentLevel.level !== 'basic' ? 'text-green-600' : 'text-gray-300'
                   }`}
                 />
                 <div className="flex-1">

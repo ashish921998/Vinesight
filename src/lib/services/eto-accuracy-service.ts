@@ -106,7 +106,9 @@ export class LocalSensorDataService {
     sensorData: LocalSensorData
   ): Promise<LocalSensorDataRow | null> {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user }
+      } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
       // Check if entry exists for this farm and date
@@ -162,10 +164,7 @@ export class LocalSensorDataService {
   /**
    * Get sensor data for a specific date
    */
-  static async getSensorData(
-    farmId: number,
-    date: string
-  ): Promise<LocalSensorDataRow | null> {
+  static async getSensorData(farmId: number, date: string): Promise<LocalSensorDataRow | null> {
     try {
       const { data, error } = await supabase
         .from('local_sensor_data')
@@ -231,10 +230,7 @@ export class LocalSensorDataService {
    */
   static async deleteSensorData(id: number): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('local_sensor_data')
-        .delete()
-        .eq('id', id)
+      const { error } = await supabase.from('local_sensor_data').delete().eq('id', id)
 
       if (error) throw error
       return true
@@ -271,7 +267,9 @@ export class EToValidationService {
     }
   ): Promise<EToValidationRow | null> {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user }
+      } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
       const { data, error } = await supabase
@@ -381,18 +379,18 @@ export class EToValidationService {
       return { count: 0, avgError: 0, avgErrorPercent: 0, rmse: 0, mae: 0 }
     }
 
-    const errors = validations.map(v => v.api_eto - v.measured_eto)
-    const errorPercents = validations.map(v =>
-      ((v.api_eto - v.measured_eto) / v.measured_eto) * 100
+    const errors = validations.map((v) => v.api_eto - v.measured_eto)
+    const errorPercents = validations.map(
+      (v) => ((v.api_eto - v.measured_eto) / v.measured_eto) * 100
     )
 
     const avgError = errors.reduce((sum, e) => sum + e, 0) / errors.length
     const avgErrorPercent = errorPercents.reduce((sum, e) => sum + e, 0) / errorPercents.length
 
-    const squaredErrors = errors.map(e => e * e)
+    const squaredErrors = errors.map((e) => e * e)
     const rmse = Math.sqrt(squaredErrors.reduce((sum, e) => sum + e, 0) / errors.length)
 
-    const absoluteErrors = errors.map(e => Math.abs(e))
+    const absoluteErrors = errors.map((e) => Math.abs(e))
     const mae = absoluteErrors.reduce((sum, e) => sum + e, 0) / errors.length
 
     return {
@@ -501,7 +499,7 @@ export class RegionalCalibrationService {
 
       // Group by season
       const seasonalValidations: Record<string, EToValidationRow[]> = {}
-      validations.forEach(v => {
+      validations.forEach((v) => {
         const season = this.getSeason(new Date(v.date))
         if (!seasonalValidations[season]) {
           seasonalValidations[season] = []
@@ -516,10 +514,10 @@ export class RegionalCalibrationService {
         if (vals.length < 3) continue
 
         // Calculate correction factor and bias
-        const ratios = vals.map(v => v.measured_eto / v.api_eto)
+        const ratios = vals.map((v) => v.measured_eto / v.api_eto)
         const correctionFactor = ratios.reduce((sum, r) => sum + r, 0) / ratios.length
 
-        const errors = vals.map(v => v.api_eto - v.measured_eto)
+        const errors = vals.map((v) => v.api_eto - v.measured_eto)
         const bias = errors.reduce((sum, e) => sum + e, 0) / errors.length
 
         // Calculate statistics
@@ -529,20 +527,23 @@ export class RegionalCalibrationService {
         // Upsert calibration
         const { data, error } = await supabase
           .from('regional_calibrations')
-          .upsert({
-            region_key: regionKey,
-            provider,
-            season: season as RegionalCalibrationRow['season'],
-            correction_factor: Math.round(correctionFactor * 1000) / 1000,
-            bias: Math.round(bias * 100) / 100,
-            sample_size: vals.length,
-            confidence: Math.round(confidence * 100) / 100,
-            rmse: stats.rmse,
-            mae: stats.mae,
-            last_updated: new Date().toISOString()
-          }, {
-            onConflict: 'region_key,provider,season'
-          })
+          .upsert(
+            {
+              region_key: regionKey,
+              provider,
+              season: season as RegionalCalibrationRow['season'],
+              correction_factor: Math.round(correctionFactor * 1000) / 1000,
+              bias: Math.round(bias * 100) / 100,
+              sample_size: vals.length,
+              confidence: Math.round(confidence * 100) / 100,
+              rmse: stats.rmse,
+              mae: stats.mae,
+              last_updated: new Date().toISOString()
+            },
+            {
+              onConflict: 'region_key,provider,season'
+            }
+          )
           .select()
           .single()
 
@@ -622,20 +623,25 @@ export class ProviderPerformanceService {
         return {
           'open-meteo': 1.0,
           'tomorrow-io': 0.9,
-          'weatherbit': 0.7,
+          weatherbit: 0.7,
           'visual-crossing': 0.5
         }
       }
 
       // Calculate weights based on accuracy scores
       const weights: Record<string, number> = {}
-      performance.forEach(p => {
+      performance.forEach((p) => {
         weights[p.provider] = p.accuracy_score || 0.5
       })
 
       // Ensure all providers have weights
-      const allProviders: WeatherProvider[] = ['open-meteo', 'visual-crossing', 'weatherbit', 'tomorrow-io']
-      allProviders.forEach(provider => {
+      const allProviders: WeatherProvider[] = [
+        'open-meteo',
+        'visual-crossing',
+        'weatherbit',
+        'tomorrow-io'
+      ]
+      allProviders.forEach((provider) => {
         if (!weights[provider]) {
           weights[provider] = 0.5 // Default weight
         }
@@ -647,7 +653,7 @@ export class ProviderPerformanceService {
       return {
         'open-meteo': 1.0,
         'tomorrow-io': 0.9,
-        'weatherbit': 0.7,
+        weatherbit: 0.7,
         'visual-crossing': 0.5
       }
     }

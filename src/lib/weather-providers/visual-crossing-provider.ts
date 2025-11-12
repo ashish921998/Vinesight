@@ -35,7 +35,8 @@ interface VisualCrossingResponse {
 }
 
 export class VisualCrossingProvider implements IWeatherProvider {
-  private static readonly BASE_URL = 'https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline'
+  private static readonly BASE_URL =
+    'https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline'
   private static readonly API_KEY = process.env.NEXT_PUBLIC_VISUAL_CROSSING_API_KEY
 
   async getWeatherData(

@@ -75,11 +75,7 @@ export interface IWeatherProvider {
   /**
    * Get weather forecast for multiple days
    */
-  getWeatherForecast(
-    latitude: number,
-    longitude: number,
-    days?: number
-  ): Promise<WeatherData[]>
+  getWeatherForecast(latitude: number, longitude: number, days?: number): Promise<WeatherData[]>
 }
 
 export interface WeatherProviderInfo {
@@ -120,7 +116,7 @@ export const WEATHER_PROVIDERS: Record<WeatherProvider, WeatherProviderInfo> = {
     isFree: false,
     requiresApiKey: true
   },
-  'weatherbit': {
+  weatherbit: {
     id: 'weatherbit',
     name: 'Weatherbit Agriculture',
     description: 'Dedicated agriculture API with soil data and 8-day forecasts',

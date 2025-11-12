@@ -152,10 +152,7 @@ export class WeatherbitProvider implements IWeatherProvider {
     }
   }
 
-  private parseWeatherData(
-    response: WeatherbitResponse,
-    days: WeatherbitDay[]
-  ): WeatherData[] {
+  private parseWeatherData(response: WeatherbitResponse, days: WeatherbitDay[]): WeatherData[] {
     const latitude = parseFloat(response.lat)
     const longitude = parseFloat(response.lon)
 

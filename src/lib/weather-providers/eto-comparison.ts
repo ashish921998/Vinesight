@@ -36,7 +36,7 @@ export class EToComparisonService {
     const providerPromises = Object.entries({
       'open-meteo': true,
       'visual-crossing': true,
-      'weatherbit': true,
+      weatherbit: true,
       'tomorrow-io': true
     } as Record<WeatherProvider, boolean>).map(async ([providerId]) => {
       try {
@@ -48,7 +48,7 @@ export class EToComparisonService {
         )
 
         // Find data for target date
-        const dayData = data.find(d => d.date === targetDate)
+        const dayData = data.find((d) => d.date === targetDate)
         if (!dayData) return null
 
         return {
@@ -61,7 +61,7 @@ export class EToComparisonService {
       }
     })
 
-    const results = (await Promise.all(providerPromises)).filter(r => r !== null)
+    const results = (await Promise.all(providerPromises)).filter((r) => r !== null)
 
     // Build comparison object
     const providers: EToComparison['providers'] = {}

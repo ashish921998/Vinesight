@@ -15,7 +15,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
@@ -33,8 +39,14 @@ import {
   RefreshCw
 } from 'lucide-react'
 import type { Farm } from '@/types/types'
-import type { LocalSensorData, EnhancedEToResult } from '@/lib/weather-providers/eto-accuracy-enhancement-service'
-import { SensorFusionService, AccuracyEnhancementService } from '@/lib/weather-providers/eto-accuracy-enhancement-service'
+import type {
+  LocalSensorData,
+  EnhancedEToResult
+} from '@/lib/weather-providers/eto-accuracy-enhancement-service'
+import {
+  SensorFusionService,
+  AccuracyEnhancementService
+} from '@/lib/weather-providers/eto-accuracy-enhancement-service'
 import { WeatherProviderManager } from '@/lib/weather-providers/weather-provider-manager'
 import { EToAccuracyService } from '@/lib/services/eto-accuracy-service'
 import { toast } from 'sonner'
@@ -434,7 +446,7 @@ export function LocalSensorInput({ farm }: LocalSensorInputProps) {
                     onChange={(e) => handleInputChange('windSpeed', e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground">
-                    If entering km/h, we'll convert to m/s
+                    If entering km/h, we&apos;ll convert to m/s
                   </p>
                 </div>
               </div>
@@ -579,9 +591,7 @@ export function LocalSensorInput({ farm }: LocalSensorInputProps) {
                       <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                         {refinedETo.eto} mm/day
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Estimated error: ±5-7%
-                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Estimated error: ±5-7%</p>
                     </div>
                   </div>
 
@@ -634,9 +644,9 @@ export function LocalSensorInput({ farm }: LocalSensorInputProps) {
                     <AlertDescription>
                       <strong>Irrigation Impact:</strong> Using refined ETo instead of API ETo could
                       save{' '}
-                      {(
-                        ((Math.abs(refinedETo.eto - (apiETo || 0)) / (apiETo || 1)) * 100)
-                      ).toFixed(1)}
+                      {((Math.abs(refinedETo.eto - (apiETo || 0)) / (apiETo || 1)) * 100).toFixed(
+                        1
+                      )}
                       % water per irrigation cycle.
                     </AlertDescription>
                   </Alert>
@@ -644,7 +654,7 @@ export function LocalSensorInput({ farm }: LocalSensorInputProps) {
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <Thermometer className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Enter sensor data and click "Refine ETo" to see results</p>
+                  <p>Enter sensor data and click &quot;Refine ETo&quot; to see results</p>
                 </div>
               )}
             </CardContent>

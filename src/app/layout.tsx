@@ -174,13 +174,7 @@ export default function RootLayout({
             </I18nProvider>
           </Suspense>
         </AsyncErrorBoundary>
-        <Toaster
-          position="top-right"
-          expand={false}
-          richColors
-          closeButton
-          duration={4000}
-        />
+        <Toaster position="top-right" expand={false} richColors closeButton duration={4000} />
         <GoogleAnalytics />
         <Analytics />
       </body>
