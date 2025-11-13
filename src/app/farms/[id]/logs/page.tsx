@@ -426,14 +426,10 @@ export default function FarmLogsPage() {
     setCurrentPage(1)
   }, [])
 
-  const handleFarmChange = useCallback(
-    (farmId: string) => {
-      setSelectedFarm(farmId)
-      setCurrentPage(1)
-      router.push(`/farms/${farmId}/logs`)
-    },
-    [router]
-  )
+  const handleFarmChange = useCallback((farmId: string) => {
+    setSelectedFarm(farmId)
+    setCurrentPage(1)
+  }, [])
 
   const handlePageChange = useCallback(
     (page: number) => {

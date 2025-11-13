@@ -1343,21 +1343,21 @@ export class SupabaseService {
 
     // Combine all activities for recent activities display
     const allActivities = [
-      ...irrigationRecords.slice(0, 3).map((record) => ({ ...record, type: 'irrigation' })),
-      ...sprayRecords.slice(0, 3).map((record) => ({ ...record, type: 'spray' })),
-      ...fertigationRecords.slice(0, 3).map((record) => ({ ...record, type: 'fertigation' })),
-      ...harvestRecords.slice(0, 3).map((record) => ({ ...record, type: 'harvest' })),
-      ...expenseRecords.slice(0, 3).map((record) => ({ ...record, type: 'expense' })),
-      ...soilTestRecords.slice(0, 3).map((record) => ({ ...record, type: 'soil_test' })),
-      ...petioleTestRecords.slice(0, 3).map((record) => ({ ...record, type: 'petiole_test' })),
-      ...dailyNotes.slice(0, 3).map((record) => ({ ...record, type: 'daily_note' }))
+      ...irrigationRecords.slice(0, 10).map((record) => ({ ...record, type: 'irrigation' })),
+      ...sprayRecords.slice(0, 10).map((record) => ({ ...record, type: 'spray' })),
+      ...fertigationRecords.slice(0, 10).map((record) => ({ ...record, type: 'fertigation' })),
+      ...harvestRecords.slice(0, 10).map((record) => ({ ...record, type: 'harvest' })),
+      ...expenseRecords.slice(0, 10).map((record) => ({ ...record, type: 'expense' })),
+      ...soilTestRecords.slice(0, 10).map((record) => ({ ...record, type: 'soil_test' })),
+      ...petioleTestRecords.slice(0, 10).map((record) => ({ ...record, type: 'petiole_test' })),
+      ...dailyNotes.slice(0, 10).map((record) => ({ ...record, type: 'daily_note' }))
     ]
       .sort(
         (a, b) =>
           new Date(b.date || b.created_at || '').getTime() -
           new Date(a.date || a.created_at || '').getTime()
       )
-      .slice(0, 10)
+      .slice(0, 50)
 
     return {
       farm,

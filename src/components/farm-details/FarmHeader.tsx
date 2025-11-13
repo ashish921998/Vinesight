@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { type Farm } from '@/types/types'
-import { capitalize } from '@/lib/utils'
+import { capitalize, formatRemainingWater } from '@/lib/utils'
 import { WEATHER_THRESHOLDS } from '@/constants/weather'
 
 export type FarmWeatherSummary = {
@@ -186,11 +186,6 @@ export function FarmHeader({
   if (!farm) return null
 
   const hasPendingTasks = (pendingTasksCount ?? 0) > 0
-
-  const formatRemainingWater = (value: number | null | undefined) => {
-    if (value === null || value === undefined) return '—'
-    return `${value.toFixed(1)} mm`
-  }
 
   const waterUsageCaption = totalWaterUsage
     ? `${formatWaterUsage(totalWaterUsage)} this season`
