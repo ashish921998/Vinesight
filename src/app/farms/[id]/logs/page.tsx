@@ -351,6 +351,7 @@ export default function FarmLogsPage() {
         if (myRequestId === requestIdRef.current) setSearchLoading(false)
       }
     },
+    // itemsPerPage is only a fallback when debouncedItemsPerPage is falsy, so only debouncedItemsPerPage is needed
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       selectedFarm,
@@ -358,12 +359,11 @@ export default function FarmLogsPage() {
       debouncedActivityTypes,
       debouncedDateFrom,
       debouncedDateTo,
-      debouncedItemsPerPage,
-      itemsPerPage
+      debouncedItemsPerPage
     ]
   )
 
-  // Load logs on farm change
+  // Load logs on farm change and filter updates
   useEffect(() => {
     if (!selectedFarm) return
 
@@ -379,19 +379,14 @@ export default function FarmLogsPage() {
     }
 
     loadLogsOnChange()
-  }, [selectedFarm, performSearch])
-
-  // Watch debounced filters
-  useEffect(() => {
-    // whenever any debounced filter changes, fetch page 1
-    performSearch(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    selectedFarm,
     debouncedQuery,
     debouncedActivityTypes,
     debouncedDateFrom,
     debouncedDateTo,
-    debouncedItemsPerPage,
-    performSearch
+    debouncedItemsPerPage
   ])
 
   useEffect(() => {
@@ -949,8 +944,12 @@ export default function FarmLogsPage() {
               Green badge with scissors shows days after pruning when log was added
             </div>
           </CardHeader>
-          <CardContent className="px-2 sm:px-3 pb-3">
-            {logs.length > 0 ? (
+          <CardContent className="px-2 sm:px-3 pb-3 relative" aria-busy={searchLoading}>
+            {searchLoading ? (
+              <div className="flex flex-col items-center justify-center py-12" role="status">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-3"></div>
+              </div>
+            ) : logs.length > 0 ? (
               <LogsList
                 logs={logs}
                 onEdit={handleEditRecord}
