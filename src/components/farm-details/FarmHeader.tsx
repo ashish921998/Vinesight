@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { type Farm } from '@/types/types'
-import { capitalize } from '@/lib/utils'
+import { capitalize, formatRemainingWater, calculateDaysAfterPruning } from '@/lib/utils'
 import { WEATHER_THRESHOLDS } from '@/constants/weather'
 
 export type FarmWeatherSummary = {
@@ -68,24 +68,6 @@ export function FarmHeader({
   onEditFarm,
   onDeleteFarm
 }: FarmHeaderProps) {
-  const calculateDaysAfterPruning = (pruningDate?: Date) => {
-    if (!pruningDate) return null
-
-    const pruning = pruningDate
-    const today = new Date()
-
-    const pruningMidnight = new Date(pruning.getFullYear(), pruning.getMonth(), pruning.getDate())
-    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-
-    const diffTime = todayMidnight.getTime() - pruningMidnight.getTime()
-
-    const rawDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-
-    const diffDays = rawDays + 1
-
-    return diffDays > 0 ? diffDays : null
-  }
-
   const getWeatherConditionIcon = () => {
     if (!weatherSummary) return Sun
     switch (weatherSummary.condition) {
@@ -186,11 +168,6 @@ export function FarmHeader({
   if (!farm) return null
 
   const hasPendingTasks = (pendingTasksCount ?? 0) > 0
-
-  const formatRemainingWater = (value: number | null | undefined) => {
-    if (value === null || value === undefined) return '—'
-    return `${value.toFixed(1)} mm`
-  }
 
   const waterUsageCaption = totalWaterUsage
     ? `${formatWaterUsage(totalWaterUsage)} this season`

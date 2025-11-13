@@ -348,13 +348,19 @@ export class SupabaseService {
   }
 
   // Spray operations
-  static async getSprayRecords(farmId: number): Promise<SprayRecord[]> {
+  static async getSprayRecords(farmId: number, limit?: number): Promise<SprayRecord[]> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
+    let query = supabase
       .from('spray_records')
       .select('*')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return (data || []).map(toApplicationSprayRecord)
@@ -630,13 +636,19 @@ export class SupabaseService {
   }
 
   // Fertigation operations
-  static async getFertigationRecords(farmId: number): Promise<FertigationRecord[]> {
+  static async getFertigationRecords(farmId: number, limit?: number): Promise<FertigationRecord[]> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
+    let query = supabase
       .from('fertigation_records')
       .select('*')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return (data || []).map(toApplicationFertigationRecord)
@@ -829,13 +841,19 @@ export class SupabaseService {
   }
 
   // Harvest operations
-  static async getHarvestRecords(farmId: number): Promise<HarvestRecord[]> {
+  static async getHarvestRecords(farmId: number, limit?: number): Promise<HarvestRecord[]> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
+    let query = supabase
       .from('harvest_records')
       .select('*')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return (data || []).map(toApplicationHarvestRecord)
@@ -883,13 +901,19 @@ export class SupabaseService {
   }
 
   // Expense operations
-  static async getExpenseRecords(farmId: number): Promise<ExpenseRecord[]> {
+  static async getExpenseRecords(farmId: number, limit?: number): Promise<ExpenseRecord[]> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
+    let query = supabase
       .from('expense_records')
       .select('*')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return (data || []).map(toApplicationExpenseRecord)
@@ -1171,13 +1195,19 @@ export class SupabaseService {
   }
 
   // Soil test operations
-  static async getSoilTestRecords(farmId: number): Promise<SoilTestRecord[]> {
+  static async getSoilTestRecords(farmId: number, limit?: number): Promise<SoilTestRecord[]> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
+    let query = supabase
       .from('soil_test_records')
       .select('*')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return (data || []).map(toApplicationSoilTestRecord)
@@ -1225,13 +1255,19 @@ export class SupabaseService {
   }
 
   // Petiole test operations
-  static async getPetioleTestRecords(farmId: number): Promise<PetioleTestRecord[]> {
+  static async getPetioleTestRecords(farmId: number, limit?: number): Promise<PetioleTestRecord[]> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
+    let query = supabase
       .from('petiole_test_records')
       .select('*')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return (data || []).map(toApplicationPetioleTestRecord)
@@ -1309,73 +1345,113 @@ export class SupabaseService {
 
   // Dashboard summary
   static async getDashboardSummary(farmId: number) {
+    // Fetch only 10 most recent records for each activity type (for display)
     const [
       farm,
       pendingTasks,
-      irrigationRecords,
-      sprayRecords,
-      fertigationRecords,
-      harvestRecords,
-      expenseRecords,
-      soilTestRecords,
-      petioleTestRecords,
-      dailyNotes
+      irrigationRecordsLimited,
+      sprayRecordsLimited,
+      fertigationRecordsLimited,
+      harvestRecordsLimited,
+      expenseRecordsLimited,
+      soilTestRecordsLimited,
+      petioleTestRecordsLimited,
+      dailyNotesLimited
     ] = await Promise.all([
       this.getFarmById(farmId),
       this.getPendingTasks(farmId),
-      this.getIrrigationRecords(farmId),
-      this.getSprayRecords(farmId),
-      this.getFertigationRecords(farmId),
-      this.getHarvestRecords(farmId),
-      this.getExpenseRecords(farmId),
-      this.getSoilTestRecords(farmId),
-      this.getPetioleTestRecords(farmId),
-      this.getDailyNotes(farmId)
+      this.getIrrigationRecords(farmId, 10),
+      this.getSprayRecords(farmId, 10),
+      this.getFertigationRecords(farmId, 10),
+      this.getHarvestRecords(farmId, 10),
+      this.getExpenseRecords(farmId, 10),
+      this.getSoilTestRecords(farmId, 10),
+      this.getPetioleTestRecords(farmId, 10),
+      this.getDailyNotes(farmId, 10)
     ])
 
-    const totalHarvest = harvestRecords.reduce((sum, record) => sum + record.quantity, 0)
+    // Fetch all harvest and irrigation records for totals calculation (in parallel)
+    const [allIrrigationRecords, allHarvestRecords] = await Promise.all([
+      this.getIrrigationRecords(farmId),
+      this.getHarvestRecords(farmId)
+    ])
+
+    const totalHarvest = allHarvestRecords.reduce((sum, record) => sum + record.quantity, 0)
 
     // Calculate total historical water usage (duration × system_discharge)
-    const totalWaterUsage = irrigationRecords.reduce((sum, record) => {
+    const totalWaterUsage = allIrrigationRecords.reduce((sum, record) => {
       const waterUsed = (record.duration || 0) * (record.system_discharge || 0)
       return sum + waterUsed
     }, 0)
 
-    // Combine all activities for recent activities display
+    // Get record counts efficiently using count queries
+    const supabase = getTypedSupabaseClient()
+    const [
+      sprayCount,
+      fertigationCount,
+      expenseCount,
+      soilTestCount,
+      petioleTestCount,
+      dailyNotesCount
+    ] = await Promise.all([
+      supabase
+        .from('spray_records')
+        .select('*', { count: 'exact', head: true })
+        .eq('farm_id', farmId),
+      supabase
+        .from('fertigation_records')
+        .select('*', { count: 'exact', head: true })
+        .eq('farm_id', farmId),
+      supabase
+        .from('expense_records')
+        .select('*', { count: 'exact', head: true })
+        .eq('farm_id', farmId),
+      supabase
+        .from('soil_test_records')
+        .select('*', { count: 'exact', head: true })
+        .eq('farm_id', farmId),
+      supabase
+        .from('petiole_test_records')
+        .select('*', { count: 'exact', head: true })
+        .eq('farm_id', farmId),
+      supabase.from('daily_notes').select('*', { count: 'exact', head: true }).eq('farm_id', farmId)
+    ])
+
+    // Combine all activities for recent activities display (already limited to 10 each at DB level)
     const allActivities = [
-      ...irrigationRecords.slice(0, 3).map((record) => ({ ...record, type: 'irrigation' })),
-      ...sprayRecords.slice(0, 3).map((record) => ({ ...record, type: 'spray' })),
-      ...fertigationRecords.slice(0, 3).map((record) => ({ ...record, type: 'fertigation' })),
-      ...harvestRecords.slice(0, 3).map((record) => ({ ...record, type: 'harvest' })),
-      ...expenseRecords.slice(0, 3).map((record) => ({ ...record, type: 'expense' })),
-      ...soilTestRecords.slice(0, 3).map((record) => ({ ...record, type: 'soil_test' })),
-      ...petioleTestRecords.slice(0, 3).map((record) => ({ ...record, type: 'petiole_test' })),
-      ...dailyNotes.slice(0, 3).map((record) => ({ ...record, type: 'daily_note' }))
+      ...irrigationRecordsLimited.map((record) => ({ ...record, type: 'irrigation' })),
+      ...sprayRecordsLimited.map((record) => ({ ...record, type: 'spray' })),
+      ...fertigationRecordsLimited.map((record) => ({ ...record, type: 'fertigation' })),
+      ...harvestRecordsLimited.map((record) => ({ ...record, type: 'harvest' })),
+      ...expenseRecordsLimited.map((record) => ({ ...record, type: 'expense' })),
+      ...soilTestRecordsLimited.map((record) => ({ ...record, type: 'soil_test' })),
+      ...petioleTestRecordsLimited.map((record) => ({ ...record, type: 'petiole_test' })),
+      ...dailyNotesLimited.map((record) => ({ ...record, type: 'daily_note' }))
     ]
       .sort(
         (a, b) =>
           new Date(b.date || b.created_at || '').getTime() -
           new Date(a.date || a.created_at || '').getTime()
       )
-      .slice(0, 10)
+      .slice(0, 50)
 
     return {
       farm,
       pendingTasksCount: pendingTasks.length,
-      recentIrrigations: irrigationRecords.slice(0, 5), // Keep for backward compatibility
+      recentIrrigations: irrigationRecordsLimited.slice(0, 5), // Keep for backward compatibility
       recentActivities: allActivities, // New comprehensive activities list
       totalHarvest,
-      totalWaterUsage, // Total historical water usage in liters
+      totalWaterUsage, // Total historical water usage in mm
       pendingTasks: pendingTasks.slice(0, 3), // Show top 3 pending tasks
       recordCounts: {
-        irrigation: irrigationRecords.length,
-        spray: sprayRecords.length,
-        fertigation: fertigationRecords.length,
-        harvest: harvestRecords.length,
-        expense: expenseRecords.length,
-        soilTest: soilTestRecords.length,
-        petioleTest: petioleTestRecords.length,
-        dailyNotes: dailyNotes.length
+        irrigation: allIrrigationRecords.length,
+        spray: sprayCount.count || 0,
+        fertigation: fertigationCount.count || 0,
+        harvest: allHarvestRecords.length,
+        expense: expenseCount.count || 0,
+        soilTest: soilTestCount.count || 0,
+        petioleTest: petioleTestCount.count || 0,
+        dailyNotes: dailyNotesCount.count || 0
       }
     }
   }

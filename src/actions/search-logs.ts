@@ -54,26 +54,52 @@ export async function searchLogs({
     const supabase = await createServerSupabaseClient()
 
     // Fetch all record types in parallel
-    const [irrigation, spray, harvest, expenses, fertigation, soilTests, petioleTests, dailyNotes] =
-      await Promise.all([
-        supabase.from('irrigation_records').select('*').eq('farm_id', farmId),
-        supabase.from('spray_records').select('*').eq('farm_id', farmId),
-        supabase.from('harvest_records').select('*').eq('farm_id', farmId),
-        supabase.from('expense_records').select('*').eq('farm_id', farmId),
-        supabase.from('fertigation_records').select('*').eq('farm_id', farmId),
-        supabase.from('soil_test_records').select('*').eq('farm_id', farmId),
-        supabase.from('petiole_test_records').select('*').eq('farm_id', farmId),
-        supabase.from('daily_notes').select('*').eq('farm_id', farmId)
-      ])
+    const [
+      irrigationResult,
+      sprayResult,
+      harvestResult,
+      expensesResult,
+      fertigationResult,
+      soilTestsResult,
+      petioleTestsResult,
+      dailyNotesResult
+    ] = await Promise.all([
+      supabase.from('irrigation_records').select('*').eq('farm_id', farmId),
+      supabase.from('spray_records').select('*').eq('farm_id', farmId),
+      supabase.from('harvest_records').select('*').eq('farm_id', farmId),
+      supabase.from('expense_records').select('*').eq('farm_id', farmId),
+      supabase.from('fertigation_records').select('*').eq('farm_id', farmId),
+      supabase.from('soil_test_records').select('*').eq('farm_id', farmId),
+      supabase.from('petiole_test_records').select('*').eq('farm_id', farmId),
+      supabase.from('daily_notes').select('*').eq('farm_id', farmId)
+    ])
 
-    const irrigationData = irrigation.data || []
-    const sprayData = spray.data || []
-    const harvestData = harvest.data || []
-    const expensesData = expenses.data || []
-    const fertigationData = fertigation.data || []
-    const soilTestsData = soilTests.data || []
-    const petioleTestsData = petioleTests.data || []
-    const dailyNotesData = dailyNotes.data || []
+    // Validate each query result and log errors
+    const errors: string[] = []
+    if (irrigationResult.error) errors.push(`irrigation_records: ${irrigationResult.error.message}`)
+    if (sprayResult.error) errors.push(`spray_records: ${sprayResult.error.message}`)
+    if (harvestResult.error) errors.push(`harvest_records: ${harvestResult.error.message}`)
+    if (expensesResult.error) errors.push(`expense_records: ${expensesResult.error.message}`)
+    if (fertigationResult.error)
+      errors.push(`fertigation_records: ${fertigationResult.error.message}`)
+    if (soilTestsResult.error) errors.push(`soil_test_records: ${soilTestsResult.error.message}`)
+    if (petioleTestsResult.error)
+      errors.push(`petiole_test_records: ${petioleTestsResult.error.message}`)
+    if (dailyNotesResult.error) errors.push(`daily_notes: ${dailyNotesResult.error.message}`)
+
+    if (errors.length > 0) {
+      console.error('Supabase query errors:', errors)
+      throw new Error(`Failed to fetch farm logs: ${errors.join('; ')}`)
+    }
+
+    const irrigationData = irrigationResult.data || []
+    const sprayData = sprayResult.data || []
+    const harvestData = harvestResult.data || []
+    const expensesData = expensesResult.data || []
+    const fertigationData = fertigationResult.data || []
+    const soilTestsData = soilTestsResult.data || []
+    const petioleTestsData = petioleTestsResult.data || []
+    const dailyNotesData = dailyNotesResult.data || []
 
     // small helper to map arrays safely
     const mapIfHasId = (arr: any[] | undefined, fn: (r: any) => ActivityLog) =>
