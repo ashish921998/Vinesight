@@ -43,7 +43,7 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { SupabaseService } from '@/lib/supabase-service'
 import { WeatherService, type WeatherData } from '@/lib/weather-service'
 import { type Farm } from '@/types/types'
-import { capitalize, cn, formatRemainingWater } from '@/lib/utils'
+import { capitalize, cn, formatRemainingWater, calculateDaysAfterPruning } from '@/lib/utils'
 import { EmptyStateDashboard } from './EmptyStateDashboard'
 import { useRouter } from 'next/navigation'
 import { TasksOverviewCard } from '@/components/tasks/TasksOverviewCard'
@@ -67,25 +67,6 @@ const calculateFarmStatus = (
   if (criticalAlerts > 0 || overdueTasks > 2) return 'critical'
   if (overdueTasks > 0) return 'attention'
   return 'healthy'
-}
-
-// Helper function to calculate days after pruning
-const calculateDaysAfterPruning = (pruningDate?: Date | null) => {
-  if (!pruningDate) return null
-
-  const pruning = pruningDate
-  const today = new Date()
-
-  const pruningMidnight = new Date(pruning.getFullYear(), pruning.getMonth(), pruning.getDate())
-  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-
-  const diffTime = todayMidnight.getTime() - pruningMidnight.getTime()
-
-  const rawDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-
-  const diffDays = rawDays + 1
-
-  return diffDays > 0 ? diffDays : null
 }
 
 interface FarmerDashboardProps {
