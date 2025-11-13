@@ -110,7 +110,7 @@ const getDaysAfterPruning = (
     const diffMs = createdDate.getTime() - pruningDate.getTime()
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-    return diffDays >= 0 ? diffDays : null
+    return diffDays
   } catch {
     return null
   }
@@ -199,11 +199,15 @@ const LogsList = React.memo(function LogsList({
                     {formatLogDate(log.date)}
                   </span>
                 </div>
-                {daysAfterPruning !== null && daysAfterPruning >= 0 && (
+                {daysAfterPruning !== null && (
                   <div className="mt-2">
-                    <div className="inline-flex items-center gap-1 bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full cursor-help">
+                    <div
+                      className={`inline-flex items-center gap-1 text-white text-xs font-medium px-2 py-1 rounded-full cursor-help ${
+                        daysAfterPruning >= 0 ? 'bg-green-500' : 'bg-orange-500'
+                      }`}
+                    >
                       <Scissors className="h-3 w-3" />
-                      {daysAfterPruning}d
+                      {daysAfterPruning >= 0 ? `${daysAfterPruning}d` : `${daysAfterPruning}d`}
                     </div>
                   </div>
                 )}

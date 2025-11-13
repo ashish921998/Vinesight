@@ -145,13 +145,12 @@ export function FarmHeader({
 
   const formatWaterUsage = (value: number | null | undefined) => {
     if (value === null || value === undefined || value === 0) return 'No irrigation logged yet'
-    if (value < 1000) return `${formatNumber(value)} L used`
-    if (value < 1000000) {
-      const kilolitres = value / 1000
-      return `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 }).format(kilolitres)} kL used`
-    }
-    const megalitres = value / 1000000
-    return `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 }).format(megalitres)} ML used`
+    const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
+    const formatter = new Intl.NumberFormat('en-IN', {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits
+    })
+    return `${formatter.format(value)} mm applied`
   }
 
   const daysAfterPruning = calculateDaysAfterPruning(farm.dateOfPruning)
