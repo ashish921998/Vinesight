@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -36,11 +36,12 @@ import { UnifiedDataLogsModal } from '@/components/farm-details/UnifiedDataLogsM
 import { EditRecordModal } from '@/components/journal/EditRecordModal'
 
 import { SupabaseService } from '@/lib/supabase-service'
-import { getActivityDisplayData, normalizeDateToYYYYMMDD } from '@/lib/activity-display-utils'
+import { getActivityDisplayData } from '@/lib/activity-display-utils'
 import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
 import { cn, capitalize } from '@/lib/utils'
 import { toast } from 'sonner'
 import { parseFarmId, handleDailyNotesAndPhotosAfterLogs } from '@/lib/daily-note-utils'
+import { searchLogs } from '@/lib/server/search-logs'
 
 import { type Farm } from '@/types/types'
 
@@ -140,7 +141,6 @@ export default function FarmLogsPage() {
   const [selectedFarm, setSelectedFarm] = useState<string>(farmId)
   const [farms, setFarms] = useState<Farm[]>([])
   const [logs, setLogs] = useState<ActivityLog[]>([])
-  const [allLogs, setAllLogs] = useState<ActivityLog[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalLogs, setTotalLogs] = useState(0)
@@ -165,6 +165,7 @@ export default function FarmLogsPage() {
   const [deletingRecord, setDeletingRecord] = useState<ActivityLog | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
 
   const totalPages = Math.ceil(totalLogs / itemsPerPage)
 
@@ -180,185 +181,66 @@ export default function FarmLogsPage() {
     }
   }, [selectedFarm])
 
-  const loadLogs = useCallback(async () => {
+  const performSearch = useCallback(
+    async (page: number = 1) => {
+      if (!selectedFarm) return
+
+      try {
+        setSearchLoading(true)
+        const farmIdNum = parseInt(selectedFarm)
+
+        const result = await searchLogs({
+          farmId: farmIdNum,
+          searchQuery,
+          selectedActivityTypes,
+          dateFrom,
+          dateTo,
+          currentPage: page,
+          itemsPerPage
+        })
+
+        setLogs(result.logs)
+        setTotalLogs(result.totalCount)
+      } catch (error) {
+        console.error('Error searching logs:', error)
+        toast.error('Failed to search logs')
+      } finally {
+        setSearchLoading(false)
+      }
+    },
+    [selectedFarm, searchQuery, selectedActivityTypes, dateFrom, dateTo, itemsPerPage]
+  )
+
+  // Load logs on farm change
+  useEffect(() => {
     if (!selectedFarm) return
 
-    try {
-      setLoading(true)
-
-      const farmIdNum = parseInt(selectedFarm)
-
-      const [
-        irrigation,
-        spray,
-        harvest,
-        expenses,
-        fertigation,
-        soilTests,
-        petioleTests,
-        dailyNotes
-      ] = await Promise.all([
-        SupabaseService.getIrrigationRecords(farmIdNum),
-        SupabaseService.getSprayRecords(farmIdNum),
-        SupabaseService.getHarvestRecords(farmIdNum),
-        SupabaseService.getExpenseRecords(farmIdNum),
-        SupabaseService.getFertigationRecords(farmIdNum),
-        SupabaseService.getSoilTestRecords(farmIdNum),
-        SupabaseService.getPetioleTestRecords(farmIdNum),
-        SupabaseService.getDailyNotes(farmIdNum)
-      ])
-
-      const combinedLogs: ActivityLog[] = [
-        ...irrigation
-          .filter((log) => log.id != null)
-          .map((log) => ({
-            id: log.id!,
-            type: 'irrigation',
-            date: log.date,
-            notes: log.notes,
-            duration: log.duration,
-            created_at: log.created_at || log.date
-          })),
-        ...spray
-          .filter((log) => log.id != null)
-          .map((log) => ({
-            id: log.id!,
-            type: 'spray',
-            date: log.date,
-            notes: log.notes,
-            chemical: log.chemical,
-            chemicals: log.chemicals,
-            created_at: log.created_at || log.date,
-            water_volume: log.water_volume
-          })),
-        ...harvest
-          .filter((log) => log.id != null)
-          .map((log) => ({
-            id: log.id!,
-            type: 'harvest',
-            date: log.date,
-            notes: log.notes,
-            quantity: log.quantity,
-            created_at: log.created_at || log.date
-          })),
-        ...expenses
-          .filter((log) => log.id != null)
-          .map((log) => ({
-            id: log.id!,
-            type: 'expense',
-            date: log.date,
-            notes: log.remarks,
-            cost: log.cost,
-            created_at: log.created_at || log.date
-          })),
-        ...fertigation
-          .filter((log) => log.id != null)
-          .map((log) => ({
-            id: log.id!,
-            type: 'fertigation',
-            date: log.date,
-            notes: log.notes,
-            fertilizers: log.fertilizers,
-            created_at: log.created_at || log.date
-          })),
-        ...soilTests
-          .filter((log) => log.id != null)
-          .map((log) => ({
-            id: log.id!,
-            type: 'soil_test',
-            date: log.date,
-            notes: log.notes,
-            created_at: log.created_at || log.date
-          })),
-        ...petioleTests
-          .filter((log) => log.id != null)
-          .map((log) => ({
-            id: log.id!,
-            type: 'petiole_test',
-            date: log.date,
-            notes: log.notes,
-            created_at: log.created_at || log.date
-          })),
-        ...dailyNotes
-          .filter((note) => note.id != null)
-          .map((note) => ({
-            id: note.id!,
-            type: 'daily_note',
-            date: note.date,
-            notes: note.notes || '',
-            created_at: note.created_at || note.date
-          }))
-      ]
-
-      const sortedLogs = combinedLogs.sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      )
-
-      setAllLogs(sortedLogs)
-    } catch (error) {
-      console.error('Error loading logs:', error)
-    } finally {
-      setLoading(false)
+    const loadLogsOnChange = async () => {
+      try {
+        setLoading(true)
+        await performSearch(1)
+      } catch (error) {
+        console.error('Error loading logs:', error)
+      } finally {
+        setLoading(false)
+      }
     }
+
+    loadLogsOnChange()
   }, [selectedFarm])
 
-  const filteredLogs = useMemo(() => {
-    let filtered = [...allLogs]
-
-    if (selectedActivityTypes.length > 0) {
-      filtered = filtered.filter((log) => selectedActivityTypes.includes(log.type))
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim()
-      filtered = filtered.filter(
-        (log) => log.notes?.toLowerCase().includes(query) || log.type.toLowerCase().includes(query)
-      )
-    }
-
-    if (dateFrom) {
-      const normalizedDateFrom = normalizeDateToYYYYMMDD(dateFrom)
-      if (normalizedDateFrom) {
-        filtered = filtered.filter((log) => {
-          const normalizedLogDate = normalizeDateToYYYYMMDD(log.date)
-          return normalizedLogDate && normalizedLogDate >= normalizedDateFrom
-        })
-      }
-    }
-    if (dateTo) {
-      const normalizedDateTo = normalizeDateToYYYYMMDD(dateTo)
-      if (normalizedDateTo) {
-        filtered = filtered.filter((log) => {
-          const normalizedLogDate = normalizeDateToYYYYMMDD(log.date)
-          return normalizedLogDate && normalizedLogDate <= normalizedDateTo
-        })
-      }
-    }
-
-    return filtered
-  }, [allLogs, selectedActivityTypes, searchQuery, dateFrom, dateTo])
-
-  const paginatedLogs = useMemo(() => {
-    const offset = (currentPage - 1) * itemsPerPage
-    return filteredLogs.slice(offset, offset + itemsPerPage)
-  }, [filteredLogs, currentPage, itemsPerPage])
-
+  // Search when filters change (with debounce)
   useEffect(() => {
-    setLogs(paginatedLogs)
-    setTotalLogs(filteredLogs.length)
-    // Reset to page 1 when filters change
-    if (currentPage > 1 && paginatedLogs.length === 0 && filteredLogs.length > 0) {
-      setCurrentPage(1)
-    }
-  }, [paginatedLogs, filteredLogs.length, currentPage])
+    const timer = setTimeout(() => {
+      performSearch(1)
+    }, 300) // Debounce search
+
+    return () => clearTimeout(timer)
+  }, [searchQuery, selectedActivityTypes, dateFrom, dateTo, itemsPerPage, performSearch])
 
   useEffect(() => {
     loadFarms()
   }, [loadFarms])
-
-  useEffect(() => {
-    loadLogs()
-  }, [loadLogs])
 
   const clearFilters = () => {
     setSearchQuery('')
@@ -396,12 +278,14 @@ export default function FarmLogsPage() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
+    performSearch(page)
     window.scrollTo(0, 0)
   }
 
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage)
     setCurrentPage(1)
+    // Search will be triggered by the useEffect watching itemsPerPage
   }
 
   const saveLogEntry = async (logEntry: any, date: string, dayNotes: string) => {
@@ -551,7 +435,7 @@ export default function FarmLogsPage() {
         date
       })
 
-      await loadLogs()
+      await performSearch(1)
       setShowUnifiedModal(false)
       setExistingLogsForEdit([])
       setSelectedDate('')
@@ -620,7 +504,7 @@ export default function FarmLogsPage() {
           throw new Error(`Unsupported record type: ${deletingRecord.type}`)
       }
 
-      await loadLogs()
+      await performSearch(1)
       setShowDeleteDialog(false)
       setDeletingRecord(null)
     } catch (error) {
@@ -901,9 +785,9 @@ export default function FarmLogsPage() {
             </div>
           </CardHeader>
           <CardContent className="px-2 sm:px-3 pb-3">
-            {paginatedLogs.length > 0 ? (
+            {logs.length > 0 ? (
               <div className="space-y-2">
-                {paginatedLogs.map((log) => {
+                {logs.map((log) => {
                   const Icon = getLogTypeIcon(log.type)
                   const daysAfterPruning = getDaysAfterPruning(currentFarm?.dateOfPruning, log.date)
 
@@ -1109,7 +993,7 @@ export default function FarmLogsPage() {
             onSave={() => {
               setShowEditModal(false)
               setEditingRecord(null)
-              loadLogs() // Reload logs after editing
+              performSearch(1) // Reload logs after editing
             }}
             record={editingRecord as any}
             recordType={
