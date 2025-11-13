@@ -41,7 +41,7 @@ import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-ty
 import { cn, capitalize } from '@/lib/utils'
 import { toast } from 'sonner'
 import { parseFarmId, handleDailyNotesAndPhotosAfterLogs } from '@/lib/daily-note-utils'
-import { searchLogs } from '@/lib/server/search-logs'
+import { searchLogs } from '@/actions/search-logs'
 
 import { type Farm } from '@/types/types'
 
@@ -611,7 +611,7 @@ export default function FarmLogsPage() {
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search in notes..."
+                  placeholder="Search logs by type, notes, chemicals, amounts..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-8 h-9"
