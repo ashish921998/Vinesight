@@ -649,7 +649,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       <div className="mt-4 flex flex-col gap-3">
         {displayedActivities.length > 0 ? (
           displayedActivities.map((activity: any, index: number) => {
-            const rawDate = activity?.created_at || activity?.date
+            const rawDate = activity?.date || activity?.created_at
             const activityDate = rawDate ? new Date(rawDate) : null
             const timestamp =
               activityDate && !Number.isNaN(activityDate.getTime())
