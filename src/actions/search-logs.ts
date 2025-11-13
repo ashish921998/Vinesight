@@ -1,6 +1,6 @@
 'use server'
 
-import { SupabaseService } from '@/lib/supabase-service'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { normalizeDateToYYYYMMDD } from '@/lib/activity-display-utils'
 
 interface ActivityLog {
@@ -51,18 +51,29 @@ export async function searchLogs({
   itemsPerPage
 }: SearchLogsParams): Promise<SearchLogsResult> {
   try {
-    // fetch all record types in parallel
+    const supabase = await createServerSupabaseClient()
+
+    // Fetch all record types in parallel
     const [irrigation, spray, harvest, expenses, fertigation, soilTests, petioleTests, dailyNotes] =
       await Promise.all([
-        SupabaseService.getIrrigationRecords(farmId),
-        SupabaseService.getSprayRecords(farmId),
-        SupabaseService.getHarvestRecords(farmId),
-        SupabaseService.getExpenseRecords(farmId),
-        SupabaseService.getFertigationRecords(farmId),
-        SupabaseService.getSoilTestRecords(farmId),
-        SupabaseService.getPetioleTestRecords(farmId),
-        SupabaseService.getDailyNotes(farmId)
+        supabase.from('irrigation_records').select('*').eq('farm_id', farmId),
+        supabase.from('spray_records').select('*').eq('farm_id', farmId),
+        supabase.from('harvest_records').select('*').eq('farm_id', farmId),
+        supabase.from('expense_records').select('*').eq('farm_id', farmId),
+        supabase.from('fertigation_records').select('*').eq('farm_id', farmId),
+        supabase.from('soil_test_records').select('*').eq('farm_id', farmId),
+        supabase.from('petiole_test_records').select('*').eq('farm_id', farmId),
+        supabase.from('daily_notes').select('*').eq('farm_id', farmId)
       ])
+
+    const irrigationData = irrigation.data || []
+    const sprayData = spray.data || []
+    const harvestData = harvest.data || []
+    const expensesData = expenses.data || []
+    const fertigationData = fertigation.data || []
+    const soilTestsData = soilTests.data || []
+    const petioleTestsData = petioleTests.data || []
+    const dailyNotesData = dailyNotes.data || []
 
     // small helper to map arrays safely
     const mapIfHasId = (arr: any[] | undefined, fn: (r: any) => ActivityLog) =>
@@ -135,14 +146,14 @@ export async function searchLogs({
 
     // combine mapped arrays
     const combined: ActivityLog[] = [
-      ...mapIfHasId(irrigation, mappers.irrigation),
-      ...mapIfHasId(spray, mappers.spray),
-      ...mapIfHasId(harvest, mappers.harvest),
-      ...mapIfHasId(expenses, mappers.expense),
-      ...mapIfHasId(fertigation, mappers.fertigation),
-      ...mapIfHasId(soilTests, mappers.soil_test),
-      ...mapIfHasId(petioleTests, mappers.petiole_test),
-      ...mapIfHasId(dailyNotes, mappers.daily_note)
+      ...mapIfHasId(irrigationData, mappers.irrigation),
+      ...mapIfHasId(sprayData, mappers.spray),
+      ...mapIfHasId(harvestData, mappers.harvest),
+      ...mapIfHasId(expensesData, mappers.expense),
+      ...mapIfHasId(fertigationData, mappers.fertigation),
+      ...mapIfHasId(soilTestsData, mappers.soil_test),
+      ...mapIfHasId(petioleTestsData, mappers.petiole_test),
+      ...mapIfHasId(dailyNotesData, mappers.daily_note)
     ]
 
     // defensive defaults
