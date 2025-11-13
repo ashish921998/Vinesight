@@ -41,6 +41,8 @@ import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-con
 import { type Chemical } from '@/lib/chemical-formatter'
 import { SupabaseService } from '@/lib/supabase-service'
 import { generateSaveButtonLabel } from '@/lib/daily-note-utils'
+import { WarehouseItemSelect } from '@/components/warehouse/WarehouseItemSelect'
+import { warehouseService } from '@/lib/warehouse-service'
 
 interface LogEntry {
   id: string // temporary ID for session
@@ -142,36 +144,38 @@ export function UnifiedDataLogsModal({
 
   // Helper to create a blank chemical row with stable ID (pure function)
   // Moved before state declarations to avoid TDZ issues
-  const makeEmptyChemical = (): { id: string; name: string; quantity: string; unit: string } => {
+  const makeEmptyChemical = (): { id: string; name: string; quantity: string; unit: string; warehouseItemId?: number } => {
     // Generate stable unique ID without referencing external state
     return {
       id:
         globalThis.crypto?.randomUUID?.() ?? `${Date.now()}_${Math.random().toString(36).slice(2)}`,
       name: '',
       quantity: '',
-      unit: 'gm/L'
+      unit: 'gm/L',
+      warehouseItemId: undefined
     }
   }
 
   // Helper to create a blank fertilizer row with stable ID
-  const makeEmptyFertilizer = (): { id: string; name: string; quantity: string; unit: string } => {
+  const makeEmptyFertilizer = (): { id: string; name: string; quantity: string; unit: string; warehouseItemId?: number } => {
     return {
       id:
         globalThis.crypto?.randomUUID?.() ?? `${Date.now()}_${Math.random().toString(36).slice(2)}`,
       name: '',
       quantity: '',
-      unit: 'kg/acre'
+      unit: 'kg/acre',
+      warehouseItemId: undefined
     }
   }
 
   const [chemicals, setChemicals] = useState<
-    Array<{ id: string; name: string; quantity: string; unit: string }>
+    Array<{ id: string; name: string; quantity: string; unit: string; warehouseItemId?: number }>
   >([makeEmptyChemical()])
 
   // Fertigation state (similar to spray)
   const [multipleFertigationMode, setMultipleFertigationMode] = useState(false)
   const [fertilizers, setFertilizers] = useState<
-    Array<{ id: string; name: string; quantity: string; unit: string }>
+    Array<{ id: string; name: string; quantity: string; unit: string; warehouseItemId?: number }>
   >([makeEmptyFertilizer()])
   const [fertigationNotes, setFertigationNotes] = useState('')
 
@@ -629,7 +633,7 @@ export function UnifiedDataLogsModal({
     setChemicals((prev) => prev.filter((chem) => chem.id !== id))
   }
 
-  const handleChemicalChange = (id: string, field: 'name' | 'quantity' | 'unit', value: string) => {
+  const handleChemicalChange = (id: string, field: 'name' | 'quantity' | 'unit' | 'warehouseItemId', value: string | number | undefined) => {
     setChemicals((prev) =>
       prev.map((chem) => {
         if (chem.id === id) {
@@ -653,8 +657,8 @@ export function UnifiedDataLogsModal({
 
   const handleFertilizerChange = (
     id: string,
-    field: 'name' | 'quantity' | 'unit',
-    value: string
+    field: 'name' | 'quantity' | 'unit' | 'warehouseItemId',
+    value: string | number | undefined
   ) => {
     setFertilizers((prev) =>
       prev.map((fert) => {
@@ -1081,6 +1085,71 @@ export function UnifiedDataLogsModal({
   const hasPhotos = dayPhotos.length > 0
   const saveButtonLabel = generateSaveButtonLabel(hasLogs, sessionLogs.length)
 
+  // Helper function to process warehouse inventory deductions
+  const processWarehouseDeductions = async () => {
+    const deductionPromises: Promise<void>[] = []
+
+    for (const log of sessionLogs) {
+      // Process fertigation logs
+      if (log.type === 'fertigation' && log.data.fertilizers) {
+        for (const fert of log.data.fertilizers) {
+          // Find the corresponding fertilizer in our state to get warehouseItemId
+          const fertilizer = fertilizers.find(f => f.name === fert.name)
+          if (fertilizer?.warehouseItemId) {
+            // Note: quantity in fertilizers is per acre (e.g., 5 kg/acre)
+            // For now, we'll use the quantity as-is assuming it's total quantity
+            // TODO: Multiply by actual area treated when area field is added to form
+            const quantityToDeduct = parseFloat(fert.quantity.toString())
+
+            deductionPromises.push(
+              warehouseService.deductInventory({
+                itemId: fertilizer.warehouseItemId,
+                quantityToDeduct,
+                recordType: 'fertigation',
+                recordId: 0 // Will be updated with actual ID after save
+              }).then(result => {
+                if (result.success) {
+                  toast.success(result.message)
+                } else {
+                  toast.warning(result.message)
+                }
+              })
+            )
+          }
+        }
+      }
+
+      // Process spray logs
+      if (log.type === 'spray' && log.data.chemicals) {
+        for (const chem of log.data.chemicals) {
+          // Find the corresponding chemical in our state to get warehouseItemId
+          const chemical = chemicals.find(c => c.name === chem.name)
+          if (chemical?.warehouseItemId) {
+            const quantityToDeduct = parseFloat(chem.quantity.toString())
+
+            deductionPromises.push(
+              warehouseService.deductInventory({
+                itemId: chemical.warehouseItemId,
+                quantityToDeduct,
+                recordType: 'spray',
+                recordId: 0 // Will be updated with actual ID after save
+              }).then(result => {
+                if (result.success) {
+                  toast.success(result.message)
+                } else {
+                  toast.warning(result.message)
+                }
+              })
+            )
+          }
+        }
+      }
+    }
+
+    // Process all deductions
+    await Promise.all(deductionPromises)
+  }
+
   const handleSaveAllLogs = async () => {
     if (!hasLogs && !hasNotes && !hasPhotos) {
       toast.error('Add at least one log, note, or photo before saving.')
@@ -1088,7 +1157,13 @@ export function UnifiedDataLogsModal({
     }
 
     try {
+      // Save logs first
       await onSubmit(sessionLogs, selectedDateToUse, dayNotes, dayPhotos, activeDailyNoteId)
+
+      // Process warehouse deductions after successful save
+      if (hasLogs) {
+        await processWarehouseDeductions()
+      }
     } catch (error) {
       console.error('Error saving logs:', error)
       const errorMessage =
@@ -1898,16 +1973,18 @@ export function UnifiedDataLogsModal({
                                 <Label className="text-xs font-medium text-gray-600">
                                   Name<span className="text-red-500 ml-1">*</span>
                                 </Label>
-                                <Input
-                                  type="text"
-                                  value={chemical.name}
-                                  onChange={(e) =>
-                                    handleChemicalChange(chemical.id, 'name', e.target.value)
-                                  }
-                                  placeholder="e.g., Sulfur fungicide"
-                                  maxLength={1000}
-                                  className="h-8 text-sm mt-1 rounded-md"
-                                />
+                                <div className="mt-1">
+                                  <WarehouseItemSelect
+                                    type="spray"
+                                    value={chemical.name}
+                                    onChange={(name, warehouseItemId) => {
+                                      handleChemicalChange(chemical.id, 'name', name)
+                                      handleChemicalChange(chemical.id, 'warehouseItemId', warehouseItemId)
+                                    }}
+                                    placeholder="e.g., Sulfur fungicide"
+                                    className="h-8 text-sm rounded-md"
+                                  />
+                                </div>
                               </div>
 
                               {/* Quantity and Unit Row */}
@@ -2049,16 +2126,18 @@ export function UnifiedDataLogsModal({
                                 <Label className="text-xs font-medium text-gray-600">
                                   Name<span className="text-red-500 ml-1">*</span>
                                 </Label>
-                                <Input
-                                  type="text"
-                                  value={fertilizer.name}
-                                  onChange={(e) =>
-                                    handleFertilizerChange(fertilizer.id, 'name', e.target.value)
-                                  }
-                                  placeholder="e.g., NPK 19:19:19"
-                                  maxLength={1000}
-                                  className="h-8 text-sm mt-1 rounded-md"
-                                />
+                                <div className="mt-1">
+                                  <WarehouseItemSelect
+                                    type="fertilizer"
+                                    value={fertilizer.name}
+                                    onChange={(name, warehouseItemId) => {
+                                      handleFertilizerChange(fertilizer.id, 'name', name)
+                                      handleFertilizerChange(fertilizer.id, 'warehouseItemId', warehouseItemId)
+                                    }}
+                                    placeholder="e.g., NPK 19:19:19"
+                                    className="h-8 text-sm rounded-md"
+                                  />
+                                </div>
                               </div>
 
                               {/* Quantity and Unit Row */}
