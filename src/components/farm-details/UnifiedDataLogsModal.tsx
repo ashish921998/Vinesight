@@ -516,17 +516,14 @@ export function UnifiedDataLogsModal({
         formData.append('existingPath', currentReport.storagePath)
       }
 
-      const response = await fetch('/api/test-reports/parse', {
-        method: 'POST',
-        body: formData
-      })
+      const { uploadTestReport } = await import('@/actions')
+      const result = await uploadTestReport(formData)
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}))
-        throw new Error(payload.error || 'Failed to process report')
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to process report')
       }
 
-      const payload = await response.json()
+      const payload = result
       const reportMeta: ReportAttachmentMeta = {
         storagePath: payload.report.storagePath,
         signedUrl: payload.report.signedUrl,

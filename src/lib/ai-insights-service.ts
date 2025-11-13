@@ -124,19 +124,16 @@ export class AIInsightsService {
         const weatherData = await WeatherService.getCurrentWeather(farmId)
         const activities = await this.getRecentActivities(farmId)
 
-        // Call weather insights API
-        const response = await fetch('/api/ai/weather-insights', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            weatherData,
-            farmData: farm,
-            history: activities
-          })
+        // Call weather insights server action
+        const { generateWeatherInsights } = await import('@/actions')
+        const result = await generateWeatherInsights({
+          weatherData,
+          farmData: farm,
+          history: activities
         })
 
-        const { success, data: aiWeatherInsights } = await response.json()
-        if (!success || !aiWeatherInsights) throw new Error('API call failed')
+        if (!result.success || !result.data) throw new Error('Server action failed')
+        const aiWeatherInsights = result.data
 
         // Convert AI insights to our format
         aiWeatherInsights.forEach((aiInsight: any, index: number) => {
@@ -272,17 +269,14 @@ export class AIInsightsService {
         .lt('date', thirtyDaysAgo.toISOString().split('T')[0])
 
       // Use AI to analyze financial patterns
-      const response = await fetch('/api/ai/financial-analysis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          expenses: recentExpenses,
-          historicalData: historicalExpenses || []
-        })
+      const { generateFinancialAnalysis } = await import('@/actions')
+      const result = await generateFinancialAnalysis({
+        expenses: recentExpenses,
+        historicalData: historicalExpenses || []
       })
 
-      const { success, data: aiAnalysis } = await response.json()
-      if (!success || !aiAnalysis) throw new Error('Financial analysis API failed')
+      if (!result.success || !result.data) throw new Error('Financial analysis failed')
+      const aiAnalysis = result.data
 
       const insights: AIInsight[] = []
       const totalSpent = recentExpenses.reduce((sum, exp) => sum + exp.cost, 0)
@@ -418,18 +412,14 @@ export class AIInsightsService {
       const weatherData = await WeatherService.getCurrentWeather(farm.region)
 
       // AI-powered growth stage analysis
-      const response = await fetch('/api/ai/growth-analysis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          farmData: farm,
-          activities,
-          weather: weatherData
-        })
+      const { generateGrowthAnalysis } = await import('@/actions')
+      const result = await generateGrowthAnalysis({
+        farmData: farm,
+        activities
       })
 
-      const { success, data: growthAnalysis } = await response.json()
-      if (!success || !growthAnalysis) throw new Error('Growth analysis API failed')
+      if (!result.success || !result.data) throw new Error('Growth analysis failed')
+      const growthAnalysis = result.data
 
       if (growthAnalysis.confidence > 0.6) {
         insights.push({

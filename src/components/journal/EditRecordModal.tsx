@@ -430,17 +430,14 @@ export function EditRecordModal({
         formDataPayload.append('existingPath', reportMeta.storagePath)
       }
 
-      const response = await fetch('/api/test-reports/parse', {
-        method: 'POST',
-        body: formDataPayload
-      })
+      const { uploadTestReport } = await import('@/actions')
+      const result = await uploadTestReport(formDataPayload)
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}))
-        throw new Error(payload.error || 'Failed to process report')
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to process report')
       }
 
-      const payload = await response.json()
+      const payload = result
       const newMeta: ReportAttachmentMeta = {
         storagePath: payload.report.storagePath,
         signedUrl: payload.report.signedUrl,
@@ -483,18 +480,14 @@ export function EditRecordModal({
 
     setIsFetchingReportUrl(true)
     try {
-      const response = await fetch('/api/test-reports/signed-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: reportMeta.storagePath })
-      })
+      const { getSignedUploadUrl } = await import('@/actions')
+      const result = await getSignedUploadUrl(reportMeta.storagePath)
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}))
-        throw new Error(payload.error || 'Unable to generate download link')
+      if (!result.success) {
+        throw new Error(result.error || 'Unable to generate download link')
       }
 
-      const { signedUrl } = await response.json()
+      const { signedUrl } = result
       setReportMeta((prev) => (prev ? { ...prev, signedUrl } : prev))
       window.open(signedUrl, '_blank', 'noopener')
     } catch (error) {
