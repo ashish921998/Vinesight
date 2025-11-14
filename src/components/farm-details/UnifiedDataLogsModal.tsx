@@ -43,6 +43,7 @@ import { SupabaseService } from '@/lib/supabase-service'
 import { generateSaveButtonLabel } from '@/lib/daily-note-utils'
 import { WarehouseItemSelect } from '@/components/warehouse/WarehouseItemSelect'
 import { warehouseService } from '@/lib/warehouse-service'
+import { canonicalizeParameterKey, canonicalizeParameters } from '@/lib/parameter-canonicalization'
 
 interface LogEntry {
   id: string // temporary ID for session
@@ -430,63 +431,19 @@ export function UnifiedDataLogsModal({
   const applyParsedParameters = (parameters?: Record<string, number>) => {
     if (!parameters || !currentLogType) return
 
-    const canonicalize = (key: string) => {
-      const normalized = key.toLowerCase().replace(/[^a-z0-9]/g, '')
-      if (normalized.includes('soilph') || normalized === 'ph') return 'ph'
-      if (
-        normalized.includes('electricalconductivity') ||
-        normalized === 'ec' ||
-        normalized === 'soilec'
-      )
-        return 'ec'
-      if (normalized.includes('organiccarbon') || normalized === 'oc') return 'organicCarbon'
-      if (normalized.includes('organicmatter')) return 'organicMatter'
-      if (normalized.includes('nitrogen') || normalized === 'n') return 'nitrogen'
-      if (normalized.includes('phosphorus') || normalized === 'p') return 'phosphorus'
-      if (normalized.includes('potassium') || normalized === 'k') return 'potassium'
-      if (normalized.includes('calciumcarbonate') || normalized.includes('caco3'))
-        return 'calciumCarbonate'
-      if (normalized.includes('calcium') || normalized === 'ca') return 'calcium'
-      if (normalized.includes('magnesium') || normalized === 'mg') return 'magnesium'
-      if (normalized.includes('sulphur') || normalized.includes('sulfur') || normalized === 's')
-        return 'sulfur'
-      if (normalized.includes('iron') || normalized.includes('ferrous') || normalized === 'fe')
-        return 'iron'
-      if (normalized.includes('manganese') || normalized === 'mn') return 'manganese'
-      if (normalized.includes('zinc') || normalized === 'zn') return 'zinc'
-      if (normalized.includes('copper') || normalized === 'cu') return 'copper'
-      if (normalized.includes('boron') || normalized === 'b') return 'boron'
-      if (normalized.includes('molybdenum') || normalized === 'mo') return 'molybdenum'
-      if (normalized.includes('sodium') || normalized === 'na') return 'sodium'
-      if (normalized.includes('chloride') || normalized === 'cl') return 'chloride'
-      if (normalized.includes('bicarbonate') || normalized.includes('hco3')) return 'bicarbonate'
-      if (normalized.includes('carbonate') || normalized === 'co3') return 'carbonate'
-      return normalized
-    }
-
-    const canonicalParameters = Object.entries(parameters).reduce<Record<string, number>>(
-      (acc, [key, rawValue]) => {
-        let value = rawValue
-        if (typeof value === 'string') {
-          const parsed = parseFloat(value)
-          value = Number.isFinite(parsed) ? parsed : NaN
-        }
-        if (typeof value !== 'number' || !Number.isFinite(value)) return acc
-        acc[canonicalize(key)] = value
-        return acc
-      },
-      {}
-    )
+    // Use shared canonicalization logic
+    const canonicalParameters = canonicalizeParameters(parameters)
 
     setCurrentFormData((prev) => {
       const updated = { ...prev }
 
       logTypeConfigs[currentLogType].fields.forEach((field) => {
-        const canonicalFieldKey = canonicalize(field.name)
+        // Try to find the value using canonical form of the field name
+        const canonicalFieldKey = canonicalizeParameterKey(field.name)
         const value =
-          canonicalParameters[canonicalFieldKey] ??
-          parameters[field.name] ??
-          parameters[field.name.replace(/([A-Z])/g, '_$1').toLowerCase()]
+          (canonicalFieldKey ? canonicalParameters[canonicalFieldKey] : undefined) ??
+          canonicalParameters[field.name] ??
+          canonicalParameters[field.name.replace(/([A-Z])/g, '_$1').toLowerCase()]
 
         if (value !== undefined) {
           updated[field.name] = Number.isFinite(value) ? value.toString() : ''

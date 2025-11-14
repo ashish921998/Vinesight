@@ -1,7 +1,9 @@
 /**
- * Open-Meteo Weather Service for Agricultural ETo Calculations
- * Provides all necessary weather parameters for accurate evapotranspiration calculations
+ * Open-Meteo Weather Service using Official SDK
+ * Provides accurate ET0 and weather data for agricultural calculations
  */
+
+import { fetchWeatherApi } from 'openmeteo'
 
 export interface OpenMeteoWeatherData {
   date: string
@@ -18,6 +20,7 @@ export interface OpenMeteoWeatherData {
 
   // Wind data (m/s)
   windSpeed10m: number
+  windDirection10m: number // degrees (0-360)
   windSpeedMax: number
 
   // Precipitation (mm)
@@ -27,8 +30,11 @@ export interface OpenMeteoWeatherData {
   shortwaveRadiationSum: number // MJ/m²/day (converted from Wh/m²)
   sunshineDuration: number // seconds (converted to hours)
 
-  // Direct ETo from Open-Meteo (for validation)
-  et0FaoEvapotranspiration: number // mm
+  // Direct ET0 from Open-Meteo (FAO Penman-Monteith)
+  et0FaoEvapotranspiration: number // mm/day
+
+  // Hourly ET0 data for more precise calculations
+  hourlyEt0?: number[] // mm/hour
 
   // Location context
   latitude: number
@@ -37,58 +43,11 @@ export interface OpenMeteoWeatherData {
   timezone: string
 }
 
-export interface OpenMeteoForecastResponse {
-  daily: {
-    time: string[]
-    temperature_2m_max: number[]
-    temperature_2m_min: number[]
-    temperature_2m_mean: number[]
-    relative_humidity_2m_max: number[]
-    relative_humidity_2m_min: number[]
-    relative_humidity_2m_mean: number[]
-    wind_speed_10m_max: number[]
-    precipitation_sum: number[]
-    shortwave_radiation_sum: number[] // Wh/m²
-    sunshine_duration: number[] // seconds
-    et0_fao_evapotranspiration: number[] // mm
-  }
-  daily_units: {
-    [key: string]: string
-  }
-}
-
-export interface OpenMeteoApiResponse {
-  latitude: number
-  longitude: number
-  generationtime_ms: number
-  utc_offset_seconds: number
-  timezone: string
-  timezone_abbreviation: string
-  elevation: number
-  daily_units: {
-    [key: string]: string
-  }
-  daily: {
-    time: string[]
-    temperature_2m_max: number[]
-    temperature_2m_min: number[]
-    temperature_2m_mean: number[]
-    relative_humidity_2m_max: number[]
-    relative_humidity_2m_min: number[]
-    relative_humidity_2m_mean: number[]
-    wind_speed_10m_max: number[]
-    precipitation_sum: number[]
-    shortwave_radiation_sum: number[]
-    sunshine_duration: number[]
-    et0_fao_evapotranspiration: number[]
-  }
-}
-
 export class OpenMeteoWeatherService {
   private static readonly BASE_URL = 'https://api.open-meteo.com/v1/forecast'
 
   /**
-   * Fetch weather data from Open-Meteo API for ETo calculations
+   * Fetch weather data from Open-Meteo API using official SDK
    */
   static async getWeatherData(
     latitude: number,
@@ -97,46 +56,188 @@ export class OpenMeteoWeatherService {
     endDate?: string
   ): Promise<OpenMeteoWeatherData[]> {
     // Default to today if no dates provided
-    const today = new Date().toISOString().split('T')[0]
-    const start = startDate || today
-    const end = endDate || today
-
-    // Parameters needed for ETo calculation
-    const params = new URLSearchParams({
-      latitude: latitude.toString(),
-      longitude: longitude.toString(),
-      daily: [
-        'temperature_2m_max',
-        'temperature_2m_min',
-        'temperature_2m_mean',
-        'relative_humidity_2m_max',
-        'relative_humidity_2m_min',
-        'relative_humidity_2m_mean',
-        'wind_speed_10m_max',
-        'precipitation_sum',
-        'shortwave_radiation_sum',
-        'sunshine_duration',
-        'et0_fao_evapotranspiration'
-      ].join(','),
-      timezone: 'auto',
-      start_date: start,
-      end_date: end
-    })
-
-    const url = `${this.BASE_URL}?${params}`
+    const today = new Date()
+    const start = startDate || today.toISOString().split('T')[0]
+    const end = endDate || today.toISOString().split('T')[0]
 
     try {
-      const response = await fetch(url)
+      // Determine if this is a forecast request (future dates) or historical/current request
+      const today = new Date()
+      today.setHours(0, 0, 0, 0) // Set to start of day for accurate comparison
+      const startDateObj = new Date(start)
+      startDateObj.setHours(0, 0, 0, 0)
 
-      if (!response.ok) {
-        throw new Error(`Open-Meteo API error: ${response.status} ${response.statusText}`)
+      const isFutureRequest = startDateObj > today
+
+      // Parameters for comprehensive weather data including ET0
+      const params: any = {
+        latitude: latitude,
+        longitude: longitude,
+        daily: [
+          'temperature_2m_max',
+          'temperature_2m_min',
+          'temperature_2m_mean',
+          'relative_humidity_2m_max',
+          'relative_humidity_2m_min',
+          'relative_humidity_2m_mean',
+          'wind_speed_10m_max',
+          'wind_direction_10m_dominant',
+          'precipitation_sum',
+          'shortwave_radiation_sum',
+          'sunshine_duration',
+          'et0_fao_evapotranspiration'
+        ],
+        hourly: [
+          'temperature_2m',
+          'relative_humidity_2m',
+          'wind_speed_10m',
+          'wind_direction_10m',
+          'direct_radiation',
+          'diffuse_radiation',
+          'global_tilted_irradiance',
+          'evapotranspiration',
+          'et0_fao_evapotranspiration'
+        ],
+        timezone: 'auto'
       }
 
-      const data: OpenMeteoApiResponse = await response.json()
-      return this.parseWeatherData(data)
+      // Use forecast_days for future requests, start_date/end_date for current/historical
+      if (isFutureRequest) {
+        const forecastDays =
+          Math.ceil((new Date(end).getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24)) + 1
+        params.forecast_days = Math.min(forecastDays, 16) // Open-Meteo limit is 16 days
+      } else {
+        params.start_date = start
+        params.end_date = end
+      }
+
+      const responses = await fetchWeatherApi(OpenMeteoWeatherService.BASE_URL, params)
+
+      // Process first location
+      const response = responses[0]
+
+      // Get location and timezone information
+      const responseLatitude = response.latitude()
+      const responseLongitude = response.longitude()
+      const elevation = response.elevation()
+      const timezone = response.timezone()
+      const timezoneAbbreviation = response.timezoneAbbreviation()
+      const utcOffsetSeconds = response.utcOffsetSeconds()
+
+      console.log(
+        `\nCoordinates: ${responseLatitude}°N ${responseLongitude}°E`,
+        `\nElevation: ${elevation}m asl`,
+        `\nTimezone: ${timezone} ${timezoneAbbreviation}`,
+        `\nTimezone difference to GMT+0: ${utcOffsetSeconds}s`
+      )
+
+      const hourly = response.hourly()!
+      const daily = response.daily()!
+
+      // Process daily data
+      const dailyData = {
+        time: Array.from(
+          { length: (Number(daily.timeEnd()) - Number(daily.time())) / daily.interval() },
+          (_, i) =>
+            new Date((Number(daily.time()) + i * daily.interval() + utcOffsetSeconds) * 1000)
+        ),
+        temperature_2m_max: daily.variables(0)!.valuesArray(),
+        temperature_2m_min: daily.variables(1)!.valuesArray(),
+        temperature_2m_mean: daily.variables(2)!.valuesArray(),
+        relative_humidity_2m_max: daily.variables(3)!.valuesArray(),
+        relative_humidity_2m_min: daily.variables(4)!.valuesArray(),
+        relative_humidity_2m_mean: daily.variables(5)!.valuesArray(),
+        wind_speed_10m_max: daily.variables(6)!.valuesArray(),
+        wind_direction_10m_dominant: daily.variables(7)!.valuesArray(),
+        precipitation_sum: daily.variables(8)!.valuesArray(),
+        shortwave_radiation_sum: daily.variables(9)!.valuesArray(),
+        sunshine_duration: daily.variables(10)!.valuesArray(),
+        et0_fao_evapotranspiration: daily.variables(11)!.valuesArray()
+      }
+
+      // Process hourly data for more precise ET0
+      const hourlyData = {
+        time: Array.from(
+          { length: (Number(hourly.timeEnd()) - Number(hourly.time())) / hourly.interval() },
+          (_, i) =>
+            new Date((Number(hourly.time()) + i * hourly.interval() + utcOffsetSeconds) * 1000)
+        ),
+        temperature_2m: hourly.variables(0)!.valuesArray(),
+        relative_humidity_2m: hourly.variables(1)!.valuesArray(),
+        wind_speed_10m: hourly.variables(2)!.valuesArray(),
+        wind_direction_10m: hourly.variables(3)!.valuesArray(),
+        direct_radiation: hourly.variables(4)!.valuesArray(),
+        diffuse_radiation: hourly.variables(5)!.valuesArray(),
+        global_tilted_irradiance: hourly.variables(6)!.valuesArray(),
+        evapotranspiration: hourly.variables(7)!.valuesArray(),
+        et0_fao_evapotranspiration: hourly.variables(8)!.valuesArray()
+      }
+
+      console.log('\nDaily data:\n', dailyData)
+      console.log('\nHourly data:\n', hourlyData)
+
+      // Convert to our format
+      const result: OpenMeteoWeatherData[] = []
+
+      for (let i = 0; i < dailyData.time.length; i++) {
+        // Use shortwave radiation directly from Open-Meteo (already in MJ/m²/day)
+        const shortwave_MJ = dailyData.shortwave_radiation_sum?.[i] || 0
+
+        // Convert sunshine duration from seconds to hours
+        const sunshineDurationHours = (dailyData.sunshine_duration?.[i] || 0) / 3600
+
+        // Get hourly ET0 data for this day (24 hours)
+        const hourlyEt0Array = Array.from(hourlyData.et0_fao_evapotranspiration || [])
+        const startIdx = i * 24
+        const endIdx = Math.min((i + 1) * 24, hourlyEt0Array.length)
+        const hourlyEt0ForDay =
+          startIdx < hourlyEt0Array.length ? hourlyEt0Array.slice(startIdx, endIdx) : []
+
+        result.push({
+          date: dailyData.time[i].toISOString().split('T')[0],
+
+          // Temperature (°C)
+          temperatureMax: dailyData.temperature_2m_max?.[i] || 0,
+          temperatureMin: dailyData.temperature_2m_min?.[i] || 0,
+          temperatureMean: dailyData.temperature_2m_mean?.[i] || 0,
+
+          // Humidity (%)
+          relativeHumidityMax: dailyData.relative_humidity_2m_max?.[i] || 0,
+          relativeHumidityMin: dailyData.relative_humidity_2m_min?.[i] || 0,
+          relativeHumidityMean: dailyData.relative_humidity_2m_mean?.[i] || 0,
+
+          // Wind (convert km/h to m/s)
+          windSpeed10m: (dailyData.wind_speed_10m_max?.[i] || 0) / 3.6,
+          windDirection10m: dailyData.wind_direction_10m_dominant?.[i] || 0,
+          windSpeedMax: (dailyData.wind_speed_10m_max?.[i] || 0) / 3.6,
+
+          // Precipitation (mm)
+          precipitationSum: dailyData.precipitation_sum?.[i] || 0,
+
+          // Solar data - use actual shortwave radiation from Open-Meteo
+          shortwaveRadiationSum: shortwave_MJ,
+          sunshineDuration: sunshineDurationHours,
+
+          // Direct ET0 from Open-Meteo (FAO Penman-Monteith)
+          et0FaoEvapotranspiration: dailyData.et0_fao_evapotranspiration?.[i] || 0,
+
+          // Hourly ET0 data for more precise analysis
+          hourlyEt0: hourlyEt0ForDay,
+
+          // Location context
+          latitude: responseLatitude,
+          longitude: responseLongitude,
+          elevation: elevation || 0,
+          timezone: timezone || 'UTC'
+        })
+      }
+
+      return result
     } catch (error) {
       console.error('Error fetching Open-Meteo weather data:', error)
-      throw new Error('Failed to fetch weather data from Open-Meteo API')
+      throw new Error(
+        `Failed to fetch weather data from Open-Meteo API: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
     }
   }
 
@@ -152,64 +253,21 @@ export class OpenMeteoWeatherService {
   }
 
   /**
-   * Parse Open-Meteo API response into our format
+   * Get weather forecast for multiple days
    */
-  private static parseWeatherData(data: OpenMeteoApiResponse): OpenMeteoWeatherData[] {
-    const daily = data.daily
-    const result: OpenMeteoWeatherData[] = []
+  static async getWeatherForecast(
+    latitude: number,
+    longitude: number,
+    days: number = 7
+  ): Promise<OpenMeteoWeatherData[]> {
+    const today = new Date()
+    const endDate = new Date(today)
+    endDate.setDate(today.getDate() + days - 1)
 
-    for (let i = 0; i < daily.time.length; i++) {
-      // Convert shortwave radiation from Wh/m² to MJ/m²/day
-      const shortwaveWh = daily.shortwave_radiation_sum[i] || 0
-      const shortwave_MJ = this.convertWhToMJ(shortwaveWh)
+    const startDateStr = today.toISOString().split('T')[0]
+    const endDateStr = endDate.toISOString().split('T')[0]
 
-      // Convert sunshine duration from seconds to hours
-      const sunshineDurationHours = (daily.sunshine_duration[i] || 0) / 3600
-
-      result.push({
-        date: daily.time[i],
-
-        // Temperature (°C)
-        temperatureMax: daily.temperature_2m_max[i] || 0,
-        temperatureMin: daily.temperature_2m_min[i] || 0,
-        temperatureMean: daily.temperature_2m_mean[i] || 0,
-
-        // Humidity (%)
-        relativeHumidityMax: daily.relative_humidity_2m_max[i] || 0,
-        relativeHumidityMin: daily.relative_humidity_2m_min[i] || 0,
-        relativeHumidityMean: daily.relative_humidity_2m_mean[i] || 0,
-
-        // Wind (m/s) - Open-Meteo provides in km/h by default, convert to m/s
-        windSpeed10m: this.convertKmhToMs(daily.wind_speed_10m_max[i] || 0),
-        windSpeedMax: this.convertKmhToMs(daily.wind_speed_10m_max[i] || 0),
-
-        // Precipitation (mm)
-        precipitationSum: daily.precipitation_sum[i] || 0,
-
-        // Solar data
-        shortwaveRadiationSum: shortwave_MJ,
-        sunshineDuration: sunshineDurationHours,
-
-        // Direct ETo from Open-Meteo
-        et0FaoEvapotranspiration: daily.et0_fao_evapotranspiration[i] || 0,
-
-        // Location context
-        latitude: data.latitude,
-        longitude: data.longitude,
-        elevation: data.elevation,
-        timezone: data.timezone
-      })
-    }
-
-    return result
-  }
-
-  /**
-   * Convert shortwave radiation from Wh/m² to MJ/m²/day
-   */
-  private static convertWhToMJ(whPerSqM: number): number {
-    // 1 Wh/m² = 0.0036 MJ/m²
-    return whPerSqM * 0.0036
+    return this.getWeatherData(latitude, longitude, startDateStr, endDateStr)
   }
 
   /**
@@ -246,24 +304,6 @@ export class OpenMeteoWeatherService {
   }
 
   /**
-   * Get weather forecast for multiple days
-   */
-  static async getWeatherForecast(
-    latitude: number,
-    longitude: number,
-    days: number = 7
-  ): Promise<OpenMeteoWeatherData[]> {
-    const today = new Date()
-    const endDate = new Date(today)
-    endDate.setDate(today.getDate() + days - 1)
-
-    const startDateStr = today.toISOString().split('T')[0]
-    const endDateStr = endDate.toISOString().split('T')[0]
-
-    return this.getWeatherData(latitude, longitude, startDateStr, endDateStr)
-  }
-
-  /**
    * Get hourly solar radiation data for accurate lux calculations
    */
   static async getHourlySolarRadiation(
@@ -278,32 +318,28 @@ export class OpenMeteoWeatherService {
   } | null> {
     const targetDate = date || new Date().toISOString().split('T')[0]
 
-    const params = new URLSearchParams({
-      latitude: latitude.toString(),
-      longitude: longitude.toString(),
-      hourly: 'shortwave_radiation',
-      timezone: 'auto',
-      start_date: targetDate,
-      end_date: targetDate
-    })
-
-    const url = `${this.BASE_URL}?${params}`
-
     try {
-      const response = await fetch(url)
-
-      if (!response.ok) {
-        throw new Error(`Open-Meteo API error: ${response.status} ${response.statusText}`)
+      const params = {
+        latitude,
+        longitude,
+        hourly: ['shortwave_radiation', 'direct_radiation', 'diffuse_radiation'],
+        timezone: 'auto',
+        start_date: targetDate,
+        end_date: targetDate
       }
 
-      const data = await response.json()
+      const url = 'https://api.open-meteo.com/v1/forecast'
+      const responses = await fetchWeatherApi(url, params)
+      const response = responses[0]
+      const hourly = response.hourly()!
 
-      if (!data.hourly?.shortwave_radiation) {
-        return null
-      }
+      // Get radiation data
+      const shortwaveRadiationArray = Array.from(hourly.variables(0)!.valuesArray() || [])
+      const directRadiation = hourly.variables(1)!.valuesArray()
+      const diffuseRadiation = hourly.variables(2)!.valuesArray()
 
       // Convert W/m² to lux (approximate conversion: 1 W/m² ≈ 110 lux for solar radiation)
-      const hourlyLux = data.hourly.shortwave_radiation.map(
+      const hourlyLux = shortwaveRadiationArray.map(
         (wPerSqM: number) => wPerSqM * 110 // Standard conversion factor for solar radiation
       )
 
@@ -337,13 +373,53 @@ export class OpenMeteoWeatherService {
     isAccurate: boolean
   } {
     const difference = ourETo - openMeteoETo
-    const percentageError = (difference / openMeteoETo) * 100
+    const percentageError = openMeteoETo !== 0 ? (difference / openMeteoETo) * 100 : 0
     const isAccurate = Math.abs(percentageError) <= 5 // 5% tolerance
 
     return {
       difference: Number(difference.toFixed(2)),
       percentageError: Number(percentageError.toFixed(1)),
       isAccurate
+    }
+  }
+
+  /**
+   * Get detailed ET0 analysis comparing our calculation with Open-Meteo
+   */
+  static getET0Analysis(
+    ourETo: number,
+    openMeteoData: OpenMeteoWeatherData
+  ): {
+    ourETo: number
+    openMeteoETo: number
+    difference: number
+    percentageError: number
+    isAccurate: boolean
+    hourlyEt0Data?: number[]
+    recommendation: string
+  } {
+    const openMeteoETo = openMeteoData.et0FaoEvapotranspiration
+    const validation = this.validateEToDifference(ourETo, openMeteoETo)
+
+    let recommendation = ''
+    if (validation.isAccurate) {
+      recommendation = 'Our calculation is accurate within 5% of Open-Meteo FAO Penman-Monteith'
+    } else if (validation.percentageError > 0) {
+      recommendation =
+        'Our calculation is higher than Open-Meteo - consider checking radiation inputs'
+    } else {
+      recommendation =
+        'Our calculation is lower than Open-Meteo - consider checking wind/humidity inputs'
+    }
+
+    return {
+      ourETo: Number(ourETo.toFixed(2)),
+      openMeteoETo: Number(openMeteoETo.toFixed(2)),
+      difference: validation.difference,
+      percentageError: validation.percentageError,
+      isAccurate: validation.isAccurate,
+      hourlyEt0Data: openMeteoData.hourlyEt0,
+      recommendation
     }
   }
 }

@@ -1,5 +1,6 @@
 import OpenAI, { toFile } from 'openai'
 import type { Response as OpenAIResponse } from 'openai/resources/responses/responses.js'
+import { canonicalizeParameterKey } from './parameter-canonicalization'
 
 export interface ParsedReportResult {
   parameters: Record<string, number>
@@ -186,56 +187,7 @@ Respond strictly as JSON with the shape:
   }
 
   private static canonicalParameterKey(key: string): string | null {
-    const normalized = key.toLowerCase().replace(/[^a-z0-9]/g, '')
-
-    const mappings: Record<string, string> = {
-      soilph: 'ph',
-      ph: 'ph',
-      electricalconductivity: 'ec',
-      ec: 'ec',
-      organiccarbon: 'organicCarbon',
-      organicmatter: 'organicMatter',
-      oc: 'organicCarbon',
-      nitrogen: 'nitrogen',
-      n: 'nitrogen',
-      phosphorus: 'phosphorus',
-      phosphorous: 'phosphorus',
-      p: 'phosphorus',
-      potassium: 'potassium',
-      k: 'potassium',
-      calciumcarbonate: 'calciumcarbonate',
-      caco3: 'calciumcarbonate',
-      calcium: 'calcium',
-      ca: 'calcium',
-      magnesium: 'magnesium',
-      mg: 'magnesium',
-      sulphur: 'sulfur',
-      sulfur: 'sulfur',
-      s: 'sulfur',
-      iron: 'iron',
-      ferrous: 'iron',
-      fe: 'iron',
-      manganese: 'manganese',
-      mn: 'manganese',
-      zinc: 'zinc',
-      zn: 'zinc',
-      copper: 'copper',
-      cu: 'copper',
-      boron: 'boron',
-      b: 'boron',
-      molybdenum: 'molybdenum',
-      mo: 'molybdenum',
-      sodium: 'sodium',
-      na: 'sodium',
-      chloride: 'chloride',
-      cl: 'chloride',
-      carbonate: 'carbonate',
-      co3: 'carbonate',
-      bicarbonate: 'bicarbonate',
-      hco3: 'bicarbonate'
-    }
-
-    return mappings[normalized] ?? null
+    return canonicalizeParameterKey(key)
   }
 
   private static buildSchema() {

@@ -40,18 +40,18 @@ export function useSupabaseAuth() {
   useEffect(() => {
     const supabase = createClient()
 
-    // Get initial session
-    const getSession = async () => {
+    // Get initial user - use getUser() for secure verification
+    const getInitialUser = async () => {
       try {
         const {
-          data: { session },
+          data: { user },
           error
-        } = await supabase.auth.getSession()
+        } = await supabase.auth.getUser()
 
         if (error) {
           setAuthState((prev) => ({ ...prev, error: error.message }))
         } else {
-          setAuthState((prev) => ({ ...prev, user: session?.user ?? null }))
+          setAuthState((prev) => ({ ...prev, user: user ?? null }))
         }
       } catch (err) {
         setAuthState((prev) => ({
@@ -75,7 +75,7 @@ export function useSupabaseAuth() {
       }))
     })
 
-    getSession()
+    getInitialUser()
 
     return () => {
       subscription.unsubscribe()

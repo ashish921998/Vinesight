@@ -36,13 +36,14 @@ import {
   Trash2,
   Edit,
   Cloud,
-  Brain
+  Brain,
+  Scissors
 } from 'lucide-react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { SupabaseService } from '@/lib/supabase-service'
 import { WeatherService, type WeatherData } from '@/lib/weather-service'
 import { type Farm } from '@/types/types'
-import { capitalize, cn } from '@/lib/utils'
+import { capitalize, cn, formatRemainingWater, calculateDaysAfterPruning } from '@/lib/utils'
 import { EmptyStateDashboard } from './EmptyStateDashboard'
 import { useRouter } from 'next/navigation'
 import { TasksOverviewCard } from '@/components/tasks/TasksOverviewCard'
@@ -66,15 +67,6 @@ const calculateFarmStatus = (
   if (criticalAlerts > 0 || overdueTasks > 2) return 'critical'
   if (overdueTasks > 0) return 'attention'
   return 'healthy'
-}
-
-interface FarmInfo {
-  id: string
-  name: string
-  location: string
-  cropVariety: string
-  totalAcres: number
-  status: 'healthy' | 'attention' | 'critical'
 }
 
 interface FarmerDashboardProps {
@@ -319,18 +311,6 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     return liters / areaInSquareMeters
   }
 
-  const formatDepthMm = (value?: number) => {
-    if (value === undefined || value === null || Number.isNaN(value)) return '— mm'
-    const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
-    return `${formatNumber(value, digits)} mm`
-  }
-
-  const totalWaterUsageLiters =
-    dashboardData?.totalWaterUsage !== undefined && dashboardData?.totalWaterUsage !== null
-      ? dashboardData.totalWaterUsage
-      : undefined
-  const totalWaterUsageMm = convertLitersToDepthMm(totalWaterUsageLiters, selectedFarm?.area)
-
   const insights: Array<{
     title: string
     description: string
@@ -402,8 +382,6 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     })
   }
 
-  const curatedInsights = insights.slice(0, 3)
-
   const growthData = dashboardData?.growth as
     | {
         stage?: string
@@ -461,15 +439,13 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   const twoDaysAgo = new Date(startOfToday)
   twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
 
-  const recentActivityWindow = recentActivities
-    .filter((activity: any) => {
-      const rawDate = activity?.created_at || activity?.date
-      if (!rawDate) return false
-      const activityDate = new Date(rawDate)
-      if (Number.isNaN(activityDate.getTime())) return false
-      return activityDate >= twoDaysAgo
-    })
-    .slice(0, 4)
+  const recentActivityWindow = recentActivities.filter((activity: any) => {
+    const rawDate = activity?.created_at || activity?.date
+    if (!rawDate) return false
+    const activityDate = new Date(rawDate)
+    if (Number.isNaN(activityDate.getTime())) return false
+    return activityDate >= twoDaysAgo
+  })
   const displayedActivities = activityExpanded
     ? recentActivityWindow
     : recentActivityWindow.slice(0, 1)
@@ -606,10 +582,10 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     },
     {
       id: 'metric-water',
-      title: formatDepthMm(totalWaterUsageMm),
+      title: formatRemainingWater(dashboardData?.totalWaterUsage ?? 0),
       label: 'Water usage',
       body:
-        selectedFarm?.area && totalWaterUsageMm !== undefined
+        selectedFarm?.area && dashboardData?.totalWaterUsage !== undefined
           ? `Across ${formatNumber(selectedFarm.area, selectedFarm.area >= 10 ? 0 : 1)} acre${selectedFarm.area > 1 ? 's' : ''}`
           : 'Cumulative irrigation depth',
       icon: Droplet,
@@ -646,10 +622,16 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
           Log
         </Button>
       </div>
-      <div className="mt-4 flex flex-col gap-3">
+      <div
+        className={cn(
+          'mt-4 flex flex-col gap-3',
+          activityExpanded &&
+            'max-h-[400px] overflow-y-auto pr-1 md:max-h-none md:overflow-visible md:pr-0'
+        )}
+      >
         {displayedActivities.length > 0 ? (
           displayedActivities.map((activity: any, index: number) => {
-            const rawDate = activity?.created_at || activity?.date
+            const rawDate = activity?.date || activity?.created_at
             const activityDate = rawDate ? new Date(rawDate) : null
             const timestamp =
               activityDate && !Number.isNaN(activityDate.getTime())
@@ -991,7 +973,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                 )}
               </div>
               <div className="space-y-2">
-                <div className="flex flex-col gap-2.5 sm:flex-row md:flex-col md:items-end">
+                <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
                   <Select value={selectedFarmId?.toString() || ''} onValueChange={handleFarmChange}>
                     <SelectTrigger className="h-11 w-full rounded-full border border-border/60 bg-background/90 px-4 text-sm font-semibold leading-tight shadow-sm transition-all focus:ring-2 focus:ring-primary/40 sm:h-12 sm:w-64 sm:text-base">
                       <SelectValue placeholder="Select a farm" />
@@ -1045,6 +1027,13 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
               </div>
               {farmInfo && (
                 <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground sm:text-sm">
+                  {selectedFarm?.dateOfPruning &&
+                    calculateDaysAfterPruning(selectedFarm.dateOfPruning) && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-primary px-2.5 py-0.5 font-semibold text-primary-foreground sm:px-3 sm:py-1">
+                        <Scissors className="h-3.5 w-3.5" />
+                        {calculateDaysAfterPruning(selectedFarm.dateOfPruning)} days
+                      </span>
+                    )}
                   <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/80 px-2.5 py-0.5 sm:px-3 sm:py-1">
                     <MapPin className="h-3.5 w-3.5 text-primary" />
                     {farmInfo.location}
