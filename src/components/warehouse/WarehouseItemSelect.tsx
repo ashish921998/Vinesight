@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -34,15 +34,7 @@ export function WarehouseItemSelect({
   const [showWarehouse, setShowWarehouse] = useState(false)
   const [customInput, setCustomInput] = useState(value)
 
-  useEffect(() => {
-    loadWarehouseItems()
-  }, [type])
-
-  useEffect(() => {
-    setCustomInput(value)
-  }, [value])
-
-  const loadWarehouseItems = async () => {
+  const loadWarehouseItems = useCallback(async () => {
     try {
       setLoading(true)
       const items = await warehouseService.getWarehouseItems(type)
@@ -52,7 +44,15 @@ export function WarehouseItemSelect({
     } finally {
       setLoading(false)
     }
-  }
+  }, [type])
+
+  useEffect(() => {
+    loadWarehouseItems()
+  }, [loadWarehouseItems])
+
+  useEffect(() => {
+    setCustomInput(value)
+  }, [value])
 
   const handleWarehouseSelect = (itemId: string) => {
     const item = warehouseItems.find((i) => i.id.toString() === itemId)

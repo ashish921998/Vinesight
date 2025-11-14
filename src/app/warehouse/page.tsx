@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -28,11 +28,7 @@ function WarehousePageContent() {
   const [editingItem, setEditingItem] = useState<WarehouseItem | null>(null)
   const [addingStockItem, setAddingStockItem] = useState<WarehouseItem | null>(null)
 
-  useEffect(() => {
-    loadItems()
-  }, [filter])
-
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       setLoading(true)
       const filterType = filter === 'all' ? undefined : filter
@@ -44,7 +40,11 @@ function WarehousePageContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filter])
+
+  useEffect(() => {
+    loadItems()
+  }, [loadItems])
 
   const handleDelete = async (id: number, name: string) => {
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return
