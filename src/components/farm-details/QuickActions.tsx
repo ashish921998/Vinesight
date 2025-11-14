@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowRight, BarChart3, Brain, ClipboardList } from 'lucide-react'
+import { ArrowRight, BarChart3, Brain, ClipboardList, Sparkles } from 'lucide-react'
 
 export function QuickActions() {
   const router = useRouter()
@@ -15,6 +15,13 @@ export function QuickActions() {
       icon: ClipboardList,
       onClick: () => router.push(`/farms/${farmId}/tasks`),
       iconClass: 'bg-primary/10 text-primary'
+    },
+    {
+      title: 'AI Task Recommendations',
+      description: 'Smart task suggestions based on weather and farm data.',
+      icon: Sparkles,
+      onClick: () => router.push(`/farms/${farmId}/ai-tasks`),
+      iconClass: 'bg-blue-100 text-blue-600'
     },
     {
       title: 'AI intelligence',
@@ -41,7 +48,7 @@ export function QuickActions() {
         Keep the farm log updated in a couple of taps.
       </p>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {quickActions.map((action) => {
           const Icon = action.icon
           return (
