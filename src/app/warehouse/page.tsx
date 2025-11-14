@@ -322,7 +322,9 @@ function WarehousePageContent() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Unit Price:</span>
-                      <span className="font-medium text-gray-900">₹{item.unitPrice.toFixed(2)}</span>
+                      <span className="font-medium text-gray-900">
+                        ₹{item.unitPrice.toFixed(2)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Total Value:</span>
