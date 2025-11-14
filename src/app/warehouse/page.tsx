@@ -87,9 +87,7 @@ function WarehousePageContent() {
             <Package className="h-8 w-8" />
             Warehouse
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your fertilizers and sprays inventory
-          </p>
+          <p className="text-muted-foreground mt-1">Manage your fertilizers and sprays inventory</p>
         </div>
         <Button onClick={() => setShowAddModal(true)} className="sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
@@ -249,11 +247,7 @@ function WarehousePageContent() {
                     <PackagePlus className="h-4 w-4 mr-1" />
                     Add Stock
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEditingItem(item)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setEditingItem(item)}>
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button
@@ -303,10 +297,7 @@ function WarehousePageContent() {
 
       {/* Modals */}
       {showAddModal && (
-        <AddWarehouseItemModal
-          onClose={() => setShowAddModal(false)}
-          onSave={handleSave}
-        />
+        <AddWarehouseItemModal onClose={() => setShowAddModal(false)} onSave={handleSave} />
       )}
 
       {editingItem && (

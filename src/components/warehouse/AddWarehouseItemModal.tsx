@@ -223,9 +223,7 @@ export function AddWarehouseItemModal({ item, onClose, onSave }: AddWarehouseIte
               value={formData.reorderQuantity}
               onChange={(e) => setFormData({ ...formData, reorderQuantity: e.target.value })}
             />
-            <p className="text-xs text-muted-foreground">
-              Alert when stock falls below this level
-            </p>
+            <p className="text-xs text-muted-foreground">Alert when stock falls below this level</p>
           </div>
 
           {/* Notes */}

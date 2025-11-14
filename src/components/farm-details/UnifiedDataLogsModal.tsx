@@ -144,7 +144,13 @@ export function UnifiedDataLogsModal({
 
   // Helper to create a blank chemical row with stable ID (pure function)
   // Moved before state declarations to avoid TDZ issues
-  const makeEmptyChemical = (): { id: string; name: string; quantity: string; unit: string; warehouseItemId?: number } => {
+  const makeEmptyChemical = (): {
+    id: string
+    name: string
+    quantity: string
+    unit: string
+    warehouseItemId?: number
+  } => {
     // Generate stable unique ID without referencing external state
     return {
       id:
@@ -157,7 +163,13 @@ export function UnifiedDataLogsModal({
   }
 
   // Helper to create a blank fertilizer row with stable ID
-  const makeEmptyFertilizer = (): { id: string; name: string; quantity: string; unit: string; warehouseItemId?: number } => {
+  const makeEmptyFertilizer = (): {
+    id: string
+    name: string
+    quantity: string
+    unit: string
+    warehouseItemId?: number
+  } => {
     return {
       id:
         globalThis.crypto?.randomUUID?.() ?? `${Date.now()}_${Math.random().toString(36).slice(2)}`,
@@ -633,7 +645,11 @@ export function UnifiedDataLogsModal({
     setChemicals((prev) => prev.filter((chem) => chem.id !== id))
   }
 
-  const handleChemicalChange = (id: string, field: 'name' | 'quantity' | 'unit' | 'warehouseItemId', value: string | number | undefined) => {
+  const handleChemicalChange = (
+    id: string,
+    field: 'name' | 'quantity' | 'unit' | 'warehouseItemId',
+    value: string | number | undefined
+  ) => {
     setChemicals((prev) =>
       prev.map((chem) => {
         if (chem.id === id) {
@@ -1094,7 +1110,7 @@ export function UnifiedDataLogsModal({
       if (log.type === 'fertigation' && log.data.fertilizers) {
         for (const fert of log.data.fertilizers) {
           // Find the corresponding fertilizer in our state to get warehouseItemId
-          const fertilizer = fertilizers.find(f => f.name === fert.name)
+          const fertilizer = fertilizers.find((f) => f.name === fert.name)
           if (fertilizer?.warehouseItemId) {
             // Note: quantity in fertilizers is per acre (e.g., 5 kg/acre)
             // For now, we'll use the quantity as-is assuming it's total quantity
@@ -1102,18 +1118,20 @@ export function UnifiedDataLogsModal({
             const quantityToDeduct = parseFloat(fert.quantity.toString())
 
             deductionPromises.push(
-              warehouseService.deductInventory({
-                itemId: fertilizer.warehouseItemId,
-                quantityToDeduct,
-                recordType: 'fertigation',
-                recordId: 0 // Will be updated with actual ID after save
-              }).then(result => {
-                if (result.success) {
-                  toast.success(result.message)
-                } else {
-                  toast.warning(result.message)
-                }
-              })
+              warehouseService
+                .deductInventory({
+                  itemId: fertilizer.warehouseItemId,
+                  quantityToDeduct,
+                  recordType: 'fertigation',
+                  recordId: 0 // Will be updated with actual ID after save
+                })
+                .then((result) => {
+                  if (result.success) {
+                    toast.success(result.message)
+                  } else {
+                    toast.warning(result.message)
+                  }
+                })
             )
           }
         }
@@ -1123,23 +1141,25 @@ export function UnifiedDataLogsModal({
       if (log.type === 'spray' && log.data.chemicals) {
         for (const chem of log.data.chemicals) {
           // Find the corresponding chemical in our state to get warehouseItemId
-          const chemical = chemicals.find(c => c.name === chem.name)
+          const chemical = chemicals.find((c) => c.name === chem.name)
           if (chemical?.warehouseItemId) {
             const quantityToDeduct = parseFloat(chem.quantity.toString())
 
             deductionPromises.push(
-              warehouseService.deductInventory({
-                itemId: chemical.warehouseItemId,
-                quantityToDeduct,
-                recordType: 'spray',
-                recordId: 0 // Will be updated with actual ID after save
-              }).then(result => {
-                if (result.success) {
-                  toast.success(result.message)
-                } else {
-                  toast.warning(result.message)
-                }
-              })
+              warehouseService
+                .deductInventory({
+                  itemId: chemical.warehouseItemId,
+                  quantityToDeduct,
+                  recordType: 'spray',
+                  recordId: 0 // Will be updated with actual ID after save
+                })
+                .then((result) => {
+                  if (result.success) {
+                    toast.success(result.message)
+                  } else {
+                    toast.warning(result.message)
+                  }
+                })
             )
           }
         }
@@ -1979,7 +1999,11 @@ export function UnifiedDataLogsModal({
                                     value={chemical.name}
                                     onChange={(name, warehouseItemId) => {
                                       handleChemicalChange(chemical.id, 'name', name)
-                                      handleChemicalChange(chemical.id, 'warehouseItemId', warehouseItemId)
+                                      handleChemicalChange(
+                                        chemical.id,
+                                        'warehouseItemId',
+                                        warehouseItemId
+                                      )
                                     }}
                                     placeholder="e.g., Sulfur fungicide"
                                     className="h-8 text-sm rounded-md"
@@ -2132,7 +2156,11 @@ export function UnifiedDataLogsModal({
                                     value={fertilizer.name}
                                     onChange={(name, warehouseItemId) => {
                                       handleFertilizerChange(fertilizer.id, 'name', name)
-                                      handleFertilizerChange(fertilizer.id, 'warehouseItemId', warehouseItemId)
+                                      handleFertilizerChange(
+                                        fertilizer.id,
+                                        'warehouseItemId',
+                                        warehouseItemId
+                                      )
                                     }}
                                     placeholder="e.g., NPK 19:19:19"
                                     className="h-8 text-sm rounded-md"

@@ -268,7 +268,10 @@ class WarehouseService {
   /**
    * Search warehouse items by name
    */
-  async searchWarehouseItems(query: string, type?: 'fertilizer' | 'spray'): Promise<WarehouseItem[]> {
+  async searchWarehouseItems(
+    query: string,
+    type?: 'fertilizer' | 'spray'
+  ): Promise<WarehouseItem[]> {
     const {
       data: { user }
     } = await supabase.auth.getUser()
