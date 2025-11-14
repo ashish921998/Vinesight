@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Sprout, Calculator, User, Brain, FileText } from 'lucide-react'
+import { Home, Sprout, Calculator, User, Brain, FileText, Package } from 'lucide-react'
 import { logTypeConfigs, type LogType } from '@/lib/log-type-config'
 import {
   Dialog,
@@ -37,6 +37,12 @@ const navigationItems = [
     name: 'Farms',
     href: '/farms',
     icon: Sprout,
+    color: 'text-primary'
+  },
+  {
+    name: 'Warehouse',
+    href: '/warehouse',
+    icon: Package,
     color: 'text-primary'
   },
   {
