@@ -13,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Select,
   SelectContent,
@@ -129,27 +128,31 @@ export function AddWarehouseItemModal({ item, onClose, onSave }: AddWarehouseIte
           {/* Type (only for new items) */}
           {!item && (
             <div className="space-y-2">
-              <Label>Type</Label>
-              <RadioGroup
-                value={formData.type}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, type: value as 'fertilizer' | 'spray' })
-                }
-                className="flex gap-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="fertilizer" id="fertilizer" />
-                  <Label htmlFor="fertilizer" className="font-normal cursor-pointer">
-                    Fertilizer
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="spray" id="spray" />
-                  <Label htmlFor="spray" className="font-normal cursor-pointer">
-                    Spray
-                  </Label>
-                </div>
-              </RadioGroup>
+              <Label>Type *</Label>
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="type"
+                    value="fertilizer"
+                    checked={formData.type === 'fertilizer'}
+                    onChange={(e) => setFormData({ ...formData, type: 'fertilizer' })}
+                    className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                  />
+                  <span className="text-sm font-medium text-gray-900">Fertilizer</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="type"
+                    value="spray"
+                    checked={formData.type === 'spray'}
+                    onChange={(e) => setFormData({ ...formData, type: 'spray' })}
+                    className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                  />
+                  <span className="text-sm font-medium text-gray-900">Spray</span>
+                </label>
+              </div>
             </div>
           )}
 
