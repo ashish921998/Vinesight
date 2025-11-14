@@ -178,6 +178,7 @@ function LabTestsPage() {
           <LabTestsTimeline
             soilTests={soilTests}
             petioleTests={petioleTests}
+            farmId={farmId}
             onAddSoilTest={handleAddSoilTest}
             onAddPetioleTest={handleAddPetioleTest}
             onEditSoilTest={handleEditSoilTest}

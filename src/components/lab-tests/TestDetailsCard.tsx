@@ -16,8 +16,9 @@ import {
   generateSoilTestRecommendations,
   generatePetioleTestRecommendations
 } from '@/lib/lab-test-recommendations'
-import { FileText, Edit, Trash2, Calendar, FileCheck } from 'lucide-react'
+import { FileText, Edit, Trash2, Calendar, FileCheck, Sprout } from 'lucide-react'
 import { format } from 'date-fns'
+import { FertilizerPlanGenerator } from './FertilizerPlanGenerator'
 
 export interface LabTestRecord {
   id: number
@@ -36,6 +37,7 @@ interface TestDetailsCardProps {
   test: LabTestRecord
   testType: 'soil' | 'petiole'
   previousTest?: LabTestRecord
+  farmId: number
   onEdit: (test: LabTestRecord) => void
   onDelete: (test: LabTestRecord) => void
 }
@@ -44,11 +46,13 @@ export function TestDetailsCard({
   test,
   testType,
   previousTest,
+  farmId,
   onEdit,
   onDelete
 }: TestDetailsCardProps) {
   const [showDetails, setShowDetails] = useState(false)
   const [showReportViewer, setShowReportViewer] = useState(false)
+  const [showFertilizerPlan, setShowFertilizerPlan] = useState(false)
 
   // Generate recommendations
   const recommendations =
@@ -229,24 +233,38 @@ export function TestDetailsCard({
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowDetails(true)}
-                className="flex-1"
-              >
-                View Full Details
-              </Button>
-              {test.report_url && (
+            <div className="flex flex-col gap-2 pt-2">
+              <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowReportViewer(true)}
-                  className="flex items-center gap-2"
+                  onClick={() => setShowDetails(true)}
+                  className="flex-1"
                 >
-                  <FileText className="h-4 w-4" />
-                  Report
+                  View Full Details
+                </Button>
+                {test.report_url && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowReportViewer(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Report
+                  </Button>
+                )}
+              </div>
+              {/* Fertilizer Plan Button - only show if there are actionable recommendations */}
+              {recommendations.filter((r) => r.priority === 'critical' || r.priority === 'high').length > 0 && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => setShowFertilizerPlan(true)}
+                  className="w-full flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                >
+                  <Sprout className="h-4 w-4" />
+                  Generate Fertilizer Plan
                 </Button>
               )}
             </div>
@@ -371,6 +389,16 @@ export function TestDetailsCard({
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Fertilizer Plan Generator Dialog */}
+      <FertilizerPlanGenerator
+        test={test}
+        testType={testType}
+        recommendations={recommendations}
+        farmId={farmId}
+        open={showFertilizerPlan}
+        onOpenChange={setShowFertilizerPlan}
+      />
     </>
   )
 }

@@ -18,6 +18,7 @@ import { subMonths, isAfter, startOfDay } from 'date-fns'
 interface LabTestsTimelineProps {
   soilTests: LabTestRecord[]
   petioleTests: LabTestRecord[]
+  farmId: number
   onAddSoilTest: () => void
   onAddPetioleTest: () => void
   onEditSoilTest: (test: LabTestRecord) => void
@@ -32,6 +33,7 @@ type DateFilter = 'all' | '6months' | '1year' | 'season'
 export function LabTestsTimeline({
   soilTests,
   petioleTests,
+  farmId,
   onAddSoilTest,
   onAddPetioleTest,
   onEditSoilTest,
@@ -236,6 +238,7 @@ export function LabTestsTimeline({
               test={item.test}
               testType={item.type}
               previousTest={getPreviousTest(item.test, item.type)}
+              farmId={farmId}
               onEdit={item.type === 'soil' ? onEditSoilTest : onEditPetioleTest}
               onDelete={item.type === 'soil' ? onDeleteSoilTest : onDeletePetioleTest}
             />
