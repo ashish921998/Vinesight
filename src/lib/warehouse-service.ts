@@ -119,17 +119,34 @@ class WarehouseService {
     } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
 
+    // Input validation
+    if (!input.name || input.name.trim().length === 0) {
+      throw new Error('Item name is required')
+    }
+
+    if (input.quantity < 0) {
+      throw new Error('Quantity must be a positive number')
+    }
+
+    if (input.unitPrice < 0) {
+      throw new Error('Unit price must be a positive number')
+    }
+
+    if (input.reorderQuantity !== undefined && input.reorderQuantity < 0) {
+      throw new Error('Reorder quantity must be a positive number')
+    }
+
     const { data, error } = await supabase
       .from('warehouse_items')
       .insert({
         user_id: user.id,
-        name: input.name,
+        name: input.name.trim(),
         type: input.type,
         quantity: input.quantity,
         unit: input.unit,
         unit_price: input.unitPrice,
         reorder_quantity: input.reorderQuantity,
-        notes: input.notes
+        notes: input.notes?.trim()
       })
       .select()
       .single()
@@ -151,12 +168,34 @@ class WarehouseService {
     } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
 
+    // Input validation
+    if (input.name !== undefined && input.name.trim().length === 0) {
+      throw new Error('Item name cannot be empty')
+    }
+
+    if (input.quantity !== undefined && input.quantity < 0) {
+      throw new Error('Quantity must be a positive number')
+    }
+
+    if (input.unitPrice !== undefined && input.unitPrice < 0) {
+      throw new Error('Unit price must be a positive number')
+    }
+
+    if (input.reorderQuantity !== undefined && input.reorderQuantity < 0) {
+      throw new Error('Reorder quantity must be a positive number')
+    }
+
     const updateData: any = {}
-    if (input.name !== undefined) updateData.name = input.name
+    if (input.name !== undefined) updateData.name = input.name.trim()
     if (input.quantity !== undefined) updateData.quantity = input.quantity
     if (input.unitPrice !== undefined) updateData.unit_price = input.unitPrice
     if (input.reorderQuantity !== undefined) updateData.reorder_quantity = input.reorderQuantity
-    if (input.notes !== undefined) updateData.notes = input.notes
+    if (input.notes !== undefined) updateData.notes = input.notes.trim()
+
+    // Check if there's anything to update
+    if (Object.keys(updateData).length === 0) {
+      throw new Error('No fields provided to update')
+    }
 
     const { data, error } = await supabase
       .from('warehouse_items')

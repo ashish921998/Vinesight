@@ -756,7 +756,7 @@ export function UnifiedDataLogsModal({
 
       type SprayData = {
         water_volume: number
-        chemicals: { name: string; quantity: number; unit: string }[]
+        chemicals: { name: string; quantity: number; unit: string; warehouseItemId?: number }[]
         notes?: string
       }
 
@@ -771,7 +771,13 @@ export function UnifiedDataLogsModal({
         water_volume: water,
         notes: sprayNotes.trim() || undefined,
         chemicals: validChemicals.map(
-          (chem: { id: string; name: string; quantity: string; unit: string }) => {
+          (chem: {
+            id: string
+            name: string
+            quantity: string
+            unit: string
+            warehouseItemId?: number
+          }) => {
             const qty = parseFloat(chem.quantity || '')
             if (!Number.isFinite(qty) || qty <= 0) {
               toast.error(
@@ -796,7 +802,8 @@ export function UnifiedDataLogsModal({
             return {
               name: trimmedName,
               quantity: qty,
-              unit: trimmedUnit
+              unit: trimmedUnit,
+              warehouseItemId: chem.warehouseItemId
             }
           }
         )
@@ -850,7 +857,7 @@ export function UnifiedDataLogsModal({
       type FertigationData = {
         farm_id: number
         date: string
-        fertilizers: { name: string; quantity: number; unit: string }[]
+        fertilizers: { name: string; quantity: number; unit: string; warehouseItemId?: number }[]
         notes?: string
         date_of_pruning?: string
       }
@@ -860,7 +867,13 @@ export function UnifiedDataLogsModal({
         date: selectedDateToUse,
         notes: fertigationNotes.trim() || undefined,
         fertilizers: validFertilizers.map(
-          (fert: { id: string; name: string; quantity: string; unit: string }) => {
+          (fert: {
+            id: string
+            name: string
+            quantity: string
+            unit: string
+            warehouseItemId?: number
+          }) => {
             const qty = parseFloat(fert.quantity || '')
             if (!Number.isFinite(qty) || qty <= 0) {
               toast.error(
@@ -898,7 +911,8 @@ export function UnifiedDataLogsModal({
             return {
               name: trimmedName,
               quantity: qty,
-              unit: trimmedUnit
+              unit: trimmedUnit,
+              warehouseItemId: fert.warehouseItemId
             }
           }
         )
@@ -1103,36 +1117,30 @@ export function UnifiedDataLogsModal({
 
   // Helper function to process warehouse inventory deductions
   const processWarehouseDeductions = async () => {
-    const deductionPromises: Promise<void>[] = []
-
+    // Process deductions sequentially to prevent race conditions
     for (const log of sessionLogs) {
       // Process fertigation logs
       if (log.type === 'fertigation' && log.data.fertilizers) {
         for (const fert of log.data.fertilizers) {
-          // Find the corresponding fertilizer in our state to get warehouseItemId
-          const fertilizer = fertilizers.find((f) => f.name === fert.name)
-          if (fertilizer?.warehouseItemId) {
+          // Read warehouseItemId directly from saved log data
+          if (fert.warehouseItemId) {
             // Note: quantity in fertilizers is per acre (e.g., 5 kg/acre)
             // For now, we'll use the quantity as-is assuming it's total quantity
             // TODO: Multiply by actual area treated when area field is added to form
             const quantityToDeduct = parseFloat(fert.quantity.toString())
 
-            deductionPromises.push(
-              warehouseService
-                .deductInventory({
-                  itemId: fertilizer.warehouseItemId,
-                  quantityToDeduct,
-                  recordType: 'fertigation',
-                  recordId: 0 // Will be updated with actual ID after save
-                })
-                .then((result) => {
-                  if (result.success) {
-                    toast.success(result.message)
-                  } else {
-                    toast.warning(result.message)
-                  }
-                })
-            )
+            const result = await warehouseService.deductInventory({
+              itemId: fert.warehouseItemId,
+              quantityToDeduct,
+              recordType: 'fertigation',
+              recordId: 0 // Will be updated with actual ID after save
+            })
+
+            if (result.success) {
+              toast.success(result.message)
+            } else {
+              toast.warning(result.message)
+            }
           }
         }
       }
@@ -1140,34 +1148,26 @@ export function UnifiedDataLogsModal({
       // Process spray logs
       if (log.type === 'spray' && log.data.chemicals) {
         for (const chem of log.data.chemicals) {
-          // Find the corresponding chemical in our state to get warehouseItemId
-          const chemical = chemicals.find((c) => c.name === chem.name)
-          if (chemical?.warehouseItemId) {
+          // Read warehouseItemId directly from saved log data
+          if (chem.warehouseItemId) {
             const quantityToDeduct = parseFloat(chem.quantity.toString())
 
-            deductionPromises.push(
-              warehouseService
-                .deductInventory({
-                  itemId: chemical.warehouseItemId,
-                  quantityToDeduct,
-                  recordType: 'spray',
-                  recordId: 0 // Will be updated with actual ID after save
-                })
-                .then((result) => {
-                  if (result.success) {
-                    toast.success(result.message)
-                  } else {
-                    toast.warning(result.message)
-                  }
-                })
-            )
+            const result = await warehouseService.deductInventory({
+              itemId: chem.warehouseItemId,
+              quantityToDeduct,
+              recordType: 'spray',
+              recordId: 0 // Will be updated with actual ID after save
+            })
+
+            if (result.success) {
+              toast.success(result.message)
+            } else {
+              toast.warning(result.message)
+            }
           }
         }
       }
     }
-
-    // Process all deductions
-    await Promise.all(deductionPromises)
   }
 
   const handleSaveAllLogs = async () => {
