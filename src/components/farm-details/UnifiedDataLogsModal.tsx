@@ -425,6 +425,22 @@ export function UnifiedDataLogsModal({
         return 'ec'
       if (normalized.includes('organiccarbon') || normalized === 'oc') return 'organicCarbon'
       if (normalized.includes('organicmatter')) return 'organicMatter'
+      // Specific nitrogen types for petiole tests (check these first before generic nitrogen)
+      if (normalized.includes('totalnitrogen') || normalized === 'totalnitrogenasn')
+        return 'total_nitrogen'
+      if (
+        normalized.includes('nitratenitrogen') ||
+        normalized === 'nitratenitrogenasno3n' ||
+        normalized === 'no3n'
+      )
+        return 'nitrate_nitrogen'
+      if (
+        normalized.includes('ammonicalnitrogen') ||
+        normalized === 'ammonicalnitrogenasnh4n' ||
+        normalized === 'nh4n'
+      )
+        return 'ammonical_nitrogen'
+      // Generic nitrogen for soil tests
       if (normalized.includes('nitrogen') || normalized === 'n') return 'nitrogen'
       if (normalized.includes('phosphorus') || normalized === 'p') return 'phosphorus'
       if (normalized.includes('potassium') || normalized === 'k') return 'potassium'

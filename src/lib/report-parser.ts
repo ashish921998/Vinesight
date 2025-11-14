@@ -196,6 +196,16 @@ Respond strictly as JSON with the shape:
       organiccarbon: 'organicCarbon',
       organicmatter: 'organicMatter',
       oc: 'organicCarbon',
+      // Specific nitrogen types for petiole tests
+      totalnitrogen: 'total_nitrogen',
+      totalnitrogenasn: 'total_nitrogen',
+      nitratenitrogen: 'nitrate_nitrogen',
+      nitratenitrogenasno3n: 'nitrate_nitrogen',
+      no3n: 'nitrate_nitrogen',
+      ammonicalnitrogen: 'ammonical_nitrogen',
+      ammonicalnitrogenasnh4n: 'ammonical_nitrogen',
+      nh4n: 'ammonical_nitrogen',
+      // Generic nitrogen for soil tests
       nitrogen: 'nitrogen',
       n: 'nitrogen',
       phosphorus: 'phosphorus',
