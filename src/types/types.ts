@@ -97,6 +97,41 @@ export interface WeatherData {
   date: string
 }
 
+// Warehouse Inventory types
+export interface WarehouseItem {
+  id: number
+  userId: string
+  name: string
+  type: 'fertilizer' | 'spray'
+  quantity: number
+  unit: 'kg' | 'liter' | 'gram' | 'ml'
+  unitPrice: number
+  reorderQuantity?: number
+  notes?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// Convert database row to WarehouseItem
+export function warehouseItemFromDB(row: any): WarehouseItem {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    name: row.name,
+    type: row.type,
+    quantity: parseFloat(row.quantity),
+    unit: row.unit,
+    unitPrice: parseFloat(row.unit_price),
+    reorderQuantity:
+      row.reorder_quantity !== null && row.reorder_quantity !== undefined
+        ? parseFloat(row.reorder_quantity)
+        : undefined,
+    notes: row.notes,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  }
+}
+
 // Export database types for convenience
 export type { Database } from './database'
 export type DatabaseRow<T extends keyof Database['public']['Tables']> =
