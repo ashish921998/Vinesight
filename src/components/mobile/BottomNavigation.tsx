@@ -52,12 +52,6 @@ const navigationItems = [
     color: 'text-primary'
   },
   {
-    name: 'Calculator',
-    href: '/calculators',
-    icon: Calculator,
-    color: 'text-primary'
-  },
-  {
     name: 'Profile',
     href: '/settings',
     icon: User,
