@@ -40,15 +40,15 @@ const navigationItems = [
     color: 'text-primary'
   },
   {
-    name: 'Calculator',
-    href: '/calculators',
-    icon: Calculator,
-    color: 'text-primary'
-  },
-  {
     name: 'AI',
     href: '/ai-assistant',
     icon: Brain,
+    color: 'text-primary'
+  },
+  {
+    name: 'Calculator',
+    href: '/calculators',
+    icon: Calculator,
     color: 'text-primary'
   },
   {
