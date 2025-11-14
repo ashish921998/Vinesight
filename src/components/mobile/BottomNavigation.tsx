@@ -34,12 +34,6 @@ const navigationItems = [
     color: 'text-primary'
   },
   {
-    name: 'Farms',
-    href: '/farms',
-    icon: Sprout,
-    color: 'text-primary'
-  },
-  {
     name: 'Warehouse',
     href: '/warehouse',
     icon: Package,
