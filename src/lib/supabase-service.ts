@@ -1525,6 +1525,381 @@ export class SupabaseService {
     }
   }
 
+  // ============================================================================
+  // Phase 3A: AI Intelligence Methods
+  // ============================================================================
+
+  // Recommendation Outcomes
+  static async createRecommendationOutcome(outcome: {
+    test_id: number
+    test_type: 'soil' | 'petiole'
+    farm_id: number
+    recommendation_parameter: string
+    recommendation_priority: string
+    recommendation_text: string
+    followed?: boolean | null
+    action_taken?: string | null
+    action_date?: string | null
+    cost_spent?: number | null
+    yield_impact?: number | null
+    soil_parameter_change?: Record<string, number> | null
+    disease_incidents?: number
+    satisfaction_rating?: 1 | 2 | 3 | 4 | 5 | null
+    notes?: string | null
+  }): Promise<any> {
+    const supabase = getTypedSupabaseClient()
+    const { data, error } = await supabase
+      .from('recommendation_outcomes')
+      .insert(outcome)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error creating recommendation outcome:', error)
+      throw new Error(`Failed to create outcome: ${error.message}`)
+    }
+    return data
+  }
+
+  static async getRecommendationOutcomes(testId: number): Promise<any[]> {
+    const supabase = getTypedSupabaseClient()
+    const { data, error } = await supabase
+      .from('recommendation_outcomes')
+      .select('*')
+      .eq('test_id', testId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error getting recommendation outcomes:', error)
+      throw new Error(`Failed to get outcomes: ${error.message}`)
+    }
+    return data || []
+  }
+
+  static async updateRecommendationOutcome(
+    id: number,
+    updates: {
+      followed?: boolean | null
+      action_taken?: string | null
+      action_date?: string | null
+      cost_spent?: number | null
+      yield_impact?: number | null
+      soil_parameter_change?: Record<string, number> | null
+      disease_incidents?: number
+      satisfaction_rating?: 1 | 2 | 3 | 4 | 5 | null
+      notes?: string | null
+    }
+  ): Promise<any> {
+    const supabase = getTypedSupabaseClient()
+    const { data, error } = await supabase
+      .from('recommendation_outcomes')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating recommendation outcome:', error)
+      throw new Error(`Failed to update outcome: ${error.message}`)
+    }
+    return data
+  }
+
+  // Test ROI Tracking
+  static async createTestROI(roi: {
+    test_id: number
+    test_type: 'soil' | 'petiole'
+    farm_id: number
+    test_date: string
+    test_cost: number
+    fertilizer_savings?: number
+    yield_increase_kg?: number
+    yield_increase_value?: number
+    disease_prevention_savings?: number
+    water_savings?: number
+    total_benefit: number
+    roi_percentage: number
+    outcome_measured_date?: string | null
+    season?: string | null
+  }): Promise<any> {
+    const supabase = getTypedSupabaseClient()
+    const { data, error } = await supabase.from('test_roi_tracking').insert(roi).select().single()
+
+    if (error) {
+      console.error('Error creating test ROI:', error)
+      throw new Error(`Failed to create ROI: ${error.message}`)
+    }
+    return data
+  }
+
+  static async getTestROI(testId: number): Promise<any | null> {
+    const supabase = getTypedSupabaseClient()
+    const { data, error } = await supabase
+      .from('test_roi_tracking')
+      .select('*')
+      .eq('test_id', testId)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') return null // Not found
+      console.error('Error getting test ROI:', error)
+      throw new Error(`Failed to get ROI: ${error.message}`)
+    }
+    return data
+  }
+
+  static async updateTestROI(
+    id: number,
+    updates: {
+      fertilizer_savings?: number
+      yield_increase_kg?: number
+      yield_increase_value?: number
+      disease_prevention_savings?: number
+      water_savings?: number
+      total_benefit?: number
+      roi_percentage?: number
+      outcome_measured_date?: string | null
+    }
+  ): Promise<any> {
+    const supabase = getTypedSupabaseClient()
+    const { data, error } = await supabase
+      .from('test_roi_tracking')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating test ROI:', error)
+      throw new Error(`Failed to update ROI: ${error.message}`)
+    }
+    return data
+  }
+
+  static async getFarmROISummary(farmId: number): Promise<{
+    total_tests: number
+    total_roi: number
+    total_savings: number
+    avg_roi_percentage: number
+  }> {
+    const supabase = getTypedSupabaseClient()
+    const { data, error } = await supabase
+      .from('test_roi_tracking')
+      .select('*')
+      .eq('farm_id', farmId)
+
+    if (error) {
+      console.error('Error getting farm ROI summary:', error)
+      throw new Error(`Failed to get ROI summary: ${error.message}`)
+    }
+
+    if (!data || data.length === 0) {
+      return {
+        total_tests: 0,
+        total_roi: 0,
+        total_savings: 0,
+        avg_roi_percentage: 0
+      }
+    }
+
+    const total_tests = data.length
+    const total_roi = data.reduce((sum: number, roi: any) => sum + (roi.total_benefit || 0), 0)
+    const total_savings = data.reduce((sum: number, roi: any) => sum + (roi.fertilizer_savings || 0), 0)
+    const avg_roi_percentage =
+      data.reduce((sum: number, roi: any) => sum + (roi.roi_percentage || 0), 0) / total_tests
+
+    return {
+      total_tests,
+      total_roi,
+      total_savings,
+      avg_roi_percentage
+    }
+  }
+
+  // Disease Risk Alerts
+  static async createDiseaseRiskAlert(alert: {
+    test_id: number
+    test_type: 'soil' | 'petiole'
+    farm_id: number
+    nutrient_deficiency: string
+    disease_risks: string[]
+    risk_level: 'low' | 'medium' | 'high' | 'critical'
+    risk_explanation: string
+    preventive_actions?: string[]
+    disease_occurred?: boolean | null
+    preventive_action_taken?: boolean | null
+  }): Promise<any> {
+    const supabase = getTypedSupabaseClient()
+    const { data, error } = await supabase
+      .from('disease_risk_alerts')
+      .insert(alert)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error creating disease risk alert:', error)
+      throw new Error(`Failed to create alert: ${error.message}`)
+    }
+    return data
+  }
+
+  static async getDiseaseRiskAlerts(testId: number): Promise<any[]> {
+    const supabase = getTypedSupabaseClient()
+    const { data, error } = await supabase
+      .from('disease_risk_alerts')
+      .select('*')
+      .eq('test_id', testId)
+      .order('risk_level', { ascending: false })
+
+    if (error) {
+      console.error('Error getting disease risk alerts:', error)
+      throw new Error(`Failed to get alerts: ${error.message}`)
+    }
+    return data || []
+  }
+
+  static async getActiveDiseaseRisks(farmId: number): Promise<any[]> {
+    const supabase = getTypedSupabaseClient()
+    const { data, error } = await supabase
+      .from('disease_risk_alerts')
+      .select('*')
+      .eq('farm_id', farmId)
+      .is('resolved_at', null)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error getting active disease risks:', error)
+      throw new Error(`Failed to get active risks: ${error.message}`)
+    }
+    return data || []
+  }
+
+  static async updateDiseaseRiskAlert(
+    id: number,
+    updates: {
+      disease_occurred?: boolean | null
+      preventive_action_taken?: boolean | null
+      resolved_at?: string | null
+    }
+  ): Promise<any> {
+    const supabase = getTypedSupabaseClient()
+    const { data, error } = await supabase
+      .from('disease_risk_alerts')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating disease risk alert:', error)
+      throw new Error(`Failed to update alert: ${error.message}`)
+    }
+    return data
+  }
+
+  // Farm Insights
+  static async getFarmInsights(farmId: number): Promise<{
+    soil_health_trend: 'improving' | 'stable' | 'declining' | 'unknown'
+    total_roi: number
+    recommendations_followed: number
+    recommendations_total: number
+    avg_satisfaction: number
+    key_insights: string[]
+  }> {
+    const supabase = getTypedSupabaseClient()
+
+    // Get ROI summary
+    const roiSummary = await this.getFarmROISummary(farmId)
+
+    // Get recommendation outcomes
+    const { data: outcomes, error: outcomesError } = await supabase
+      .from('recommendation_outcomes')
+      .select('*')
+      .eq('farm_id', farmId)
+
+    if (outcomesError) {
+      console.error('Error getting outcomes for insights:', outcomesError)
+    }
+
+    const recommendations_total = outcomes?.length || 0
+    const recommendations_followed =
+      outcomes?.filter((o: any) => o.followed === true).length || 0
+
+    // Calculate average satisfaction
+    const satisfactionRatings = outcomes?.filter((o: any) => o.satisfaction_rating !== null) || []
+    const avg_satisfaction =
+      satisfactionRatings.length > 0
+        ? satisfactionRatings.reduce((sum: number, o: any) => sum + o.satisfaction_rating, 0) /
+          satisfactionRatings.length
+        : 0
+
+    // Determine soil health trend (simplified logic based on recent tests)
+    const { data: recentSoilTests } = await supabase
+      .from('soil_test_records')
+      .select('*')
+      .eq('farm_id', farmId)
+      .order('date', { ascending: false })
+      .limit(3)
+
+    let soil_health_trend: 'improving' | 'stable' | 'declining' | 'unknown' = 'unknown'
+    if (recentSoilTests && recentSoilTests.length >= 2) {
+      const latest = recentSoilTests[0].parameters
+      const previous = recentSoilTests[1].parameters
+
+      // Simple heuristic: compare key parameters (pH, EC, NPK)
+      const phTrend = (latest.ph || 0) - (previous.ph || 0)
+      const ecTrend = (latest.ec || 0) - (previous.ec || 0)
+      const nTrend = (latest.nitrogen || 0) - (previous.nitrogen || 0)
+
+      const improvingCount = [phTrend > 0, ecTrend > 0, nTrend > 0].filter(Boolean).length
+
+      if (improvingCount >= 2) soil_health_trend = 'improving'
+      else if (improvingCount === 1) soil_health_trend = 'stable'
+      else soil_health_trend = 'declining'
+    }
+
+    // Generate key insights
+    const key_insights: string[] = []
+
+    if (roiSummary.total_tests > 0) {
+      key_insights.push(
+        `Total ROI from ${roiSummary.total_tests} lab tests: ₹${Math.round(roiSummary.total_roi)}`
+      )
+    }
+
+    if (roiSummary.avg_roi_percentage > 0) {
+      key_insights.push(
+        `Average ROI: ${Math.round(roiSummary.avg_roi_percentage)}% on testing investment`
+      )
+    }
+
+    if (recommendations_total > 0) {
+      const followRate = Math.round((recommendations_followed / recommendations_total) * 100)
+      key_insights.push(
+        `You followed ${followRate}% of recommendations (${recommendations_followed}/${recommendations_total})`
+      )
+    }
+
+    if (avg_satisfaction > 0) {
+      key_insights.push(`Average satisfaction rating: ${avg_satisfaction.toFixed(1)}/5 stars`)
+    }
+
+    if (soil_health_trend === 'improving') {
+      key_insights.push('Soil health is improving! Keep up the good work.')
+    } else if (soil_health_trend === 'declining') {
+      key_insights.push('Soil health needs attention. Consider following test recommendations.')
+    }
+
+    return {
+      soil_health_trend,
+      total_roi: roiSummary.total_roi,
+      recommendations_followed,
+      recommendations_total,
+      avg_satisfaction,
+      key_insights
+    }
+  }
+
   // Real-time subscriptions
   static subscribeToFarmChanges(farmId: number, callback: (payload: any) => void) {
     const supabase = getTypedSupabaseClient()

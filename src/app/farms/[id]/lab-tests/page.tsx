@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { SupabaseService } from '@/lib/supabase-service'
 import { LabTestsTimeline } from '@/components/lab-tests/LabTestsTimeline'
 import { LabTestTrendCharts } from '@/components/lab-tests/LabTestTrendCharts'
+import { SmartInsightsDashboard } from '@/components/lab-tests/SmartInsightsDashboard'
 import { UnifiedDataLogsModal } from '@/components/farm-details/UnifiedDataLogsModal'
 import { type LabTestRecord } from '@/components/lab-tests/TestDetailsCard'
 import { Button } from '@/components/ui/button'
@@ -166,6 +167,9 @@ function LabTestsPage() {
           Back to {farmName}
         </Button>
       </div>
+
+      {/* Smart Insights Dashboard */}
+      <SmartInsightsDashboard farmId={farmId} />
 
       {/* Tabs */}
       <Tabs defaultValue="timeline" className="space-y-4">
