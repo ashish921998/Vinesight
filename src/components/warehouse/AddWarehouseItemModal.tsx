@@ -54,8 +54,14 @@ export function AddWarehouseItemModal({ item, onClose, onSave }: AddWarehouseIte
     }
 
     const quantity = parseFloat(formData.quantity)
-    if (isNaN(quantity) || quantity <= 0) {
-      toast.error('Please enter a quantity greater than zero')
+    // Allow zero quantity when editing (user might just be updating price/notes)
+    // But require positive quantity when creating new items
+    if (isNaN(quantity) || quantity < 0) {
+      toast.error('Please enter a valid quantity (0 or greater)')
+      return
+    }
+    if (!item && quantity === 0) {
+      toast.error('Please enter a quantity greater than zero for new items')
       return
     }
 

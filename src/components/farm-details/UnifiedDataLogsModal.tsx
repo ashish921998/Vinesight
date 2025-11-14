@@ -1126,25 +1126,33 @@ export function UnifiedDataLogsModal({
         for (const fert of log.data.fertilizers) {
           // Read warehouseItemId directly from saved log data
           if (fert.warehouseItemId) {
-            // Note: quantity in fertilizers is per acre (e.g., 5 kg/acre)
-            // For now, we'll use the quantity as-is assuming it's total quantity
-            // TODO: Multiply by actual area treated when area field is added to form
-            const quantityToDeduct = parseFloat(fert.quantity.toString())
+            try {
+              // Note: quantity in fertilizers is per acre (e.g., 5 kg/acre)
+              // For now, we'll use the quantity as-is assuming it's total quantity
+              // TODO: Multiply by actual area treated when area field is added to form
+              const quantityToDeduct = parseFloat(fert.quantity.toString())
 
-            const result = await warehouseService.deductInventory({
-              itemId: fert.warehouseItemId,
-              quantityToDeduct,
-              recordType: 'fertigation',
-              // TODO: recordId is currently 0 because sessionLogs use temporary IDs.
-              // To fix: either move deductions to happen after DB save with real IDs,
-              // or update the deduction logic to not require recordId for audit trail.
-              recordId: 0
-            })
+              const result = await warehouseService.deductInventory({
+                itemId: fert.warehouseItemId,
+                quantityToDeduct,
+                recordType: 'fertigation',
+                // TODO: recordId is currently 0 because sessionLogs use temporary IDs.
+                // To fix: either move deductions to happen after DB save with real IDs,
+                // or update the deduction logic to not require recordId for audit trail.
+                recordId: 0
+              })
 
-            if (result.success) {
-              toast.success(result.message)
-            } else {
-              toast.warning(result.message)
+              if (result.success) {
+                toast.success(result.message)
+              } else {
+                toast.warning(result.message)
+              }
+            } catch (error) {
+              console.error('Error deducting fertilizer inventory:', error)
+              toast.error(
+                `Failed to deduct ${fert.name} from warehouse: ${error instanceof Error ? error.message : 'Unknown error'}`
+              )
+              // Continue processing other items
             }
           }
         }
@@ -1155,22 +1163,30 @@ export function UnifiedDataLogsModal({
         for (const chem of log.data.chemicals) {
           // Read warehouseItemId directly from saved log data
           if (chem.warehouseItemId) {
-            const quantityToDeduct = parseFloat(chem.quantity.toString())
+            try {
+              const quantityToDeduct = parseFloat(chem.quantity.toString())
 
-            const result = await warehouseService.deductInventory({
-              itemId: chem.warehouseItemId,
-              quantityToDeduct,
-              recordType: 'spray',
-              // TODO: recordId is currently 0 because sessionLogs use temporary IDs.
-              // To fix: either move deductions to happen after DB save with real IDs,
-              // or update the deduction logic to not require recordId for audit trail.
-              recordId: 0
-            })
+              const result = await warehouseService.deductInventory({
+                itemId: chem.warehouseItemId,
+                quantityToDeduct,
+                recordType: 'spray',
+                // TODO: recordId is currently 0 because sessionLogs use temporary IDs.
+                // To fix: either move deductions to happen after DB save with real IDs,
+                // or update the deduction logic to not require recordId for audit trail.
+                recordId: 0
+              })
 
-            if (result.success) {
-              toast.success(result.message)
-            } else {
-              toast.warning(result.message)
+              if (result.success) {
+                toast.success(result.message)
+              } else {
+                toast.warning(result.message)
+              }
+            } catch (error) {
+              console.error('Error deducting spray inventory:', error)
+              toast.error(
+                `Failed to deduct ${chem.name} from warehouse: ${error instanceof Error ? error.message : 'Unknown error'}`
+              )
+              // Continue processing other items
             }
           }
         }
