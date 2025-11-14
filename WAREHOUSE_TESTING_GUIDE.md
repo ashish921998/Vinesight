@@ -121,12 +121,12 @@ npm run dev
 1. Find NPK item (100 kg)
 2. Click "Add Stock" button
 3. Enter Quantity: `50`
-4. Review preview (should show "150 kg")
+4. Review preview (should show "150.00 kg")
 5. Click "Add Stock"
 
 **Expected Results:**
 - ✅ Modal closes
-- ✅ Toast: "Added 50 kg to NPK 19:19:19. New quantity: 150 kg"
+- ✅ Toast: "Added 50 kg to NPK 19:19:19. New quantity: 150.00 kg"
 - ✅ Item now shows 150 kg
 - ✅ Total value updated to ₹7,500
 

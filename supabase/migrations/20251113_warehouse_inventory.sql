@@ -36,7 +36,8 @@ CREATE POLICY "Users can insert their own warehouse items"
 
 CREATE POLICY "Users can update their own warehouse items"
   ON warehouse_items FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete their own warehouse items"
   ON warehouse_items FOR DELETE

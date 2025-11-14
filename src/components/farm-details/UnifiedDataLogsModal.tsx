@@ -1001,7 +1001,8 @@ export function UnifiedDataLogsModal({
           `${Date.now()}_${Math.random().toString(36).slice(2)}`,
         name: chem.name || '',
         quantity: chem.quantity?.toString() || '',
-        unit: chem.unit || 'gm/L'
+        unit: chem.unit || 'gm/L',
+        warehouseItemId: chem.warehouseItemId
       }))
       setChemicals(formChemicals)
       setMultipleSprayMode(true)
@@ -1018,7 +1019,8 @@ export function UnifiedDataLogsModal({
             `${Date.now()}_${Math.random().toString(36).slice(2)}`,
           name: fert.name || '',
           quantity: fert.quantity?.toString() || '',
-          unit: fert.unit || 'kg/acre'
+          unit: fert.unit || 'kg/acre',
+          warehouseItemId: fert.warehouseItemId
         }))
         setFertilizers(formFertilizers)
         setMultipleFertigationMode(true)
@@ -1133,7 +1135,10 @@ export function UnifiedDataLogsModal({
               itemId: fert.warehouseItemId,
               quantityToDeduct,
               recordType: 'fertigation',
-              recordId: 0 // Will be updated with actual ID after save
+              // TODO: recordId is currently 0 because sessionLogs use temporary IDs.
+              // To fix: either move deductions to happen after DB save with real IDs,
+              // or update the deduction logic to not require recordId for audit trail.
+              recordId: 0
             })
 
             if (result.success) {
@@ -1156,7 +1161,10 @@ export function UnifiedDataLogsModal({
               itemId: chem.warehouseItemId,
               quantityToDeduct,
               recordType: 'spray',
-              recordId: 0 // Will be updated with actual ID after save
+              // TODO: recordId is currently 0 because sessionLogs use temporary IDs.
+              // To fix: either move deductions to happen after DB save with real IDs,
+              // or update the deduction logic to not require recordId for audit trail.
+              recordId: 0
             })
 
             if (result.success) {

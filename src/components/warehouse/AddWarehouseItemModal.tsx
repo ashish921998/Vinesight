@@ -54,14 +54,14 @@ export function AddWarehouseItemModal({ item, onClose, onSave }: AddWarehouseIte
     }
 
     const quantity = parseFloat(formData.quantity)
-    if (isNaN(quantity) || quantity < 0) {
-      toast.error('Please enter a valid quantity')
+    if (isNaN(quantity) || quantity <= 0) {
+      toast.error('Please enter a quantity greater than zero')
       return
     }
 
     const unitPrice = parseFloat(formData.unitPrice)
-    if (isNaN(unitPrice) || unitPrice < 0) {
-      toast.error('Please enter a valid unit price')
+    if (isNaN(unitPrice) || unitPrice <= 0) {
+      toast.error('Please enter a unit price greater than zero')
       return
     }
 

@@ -243,6 +243,11 @@ class WarehouseService {
     } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
 
+    // Validate positive quantity
+    if (quantityToAdd <= 0) {
+      throw new Error('Quantity to add must be greater than zero')
+    }
+
     // Get current item
     const item = await this.getWarehouseItem(id)
     if (!item) throw new Error('Warehouse item not found')
@@ -266,6 +271,15 @@ class WarehouseService {
     if (!user) throw new Error('Not authenticated')
 
     try {
+      // Validate positive quantity
+      if (input.quantityToDeduct <= 0) {
+        return {
+          success: false,
+          item: null,
+          message: 'Quantity to deduct must be greater than zero'
+        }
+      }
+
       // Get current item
       const item = await this.getWarehouseItem(input.itemId)
       if (!item) {

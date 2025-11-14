@@ -122,7 +122,10 @@ export function warehouseItemFromDB(row: any): WarehouseItem {
     quantity: parseFloat(row.quantity),
     unit: row.unit,
     unitPrice: parseFloat(row.unit_price),
-    reorderQuantity: row.reorder_quantity ? parseFloat(row.reorder_quantity) : undefined,
+    reorderQuantity:
+      row.reorder_quantity !== null && row.reorder_quantity !== undefined
+        ? parseFloat(row.reorder_quantity)
+        : undefined,
     notes: row.notes,
     createdAt: row.created_at,
     updatedAt: row.updated_at
