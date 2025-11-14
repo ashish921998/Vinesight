@@ -46,6 +46,7 @@ export interface SprayChemical {
   name: string
   quantity: number
   unit: 'gm/L' | 'ml/L' | 'ppm'
+  warehouseItemId?: number
 }
 
 // Fertilizer object type for fertilizers array
@@ -54,6 +55,7 @@ export interface Fertilizer {
   name: string
   quantity: number
   unit: 'kg/acre' | 'liter/acre'
+  warehouseItemId?: number
 }
 
 export interface SprayRecord {
