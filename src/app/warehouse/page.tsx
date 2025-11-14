@@ -270,7 +270,7 @@ function WarehousePageContent() {
       )}
 
       {/* Summary Card */}
-      {items.length > 0 && (
+      {allItems.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Inventory Summary</CardTitle>
@@ -279,7 +279,7 @@ function WarehousePageContent() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Total Items</p>
-                <p className="text-2xl font-bold">{items.length}</p>
+                <p className="text-2xl font-bold">{allItems.length}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Fertilizers</p>
@@ -292,7 +292,10 @@ function WarehousePageContent() {
               <div>
                 <p className="text-sm text-muted-foreground">Total Value</p>
                 <p className="text-2xl font-bold">
-                  ₹{items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0).toFixed(2)}
+                  ₹
+                  {allItems
+                    .reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+                    .toFixed(2)}
                 </p>
               </div>
             </div>
