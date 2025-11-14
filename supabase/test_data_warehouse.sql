@@ -2,8 +2,9 @@
 -- Run this AFTER applying the main migration
 -- This creates sample warehouse items for testing
 
--- Note: Replace 'YOUR_USER_ID' with your actual Supabase user ID
--- You can get it from: SELECT auth.uid() in SQL Editor when logged in
+-- Note: This script uses auth.uid() to automatically get the current user's ID
+-- Make sure you are logged in when running this script
+-- (If you need to check your user ID manually, run: SELECT auth.uid() in SQL Editor)
 
 -- Sample Fertilizers
 INSERT INTO warehouse_items (user_id, name, type, quantity, unit, unit_price, reorder_quantity, notes)

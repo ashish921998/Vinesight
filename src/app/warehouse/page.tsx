@@ -21,7 +21,7 @@ export default function WarehousePage() {
 }
 
 function WarehousePageContent() {
-  const [items, setItems] = useState<WarehouseItem[]>([])
+  const [allItems, setAllItems] = useState<WarehouseItem[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'fertilizer' | 'spray'>('all')
   const [showAddModal, setShowAddModal] = useState(false)
@@ -31,16 +31,16 @@ function WarehousePageContent() {
   const loadItems = useCallback(async () => {
     try {
       setLoading(true)
-      const filterType = filter === 'all' ? undefined : filter
-      const data = await warehouseService.getWarehouseItems(filterType)
-      setItems(data)
+      // Always fetch all items for accurate badge counts
+      const data = await warehouseService.getWarehouseItems()
+      setAllItems(data)
     } catch (error) {
       console.error('Error loading warehouse items:', error)
       toast.error('Failed to load warehouse items')
     } finally {
       setLoading(false)
     }
-  }, [filter])
+  }, [])
 
   useEffect(() => {
     loadItems()
@@ -74,9 +74,14 @@ function WarehousePageContent() {
     return item.reorderQuantity && item.quantity <= item.reorderQuantity
   }
 
-  const fertilizers = items.filter((item) => item.type === 'fertilizer')
-  const sprays = items.filter((item) => item.type === 'spray')
-  const lowStockItems = items.filter(isLowStock)
+  // Compute badge counts from all items (not filtered)
+  const fertilizers = allItems.filter((item) => item.type === 'fertilizer')
+  const sprays = allItems.filter((item) => item.type === 'spray')
+  const lowStockItems = allItems.filter(isLowStock)
+
+  // Filter items for display based on active filter
+  const displayedItems =
+    filter === 'all' ? allItems : allItems.filter((item) => item.type === filter)
 
   return (
     <div className="container mx-auto p-4 space-y-6 max-w-7xl">
@@ -141,7 +146,7 @@ function WarehousePageContent() {
           onClick={() => setFilter('all')}
           size="sm"
         >
-          All Items ({items.length})
+          All Items ({allItems.length})
         </Button>
         <Button
           variant={filter === 'fertilizer' ? 'default' : 'outline'}
@@ -165,7 +170,7 @@ function WarehousePageContent() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-muted-foreground">Loading warehouse items...</p>
         </div>
-      ) : items.length === 0 ? (
+      ) : displayedItems.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Package className="h-16 w-16 text-muted-foreground mb-4" />
@@ -181,7 +186,7 @@ function WarehousePageContent() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => (
+          {displayedItems.map((item) => (
             <Card
               key={item.id}
               className={isLowStock(item) ? 'border-orange-300 bg-orange-50/50' : ''}

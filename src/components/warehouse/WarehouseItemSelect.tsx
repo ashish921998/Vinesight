@@ -33,6 +33,7 @@ export function WarehouseItemSelect({
   const [loading, setLoading] = useState(false)
   const [showWarehouse, setShowWarehouse] = useState(false)
   const [customInput, setCustomInput] = useState(value)
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>('')
 
   const loadWarehouseItems = useCallback(async () => {
     try {
@@ -57,6 +58,7 @@ export function WarehouseItemSelect({
   const handleWarehouseSelect = (itemId: string) => {
     const item = warehouseItems.find((i) => i.id.toString() === itemId)
     if (item) {
+      setSelectedWarehouseId(itemId)
       onChange(item.name, item.id)
       setCustomInput(item.name)
       setShowWarehouse(false)
@@ -65,6 +67,7 @@ export function WarehouseItemSelect({
 
   const handleCustomInput = (value: string) => {
     setCustomInput(value)
+    setSelectedWarehouseId('') // Clear warehouse selection when using custom input
     onChange(value, undefined)
   }
 
@@ -95,7 +98,7 @@ export function WarehouseItemSelect({
   if (showWarehouse && warehouseItems.length > 0) {
     return (
       <div className="space-y-2">
-        <Select onValueChange={handleWarehouseSelect}>
+        <Select value={selectedWarehouseId} onValueChange={handleWarehouseSelect}>
           <SelectTrigger className={className}>
             <SelectValue placeholder="Select from warehouse..." />
           </SelectTrigger>
