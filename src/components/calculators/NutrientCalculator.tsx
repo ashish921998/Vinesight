@@ -38,6 +38,8 @@ import {
 import { SupabaseService } from '@/lib/supabase-service'
 import type { Farm } from '@/types/types'
 import { capitalize } from '@/lib/utils'
+import { SoilTestLoadBanner } from '@/components/lab-tests/SoilTestLoadBanner'
+import { toast } from 'sonner'
 
 export function NutrientCalculatorComponent() {
   const [farms, setFarms] = useState<Farm[]>([])
@@ -168,6 +170,27 @@ export function NutrientCalculatorComponent() {
     setResults(null)
   }
 
+  const loadSoilTestData = (testParameters: Record<string, any>) => {
+    setFormData((prev) => ({
+      ...prev,
+      ph: testParameters.ph?.toString() || '',
+      organicMatter: testParameters.organicMatter?.toString() || '',
+      nitrogen: testParameters.nitrogen?.toString() || '',
+      phosphorus: testParameters.phosphorus?.toString() || '',
+      potassium: testParameters.potassium?.toString() || '',
+      calcium: testParameters.calcium?.toString() || '',
+      magnesium: testParameters.magnesium?.toString() || '',
+      sulfur: testParameters.sulfur?.toString() || '',
+      boron: testParameters.boron?.toString() || '',
+      zinc: testParameters.zinc?.toString() || '',
+      manganese: testParameters.manganese?.toString() || '',
+      iron: testParameters.iron?.toString() || '',
+      copper: testParameters.copper?.toString() || '',
+      cec: testParameters.cec?.toString() || ''
+    }))
+    toast.success('Soil test data loaded! Review and adjust values as needed.')
+  }
+
   const getNutrientStatus = (deficit: number) => {
     if (deficit > 50) return { variant: 'destructive' as const, status: 'High Need' }
     if (deficit > 20) return { variant: 'secondary' as const, status: 'Moderate Need' }
@@ -261,6 +284,11 @@ export function NutrientCalculatorComponent() {
         </Card>
       ) : (
         <>
+          {/* Soil Test Load Banner */}
+          {selectedFarm && (
+            <SoilTestLoadBanner farmId={selectedFarm.id!} onLoadTest={loadSoilTestData} />
+          )}
+
           {/* Mobile-Optimized Input Sections */}
           <div className="mx-4 sm:mx-0 space-y-4 sm:space-y-3">
             {/* Production Goals Section */}
