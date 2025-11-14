@@ -318,8 +318,8 @@ export function FarmHeader({
                     )}
                   </div>
                 )}
-                {weatherSummary && (
-                  <div className="hidden rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/12 via-primary/6 to-transparent px-3 py-3 sm:block sm:px-5 sm:py-4">
+                {/* {weatherSummary && (
+                  <div className="rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/12 via-primary/6 to-transparent px-3 py-3 sm:px-5 sm:py-4">
                     <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-5">
                       <div className="flex min-w-0 flex-1 items-start gap-3">
                         <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm sm:h-10 sm:w-10">
@@ -369,7 +369,7 @@ export function FarmHeader({
                       )}
                     </div>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
             {(onAddLogs || onEditFarm || onDeleteFarm) && (
@@ -390,6 +390,7 @@ export function FarmHeader({
                         variant="outline"
                         size="icon"
                         className="mt-1 h-11 w-11 shrink-0 rounded-full border-border/70 bg-card text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                        aria-label="Open farm actions"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>

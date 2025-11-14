@@ -111,6 +111,7 @@ export async function createServerSupabaseClient() {
 /**
  * Server-side authentication middleware for API routes
  * Validates user session using Supabase auth
+ * Uses getUser() instead of getSession() for secure server-side auth verification
  */
 export async function validateUserSession(
   request: Request
@@ -118,21 +119,23 @@ export async function validateUserSession(
   try {
     const supabase = await createServerSupabaseClient()
 
+    // Use getUser() instead of getSession() for server-side validation
+    // This authenticates the user by contacting the Supabase Auth server
     const {
-      data: { session },
+      data: { user },
       error
-    } = await supabase.auth.getSession()
+    } = await supabase.auth.getUser()
 
     if (error) {
       console.error('Session validation error:', error)
       return { user: null, error: 'Authentication failed' }
     }
 
-    if (!session || !session.user) {
+    if (!user) {
       return { user: null, error: 'No valid session found' }
     }
 
-    return { user: session.user }
+    return { user }
   } catch (error) {
     console.error('Auth middleware error:', error)
     return { user: null, error: 'Authentication service unavailable' }
