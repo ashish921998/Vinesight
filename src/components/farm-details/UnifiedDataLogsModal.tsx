@@ -964,9 +964,7 @@ export function UnifiedDataLogsModal({
       setChemicals(formChemicals)
       setMultipleSprayMode(true)
     } else if (log.type === 'fertigation') {
-      // Handle fertigation records with fertilizers array
       if (log.data.fertilizers && Array.isArray(log.data.fertilizers)) {
-        // New format: fertilizers array
         setFertigationNotes(log.data.notes || '')
 
         // Convert fertilizers array to form format
