@@ -9,6 +9,7 @@ const resources = {
       navigation: {
         dashboard: 'Dashboard',
         farmManagement: 'Farm Management',
+        warehouse: 'Warehouse',
         calculators: 'Calculators',
         journal: 'Operations Journal',
         aiAssistant: 'AI Assistant',
@@ -17,6 +18,7 @@ const resources = {
         weather: 'Weather',
         reminders: 'Reminders',
         reports: 'Reports',
+        farmEfficiency: 'Farm Efficiency',
         settings: 'Settings'
       },
       // Common UI elements
@@ -305,6 +307,7 @@ const resources = {
       navigation: {
         dashboard: 'डैशबोर्ड',
         farmManagement: 'फार्म प्रबंधन',
+        warehouse: 'गोदाम',
         calculators: 'कैलकुलेटर',
         journal: 'संचालन डायरी',
         aiAssistant: 'AI सहायक',
@@ -313,6 +316,7 @@ const resources = {
         weather: 'मौसम',
         reminders: 'रिमाइंडर',
         reports: 'रिपोर्ट',
+        farmEfficiency: 'फार्म दक्षता',
         settings: 'सेटिंग्स'
       },
       // Common UI elements - Hindi
@@ -602,6 +606,7 @@ const resources = {
       navigation: {
         dashboard: 'डॅशबोर्ड',
         farmManagement: 'शेत व्यवस्थापन',
+        warehouse: 'गोदाम',
         calculators: 'कॅल्क्युलेटर',
         journal: 'संचालन नोंदवही',
         aiAssistant: 'AI सहायक',
@@ -610,6 +615,7 @@ const resources = {
         weather: 'हवामान',
         reminders: 'स्मरणपत्र',
         reports: 'अहवाल',
+        farmEfficiency: 'शेत कार्यक्षमता',
         settings: 'सेटिंग्ज'
       },
       // Common UI elements - Marathi

@@ -44,17 +44,17 @@ function AuthCallbackContent() {
           }
         }
 
-        // If no code, check if we already have a session
-        const { data, error: sessionError } = await supabase.auth.getSession()
+        // If no code, check if we already have a valid authenticated user
+        const { data, error: userError } = await supabase.auth.getUser()
 
-        if (sessionError) {
+        if (userError) {
           router.push(
-            `/auth/auth-code-error?error=session_failed&message=${encodeURIComponent(sessionError.message)}`
+            `/auth/auth-code-error?error=session_failed&message=${encodeURIComponent(userError.message)}`
           )
           return
         }
 
-        if (data?.session) {
+        if (data?.user) {
           // User is authenticated, redirect to dashboard
           // Add a small delay to ensure the auth state is properly set
           setTimeout(() => {
