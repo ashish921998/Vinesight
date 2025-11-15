@@ -2244,10 +2244,11 @@ export function UnifiedDataLogsModal({
                   </div>
                 ) : (
                   <>
+                    {/* Lab Report Attachment Section - Shown at top for soil/petiole tests */}
+                    {renderReportAttachmentSection()}
+
                     {/* Dynamic fields for non-spray logs */}
                     {logTypeConfigs[currentLogType].fields.map(renderFormField)}
-
-                    {renderReportAttachmentSection()}
 
                     {/* Add Entry Button */}
                     <Button
