@@ -4,9 +4,17 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import {
   TASK_TEMPLATES,
   TaskTemplate,
@@ -199,12 +207,10 @@ export function TaskTemplateSelector({
 
           {/* Seasonal Filter */}
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
+            <Checkbox
               id="seasonal"
               checked={showOnlySeasonal}
-              onChange={(e) => setShowOnlySeasonal(e.target.checked)}
-              className="rounded"
+              onCheckedChange={(checked) => setShowOnlySeasonal(checked === true)}
             />
             <Label htmlFor="seasonal">Show only current season tasks</Label>
           </div>
@@ -310,28 +316,31 @@ export function TaskTemplateSelector({
 
                     <div>
                       <Label htmlFor="priority">Priority</Label>
-                      <select
-                        id="priority"
+                      <Select
                         value={formData.priority}
-                        onChange={(e) => handleInputChange('priority', e.target.value)}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        onValueChange={(newValue) => handleInputChange('priority', newValue)}
                       >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                      </select>
+                        <SelectTrigger id="priority">
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
                   {/* Recurring Task Options */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         id="recurring"
                         checked={formData.isRecurring}
-                        onChange={(e) => handleInputChange('isRecurring', e.target.checked)}
-                        className="rounded"
+                        onCheckedChange={(checked) =>
+                          handleInputChange('isRecurring', checked === true)
+                        }
                       />
                       <Label htmlFor="recurring">Make this a recurring task</Label>
                     </div>
@@ -340,17 +349,20 @@ export function TaskTemplateSelector({
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="frequency">Frequency</Label>
-                          <select
-                            id="frequency"
-                            value={formData.frequency || 'weekly'}
-                            onChange={(e) => handleInputChange('frequency', e.target.value)}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          <Select
+                            value={formData.frequency ?? 'weekly'}
+                            onValueChange={(newValue) => handleInputChange('frequency', newValue)}
                           >
-                            <option value="weekly">Weekly</option>
-                            <option value="biweekly">Bi-weekly</option>
-                            <option value="monthly">Monthly</option>
-                            <option value="seasonal">Seasonal</option>
-                          </select>
+                            <SelectTrigger id="frequency">
+                              <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="biweekly">Bi-weekly</SelectItem>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                              <SelectItem value="seasonal">Seasonal</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div>
                           <Label htmlFor="endDate">End Date (optional)</Label>
