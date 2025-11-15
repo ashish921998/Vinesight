@@ -57,7 +57,7 @@ export function TestReminderNotification({ farmId, compact = false }: TestRemind
           ? 'It has been over 4 months since the last soil test. Schedule a new soil test to check pH, EC, and nutrient levels for optimal fertilizer planning.'
           : 'It has been over 3 months since the last petiole test. Conduct a petiole test during active growth to monitor plant nutrient uptake and adjust fertigation.'
 
-      await SupabaseService.createTask({
+      await SupabaseService.addTaskReminder({
         farm_id: farmId,
         title,
         description,

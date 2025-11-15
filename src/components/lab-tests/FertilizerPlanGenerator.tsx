@@ -90,7 +90,7 @@ export function FertilizerPlanGenerator({
 
       // Create tasks in batch
       for (const task of tasks) {
-        await SupabaseService.createTask(task)
+        await SupabaseService.addTaskReminder(task)
       }
 
       toast.success(`Created ${tasks.length} fertilizer tasks`)
