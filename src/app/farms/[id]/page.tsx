@@ -34,6 +34,7 @@ import {
   handleDailyNotesAndPhotosAfterLogs
 } from '@/lib/daily-note-utils'
 import { TasksOverviewCard } from '@/components/tasks/TasksOverviewCard'
+import { TestReminderNotification } from '@/components/lab-tests/TestReminderNotification'
 
 interface DashboardData {
   farm: Farm | null
@@ -1347,6 +1348,7 @@ export default function FarmDetailsPage() {
         <main className="relative z-10 mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
           <div className="space-y-6">
             <QuickActions />
+            <TestReminderNotification farmId={Number.parseInt(farmId, 10)} />
             <TasksOverviewCard
               farmId={Number.parseInt(farmId, 10)}
               tasks={dashboardData?.pendingTasks || []}
