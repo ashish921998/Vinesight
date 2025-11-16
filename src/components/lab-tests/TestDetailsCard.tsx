@@ -19,11 +19,12 @@ import {
 import { FileText, Edit, Trash2, Calendar, FileCheck, Sprout } from 'lucide-react'
 import { format } from 'date-fns'
 import { FertilizerPlanGenerator } from './FertilizerPlanGenerator'
-import { DiseaseRiskAlerts } from './DiseaseRiskAlerts'
-import { ROICalculator } from './ROICalculator'
-import { OutcomeTracker } from './OutcomeTracker'
-import { AIIntelligenceService } from '@/lib/ai-intelligence'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+// Phase 3A - Commented out for initial launch
+// import { DiseaseRiskAlerts } from './DiseaseRiskAlerts'
+// import { ROICalculator } from './ROICalculator'
+// import { OutcomeTracker } from './OutcomeTracker'
+// import { AIIntelligenceService } from '@/lib/ai-intelligence'
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export interface LabTestRecord {
   id: number
@@ -58,21 +59,21 @@ export function TestDetailsCard({
   const [showDetails, setShowDetails] = useState(false)
   const [showReportViewer, setShowReportViewer] = useState(false)
   const [showFertilizerPlan, setShowFertilizerPlan] = useState(false)
-  const [diseaseRiskAlerts, setDiseaseRiskAlerts] = useState<any[]>([])
 
-  // Load disease risk alerts
-  useEffect(() => {
-    const loadAlerts = async () => {
-      const alerts = await AIIntelligenceService.generateDiseaseRiskAlerts(
-        test.id,
-        testType,
-        farmId,
-        test.parameters
-      )
-      setDiseaseRiskAlerts(alerts)
-    }
-    loadAlerts()
-  }, [test.id, testType, farmId, test.parameters])
+  // Phase 3A - Commented out for initial launch
+  // const [diseaseRiskAlerts, setDiseaseRiskAlerts] = useState<any[]>([])
+  // useEffect(() => {
+  //   const loadAlerts = async () => {
+  //     const alerts = await AIIntelligenceService.generateDiseaseRiskAlerts(
+  //       test.id,
+  //       testType,
+  //       farmId,
+  //       test.parameters
+  //     )
+  //     setDiseaseRiskAlerts(alerts)
+  //   }
+  //   loadAlerts()
+  // }, [test.id, testType, farmId, test.parameters])
 
   // Generate recommendations
   const recommendations =
@@ -304,19 +305,12 @@ export function TestDetailsCard({
               {format(new Date(test.date), 'MMMM dd, yyyy')}
             </DialogTitle>
             <DialogDescription>
-              Complete test results, recommendations, and AI insights for your farm
+              Complete test results and recommendations for your farm
             </DialogDescription>
           </DialogHeader>
 
-          <Tabs defaultValue="results" className="mt-4">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="results">Test Results</TabsTrigger>
-              <TabsTrigger value="disease">Disease Risks</TabsTrigger>
-              <TabsTrigger value="roi">ROI Tracker</TabsTrigger>
-              <TabsTrigger value="tracking">Action Tracking</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="results" className="space-y-6 mt-4">
+          {/* Phase 3A tabs (Disease Risks, ROI, Action Tracking) commented out for initial launch */}
+          <div className="space-y-6 mt-4">
               {/* All Parameters */}
               <Card>
                 <CardHeader>
@@ -401,14 +395,12 @@ export function TestDetailsCard({
                   </CardContent>
                 </Card>
               )}
-            </TabsContent>
 
-            {/* Disease Risks Tab */}
+            {/* Phase 3A - Commented out for initial launch
             <TabsContent value="disease" className="mt-4">
               <DiseaseRiskAlerts alerts={diseaseRiskAlerts} />
             </TabsContent>
 
-            {/* ROI Tracker Tab */}
             <TabsContent value="roi" className="mt-4">
               <ROICalculator
                 testId={test.id}
@@ -419,7 +411,6 @@ export function TestDetailsCard({
               />
             </TabsContent>
 
-            {/* Action Tracking Tab */}
             <TabsContent value="tracking" className="mt-4">
               <OutcomeTracker
                 testId={test.id}
@@ -428,7 +419,8 @@ export function TestDetailsCard({
                 recommendations={recommendations}
               />
             </TabsContent>
-          </Tabs>
+            */}
+          </div>
         </DialogContent>
       </Dialog>
 
