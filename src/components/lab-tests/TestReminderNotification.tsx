@@ -61,12 +61,12 @@ export function TestReminderNotification({
           : 'It has been over 3 months since the last petiole test. Conduct a petiole test during active growth to monitor plant nutrient uptake and adjust fertigation.'
 
       await SupabaseService.addTaskReminder({
-        farm_id: farmId,
+        farmId,
         title,
         description,
-        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
         priority: 'medium',
-        category: 'other',
+        type: 'test',
         status: 'pending'
       })
 

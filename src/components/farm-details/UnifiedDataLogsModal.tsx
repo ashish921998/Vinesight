@@ -22,16 +22,7 @@ import {
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import {
-  Upload,
-  X,
-  Loader2,
-  Plus,
-  Edit2,
-  Trash2,
-  Calendar,
-  CheckCircle
-} from 'lucide-react'
+import { Upload, X, Loader2, Plus, Edit2, Trash2, Calendar, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-config'
 import { type Chemical } from '@/lib/chemical-formatter'
@@ -800,8 +791,6 @@ export function UnifiedDataLogsModal({
     // Reset form
     setCurrentLogType(null)
     setCurrentFormData({})
-    setCurrentReport(null)
-    setReportUploadError(null)
   }
 
   const handleEditLog = (logId: string) => {
@@ -1278,7 +1267,6 @@ export function UnifiedDataLogsModal({
         )
     }
   }
-
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
