@@ -75,8 +75,10 @@ export function TestDetailsCard({
       !previousTest ||
       previousTest.parameters[param] === undefined ||
       previousTest.parameters[param] === null ||
+      previousTest.parameters[param] === '' ||
       test.parameters[param] === undefined ||
-      test.parameters[param] === null
+      test.parameters[param] === null ||
+      test.parameters[param] === ''
     ) {
       return null
     }
