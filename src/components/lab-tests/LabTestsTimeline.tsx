@@ -115,14 +115,14 @@ export function LabTestsTimeline({
           </p>
         </div>
         <div className="grid grid-cols-2 gap-1.5 sm:gap-2 sm:flex">
-          <Button onClick={onAddSoilTest} className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9">
+          <Button onClick={onAddSoilTest} className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9 rounded-2xl">
             <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Soil Test</span>
             <span className="sm:hidden">Soil</span>
           </Button>
           <Button
             onClick={onAddPetioleTest}
-            className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9"
+            className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9 rounded-2xl"
             variant="outline"
           >
             <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -134,10 +134,10 @@ export function LabTestsTimeline({
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3">
-        <Card className="border-blue-200 bg-blue-50">
+        <Card className="border-blue-200 bg-blue-50 rounded-2xl">
           <CardContent className="p-2 sm:p-4">
             <div className="flex items-center gap-1.5 sm:gap-3">
-              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-2xl bg-blue-100 flex items-center justify-center flex-shrink-0">
                 <Beaker className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-blue-600" />
               </div>
               <div className="min-w-0">
@@ -148,10 +148,10 @@ export function LabTestsTimeline({
           </CardContent>
         </Card>
 
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-green-200 bg-green-50 rounded-2xl">
           <CardContent className="p-2 sm:p-4">
             <div className="flex items-center gap-1.5 sm:gap-3">
-              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-2xl bg-green-100 flex items-center justify-center flex-shrink-0">
                 <span className="text-base sm:text-xl">🌱</span>
               </div>
               <div className="min-w-0">
@@ -162,10 +162,10 @@ export function LabTestsTimeline({
           </CardContent>
         </Card>
 
-        <Card className="border-emerald-200 bg-emerald-50">
+        <Card className="border-emerald-200 bg-emerald-50 rounded-2xl">
           <CardContent className="p-2 sm:p-4">
             <div className="flex items-center gap-1.5 sm:gap-3">
-              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-2xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
                 <span className="text-base sm:text-xl">🍃</span>
               </div>
               <div className="min-w-0">
@@ -178,10 +178,10 @@ export function LabTestsTimeline({
           </CardContent>
         </Card>
 
-        <Card className="border-purple-200 bg-purple-50">
+        <Card className="border-purple-200 bg-purple-50 rounded-2xl">
           <CardContent className="p-2 sm:p-4">
             <div className="flex items-center gap-1.5 sm:gap-3">
-              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-2xl bg-purple-100 flex items-center justify-center flex-shrink-0">
                 <Calendar className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-purple-600" />
               </div>
               <div className="min-w-0">
@@ -198,7 +198,7 @@ export function LabTestsTimeline({
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="rounded-2xl">
         <CardContent className="p-2 sm:p-4">
           <div className="flex flex-col gap-2 sm:gap-3">
             <div className="flex items-center justify-between">

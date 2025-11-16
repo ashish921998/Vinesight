@@ -149,7 +149,7 @@ export function TestDetailsCard({
 
   return (
     <>
-      <Card className={`${urgencyColor} border-2 hover:shadow-md transition-shadow`}>
+      <Card className={`${urgencyColor} border-2 hover:shadow-md transition-shadow rounded-2xl`}>
         <CardContent className="p-2.5 sm:p-4">
           <div className="space-y-2 sm:space-y-3">
             {/* Header */}
@@ -197,7 +197,7 @@ export function TestDetailsCard({
                   variant="ghost"
                   size="sm"
                   onClick={() => onEdit(test)}
-                  className="h-7 w-7 sm:h-8 sm:w-8 p-0"
+                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-2xl"
                 >
                   <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
@@ -205,7 +205,7 @@ export function TestDetailsCard({
                   variant="ghost"
                   size="sm"
                   onClick={() => onDelete(test)}
-                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700"
+                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700 rounded-2xl"
                 >
                   <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
@@ -219,7 +219,7 @@ export function TestDetailsCard({
                 const change = getChange(param.key)
 
                 return (
-                  <div key={param.key} className="bg-white/60 rounded-lg p-1.5 sm:p-2 text-center border">
+                  <div key={param.key} className="bg-white/60 rounded-2xl p-1.5 sm:p-2 text-center border">
                     <div className="text-[10px] sm:text-xs text-muted-foreground font-medium truncate">{param.label}</div>
                     <div className="text-sm sm:text-lg font-bold text-foreground leading-tight">
                       {formatValue(value)}
@@ -262,7 +262,7 @@ export function TestDetailsCard({
                   variant="outline"
                   size="sm"
                   onClick={() => setShowDetails(true)}
-                  className="flex-1 text-xs sm:text-sm h-7 sm:h-9"
+                  className="flex-1 text-xs sm:text-sm h-7 sm:h-9 rounded-2xl"
                 >
                   <span className="hidden sm:inline">View Full Details</span>
                   <span className="sm:hidden">Details</span>
@@ -272,7 +272,7 @@ export function TestDetailsCard({
                     variant="outline"
                     size="sm"
                     onClick={() => setShowReportViewer(true)}
-                    className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm h-7 sm:h-9 px-2 sm:px-3"
+                    className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm h-7 sm:h-9 px-2 sm:px-3 rounded-2xl"
                   >
                     <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span className="hidden sm:inline">Report</span>
@@ -286,7 +286,7 @@ export function TestDetailsCard({
                   variant="default"
                   size="sm"
                   onClick={() => setShowFertilizerPlan(true)}
-                  className="w-full flex items-center gap-1.5 sm:gap-2 bg-green-600 hover:bg-green-700 text-xs sm:text-sm h-7 sm:h-9"
+                  className="w-full flex items-center gap-1.5 sm:gap-2 bg-green-600 hover:bg-green-700 text-xs sm:text-sm h-7 sm:h-9 rounded-2xl"
                 >
                   <Sprout className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden sm:inline">Generate Fertilizer Plan</span>

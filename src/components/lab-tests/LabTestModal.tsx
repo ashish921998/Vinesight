@@ -480,14 +480,14 @@ export function LabTestModal({
 
           {/* Report Upload (only for add mode) */}
           {mode === 'add' && (
-            <Card className="border-dashed border-2">
+            <Card className="border-dashed border-2 rounded-2xl">
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between mb-2">
                   <Label htmlFor="report-upload" className="text-sm font-semibold">
                     Upload Lab Report (Optional)
                   </Label>
                   {parseStatus === 'success' && parseConfidence && (
-                    <Badge variant="secondary" className="gap-1">
+                    <Badge variant="secondary" className="gap-1 rounded-2xl">
                       <Sparkles className="h-3 w-3" />
                       {Math.round(parseConfidence * 100)}% confidence
                     </Badge>
@@ -497,7 +497,7 @@ export function LabTestModal({
                   {reportFile ? (
                     <div className="space-y-2">
                       <div
-                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                        className={`flex items-center justify-between p-3 rounded-2xl border ${
                           parseStatus === 'success'
                             ? 'bg-green-50 border-green-200'
                             : parseStatus === 'failed'
@@ -566,6 +566,7 @@ export function LabTestModal({
                               setParameters({})
                             }}
                             disabled={loading || parsing}
+                            className="rounded-2xl"
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -579,7 +580,7 @@ export function LabTestModal({
                       )}
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center border-2 border-dashed rounded-lg p-6 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center justify-center border-2 border-dashed rounded-2xl p-6 hover:bg-muted/50 transition-colors">
                       <label
                         htmlFor="report-upload"
                         className="flex flex-col items-center gap-2 cursor-pointer"
@@ -612,7 +613,7 @@ export function LabTestModal({
             <div className="flex items-center justify-between">
               <Label className="text-xs sm:text-sm font-semibold">Test Parameters</Label>
               {autoFilledFields.size > 0 && (
-                <Badge variant="secondary" className="gap-1 h-5 text-xs">
+                <Badge variant="secondary" className="gap-1 h-5 text-xs rounded-2xl">
                   <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                   {autoFilledFields.size} AI
                 </Badge>
@@ -633,7 +634,7 @@ export function LabTestModal({
                       {isAutoFilled && (
                         <Badge
                           variant="outline"
-                          className="h-4 sm:h-5 text-[10px] sm:text-xs gap-0.5 sm:gap-1 border-green-300 bg-green-50 text-green-700"
+                          className="h-4 sm:h-5 text-[10px] sm:text-xs gap-0.5 sm:gap-1 border-green-300 bg-green-50 text-green-700 rounded-2xl"
                         >
                           <Sparkles className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
                           AI
@@ -688,11 +689,11 @@ export function LabTestModal({
               variant="outline"
               onClick={onClose}
               disabled={loading}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto rounded-2xl"
             >
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={loading} className="w-full sm:w-auto">
+            <Button onClick={handleSubmit} disabled={loading} className="w-full sm:w-auto rounded-2xl">
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
