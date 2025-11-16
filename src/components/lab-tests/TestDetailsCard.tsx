@@ -19,12 +19,6 @@ import {
 import { FileText, Edit, Trash2, Calendar, FileCheck, Sprout } from 'lucide-react'
 import { format } from 'date-fns'
 import { FertilizerPlanGenerator } from './FertilizerPlanGenerator'
-// Phase 3A - Commented out for initial launch
-// import { DiseaseRiskAlerts } from './DiseaseRiskAlerts'
-// import { ROICalculator } from './ROICalculator'
-// import { OutcomeTracker } from './OutcomeTracker'
-// import { AIIntelligenceService } from '@/lib/ai-intelligence'
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export interface LabTestRecord {
   id: number
@@ -59,21 +53,6 @@ export function TestDetailsCard({
   const [showDetails, setShowDetails] = useState(false)
   const [showReportViewer, setShowReportViewer] = useState(false)
   const [showFertilizerPlan, setShowFertilizerPlan] = useState(false)
-
-  // Phase 3A - Commented out for initial launch
-  // const [diseaseRiskAlerts, setDiseaseRiskAlerts] = useState<any[]>([])
-  // useEffect(() => {
-  //   const loadAlerts = async () => {
-  //     const alerts = await AIIntelligenceService.generateDiseaseRiskAlerts(
-  //       test.id,
-  //       testType,
-  //       farmId,
-  //       test.parameters
-  //     )
-  //     setDiseaseRiskAlerts(alerts)
-  //   }
-  //   loadAlerts()
-  // }, [test.id, testType, farmId, test.parameters])
 
   // Generate recommendations
   const recommendations =
@@ -311,7 +290,6 @@ export function TestDetailsCard({
             </DialogDescription>
           </DialogHeader>
 
-          {/* Phase 3A tabs (Disease Risks, ROI, Action Tracking) commented out for initial launch */}
           <div className="space-y-6 mt-4">
               {/* All Parameters */}
               <Card>
@@ -397,31 +375,6 @@ export function TestDetailsCard({
                   </CardContent>
                 </Card>
               )}
-
-            {/* Phase 3A - Commented out for initial launch
-            <TabsContent value="disease" className="mt-4">
-              <DiseaseRiskAlerts alerts={diseaseRiskAlerts} />
-            </TabsContent>
-
-            <TabsContent value="roi" className="mt-4">
-              <ROICalculator
-                testId={test.id}
-                testType={testType}
-                farmId={farmId}
-                testDate={test.date}
-                recommendations={recommendations}
-              />
-            </TabsContent>
-
-            <TabsContent value="tracking" className="mt-4">
-              <OutcomeTracker
-                testId={test.id}
-                testType={testType}
-                farmId={farmId}
-                recommendations={recommendations}
-              />
-            </TabsContent>
-            */}
           </div>
         </DialogContent>
       </Dialog>
