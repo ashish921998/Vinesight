@@ -191,6 +191,7 @@ export function TestDetailsCard({
                   size="sm"
                   onClick={() => onEdit(test)}
                   className="h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-2xl"
+                  aria-label={`Edit ${testType} test from ${format(new Date(test.date), 'MMM dd, yyyy')}`}
                 >
                   <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
@@ -199,6 +200,7 @@ export function TestDetailsCard({
                   size="sm"
                   onClick={() => onDelete(test)}
                   className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700 rounded-2xl"
+                  aria-label={`Delete ${testType} test from ${format(new Date(test.date), 'MMM dd, yyyy')}`}
                 >
                   <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
