@@ -16,6 +16,17 @@ export interface Recommendation {
   icon: string // Emoji or icon identifier
 }
 
+/**
+ * Priority order mapping for sorting recommendations
+ */
+const PRIORITY_ORDER: Record<RecommendationPriority, number> = {
+  critical: 0,
+  high: 1,
+  moderate: 2,
+  low: 3,
+  optimal: 4
+}
+
 interface SoilTestParameters {
   ph?: number
   ec?: number // Electrical Conductivity (dS/m)
@@ -331,15 +342,7 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
   }
 
   // Sort recommendations by priority
-  const priorityOrder: Record<RecommendationPriority, number> = {
-    critical: 0,
-    high: 1,
-    moderate: 2,
-    low: 3,
-    optimal: 4
-  }
-
-  return recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+  return recommendations.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
 }
 
 /**
@@ -554,15 +557,7 @@ export function generatePetioleTestRecommendations(
   }
 
   // Sort by priority
-  const priorityOrder: Record<RecommendationPriority, number> = {
-    critical: 0,
-    high: 1,
-    moderate: 2,
-    low: 3,
-    optimal: 4
-  }
-
-  return recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+  return recommendations.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
 }
 
 /**
