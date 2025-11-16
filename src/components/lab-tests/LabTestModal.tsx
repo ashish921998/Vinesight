@@ -323,10 +323,10 @@ export function LabTestModal({
         }
 
         if (testType === 'soil') {
-          await SupabaseService.createSoilTestRecord(testData)
+          await SupabaseService.addSoilTestRecord(testData)
           toast.success('Soil test added successfully')
         } else {
-          await SupabaseService.createPetioleTestRecord(testData)
+          await SupabaseService.addPetioleTestRecord(testData)
           toast.success('Petiole test added successfully')
         }
       }
