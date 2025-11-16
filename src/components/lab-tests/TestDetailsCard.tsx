@@ -71,7 +71,15 @@ export function TestDetailsCard({
   const getChange = (
     param: string
   ): { value: number; direction: 'up' | 'down' | 'same' } | null => {
-    if (!previousTest || !previousTest.parameters[param] || !test.parameters[param]) return null
+    if (
+      !previousTest ||
+      previousTest.parameters[param] === undefined ||
+      previousTest.parameters[param] === null ||
+      test.parameters[param] === undefined ||
+      test.parameters[param] === null
+    ) {
+      return null
+    }
 
     const current = Number(test.parameters[param])
     const previous = Number(previousTest.parameters[param])
@@ -111,13 +119,14 @@ export function TestDetailsCard({
   const keyParams = getKeyParameters()
 
   // Get urgency level from recommendations
-  const urgencyLevel = recommendations.some((r) => r.priority === 'critical')
-    ? 'critical'
-    : recommendations.some((r) => r.priority === 'high')
-      ? 'high'
-      : recommendations.every((r) => r.priority === 'optimal')
-        ? 'optimal'
-        : 'moderate'
+  const getUrgencyLevel = () => {
+    if (recommendations.some((r) => r.priority === 'critical')) return 'critical'
+    if (recommendations.some((r) => r.priority === 'high')) return 'high'
+    if (recommendations.every((r) => r.priority === 'optimal')) return 'optimal'
+    return 'moderate'
+  }
+
+  const urgencyLevel = getUrgencyLevel()
 
   const urgencyColor = {
     critical: 'border-red-300 bg-red-50',
@@ -202,7 +211,7 @@ export function TestDetailsCard({
                     <div className="text-[10px] sm:text-xs text-muted-foreground font-medium truncate">{param.label}</div>
                     <div className="text-sm sm:text-lg font-bold text-foreground leading-tight">
                       {formatValue(value)}
-                      {value && <span className="text-[10px] sm:text-xs ml-0.5">{param.unit}</span>}
+                      {(value !== null && value !== undefined && value !== '') && <span className="text-[10px] sm:text-xs ml-0.5">{param.unit}</span>}
                     </div>
                     {change && change.direction !== 'same' && (
                       <div
@@ -252,6 +261,7 @@ export function TestDetailsCard({
                     size="sm"
                     onClick={() => setShowReportViewer(true)}
                     className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm h-7 sm:h-9 px-2 sm:px-3 rounded-2xl"
+                    aria-label="View Report"
                   >
                     <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span className="hidden sm:inline">Report</span>
