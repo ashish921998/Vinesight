@@ -179,12 +179,12 @@ function LabTestsPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="timeline" className="space-y-2 sm:space-y-4">
-        <TabsList className="grid w-full max-w-md grid-cols-2 h-8 sm:h-10">
-          <TabsTrigger value="timeline" className="text-xs sm:text-sm py-1">
+        <TabsList className="grid w-full max-w-md grid-cols-2 h-9 sm:h-10">
+          <TabsTrigger value="timeline" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">Timeline View</span>
             <span className="sm:hidden">Timeline</span>
           </TabsTrigger>
-          <TabsTrigger value="trends" className="text-xs sm:text-sm py-1">
+          <TabsTrigger value="trends" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">Trend Analysis</span>
             <span className="sm:hidden">Trends</span>
           </TabsTrigger>
