@@ -398,7 +398,11 @@ export function TestDetailsCard({
             </DialogHeader>
             <div className="w-full h-[70vh]">
               {test.report_filename?.toLowerCase().endsWith('.pdf') ? (
-                <iframe src={test.report_url} className="w-full h-full border rounded" />
+                <iframe
+                  src={test.report_url}
+                  className="w-full h-full border rounded"
+                  title={test.report_filename ? `Lab Report: ${test.report_filename}` : 'Lab Test Report'}
+                />
               ) : (
                 <img
                   src={test.report_url}
