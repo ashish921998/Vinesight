@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { SupabaseService } from '@/lib/supabase-service'
 import { LabTestsTimeline } from '@/components/lab-tests/LabTestsTimeline'
@@ -39,6 +39,7 @@ function LabTestsPage() {
   const [showAddPetioleModal, setShowAddPetioleModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [deletingTest, setDeletingTest] = useState<{
     test: LabTestRecord
     type: 'soil' | 'petiole'
@@ -130,6 +131,18 @@ function LabTestsPage() {
     }
   }
 
+  // Handle test submission from UnifiedDataLogsModal
+  const handleTestSubmit = async () => {
+    // The UnifiedDataLogsModal handles the actual save to database
+    // We just need to reload the data and close the modal
+    setIsSubmitting(true)
+    try {
+      await loadLabTests()
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   // Handle modal close and refresh
   const handleModalClose = async (testType: 'soil' | 'petiole') => {
     if (testType === 'soil') {
@@ -153,6 +166,41 @@ function LabTestsPage() {
       </div>
     )
   }
+
+  // Memoize initialLogs to prevent infinite re-renders in UnifiedDataLogsModal
+  const soilInitialLogs = useMemo(() => {
+    if (editingTest && editingTest.type === 'soil') {
+      return [
+        {
+          type: 'soil_test' as const,
+          data: {
+            ...editingTest.test.parameters,
+            notes: editingTest.test.notes || '',
+            date_of_pruning: editingTest.test.date_of_pruning || undefined
+          },
+          id: editingTest.test.id
+        }
+      ]
+    }
+    return [{ type: 'soil_test' as const, data: {} }]
+  }, [editingTest])
+
+  const petioleInitialLogs = useMemo(() => {
+    if (editingTest && editingTest.type === 'petiole') {
+      return [
+        {
+          type: 'petiole_test' as const,
+          data: {
+            ...editingTest.test.parameters,
+            notes: editingTest.test.notes || '',
+            date_of_pruning: editingTest.test.date_of_pruning || undefined
+          },
+          id: editingTest.test.id
+        }
+      ]
+    }
+    return [{ type: 'petiole_test' as const, data: {} }]
+  }, [editingTest])
 
   return (
     <div className="container max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
@@ -203,25 +251,12 @@ function LabTestsPage() {
         farmId={farmId}
         isOpen={showAddSoilModal}
         onClose={() => handleModalClose('soil')}
+        onSubmit={handleTestSubmit}
+        isSubmitting={isSubmitting}
         mode={editingTest?.type === 'soil' ? 'edit' : 'add'}
-        initialDate={editingTest?.test.date || new Date().toISOString().split('T')[0]}
-        initialLogs={
-          editingTest && editingTest.type === 'soil'
-            ? [
-                {
-                  type: 'soil_test',
-                  data: {
-                    ...editingTest.test.parameters,
-                    notes: editingTest.test.notes || '',
-                    date_of_pruning: editingTest.test.date_of_pruning || undefined
-                  },
-                  id: editingTest.test.id
-                }
-              ]
-            : [{ type: 'soil_test', data: {} }]
-        }
-        initialDayNote={null}
-        allowedLogTypes={['soil_test']}
+        selectedDate={editingTest?.test.date || new Date().toISOString().split('T')[0]}
+        existingLogs={soilInitialLogs}
+        existingDayNote=""
       />
 
       {/* Petiole Test Modal */}
@@ -229,25 +264,12 @@ function LabTestsPage() {
         farmId={farmId}
         isOpen={showAddPetioleModal}
         onClose={() => handleModalClose('petiole')}
+        onSubmit={handleTestSubmit}
+        isSubmitting={isSubmitting}
         mode={editingTest?.type === 'petiole' ? 'edit' : 'add'}
-        initialDate={editingTest?.test.date || new Date().toISOString().split('T')[0]}
-        initialLogs={
-          editingTest && editingTest.type === 'petiole'
-            ? [
-                {
-                  type: 'petiole_test',
-                  data: {
-                    ...editingTest.test.parameters,
-                    notes: editingTest.test.notes || '',
-                    date_of_pruning: editingTest.test.date_of_pruning || undefined
-                  },
-                  id: editingTest.test.id
-                }
-              ]
-            : [{ type: 'petiole_test', data: {} }]
-        }
-        initialDayNote={null}
-        allowedLogTypes={['petiole_test']}
+        selectedDate={editingTest?.test.date || new Date().toISOString().split('T')[0]}
+        existingLogs={petioleInitialLogs}
+        existingDayNote=""
       />
 
       {/* Delete Confirmation Dialog */}
