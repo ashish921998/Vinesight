@@ -114,6 +114,60 @@ A progressive web and mobile app designed to digitize grape farming operations f
   - Post-production records: expenses, purchases, cold storage, box rate, sold date, payments.
 - Task tracking: due reminders, notification list (to-do), weather alerts, irrigation trigger alerts, empty tank/event notification, etc.
 
+#### **4.3.1 Lab Tests Module** ✅ **COMPLETED**
+
+**Comprehensive lab test tracking and analysis for soil and petiole tests**
+
+- **Lab Test Timeline:**
+  - View all soil and petiole tests in chronological order
+  - Filter by test type (All / Soil / Petiole)
+  - Filter by date range (All Time / Last 6 Months / Last Year / Season)
+  - Last 10 tests shown with "Load More" functionality
+  - Summary statistics (total tests, soil tests, petiole tests)
+
+- **Test Details Cards:**
+  - Compact test preview with key parameters
+  - Color-coded urgency indicators (Critical/High/Optimal/Moderate)
+  - Comparison with previous test (delta changes)
+  - Full details dialog with all parameters
+  - Lab report viewer (PDF/Image)
+  - Edit and delete actions
+
+- **Smart Recommendations:**
+  - Rule-based recommendation engine
+  - Recommendations grouped by priority:
+    - 🔴 Priority Actions (Critical/High)
+    - 💰 Cost Savings Opportunities
+    - ⚠️ Monitor These Parameters
+    - ✅ Optimal Parameters
+  - **Both Technical & Simple explanations:**
+    - Technical: Agricultural science terminology
+    - Simple: Farmer-friendly language (English + Marathi/Hindi)
+  - Recommendations for:
+    - **Soil Tests:** pH, EC, NPK, organic matter, micronutrients
+    - **Petiole Tests:** N, P, K, Ca, Mg, micronutrients
+  - Context-aware multi-parameter analysis (e.g., high pH affecting P availability)
+
+- **AI-Powered Report Parsing:**
+  - Upload lab report (PDF or image)
+  - Automatic parameter extraction using OpenAI Vision API
+  - Auto-fill test values with confidence scoring
+  - Manual verification and editing capability
+
+- **Integration:**
+  - Added "Lab Tests" quick action card on farm details page
+  - Accessible via `/farms/[id]/lab-tests`
+  - Unified data entry modal for add/edit operations
+  - Cloud-based storage with real-time sync
+
+- **Future Enhancements (Phase 2):**
+  - Trend charts with Victory.js (pH trends, EC trends, NPK multi-line charts)
+  - Pre-fill fertilizer calculator with test values
+  - Generate fertilizer plan from soil test
+  - Link to irrigation ETc calculator
+  - Add test reminder tasks
+  - Tag expenses as "test-driven"
+
 #### **4.4 Data & Export**
 
 - Cloud-based data storage with real-time sync
