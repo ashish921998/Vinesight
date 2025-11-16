@@ -156,6 +156,9 @@ export function LabTestModal({
 
       const result = await response.json()
 
+      // Log the full result for debugging
+      console.log('Parse API result:', result)
+
       // Store report path for saving later
       if (result.report?.storagePath) {
         setReportPath(result.report.storagePath)
@@ -163,13 +166,40 @@ export function LabTestModal({
 
       // Check if extraction was successful
       if (result.extraction?.status === 'success' && result.extraction.parameters) {
+        // Key mapping to normalize API response keys to our field keys
+        const keyMapping: Record<string, string> = {
+          // Common variations
+          organicCarbon: 'organic_carbon',
+          organic_carbon_percent: 'organic_carbon',
+          'organic carbon': 'organic_carbon',
+          nitrogen_n: 'nitrogen',
+          total_nitrogen: 'nitrogen',
+          'total nitrogen': 'nitrogen',
+          phosphorus_p: 'phosphorus',
+          potassium_k: 'potassium',
+          calcium_ca: 'calcium',
+          magnesium_mg: 'magnesium',
+          sulphur_s: 'sulfur',
+          sulfur_s: 'sulfur',
+          ferrous_fe: 'iron',
+          iron_fe: 'iron',
+          manganese_mn: 'manganese',
+          zinc_zn: 'zinc',
+          copper_cu: 'copper',
+          boron_b: 'boron'
+        }
+
         // Auto-fill form fields with extracted parameters
         const extractedParams: Record<string, string> = {}
         Object.entries(result.extraction.parameters).forEach(([key, value]) => {
           if (typeof value === 'number' && !isNaN(value)) {
-            extractedParams[key] = String(value)
+            // Normalize the key using mapping, or use as-is if no mapping exists
+            const normalizedKey = keyMapping[key.toLowerCase()] || key.toLowerCase()
+            extractedParams[normalizedKey] = String(value)
           }
         })
+
+        console.log('Extracted parameters after mapping:', extractedParams)
 
         setParameters(extractedParams)
         setParseConfidence(result.extraction.confidence || null)
