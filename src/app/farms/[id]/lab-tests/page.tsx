@@ -199,60 +199,56 @@ function LabTestsPage() {
       </Tabs>
 
       {/* Soil Test Modal */}
-      {showAddSoilModal && (
-        <UnifiedDataLogsModal
-          farmId={farmId}
-          isOpen={showAddSoilModal}
-          onClose={() => handleModalClose('soil')}
-          mode={editingTest ? 'edit' : 'add'}
-          initialDate={editingTest?.test.date || new Date().toISOString().split('T')[0]}
-          initialLogs={
-            editingTest
-              ? [
-                  {
-                    type: 'soil_test',
-                    data: {
-                      ...editingTest.test.parameters,
-                      notes: editingTest.test.notes || '',
-                      date_of_pruning: editingTest.test.date_of_pruning || undefined
-                    },
-                    id: editingTest.test.id
-                  }
-                ]
-              : [{ type: 'soil_test', data: {} }]
-          }
-          initialDayNote={null}
-          allowedLogTypes={['soil_test']}
-        />
-      )}
+      <UnifiedDataLogsModal
+        farmId={farmId}
+        isOpen={showAddSoilModal}
+        onClose={() => handleModalClose('soil')}
+        mode={editingTest?.type === 'soil' ? 'edit' : 'add'}
+        initialDate={editingTest?.test.date || new Date().toISOString().split('T')[0]}
+        initialLogs={
+          editingTest && editingTest.type === 'soil'
+            ? [
+                {
+                  type: 'soil_test',
+                  data: {
+                    ...editingTest.test.parameters,
+                    notes: editingTest.test.notes || '',
+                    date_of_pruning: editingTest.test.date_of_pruning || undefined
+                  },
+                  id: editingTest.test.id
+                }
+              ]
+            : [{ type: 'soil_test', data: {} }]
+        }
+        initialDayNote={null}
+        allowedLogTypes={['soil_test']}
+      />
 
       {/* Petiole Test Modal */}
-      {showAddPetioleModal && (
-        <UnifiedDataLogsModal
-          farmId={farmId}
-          isOpen={showAddPetioleModal}
-          onClose={() => handleModalClose('petiole')}
-          mode={editingTest ? 'edit' : 'add'}
-          initialDate={editingTest?.test.date || new Date().toISOString().split('T')[0]}
-          initialLogs={
-            editingTest
-              ? [
-                  {
-                    type: 'petiole_test',
-                    data: {
-                      ...editingTest.test.parameters,
-                      notes: editingTest.test.notes || '',
-                      date_of_pruning: editingTest.test.date_of_pruning || undefined
-                    },
-                    id: editingTest.test.id
-                  }
-                ]
-              : [{ type: 'petiole_test', data: {} }]
-          }
-          initialDayNote={null}
-          allowedLogTypes={['petiole_test']}
-        />
-      )}
+      <UnifiedDataLogsModal
+        farmId={farmId}
+        isOpen={showAddPetioleModal}
+        onClose={() => handleModalClose('petiole')}
+        mode={editingTest?.type === 'petiole' ? 'edit' : 'add'}
+        initialDate={editingTest?.test.date || new Date().toISOString().split('T')[0]}
+        initialLogs={
+          editingTest && editingTest.type === 'petiole'
+            ? [
+                {
+                  type: 'petiole_test',
+                  data: {
+                    ...editingTest.test.parameters,
+                    notes: editingTest.test.notes || '',
+                    date_of_pruning: editingTest.test.date_of_pruning || undefined
+                  },
+                  id: editingTest.test.id
+                }
+              ]
+            : [{ type: 'petiole_test', data: {} }]
+        }
+        initialDayNote={null}
+        allowedLogTypes={['petiole_test']}
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
