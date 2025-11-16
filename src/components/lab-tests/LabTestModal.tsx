@@ -167,17 +167,18 @@ export function LabTestModal({
       // Check if extraction was successful
       if (result.extraction?.status === 'success' && result.extraction.parameters) {
         // Key mapping to normalize API response keys to our field keys
+        // Note: Soil tests use 'nitrogen', petiole tests use 'total_nitrogen'
         const keyMapping: Record<string, string> = {
-          // Organic carbon variations
+          // Organic carbon variations (soil only)
           organiccarbon: 'organic_carbon',
           organicCarbon: 'organic_carbon',
           organic_carbon_percent: 'organic_carbon',
           'organic carbon': 'organic_carbon',
-          // Nitrogen variations
-          nitrogen_n: 'nitrogen',
-          total_nitrogen: 'nitrogen',
-          totalnitrogen: 'nitrogen',
-          'total nitrogen': 'nitrogen',
+          // Nitrogen variations - keep as total_nitrogen for petiole, nitrogen for soil
+          totalnitrogen: 'total_nitrogen',
+          total_nitrogen: 'total_nitrogen',
+          'total nitrogen': 'total_nitrogen',
+          nitrogen_n: testType === 'soil' ? 'nitrogen' : 'total_nitrogen',
           // Phosphorus variations
           phosphorus_p: 'phosphorus',
           phosphorusp: 'phosphorus',
