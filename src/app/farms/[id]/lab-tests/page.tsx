@@ -190,7 +190,7 @@ function LabTestsPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="timeline" className="space-y-2 sm:space-y-4 mt-2 sm:mt-4">
+        <TabsContent value="timeline" className="mt-0">
           <LabTestsTimeline
             soilTests={soilTests}
             petioleTests={petioleTests}
@@ -204,7 +204,7 @@ function LabTestsPage() {
           />
         </TabsContent>
 
-        <TabsContent value="trends" className="space-y-4">
+        <TabsContent value="trends" className="mt-0">
           <LabTestTrendCharts soilTests={soilTests} petioleTests={petioleTests} />
         </TabsContent>
       </Tabs>
