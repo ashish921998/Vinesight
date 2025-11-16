@@ -45,6 +45,8 @@ export function LabTestModal({
   const [parameters, setParameters] = useState<Record<string, string>>({})
   const [parseConfidence, setParseConfidence] = useState<number | null>(null)
   const [parseStatus, setParseStatus] = useState<'idle' | 'success' | 'failed'>('idle')
+  const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(new Set())
+  const [fieldWarnings, setFieldWarnings] = useState<Record<string, string>>({})
 
   // Initialize form when modal opens or existingTest changes
   useEffect(() => {
@@ -72,6 +74,8 @@ export function LabTestModal({
         setReportPath(null)
         setParseConfidence(null)
         setParseStatus('idle')
+        setAutoFilledFields(new Set())
+        setFieldWarnings({})
       }
     }
   }, [isOpen, mode, existingTest])
@@ -111,11 +115,79 @@ export function LabTestModal({
 
   const fields = testType === 'soil' ? soilFields : petioleFields
 
+  // Validation ranges for parameters
+  const soilRanges: Record<string, { min: number; max: number }> = {
+    ph: { min: 4.0, max: 10.0 },
+    ec: { min: 0.1, max: 5.0 },
+    organic_carbon: { min: 0.1, max: 10.0 },
+    nitrogen: { min: 1, max: 500 },
+    phosphorus: { min: 1, max: 100 },
+    potassium: { min: 10, max: 500 },
+    calcium: { min: 100, max: 20000 },
+    magnesium: { min: 50, max: 5000 },
+    sulfur: { min: 1, max: 100 },
+    iron: { min: 0.5, max: 50 },
+    manganese: { min: 0.5, max: 50 },
+    zinc: { min: 0.1, max: 10 },
+    copper: { min: 0.1, max: 20 },
+    boron: { min: 0.1, max: 5 }
+  }
+
+  const petioleRanges: Record<string, { min: number; max: number }> = {
+    total_nitrogen: { min: 0.5, max: 5.0 },
+    phosphorus: { min: 0.1, max: 1.0 },
+    potassium: { min: 0.5, max: 5.0 },
+    calcium: { min: 0.5, max: 5.0 },
+    magnesium: { min: 0.1, max: 2.0 },
+    sulfur: { min: 0.05, max: 1.0 },
+    iron: { min: 20, max: 300 },
+    manganese: { min: 10, max: 200 },
+    zinc: { min: 10, max: 200 },
+    copper: { min: 2, max: 50 },
+    boron: { min: 10, max: 100 }
+  }
+
+  const ranges = testType === 'soil' ? soilRanges : petioleRanges
+
+  const validateParameterValue = (key: string, value: string): string | null => {
+    const numValue = parseFloat(value)
+    if (isNaN(numValue)) return null
+
+    const range = ranges[key]
+    if (!range) return null
+
+    if (numValue < range.min || numValue > range.max) {
+      return `Unusual value (expected ${range.min}-${range.max})`
+    }
+    return null
+  }
+
   const handleParameterChange = (key: string, value: string) => {
     setParameters((prev) => ({
       ...prev,
       [key]: value
     }))
+
+    // Remove from auto-filled fields when manually edited
+    if (autoFilledFields.has(key)) {
+      setAutoFilledFields((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(key)
+        return newSet
+      })
+    }
+
+    // Validate value
+    const warning = validateParameterValue(key, value)
+    setFieldWarnings((prev) => {
+      const newWarnings = { ...prev }
+      if (warning) {
+        newWarnings[key] = warning
+      } else {
+        delete newWarnings[key]
+      }
+      return newWarnings
+    })
   }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -227,6 +299,19 @@ export function LabTestModal({
 
         console.log('Extracted parameters after mapping:', extractedParams)
 
+        // Track which fields were auto-filled
+        setAutoFilledFields(new Set(Object.keys(extractedParams)))
+
+        // Validate extracted parameters and set warnings
+        const warnings: Record<string, string> = {}
+        Object.entries(extractedParams).forEach(([key, value]) => {
+          const warning = validateParameterValue(key, value)
+          if (warning) {
+            warnings[key] = warning
+          }
+        })
+        setFieldWarnings(warnings)
+
         setParameters(extractedParams)
         setParseConfidence(result.extraction.confidence || null)
         setParseStatus('success')
@@ -236,9 +321,17 @@ export function LabTestModal({
           setNotes(result.extraction.summary)
         }
 
-        toast.success(
-          `Report parsed successfully! ${Object.keys(extractedParams).length} parameters extracted.`
-        )
+        const warningCount = Object.keys(warnings).length
+        if (warningCount > 0) {
+          toast.success(
+            `Report parsed! ${Object.keys(extractedParams).length} parameters extracted (${warningCount} unusual values detected).`,
+            { duration: 5000 }
+          )
+        } else {
+          toast.success(
+            `Report parsed successfully! ${Object.keys(extractedParams).length} parameters extracted.`
+          )
+        }
       } else {
         setParseStatus('failed')
         toast.warning(
@@ -461,6 +554,9 @@ export function LabTestModal({
                               setReportPath(null)
                               setParseStatus('idle')
                               setParseConfidence(null)
+                              setAutoFilledFields(new Set())
+                              setFieldWarnings({})
+                              setParameters({})
                             }}
                             disabled={loading || parsing}
                           >
@@ -506,24 +602,62 @@ export function LabTestModal({
 
           {/* Test Parameters */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold">Test Parameters</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">Test Parameters</Label>
+              {autoFilledFields.size > 0 && (
+                <Badge variant="secondary" className="gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  {autoFilledFields.size} AI-filled
+                </Badge>
+              )}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {fields.map((field) => (
-                <div key={field.key} className="space-y-2">
-                  <Label htmlFor={field.key} className="text-sm">
-                    {field.label}
-                  </Label>
-                  <Input
-                    id={field.key}
-                    type={field.type}
-                    step={field.step}
-                    value={parameters[field.key] || ''}
-                    onChange={(e) => handleParameterChange(field.key, e.target.value)}
-                    disabled={loading}
-                    placeholder="Enter value"
-                  />
-                </div>
-              ))}
+              {fields.map((field) => {
+                const isAutoFilled = autoFilledFields.has(field.key)
+                const hasWarning = !!fieldWarnings[field.key]
+                const hasValue = !!parameters[field.key]
+
+                return (
+                  <div key={field.key} className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor={field.key} className="text-sm">
+                        {field.label}
+                      </Label>
+                      {isAutoFilled && (
+                        <Badge
+                          variant="outline"
+                          className="h-5 text-xs gap-1 border-green-300 bg-green-50 text-green-700"
+                        >
+                          <Sparkles className="h-2.5 w-2.5" />
+                          AI
+                        </Badge>
+                      )}
+                    </div>
+                    <Input
+                      id={field.key}
+                      type={field.type}
+                      step={field.step}
+                      value={parameters[field.key] || ''}
+                      onChange={(e) => handleParameterChange(field.key, e.target.value)}
+                      disabled={loading || parsing}
+                      placeholder="Enter value"
+                      className={
+                        isAutoFilled && !hasWarning && hasValue
+                          ? 'border-green-300 bg-green-50/50 focus-visible:ring-green-500'
+                          : hasWarning && hasValue
+                            ? 'border-amber-400 bg-amber-50/50 focus-visible:ring-amber-500'
+                            : ''
+                      }
+                    />
+                    {hasWarning && (
+                      <p className="text-xs text-amber-600 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {fieldWarnings[field.key]}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
 
