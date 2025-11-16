@@ -19,12 +19,7 @@ import {
  * but rather a free-form note attached to a date. It's handled via special cases
  * in the helper functions below rather than being part of this union type.
  */
-export type LogType =
-  | 'irrigation'
-  | 'spray'
-  | 'harvest'
-  | 'expense'
-  | 'fertigation'
+export type LogType = 'irrigation' | 'spray' | 'harvest' | 'expense' | 'fertigation'
 
 export interface FormField {
   name: string

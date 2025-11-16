@@ -173,7 +173,7 @@ export function NutrientCalculatorComponent() {
   const loadSoilTestData = (testParameters: Record<string, any>) => {
     setFormData((prev) => ({
       ...prev,
-      ph: testParameters.ph?.toString() || '',
+      ph: (testParameters.pH ?? testParameters.ph)?.toString() || '',
       organicMatter: testParameters.organicMatter?.toString() || '',
       nitrogen: testParameters.nitrogen?.toString() || '',
       phosphorus: testParameters.phosphorus?.toString() || '',

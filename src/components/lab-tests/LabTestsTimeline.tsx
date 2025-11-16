@@ -200,7 +200,7 @@ export function LabTestsTimeline({
               <div className="min-w-0">
                 <div className="text-sm sm:text-lg font-bold text-purple-700 leading-tight">
                   {allTests.length > 0
-                    ? `${Math.ceil((new Date().getTime() - new Date(allTests[allTests.length - 1].test.date).getTime()) / (1000 * 60 * 60 * 24))}d`
+                    ? `${Math.ceil((Date.now() - new Date(allTests[0].test.date).getTime()) / 86_400_000)}d`
                     : '—'}
                 </div>
                 <div className="text-[10px] sm:text-xs text-purple-600 font-medium truncate">
