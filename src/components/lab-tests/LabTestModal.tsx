@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { SupabaseService } from '@/lib/supabase-service'
-import { Loader2, Upload, X, FileText } from 'lucide-react'
+import { Loader2, Upload, X, FileText, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface LabTestModalProps {
@@ -35,11 +36,15 @@ export function LabTestModal({
   existingTest
 }: LabTestModalProps) {
   const [loading, setLoading] = useState(false)
+  const [parsing, setParsing] = useState(false)
   const [date, setDate] = useState('')
   const [dateOfPruning, setDateOfPruning] = useState('')
   const [notes, setNotes] = useState('')
   const [reportFile, setReportFile] = useState<File | null>(null)
+  const [reportPath, setReportPath] = useState<string | null>(null)
   const [parameters, setParameters] = useState<Record<string, string>>({})
+  const [parseConfidence, setParseConfidence] = useState<number | null>(null)
+  const [parseStatus, setParseStatus] = useState<'idle' | 'success' | 'failed'>('idle')
 
   // Initialize form when modal opens or existingTest changes
   useEffect(() => {
@@ -64,6 +69,9 @@ export function LabTestModal({
         setNotes('')
         setParameters({})
         setReportFile(null)
+        setReportPath(null)
+        setParseConfidence(null)
+        setParseStatus('idle')
       }
     }
   }, [isOpen, mode, existingTest])
@@ -110,21 +118,83 @@ export function LabTestModal({
     }))
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      // Validate file type
-      const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
-      if (!validTypes.includes(file.type)) {
-        toast.error('Please upload a PDF or image file (JPG, PNG)')
-        return
+    if (!file) return
+
+    // Validate file type
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a PDF or image file (JPG, PNG)')
+      return
+    }
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size must be less than 10MB')
+      return
+    }
+
+    setReportFile(file)
+    setParsing(true)
+    setParseStatus('idle')
+
+    try {
+      // Call parse API
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('testType', testType)
+      formData.append('farmId', String(farmId))
+
+      const response = await fetch('/api/test-reports/parse', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to parse report')
       }
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error('File size must be less than 10MB')
-        return
+
+      const result = await response.json()
+
+      // Store report path for saving later
+      if (result.report?.storagePath) {
+        setReportPath(result.report.storagePath)
       }
-      setReportFile(file)
+
+      // Check if extraction was successful
+      if (result.extraction?.status === 'success' && result.extraction.parameters) {
+        // Auto-fill form fields with extracted parameters
+        const extractedParams: Record<string, string> = {}
+        Object.entries(result.extraction.parameters).forEach(([key, value]) => {
+          if (typeof value === 'number' && !isNaN(value)) {
+            extractedParams[key] = String(value)
+          }
+        })
+
+        setParameters(extractedParams)
+        setParseConfidence(result.extraction.confidence || null)
+        setParseStatus('success')
+
+        // Auto-fill notes if available
+        if (result.extraction.summary) {
+          setNotes(result.extraction.summary)
+        }
+
+        toast.success(
+          `Report parsed successfully! ${Object.keys(extractedParams).length} parameters extracted.`
+        )
+      } else {
+        setParseStatus('failed')
+        toast.warning(
+          'Report uploaded but extraction failed. Please fill in the values manually.'
+        )
+      }
+    } catch (error) {
+      console.error('Error parsing report:', error)
+      setParseStatus('failed')
+      toast.error('Failed to parse report. Please fill in the values manually.')
+    } finally {
+      setParsing(false)
     }
   }
 
@@ -189,7 +259,11 @@ export function LabTestModal({
           testData.date_of_pruning = dateOfPruning
         }
 
-        if (reportFile) {
+        // If report was already uploaded via parse API, use the path
+        // Otherwise pass the file for direct upload
+        if (reportPath) {
+          testData.report_path = reportPath
+        } else if (reportFile) {
           testData.report = reportFile
         }
 
@@ -252,29 +326,98 @@ export function LabTestModal({
           {mode === 'add' && (
             <Card className="border-dashed border-2">
               <CardContent className="p-4">
-                <Label htmlFor="report-upload" className="text-sm font-semibold mb-2 block">
-                  Upload Lab Report (Optional)
-                </Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="report-upload" className="text-sm font-semibold">
+                    Upload Lab Report (Optional)
+                  </Label>
+                  {parseStatus === 'success' && parseConfidence && (
+                    <Badge variant="secondary" className="gap-1">
+                      <Sparkles className="h-3 w-3" />
+                      {Math.round(parseConfidence * 100)}% confidence
+                    </Badge>
+                  )}
+                </div>
                 <div className="space-y-2">
                   {reportFile ? (
-                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <div className="text-sm font-medium text-blue-900">{reportFile.name}</div>
-                          <div className="text-xs text-blue-600">
-                            {(reportFile.size / 1024).toFixed(1)} KB
+                    <div className="space-y-2">
+                      <div
+                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                          parseStatus === 'success'
+                            ? 'bg-green-50 border-green-200'
+                            : parseStatus === 'failed'
+                              ? 'bg-amber-50 border-amber-200'
+                              : 'bg-blue-50 border-blue-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 flex-1">
+                          <FileText
+                            className={`h-5 w-5 ${
+                              parseStatus === 'success'
+                                ? 'text-green-600'
+                                : parseStatus === 'failed'
+                                  ? 'text-amber-600'
+                                  : 'text-blue-600'
+                            }`}
+                          />
+                          <div className="flex-1">
+                            <div
+                              className={`text-sm font-medium ${
+                                parseStatus === 'success'
+                                  ? 'text-green-900'
+                                  : parseStatus === 'failed'
+                                    ? 'text-amber-900'
+                                    : 'text-blue-900'
+                              }`}
+                            >
+                              {reportFile.name}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={`text-xs ${
+                                  parseStatus === 'success'
+                                    ? 'text-green-600'
+                                    : parseStatus === 'failed'
+                                      ? 'text-amber-600'
+                                      : 'text-blue-600'
+                                }`}
+                              >
+                                {(reportFile.size / 1024).toFixed(1)} KB
+                              </div>
+                              {parseStatus === 'success' && (
+                                <div className="flex items-center gap-1 text-xs text-green-600">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  Parsed successfully
+                                </div>
+                              )}
+                              {parseStatus === 'failed' && (
+                                <div className="flex items-center gap-1 text-xs text-amber-600">
+                                  <AlertCircle className="h-3 w-3" />
+                                  Manual entry needed
+                                </div>
+                              )}
+                            </div>
                           </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setReportFile(null)
+                              setReportPath(null)
+                              setParseStatus('idle')
+                              setParseConfidence(null)
+                            }}
+                            disabled={loading || parsing}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setReportFile(null)}
-                        disabled={loading}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                      {parsing && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground px-3">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Analyzing report with AI...
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="flex items-center justify-center border-2 border-dashed rounded-lg p-6 hover:bg-muted/50 transition-colors">
@@ -286,7 +429,9 @@ export function LabTestModal({
                         <span className="text-sm text-muted-foreground">
                           Click to upload PDF or image
                         </span>
-                        <span className="text-xs text-muted-foreground">Max 10MB</span>
+                        <span className="text-xs text-muted-foreground">
+                          Max 10MB • AI will auto-fill values
+                        </span>
                       </label>
                       <input
                         id="report-upload"
@@ -294,7 +439,7 @@ export function LabTestModal({
                         accept=".pdf,.jpg,.jpeg,.png"
                         onChange={handleFileChange}
                         className="hidden"
-                        disabled={loading}
+                        disabled={loading || parsing}
                       />
                     </div>
                   )}
