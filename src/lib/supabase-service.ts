@@ -1526,9 +1526,10 @@ export class SupabaseService {
   }
 
   // ============================================================================
-  // Phase 3A: AI Intelligence Methods
+  // Phase 3A: AI Intelligence Methods (Commented out - tables not yet created)
   // ============================================================================
 
+  /*
   // Recommendation Outcomes
   static async createRecommendationOutcome(outcome: {
     test_id: number
@@ -1901,6 +1902,7 @@ export class SupabaseService {
       key_insights
     }
   }
+  */
 
   // Real-time subscriptions
   static subscribeToFarmChanges(farmId: number, callback: (payload: any) => void) {
