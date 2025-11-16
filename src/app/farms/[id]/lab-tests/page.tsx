@@ -156,18 +156,8 @@ function LabTestsPage() {
     await loadLabTests()
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading lab tests...</p>
-        </div>
-      </div>
-    )
-  }
-
   // Memoize initialLogs to prevent infinite re-renders in UnifiedDataLogsModal
+  // IMPORTANT: Must be before early return to satisfy Rules of Hooks
   const soilInitialLogs = useMemo(() => {
     if (editingTest && editingTest.type === 'soil') {
       return [
@@ -201,6 +191,17 @@ function LabTestsPage() {
     }
     return [{ type: 'petiole_test' as const, data: {} }]
   }, [editingTest])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-sm text-muted-foreground">Loading lab tests...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="container max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
