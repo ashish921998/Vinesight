@@ -58,6 +58,7 @@ npm install victory
 ```
 
 **Why Victory?**
+
 - Works on both **web** (React) and **mobile** (React Native)
 - Same API for web and mobile apps
 - When creating Android/iOS app, just swap `victory` → `victory-native`
@@ -65,6 +66,7 @@ npm install victory
 ### Charts to Implement in `LabTestTrendCharts.tsx`
 
 #### Soil Test Trends:
+
 1. **pH Trend** (Line chart)
    - Color zones: Green (6.5-7.5), Yellow (6.0-6.5, 7.5-8.0), Red (<6.0, >8.0)
 
@@ -79,6 +81,7 @@ npm install victory
    - Iron, Zinc, Boron, Manganese trends
 
 #### Petiole Test Trends:
+
 1. **N-P-K Trend** (Multi-line chart)
    - Total Nitrogen, Phosphorus, Potassium
    - Optimal range zones
@@ -88,6 +91,7 @@ npm install victory
    - Track balance over time
 
 ### Chart Features to Add:
+
 - ✅ Hover tooltips (exact values + date)
 - ✅ Color-coded optimal/watch/action zones
 - ✅ Toggle between soil and petiole charts
@@ -101,7 +105,7 @@ npm install victory
 import { VictoryChart, VictoryLine, VictoryAxis, VictoryTooltip, VictoryArea } from 'victory'
 
 // pH Trend Chart
-<VictoryChart>
+;<VictoryChart>
   {/* Optimal zone background */}
   <VictoryArea
     data={[
@@ -113,7 +117,7 @@ import { VictoryChart, VictoryLine, VictoryAxis, VictoryTooltip, VictoryArea } f
 
   {/* pH trend line */}
   <VictoryLine
-    data={soilTests.map(t => ({ x: new Date(t.date), y: t.parameters.ph }))}
+    data={soilTests.map((t) => ({ x: new Date(t.date), y: t.parameters.ph }))}
     style={{ data: { stroke: 'blue', strokeWidth: 3 } }}
     labelComponent={<VictoryTooltip />}
   />
@@ -153,6 +157,7 @@ import { VictoryChart, VictoryLine, VictoryAxis, VictoryTooltip, VictoryArea } f
 ## Future Enhancements (Phase 2-3)
 
 ### Phase 2: Integration
+
 - [ ] Pre-fill fertilizer calculator with test values
 - [ ] Generate fertilizer plan from soil test
 - [ ] Link to irrigation ETc calculator
@@ -160,6 +165,7 @@ import { VictoryChart, VictoryLine, VictoryAxis, VictoryTooltip, VictoryArea } f
 - [ ] Tag expenses as "test-driven"
 
 ### Phase 3: Intelligence
+
 - [ ] AI-powered recommendations (learn from outcomes)
 - [ ] Pest disease correlation with nutrient deficiencies
 - [ ] Yield prediction based on petiole tests

@@ -144,7 +144,10 @@ export function TestDetailsCard({
             <div className="flex items-start justify-between gap-2">
               <div className="space-y-0.5 sm:space-y-1">
                 <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                  <Badge variant="secondary" className="font-semibold text-xs sm:text-sm h-5 sm:h-6">
+                  <Badge
+                    variant="secondary"
+                    className="font-semibold text-xs sm:text-sm h-5 sm:h-6"
+                  >
                     {testType === 'soil' ? '🌱 Soil' : '🍃 Petiole'}
                   </Badge>
                   <Badge
@@ -207,11 +210,18 @@ export function TestDetailsCard({
                 const change = getChange(param.key)
 
                 return (
-                  <div key={param.key} className="bg-white/60 rounded-2xl p-1.5 sm:p-2 text-center border">
-                    <div className="text-[10px] sm:text-xs text-muted-foreground font-medium truncate">{param.label}</div>
+                  <div
+                    key={param.key}
+                    className="bg-white/60 rounded-2xl p-1.5 sm:p-2 text-center border"
+                  >
+                    <div className="text-[10px] sm:text-xs text-muted-foreground font-medium truncate">
+                      {param.label}
+                    </div>
                     <div className="text-sm sm:text-lg font-bold text-foreground leading-tight">
                       {formatValue(value)}
-                      {(value !== null && value !== undefined && value !== '') && <span className="text-[10px] sm:text-xs ml-0.5">{param.unit}</span>}
+                      {value !== null && value !== undefined && value !== '' && (
+                        <span className="text-[10px] sm:text-xs ml-0.5">{param.unit}</span>
+                      )}
                     </div>
                     {change && change.direction !== 'same' && (
                       <div
@@ -227,12 +237,19 @@ export function TestDetailsCard({
 
             {/* Recommendations Summary */}
             <div className="space-y-1 sm:space-y-2">
-              <div className="text-[11px] sm:text-xs font-semibold text-foreground">Recommendations:</div>
+              <div className="text-[11px] sm:text-xs font-semibold text-foreground">
+                Recommendations:
+              </div>
               <div className="space-y-0.5 sm:space-y-1">
                 {recommendations.slice(0, 2).map((rec, idx) => (
-                  <div key={idx} className="flex items-start gap-1.5 sm:gap-2 text-[11px] sm:text-xs">
+                  <div
+                    key={idx}
+                    className="flex items-start gap-1.5 sm:gap-2 text-[11px] sm:text-xs"
+                  >
                     <span className="text-xs sm:text-sm">{rec.icon}</span>
-                    <span className="text-muted-foreground leading-snug sm:leading-relaxed">{rec.simple}</span>
+                    <span className="text-muted-foreground leading-snug sm:leading-relaxed">
+                      {rec.simple}
+                    </span>
                   </div>
                 ))}
                 {recommendations.length > 2 && (
@@ -301,90 +318,84 @@ export function TestDetailsCard({
           </DialogHeader>
 
           <div className="space-y-6 mt-4">
-              {/* All Parameters */}
+            {/* All Parameters */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">📊 All Parameters</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {Object.entries(test.parameters)
+                    .filter(([_, value]) => value !== null && value !== undefined && value !== '')
+                    .map(([key, value]) => {
+                      const change = getChange(key)
+                      return (
+                        <div
+                          key={key}
+                          className="border rounded-lg p-3 bg-muted/30 hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="text-xs text-muted-foreground font-medium capitalize">
+                            {key.replace(/_/g, ' ')}
+                          </div>
+                          <div className="text-base font-semibold text-foreground mt-1">
+                            {formatValue(value)}
+                          </div>
+                          {change && change.direction !== 'same' && (
+                            <div
+                              className={`text-xs mt-1 ${change.direction === 'up' ? 'text-blue-600' : 'text-orange-600'}`}
+                            >
+                              {change.direction === 'up' ? '↑' : '↓'}{' '}
+                              {Math.abs(change.value).toFixed(2)} from last test
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recommendations */}
+            <TestRecommendations recommendations={recommendations} testType={testType} />
+
+            {/* Notes */}
+            {test.notes && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">📊 All Parameters</CardTitle>
+                  <CardTitle className="text-base">📝 Notes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {Object.entries(test.parameters)
-                      .filter(([_, value]) => value !== null && value !== undefined && value !== '')
-                      .map(([key, value]) => {
-                        const change = getChange(key)
-                        return (
-                          <div
-                            key={key}
-                            className="border rounded-lg p-3 bg-muted/30 hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="text-xs text-muted-foreground font-medium capitalize">
-                              {key.replace(/_/g, ' ')}
-                            </div>
-                            <div className="text-base font-semibold text-foreground mt-1">
-                              {formatValue(value)}
-                            </div>
-                            {change && change.direction !== 'same' && (
-                              <div
-                                className={`text-xs mt-1 ${change.direction === 'up' ? 'text-blue-600' : 'text-orange-600'}`}
-                              >
-                                {change.direction === 'up' ? '↑' : '↓'}{' '}
-                                {Math.abs(change.value).toFixed(2)} from last test
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{test.notes}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Report Info */}
+            {test.report_filename && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">📄 Lab Report</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium">{test.report_filename}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {test.extraction_status === 'success'
+                          ? '✅ Auto-extracted successfully'
+                          : '⚠️ Manual entry'}
+                      </div>
+                    </div>
+                    {test.report_url && (
+                      <Button variant="outline" size="sm" onClick={() => setShowReportViewer(true)}>
+                        <FileText className="h-4 w-4 mr-2" />
+                        View Report
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Recommendations */}
-              <TestRecommendations recommendations={recommendations} testType={testType} />
-
-              {/* Notes */}
-              {test.notes && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">📝 Notes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                      {test.notes}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Report Info */}
-              {test.report_filename && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">📄 Lab Report</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-medium">{test.report_filename}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {test.extraction_status === 'success'
-                            ? '✅ Auto-extracted successfully'
-                            : '⚠️ Manual entry'}
-                        </div>
-                      </div>
-                      {test.report_url && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowReportViewer(true)}
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          View Report
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -401,7 +412,9 @@ export function TestDetailsCard({
                 <iframe
                   src={test.report_url}
                   className="w-full h-full border rounded"
-                  title={test.report_filename ? `Lab Report: ${test.report_filename}` : 'Lab Test Report'}
+                  title={
+                    test.report_filename ? `Lab Report: ${test.report_filename}` : 'Lab Test Report'
+                  }
                 />
               ) : (
                 <img

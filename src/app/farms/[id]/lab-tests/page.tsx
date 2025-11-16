@@ -163,9 +163,7 @@ function LabTestsPage() {
           <span className="sm:hidden text-xs">Back</span>
         </Button>
         <div>
-          <h1 className="text-xl sm:text-3xl font-bold text-foreground leading-tight">
-            Lab Tests
-          </h1>
+          <h1 className="text-xl sm:text-3xl font-bold text-foreground leading-tight">Lab Tests</h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
             Track and analyze soil and petiole test results
           </p>

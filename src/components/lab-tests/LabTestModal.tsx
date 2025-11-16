@@ -339,9 +339,7 @@ export function LabTestModal({
         }
       } else {
         setParseStatus('failed')
-        toast.warning(
-          'Report uploaded but extraction failed. Please fill in the values manually.'
-        )
+        toast.warning('Report uploaded but extraction failed. Please fill in the values manually.')
       }
     } catch (error) {
       console.error('Error parsing report:', error)
@@ -466,7 +464,9 @@ export function LabTestModal({
             </div>
 
             <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="pruning-date" className="text-xs sm:text-sm">Date of Pruning (Optional)</Label>
+              <Label htmlFor="pruning-date" className="text-xs sm:text-sm">
+                Date of Pruning (Optional)
+              </Label>
               <Input
                 id="pruning-date"
                 type="date"
@@ -671,7 +671,9 @@ export function LabTestModal({
 
           {/* Notes */}
           <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="notes" className="text-xs sm:text-sm">Notes (Optional)</Label>
+            <Label htmlFor="notes" className="text-xs sm:text-sm">
+              Notes (Optional)
+            </Label>
             <Textarea
               id="notes"
               value={notes}
@@ -693,7 +695,11 @@ export function LabTestModal({
             >
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={loading} className="w-full sm:w-auto rounded-2xl">
+            <Button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full sm:w-auto rounded-2xl"
+            >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

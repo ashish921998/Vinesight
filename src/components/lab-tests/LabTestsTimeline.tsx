@@ -115,7 +115,10 @@ export function LabTestsTimeline({
           </p>
         </div>
         <div className="grid grid-cols-2 gap-1.5 sm:gap-2 sm:flex">
-          <Button onClick={onAddSoilTest} className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9 rounded-2xl">
+          <Button
+            onClick={onAddSoilTest}
+            className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9 rounded-2xl"
+          >
             <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Soil Test</span>
             <span className="sm:hidden">Soil</span>
@@ -141,8 +144,12 @@ export function LabTestsTimeline({
                 <Beaker className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-blue-600" />
               </div>
               <div className="min-w-0">
-                <div className="text-lg sm:text-2xl font-bold text-blue-700 leading-tight">{allTests.length}</div>
-                <div className="text-[10px] sm:text-xs text-blue-600 font-medium truncate">Total</div>
+                <div className="text-lg sm:text-2xl font-bold text-blue-700 leading-tight">
+                  {allTests.length}
+                </div>
+                <div className="text-[10px] sm:text-xs text-blue-600 font-medium truncate">
+                  Total
+                </div>
               </div>
             </div>
           </CardContent>
@@ -155,8 +162,12 @@ export function LabTestsTimeline({
                 <span className="text-base sm:text-xl">🌱</span>
               </div>
               <div className="min-w-0">
-                <div className="text-lg sm:text-2xl font-bold text-green-700 leading-tight">{soilTests.length}</div>
-                <div className="text-[10px] sm:text-xs text-green-600 font-medium truncate">Soil</div>
+                <div className="text-lg sm:text-2xl font-bold text-green-700 leading-tight">
+                  {soilTests.length}
+                </div>
+                <div className="text-[10px] sm:text-xs text-green-600 font-medium truncate">
+                  Soil
+                </div>
               </div>
             </div>
           </CardContent>
@@ -172,7 +183,9 @@ export function LabTestsTimeline({
                 <div className="text-lg sm:text-2xl font-bold text-emerald-700 leading-tight">
                   {petioleTests.length}
                 </div>
-                <div className="text-[10px] sm:text-xs text-emerald-600 font-medium truncate">Petiole</div>
+                <div className="text-[10px] sm:text-xs text-emerald-600 font-medium truncate">
+                  Petiole
+                </div>
               </div>
             </div>
           </CardContent>
@@ -190,7 +203,9 @@ export function LabTestsTimeline({
                     ? `${Math.ceil((new Date().getTime() - new Date(allTests[allTests.length - 1].test.date).getTime()) / (1000 * 60 * 60 * 24))}d`
                     : '—'}
                 </div>
-                <div className="text-[10px] sm:text-xs text-purple-600 font-medium truncate">Days</div>
+                <div className="text-[10px] sm:text-xs text-purple-600 font-medium truncate">
+                  Days
+                </div>
               </div>
             </div>
           </CardContent>

@@ -1525,7 +1525,6 @@ export class SupabaseService {
     }
   }
 
-
   // Real-time subscriptions
   /**
    * Subscribe to real-time changes for a specific farm.

@@ -32,10 +32,12 @@ npm run dev
 ### ✅ TEST 1: Access Warehouse Page
 
 **Steps:**
+
 1. Navigate to `http://localhost:3000/warehouse`
 2. Should see "Warehouse" page with header
 
 **Expected Results:**
+
 - ✅ Page loads without errors
 - ✅ "Add Item" button visible
 - ✅ Empty state message if no items (or list of items if test data loaded)
@@ -48,6 +50,7 @@ npm run dev
 ### ✅ TEST 2: Add Fertilizer to Warehouse
 
 **Steps:**
+
 1. Click "+ Add Item" button
 2. Select Type: **Fertilizer**
 3. Enter:
@@ -60,6 +63,7 @@ npm run dev
 4. Click "Add Item"
 
 **Expected Results:**
+
 - ✅ Modal closes
 - ✅ Success toast: "Item added successfully"
 - ✅ Item appears in warehouse list
@@ -74,6 +78,7 @@ npm run dev
 ### ✅ TEST 3: Add Spray to Warehouse
 
 **Steps:**
+
 1. Click "+ Add Item"
 2. Select Type: **Spray**
 3. Enter:
@@ -85,6 +90,7 @@ npm run dev
 4. Click "Add Item"
 
 **Expected Results:**
+
 - ✅ Item appears with "Spray" badge
 - ✅ Shows: "5 liter • ₹800/L"
 - ✅ Total Value: ₹4,000
@@ -96,6 +102,7 @@ npm run dev
 ### ✅ TEST 4: Low Stock Alert
 
 **Steps:**
+
 1. Click "+ Add Item"
 2. Add fertilizer with quantity BELOW reorder level:
    - Name: `Urea`
@@ -105,6 +112,7 @@ npm run dev
 3. Save
 
 **Expected Results:**
+
 - ✅ Item shows "Low Stock" red badge
 - ✅ Card has orange border/background
 - ✅ Appears in "Low Stock Alerts" section at top of page
@@ -118,6 +126,7 @@ npm run dev
 ### ✅ TEST 5: Quick Add Stock
 
 **Steps:**
+
 1. Find NPK item (100 kg)
 2. Click "Add Stock" button
 3. Enter Quantity: `50`
@@ -125,6 +134,7 @@ npm run dev
 5. Click "Add Stock"
 
 **Expected Results:**
+
 - ✅ Modal closes
 - ✅ Toast: "Added 50 kg to NPK 19:19:19. New quantity: 150.00 kg"
 - ✅ Item now shows 150 kg
@@ -137,11 +147,13 @@ npm run dev
 ### ✅ TEST 6: Edit Warehouse Item
 
 **Steps:**
+
 1. Click Edit (pencil icon) on any item
 2. Change unit price from ₹50 to ₹55
 3. Click "Update"
 
 **Expected Results:**
+
 - ✅ Modal closes
 - ✅ Toast: "Item updated successfully"
 - ✅ Item shows new price
@@ -154,10 +166,12 @@ npm run dev
 ### ✅ TEST 7: Delete Warehouse Item
 
 **Steps:**
+
 1. Click Delete (trash icon) on any item
 2. Confirm deletion in popup
 
 **Expected Results:**
+
 - ✅ Item removed from list
 - ✅ Toast: "Item deleted successfully"
 - ✅ Inventory summary updated
@@ -169,12 +183,14 @@ npm run dev
 ### ✅ TEST 8: Filter by Type
 
 **Steps:**
+
 1. Ensure you have both fertilizers and sprays
 2. Click "Fertilizers" filter button
 3. Click "Sprays" filter button
 4. Click "All Items" button
 
 **Expected Results:**
+
 - ✅ Fertilizers filter: Only shows fertilizer items
 - ✅ Sprays filter: Only shows spray items
 - ✅ All Items: Shows everything
@@ -187,9 +203,11 @@ npm run dev
 ### ✅ TEST 9: Inventory Summary
 
 **Steps:**
+
 1. Scroll to bottom of warehouse page
 
 **Expected Results:**
+
 - ✅ Summary card visible
 - ✅ Shows Total Items count
 - ✅ Shows Fertilizers count
@@ -206,6 +224,7 @@ npm run dev
 ### ✅ TEST 10: Select Fertilizer from Warehouse in Fertigation Form
 
 **Steps:**
+
 1. Go to any farm
 2. Click "Add Logs" or equivalent
 3. Select "Fertigation" log type
@@ -214,6 +233,7 @@ npm run dev
 6. Should see dropdown with warehouse fertilizers
 
 **Expected Results:**
+
 - ✅ Dropdown shows: "NPK 19:19:19 (150 kg available)"
 - ✅ Can select item from dropdown
 - ✅ Name field populates with selected item
@@ -226,15 +246,18 @@ npm run dev
 ### ✅ TEST 11: Auto-Deduction from Warehouse (Success Case)
 
 **Prerequisites:**
+
 - Warehouse has: NPK 19:19:19 with 50 kg available
 
 **Steps:**
+
 1. Create Fertigation log
 2. Select "NPK 19:19:19" from warehouse dropdown
 3. Enter quantity: `10` kg/acre
 4. Save log
 
 **Expected Results:**
+
 - ✅ Log saves successfully
 - ✅ Toast: "Deducted 10 kg of NPK 19:19:19 from warehouse"
 - ✅ Go to /warehouse → NPK now shows 40 kg (50 - 10)
@@ -247,15 +270,18 @@ npm run dev
 ### ✅ TEST 12: Auto-Deduction Insufficient Stock Warning
 
 **Prerequisites:**
+
 - Warehouse has: Urea with only 5 kg available
 
 **Steps:**
+
 1. Create Fertigation log
 2. Select "Urea" from warehouse
 3. Enter quantity: `10` kg/acre
 4. Save log
 
 **Expected Results:**
+
 - ✅ Warning toast: "Insufficient stock. Available: 5 kg, Required: 10 kg"
 - ✅ Warehouse quantity remains at 5 kg (no deduction)
 - ✅ Log may or may not save (depending on your business logic preference)
@@ -267,6 +293,7 @@ npm run dev
 ### ✅ TEST 13: Manual Entry (No Deduction)
 
 **Steps:**
+
 1. Create Fertigation log
 2. DO NOT select from warehouse
 3. Type custom name: "Custom Mix ABC"
@@ -274,6 +301,7 @@ npm run dev
 5. Save log
 
 **Expected Results:**
+
 - ✅ Log saves successfully
 - ✅ NO warehouse deduction occurs
 - ✅ NO toast about warehouse deduction
@@ -286,6 +314,7 @@ npm run dev
 ### ✅ TEST 14: Spray Integration (Similar to Fertigation)
 
 **Steps:**
+
 1. Create Spray log
 2. Add chemical → Select from warehouse
 3. Choose "Imidacloprid (5 liter available)"
@@ -293,6 +322,7 @@ npm run dev
 5. Save log
 
 **Expected Results:**
+
 - ✅ Toast: "Deducted 2 liter of Imidacloprid from warehouse"
 - ✅ Warehouse shows 3 liter remaining
 - ✅ Works same as fertigation
@@ -306,11 +336,13 @@ npm run dev
 ### ✅ TEST 15: Validation - Empty Fields
 
 **Steps:**
+
 1. Try to add warehouse item with empty name
 2. Try to add with negative quantity
 3. Try to add with negative price
 
 **Expected Results:**
+
 - ✅ Error toast: "Please enter item name"
 - ✅ Error toast: "Please enter a valid quantity"
 - ✅ Error toast: "Please enter a valid unit price"
@@ -323,10 +355,12 @@ npm run dev
 ### ✅ TEST 16: Page Refresh Persistence
 
 **Steps:**
+
 1. Add items to warehouse
 2. Refresh browser (F5)
 
 **Expected Results:**
+
 - ✅ All items still visible
 - ✅ Data persists in database
 - ✅ No data loss
@@ -338,14 +372,17 @@ npm run dev
 ### ✅ TEST 17: Multi-User Isolation (RLS)
 
 **Prerequisites:**
+
 - Need 2 different user accounts
 
 **Steps:**
+
 1. Login as User A, add warehouse items
 2. Logout, login as User B
 3. Check warehouse
 
 **Expected Results:**
+
 - ✅ User B cannot see User A's items
 - ✅ Each user has separate inventory
 - ✅ RLS working correctly
@@ -359,11 +396,13 @@ npm run dev
 ### ✅ TEST 18: Large Inventory
 
 **Steps:**
+
 1. Add 20+ items to warehouse
 2. Test page load time
 3. Test filtering speed
 
 **Expected Results:**
+
 - ✅ Page loads in < 2 seconds
 - ✅ Filtering is instant
 - ✅ No lag or performance issues
@@ -374,13 +413,13 @@ npm run dev
 
 ## Summary
 
-| Category | Passed | Failed | Skipped |
-|----------|--------|--------|---------|
-| Warehouse UI | /9 | /9 | /9 |
-| Integration | /5 | /5 | /5 |
-| Edge Cases | /3 | /3 | /3 |
-| Performance | /1 | /1 | /1 |
-| **TOTAL** | /18 | /18 | /18 |
+| Category     | Passed | Failed | Skipped |
+| ------------ | ------ | ------ | ------- |
+| Warehouse UI | /9     | /9     | /9      |
+| Integration  | /5     | /5     | /5      |
+| Edge Cases   | /3     | /3     | /3      |
+| Performance  | /1     | /1     | /1      |
+| **TOTAL**    | /18    | /18    | /18     |
 
 ---
 
@@ -405,6 +444,6 @@ _Attach screenshots of key features:_
 
 ---
 
-**Tested By:** ___________________
-**Date:** ___________________
-**Version:** ___________________
+**Tested By:** ********\_\_\_********
+**Date:** ********\_\_\_********
+**Version:** ********\_\_\_********
