@@ -168,25 +168,50 @@ export function LabTestModal({
       if (result.extraction?.status === 'success' && result.extraction.parameters) {
         // Key mapping to normalize API response keys to our field keys
         const keyMapping: Record<string, string> = {
-          // Common variations
+          // Organic carbon variations
+          organiccarbon: 'organic_carbon',
           organicCarbon: 'organic_carbon',
           organic_carbon_percent: 'organic_carbon',
           'organic carbon': 'organic_carbon',
+          // Nitrogen variations
           nitrogen_n: 'nitrogen',
           total_nitrogen: 'nitrogen',
+          totalnitrogen: 'nitrogen',
           'total nitrogen': 'nitrogen',
+          // Phosphorus variations
           phosphorus_p: 'phosphorus',
+          phosphorusp: 'phosphorus',
+          // Potassium variations
           potassium_k: 'potassium',
+          potassiumk: 'potassium',
+          // Calcium variations
           calcium_ca: 'calcium',
+          calciumca: 'calcium',
+          // Magnesium variations
           magnesium_mg: 'magnesium',
+          magnesiummg: 'magnesium',
+          // Sulfur variations (both spellings)
           sulphur_s: 'sulfur',
+          sulphurs: 'sulfur',
           sulfur_s: 'sulfur',
+          sulfurs: 'sulfur',
+          // Iron variations (ferrous)
           ferrous_fe: 'iron',
+          ferrousfe: 'iron',
           iron_fe: 'iron',
+          ironfe: 'iron',
+          // Manganese variations
           manganese_mn: 'manganese',
+          manganesemn: 'manganese',
+          // Zinc variations
           zinc_zn: 'zinc',
+          zinczn: 'zinc',
+          // Copper variations
           copper_cu: 'copper',
-          boron_b: 'boron'
+          coppercu: 'copper',
+          // Boron variations
+          boron_b: 'boron',
+          boronb: 'boron'
         }
 
         // Auto-fill form fields with extracted parameters
