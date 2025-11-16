@@ -448,11 +448,11 @@ export function LabTestModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
+        <div className="space-y-3 sm:space-y-6 py-2 sm:py-4">
           {/* Date Fields */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="test-date">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="test-date" className="text-xs sm:text-sm">
                 Test Date <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -461,17 +461,19 @@ export function LabTestModal({
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 disabled={loading}
+                className="h-9 text-sm"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="pruning-date">Date of Pruning (Optional)</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="pruning-date" className="text-xs sm:text-sm">Date of Pruning (Optional)</Label>
               <Input
                 id="pruning-date"
                 type="date"
                 value={dateOfPruning}
                 onChange={(e) => setDateOfPruning(e.target.value)}
                 disabled={loading}
+                className="h-9 text-sm"
               />
             </div>
           </div>
@@ -479,7 +481,7 @@ export function LabTestModal({
           {/* Report Upload (only for add mode) */}
           {mode === 'add' && (
             <Card className="border-dashed border-2">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between mb-2">
                   <Label htmlFor="report-upload" className="text-sm font-semibold">
                     Upload Lab Report (Optional)
@@ -606,34 +608,34 @@ export function LabTestModal({
           )}
 
           {/* Test Parameters */}
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-semibold">Test Parameters</Label>
+              <Label className="text-xs sm:text-sm font-semibold">Test Parameters</Label>
               {autoFilledFields.size > 0 && (
-                <Badge variant="secondary" className="gap-1">
-                  <Sparkles className="h-3 w-3" />
-                  {autoFilledFields.size} AI-filled
+                <Badge variant="secondary" className="gap-1 h-5 text-xs">
+                  <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                  {autoFilledFields.size} AI
                 </Badge>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {fields.map((field) => {
                 const isAutoFilled = autoFilledFields.has(field.key)
                 const hasWarning = !!fieldWarnings[field.key]
                 const hasValue = !!parameters[field.key]
 
                 return (
-                  <div key={field.key} className="space-y-1.5">
+                  <div key={field.key} className="space-y-1 sm:space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor={field.key} className="text-sm">
+                      <Label htmlFor={field.key} className="text-xs sm:text-sm">
                         {field.label}
                       </Label>
                       {isAutoFilled && (
                         <Badge
                           variant="outline"
-                          className="h-5 text-xs gap-1 border-green-300 bg-green-50 text-green-700"
+                          className="h-4 sm:h-5 text-[10px] sm:text-xs gap-0.5 sm:gap-1 border-green-300 bg-green-50 text-green-700"
                         >
-                          <Sparkles className="h-2.5 w-2.5" />
+                          <Sparkles className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
                           AI
                         </Badge>
                       )}
@@ -646,13 +648,13 @@ export function LabTestModal({
                       onChange={(e) => handleParameterChange(field.key, e.target.value)}
                       disabled={loading || parsing}
                       placeholder="Enter value"
-                      className={
+                      className={`h-9 text-sm ${
                         isAutoFilled && !hasWarning && hasValue
                           ? 'border-green-300 bg-green-50/50 focus-visible:ring-green-500'
                           : hasWarning && hasValue
                             ? 'border-amber-400 bg-amber-50/50 focus-visible:ring-amber-500'
                             : ''
-                      }
+                      }`}
                     />
                     {hasWarning && (
                       <p className="text-xs text-amber-600 flex items-center gap-1">
@@ -667,8 +669,8 @@ export function LabTestModal({
           </div>
 
           {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes (Optional)</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="notes" className="text-xs sm:text-sm">Notes (Optional)</Label>
             <Textarea
               id="notes"
               value={notes}
@@ -676,11 +678,12 @@ export function LabTestModal({
               disabled={loading}
               placeholder="Add any additional observations or notes..."
               rows={3}
+              className="text-sm"
             />
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4 border-t">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t">
             <Button
               variant="outline"
               onClick={onClose}

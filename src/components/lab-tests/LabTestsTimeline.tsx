@@ -105,27 +105,27 @@ export function LabTestsTimeline({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2 sm:space-y-4">
       {/* Header with Actions */}
-      <div className="flex flex-col gap-3">
-        <div>
+      <div className="flex flex-col gap-2 sm:gap-3">
+        <div className="hidden sm:block">
           <h2 className="text-xl sm:text-2xl font-bold text-foreground">Lab Test History</h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
             Track soil and petiole test results over time
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
-          <Button onClick={onAddSoilTest} className="flex items-center gap-2 text-sm">
-            <Plus className="h-4 w-4" />
+        <div className="grid grid-cols-2 gap-1.5 sm:gap-2 sm:flex">
+          <Button onClick={onAddSoilTest} className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9">
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Soil Test</span>
             <span className="sm:hidden">Soil</span>
           </Button>
           <Button
             onClick={onAddPetioleTest}
-            className="flex items-center gap-2 text-sm"
+            className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9"
             variant="outline"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Petiole Test</span>
             <span className="sm:hidden">Petiole</span>
           </Button>
@@ -133,64 +133,64 @@ export function LabTestsTimeline({
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3">
         <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <Beaker className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+          <CardContent className="p-2 sm:p-4">
+            <div className="flex items-center gap-1.5 sm:gap-3">
+              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <Beaker className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-blue-600" />
               </div>
               <div className="min-w-0">
-                <div className="text-xl sm:text-2xl font-bold text-blue-700">{allTests.length}</div>
-                <div className="text-xs text-blue-600 font-medium truncate">Total Tests</div>
+                <div className="text-lg sm:text-2xl font-bold text-blue-700 leading-tight">{allTests.length}</div>
+                <div className="text-[10px] sm:text-xs text-blue-600 font-medium truncate">Total</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-green-200 bg-green-50">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-lg sm:text-xl">🌱</span>
+          <CardContent className="p-2 sm:p-4">
+            <div className="flex items-center gap-1.5 sm:gap-3">
+              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                <span className="text-base sm:text-xl">🌱</span>
               </div>
               <div className="min-w-0">
-                <div className="text-xl sm:text-2xl font-bold text-green-700">{soilTests.length}</div>
-                <div className="text-xs text-green-600 font-medium truncate">Soil Tests</div>
+                <div className="text-lg sm:text-2xl font-bold text-green-700 leading-tight">{soilTests.length}</div>
+                <div className="text-[10px] sm:text-xs text-green-600 font-medium truncate">Soil</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-emerald-200 bg-emerald-50">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-lg sm:text-xl">🍃</span>
+          <CardContent className="p-2 sm:p-4">
+            <div className="flex items-center gap-1.5 sm:gap-3">
+              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <span className="text-base sm:text-xl">🍃</span>
               </div>
               <div className="min-w-0">
-                <div className="text-xl sm:text-2xl font-bold text-emerald-700">
+                <div className="text-lg sm:text-2xl font-bold text-emerald-700 leading-tight">
                   {petioleTests.length}
                 </div>
-                <div className="text-xs text-emerald-600 font-medium truncate">Petiole Tests</div>
+                <div className="text-[10px] sm:text-xs text-emerald-600 font-medium truncate">Petiole</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-purple-200 bg-purple-50">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+          <CardContent className="p-2 sm:p-4">
+            <div className="flex items-center gap-1.5 sm:gap-3">
+              <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                <Calendar className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-purple-600" />
               </div>
               <div className="min-w-0">
-                <div className="text-base sm:text-lg font-bold text-purple-700">
+                <div className="text-sm sm:text-lg font-bold text-purple-700 leading-tight">
                   {allTests.length > 0
                     ? `${Math.ceil((new Date().getTime() - new Date(allTests[allTests.length - 1].test.date).getTime()) / (1000 * 60 * 60 * 24))}d`
                     : '—'}
                 </div>
-                <div className="text-xs text-purple-600 font-medium truncate">Since First</div>
+                <div className="text-[10px] sm:text-xs text-purple-600 font-medium truncate">Days</div>
               </div>
             </div>
           </CardContent>
@@ -199,26 +199,26 @@ export function LabTestsTimeline({
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-3 sm:p-4">
-          <div className="flex flex-col gap-3">
+        <CardContent className="p-2 sm:p-4">
+          <div className="flex flex-col gap-2 sm:gap-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
-                <Filter className="h-4 w-4" />
-                Filters
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
+                <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Filters</span>
               </div>
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-[10px] sm:text-xs h-5">
                 {filteredTests.length} results
               </Badge>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <span className="text-xs text-muted-foreground">Test Type</span>
+            <div className="grid grid-cols-2 sm:grid-cols-2 gap-1.5 sm:gap-3">
+              <div className="space-y-1">
+                <span className="text-[10px] sm:text-xs text-muted-foreground">Type</span>
                 <Select
                   value={testTypeFilter}
                   onValueChange={(v) => setTestTypeFilter(v as TestType)}
                 >
-                  <SelectTrigger className="w-full h-9">
+                  <SelectTrigger className="w-full h-8 sm:h-9 text-xs sm:text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -229,10 +229,10 @@ export function LabTestsTimeline({
                 </Select>
               </div>
 
-              <div className="space-y-1.5">
-                <span className="text-xs text-muted-foreground">Period</span>
+              <div className="space-y-1">
+                <span className="text-[10px] sm:text-xs text-muted-foreground">Period</span>
                 <Select value={dateFilter} onValueChange={(v) => setDateFilter(v as DateFilter)}>
-                  <SelectTrigger className="w-full h-9">
+                  <SelectTrigger className="w-full h-8 sm:h-9 text-xs sm:text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -250,7 +250,7 @@ export function LabTestsTimeline({
 
       {/* Tests Timeline */}
       {displayedTests.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-2 sm:space-y-4">
           {displayedTests.map((item) => (
             <TestDetailsCard
               key={`${item.type}-${item.test.id}`}

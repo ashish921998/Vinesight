@@ -150,18 +150,18 @@ export function TestDetailsCard({
   return (
     <>
       <Card className={`${urgencyColor} border-2 hover:shadow-md transition-shadow`}>
-        <CardContent className="p-4">
-          <div className="space-y-3">
+        <CardContent className="p-2.5 sm:p-4">
+          <div className="space-y-2 sm:space-y-3">
             {/* Header */}
             <div className="flex items-start justify-between gap-2">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="font-semibold">
-                    {testType === 'soil' ? '🌱 Soil Test' : '🍃 Petiole Test'}
+              <div className="space-y-0.5 sm:space-y-1">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                  <Badge variant="secondary" className="font-semibold text-xs sm:text-sm h-5 sm:h-6">
+                    {testType === 'soil' ? '🌱 Soil' : '🍃 Petiole'}
                   </Badge>
                   <Badge
                     variant="outline"
-                    className={
+                    className={`text-xs sm:text-sm h-5 sm:h-6 ${
                       urgencyLevel === 'critical'
                         ? 'border-red-600 text-red-700'
                         : urgencyLevel === 'high'
@@ -169,67 +169,67 @@ export function TestDetailsCard({
                           : urgencyLevel === 'optimal'
                             ? 'border-green-600 text-green-700'
                             : 'border-yellow-600 text-yellow-700'
-                    }
+                    }`}
                   >
                     {urgencyLevel === 'critical'
                       ? '🔴 Urgent'
                       : urgencyLevel === 'high'
-                        ? '🟡 Action Needed'
+                        ? '🟡 Action'
                         : urgencyLevel === 'optimal'
-                          ? '✅ All Good'
+                          ? '✅ Good'
                           : '⚠️ Monitor'}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
                   <Calendar className="h-3 w-3" />
                   <span>{format(new Date(test.date), 'MMM dd, yyyy')}</span>
                 </div>
                 {test.report_filename && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
                     <FileCheck className="h-3 w-3 text-blue-600" />
-                    <span className="text-xs text-blue-700">Lab report attached</span>
+                    <span className="text-[10px] sm:text-xs text-blue-700">Report attached</span>
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onEdit(test)}
-                  className="h-8 w-8 p-0"
+                  className="h-7 w-7 sm:h-8 sm:w-8 p-0"
                 >
-                  <Edit className="h-4 w-4" />
+                  <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onDelete(test)}
-                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             </div>
 
             {/* Key Parameters Preview */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
               {keyParams.map((param) => {
                 const value = test.parameters[param.key]
                 const change = getChange(param.key)
 
                 return (
-                  <div key={param.key} className="bg-white/60 rounded-lg p-2 text-center border">
-                    <div className="text-xs text-muted-foreground font-medium">{param.label}</div>
-                    <div className="text-lg font-bold text-foreground">
+                  <div key={param.key} className="bg-white/60 rounded-lg p-1.5 sm:p-2 text-center border">
+                    <div className="text-[10px] sm:text-xs text-muted-foreground font-medium truncate">{param.label}</div>
+                    <div className="text-sm sm:text-lg font-bold text-foreground leading-tight">
                       {formatValue(value)}
-                      {value && <span className="text-xs ml-0.5">{param.unit}</span>}
+                      {value && <span className="text-[10px] sm:text-xs ml-0.5">{param.unit}</span>}
                     </div>
                     {change && change.direction !== 'same' && (
                       <div
-                        className={`text-xs ${change.direction === 'up' ? 'text-blue-600' : 'text-orange-600'}`}
+                        className={`text-[10px] sm:text-xs ${change.direction === 'up' ? 'text-blue-600' : 'text-orange-600'}`}
                       >
-                        {change.direction === 'up' ? '↑' : '↓'} {Math.abs(change.value).toFixed(2)}
+                        {change.direction === 'up' ? '↑' : '↓'} {Math.abs(change.value).toFixed(1)}
                       </div>
                     )}
                   </div>
@@ -238,31 +238,31 @@ export function TestDetailsCard({
             </div>
 
             {/* Recommendations Summary */}
-            <div className="space-y-2">
-              <div className="text-xs font-semibold text-foreground">Quick Recommendations:</div>
-              <div className="space-y-1">
+            <div className="space-y-1 sm:space-y-2">
+              <div className="text-[11px] sm:text-xs font-semibold text-foreground">Recommendations:</div>
+              <div className="space-y-0.5 sm:space-y-1">
                 {recommendations.slice(0, 2).map((rec, idx) => (
-                  <div key={idx} className="flex items-start gap-2 text-xs">
-                    <span>{rec.icon}</span>
-                    <span className="text-muted-foreground leading-relaxed">{rec.simple}</span>
+                  <div key={idx} className="flex items-start gap-1.5 sm:gap-2 text-[11px] sm:text-xs">
+                    <span className="text-xs sm:text-sm">{rec.icon}</span>
+                    <span className="text-muted-foreground leading-snug sm:leading-relaxed">{rec.simple}</span>
                   </div>
                 ))}
                 {recommendations.length > 2 && (
-                  <div className="text-xs text-blue-600 font-medium">
-                    +{recommendations.length - 2} more recommendations
+                  <div className="text-[11px] sm:text-xs text-blue-600 font-medium">
+                    +{recommendations.length - 2} more
                   </div>
                 )}
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col gap-2 pt-2">
-              <div className="flex gap-2">
+            <div className="flex flex-col gap-1.5 sm:gap-2 pt-1 sm:pt-2">
+              <div className="flex gap-1.5 sm:gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowDetails(true)}
-                  className="flex-1 text-xs sm:text-sm"
+                  className="flex-1 text-xs sm:text-sm h-7 sm:h-9"
                 >
                   <span className="hidden sm:inline">View Full Details</span>
                   <span className="sm:hidden">Details</span>
@@ -272,10 +272,10 @@ export function TestDetailsCard({
                     variant="outline"
                     size="sm"
                     onClick={() => setShowReportViewer(true)}
-                    className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm"
+                    className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm h-7 sm:h-9 px-2 sm:px-3"
                   >
-                    <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    Report
+                    <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Report</span>
                   </Button>
                 )}
               </div>
@@ -286,9 +286,9 @@ export function TestDetailsCard({
                   variant="default"
                   size="sm"
                   onClick={() => setShowFertilizerPlan(true)}
-                  className="w-full flex items-center gap-2 bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
+                  className="w-full flex items-center gap-1.5 sm:gap-2 bg-green-600 hover:bg-green-700 text-xs sm:text-sm h-7 sm:h-9"
                 >
-                  <Sprout className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <Sprout className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden sm:inline">Generate Fertilizer Plan</span>
                   <span className="sm:hidden">Fertilizer Plan</span>
                 </Button>

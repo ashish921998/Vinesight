@@ -151,22 +151,24 @@ function LabTestsPage() {
   }
 
   return (
-    <div className="container max-w-7xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <div className="container max-w-7xl mx-auto p-3 sm:p-6 space-y-2 sm:space-y-6">
       {/* Header */}
-      <div className="space-y-3">
+      <div className="space-y-1.5 sm:space-y-3">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => router.push(`/farms/${farmId}`)}
-          className="flex items-center gap-2 -ml-2"
+          className="flex items-center gap-2 -ml-2 h-8 sm:h-9"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           <span className="hidden sm:inline">Back to {farmName}</span>
-          <span className="sm:hidden">Back</span>
+          <span className="sm:hidden text-xs">Back</span>
         </Button>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Lab Tests</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-xl sm:text-3xl font-bold text-foreground leading-tight">
+            Lab Tests
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
             Track and analyze soil and petiole test results
           </p>
         </div>
@@ -176,19 +178,19 @@ function LabTestsPage() {
       {/* <SmartInsightsDashboard farmId={farmId} /> */}
 
       {/* Tabs */}
-      <Tabs defaultValue="timeline" className="space-y-4">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="timeline" className="text-xs sm:text-sm">
+      <Tabs defaultValue="timeline" className="space-y-2 sm:space-y-4">
+        <TabsList className="grid w-full max-w-md grid-cols-2 h-8 sm:h-10">
+          <TabsTrigger value="timeline" className="text-xs sm:text-sm py-1">
             <span className="hidden sm:inline">Timeline View</span>
             <span className="sm:hidden">Timeline</span>
           </TabsTrigger>
-          <TabsTrigger value="trends" className="text-xs sm:text-sm">
+          <TabsTrigger value="trends" className="text-xs sm:text-sm py-1">
             <span className="hidden sm:inline">Trend Analysis</span>
             <span className="sm:hidden">Trends</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="timeline" className="space-y-4">
+        <TabsContent value="timeline" className="space-y-2 sm:space-y-4 mt-2 sm:mt-4">
           <LabTestsTimeline
             soilTests={soilTests}
             petioleTests={petioleTests}
