@@ -262,18 +262,19 @@ export function TestDetailsCard({
                   variant="outline"
                   size="sm"
                   onClick={() => setShowDetails(true)}
-                  className="flex-1"
+                  className="flex-1 text-xs sm:text-sm"
                 >
-                  View Full Details
+                  <span className="hidden sm:inline">View Full Details</span>
+                  <span className="sm:hidden">Details</span>
                 </Button>
                 {test.report_url && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowReportViewer(true)}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm"
                   >
-                    <FileText className="h-4 w-4" />
+                    <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     Report
                   </Button>
                 )}
@@ -285,10 +286,11 @@ export function TestDetailsCard({
                   variant="default"
                   size="sm"
                   onClick={() => setShowFertilizerPlan(true)}
-                  className="w-full flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                  className="w-full flex items-center gap-2 bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
                 >
-                  <Sprout className="h-4 w-4" />
-                  Generate Fertilizer Plan
+                  <Sprout className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Generate Fertilizer Plan</span>
+                  <span className="sm:hidden">Fertilizer Plan</span>
                 </Button>
               )}
             </div>
@@ -298,13 +300,13 @@ export function TestDetailsCard({
 
       {/* Full Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-base sm:text-lg pr-6">
               {testType === 'soil' ? '🌱 Soil' : '🍃 Petiole'} Test Details -{' '}
-              {format(new Date(test.date), 'MMMM dd, yyyy')}
+              {format(new Date(test.date), 'MMM dd, yyyy')}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-xs sm:text-sm">
               Complete test results and recommendations for your farm
             </DialogDescription>
           </DialogHeader>

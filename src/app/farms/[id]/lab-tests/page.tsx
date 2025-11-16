@@ -151,18 +151,25 @@ function LabTestsPage() {
   }
 
   return (
-    <div className="container max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+    <div className="container max-w-7xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="space-y-3">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => router.push(`/farms/${farmId}`)}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 -ml-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to {farmName}
+          <span className="hidden sm:inline">Back to {farmName}</span>
+          <span className="sm:hidden">Back</span>
         </Button>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Lab Tests</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Track and analyze soil and petiole test results
+          </p>
+        </div>
       </div>
 
       {/* Phase 3A - Commented out for initial launch */}
@@ -171,8 +178,14 @@ function LabTestsPage() {
       {/* Tabs */}
       <Tabs defaultValue="timeline" className="space-y-4">
         <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="timeline">Timeline View</TabsTrigger>
-          <TabsTrigger value="trends">Trend Analysis</TabsTrigger>
+          <TabsTrigger value="timeline" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Timeline View</span>
+            <span className="sm:hidden">Timeline</span>
+          </TabsTrigger>
+          <TabsTrigger value="trends" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Trend Analysis</span>
+            <span className="sm:hidden">Trends</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="timeline" className="space-y-4">

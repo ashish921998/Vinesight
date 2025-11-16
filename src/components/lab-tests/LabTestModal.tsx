@@ -441,14 +441,14 @@ export function LabTestModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-base sm:text-lg pr-6">
             {mode === 'edit' ? 'Edit' : 'Add'} {testType === 'soil' ? 'Soil' : 'Petiole'} Test
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
           {/* Date Fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -680,11 +680,16 @@ export function LabTestModal({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button variant="outline" onClick={onClose} disabled={loading}>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              disabled={loading}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={loading}>
+            <Button onClick={handleSubmit} disabled={loading} className="w-full sm:w-auto">
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
