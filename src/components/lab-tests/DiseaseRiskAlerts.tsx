@@ -80,8 +80,9 @@ export function DiseaseRiskAlerts({ alerts }: DiseaseRiskAlertsProps) {
           <div className="flex items-start gap-2 text-sm text-amber-900">
             <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
             <p className="leading-relaxed">
-              <strong>AI Analysis:</strong> Based on your test results, certain nutrient deficiencies
-              increase disease susceptibility. Take preventive action now to protect your crop.
+              <strong>AI Analysis:</strong> Based on your test results, certain nutrient
+              deficiencies increase disease susceptibility. Take preventive action now to protect
+              your crop.
             </p>
           </div>
         </div>
@@ -103,11 +104,7 @@ export function DiseaseRiskAlerts({ alerts }: DiseaseRiskAlertsProps) {
                 <div className="text-sm font-semibold mb-1">Disease Risks:</div>
                 <div className="flex flex-wrap gap-2">
                   {alert.disease_risks.map((disease, didx) => (
-                    <Badge
-                      key={didx}
-                      variant="outline"
-                      className="text-xs bg-white/50"
-                    >
+                    <Badge key={didx} variant="outline" className="text-xs bg-white/50">
                       {disease}
                     </Badge>
                   ))}
@@ -115,9 +112,7 @@ export function DiseaseRiskAlerts({ alerts }: DiseaseRiskAlertsProps) {
               </div>
 
               {/* Explanation */}
-              <div className="text-sm leading-relaxed opacity-90">
-                {alert.risk_explanation}
-              </div>
+              <div className="text-sm leading-relaxed opacity-90">{alert.risk_explanation}</div>
 
               {/* Preventive Actions */}
               {alert.preventive_actions && alert.preventive_actions.length > 0 && (
@@ -145,7 +140,10 @@ export function DiseaseRiskAlerts({ alerts }: DiseaseRiskAlertsProps) {
           <Card className="border-red-200 bg-red-50">
             <CardContent className="p-3 text-center">
               <div className="text-xl font-bold text-red-700">
-                {alerts.filter((a) => a.risk_level === 'critical' || a.risk_level === 'high').length}
+                {
+                  alerts.filter((a) => a.risk_level === 'critical' || a.risk_level === 'high')
+                    .length
+                }
               </div>
               <div className="text-xs text-red-600 font-medium">High Risk Alerts</div>
             </CardContent>

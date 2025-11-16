@@ -1704,7 +1704,10 @@ export class SupabaseService {
 
     const total_tests = data.length
     const total_roi = data.reduce((sum: number, roi: any) => sum + (roi.total_benefit || 0), 0)
-    const total_savings = data.reduce((sum: number, roi: any) => sum + (roi.fertilizer_savings || 0), 0)
+    const total_savings = data.reduce(
+      (sum: number, roi: any) => sum + (roi.fertilizer_savings || 0),
+      0
+    )
     const avg_roi_percentage =
       data.reduce((sum: number, roi: any) => sum + (roi.roi_percentage || 0), 0) / total_tests
 
@@ -1822,8 +1825,7 @@ export class SupabaseService {
     }
 
     const recommendations_total = outcomes?.length || 0
-    const recommendations_followed =
-      outcomes?.filter((o: any) => o.followed === true).length || 0
+    const recommendations_followed = outcomes?.filter((o: any) => o.followed === true).length || 0
 
     // Calculate average satisfaction
     const satisfactionRatings = outcomes?.filter((o: any) => o.satisfaction_rating !== null) || []

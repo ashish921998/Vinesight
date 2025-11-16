@@ -26,12 +26,7 @@ interface OutcomeTrackerProps {
   recommendations: Recommendation[]
 }
 
-export function OutcomeTracker({
-  testId,
-  testType,
-  farmId,
-  recommendations
-}: OutcomeTrackerProps) {
+export function OutcomeTracker({ testId, testType, farmId, recommendations }: OutcomeTrackerProps) {
   const [loading, setLoading] = useState(true)
   const [outcomes, setOutcomes] = useState<any[]>([])
   const [selectedRec, setSelectedRec] = useState<Recommendation | null>(null)
@@ -222,7 +217,10 @@ export function OutcomeTracker({
               const status = getOutcomeStatus(rec)
 
               return (
-                <div key={idx} className={`border rounded-lg p-3 ${getPriorityColor(rec.priority)}`}>
+                <div
+                  key={idx}
+                  className={`border rounded-lg p-3 ${getPriorityColor(rec.priority)}`}
+                >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">

@@ -66,8 +66,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
               color-coded optimal ranges.
             </p>
             <div className="mt-4 text-xs text-muted-foreground">
-              <strong>Available data:</strong>{' '}
-              {hasSoilTrends && `${soilTests.length} soil tests`}
+              <strong>Available data:</strong> {hasSoilTrends && `${soilTests.length} soil tests`}
               {hasSoilTrends && hasPetioleTrends && ', '}
               {hasPetioleTrends && `${petioleTests.length} petiole tests`}
             </div>

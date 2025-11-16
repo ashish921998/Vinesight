@@ -16,7 +16,10 @@ interface TestReminderNotificationProps {
   compact?: boolean
 }
 
-export function TestReminderNotification({ farmId, compact = false }: TestReminderNotificationProps) {
+export function TestReminderNotification({
+  farmId,
+  compact = false
+}: TestReminderNotificationProps) {
   const router = useRouter()
   const [reminders, setReminders] = useState<{
     soilTestNeeded: boolean
@@ -105,8 +108,10 @@ export function TestReminderNotification({ farmId, compact = false }: TestRemind
                 {reminders.soilTestNeeded && (
                   <>
                     <strong>Soil test:</strong> Last test was{' '}
-                    {reminders.soilTestAge ? `${reminders.soilTestAge} days ago` : 'over 4 months ago'}.
-                    {reminders.petioleTestNeeded && <br />}
+                    {reminders.soilTestAge
+                      ? `${reminders.soilTestAge} days ago`
+                      : 'over 4 months ago'}
+                    .{reminders.petioleTestNeeded && <br />}
                   </>
                 )}
                 {reminders.petioleTestNeeded && (
@@ -161,8 +166,8 @@ export function TestReminderNotification({ farmId, compact = false }: TestRemind
                 ) : (
                   'over 4 months ago'
                 )}
-                . Regular soil testing (every 3-4 months) helps track pH, salinity, and nutrient levels for
-                better fertilizer planning.
+                . Regular soil testing (every 3-4 months) helps track pH, salinity, and nutrient
+                levels for better fertilizer planning.
               </div>
             </div>
           )}
@@ -180,7 +185,8 @@ export function TestReminderNotification({ farmId, compact = false }: TestRemind
                 ) : (
                   'over 3 months ago'
                 )}
-                . Petiole tests during active growth help monitor nutrient uptake and adjust fertigation timing.
+                . Petiole tests during active growth help monitor nutrient uptake and adjust
+                fertigation timing.
               </div>
             </div>
           )}

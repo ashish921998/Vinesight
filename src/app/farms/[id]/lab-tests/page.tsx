@@ -259,7 +259,9 @@ function LabTestsPage() {
           <DialogHeader>
             <DialogTitle>Delete Lab Test?</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this {deletingTest?.type === 'soil' ? 'soil' : 'petiole'} test? This action cannot be undone.
+              Are you sure you want to delete this{' '}
+              {deletingTest?.type === 'soil' ? 'soil' : 'petiole'} test? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -270,11 +272,7 @@ function LabTestsPage() {
             >
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmDelete}
-              disabled={isDeleting}
-            >
+            <Button variant="destructive" onClick={handleConfirmDelete} disabled={isDeleting}>
               {isDeleting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

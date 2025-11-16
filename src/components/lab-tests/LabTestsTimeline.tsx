@@ -90,7 +90,10 @@ export function LabTestsTimeline({
   const hasMore = filteredTests.length > showCount
 
   // Helper to find previous test of the same type
-  const getPreviousTest = (currentTest: LabTestRecord, type: 'soil' | 'petiole'): LabTestRecord | undefined => {
+  const getPreviousTest = (
+    currentTest: LabTestRecord,
+    type: 'soil' | 'petiole'
+  ): LabTestRecord | undefined => {
     const testsOfType = type === 'soil' ? soilTests : petioleTests
     const sorted = [...testsOfType].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -175,7 +178,9 @@ export function LabTestsTimeline({
               </div>
               <div>
                 <div className="text-lg font-bold text-purple-700">
-                  {allTests.length > 0 ? `${Math.ceil((new Date().getTime() - new Date(allTests[allTests.length - 1].test.date).getTime()) / (1000 * 60 * 60 * 24))}d` : '—'}
+                  {allTests.length > 0
+                    ? `${Math.ceil((new Date().getTime() - new Date(allTests[allTests.length - 1].test.date).getTime()) / (1000 * 60 * 60 * 24))}d`
+                    : '—'}
                 </div>
                 <div className="text-xs text-purple-600 font-medium">Since First</div>
               </div>
@@ -196,7 +201,10 @@ export function LabTestsTimeline({
             <div className="flex flex-wrap items-center gap-3 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Test Type:</span>
-                <Select value={testTypeFilter} onValueChange={(v) => setTestTypeFilter(v as TestType)}>
+                <Select
+                  value={testTypeFilter}
+                  onValueChange={(v) => setTestTypeFilter(v as TestType)}
+                >
                   <SelectTrigger className="w-[140px] h-9">
                     <SelectValue />
                   </SelectTrigger>

@@ -88,7 +88,9 @@ export function TestDetailsCard({
   }
 
   // Helper to calculate change from previous test
-  const getChange = (param: string): { value: number; direction: 'up' | 'down' | 'same' } | null => {
+  const getChange = (
+    param: string
+  ): { value: number; direction: 'up' | 'down' | 'same' } | null => {
     if (!previousTest || !previousTest.parameters[param] || !test.parameters[param]) return null
 
     const current = Number(test.parameters[param])
@@ -276,7 +278,8 @@ export function TestDetailsCard({
                 )}
               </div>
               {/* Fertilizer Plan Button - only show if there are actionable recommendations */}
-              {recommendations.filter((r) => r.priority === 'critical' || r.priority === 'high').length > 0 && (
+              {recommendations.filter((r) => r.priority === 'critical' || r.priority === 'high')
+                .length > 0 && (
                 <Button
                   variant="default"
                   size="sm"
@@ -314,84 +317,90 @@ export function TestDetailsCard({
             </TabsList>
 
             <TabsContent value="results" className="space-y-6 mt-4">
-            {/* All Parameters */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">📊 All Parameters</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {Object.entries(test.parameters)
-                    .filter(([_, value]) => value !== null && value !== undefined && value !== '')
-                    .map(([key, value]) => {
-                      const change = getChange(key)
-                      return (
-                        <div
-                          key={key}
-                          className="border rounded-lg p-3 bg-muted/30 hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="text-xs text-muted-foreground font-medium capitalize">
-                            {key.replace(/_/g, ' ')}
-                          </div>
-                          <div className="text-base font-semibold text-foreground mt-1">
-                            {formatValue(value)}
-                          </div>
-                          {change && change.direction !== 'same' && (
-                            <div
-                              className={`text-xs mt-1 ${change.direction === 'up' ? 'text-blue-600' : 'text-orange-600'}`}
-                            >
-                              {change.direction === 'up' ? '↑' : '↓'}{' '}
-                              {Math.abs(change.value).toFixed(2)} from last test
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recommendations */}
-            <TestRecommendations recommendations={recommendations} testType={testType} />
-
-            {/* Notes */}
-            {test.notes && (
+              {/* All Parameters */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">📝 Notes</CardTitle>
+                  <CardTitle className="text-base">📊 All Parameters</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{test.notes}</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Report Info */}
-            {test.report_filename && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">📄 Lab Report</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-medium">{test.report_filename}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {test.extraction_status === 'success'
-                          ? '✅ Auto-extracted successfully'
-                          : '⚠️ Manual entry'}
-                      </div>
-                    </div>
-                    {test.report_url && (
-                      <Button variant="outline" size="sm" onClick={() => setShowReportViewer(true)}>
-                        <FileText className="h-4 w-4 mr-2" />
-                        View Report
-                      </Button>
-                    )}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {Object.entries(test.parameters)
+                      .filter(([_, value]) => value !== null && value !== undefined && value !== '')
+                      .map(([key, value]) => {
+                        const change = getChange(key)
+                        return (
+                          <div
+                            key={key}
+                            className="border rounded-lg p-3 bg-muted/30 hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="text-xs text-muted-foreground font-medium capitalize">
+                              {key.replace(/_/g, ' ')}
+                            </div>
+                            <div className="text-base font-semibold text-foreground mt-1">
+                              {formatValue(value)}
+                            </div>
+                            {change && change.direction !== 'same' && (
+                              <div
+                                className={`text-xs mt-1 ${change.direction === 'up' ? 'text-blue-600' : 'text-orange-600'}`}
+                              >
+                                {change.direction === 'up' ? '↑' : '↓'}{' '}
+                                {Math.abs(change.value).toFixed(2)} from last test
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
                   </div>
                 </CardContent>
               </Card>
-            )}
+
+              {/* Recommendations */}
+              <TestRecommendations recommendations={recommendations} testType={testType} />
+
+              {/* Notes */}
+              {test.notes && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">📝 Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {test.notes}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Report Info */}
+              {test.report_filename && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">📄 Lab Report</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-medium">{test.report_filename}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {test.extraction_status === 'success'
+                            ? '✅ Auto-extracted successfully'
+                            : '⚠️ Manual entry'}
+                        </div>
+                      </div>
+                      {test.report_url && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowReportViewer(true)}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          View Report
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* Disease Risks Tab */}

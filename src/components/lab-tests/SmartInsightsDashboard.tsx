@@ -106,8 +106,8 @@ export function SmartInsightsDashboard({ farmId }: SmartInsightsDashboardProps) 
           <Alert className="bg-blue-50 border-blue-300">
             <AlertDescription className="text-sm text-blue-900">
               <strong>Start tracking your progress!</strong> Once you track recommendations and ROI
-              for your lab tests, you'll see personalized insights here about your farm's soil health
-              trends, savings, and more.
+              for your lab tests, you'll see personalized insights here about your farm's soil
+              health trends, savings, and more.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -173,9 +173,7 @@ export function SmartInsightsDashboard({ farmId }: SmartInsightsDashboardProps) 
                 <div className="text-xs font-medium text-yellow-600">Satisfaction</div>
               </div>
               <div className="text-lg font-bold text-yellow-700">
-                {insights.avg_satisfaction > 0
-                  ? `${insights.avg_satisfaction.toFixed(1)}/5`
-                  : '—'}
+                {insights.avg_satisfaction > 0 ? `${insights.avg_satisfaction.toFixed(1)}/5` : '—'}
               </div>
             </CardContent>
           </Card>

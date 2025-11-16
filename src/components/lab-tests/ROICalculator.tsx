@@ -147,7 +147,11 @@ export function ROICalculator({
   }
 
   // Calculate estimated ROI for comparison
-  const estimated = AIIntelligenceService.calculateEstimatedROI(roiData.test_cost, recommendations, 1)
+  const estimated = AIIntelligenceService.calculateEstimatedROI(
+    roiData.test_cost,
+    recommendations,
+    1
+  )
 
   const hasActualData =
     roiData.fertilizer_savings > 0 ||
@@ -253,9 +257,7 @@ export function ROICalculator({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="border rounded-lg p-3 bg-muted/30">
-                <div className="text-xs text-muted-foreground font-medium">
-                  Fertilizer Savings
-                </div>
+                <div className="text-xs text-muted-foreground font-medium">Fertilizer Savings</div>
                 <div className="text-lg font-semibold text-foreground mt-1">
                   {formatCurrency(roiData.fertilizer_savings)}
                 </div>

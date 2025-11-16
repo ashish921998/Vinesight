@@ -154,8 +154,7 @@ export function generateFertilizerPlan(
       } else if (technical.includes('gypsum')) {
         immediateApplications.push({
           product: 'Gypsum (CaSO₄)',
-          dosage:
-            technical.match(/(\d+[-–]\d+)\s*(kg|tons?)\/acre/)?.[0] || '500-1000 kg/acre',
+          dosage: technical.match(/(\d+[-–]\d+)\s*(kg|tons?)\/acre/)?.[0] || '500-1000 kg/acre',
           method: 'soil',
           purpose: 'Lower soil pH to optimal range',
           recommendationSource: rec.parameter
@@ -194,7 +193,10 @@ export function generateFertilizerPlan(
     }
 
     // Phosphorus
-    if (rec.parameter === 'Phosphorus' && (technical.includes('dap') || technical.includes('ssp'))) {
+    if (
+      rec.parameter === 'Phosphorus' &&
+      (technical.includes('dap') || technical.includes('ssp'))
+    ) {
       immediateApplications.push({
         product: 'DAP (18-46-0) or SSP',
         dosage: technical.match(/(\d+[-–]\d+)\s*kg\/acre/)?.[0] || '50-60 kg/acre',

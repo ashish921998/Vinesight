@@ -82,7 +82,10 @@ export function FertilizerPlanGenerator({
           title: `${app.method === 'soil' ? 'Apply' : app.method === 'foliar' ? 'Spray' : 'Add to fertigation'}: ${app.product}`,
           description: `${app.purpose}\n\nDosage: ${app.dosage}\nMethod: ${app.method}\n\nGrowth Stage: ${item.growthStage}\n\nBased on ${testType} test from ${format(new Date(test.date), 'MMM dd, yyyy')}\n\n${item.notes}`,
           due_date: format(item.date, 'yyyy-MM-dd'),
-          priority: app.recommendationSource.includes('pH') || app.recommendationSource.includes('EC') ? ('high' as const) : ('medium' as const),
+          priority:
+            app.recommendationSource.includes('pH') || app.recommendationSource.includes('EC')
+              ? ('high' as const)
+              : ('medium' as const),
           category: 'fertilization' as const,
           status: 'pending' as const
         }))
@@ -113,21 +116,29 @@ Generated on ${format(new Date(), 'MMMM dd, yyyy')}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-${plan.map((item, idx) => `
+${plan
+  .map(
+    (item, idx) => `
 ${idx + 1}. ${item.month.toUpperCase()} - ${item.growthStage}
 
-${item.applications.map((app, appIdx) => `
+${item.applications
+  .map(
+    (app, appIdx) => `
    ${idx + 1}.${appIdx + 1} ${app.product}
         • Dosage: ${app.dosage}
         • Method: ${app.method}
         • Purpose: ${app.purpose}
         • Source: ${app.recommendationSource}
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
    Notes: ${item.notes}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
 This plan is based on your lab test results and should be adjusted based on:
 - Current weather conditions
@@ -199,11 +210,18 @@ Always follow label instructions and safety guidelines when applying fertilizers
                   <div className="text-sm text-muted-foreground">
                     {testType === 'soil' ? 'Soil' : 'Petiole'} Test
                   </div>
-                  <div className="font-semibold">{format(new Date(test.date), 'MMMM dd, yyyy')}</div>
+                  <div className="font-semibold">
+                    {format(new Date(test.date), 'MMMM dd, yyyy')}
+                  </div>
                 </div>
                 <div>
                   <Badge variant="secondary">
-                    {recommendations.filter((r) => r.priority === 'critical' || r.priority === 'high').length} priority actions
+                    {
+                      recommendations.filter(
+                        (r) => r.priority === 'critical' || r.priority === 'high'
+                      ).length
+                    }{' '}
+                    priority actions
                   </Badge>
                 </div>
               </div>
@@ -218,7 +236,8 @@ Always follow label instructions and safety guidelines when applying fertilizers
               </div>
               <h3 className="text-lg font-semibold mb-2">Generate Your Fertilizer Plan</h3>
               <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-                Based on your test results, we'll create a customized fertilizer application schedule with specific products, dosages, and timing.
+                Based on your test results, we'll create a customized fertilizer application
+                schedule with specific products, dosages, and timing.
               </p>
               <Button onClick={handleGeneratePlan} disabled={generatingPlan} size="lg">
                 {generatingPlan ? (
@@ -255,7 +274,11 @@ Always follow label instructions and safety guidelines when applying fertilizers
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-purple-600">
-                      {Math.ceil((new Date(plan[plan.length - 1].date).getTime() - new Date(plan[0].date).getTime()) / (1000 * 60 * 60 * 24 * 30))}
+                      {Math.ceil(
+                        (new Date(plan[plan.length - 1].date).getTime() -
+                          new Date(plan[0].date).getTime()) /
+                          (1000 * 60 * 60 * 24 * 30)
+                      )}
                     </div>
                     <div className="text-xs text-muted-foreground">Months</div>
                   </CardContent>
@@ -332,10 +355,10 @@ Always follow label instructions and safety guidelines when applying fertilizers
                   <div className="flex items-start gap-3">
                     <div className="text-xl">⚠️</div>
                     <div className="flex-1 text-xs text-yellow-900 leading-relaxed">
-                      <strong>Important:</strong> This plan is generated based on your lab test results
-                      and general recommendations. Always adjust applications based on current weather
-                      conditions, actual vine growth, local expert advice, and product availability.
-                      Follow all label instructions and safety guidelines.
+                      <strong>Important:</strong> This plan is generated based on your lab test
+                      results and general recommendations. Always adjust applications based on
+                      current weather conditions, actual vine growth, local expert advice, and
+                      product availability. Follow all label instructions and safety guidelines.
                     </div>
                   </div>
                 </CardContent>
@@ -347,7 +370,11 @@ Always follow label instructions and safety guidelines when applying fertilizers
         <DialogFooter className="flex-col sm:flex-row gap-2">
           {plan.length > 0 && (
             <>
-              <Button variant="outline" onClick={exportPlanAsText} className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={exportPlanAsText}
+                className="flex items-center gap-2"
+              >
                 <Download className="h-4 w-4" />
                 Export as Text
               </Button>
