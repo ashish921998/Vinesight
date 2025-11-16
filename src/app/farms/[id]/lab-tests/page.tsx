@@ -179,7 +179,7 @@ function LabTestsPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="timeline" className="space-y-2 sm:space-y-4">
-        <TabsList className="grid w-full max-w-md grid-cols-2 h-10 sm:h-11 rounded-2xl">
+        <TabsList className="grid w-full max-w-md grid-cols-2 h-12 rounded-2xl">
           <TabsTrigger value="timeline" className="text-xs sm:text-sm rounded-2xl">
             <span className="hidden sm:inline">Timeline View</span>
             <span className="sm:hidden">Timeline</span>
