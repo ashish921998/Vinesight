@@ -316,6 +316,13 @@ export function LabTestModal({
         setParseConfidence(result.extraction.confidence || null)
         setParseStatus('success')
 
+        // Auto-fill test date if available from extraction
+        if (result.extraction.testDate) {
+          setDate(result.extraction.testDate)
+        } else if (result.extraction.analysisDate) {
+          setDate(result.extraction.analysisDate)
+        }
+
         // Auto-fill notes if available
         if (result.extraction.summary) {
           setNotes(result.extraction.summary)
