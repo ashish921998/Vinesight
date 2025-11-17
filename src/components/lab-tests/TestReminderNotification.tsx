@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -32,10 +32,10 @@ export function TestReminderNotification({
   const [creatingTask, setCreatingTask] = useState(false)
 
   useEffect(() => {
-    loadReminders()
+    setDismissed(false)
   }, [farmId])
 
-  const loadReminders = async () => {
+  const loadReminders = useCallback(async () => {
     setLoading(true)
     try {
       const reminderData = await checkTestReminders(farmId)
@@ -45,7 +45,11 @@ export function TestReminderNotification({
     } finally {
       setLoading(false)
     }
-  }
+  }, [farmId])
+
+  useEffect(() => {
+    loadReminders()
+  }, [loadReminders])
 
   const handleAddTest = () => {
     router.push(`/farms/${farmId}/lab-tests`)
@@ -66,7 +70,7 @@ export function TestReminderNotification({
         description,
         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
         priority: 'medium',
-        type: 'test',
+        type: testType === 'soil' ? 'soil_test' : 'petiole_test',
         status: 'pending'
       })
 
@@ -111,7 +115,7 @@ export function TestReminderNotification({
                     {reminders.soilTestAge
                       ? `${reminders.soilTestAge} days ago`
                       : 'over 4 months ago'}
-                    .{reminders.petioleTestNeeded && <br />}
+                    {'.'}{reminders.petioleTestNeeded && <br />}
                   </>
                 )}
                 {reminders.petioleTestNeeded && (
