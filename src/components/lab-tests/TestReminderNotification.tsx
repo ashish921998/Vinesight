@@ -115,7 +115,8 @@ export function TestReminderNotification({
                     {reminders.soilTestAge
                       ? `${reminders.soilTestAge} days ago`
                       : 'over 4 months ago'}
-                    {'.'}{reminders.petioleTestNeeded && <br />}
+                    {'.'}
+                    {reminders.petioleTestNeeded && <br />}
                   </>
                 )}
                 {reminders.petioleTestNeeded && (

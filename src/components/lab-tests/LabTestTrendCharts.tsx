@@ -61,9 +61,9 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
             <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="font-semibold text-foreground mb-2">Interactive Charts Coming Soon</h3>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              We're building interactive trend charts to visualize how your soil and plant health
-              parameters change over time. This will include pH, EC, NPK levels, and more with
-              color-coded optimal ranges.
+              We&apos;re building interactive trend charts to visualize how your soil and plant
+              health parameters change over time. This will include pH, EC, NPK levels, and more
+              with color-coded optimal ranges.
             </p>
             <div className="mt-4 text-xs text-muted-foreground">
               <strong>Available data:</strong> {hasSoilTrends && `${soilTests.length} soil tests`}

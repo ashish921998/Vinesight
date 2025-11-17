@@ -236,7 +236,7 @@ Always follow label instructions and safety guidelines when applying fertilizers
               </div>
               <h3 className="text-lg font-semibold mb-2">Generate Your Fertilizer Plan</h3>
               <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-                Based on your test results, we'll create a customized fertilizer application
+                Based on your test results, we&apos;ll create a customized fertilizer application
                 schedule with specific products, dosages, and timing.
               </p>
               <Button onClick={handleGeneratePlan} disabled={generatingPlan} size="lg">

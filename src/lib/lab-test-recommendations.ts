@@ -27,7 +27,7 @@ const PRIORITY_ORDER: Record<RecommendationPriority, number> = {
   optimal: 4
 }
 
-interface SoilTestParameters {
+export interface SoilTestParameters {
   ph?: number
   ec?: number // Electrical Conductivity (dS/m)
   organicCarbon?: number // %
@@ -45,7 +45,7 @@ interface SoilTestParameters {
   boron?: number // ppm
 }
 
-interface PetioleTestParameters {
+export interface PetioleTestParameters {
   total_nitrogen?: number // %
   nitrate_nitrogen?: number // ppm
   phosphorus?: number // %
