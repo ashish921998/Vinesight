@@ -100,6 +100,33 @@ const PETIOLE_VALIDATION_RANGES = {
 } as const
 
 /**
+ * User-friendly parameter names for error messages
+ */
+const PARAMETER_DISPLAY_NAMES: Record<string, string> = {
+  // Soil parameters
+  ph: 'pH',
+  ec: 'EC (Electrical Conductivity)',
+  organicCarbon: 'Organic Carbon',
+  organicMatter: 'Organic Matter',
+  nitrogen: 'Nitrogen',
+  phosphorus: 'Phosphorus',
+  potassium: 'Potassium',
+  calcium: 'Calcium',
+  magnesium: 'Magnesium',
+  sulfur: 'Sulfur',
+  iron: 'Iron',
+  manganese: 'Manganese',
+  zinc: 'Zinc',
+  copper: 'Copper',
+  boron: 'Boron',
+  // Petiole parameters
+  total_nitrogen: 'Total Nitrogen',
+  nitrate_nitrogen: 'Nitrate Nitrogen',
+  sulphur: 'Sulphur',
+  ferrous: 'Iron (Ferrous)'
+}
+
+/**
  * Validate a numeric parameter against expected range
  */
 function validateParameter(
@@ -111,17 +138,19 @@ function validateParameter(
     return { isValid: true } // Optional parameters are valid if undefined
   }
 
+  const displayName = PARAMETER_DISPLAY_NAMES[paramName] || paramName
+
   if (typeof value !== 'number' || isNaN(value)) {
     return {
       isValid: false,
-      message: `${paramName} must be a valid number (got: ${value})`
+      message: `${displayName} must be a valid number (got: ${value})`
     }
   }
 
   if (value < range.min || value > range.max) {
     return {
       isValid: false,
-      message: `${paramName} (${value} ${range.unit}) is out of valid range (${range.min}-${range.max} ${range.unit})`
+      message: `${displayName} (${value} ${range.unit}) is out of valid range (${range.min}-${range.max} ${range.unit})`
     }
   }
 
@@ -304,7 +333,7 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
           parameter: 'Phosphorus',
           technical: `Low phosphorus (${parameters.phosphorus} ppm) with high pH reduces P availability. First correct pH with gypsum, then apply DAP at 50-60 kg/acre.`,
           simple: `फॉस्फरस कमी आणि pH जास्त. प्रथम pH दुरुस्त करा नंतर डीएपी द्या. / Phosphorus low and pH high. Fix pH first, then add DAP.`,
-          icon: '🔴'
+          icon: '🟡'
         })
       } else {
         recommendations.push({
@@ -434,6 +463,10 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
       icon: '⚠️'
     })
   }
+
+  // Note: Some validated parameters (calcium, magnesium, sulfur, manganese, copper, organicCarbon)
+  // are validation-only for now and don't generate specific recommendations in this version.
+  // They are validated to catch data entry errors but recommendations may be added in future versions.
 
   // Sort recommendations by priority
   return recommendations.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
@@ -676,34 +709,46 @@ export function generatePetioleTestRecommendations(
     })
   }
 
+  // Note: Some validated parameters (nitrate_nitrogen, sulphur, manganese, copper)
+  // are validation-only for now and don't generate specific recommendations in this version.
+  // They are validated to catch data entry errors but recommendations may be added in future versions.
+
   // Sort by priority
   return recommendations.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
+}
+
+/**
+ * Priority color mappings for UI display
+ */
+const PRIORITY_COLORS: Record<RecommendationPriority, string> = {
+  critical: 'text-red-600 bg-red-50 border-red-200',
+  high: 'text-orange-600 bg-orange-50 border-orange-200',
+  moderate: 'text-yellow-600 bg-yellow-50 border-yellow-200',
+  low: 'text-blue-600 bg-blue-50 border-blue-200',
+  optimal: 'text-green-600 bg-green-50 border-green-200'
+}
+
+/**
+ * Priority label mappings for display
+ */
+const PRIORITY_LABELS: Record<RecommendationPriority, string> = {
+  critical: 'Urgent Action Required',
+  high: 'High Priority',
+  moderate: 'Monitor',
+  low: 'Suggestion',
+  optimal: 'Optimal'
 }
 
 /**
  * Get priority color for UI display
  */
 export function getPriorityColor(priority: RecommendationPriority): string {
-  const colors: Record<RecommendationPriority, string> = {
-    critical: 'text-red-600 bg-red-50 border-red-200',
-    high: 'text-orange-600 bg-orange-50 border-orange-200',
-    moderate: 'text-yellow-600 bg-yellow-50 border-yellow-200',
-    low: 'text-blue-600 bg-blue-50 border-blue-200',
-    optimal: 'text-green-600 bg-green-50 border-green-200'
-  }
-  return colors[priority]
+  return PRIORITY_COLORS[priority]
 }
 
 /**
  * Get priority label for display
  */
 export function getPriorityLabel(priority: RecommendationPriority): string {
-  const labels: Record<RecommendationPriority, string> = {
-    critical: 'Urgent Action Required',
-    high: 'High Priority',
-    moderate: 'Monitor',
-    low: 'Suggestion',
-    optimal: 'Optimal'
-  }
-  return labels[priority]
+  return PRIORITY_LABELS[priority]
 }
