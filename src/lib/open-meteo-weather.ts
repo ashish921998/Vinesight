@@ -124,13 +124,6 @@ export class OpenMeteoWeatherService {
       const timezoneAbbreviation = response.timezoneAbbreviation()
       const utcOffsetSeconds = response.utcOffsetSeconds()
 
-      console.log(
-        `\nCoordinates: ${responseLatitude}°N ${responseLongitude}°E`,
-        `\nElevation: ${elevation}m asl`,
-        `\nTimezone: ${timezone} ${timezoneAbbreviation}`,
-        `\nTimezone difference to GMT+0: ${utcOffsetSeconds}s`
-      )
-
       const hourly = response.hourly()!
       const daily = response.daily()!
 
@@ -172,9 +165,6 @@ export class OpenMeteoWeatherService {
         evapotranspiration: hourly.variables(7)!.valuesArray(),
         et0_fao_evapotranspiration: hourly.variables(8)!.valuesArray()
       }
-
-      console.log('\nDaily data:\n', dailyData)
-      console.log('\nHourly data:\n', hourlyData)
 
       // Convert to our format
       const result: OpenMeteoWeatherData[] = []

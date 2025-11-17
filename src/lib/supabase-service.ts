@@ -1149,13 +1149,6 @@ export class SupabaseService {
     const supabase = getTypedSupabaseClient()
     const dbUpdates = toDatabaseTaskReminderUpdate(updates)
 
-    // Debug logging
-    if (process.env.NODE_ENV === 'development') {
-      console.log('updateTask - ID:', id)
-      console.log('updateTask - App Updates:', updates)
-      console.log('updateTask - DB Updates:', dbUpdates)
-    }
-
     const { data, error } = await supabase
       .from('task_reminders')
       .update(dbUpdates as any)

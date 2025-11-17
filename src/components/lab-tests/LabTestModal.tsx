@@ -228,9 +228,6 @@ export function LabTestModal({
 
       const result = await response.json()
 
-      // Log the full result for debugging
-      console.log('Parse API result:', result)
-
       // Store report path for saving later
       if (result.report?.storagePath) {
         setReportPath(result.report.storagePath)
@@ -296,8 +293,6 @@ export function LabTestModal({
             extractedParams[normalizedKey] = String(value)
           }
         })
-
-        console.log('Extracted parameters after mapping:', extractedParams)
 
         // Track which fields were auto-filled
         setAutoFilledFields(new Set(Object.keys(extractedParams)))

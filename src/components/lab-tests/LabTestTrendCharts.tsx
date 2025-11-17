@@ -50,7 +50,9 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">📈 Parameter Trends</CardTitle>
+            <CardTitle className="text-lg" aria-label="Parameter Trends">
+              📈 Parameter Trends
+            </CardTitle>
             <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700">
               Charts Coming Soon
             </Badge>
@@ -79,7 +81,9 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
         {hasSoilTrends && (
           <Card className="bg-gradient-to-br from-green-50 to-blue-50">
             <CardHeader>
-              <CardTitle className="text-sm">🌱 Soil Trends</CardTitle>
+              <CardTitle className="text-sm" aria-label="Soil Trends">
+                🌱 Soil Trends
+              </CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground">
               • pH levels over time
@@ -96,7 +100,9 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
         {hasPetioleTrends && (
           <Card className="bg-gradient-to-br from-emerald-50 to-teal-50">
             <CardHeader>
-              <CardTitle className="text-sm">🍃 Petiole Trends</CardTitle>
+              <CardTitle className="text-sm" aria-label="Petiole Trends">
+                🍃 Petiole Trends
+              </CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground">
               • Nitrogen uptake trends

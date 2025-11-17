@@ -101,29 +101,33 @@ const PETIOLE_VALIDATION_RANGES = {
 
 /**
  * User-friendly parameter names for error messages
+ * Note: Some parameter names are shared between soil and petiole tests
+ * (e.g., phosphorus, potassium, calcium, magnesium, zinc, copper, boron, manganese)
+ * These will be used in their respective validation contexts
  */
 const PARAMETER_DISPLAY_NAMES: Record<string, string> = {
-  // Soil parameters
+  // Soil-only parameters
   ph: 'pH',
   ec: 'EC (Electrical Conductivity)',
   organicCarbon: 'Organic Carbon',
   organicMatter: 'Organic Matter',
   nitrogen: 'Nitrogen',
+  sulfur: 'Sulfur',
+  iron: 'Iron',
+  // Petiole-only parameters
+  total_nitrogen: 'Total Nitrogen',
+  nitrate_nitrogen: 'Nitrate Nitrogen',
+  sulphur: 'Sulphur',
+  ferrous: 'Iron (Ferrous)',
+  // Shared parameters (used in both soil and petiole)
   phosphorus: 'Phosphorus',
   potassium: 'Potassium',
   calcium: 'Calcium',
   magnesium: 'Magnesium',
-  sulfur: 'Sulfur',
-  iron: 'Iron',
-  manganese: 'Manganese',
   zinc: 'Zinc',
   copper: 'Copper',
   boron: 'Boron',
-  // Petiole parameters
-  total_nitrogen: 'Total Nitrogen',
-  nitrate_nitrogen: 'Nitrate Nitrogen',
-  sulphur: 'Sulphur',
-  ferrous: 'Iron (Ferrous)'
+  manganese: 'Manganese'
 }
 
 /**
@@ -158,16 +162,17 @@ function validateParameter(
 }
 
 /**
- * Generate recommendations for soil test results
+ * Validate all test parameters against their ranges
+ * Returns an array of validation error messages
  */
-export function generateSoilTestRecommendations(parameters: SoilTestParameters): Recommendation[] {
-  const recommendations: Recommendation[] = []
-
-  // Validate all input parameters
+function validateTestParameters(
+  parameters: SoilTestParameters | PetioleTestParameters,
+  validationRanges: Record<string, { min: number; max: number; unit: string }>
+): string[] {
   const invalidParameters: string[] = []
 
   Object.entries(parameters).forEach(([key, value]) => {
-    const range = SOIL_VALIDATION_RANGES[key as keyof typeof SOIL_VALIDATION_RANGES]
+    const range = validationRanges[key]
     if (range) {
       const validation = validateParameter(value, key, range)
       if (!validation.isValid && validation.message) {
@@ -175,6 +180,18 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
       }
     }
   })
+
+  return invalidParameters
+}
+
+/**
+ * Generate recommendations for soil test results
+ */
+export function generateSoilTestRecommendations(parameters: SoilTestParameters): Recommendation[] {
+  const recommendations: Recommendation[] = []
+
+  // Validate all input parameters
+  const invalidParameters = validateTestParameters(parameters, SOIL_VALIDATION_RANGES)
 
   // If any parameters are invalid, return critical validation error
   if (invalidParameters.length > 0) {
@@ -481,17 +498,7 @@ export function generatePetioleTestRecommendations(
   const recommendations: Recommendation[] = []
 
   // Validate all input parameters
-  const invalidParameters: string[] = []
-
-  Object.entries(parameters).forEach(([key, value]) => {
-    const range = PETIOLE_VALIDATION_RANGES[key as keyof typeof PETIOLE_VALIDATION_RANGES]
-    if (range) {
-      const validation = validateParameter(value, key, range)
-      if (!validation.isValid && validation.message) {
-        invalidParameters.push(validation.message)
-      }
-    }
-  })
+  const invalidParameters = validateTestParameters(parameters, PETIOLE_VALIDATION_RANGES)
 
   // If any parameters are invalid, return critical validation error
   if (invalidParameters.length > 0) {

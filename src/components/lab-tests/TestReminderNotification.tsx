@@ -139,6 +139,7 @@ export function TestReminderNotification({
                   variant="outline"
                   onClick={() => setDismissed(true)}
                   className="h-7 text-xs"
+                  aria-label="Dismiss reminder"
                 >
                   <X className="h-3 w-3" />
                 </Button>
