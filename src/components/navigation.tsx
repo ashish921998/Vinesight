@@ -12,7 +12,8 @@ import {
   CloudSun,
   BarChart3,
   TrendingUp,
-  Brain
+  Brain,
+  Package
 } from 'lucide-react'
 import { LoginButton } from './auth/LoginButton'
 import { UserMenu } from './auth/UserMenu'
@@ -24,13 +25,14 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 export const getNavigation = (t: any) => [
   { name: t('navigation.dashboard'), href: '/dashboard', icon: Home },
   { name: t('navigation.farmManagement'), href: '/farms', icon: Sprout },
+  { name: t('navigation.warehouse'), href: '/warehouse', icon: Package },
   { name: t('navigation.calculators'), href: '/calculators', icon: Calculator },
   { name: t('navigation.aiAssistant'), href: '/ai-assistant', icon: Brain },
   { name: t('navigation.analytics'), href: '/analytics', icon: Activity },
   { name: t('navigation.weather'), href: '/weather', icon: CloudSun },
   { name: t('navigation.reminders'), href: '/reminders', icon: Users },
   { name: t('navigation.reports'), href: '/reports', icon: BarChart3 },
-  { name: 'Farm Efficiency', href: '/performance', icon: TrendingUp },
+  { name: t('navigation.farmEfficiency'), href: '/performance', icon: TrendingUp },
   { name: t('navigation.settings'), href: '/settings', icon: Settings }
 ]
 

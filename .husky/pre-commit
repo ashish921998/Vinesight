@@ -1,15 +1,25 @@
-# Get list of staged files
-staged_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|jsx|ts|tsx|json|css|scss|md)$')
+#!/usr/bin/env sh
+# Get list of staged files using null-delimited format for safety
+# This prevents command injection via malicious filenames
 
-if [ -n "$staged_files" ]; then
+# Create a temporary file to store the list of files
+TEMP_FILE=$(mktemp)
+trap 'rm -f "$TEMP_FILE"' EXIT
+
+# Get staged files and store them
+git diff --cached --name-only -z --diff-filter=ACM | \
+  grep -zE '\.(js|jsx|ts|tsx|json|css|scss|md)$' > "$TEMP_FILE"
+
+# Check if we have any files to process
+if [ -s "$TEMP_FILE" ]; then
   echo "Running Prettier on staged files..."
-  if ! echo "$staged_files" | xargs npx prettier --write; then
+
+  # Process each file safely with proper quoting
+  # Read from temp file using xargs for proper handling
+  if xargs -0 -I {} sh -c 'npx prettier --write "$1" && git add "$1"' _ {} < "$TEMP_FILE"; then
+    echo "Prettier formatting applied to staged files."
+  else
     echo "Prettier formatting failed. Please fix errors and try again."
     exit 1
   fi
-
-  # Re-stage the formatted files
-  echo "$staged_files" | xargs git add
-
-  echo "Prettier formatting applied to staged files."
 fi

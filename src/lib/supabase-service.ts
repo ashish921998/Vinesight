@@ -35,6 +35,8 @@ import {
   toApplicationTaskReminder,
   toDatabaseTaskReminderInsert,
   toDatabaseTaskReminderUpdate,
+  TaskReminderCreateInput,
+  TaskReminderUpdateInput,
   toApplicationSoilTestRecord,
   toDatabaseSoilTestInsert,
   toDatabaseSoilTestUpdate,
@@ -346,13 +348,19 @@ export class SupabaseService {
   }
 
   // Spray operations
-  static async getSprayRecords(farmId: number): Promise<SprayRecord[]> {
+  static async getSprayRecords(farmId: number, limit?: number): Promise<SprayRecord[]> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
+    let query = supabase
       .from('spray_records')
       .select('*')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return (data || []).map(toApplicationSprayRecord)
@@ -628,13 +636,19 @@ export class SupabaseService {
   }
 
   // Fertigation operations
-  static async getFertigationRecords(farmId: number): Promise<FertigationRecord[]> {
+  static async getFertigationRecords(farmId: number, limit?: number): Promise<FertigationRecord[]> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
+    let query = supabase
       .from('fertigation_records')
       .select('*')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return (data || []).map(toApplicationFertigationRecord)
@@ -645,44 +659,54 @@ export class SupabaseService {
   ): Promise<FertigationRecord> {
     const supabase = getTypedSupabaseClient()
 
-    // Validate fertilizer name
-    if (!record.fertilizer || !record.fertilizer.trim()) {
-      throw new Error('Fertilizer name is required and cannot be empty')
+    // Validate fertilizers array
+    if (!record.fertilizers || record.fertilizers.length === 0) {
+      throw new Error('At least one fertilizer is required')
     }
 
-    const trimmedFertilizer = record.fertilizer.trim()
-    if (trimmedFertilizer.length > 100) {
-      throw new Error('Fertilizer name must be less than 100 characters')
-    }
+    // Ensure each fertilizer has the required fields
+    for (const fertilizer of record.fertilizers) {
+      // Validate fertilizer name
+      const trimmedName = fertilizer.name.trim()
+      if (!trimmedName) {
+        throw new Error('Fertilizer name is required and cannot be empty')
+      }
 
-    // Validate quantity is provided and is a valid number
-    if (record.quantity === undefined || record.quantity === null) {
-      throw new Error('Fertilizer quantity is required')
-    }
+      // Validate fertilizer name length
+      if (trimmedName.length > 100) {
+        throw new Error('Fertilizer name must be less than 100 characters')
+      }
 
-    // Check for NaN and Infinity
-    if (isNaN(record.quantity) || !isFinite(record.quantity)) {
-      throw new Error('Fertilizer quantity must be a valid number')
-    }
+      // Validate quantity is provided and is a valid number
+      if (fertilizer.quantity === undefined || fertilizer.quantity === null) {
+        throw new Error('Fertilizer quantity is required')
+      }
 
-    // Validate quantity is strictly greater than 0
-    if (record.quantity <= 0) {
-      throw new Error('Fertilizer quantity must be greater than 0')
-    }
+      // Check for NaN and Infinity
+      if (isNaN(fertilizer.quantity) || !isFinite(fertilizer.quantity)) {
+        throw new Error('Fertilizer quantity must be a valid number')
+      }
 
-    // Validate unit is provided
-    if (!record.unit) {
-      throw new Error('Fertilizer unit is required')
-    }
+      // Validate quantity is strictly greater than 0
+      if (fertilizer.quantity <= 0) {
+        throw new Error('Fertilizer quantity must be greater than 0')
+      }
 
-    const unit = record.unit.trim()
-    if (!unit) {
-      throw new Error('Fertilizer unit cannot be empty')
-    }
+      // Validate unit is provided
+      if (!fertilizer.unit) {
+        throw new Error('Fertilizer unit is required')
+      }
 
-    // Validate unit is one of the allowed values
-    if (!['kg/acre', 'liter/acre'].includes(unit)) {
-      throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre"')
+      // Trim unit once into local variable
+      const unit = fertilizer.unit.trim()
+
+      // Validate unit is one of the allowed values
+      if (!['kg/acre', 'liter/acre'].includes(unit)) {
+        throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre"')
+      }
+
+      // Assign/store sanitized trimmed value back to object with proper type assertion
+      fertilizer.unit = unit as 'kg/acre' | 'liter/acre'
     }
 
     // Validate area if provided
@@ -703,14 +727,7 @@ export class SupabaseService {
       }
     }
 
-    // Sanitize the record
-    const sanitizedRecord = {
-      ...record,
-      fertilizer: trimmedFertilizer,
-      unit: unit as 'kg/acre' | 'liter/acre'
-    }
-
-    const dbRecord = toDatabaseFertigationInsert(sanitizedRecord)
+    const dbRecord = toDatabaseFertigationInsert(record)
 
     const { data, error } = await supabase
       .from('fertigation_records')
@@ -733,49 +750,51 @@ export class SupabaseService {
   ): Promise<FertigationRecord> {
     const supabase = getTypedSupabaseClient()
 
-    // Validate fertilizer name if provided
-    if (updates.fertilizer !== undefined) {
-      if (!updates.fertilizer || !updates.fertilizer.trim()) {
-        throw new Error('Fertilizer name is required and cannot be empty')
-      }
+    // Validate fertilizers array if provided
+    if (updates.fertilizers && updates.fertilizers.length > 0) {
+      // Ensure each fertilizer has the required fields
+      for (const fertilizer of updates.fertilizers) {
+        // Validate fertilizer name
+        if (!fertilizer.name || !fertilizer.name.trim()) {
+          throw new Error('Fertilizer name is required and cannot be empty')
+        }
 
-      const trimmedFertilizer = updates.fertilizer.trim()
-      if (trimmedFertilizer.length > 100) {
-        throw new Error('Fertilizer name must be less than 100 characters')
-      }
-      updates.fertilizer = trimmedFertilizer
-    }
+        // Validate fertilizer name length
+        if (fertilizer.name.trim().length > 100) {
+          throw new Error('Fertilizer name must be less than 100 characters')
+        }
 
-    // Validate quantity if provided
-    if (updates.quantity !== undefined && updates.quantity !== null) {
-      // Check for NaN and Infinity
-      if (isNaN(updates.quantity) || !isFinite(updates.quantity)) {
-        throw new Error('Fertilizer quantity must be a valid number')
-      }
+        // Validate quantity is provided and is a valid number
+        if (fertilizer.quantity === undefined || fertilizer.quantity === null) {
+          throw new Error('Fertilizer quantity is required')
+        }
 
-      // Validate quantity is strictly greater than 0
-      if (updates.quantity <= 0) {
-        throw new Error('Fertilizer quantity must be greater than 0')
-      }
-    }
+        // Check for NaN and Infinity
+        if (isNaN(fertilizer.quantity) || !isFinite(fertilizer.quantity)) {
+          throw new Error('Fertilizer quantity must be a valid number')
+        }
 
-    // Validate unit if provided
-    if (updates.unit !== undefined) {
-      if (!updates.unit) {
-        throw new Error('Fertilizer unit cannot be empty')
-      }
+        // Validate quantity is strictly greater than 0
+        if (fertilizer.quantity <= 0) {
+          throw new Error('Fertilizer quantity must be greater than 0')
+        }
 
-      const unit = updates.unit.trim()
-      if (!unit) {
-        throw new Error('Fertilizer unit cannot be empty')
-      }
+        // Validate unit is provided
+        if (!fertilizer.unit) {
+          throw new Error('Fertilizer unit is required')
+        }
 
-      // Validate unit is one of the allowed values
-      if (!['kg/acre', 'liter/acre'].includes(unit)) {
-        throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre"')
-      }
+        // Trim unit once into local variable
+        const unit = fertilizer.unit.trim()
 
-      updates.unit = unit as 'kg/acre' | 'liter/acre'
+        // Validate unit is one of the allowed values
+        if (!['kg/acre', 'liter/acre'].includes(unit)) {
+          throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre"')
+        }
+
+        // Assign/store sanitized trimmed value back to object with proper type assertion
+        fertilizer.unit = unit as 'kg/acre' | 'liter/acre'
+      }
     }
 
     // Validate area if provided
@@ -822,13 +841,19 @@ export class SupabaseService {
   }
 
   // Harvest operations
-  static async getHarvestRecords(farmId: number): Promise<HarvestRecord[]> {
+  static async getHarvestRecords(farmId: number, limit?: number): Promise<HarvestRecord[]> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
+    let query = supabase
       .from('harvest_records')
       .select('*')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return (data || []).map(toApplicationHarvestRecord)
@@ -876,13 +901,19 @@ export class SupabaseService {
   }
 
   // Expense operations
-  static async getExpenseRecords(farmId: number): Promise<ExpenseRecord[]> {
+  static async getExpenseRecords(farmId: number, limit?: number): Promise<ExpenseRecord[]> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
+    let query = supabase
       .from('expense_records')
       .select('*')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return (data || []).map(toApplicationExpenseRecord)
@@ -1051,37 +1082,58 @@ export class SupabaseService {
     return toApplicationCalculationHistory(data)
   }
 
-  // Task and reminder operations
-  static async getTaskReminders(farmId: number): Promise<TaskReminder[]> {
+  // Task operations
+  static async getTaskReminders(
+    farmId: number,
+    options: { status?: TaskReminder['status'][] } = {}
+  ): Promise<TaskReminder[]> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
+    let query = supabase
       .from('task_reminders')
       .select('*')
       .eq('farm_id', farmId)
       .order('due_date', { ascending: true })
+      .order('priority', { ascending: false })
+      .order('created_at', { ascending: true })
+
+    if (options.status && options.status.length > 0) {
+      query = query.in('status', options.status as string[])
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return (data || []).map(toApplicationTaskReminder)
   }
 
   static async getPendingTasks(farmId: number): Promise<TaskReminder[]> {
+    return this.getTaskReminders(farmId, { status: ['pending', 'in_progress'] })
+  }
+
+  static async getTaskById(id: number): Promise<TaskReminder | null> {
     const supabase = getTypedSupabaseClient()
     const { data, error } = await supabase
       .from('task_reminders')
       .select('*')
-      .eq('farm_id', farmId)
-      .eq('completed', false)
-      .order('due_date', { ascending: true })
+      .eq('id', id)
+      .maybeSingle()
 
     if (error) throw error
-    return (data || []).map(toApplicationTaskReminder)
+    return data ? toApplicationTaskReminder(data) : null
   }
 
-  static async addTaskReminder(
-    task: Omit<TaskReminder, 'id' | 'createdAt'>
-  ): Promise<TaskReminder> {
+  static async addTaskReminder(task: TaskReminderCreateInput): Promise<TaskReminder> {
     const supabase = getTypedSupabaseClient()
-    const dbTask = toDatabaseTaskReminderInsert(task)
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+
+    const dbTask = toDatabaseTaskReminderInsert({
+      ...task,
+      status: task.status ?? 'pending',
+      priority: task.priority ?? 'medium',
+      createdBy: task.createdBy ?? user?.id ?? null
+    })
 
     const { data, error } = await supabase
       .from('task_reminders')
@@ -1093,12 +1145,9 @@ export class SupabaseService {
     return toApplicationTaskReminder(data)
   }
 
-  static async completeTask(id: number): Promise<TaskReminder> {
+  static async updateTask(id: number, updates: TaskReminderUpdateInput): Promise<TaskReminder> {
     const supabase = getTypedSupabaseClient()
-    const dbUpdates = toDatabaseTaskReminderUpdate({
-      completed: true,
-      completedAt: new Date().toISOString()
-    })
+    const dbUpdates = toDatabaseTaskReminderUpdate(updates)
 
     const { data, error } = await supabase
       .from('task_reminders')
@@ -1107,18 +1156,51 @@ export class SupabaseService {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('updateTask - Error:', error)
+      }
+      throw error
+    }
     return toApplicationTaskReminder(data)
   }
 
-  // Soil test operations
-  static async getSoilTestRecords(farmId: number): Promise<SoilTestRecord[]> {
+  static async completeTask(id: number): Promise<TaskReminder> {
+    return this.updateTask(id, {
+      status: 'completed',
+      completed: true,
+      completedAt: new Date().toISOString()
+    })
+  }
+
+  static async reopenTask(id: number): Promise<TaskReminder> {
+    return this.updateTask(id, {
+      status: 'pending',
+      completed: false,
+      completedAt: null
+    })
+  }
+
+  static async deleteTask(id: number): Promise<void> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
+    const { error } = await supabase.from('task_reminders').delete().eq('id', id)
+    if (error) throw error
+  }
+
+  // Soil test operations
+  static async getSoilTestRecords(farmId: number, limit?: number): Promise<SoilTestRecord[]> {
+    const supabase = getTypedSupabaseClient()
+    let query = supabase
       .from('soil_test_records')
       .select('*')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return (data || []).map(toApplicationSoilTestRecord)
@@ -1166,13 +1248,19 @@ export class SupabaseService {
   }
 
   // Petiole test operations
-  static async getPetioleTestRecords(farmId: number): Promise<PetioleTestRecord[]> {
+  static async getPetioleTestRecords(farmId: number, limit?: number): Promise<PetioleTestRecord[]> {
     const supabase = getTypedSupabaseClient()
-    const { data, error } = await supabase
+    let query = supabase
       .from('petiole_test_records')
       .select('*')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
+
+    if (limit) {
+      query = query.limit(limit)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
     return (data || []).map(toApplicationPetioleTestRecord)
@@ -1250,73 +1338,113 @@ export class SupabaseService {
 
   // Dashboard summary
   static async getDashboardSummary(farmId: number) {
+    // Fetch only 10 most recent records for each activity type (for display)
     const [
       farm,
       pendingTasks,
-      irrigationRecords,
-      sprayRecords,
-      fertigationRecords,
-      harvestRecords,
-      expenseRecords,
-      soilTestRecords,
-      petioleTestRecords,
-      dailyNotes
+      irrigationRecordsLimited,
+      sprayRecordsLimited,
+      fertigationRecordsLimited,
+      harvestRecordsLimited,
+      expenseRecordsLimited,
+      soilTestRecordsLimited,
+      petioleTestRecordsLimited,
+      dailyNotesLimited
     ] = await Promise.all([
       this.getFarmById(farmId),
       this.getPendingTasks(farmId),
-      this.getIrrigationRecords(farmId),
-      this.getSprayRecords(farmId),
-      this.getFertigationRecords(farmId),
-      this.getHarvestRecords(farmId),
-      this.getExpenseRecords(farmId),
-      this.getSoilTestRecords(farmId),
-      this.getPetioleTestRecords(farmId),
-      this.getDailyNotes(farmId)
+      this.getIrrigationRecords(farmId, 10),
+      this.getSprayRecords(farmId, 10),
+      this.getFertigationRecords(farmId, 10),
+      this.getHarvestRecords(farmId, 10),
+      this.getExpenseRecords(farmId, 10),
+      this.getSoilTestRecords(farmId, 10),
+      this.getPetioleTestRecords(farmId, 10),
+      this.getDailyNotes(farmId, 10)
     ])
 
-    const totalHarvest = harvestRecords.reduce((sum, record) => sum + record.quantity, 0)
+    // Fetch all harvest and irrigation records for totals calculation (in parallel)
+    const [allIrrigationRecords, allHarvestRecords] = await Promise.all([
+      this.getIrrigationRecords(farmId),
+      this.getHarvestRecords(farmId)
+    ])
+
+    const totalHarvest = allHarvestRecords.reduce((sum, record) => sum + record.quantity, 0)
 
     // Calculate total historical water usage (duration × system_discharge)
-    const totalWaterUsage = irrigationRecords.reduce((sum, record) => {
+    const totalWaterUsage = allIrrigationRecords.reduce((sum, record) => {
       const waterUsed = (record.duration || 0) * (record.system_discharge || 0)
       return sum + waterUsed
     }, 0)
 
-    // Combine all activities for recent activities display
+    // Get record counts efficiently using count queries
+    const supabase = getTypedSupabaseClient()
+    const [
+      sprayCount,
+      fertigationCount,
+      expenseCount,
+      soilTestCount,
+      petioleTestCount,
+      dailyNotesCount
+    ] = await Promise.all([
+      supabase
+        .from('spray_records')
+        .select('*', { count: 'exact', head: true })
+        .eq('farm_id', farmId),
+      supabase
+        .from('fertigation_records')
+        .select('*', { count: 'exact', head: true })
+        .eq('farm_id', farmId),
+      supabase
+        .from('expense_records')
+        .select('*', { count: 'exact', head: true })
+        .eq('farm_id', farmId),
+      supabase
+        .from('soil_test_records')
+        .select('*', { count: 'exact', head: true })
+        .eq('farm_id', farmId),
+      supabase
+        .from('petiole_test_records')
+        .select('*', { count: 'exact', head: true })
+        .eq('farm_id', farmId),
+      supabase.from('daily_notes').select('*', { count: 'exact', head: true }).eq('farm_id', farmId)
+    ])
+
+    // Combine all activities for recent activities display (already limited to 10 each at DB level)
     const allActivities = [
-      ...irrigationRecords.slice(0, 3).map((record) => ({ ...record, type: 'irrigation' })),
-      ...sprayRecords.slice(0, 3).map((record) => ({ ...record, type: 'spray' })),
-      ...fertigationRecords.slice(0, 3).map((record) => ({ ...record, type: 'fertigation' })),
-      ...harvestRecords.slice(0, 3).map((record) => ({ ...record, type: 'harvest' })),
-      ...expenseRecords.slice(0, 3).map((record) => ({ ...record, type: 'expense' })),
-      ...soilTestRecords.slice(0, 3).map((record) => ({ ...record, type: 'soil_test' })),
-      ...petioleTestRecords.slice(0, 3).map((record) => ({ ...record, type: 'petiole_test' })),
-      ...dailyNotes.slice(0, 3).map((record) => ({ ...record, type: 'daily_note' }))
+      ...irrigationRecordsLimited.map((record) => ({ ...record, type: 'irrigation' })),
+      ...sprayRecordsLimited.map((record) => ({ ...record, type: 'spray' })),
+      ...fertigationRecordsLimited.map((record) => ({ ...record, type: 'fertigation' })),
+      ...harvestRecordsLimited.map((record) => ({ ...record, type: 'harvest' })),
+      ...expenseRecordsLimited.map((record) => ({ ...record, type: 'expense' })),
+      ...soilTestRecordsLimited.map((record) => ({ ...record, type: 'soil_test' })),
+      ...petioleTestRecordsLimited.map((record) => ({ ...record, type: 'petiole_test' })),
+      ...dailyNotesLimited.map((record) => ({ ...record, type: 'daily_note' }))
     ]
       .sort(
         (a, b) =>
           new Date(b.date || b.created_at || '').getTime() -
           new Date(a.date || a.created_at || '').getTime()
       )
-      .slice(0, 10)
+      .slice(0, 50)
 
     return {
       farm,
       pendingTasksCount: pendingTasks.length,
-      recentIrrigations: irrigationRecords.slice(0, 5), // Keep for backward compatibility
+      recentIrrigations: irrigationRecordsLimited.slice(0, 5), // Keep for backward compatibility
       recentActivities: allActivities, // New comprehensive activities list
       totalHarvest,
-      totalWaterUsage, // Total historical water usage in liters
+      totalWaterUsage, // Total historical water usage in mm
       pendingTasks: pendingTasks.slice(0, 3), // Show top 3 pending tasks
       recordCounts: {
-        irrigation: irrigationRecords.length,
-        spray: sprayRecords.length,
-        fertigation: fertigationRecords.length,
-        harvest: harvestRecords.length,
-        expense: expenseRecords.length,
-        soilTest: soilTestRecords.length,
-        petioleTest: petioleTestRecords.length,
-        dailyNotes: dailyNotes.length
+        irrigation: allIrrigationRecords.length,
+        spray: sprayCount.count || 0,
+        fertigation: fertigationCount.count || 0,
+        harvest: allHarvestRecords.length,
+        expense: expenseCount.count || 0,
+        soilTest: soilTestCount.count || 0,
+        petioleTest: petioleTestCount.count || 0,
+        dailyNotes: dailyNotesCount.count || 0
       }
     }
   }
@@ -1391,6 +1519,17 @@ export class SupabaseService {
   }
 
   // Real-time subscriptions
+  /**
+   * Subscribe to real-time changes for a specific farm.
+   * @param farmId - The farm ID to subscribe to
+   * @param callback - Called when farm data changes
+   * @returns Subscription handle - call `.unsubscribe()` to clean up
+   * @example
+   * const subscription = SupabaseService.subscribeToFarmChanges(farmId, (payload) => {
+   *   console.log('Farm changed:', payload)
+   * })
+   * // Later: subscription.unsubscribe()
+   */
   static subscribeToFarmChanges(farmId: number, callback: (payload: any) => void) {
     const supabase = getTypedSupabaseClient()
     return supabase
@@ -1408,6 +1547,17 @@ export class SupabaseService {
       .subscribe()
   }
 
+  /**
+   * Subscribe to real-time changes for task reminders of a specific farm.
+   * @param farmId - The farm ID to subscribe to
+   * @param callback - Called when task reminders change
+   * @returns Subscription handle - call `.unsubscribe()` to clean up
+   * @example
+   * const subscription = SupabaseService.subscribeToTaskChanges(farmId, (payload) => {
+   *   console.log('Task changed:', payload)
+   * })
+   * // Later: subscription.unsubscribe()
+   */
   static subscribeToTaskChanges(farmId: number, callback: (payload: any) => void) {
     const supabase = getTypedSupabaseClient()
     return supabase

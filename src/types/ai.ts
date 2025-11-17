@@ -40,9 +40,10 @@ export interface AITaskRecommendation {
     | 'spray'
     | 'harvest'
     | 'fertigation'
-    | 'pruning'
     | 'soil_test'
-    | 'maintenance'
+    | 'petiole_test'
+    | 'expense'
+    | 'note'
   recommendedDate: Date
   priorityScore: number // 0-1
   weatherDependent: boolean

@@ -965,42 +965,30 @@ export type Database = {
           created_at: string | null
           date: string
           date_of_pruning: string | null
-          dose: string | null // Legacy field - kept for backward compatibility
           farm_id: number | null
-          fertilizer: string
+          fertilizers: Json | null
           id: number
           notes: string | null
-          purpose: string
-          quantity: number
-          unit: string
         }
         Insert: {
           area: number
           created_at?: string | null
           date: string
           date_of_pruning?: string | null
-          dose?: string | null // Legacy field - kept for backward compatibility
           farm_id?: number | null
-          fertilizer: string
+          fertilizers?: Json[] | null
           id?: number
           notes?: string | null
-          purpose: string
-          quantity: number
-          unit: string
         }
         Update: {
-          area?: number | null
+          area?: number
           created_at?: string | null
           date?: string
           date_of_pruning?: string | null
-          dose?: string | null // Legacy field - kept for backward compatibility
           farm_id?: number | null
-          fertilizer?: string
+          fertilizers?: Json[] | null
           id?: number
           notes?: string | null
-          purpose?: string | null
-          quantity?: number
-          unit?: string
         }
         Relationships: [
           {
@@ -1686,42 +1674,80 @@ export type Database = {
       }
       task_reminders: {
         Row: {
+          assigned_to_user_id: string | null
           completed: boolean | null
           completed_at: string | null
           created_at: string | null
+          created_by: string | null
           description: string | null
           due_date: string
+          estimated_duration_minutes: number | null
           farm_id: number | null
           id: number
+          linked_record_id: number | null
+          linked_record_type: string | null
+          location: string | null
           priority: string | null
+          status: string
           title: string
           type: string
+          updated_at: string | null
         }
         Insert: {
+          assigned_to_user_id?: string | null
           completed?: boolean | null
           completed_at?: string | null
           created_at?: string | null
+          created_by?: string | null
           description?: string | null
           due_date: string
+          estimated_duration_minutes?: number | null
           farm_id?: number | null
           id?: number
+          linked_record_id?: number | null
+          linked_record_type?: string | null
+          location?: string | null
           priority?: string | null
+          status?: string
           title: string
           type: string
+          updated_at?: string | null
         }
         Update: {
+          assigned_to_user_id?: string | null
           completed?: boolean | null
           completed_at?: string | null
           created_at?: string | null
+          created_by?: string | null
           description?: string | null
           due_date?: string
+          estimated_duration_minutes?: number | null
           farm_id?: number | null
           id?: number
+          linked_record_id?: number | null
+          linked_record_type?: string | null
+          location?: string | null
           priority?: string | null
+          status?: string
           title?: string
           type?: string
+          updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: 'task_reminders_assigned_to_user_id_fkey'
+            columns: ['assigned_to_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'task_reminders_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'task_reminders_farm_id_fkey'
             columns: ['farm_id']

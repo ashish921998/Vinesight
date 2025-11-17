@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { type Farm } from '@/types/types'
-import { capitalize } from '@/lib/utils'
+import { capitalize, formatRemainingWater, calculateDaysAfterPruning } from '@/lib/utils'
 import { WEATHER_THRESHOLDS } from '@/constants/weather'
 
 export type FarmWeatherSummary = {
@@ -68,24 +68,6 @@ export function FarmHeader({
   onEditFarm,
   onDeleteFarm
 }: FarmHeaderProps) {
-  const calculateDaysAfterPruning = (pruningDate?: Date) => {
-    if (!pruningDate) return null
-
-    const pruning = pruningDate
-    const today = new Date()
-
-    const pruningMidnight = new Date(pruning.getFullYear(), pruning.getMonth(), pruning.getDate())
-    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-
-    const diffTime = todayMidnight.getTime() - pruningMidnight.getTime()
-
-    const rawDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-
-    const diffDays = rawDays + 1
-
-    return diffDays > 0 ? diffDays : null
-  }
-
   const getWeatherConditionIcon = () => {
     if (!weatherSummary) return Sun
     switch (weatherSummary.condition) {
@@ -145,13 +127,12 @@ export function FarmHeader({
 
   const formatWaterUsage = (value: number | null | undefined) => {
     if (value === null || value === undefined || value === 0) return 'No irrigation logged yet'
-    if (value < 1000) return `${formatNumber(value)} L used`
-    if (value < 1000000) {
-      const kilolitres = value / 1000
-      return `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 }).format(kilolitres)} kL used`
-    }
-    const megalitres = value / 1000000
-    return `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 }).format(megalitres)} ML used`
+    const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
+    const formatter = new Intl.NumberFormat('en-IN', {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits
+    })
+    return `${formatter.format(value)} mm applied`
   }
 
   const daysAfterPruning = calculateDaysAfterPruning(farm.dateOfPruning)
@@ -171,6 +152,13 @@ export function FarmHeader({
           label: capitalize(farm.cropVariety),
           emphasis: false
         }
+      : null,
+    temperatureLabel
+      ? {
+          icon: Thermometer,
+          label: temperatureLabel,
+          emphasis: false
+        }
       : null
   ].filter(Boolean) as Array<{ icon: ElementType; label: string; emphasis?: boolean }>
 
@@ -187,11 +175,6 @@ export function FarmHeader({
   if (!farm) return null
 
   const hasPendingTasks = (pendingTasksCount ?? 0) > 0
-
-  const formatRemainingWater = (value: number | null | undefined) => {
-    if (value === null || value === undefined) return '—'
-    return `${value.toFixed(1)} mm`
-  }
 
   const waterUsageCaption = totalWaterUsage
     ? `${formatWaterUsage(totalWaterUsage)} this season`
@@ -243,40 +226,71 @@ export function FarmHeader({
       <div className="flex flex-col gap-6 p-4 sm:p-6">
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-            <div className="flex items-start gap-3 sm:flex-1 sm:gap-4">
+            <div className="flex w-full items-start gap-3 sm:flex-1 sm:gap-4">
               <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:h-14 sm:w-14">
                 <Grape className="h-6 w-6 sm:h-7 sm:w-7" />
               </span>
-              <div className="flex min-w-0 flex-col gap-3">
-                <div className="flex items-center gap-2 sm:items-start">
-                  <div className="flex min-w-0 flex-col gap-2">
-                    <h1
-                      className="w-full truncate text-xl font-semibold tracking-tight text-foreground sm:max-w-[540px] sm:text-3xl"
-                      title={capitalize(farm.name)}
-                    >
-                      {capitalize(farm.name)}
-                    </h1>
-                    {(locationLabel || (typeof farm.area === 'number' && farm.area > 0)) && (
-                      <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm font-medium text-muted-foreground">
-                        {locationLabel && (
-                          <span className="inline-flex min-w-0 items-center gap-1">
-                            <MapPin className="h-4 w-4 text-primary" />
-                            <span className="max-w-[70vw] truncate sm:max-w-xs lg:max-w-sm">
-                              {locationLabel}
-                            </span>
-                          </span>
-                        )}
-                        {locationLabel && typeof farm.area === 'number' && farm.area > 0 && (
-                          <span className="text-muted-foreground/60">•</span>
-                        )}
-                        {typeof farm.area === 'number' && farm.area > 0 && (
-                          <span className="inline-flex items-center gap-1">
-                            <Ruler className="h-4 w-4 text-primary" />
-                            {farm.area} acres
-                          </span>
-                        )}
-                      </div>
-                    )}
+              <div className="flex min-w-0 w-full flex-col gap-3">
+                <div className="flex w-full items-start gap-2 sm:items-start">
+                  <div className="flex min-w-0 w-full flex-col gap-2">
+                    <div className="flex items-center justify-between gap-2 sm:items-start">
+                      <h1
+                        className="w-full truncate text-xl font-semibold tracking-tight text-foreground sm:max-w-[540px] sm:text-3xl"
+                        title={capitalize(farm.name)}
+                      >
+                        {capitalize(farm.name)}
+                      </h1>
+                      {(onAddLogs || onEditFarm || onDeleteFarm) && (
+                        <div className="ml-auto flex items-center gap-1 sm:hidden">
+                          {onAddLogs && (
+                            <Button
+                              size="sm"
+                              onClick={onAddLogs}
+                              className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                            >
+                              <Plus className="h-4 w-4" />
+                              Log
+                            </Button>
+                          )}
+                          {(onEditFarm || onDeleteFarm) && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8 shrink-0 rounded-full border border-border/60 bg-muted/70 text-muted-foreground transition hover:border-primary/60 hover:text-primary"
+                                  aria-label="Open farm actions"
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="end"
+                                sideOffset={6}
+                                className="w-40 rounded-xl border border-border/60 bg-card/95 text-sm shadow-lg backdrop-blur"
+                              >
+                                {onEditFarm && (
+                                  <DropdownMenuItem
+                                    onClick={() => onEditFarm(farm)}
+                                    className="flex items-center gap-2 text-foreground focus:text-primary"
+                                  >
+                                    Edit farm
+                                  </DropdownMenuItem>
+                                )}
+                                {onDeleteFarm && (
+                                  <DropdownMenuItem
+                                    onClick={() => farm.id && onDeleteFarm(farm.id)}
+                                    className="flex items-center gap-2 text-destructive focus:text-destructive"
+                                  >
+                                    Delete farm
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 {(tagItems.length > 0 || onEditFarm || onDeleteFarm) && (
@@ -302,58 +316,9 @@ export function FarmHeader({
                         ))}
                       </div>
                     )}
-                    {(onAddLogs || onEditFarm || onDeleteFarm) && (
-                      <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 sm:hidden">
-                        {onAddLogs && (
-                          <Button
-                            size="sm"
-                            onClick={onAddLogs}
-                            className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-                          >
-                            <Plus className="h-4 w-4" />
-                            Log
-                          </Button>
-                        )}
-                        {(onEditFarm || onDeleteFarm) && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8 shrink-0 rounded-full border border-border/60 bg-muted/70 text-muted-foreground transition hover:border-primary/60 hover:text-primary"
-                              >
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                              align="end"
-                              sideOffset={6}
-                              className="w-40 rounded-xl border border-border/60 bg-card/95 text-sm shadow-lg backdrop-blur"
-                            >
-                              {onEditFarm && (
-                                <DropdownMenuItem
-                                  onClick={() => onEditFarm(farm)}
-                                  className="flex items-center gap-2 text-foreground focus:text-primary"
-                                >
-                                  Edit farm
-                                </DropdownMenuItem>
-                              )}
-                              {onDeleteFarm && (
-                                <DropdownMenuItem
-                                  onClick={() => farm.id && onDeleteFarm(farm.id)}
-                                  className="flex items-center gap-2 text-destructive focus:text-destructive"
-                                >
-                                  Delete farm
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </div>
-                    )}
                   </div>
                 )}
-                {weatherSummary && (
+                {/* {weatherSummary && (
                   <div className="rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/12 via-primary/6 to-transparent px-3 py-3 sm:px-5 sm:py-4">
                     <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-5">
                       <div className="flex min-w-0 flex-1 items-start gap-3">
@@ -404,7 +369,7 @@ export function FarmHeader({
                       )}
                     </div>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
             {(onAddLogs || onEditFarm || onDeleteFarm) && (
@@ -425,6 +390,7 @@ export function FarmHeader({
                         variant="outline"
                         size="icon"
                         className="mt-1 h-11 w-11 shrink-0 rounded-full border-border/70 bg-card text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                        aria-label="Open farm actions"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>

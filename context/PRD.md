@@ -42,7 +42,38 @@ A progressive web and mobile app designed to digitize grape farming operations f
 #### **4.2 Scientific Calculators & Data Entry**
 
 - **Irrigation/Water Use Module:**
-  - Evapotranspiration (ETc) calculator: `ETc = ETo * Kc`
+  - **Evapotranspiration (ETc) Calculator:**
+    - **FAO-56 Penman-Monteith Equation:**
+      ```
+      ET₀ = [0.408 × Δ × (Rₙ - G) + γ × (900/(T + 273)) × u₂ × (eₛ - eₐ)] / [Δ + γ × (1 + 0.34 × u₂)]
+      ```
+      Where:
+      - **ET₀**: Reference evapotranspiration (mm day⁻¹)
+      - **Δ**: Slope of saturation vapor pressure curve (kPa °C⁻¹)
+      - **Rₙ**: Net radiation at crop surface (MJ m⁻² day⁻¹)
+      - **G**: Soil heat flux density (≈ 0 for daily timestep) (MJ m⁻² day⁻¹)
+      - **γ**: Psychrometric constant (kPa °C⁻¹)
+      - **T**: Mean daily air temperature at 2m height (°C)
+      - **u₂**: Wind speed at 2m height (m s⁻¹)
+      - **eₛ**: Saturation vapor pressure (kPa)
+      - **eₐ**: Actual vapor pressure (kPa)
+      - **(eₛ - eₐ)**: Vapor pressure deficit (VPD) (kPa)
+    - **Dual ET0 Sources:**
+      - **Primary**: Open-Meteo API ET0 (professional meteorological calculations)
+      - **Secondary**: Local FAO Penman-Monteith calculation (fallback)
+    - **ETc Calculation**: `ETc = ET₀ × Kc`
+      - **Kc**: Crop coefficient based on growth stage
+      - **Grape Growth Stages**: Budbreak (0.3), Leaf development (0.5), Flowering (0.7), Fruit set (0.8), Veraison (0.8), Harvest (0.6), Post-harvest (0.4), Dormant (0.2)
+    - **Key Vapor Pressure Calculations:**
+      - **Saturation vapor pressure**: `eₛ = 0.6108 × exp((17.27 × T) / (T + 237.3))`
+      - **Actual vapor pressure**: `eₐ = (RH/100) × eₛ`
+      - **Psychrometric constant**: `γ = 0.000665 × P` (where P is atmospheric pressure in kPa)
+      - **Slope of saturation curve**: `Δ = (4098 × eₛ) / (T + 237.3)²`
+    - **Net Radiation Components:**
+      - **Net shortwave radiation**: `Rₙₛ = (1 - α) × Rₛ` (where α = 0.23 for crop albedo)
+      - **Net longwave radiation**: `Rₙₗ = σ × [(Tmax,K⁴ + Tmin,K⁴)/2] × (0.34 - 0.14 × √eₐ) × (1.35 × Rₛ/Rₛ₀ - 0.35)`
+      - **Net radiation**: `Rₙ = Rₙₛ - Rₙₗ`
+
   - **MAD (Maximum Allowable Deficit) Calculator:**
     - Inputs: Distance Between Lines (DBL/vine spacing), Root Depth, Root Width, Water Retention
     - Formula: `(100/(DBL) * Root Depth * Root Width * Water Retention * 100) / 10000`
@@ -58,6 +89,7 @@ A progressive web and mobile app designed to digitize grape farming operations f
       - Formula: `((100 / DBL) * (100/ DBD) * Discharge per hour) / 10000`
       - Inputs: Distance Between Dripper (DBD), Discharge per hour
   - Drip irrigation planner: Complete irrigation scheduling with hours and intervals
+
 - **Nutrient Calculator:**
   - Micronutrient and secondary nutrient recommendations (Zn, B, Fe, Mn, Cu, Mo, Ca, Mg, S) with per acre guidance.
   - NPK recommendations according to yield target and growth stage, with split application schedule.
@@ -81,6 +113,60 @@ A progressive web and mobile app designed to digitize grape farming operations f
   - Pest/disease observation (date, type, severity, action)
   - Post-production records: expenses, purchases, cold storage, box rate, sold date, payments.
 - Task tracking: due reminders, notification list (to-do), weather alerts, irrigation trigger alerts, empty tank/event notification, etc.
+
+#### **4.3.1 Lab Tests Module** ✅ **COMPLETED**
+
+##### Comprehensive lab test tracking and analysis for soil and petiole tests
+
+- **Lab Test Timeline:**
+  - View all soil and petiole tests in chronological order
+  - Filter by test type (All / Soil / Petiole)
+  - Filter by date range (All Time / Last 6 Months / Last Year / Season)
+  - Last 10 tests shown with "Load More" functionality
+  - Summary statistics (total tests, soil tests, petiole tests)
+
+- **Test Details Cards:**
+  - Compact test preview with key parameters
+  - Color-coded urgency indicators (Critical/High/Optimal/Moderate)
+  - Comparison with previous test (delta changes)
+  - Full details dialog with all parameters
+  - Lab report viewer (PDF/Image)
+  - Edit and delete actions
+
+- **Smart Recommendations:**
+  - Rule-based recommendation engine
+  - Recommendations grouped by priority:
+    - 🔴 Priority Actions (Critical/High)
+    - 💰 Cost Savings Opportunities
+    - ⚠️ Monitor These Parameters
+    - ✅ Optimal Parameters
+  - **Both Technical & Simple explanations:**
+    - Technical: Agricultural science terminology
+    - Simple: Farmer-friendly language (English + Marathi/Hindi)
+  - Recommendations for:
+    - **Soil Tests:** pH, EC, NPK, organic matter, micronutrients
+    - **Petiole Tests:** N, P, K, Ca, Mg, micronutrients
+  - Context-aware multi-parameter analysis (e.g., high pH affecting P availability)
+
+- **AI-Powered Report Parsing:**
+  - Upload lab report (PDF or image)
+  - Automatic parameter extraction using OpenAI Vision API
+  - Auto-fill test values with confidence scoring
+  - Manual verification and editing capability
+
+- **Integration:**
+  - Added "Lab Tests" quick action card on farm details page
+  - Accessible via `/farms/[id]/lab-tests`
+  - Unified data entry modal for add/edit operations
+  - Cloud-based storage with real-time sync
+
+- **Future Enhancements (Phase 2):**
+  - Trend charts with Victory.js (pH trends, EC trends, NPK multi-line charts)
+  - Pre-fill fertilizer calculator with test values
+  - Generate fertilizer plan from soil test
+  - Link to irrigation ETc calculator
+  - Add test reminder tasks
+  - Tag expenses as "test-driven"
 
 #### **4.4 Data & Export**
 
@@ -321,7 +407,15 @@ A progressive web and mobile app designed to digitize grape farming operations f
 
 ### **Scientific Calculations**
 
-- **Evapotranspiration:** `ETc = ETo * Kc`
+- **Evapotranspiration (ETc):**
+  - **Primary Formula**: `ETc = ET₀ × Kc`
+  - **FAO-56 Penman-Monteith ET₀**:
+    ```
+    ET₀ = [0.408 × Δ × (Rₙ - G) + γ × (900/(T + 273)) × u₂ × (eₛ - eₐ)] / [Δ + γ × (1 + 0.34 × u₂)]
+    ```
+  - **Unit Requirements**: ET₀ (mm day⁻¹), Rₙ (MJ m⁻² day⁻¹), T (°C), u₂ (m s⁻¹), eₛ/eₐ (kPa), Δ/γ (kPa °C⁻¹)
+  - **Dual Source ET₀**: Open-Meteo API (primary) + Local calculation (fallback)
+  - **Crop Coefficients**: Growth stage-specific Kc values for grapes
 - **System Discharge:** see `"System Discharge formula No2"` in notes
 - **Water use per vine:** `ETc (mm/day) * area (m^2) = liters/day`
 - **MAD, Refill Tank, Irrigation Interval:** all formulas as per lab notes

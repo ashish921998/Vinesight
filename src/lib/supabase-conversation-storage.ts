@@ -14,10 +14,11 @@ export interface Message {
   timestamp: Date
   language?: string
   attachments?: Array<{
-    type: 'image'
+    type: 'image' | 'document'
     name: string
     url: string
     size?: number
+    mimeType?: string
   }>
   context?: {
     queryType?: string

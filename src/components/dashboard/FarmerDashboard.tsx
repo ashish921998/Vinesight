@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { AlertsSection } from './AlertsSection'
-import { TodaysTasksSection } from './TodaysTasksSection'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import type { LucideIcon } from 'lucide-react'
@@ -37,15 +36,18 @@ import {
   Trash2,
   Edit,
   Cloud,
-  Brain
+  Brain,
+  Scissors
 } from 'lucide-react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { SupabaseService } from '@/lib/supabase-service'
 import { WeatherService, type WeatherData } from '@/lib/weather-service'
 import { type Farm } from '@/types/types'
-import { capitalize, cn } from '@/lib/utils'
+import { capitalize, cn, formatRemainingWater, calculateDaysAfterPruning } from '@/lib/utils'
 import { EmptyStateDashboard } from './EmptyStateDashboard'
 import { useRouter } from 'next/navigation'
+import { TasksOverviewCard } from '@/components/tasks/TasksOverviewCard'
+import type { TaskReminder } from '@/types/types'
 
 // Helper function to calculate farm health status based on real data
 const calculateFarmStatus = (
@@ -54,20 +56,17 @@ const calculateFarmStatus = (
 ): 'healthy' | 'attention' | 'critical' => {
   const criticalAlerts = alerts?.filter((alert) => alert.type === 'critical')?.length || 0
   const overdueTasks =
-    tasks?.filter((task) => !task.completed && new Date(task.due_date) < new Date())?.length || 0
+    tasks?.filter((task) => {
+      const dueDateValue = (task as any)?.dueDate
+      if (!dueDateValue || (task as any)?.completed) return false
+      const dueDate = new Date(dueDateValue)
+      if (Number.isNaN(dueDate.getTime())) return false
+      return dueDate < new Date()
+    })?.length || 0
 
   if (criticalAlerts > 0 || overdueTasks > 2) return 'critical'
   if (overdueTasks > 0) return 'attention'
   return 'healthy'
-}
-
-interface FarmInfo {
-  id: string
-  name: string
-  location: string
-  cropVariety: string
-  totalAcres: number
-  status: 'healthy' | 'attention' | 'critical'
 }
 
 interface FarmerDashboardProps {
@@ -120,8 +119,6 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
         // Select first farm by default
         if (userFarms.length > 0) {
           setSelectedFarmId(userFarms[0].id!)
-        } else {
-          setError('No farms found. Please add a farm first.')
         }
       } catch (err) {
         console.error('Error loading farms:', err)
@@ -212,29 +209,6 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     // Handle alert actions (navigate to specific screens, start workflows, etc.)
   }
 
-  const handleTaskComplete = async (taskId: string) => {
-    try {
-      await SupabaseService.completeTask(parseInt(taskId))
-      // Refresh dashboard data
-      if (selectedFarmId) {
-        const data = await SupabaseService.getDashboardSummary(selectedFarmId)
-        setDashboardData(data)
-      }
-    } catch (err) {
-      console.error('Error completing task:', err)
-    }
-  }
-
-  const handleTaskAction = (taskId: string) => {
-    // Handle task action
-    // Handle task actions (open task details, start workflow, etc.)
-  }
-
-  const handleAddTask = () => {
-    // Add new task
-    // Navigate to add task screen
-  }
-
   // Get status color for farm identification
   const getStatusColor = (status?: string) => {
     switch (status) {
@@ -284,13 +258,17 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     )
   }
 
-  const pendingTasks = dashboardData?.pendingTasks ?? []
-  const overdueTasks = pendingTasks.filter(
-    (task: any) => !task.completed && new Date(task.due_date) < new Date()
-  )
-  const todaysTasks = pendingTasks.filter((task: any) => {
-    if (!task.due_date) return false
-    const dueDate = new Date(task.due_date)
+  const pendingTasks = (dashboardData?.pendingTasks ?? []) as TaskReminder[]
+  const overdueTasks = pendingTasks.filter((task) => {
+    if (!task.dueDate || task.completed) return false
+    const dueDate = new Date(task.dueDate)
+    if (Number.isNaN(dueDate.getTime())) return false
+    return dueDate < new Date()
+  })
+  const todaysTasks = pendingTasks.filter((task) => {
+    if (!task.dueDate || task.completed) return false
+    const dueDate = new Date(task.dueDate)
+    if (Number.isNaN(dueDate.getTime())) return false
     const now = new Date()
     return (
       dueDate.getDate() === now.getDate() &&
@@ -332,18 +310,6 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     if (areaInSquareMeters === 0) return undefined
     return liters / areaInSquareMeters
   }
-
-  const formatDepthMm = (value?: number) => {
-    if (value === undefined || value === null || Number.isNaN(value)) return '— mm'
-    const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
-    return `${formatNumber(value, digits)} mm`
-  }
-
-  const totalWaterUsageLiters =
-    dashboardData?.totalWaterUsage !== undefined && dashboardData?.totalWaterUsage !== null
-      ? dashboardData.totalWaterUsage
-      : undefined
-  const totalWaterUsageMm = convertLitersToDepthMm(totalWaterUsageLiters, selectedFarm?.area)
 
   const insights: Array<{
     title: string
@@ -416,8 +382,6 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     })
   }
 
-  const curatedInsights = insights.slice(0, 3)
-
   const growthData = dashboardData?.growth as
     | {
         stage?: string
@@ -459,9 +423,9 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   const endOfTomorrow = new Date(startOfToday)
   endOfTomorrow.setDate(endOfTomorrow.getDate() + 2)
 
-  const tasksDueSoon = (dashboardData?.pendingTasks ?? []).filter((task: any) => {
-    if (!task?.due_date) return false
-    const dueDate = new Date(task.due_date)
+  const tasksDueSoon = ((dashboardData?.pendingTasks ?? []) as TaskReminder[]).filter((task) => {
+    if (!task?.dueDate || task.completed) return false
+    const dueDate = new Date(task.dueDate)
     if (Number.isNaN(dueDate.getTime())) return false
     return dueDate >= startOfToday && dueDate < endOfTomorrow
   })
@@ -475,15 +439,13 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   const twoDaysAgo = new Date(startOfToday)
   twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
 
-  const recentActivityWindow = recentActivities
-    .filter((activity: any) => {
-      const rawDate = activity?.created_at || activity?.date
-      if (!rawDate) return false
-      const activityDate = new Date(rawDate)
-      if (Number.isNaN(activityDate.getTime())) return false
-      return activityDate >= twoDaysAgo
-    })
-    .slice(0, 4)
+  const recentActivityWindow = recentActivities.filter((activity: any) => {
+    const rawDate = activity?.created_at || activity?.date
+    if (!rawDate) return false
+    const activityDate = new Date(rawDate)
+    if (Number.isNaN(activityDate.getTime())) return false
+    return activityDate >= twoDaysAgo
+  })
   const displayedActivities = activityExpanded
     ? recentActivityWindow
     : recentActivityWindow.slice(0, 1)
@@ -500,9 +462,9 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   }> = []
 
   if (tasksDueSoon.length > 0) {
-    const urgent = tasksDueSoon.filter((task: any) => {
-      if (!task?.due_date) return false
-      const dueDate = new Date(task.due_date)
+    const urgent = tasksDueSoon.filter((task) => {
+      if (!task.dueDate) return false
+      const dueDate = new Date(task.dueDate)
       const todayCutoff = new Date(startOfToday)
       todayCutoff.setDate(todayCutoff.getDate() + 1)
       return dueDate < todayCutoff
@@ -620,10 +582,10 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     },
     {
       id: 'metric-water',
-      title: formatDepthMm(totalWaterUsageMm),
+      title: formatRemainingWater(dashboardData?.totalWaterUsage ?? 0),
       label: 'Water usage',
       body:
-        selectedFarm?.area && totalWaterUsageMm !== undefined
+        selectedFarm?.area && dashboardData?.totalWaterUsage !== undefined
           ? `Across ${formatNumber(selectedFarm.area, selectedFarm.area >= 10 ? 0 : 1)} acre${selectedFarm.area > 1 ? 's' : ''}`
           : 'Cumulative irrigation depth',
       icon: Droplet,
@@ -660,10 +622,16 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
           Log
         </Button>
       </div>
-      <div className="mt-4 flex flex-col gap-3">
+      <div
+        className={cn(
+          'mt-4 flex flex-col gap-3',
+          activityExpanded &&
+            'max-h-[400px] overflow-y-auto pr-1 md:max-h-none md:overflow-visible md:pr-0'
+        )}
+      >
         {displayedActivities.length > 0 ? (
           displayedActivities.map((activity: any, index: number) => {
-            const rawDate = activity?.created_at || activity?.date
+            const rawDate = activity?.date || activity?.created_at
             const activityDate = rawDate ? new Date(rawDate) : null
             const timestamp =
               activityDate && !Number.isNaN(activityDate.getTime())
@@ -744,34 +712,20 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     </section>
   )
 
-  const tasksSection = (
-    <TodaysTasksSection
+  const tasksSection = selectedFarmId ? (
+    <TasksOverviewCard
       className="h-full"
-      tasks={
-        dashboardData?.pendingTasks?.map((task: any) => ({
-          id: task.id.toString(),
-          title: task.title,
-          type: task.category || 'maintenance',
-          priority: task.priority || 'medium',
-          scheduledTime: task.due_date
-            ? new Date(task.due_date).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit'
-              })
-            : undefined,
-          farmBlock: task.location || (selectedFarm ? capitalize(selectedFarm.name) : ''),
-          estimatedDuration: task.estimated_duration || 60,
-          completed: task.completed || false,
-          description: task.description
-        })) || []
-      }
-      onTaskComplete={handleTaskComplete}
-      onTaskAction={handleTaskAction}
-      onAddTask={handleAddTask}
-      loading={!dashboardData}
+      farmId={selectedFarmId}
+      tasks={pendingTasks}
       farmName={farmInfo?.name}
+      loading={!dashboardData}
+      onTasksUpdated={async () => {
+        if (!selectedFarmId) return
+        const data = await SupabaseService.getDashboardSummary(selectedFarmId)
+        setDashboardData(data)
+      }}
     />
-  )
+  ) : null
 
   const alertsSection = (
     <AlertsSection
@@ -872,18 +826,61 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       case 'fertigation': {
         Icon = FlaskConical
         iconClass = 'text-amber-600'
-        const fertilizer = activity?.fertilizer || 'Fertigation'
-        const quantity = activity?.quantity
-        const unit = activity?.unit
-        if (quantity) {
-          detailParts.push(`${formatNumber(quantity, quantity >= 100 ? 0 : 1)} ${unit || ''}`)
+
+        // Handle new fertilizers array format
+        const fertilizers = activity?.fertilizers as Array<{
+          name: string
+          quantity: number
+          unit: string
+        }>
+
+        if (fertilizers && Array.isArray(fertilizers) && fertilizers.length > 0) {
+          const validFertilizers = fertilizers.filter(
+            (fert) => fert && fert.name && fert.name.trim()
+          )
+          if (validFertilizers.length > 0) {
+            const firstFert = validFertilizers[0]
+            const title =
+              validFertilizers.length === 1
+                ? firstFert.name
+                : `${firstFert.name} +${validFertilizers.length - 1} more`
+
+            detailParts.push(
+              `${formatNumber(firstFert.quantity, firstFert.quantity >= 100 ? 0 : 1)} ${firstFert.unit || ''}`
+            )
+
+            // Group by unit and calculate per-unit totals
+            if (validFertilizers.length > 1) {
+              const totalsByUnit = new Map<string, number>()
+              validFertilizers.forEach((fert) => {
+                const unit = fert.unit || 'units'
+                const currentTotal = totalsByUnit.get(unit) || 0
+                totalsByUnit.set(unit, currentTotal + (fert.quantity || 0))
+              })
+
+              // Add per-unit totals to details (only if multiple units exist)
+              if (totalsByUnit.size > 1) {
+                const unitTotals: string[] = []
+                totalsByUnit.forEach((total, unit) => {
+                  unitTotals.push(`${formatNumber(total, 1)} ${unit}`)
+                })
+                detailParts.push(`Total: ${unitTotals.join(' + ')}`)
+              }
+            }
+
+            return {
+              title,
+              detail: detailParts.join(' • ') || 'Fertigation event recorded',
+              icon: Icon,
+              iconClass
+            }
+          }
         }
-        if (activity?.purpose) {
-          detailParts.push(activity.purpose)
-        }
+
+        // Fallback for records without valid data
         return {
-          title: fertilizer,
-          detail: detailParts.join(' • ') || 'Fertigation event recorded',
+          title: 'Fertigation',
+          detail: 'Fertigation event recorded',
           icon: Icon,
           iconClass
         }
@@ -976,7 +973,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                 )}
               </div>
               <div className="space-y-2">
-                <div className="flex flex-col gap-2.5 sm:flex-row md:flex-col md:items-end">
+                <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
                   <Select value={selectedFarmId?.toString() || ''} onValueChange={handleFarmChange}>
                     <SelectTrigger className="h-11 w-full rounded-full border border-border/60 bg-background/90 px-4 text-sm font-semibold leading-tight shadow-sm transition-all focus:ring-2 focus:ring-primary/40 sm:h-12 sm:w-64 sm:text-base">
                       <SelectValue placeholder="Select a farm" />
@@ -1030,6 +1027,13 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
               </div>
               {farmInfo && (
                 <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground sm:text-sm">
+                  {selectedFarm?.dateOfPruning &&
+                    calculateDaysAfterPruning(selectedFarm.dateOfPruning) && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-primary px-2.5 py-0.5 font-semibold text-primary-foreground sm:px-3 sm:py-1">
+                        <Scissors className="h-3.5 w-3.5" />
+                        {calculateDaysAfterPruning(selectedFarm.dateOfPruning)} days
+                      </span>
+                    )}
                   <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/80 px-2.5 py-0.5 sm:px-3 sm:py-1">
                     <MapPin className="h-3.5 w-3.5 text-primary" />
                     {farmInfo.location}

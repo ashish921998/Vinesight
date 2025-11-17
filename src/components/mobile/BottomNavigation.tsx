@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Sprout, Calculator, User, Brain, FileText } from 'lucide-react'
+import { Home, Sprout, Calculator, User, Brain, FileText, Package } from 'lucide-react'
 import { logTypeConfigs, type LogType } from '@/lib/log-type-config'
 import {
   Dialog,
@@ -34,9 +34,9 @@ const navigationItems = [
     color: 'text-primary'
   },
   {
-    name: 'Farms',
-    href: '/farms',
-    icon: Sprout,
+    name: 'Warehouse',
+    href: '/warehouse',
+    icon: Package,
     color: 'text-primary'
   },
   {
@@ -274,7 +274,7 @@ export function BottomNavigation() {
             chemical: formData.product?.trim() || 'Unknown',
             dose: 'Not specified',
             quantity_amount: 0,
-            quantity_unit: 'Not specified',
+            quantity_unit: 'ml/L',
             water_volume: 0,
             area: 0,
             weather: 'Not specified',
@@ -289,7 +289,8 @@ export function BottomNavigation() {
             farm_id: farmId,
             date: currentDate,
             fertilizer: formData.fertilizer?.trim() || 'Unknown',
-            dose: formData.quantity || '0',
+            quantity: parseFloat(formData.quantity || '0'),
+            unit: 'kg/acre',
             purpose: '', // Default value
             area: 0,
             notes: formData.notes || '',
@@ -456,7 +457,7 @@ export function BottomNavigation() {
 
       {/* Bottom Navigation */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 safe-area-bottom">
-        <div className="flex justify-around items-center px-2 py-1">
+        <div className="flex justify-around items-center px-1 py-2">
           {navigationItems.map((item) => {
             const Icon = item.icon
             const isActive = mounted
@@ -478,7 +479,7 @@ export function BottomNavigation() {
                 onClick={handleClick}
                 className={`
                   flex flex-col items-center justify-center
-                  px-2 py-2 min-w-0 flex-1
+                  px-1 py-2 min-w-0 flex-1
                   transition-all duration-200
                   touch-manipulation
                   active:scale-95
@@ -487,7 +488,7 @@ export function BottomNavigation() {
               >
                 <div
                   className={`
-                  p-2 rounded-xl transition-all duration-200
+                  p-1.5 rounded-lg transition-all duration-200
                   ${isActive ? 'bg-secondary text-primary' : 'text-gray-400'}
                 `}
                 >
@@ -495,7 +496,8 @@ export function BottomNavigation() {
                 </div>
                 <span
                   className={`
-                  text-xs font-medium mt-1 truncate
+                  text-[10px] font-medium mt-0.5 w-full text-center
+                  overflow-hidden text-ellipsis whitespace-nowrap px-0.5
                   ${isActive ? 'text-primary' : 'text-gray-400'}
                 `}
                 >

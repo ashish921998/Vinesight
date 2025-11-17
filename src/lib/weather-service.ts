@@ -1,3 +1,5 @@
+import { OpenMeteoWeatherService, OpenMeteoWeatherData } from './open-meteo-weather'
+
 export interface WeatherData {
   current: CurrentWeather
   forecast: ForecastDay[]
@@ -32,12 +34,14 @@ export interface ForecastDay {
   precipitation: number // mm
   precipitationProbability: number // %
   windSpeed: number // km/h
+  windDirection: string
   condition: string
   conditionCode: number
   uvIndex: number
   sunrise: string
   sunset: string
   dayLength: number // hours
+  et0?: number // Reference evapotranspiration from Open-Meteo (mm/day)
 }
 
 export interface LocationData {
@@ -47,6 +51,7 @@ export interface LocationData {
   latitude: number
   longitude: number
   timezone: string
+  elevation?: number // Elevation in meters above sea level
 }
 
 export interface WeatherAlerts {
@@ -70,124 +75,257 @@ export interface WeatherAlerts {
 
 export interface ETc {
   dailyETc: number // mm/day
+  dailyETcOpenMeteo: number // mm/day (using Open-Meteo ET0)
+  dailyETcCalculated: number // mm/day (using calculated ET0)
   weeklyETc: number // mm/week
   monthlyETc: number // mm/month
   cropCoefficient: number
   referenceET: number // mm/day
+  referenceETOpenMeteo: number // mm/day (direct from Open-Meteo)
+  referenceETCalculated: number // mm/day (calculated locally)
   growthStage: string
 }
 
-// Weather service for grape farming
+// Weather service for grape farming using Open-Meteo API
 export class WeatherService {
-  private static readonly API_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY
-  private static readonly BASE_URL = 'http://api.weatherapi.com/v1'
-
   // Default coordinates for Maharashtra grape region if no location provided
   private static readonly DEFAULT_COORDS = {
     latitude: 19.0825,
     longitude: 73.1963,
-    name: 'Nashik'
+    name: 'Nashik',
+    region: 'Maharashtra',
+    country: 'India'
   }
 
   static async getCurrentWeather(latitude?: number, longitude?: number): Promise<WeatherData> {
-    // Check if API key is available
-    if (!this.API_KEY || this.API_KEY === 'your_weatherapi_key_here') {
-      return this.getMockWeatherData()
-    }
-
-    const coords = latitude && longitude ? { latitude, longitude } : this.DEFAULT_COORDS
-
-    const query = `${coords.latitude},${coords.longitude}`
-    const url = `${this.BASE_URL}/forecast.json?key=${this.API_KEY}&q=${query}&days=7&aqi=no&alerts=no`
+    const coords =
+      latitude && longitude
+        ? { latitude, longitude, name: 'Custom Location', region: 'Unknown', country: 'Unknown' }
+        : this.DEFAULT_COORDS
 
     try {
-      const response = await fetch(url)
-      if (!response.ok) {
-        if (response.status === 401) {
-        } else {
-        }
-        return this.getMockWeatherData()
+      // Get current weather and 7-day forecast from Open-Meteo
+      const forecastData = await OpenMeteoWeatherService.getWeatherForecast(
+        coords.latitude,
+        coords.longitude,
+        7
+      )
+
+      if (!forecastData || forecastData.length === 0) {
+        throw new Error('No weather data received from Open-Meteo API')
       }
 
-      const data = await response.json()
-      return this.parseWeatherData(data)
+      return this.parseWeatherData(forecastData, coords)
     } catch (error) {
-      return this.getMockWeatherData()
+      console.error('Error fetching weather data from Open-Meteo:', error)
+      throw new Error(
+        `Failed to fetch weather data: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
     }
   }
 
-  private static parseWeatherData(data: any): WeatherData {
-    const current = data.current
-    const location = data.location
-    const forecast = data.forecast.forecastday
+  private static parseWeatherData(
+    forecastData: OpenMeteoWeatherData[],
+    coords: { latitude: number; longitude: number; name: string; region: string; country: string }
+  ): WeatherData {
+    const current = forecastData[0] // Today's data
+    const forecast = forecastData
+
+    // Convert Open-Meteo data to our format
+    const currentWeather: CurrentWeather = {
+      temperature: Math.round(current.temperatureMean),
+      humidity: Math.round(current.relativeHumidityMean),
+      windSpeed: Math.round(current.windSpeed10m * 3.6), // Convert m/s to km/h
+      windDirection: this.getWindDirection(current.windDirection10m),
+      pressure: 1013, // Open-Meteo doesn't provide pressure in free tier, use standard
+      visibility: 10, // Open-Meteo doesn't provide visibility in free tier, use standard
+      uvIndex: this.estimateUVIndex(current.shortwaveRadiationSum),
+      cloudCover: this.estimateCloudCover(current.sunshineDuration),
+      condition: this.getWeatherCondition(current.temperatureMean, current.precipitationSum),
+      conditionCode: this.getConditionCode(current.temperatureMean, current.precipitationSum),
+      isDay: true, // Open-Meteo daily data doesn't distinguish day/night
+      precipitation: current.precipitationSum,
+      feelsLike: Math.round(current.temperatureMean) // Simplified feels like
+    }
+
+    const forecastDays: ForecastDay[] = forecast.map((day) => ({
+      date: day.date,
+      maxTemp: Math.round(day.temperatureMax),
+      minTemp: Math.round(day.temperatureMin),
+      avgTemp: Math.round(day.temperatureMean),
+      maxHumidity: Math.round(day.relativeHumidityMax),
+      minHumidity: Math.round(day.relativeHumidityMin),
+      avgHumidity: Math.round(day.relativeHumidityMean),
+      precipitation: day.precipitationSum,
+      precipitationProbability: this.estimatePrecipitationProbability(day.precipitationSum),
+      windSpeed: Math.round(day.windSpeed10m * 3.6), // Convert m/s to km/h
+      windDirection: this.getWindDirection(day.windDirection10m),
+      condition: this.getWeatherCondition(day.temperatureMean, day.precipitationSum),
+      conditionCode: this.getConditionCode(day.temperatureMean, day.precipitationSum),
+      uvIndex: this.estimateUVIndex(day.shortwaveRadiationSum),
+      sunrise: '06:00 AM', // Open-Meteo doesn't provide sunrise/sunset in daily data
+      sunset: '06:00 PM', // Open-Meteo doesn't provide sunrise/sunset in daily data
+      dayLength: 12, // Default day length
+      et0: day.et0FaoEvapotranspiration // ET0 from Open-Meteo
+    }))
 
     return {
-      current: {
-        temperature: current.temp_c,
-        humidity: current.humidity,
-        windSpeed: current.wind_kph,
-        windDirection: current.wind_dir,
-        pressure: current.pressure_mb,
-        visibility: current.vis_km,
-        uvIndex: current.uv,
-        cloudCover: current.cloud,
-        condition: current.condition.text,
-        conditionCode: current.condition.code,
-        isDay: current.is_day === 1,
-        precipitation: current.precip_mm,
-        feelsLike: current.feelslike_c
-      },
-      forecast: forecast.map((day: any) => ({
-        date: day.date,
-        maxTemp: day.day.maxtemp_c,
-        minTemp: day.day.mintemp_c,
-        avgTemp: day.day.avgtemp_c,
-        maxHumidity: day.day.maxhumidity || 85,
-        minHumidity: day.day.minhumidity || 45,
-        avgHumidity: day.day.avghumidity,
-        precipitation: day.day.totalprecip_mm,
-        precipitationProbability: day.day.daily_chance_of_rain,
-        windSpeed: day.day.maxwind_kph,
-        condition: day.day.condition.text,
-        conditionCode: day.day.condition.code,
-        uvIndex: day.day.uv,
-        sunrise: day.astro.sunrise,
-        sunset: day.astro.sunset,
-        dayLength: this.calculateDayLength(day.astro.sunrise, day.astro.sunset)
-      })),
+      current: currentWeather,
+      forecast: forecastDays,
       location: {
-        name: location.name,
-        region: location.region,
-        country: location.country,
-        latitude: location.lat,
-        longitude: location.lon,
-        timezone: location.tz_id
+        name: coords.name,
+        region: coords.region,
+        country: coords.country,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        timezone: forecast[0]?.timezone || 'UTC',
+        elevation: forecast[0]?.elevation // Add elevation from Open-Meteo
       },
       lastUpdated: new Date()
     }
   }
 
-  private static calculateDayLength(sunrise: string, sunset: string): number {
-    const sunriseTime = new Date(`1970-01-01T${this.convertTo24Hour(sunrise)}:00`)
-    const sunsetTime = new Date(`1970-01-01T${this.convertTo24Hour(sunset)}:00`)
-    return (sunsetTime.getTime() - sunriseTime.getTime()) / (1000 * 60 * 60)
+  // Helper methods for weather condition estimation
+  private static getWeatherCondition(temp: number, precipitation: number): string {
+    if (precipitation > 5) return 'Rain'
+    if (precipitation > 0) return 'Light rain'
+    if (temp > 30) return 'Hot'
+    if (temp > 20) return 'Partly cloudy'
+    if (temp > 10) return 'Cloudy'
+    return 'Cool'
   }
 
-  private static convertTo24Hour(time12h: string): string {
-    const [time, modifier] = time12h.split(' ')
-    const [hoursPart, minutes] = time.split(':')
-    let hours = hoursPart
-    if (hours === '12') {
-      hours = '00'
-    }
-    if (modifier === 'PM') {
-      hours = (parseInt(hours, 10) + 12).toString()
-    }
-    return `${hours}:${minutes}`
+  private static getConditionCode(temp: number, precipitation: number): number {
+    if (precipitation > 5) return 1186 // Moderate rain
+    if (precipitation > 0) return 1153 // Light rain
+    if (temp > 30) return 1000 // Sunny
+    if (temp > 20) return 1003 // Partly cloudy
+    if (temp > 10) return 1006 // Cloudy
+    return 1009 // Overcast
   }
 
-  // Calculate Evapotranspiration (ETc) for grapes
-  static calculateETc(weather: WeatherData, growthStage: string): ETc {
+  private static getWindDirection(windDirection: number): string {
+    // Convert wind direction angle (0-360°) to compass direction
+    // Normalize angle to 0-360 range
+    const normalizedAngle = ((windDirection % 360) + 360) % 360
+
+    // Handle missing/null values
+    if (windDirection === null || windDirection === undefined || isNaN(windDirection)) {
+      return 'Unknown'
+    }
+
+    // 16-point compass directions (22.5° each)
+    const directions = [
+      'N',
+      'NNE',
+      'NE',
+      'ENE',
+      'E',
+      'ESE',
+      'SE',
+      'SSE',
+      'S',
+      'SSW',
+      'SW',
+      'WSW',
+      'W',
+      'WNW',
+      'NW',
+      'NNW'
+    ]
+
+    const index = Math.round(normalizedAngle / 22.5) % 16
+    return directions[index]
+  }
+
+  private static estimateUVIndex(solarRadiation: number): number {
+    // Convert MJ/m²/day to UV index (simplified)
+    // Max solar radiation ~25 MJ/m²/day corresponds to UV index 11
+    return Math.min(11, Math.round((solarRadiation / 25) * 11))
+  }
+
+  private static estimateCloudCover(sunshineDuration: number): number {
+    // Convert sunshine duration to cloud cover percentage
+    // 12 hours of sunshine = 0% cloud cover, 0 hours = 100% cloud cover
+    const maxSunshine = 12
+    return Math.max(
+      0,
+      Math.min(100, Math.round(((maxSunshine - sunshineDuration) / maxSunshine) * 100))
+    )
+  }
+
+  private static estimatePrecipitationProbability(precipitation: number): number {
+    // Simple probability estimation based on precipitation amount
+    if (precipitation === 0) return 0
+    if (precipitation < 2) return 30
+    if (precipitation < 5) return 60
+    if (precipitation < 10) return 80
+    return 90
+  }
+
+  /**
+   * FAO-56 Equation 7: Calculate atmospheric pressure at given elevation
+   * P = 101.3 × [(293 - 0.0065 × z) / 293]^5.26
+   * where z is elevation in meters above sea level
+   */
+  private static calculateAtmosphericPressure(elevation: number): number {
+    // Standard atmospheric pressure at sea level = 101.3 kPa
+    const pressure = 101.3 * Math.pow((293 - 0.0065 * elevation) / 293, 5.26)
+    return pressure
+  }
+
+  /**
+   * FAO-56 Equations 21-25: Calculate extraterrestrial radiation (Ra)
+   * Ra = 24 × 60 × Gsc × dr × [ωs × sin(φ) × sin(δ) + cos(φ) × cos(δ) × sin(ωs)]
+   * where Gsc = 0.0820 MJ m⁻² min⁻¹ (solar constant)
+   */
+  private static calculateExtraterrestrialRadiation(latitude: number, dayOfYear: number): number {
+    const Gsc = 0.082 // Solar constant in MJ m⁻² min⁻¹
+
+    // Convert latitude to radians
+    const phi = (latitude * Math.PI) / 180
+
+    // Inverse relative distance Earth-Sun (dr)
+    const dr = 1 + 0.033 * Math.cos((2 * Math.PI * dayOfYear) / 365)
+
+    // Solar declination (δ) in radians
+    const delta = 0.409 * Math.sin((2 * Math.PI * dayOfYear) / 365 - 1.39)
+
+    // Sunset hour angle (ωs) in radians
+    const omega_s = Math.acos(-Math.tan(phi) * Math.tan(delta))
+
+    // Extraterrestrial radiation (Ra) in MJ m⁻² day⁻¹
+    const Ra =
+      ((24 * 60 * Gsc * dr) / Math.PI) *
+      (omega_s * Math.sin(phi) * Math.sin(delta) +
+        Math.cos(phi) * Math.cos(delta) * Math.sin(omega_s))
+
+    return Ra
+  }
+
+  /**
+   * Calculate clear-sky radiation (Rso) for validation
+   * Rso = (0.75 + 2×10⁻⁵ × z) × Ra
+   * where z is elevation in meters and Ra is extraterrestrial radiation
+   */
+  private static calculateClearSkyRadiation(latitude: number, elevation: number): number {
+    const today = new Date()
+    const dayOfYear = Math.floor(
+      (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
+    )
+
+    const Ra = this.calculateExtraterrestrialRadiation(latitude, dayOfYear)
+    const Rso = (0.75 + 2e-5 * elevation) * Ra
+
+    return Rso
+  }
+
+  // Calculate Evapotranspiration (ETc) for grapes using Open-Meteo ET0
+  static calculateETc(
+    weather: WeatherData,
+    growthStage: string,
+    openMeteoData?: OpenMeteoWeatherData[]
+  ): ETc {
     const current = weather.current
     const forecast = weather.forecast
 
@@ -205,35 +343,145 @@ export class WeatherService {
 
     const kc = cropCoefficients[growthStage] || 0.7
 
-    // Simplified Penman-Monteith equation for reference ET (ET0)
-    const temp = current.temperature
-    const humidity = current.humidity
-    const windSpeed = current.windSpeed
-    const radiation = this.estimateSolarRadiation(current.uvIndex, current.cloudCover)
+    // Get ET0 from Open-Meteo
+    let et0OpenMeteo: number = 0
+    if (
+      forecast[0] &&
+      forecast[0].et0 !== undefined &&
+      forecast[0].et0 !== null &&
+      forecast[0].et0 > 0
+    ) {
+      et0OpenMeteo = forecast[0].et0
+    }
 
-    // Reference evapotranspiration (ET0) calculation
-    const delta =
-      (4098 * (0.6108 * Math.exp((17.27 * temp) / (temp + 237.3)))) / Math.pow(temp + 237.3, 2)
-    const gamma = (0.665 * current.pressure) / 1000
-    const u2 = windSpeed * 0.277778 // Convert km/h to m/s
-    const rh = humidity
+    // Always calculate ET0 locally using FAO Penman-Monteith equation
+    const temp = current.temperature // °C
+    const humidity = current.humidity // %
+    const windSpeed = current.windSpeed // km/h
+    const pressure = current.pressure // hPa
+    const altitude = weather.location.elevation || 200 // Use actual elevation from Open-Meteo
 
-    const et0 =
-      (0.408 * delta * radiation + ((gamma * 900) / (temp + 273)) * u2 * (0.01 * (100 - rh))) /
-      (delta + gamma * (1 + 0.34 * u2))
+    // Convert units properly
+    const pressureKpa = pressure / 10 // Convert hPa to kPa
 
+    // FAO-56 Equation 47: Convert wind speed from 10m height to 2m height
+    // u₂ = u_z × [4.87 / ln(67.8 × z - 5.42)] where z=10m
+    // For z=10m: u₂ = u₁₀ × 0.748
+    const windSpeedMs = windSpeed * 0.277778 // Convert km/h to m/s
+    const u2 = windSpeedMs * 0.748 // Convert from 10m to 2m height (FAO-56 Eq. 47)
+
+    // Validate input ranges
+    if (temp < -50 || temp > 60) {
+      console.warn('Temperature out of reasonable range:', temp)
+    }
+    if (humidity < 0 || humidity > 100) {
+      console.warn('Humidity out of range:', humidity)
+    }
+    if (u2 < 0 || u2 > 20) {
+      console.warn('Wind speed out of reasonable range:', u2)
+    }
+
+    // 1. Calculate saturation vapor pressure (es) in kPa
+    const es = 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3))
+
+    // 2. Calculate actual vapor pressure (ea) in kPa
+    const ea = (humidity / 100) * es
+
+    // 3. Calculate vapor pressure deficit (es - ea) in kPa
+    const vpd = es - ea
+
+    // 4. Calculate psychrometric constant (gamma) in kPa/°C using FAO-56 Equation 8
+    // γ = 0.000665 × P where P is atmospheric pressure in kPa
+    const gamma = 0.000665 * pressureKpa
+
+    // 5. Calculate slope of saturation vapor pressure curve (delta) in kPa/°C
+    const delta = (4098 * es) / Math.pow(temp + 237.3, 2)
+
+    // 6. Use actual solar radiation data from Open-Meteo instead of estimation
+    let solarRadiation = 0
+    if (openMeteoData && openMeteoData[0]) {
+      // Use actual shortwave radiation data from Open-Meteo
+      solarRadiation = openMeteoData[0].shortwaveRadiationSum
+    } else {
+      // Fallback to improved estimation if Open-Meteo data not available
+      solarRadiation = this.estimateSolarRadiationImproved(
+        current.uvIndex,
+        current.cloudCover,
+        temp
+      )
+    }
+
+    // Get max/min temperatures for accurate net longwave radiation calculation
+    const maxTemp = forecast[0]?.maxTemp || temp
+    const minTemp = forecast[0]?.minTemp || temp
+
+    // Estimate net shortwave radiation (assuming clear sky albedo = 0.23)
+    const rns = (1 - 0.23) * solarRadiation
+
+    // FAO-56 Equation 39: Net longwave radiation calculation
+    // Rnl = σ × [(Tmax,K⁴ + Tmin,K⁴)/2] × (0.34 - 0.14√ea) × (1.35 × Rs/Rso - 0.35)
+    const stefanBoltzmann = 4.903e-9 // MJ K^-4 m^-2 day^-1
+
+    // Convert temperatures to Kelvin with proper precision (+273.15)
+    const maxTempK = maxTemp + 273.15
+    const minTempK = minTemp + 273.15
+
+    // Calculate clear-sky radiation (Rso) for validation
+    const rso = this.calculateClearSkyRadiation(weather.location.latitude, altitude)
+
+    // Net longwave radiation with proper FAO-56 Equation 39
+    const rnl =
+      ((stefanBoltzmann * (Math.pow(maxTempK, 4) + Math.pow(minTempK, 4))) / 2) *
+      (0.34 - 0.14 * Math.sqrt(ea)) *
+      (1.35 * Math.min(solarRadiation / rso, 1) - 0.35)
+
+    // Net radiation
+    const rn = rns - rnl
+
+    // 7. Soil heat flux (G) - assumed negligible for daily calculations
+    const G = 0
+
+    // 8. FAO Penman-Monteith equation with proper Kelvin conversion
+    // ET0 = [0.408 * Δ * (Rn - G) + γ * (900/(T + 273.15)) * u2 * (es - ea)] / [Δ + γ * (1 + 0.34 * u2)]
+    const denominator = delta + gamma * (1 + 0.34 * u2)
+
+    // Prevent division by zero or very small numbers
+    if (denominator <= 0.01) {
+      console.warn('Denominator too small in ET0 calculation:', denominator)
+    }
+
+    const et0Calculated =
+      (0.408 * delta * (rn - G) + gamma * (900 / (temp + 273.15)) * u2 * vpd) / denominator
+
+    // Validate ET0 result - should be reasonable for most conditions
+    const et0Final = Math.max(0, Math.min(15, et0Calculated)) // Limit to 0-15 mm/day
+
+    if (et0Final !== et0Calculated) {
+      console.warn('ET0 value clamped from', et0Calculated.toFixed(2), 'to', et0Final.toFixed(2))
+    }
+
+    // Calculate ETc using both ET0 values
+    const dailyETcOpenMeteo = et0OpenMeteo > 0 ? Math.max(0, et0OpenMeteo * kc) : 0
+    const dailyETcCalculated = Math.max(0, et0Final * kc)
+
+    // Use Open-Meteo ET0 if available, otherwise use calculated value
+    const et0 = et0OpenMeteo > 0 ? et0OpenMeteo : et0Final
     const dailyETc = Math.max(0, et0 * kc)
 
-    // Calculate weekly and monthly averages
+    // Calculate weekly and monthly averages (using primary ETc)
     const weeklyETc = dailyETc * 7
     const monthlyETc = dailyETc * 30
 
     return {
       dailyETc: Math.round(dailyETc * 100) / 100,
+      dailyETcOpenMeteo: Math.round(dailyETcOpenMeteo * 100) / 100,
+      dailyETcCalculated: Math.round(dailyETcCalculated * 100) / 100,
       weeklyETc: Math.round(weeklyETc * 100) / 100,
       monthlyETc: Math.round(monthlyETc * 100) / 100,
       cropCoefficient: kc,
       referenceET: Math.round(et0 * 100) / 100,
+      referenceETOpenMeteo: Math.round(et0OpenMeteo * 100) / 100,
+      referenceETCalculated: Math.round(et0Final * 100) / 100,
       growthStage
     }
   }
@@ -244,6 +492,29 @@ export class WeatherService {
     const uvFactor = Math.min(uvIndex / 11, 1) // Normalize UV index
     const cloudFactor = (100 - cloudCover) / 100 // Reduce radiation based on cloud cover
     return maxRadiation * uvFactor * cloudFactor
+  }
+
+  private static estimateSolarRadiationImproved(
+    uvIndex: number,
+    cloudCover: number,
+    temperature: number
+  ): number {
+    // Improved solar radiation estimation considering temperature and season
+    const maxRadiation = 25 // MJ/m²/day for clear sky at sea level
+
+    // Temperature-based adjustment (higher temp = more radiation)
+    const tempFactor = Math.max(0.3, Math.min(1.0, (temperature + 10) / 40))
+
+    // UV index normalization (more accurate than simple linear)
+    const uvFactor = Math.pow(Math.min(uvIndex / 11, 1), 0.8)
+
+    // Cloud cover impact (non-linear relationship)
+    const cloudFactor = Math.pow((100 - cloudCover) / 100, 1.2)
+
+    // Seasonal adjustment (simplified - would need day of year for accuracy)
+    const seasonalFactor = 0.9 // Default for moderate season
+
+    return maxRadiation * tempFactor * uvFactor * cloudFactor * seasonalFactor
   }
 
   // Generate weather-based alerts for farming
@@ -407,76 +678,6 @@ export class WeatherService {
       isOptimal,
       conditions,
       recommendations
-    }
-  }
-
-  // Provide mock data for development when API is unavailable
-  private static getMockWeatherData(): WeatherData {
-    const now = new Date()
-
-    return {
-      current: {
-        temperature: 28,
-        humidity: 65,
-        windSpeed: 12,
-        windDirection: 'WSW',
-        pressure: 1013,
-        visibility: 10,
-        uvIndex: 7,
-        cloudCover: 25,
-        condition: 'Partly Cloudy',
-        conditionCode: 1003,
-        isDay: true,
-        precipitation: 0,
-        feelsLike: 31
-      },
-      forecast: [
-        {
-          date: now.toISOString().split('T')[0],
-          maxTemp: 32,
-          minTemp: 22,
-          avgTemp: 27,
-          maxHumidity: 75,
-          minHumidity: 45,
-          avgHumidity: 60,
-          precipitation: 0,
-          precipitationProbability: 10,
-          windSpeed: 15,
-          condition: 'Sunny',
-          conditionCode: 1000,
-          uvIndex: 8,
-          sunrise: '06:15 AM',
-          sunset: '06:45 PM',
-          dayLength: 12.5
-        },
-        {
-          date: new Date(now.getTime() + 86400000).toISOString().split('T')[0],
-          maxTemp: 30,
-          minTemp: 20,
-          avgTemp: 25,
-          maxHumidity: 80,
-          minHumidity: 50,
-          avgHumidity: 65,
-          precipitation: 2,
-          precipitationProbability: 40,
-          windSpeed: 10,
-          condition: 'Light Rain',
-          conditionCode: 1063,
-          uvIndex: 6,
-          sunrise: '06:16 AM',
-          sunset: '06:44 PM',
-          dayLength: 12.4
-        }
-      ],
-      location: {
-        name: 'Nashik',
-        region: 'Maharashtra',
-        country: 'India',
-        latitude: 19.0825,
-        longitude: 73.1963,
-        timezone: 'Asia/Kolkata'
-      },
-      lastUpdated: now
     }
   }
 

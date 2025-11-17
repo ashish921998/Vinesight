@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { Droplets, Calculator, Loader2, Edit3 } from 'lucide-react'
+import { Droplets, Calculator, Loader2, Edit3, Clock } from 'lucide-react'
 import { SupabaseService } from '@/lib/supabase-service'
 import { NotificationService } from '@/lib/notification-service'
 import type { Farm } from '@/types/types'
@@ -64,6 +64,20 @@ export function WaterCalculationModal({
   const [calculationResult, setCalculationResult] = useState<number | null>(null)
   const [manualWaterLevel, setManualWaterLevel] = useState('')
   const [useManualMode, setUseManualMode] = useState(false)
+
+  const formatUpdatedAt = (dateString?: string | null) => {
+    if (!dateString) return null
+    const date = new Date(dateString)
+    if (Number.isNaN(date.getTime())) return null
+    return new Intl.DateTimeFormat('en-IN', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date)
+  }
+  const lastUpdatedAt = formatUpdatedAt(farm.waterCalculationUpdatedAt)
 
   const handleCalculate = () => {
     if (!formData.cropCoefficient || !formData.evapotranspiration) {
@@ -211,6 +225,12 @@ export function WaterCalculationModal({
           {(!farm.remainingWater || farm.remainingWater === 0) && (
             <div className="text-amber-600 text-xs mt-1 font-medium">
               ⚠️ No current water level data. Please log irrigation first to establish baseline.
+            </div>
+          )}
+          {lastUpdatedAt && (
+            <div className="flex items-center gap-1 text-[11px] text-gray-500 mt-2">
+              <Clock className="h-3 w-3 flex-shrink-0" />
+              <span>Last updated {lastUpdatedAt}</span>
             </div>
           )}
         </DialogHeader>

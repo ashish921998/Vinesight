@@ -17,6 +17,7 @@ interface ActivityLog {
   quantity?: number
   cost?: number
   fertilizer?: string
+  fertilizers?: Array<{ name: string; quantity: number; unit: string }>
   created_at: string
   // Report-related properties for soil and petiole tests
   report_url?: string
@@ -211,22 +212,36 @@ function getExpenseDisplayText(activity: ActivityLog): string {
  * Format fertilizer display
  */
 function getFertigationDisplayText(activity: ActivityLog): string {
-  // Add null/undefined guard and type checking
-  if (activity.fertilizer && typeof activity.fertilizer === 'string') {
-    const fertilizer = activity.fertilizer.trim()
-    if (fertilizer !== '') {
-      // Use the updated chemical formatter for consistency
-      const formattedFertilizer = formatChemicalData(fertilizer)
-      if (formattedFertilizer && formattedFertilizer.trim() !== '') {
-        // Apply truncation if very long
-        return formattedFertilizer.length > 25
-          ? formattedFertilizer.substring(0, 22) + '...'
-          : formattedFertilizer
+  // Format fertilizers array
+  if (
+    activity.fertilizers &&
+    Array.isArray(activity.fertilizers) &&
+    activity.fertilizers.length > 0
+  ) {
+    try {
+      // Validate fertilizers array structure
+      const validFertilizers = activity.fertilizers.filter(
+        (fert) =>
+          fert &&
+          typeof fert === 'object' &&
+          typeof fert.name === 'string' &&
+          fert.name.trim() !== '' &&
+          typeof fert.quantity === 'number' &&
+          isFinite(fert.quantity) &&
+          fert.quantity > 0
+      ) as Chemical[]
+
+      if (validFertilizers.length > 0) {
+        const formattedFertilizers = formatChemicalsForDisplay(validFertilizers, 25)
+        if (formattedFertilizers && formattedFertilizers.trim() !== '') {
+          return formattedFertilizers
+        }
       }
-      // If formatter returns empty, use the original value
-      return fertilizer.length > 25 ? fertilizer.substring(0, 22) + '...' : fertilizer
+    } catch (error) {
+      logger.warn('Error formatting fertilizers array:', error)
     }
   }
+
   return 'Fertigation'
 }
 
@@ -393,19 +408,17 @@ export function transformActivitiesToLogEntries(activities: ActivityLog[]): Arra
     }
   }
 }> {
+  // Transform all activities uniformly
   return activities
     .map((activity) => {
       // Validate activity type
       const validatedType = validateActivityType(activity.type)
       if (!validatedType) {
-        // Log warning for invalid activity type
         logger.warn(`Invalid activity type detected: ${activity.type}`, {
           activityId: activity.id,
           activityType: activity.type,
           date: activity.date
         })
-
-        // Filter out invalid types instead of coercing to irrigation
         return null
       }
 
@@ -509,8 +522,12 @@ export function getActivitiesSummary(activities: ActivityLog[]): Array<{
       case 'fertigation': {
         const fertilizers = new Set<string>()
         typeActivities.forEach((act) => {
-          if (act.fertilizer && act.fertilizer.trim()) {
-            fertilizers.add(act.fertilizer.trim())
+          if (act.fertilizers && Array.isArray(act.fertilizers)) {
+            act.fertilizers.forEach((fert) => {
+              if (fert.name && fert.name.trim()) {
+                fertilizers.add(fert.name.trim())
+              }
+            })
           }
         })
         if (fertilizers.size > 0) {

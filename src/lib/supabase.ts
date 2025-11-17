@@ -40,12 +40,22 @@ export interface IrrigationRecord {
   created_at?: string
 }
 
-// Chemical object type for the chemicals array
+// Chemical object type for chemicals array
 export interface SprayChemical {
   id?: string // Optional ID for frontend tracking
   name: string
   quantity: number
   unit: 'gm/L' | 'ml/L' | 'ppm'
+  warehouseItemId?: number
+}
+
+// Fertilizer object type for fertilizers array
+export interface Fertilizer {
+  id?: string // Optional ID for frontend tracking
+  name: string
+  quantity: number
+  unit: 'kg/acre' | 'liter/acre'
+  warehouseItemId?: number
 }
 
 export interface SprayRecord {
@@ -70,12 +80,8 @@ export interface FertigationRecord {
   id?: number
   farm_id: number
   date: string
-  fertilizer: string
-  dose?: string | null // Legacy field - kept for backward compatibility
-  quantity: number // Quantity of fertilizer applied
-  unit: 'kg/acre' | 'liter/acre' // Unit of measurement
-  purpose?: string | null // Legacy field - made optional for backward compatibility
-  area?: number | null // Legacy field - made optional for backward compatibility
+  fertilizers?: Fertilizer[] // Array of fertilizers with name, quantity, and unit
+  area?: number
   date_of_pruning?: Date // Date object of pruning when this record was created (snapshot from farm level)
   notes?: string
   created_at?: string
@@ -129,13 +135,29 @@ export interface TaskReminder {
   id?: number
   farm_id: number
   title: string
-  description?: string
-  due_date: string
-  type: 'irrigation' | 'spray' | 'fertigation' | 'training' | 'harvest' | 'other'
-  completed: boolean
-  priority: 'low' | 'medium' | 'high'
+  description?: string | null
+  task_type:
+    | 'irrigation'
+    | 'spray'
+    | 'fertigation'
+    | 'harvest'
+    | 'soil_test'
+    | 'petiole_test'
+    | 'expense'
+    | 'note'
+  dependency_log_type?: string | null
+  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+  priority?: 'low' | 'medium' | 'high'
+  due_date?: string | null
+  estimated_duration_minutes?: number | null
+  location?: string | null
+  assigned_to_user_id?: string | null
+  created_by?: string | null
+  linked_record_type?: string | null
+  linked_record_id?: number | null
   created_at?: string
-  completed_at?: string
+  updated_at?: string
+  completed_at?: string | null
 }
 
 export interface SoilTestRecord {

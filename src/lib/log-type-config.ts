@@ -19,14 +19,7 @@ import {
  * but rather a free-form note attached to a date. It's handled via special cases
  * in the helper functions below rather than being part of this union type.
  */
-export type LogType =
-  | 'irrigation'
-  | 'spray'
-  | 'harvest'
-  | 'expense'
-  | 'fertigation'
-  | 'soil_test'
-  | 'petiole_test'
+export type LogType = 'irrigation' | 'spray' | 'harvest' | 'expense' | 'fertigation'
 
 export interface FormField {
   name: string
@@ -65,6 +58,14 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         required: true,
         min: 0,
         step: 0.1
+      },
+      {
+        name: 'notes',
+        type: 'textarea',
+        label: 'Notes (Optional)',
+        required: false,
+        placeholder: 'e.g., Irrigated north section only, reduced duration due to rain forecast...',
+        maxLength: 2000
       }
     ]
   },
@@ -83,6 +84,14 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         min: 0,
         step: 0.1,
         placeholder: 'e.g., 1000'
+      },
+      {
+        name: 'notes',
+        type: 'textarea',
+        label: 'Notes (Optional)',
+        required: false,
+        placeholder: 'e.g., Applied to north section only, weather conditions favorable...',
+        maxLength: 2000
       }
     ]
   },
@@ -123,6 +132,14 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         required: false,
         placeholder: 'Buyer name',
         maxLength: 1000
+      },
+      {
+        name: 'notes',
+        type: 'textarea',
+        label: 'Notes (Optional)',
+        required: false,
+        placeholder: 'e.g., Harvested from rows 1-5, quality excellent...',
+        maxLength: 2000
       }
     ]
   },
@@ -163,6 +180,14 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         required: false,
         placeholder: 'Vendor name (optional)',
         maxLength: 1000
+      },
+      {
+        name: 'notes',
+        type: 'textarea',
+        label: 'Notes (Optional)',
+        required: false,
+        placeholder: 'e.g., Additional details about this expense...',
+        maxLength: 2000
       }
     ]
   },
@@ -174,326 +199,12 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
     label: 'Fertigation',
     fields: [
       {
-        name: 'fertilizer',
-        type: 'text',
-        label: 'Fertilizer Type',
-        required: true,
-        placeholder: 'e.g., NPK 19:19:19',
-        maxLength: 1000
-      },
-      {
-        name: 'quantity',
-        type: 'number',
-        label: 'Quantity',
+        name: 'notes',
+        type: 'textarea',
+        label: 'Notes (Optional)',
         required: false,
-        min: 0,
-        step: 0.1
-      },
-      {
-        name: 'unit',
-        type: 'select',
-        label: 'Unit',
-        required: false,
-        options: ['kg/acre', 'liter/acre']
-      }
-    ]
-  },
-  soil_test: {
-    icon: TestTube,
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-50',
-    borderColor: 'border-orange-200',
-    label: 'Soil Test',
-    fields: [
-      {
-        name: 'ph',
-        type: 'number',
-        label: 'pH Level',
-        required: true,
-        min: 0,
-        max: 14,
-        step: 0.1
-      },
-      {
-        name: 'ec',
-        type: 'number',
-        label: 'EC (dS/m)',
-        required: false,
-        min: 0,
-        step: 0.01
-      },
-      {
-        name: 'organicCarbon',
-        type: 'number',
-        label: 'Organic Carbon (%)',
-        required: false,
-        min: 0,
-        step: 0.01
-      },
-      {
-        name: 'organicMatter',
-        type: 'number',
-        label: 'Organic Matter (%)',
-        required: false,
-        min: 0,
-        step: 0.01
-      },
-      {
-        name: 'nitrogen',
-        type: 'number',
-        label: 'Nitrogen (%)',
-        required: false,
-        min: 0,
-        step: 0.01
-      },
-      {
-        name: 'phosphorus',
-        type: 'number',
-        label: 'Phosphorus (ppm)',
-        required: false,
-        min: 0,
-        step: 0.1
-      },
-      {
-        name: 'potassium',
-        type: 'number',
-        label: 'Potassium (ppm)',
-        required: false,
-        min: 0,
-        step: 0.1
-      },
-      {
-        name: 'calcium',
-        type: 'number',
-        label: 'Calcium (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'magnesium',
-        type: 'number',
-        label: 'Magnesium (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'sulfur',
-        type: 'number',
-        label: 'Sulfur (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'iron',
-        type: 'number',
-        label: 'Ferrous / Iron (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'manganese',
-        type: 'number',
-        label: 'Manganese (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'zinc',
-        type: 'number',
-        label: 'Zinc (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'copper',
-        type: 'number',
-        label: 'Copper (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'boron',
-        type: 'number',
-        label: 'Boron (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'molybdenum',
-        type: 'number',
-        label: 'Molybdenum (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'sodium',
-        type: 'number',
-        label: 'Sodium (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'chloride',
-        type: 'number',
-        label: 'Chloride (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'calciumCarbonate',
-        type: 'number',
-        label: 'Calcium Carbonate (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'carbonate',
-        type: 'number',
-        label: 'Carbonate (ppm)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'bicarbonate',
-        type: 'number',
-        label: 'Bicarbonate (ppm)',
-        required: false,
-        min: 0
-      }
-    ]
-  },
-  petiole_test: {
-    icon: TestTube,
-    color: 'text-green-700',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-200',
-    label: 'Petiole Test',
-    fields: [
-      {
-        name: 'total_nitrogen',
-        type: 'number',
-        label: 'Total Nitrogen (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'nitrate_nitrogen',
-        type: 'number',
-        label: 'Nitrate Nitrogen (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'ammonical_nitrogen',
-        type: 'number',
-        label: 'Ammonical Nitrogen (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'phosphorus',
-        type: 'number',
-        label: 'Phosphorus (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'potassium',
-        type: 'number',
-        label: 'Potassium (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'calcium',
-        type: 'number',
-        label: 'Calcium (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'magnesium',
-        type: 'number',
-        label: 'Magnesium (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'sulphur',
-        type: 'number',
-        label: 'Sulphur (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'ferrous',
-        type: 'number',
-        label: 'Ferrous (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'manganese',
-        type: 'number',
-        label: 'Manganese (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'zinc',
-        type: 'number',
-        label: 'Zinc (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'copper',
-        type: 'number',
-        label: 'Copper (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'boron',
-        type: 'number',
-        label: 'Boron (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'molybdenum',
-        type: 'number',
-        label: 'Molybdenum (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'sodium',
-        type: 'number',
-        label: 'Sodium (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'chloride',
-        type: 'number',
-        label: 'Chloride (%)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'carbonate',
-        type: 'number',
-        label: 'Carbonate (PPM)',
-        required: false,
-        min: 0
-      },
-      {
-        name: 'bicarbonate',
-        type: 'number',
-        label: 'Bicarbonate (PPM)',
-        required: false,
-        min: 0
+        placeholder: 'e.g., Applied to all sections, timing details, observations...',
+        maxLength: 2000
       }
     ]
   }

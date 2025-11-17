@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowRight, BarChart3, Brain, ClipboardList } from 'lucide-react'
+import { ArrowRight, BarChart3, Brain, ClipboardList, FlaskConical } from 'lucide-react'
 
 export function QuickActions() {
   const router = useRouter()
@@ -9,6 +9,13 @@ export function QuickActions() {
   const farmId = params.id as string
 
   const quickActions = [
+    {
+      title: 'Tasks board',
+      description: 'Plan, assign, and close farm work faster.',
+      icon: ClipboardList,
+      onClick: () => router.push(`/farms/${farmId}/tasks`),
+      iconClass: 'bg-primary/10 text-primary'
+    },
     {
       title: 'AI intelligence',
       description: 'Review pest risk predictions and tailored insights.',
@@ -22,6 +29,13 @@ export function QuickActions() {
       icon: BarChart3,
       onClick: () => router.push('/reports'),
       iconClass: 'bg-secondary/30 text-secondary-foreground'
+    },
+    {
+      title: 'Lab Tests',
+      description: 'Track soil and petiole test history with insights.',
+      icon: FlaskConical,
+      onClick: () => router.push(`/farms/${farmId}/lab-tests`),
+      iconClass: 'bg-blue-500/10 text-blue-600'
     }
   ]
 
@@ -34,7 +48,7 @@ export function QuickActions() {
         Keep the farm log updated in a couple of taps.
       </p>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {quickActions.map((action) => {
           const Icon = action.icon
           return (

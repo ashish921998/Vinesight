@@ -55,14 +55,19 @@ CREATE TABLE fertigation_records (
   id BIGSERIAL PRIMARY KEY,
   farm_id BIGINT REFERENCES farms(id) ON DELETE CASCADE,
   date DATE NOT NULL,
-  fertilizer VARCHAR(255) NOT NULL,
-  dose VARCHAR(100) NOT NULL,
-  purpose VARCHAR(255) NOT NULL,
+  fertilizers JSONB, -- Array of fertilizer objects: [{name: string, unit: "kg/acre"|"liter/acre", quantity: number}]
   area DECIMAL(10,2) NOT NULL, -- in hectares
   date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT valid_fertilizers_array CHECK (
+    fertilizers IS NULL OR
+    jsonb_typeof(fertilizers) = 'array'
+  )
 );
+
+-- Add comment to document the fertilizers column structure
+COMMENT ON COLUMN fertigation_records.fertilizers IS 'Array of fertilizer objects with structure: [{name: string, unit: "kg/acre"|"liter/acre", quantity: number}]';
 
 -- Create harvest_records table
 CREATE TABLE harvest_records (
@@ -103,18 +108,121 @@ CREATE TABLE calculation_history (
 );
 
 -- Create task_reminders table
+-- Enhanced task_reminders table for tracking farm tasks
+-- Supports all data log types: irrigation, spray, fertigation, harvest, soil_test, petiole_test, note
 CREATE TABLE task_reminders (
   id BIGSERIAL PRIMARY KEY,
   farm_id BIGINT REFERENCES farms(id) ON DELETE CASCADE,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  assigned_to_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   title VARCHAR(255) NOT NULL,
   description TEXT,
-  due_date DATE NOT NULL,
-  type VARCHAR(20) CHECK (type IN ('irrigation', 'spray', 'fertigation', 'training', 'harvest', 'other')) NOT NULL,
-  completed BOOLEAN DEFAULT FALSE,
+  type VARCHAR(50) CHECK (type IN ('irrigation', 'spray', 'fertigation', 'harvest', 'soil_test', 'petiole_test', 'expense', 'note')) NOT NULL,
+  status VARCHAR(20) CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled')) DEFAULT 'pending' NOT NULL,
   priority VARCHAR(10) CHECK (priority IN ('low', 'medium', 'high')) DEFAULT 'medium',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  completed_at TIMESTAMP WITH TIME ZONE
+  due_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  estimated_duration_minutes INTEGER CHECK (estimated_duration_minutes IS NULL OR estimated_duration_minutes >= 0),
+  location TEXT,
+  linked_record_type VARCHAR(50),
+  linked_record_id BIGINT,
+  completed BOOLEAN DEFAULT FALSE,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  -- Ensure consistency between completed boolean and status field
+  CONSTRAINT task_status_consistency CHECK (
+    (completed = TRUE AND status = 'completed') OR
+    (completed = FALSE AND status IN ('pending', 'in_progress', 'cancelled'))
+  )
 );
+
+-- Create indexes for task_reminders
+CREATE INDEX idx_task_reminders_farm_id ON task_reminders(farm_id);
+CREATE INDEX idx_task_reminders_status ON task_reminders(status);
+CREATE INDEX idx_task_reminders_farm_status_due ON task_reminders(farm_id, status, due_date);
+CREATE INDEX idx_task_reminders_assignee_status ON task_reminders(assigned_to_user_id, status);
+CREATE INDEX idx_task_reminders_farm_type ON task_reminders(farm_id, type);
+CREATE INDEX idx_task_reminders_linked_record ON task_reminders(linked_record_type, linked_record_id);
+
+-- Trigger to auto-update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_task_reminders_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = CURRENT_TIMESTAMP;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_task_reminders_updated_at_trigger
+  BEFORE UPDATE ON task_reminders
+  FOR EACH ROW
+  EXECUTE FUNCTION update_task_reminders_updated_at();
+
+-- Function to validate linked_record references
+CREATE OR REPLACE FUNCTION validate_task_linked_record()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- If linked_record_type is set, linked_record_id must also be set
+  IF NEW.linked_record_type IS NOT NULL AND NEW.linked_record_id IS NULL THEN
+    RAISE EXCEPTION 'linked_record_id must be set when linked_record_type is specified';
+  END IF;
+
+  -- If linked_record_id is set, linked_record_type must also be set
+  IF NEW.linked_record_id IS NOT NULL AND NEW.linked_record_type IS NULL THEN
+    RAISE EXCEPTION 'linked_record_type must be set when linked_record_id is specified';
+  END IF;
+
+  -- Validate that the linked record exists and belongs to the same farm
+  IF NEW.linked_record_type IS NOT NULL AND NEW.linked_record_id IS NOT NULL THEN
+    CASE NEW.linked_record_type
+      WHEN 'irrigation' THEN
+        IF NOT EXISTS (SELECT 1 FROM irrigation_records WHERE id = NEW.linked_record_id AND farm_id = NEW.farm_id) THEN
+          RAISE EXCEPTION 'Referenced irrigation record % does not exist in this farm', NEW.linked_record_id;
+        END IF;
+      WHEN 'spray' THEN
+        IF NOT EXISTS (SELECT 1 FROM spray_records WHERE id = NEW.linked_record_id AND farm_id = NEW.farm_id) THEN
+          RAISE EXCEPTION 'Referenced spray record % does not exist in this farm', NEW.linked_record_id;
+        END IF;
+      WHEN 'fertigation' THEN
+        IF NOT EXISTS (SELECT 1 FROM fertigation_records WHERE id = NEW.linked_record_id AND farm_id = NEW.farm_id) THEN
+          RAISE EXCEPTION 'Referenced fertigation record % does not exist in this farm', NEW.linked_record_id;
+        END IF;
+      WHEN 'harvest' THEN
+        IF NOT EXISTS (SELECT 1 FROM harvest_records WHERE id = NEW.linked_record_id AND farm_id = NEW.farm_id) THEN
+          RAISE EXCEPTION 'Referenced harvest record % does not exist in this farm', NEW.linked_record_id;
+        END IF;
+      WHEN 'expense' THEN
+        IF NOT EXISTS (SELECT 1 FROM expense_records WHERE id = NEW.linked_record_id AND farm_id = NEW.farm_id) THEN
+          RAISE EXCEPTION 'Referenced expense record % does not exist in this farm', NEW.linked_record_id;
+        END IF;
+      WHEN 'soil_test' THEN
+        IF NOT EXISTS (SELECT 1 FROM soil_test_records WHERE id = NEW.linked_record_id AND farm_id = NEW.farm_id) THEN
+          RAISE EXCEPTION 'Referenced soil test record % does not exist in this farm', NEW.linked_record_id;
+        END IF;
+      WHEN 'petiole_test' THEN
+        IF NOT EXISTS (SELECT 1 FROM petiole_test_records WHERE id = NEW.linked_record_id AND farm_id = NEW.farm_id) THEN
+          RAISE EXCEPTION 'Referenced petiole test record % does not exist in this farm', NEW.linked_record_id;
+        END IF;
+      WHEN 'note' THEN
+        -- Note type tasks don't link to specific records, skip validation
+        RAISE NOTICE 'Note type tasks do not support linked records';
+      ELSE
+        -- For other types, just log a warning but allow it
+        RAISE NOTICE 'Unknown linked_record_type: %', NEW.linked_record_type;
+    END CASE;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER validate_task_linked_record_trigger
+  BEFORE INSERT OR UPDATE ON task_reminders
+  FOR EACH ROW
+  EXECUTE FUNCTION validate_task_linked_record();
+
+-- Enable Row Level Security
+ALTER TABLE task_reminders ENABLE ROW LEVEL SECURITY;
 
 -- Create soil_test_records table
 CREATE TABLE soil_test_records (
@@ -152,6 +260,7 @@ CREATE INDEX idx_spray_records_date_of_pruning ON spray_records(date_of_pruning)
 CREATE INDEX idx_fertigation_records_farm_id ON fertigation_records(farm_id);
 CREATE INDEX idx_fertigation_records_date ON fertigation_records(date);
 CREATE INDEX idx_fertigation_records_date_of_pruning ON fertigation_records(date_of_pruning);
+CREATE INDEX idx_fertigation_records_fertilizers ON fertigation_records USING GIN (fertilizers);
 CREATE INDEX idx_harvest_records_farm_id ON harvest_records(farm_id);
 CREATE INDEX idx_harvest_records_date ON harvest_records(date);
 CREATE INDEX idx_harvest_records_date_of_pruning ON harvest_records(date_of_pruning);
@@ -160,9 +269,6 @@ CREATE INDEX idx_expense_records_date ON expense_records(date);
 CREATE INDEX idx_expense_records_date_of_pruning ON expense_records(date_of_pruning);
 CREATE INDEX idx_calculation_history_farm_id ON calculation_history(farm_id);
 CREATE INDEX idx_calculation_history_date ON calculation_history(date);
-CREATE INDEX idx_task_reminders_farm_id ON task_reminders(farm_id);
-CREATE INDEX idx_task_reminders_due_date ON task_reminders(due_date);
-CREATE INDEX idx_task_reminders_completed ON task_reminders(completed);
 CREATE INDEX idx_soil_test_records_farm_id ON soil_test_records(farm_id);
 CREATE INDEX idx_soil_test_records_date ON soil_test_records(date);
 CREATE INDEX idx_soil_test_records_date_of_pruning ON soil_test_records(date_of_pruning);
@@ -273,18 +379,50 @@ CREATE POLICY "Users can delete calculation history for their farms" ON calculat
   EXISTS (SELECT 1 FROM farms WHERE farms.id = calculation_history.farm_id AND farms.user_id = auth.uid())
 );
 
--- Task reminders
-CREATE POLICY "Users can view their farm task reminders" ON task_reminders FOR SELECT USING (
-  EXISTS (SELECT 1 FROM farms WHERE farms.id = task_reminders.farm_id AND farms.user_id = auth.uid())
+-- Task reminders RLS policies
+-- Farm owners and assignees can view tasks
+CREATE POLICY "Users can view farm tasks" ON task_reminders FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM farms
+    WHERE farms.id = task_reminders.farm_id
+    AND farms.user_id = auth.uid()
+  )
+  OR assigned_to_user_id = auth.uid()
 );
-CREATE POLICY "Users can insert task reminders for their farms" ON task_reminders FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM farms WHERE farms.id = task_reminders.farm_id AND farms.user_id = auth.uid())
+
+-- Farm owners can insert tasks
+CREATE POLICY "Users can insert farm tasks" ON task_reminders FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM farms
+    WHERE farms.id = task_reminders.farm_id
+    AND farms.user_id = auth.uid()
+  )
 );
-CREATE POLICY "Users can update task reminders for their farms" ON task_reminders FOR UPDATE USING (
-  EXISTS (SELECT 1 FROM farms WHERE farms.id = task_reminders.farm_id AND farms.user_id = auth.uid())
+
+-- Farm owners can update their tasks
+CREATE POLICY "Users can update farm tasks" ON task_reminders FOR UPDATE USING (
+  -- Allow farm owners OR assigned users to update tasks
+  EXISTS (
+    SELECT 1 FROM farms
+    WHERE farms.id = task_reminders.farm_id
+    AND farms.user_id = auth.uid()
+  ) OR task_reminders.assigned_to_user_id = auth.uid()
+) WITH CHECK (
+  -- Allow farm owners OR assigned users to update tasks
+  EXISTS (
+    SELECT 1 FROM farms
+    WHERE farms.id = task_reminders.farm_id
+    AND farms.user_id = auth.uid()
+  ) OR task_reminders.assigned_to_user_id = auth.uid()
 );
-CREATE POLICY "Users can delete task reminders for their farms" ON task_reminders FOR DELETE USING (
-  EXISTS (SELECT 1 FROM farms WHERE farms.id = task_reminders.farm_id AND farms.user_id = auth.uid())
+
+-- Farm owners can delete their tasks
+CREATE POLICY "Users can delete farm tasks" ON task_reminders FOR DELETE USING (
+  EXISTS (
+    SELECT 1 FROM farms
+    WHERE farms.id = task_reminders.farm_id
+    AND farms.user_id = auth.uid()
+  )
 );
 
 -- Soil test records

@@ -6,6 +6,7 @@ export interface Chemical {
   name: string
   quantity: number
   unit: string
+  warehouseItemId?: number
 }
 
 /**

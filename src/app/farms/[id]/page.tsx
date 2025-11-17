@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { SupabaseService } from '@/lib/supabase-service'
-import { PhotoService } from '@/lib/photo-service'
 import { FarmHeader, type FarmWeatherSummary } from '@/components/farm-details/FarmHeader'
 import { QuickActions } from '@/components/farm-details/QuickActions'
 import { ActivityFeed } from '@/components/farm-details/ActivityFeed'
@@ -20,11 +19,10 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { PestPredictionService } from '@/lib/pest-prediction-service'
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { Farm } from '@/types/types'
+import type { Farm, TaskReminder } from '@/types/types'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { capitalize } from '@/lib/utils'
 import { transformActivitiesToLogEntries } from '@/lib/activity-display-utils'
 import { logger } from '@/lib/logger'
@@ -32,11 +30,13 @@ import { OpenMeteoWeatherService } from '@/lib/open-meteo-weather'
 import { WEATHER_THRESHOLDS } from '@/constants/weather'
 import { toast } from 'sonner'
 import {
-  processDailyNotesAndPhotos,
   parseFarmId,
   shouldUseSingleEditModal,
-  extractDailyNoteFromActivities
+  extractDailyNoteFromActivities,
+  handleDailyNotesAndPhotosAfterLogs
 } from '@/lib/daily-note-utils'
+import { TasksOverviewCard } from '@/components/tasks/TasksOverviewCard'
+import { TestReminderNotification } from '@/components/lab-tests/TestReminderNotification'
 
 interface DashboardData {
   farm: Farm | null
@@ -45,7 +45,7 @@ interface DashboardData {
   recentActivities: any[]
   totalHarvest: number
   totalWaterUsage: number
-  pendingTasks: any[]
+  pendingTasks: TaskReminder[]
   recordCounts: {
     irrigation: number
     spray: number
@@ -232,15 +232,6 @@ export default function FarmDetailsPage() {
   //   generateAIPredictions()
   // }, [dashboardData, farmId, user, aiPredictionsGenerated])
 
-  const completeTask = async (taskId: number) => {
-    try {
-      await SupabaseService.completeTask(taskId)
-      await loadDashboardData()
-    } catch (error) {
-      logger.error('Error completing task:', error)
-    }
-  }
-
   // Unified handler for all data logs
   const handleDataLogsSubmit = async (
     logs: any[],
@@ -276,17 +267,16 @@ export default function FarmDetailsPage() {
         }
       }
 
-      // Use utility function to handle daily notes and photos
-      await processDailyNotesAndPhotos(
-        {
-          farmId: farmIdNum,
-          date,
-          notes: dayNotes,
-          existingId: existingDailyNoteId
-        },
+      // Handle daily notes and photos based on whether logs exist
+      await handleDailyNotesAndPhotosAfterLogs({
+        logs,
+        dayNotes,
         dayPhotos,
-        firstRecordId
-      )
+        firstRecordId,
+        existingDailyNoteId: existingDailyNoteId ?? null,
+        farmId: farmIdNum,
+        date
+      })
 
       await loadDashboardData()
       toast.success('Data logs saved successfully')
@@ -330,19 +320,18 @@ export default function FarmDetailsPage() {
           growth_stage: 'Active',
           moisture_status: 'Good',
           system_discharge: dashboardData?.farm?.systemDischarge || 100,
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: dashboardData.farm.dateOfPruning
         })
 
-        // Update soil water level when irrigation is added
         if (record && dashboardData?.farm) {
-          const duration = parseFloat(data.duration || '0')
-          const systemDischarge = dashboardData.farm.systemDischarge || 100
-
-          if (duration > 0 && systemDischarge > 0) {
-            // Calculate water added from this irrigation (in mm)
+          try {
+            const duration = parseFloat(data.duration || '0')
+            const systemDischarge = Number(
+              record.system_discharge ?? dashboardData.farm.systemDischarge ?? 100
+            )
             const waterAdded = duration * systemDischarge
-            const currentWaterLevel = dashboardData.farm.remainingWater || 0
+            const currentWaterLevel = Number(dashboardData.farm.remainingWater ?? 0)
             const newWaterLevel = currentWaterLevel + waterAdded
 
             await SupabaseService.updateFarm(parseInt(farmId), {
@@ -350,20 +339,38 @@ export default function FarmDetailsPage() {
               waterCalculationUpdatedAt: new Date().toISOString()
             })
 
-            // Check if new water level needs alert
-            const { NotificationService } = await import('@/lib/notification-service')
-            const notificationService = NotificationService.getInstance()
-            notificationService.checkWaterLevelAndAlert(
-              capitalize(dashboardData.farm.name),
+            logger.info('Water level updated successfully', {
+              farmId,
+              duration,
+              systemDischarge,
+              waterAdded,
+              currentWaterLevel,
               newWaterLevel
+            })
+          } catch (waterError) {
+            logger.error('Failed to update soil water level:', {
+              error: waterError,
+              farmId,
+              irrigationRecord: record
+            })
+            toast.error(
+              'Irrigation saved but failed to update soil water level. Please report this issue.'
             )
           }
+        } else {
+          logger.error('Cannot update soil water level - missing record or farm data', {
+            hasRecord: !!record,
+            hasFarm: !!dashboardData?.farm,
+            farmId
+          })
+          toast.error(
+            'Irrigation saved but soil water level was not updated. Please report this issue.'
+          )
         }
         break
       }
 
       case 'spray': {
-        // Validate required farm data is available
         if (!dashboardData?.farm) {
           throw new Error('Farm data not loaded. Please refresh the page and try again.')
         }
@@ -376,7 +383,7 @@ export default function FarmDetailsPage() {
           area: dashboardData.farm.area,
           weather: 'Clear',
           operator: 'Farm Owner',
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: dashboardData.farm.dateOfPruning
         }
 
@@ -435,7 +442,7 @@ export default function FarmDetailsPage() {
           grade: data.grade || 'Standard',
           price: 0,
           buyer: '',
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
@@ -447,29 +454,68 @@ export default function FarmDetailsPage() {
           type: data.type || 'other',
           description: data.description || '',
           cost: parseFloat(data.cost || '0'),
-          remarks: dayNotes || '',
+          remarks: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
 
-      case 'fertigation':
-        record = await SupabaseService.addFertigationRecord({
+      case 'fertigation': {
+        // Whitelist of allowed units for fertigation (defense-in-depth)
+        const ALLOWED_FERTIGATION_UNITS = ['kg/acre', 'liter/acre'] as const
+
+        const validateFertigationUnit = (unit: string): 'kg/acre' | 'liter/acre' => {
+          const normalized = unit.trim().toLowerCase()
+
+          // Find matching allowed unit (case-insensitive)
+          for (const allowedUnit of ALLOWED_FERTIGATION_UNITS) {
+            if (allowedUnit.toLowerCase() === normalized) {
+              // Return the canonical allowed unit
+              return allowedUnit
+            }
+          }
+
+          // If no match found, throw error
+          throw new Error(`Invalid fertigation unit: "${unit}". Allowed units: kg/acre, liter/acre`)
+        }
+
+        // Validate all fertilizers before creating the record
+        const validatedFertilizers = data.fertilizers.map(
+          (fertilizer: { name: string; quantity: number; unit: string }) => {
+            // Validate unit against whitelist
+            const validatedUnit = validateFertigationUnit(fertilizer.unit || 'kg/acre')
+
+            return {
+              name: fertilizer.name?.trim() || 'Unknown',
+              quantity: fertilizer.quantity || 0,
+              unit: validatedUnit
+            }
+          }
+        )
+
+        // Create a single fertigation record with the fertilizers array
+        // Only include area if it's a valid positive number
+        const farmArea = dashboardData?.farm?.area
+        const payload: any = {
           farm_id: parseInt(farmId),
           date: date,
-          fertilizer: data.fertilizer?.trim() || 'Unknown',
-          quantity: data.quantity || 0,
-          unit: data.unit || 'kg/acre',
-          area: dashboardData?.farm?.area || 0,
-          purpose: data.purpose || 'General',
-          notes: dayNotes || '',
+          fertilizers: validatedFertilizers,
+          notes: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
-        })
+        }
+
+        // Only include area if it's a valid positive number
+        if (typeof farmArea === 'number' && farmArea > 0) {
+          payload.area = farmArea
+        }
+
+        record = await SupabaseService.addFertigationRecord(payload)
         break
+      }
 
       case 'soil_test': {
         const reportMeta = (logEntry.meta?.report || null) as ReportAttachmentMeta | null
 
-        const combineNotes = [dayNotes]
+        const combineNotes = [data.notes || '']
         if (reportMeta?.summary) combineNotes.push(reportMeta.summary)
 
         const parsedParameters = reportMeta?.parsedParameters || {}
@@ -590,7 +636,7 @@ export default function FarmDetailsPage() {
         // Create parameters object with all the nutrient values
         const reportMeta = (logEntry.meta?.report || null) as ReportAttachmentMeta | null
 
-        const combineNotes = [dayNotes]
+        const combineNotes = [data.notes || '']
         if (reportMeta?.summary) combineNotes.push(reportMeta.summary)
 
         const parameters: Record<string, number> = { ...(reportMeta?.parsedParameters || {}) }
@@ -675,7 +721,7 @@ export default function FarmDetailsPage() {
           growth_stage: 'Active',
           moisture_status: 'Good',
           system_discharge: dashboardData.farm.systemDischarge,
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: dashboardData.farm.dateOfPruning
         })
         break
@@ -695,7 +741,7 @@ export default function FarmDetailsPage() {
           area: dashboardData.farm.area,
           weather: 'Clear',
           operator: 'Farm Owner',
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: dashboardData.farm.dateOfPruning
         }
 
@@ -757,7 +803,7 @@ export default function FarmDetailsPage() {
               ? parseFloat(data.price.toString())
               : logEntry.data?.price || 0,
           buyer: data.buyer !== undefined ? data.buyer : logEntry.data?.buyer || '',
-          notes: dayNotes || '',
+          notes: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
@@ -769,29 +815,78 @@ export default function FarmDetailsPage() {
           type: data.type || 'other',
           description: data.description || '',
           cost: parseFloat(data.cost || '0'),
-          remarks: dayNotes || '',
+          remarks: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
 
-      case 'fertigation':
-        record = await SupabaseService.updateFertigationRecord(originalId, {
+      case 'fertigation': {
+        // Whitelist of allowed units for fertigation (defense-in-depth)
+        const ALLOWED_FERTIGATION_UNITS = ['kg/acre', 'liter/acre'] as const
+
+        const validateFertigationUnit = (unit: string): 'kg/acre' | 'liter/acre' => {
+          const normalized = unit.trim().toLowerCase()
+
+          // Find matching allowed unit (case-insensitive)
+          for (const allowedUnit of ALLOWED_FERTIGATION_UNITS) {
+            if (allowedUnit.toLowerCase() === normalized) {
+              // Return the canonical allowed unit
+              return allowedUnit
+            }
+          }
+
+          // If no match found, throw error
+          throw new Error(`Invalid fertigation unit: "${unit}". Allowed units: kg/acre, liter/acre`)
+        }
+
+        // Validate all fertilizers before updating the record
+        const validatedFertilizers = data.fertilizers.map(
+          (fertilizer: { name: string; quantity: number; unit: string }) => {
+            // Validate unit against whitelist
+            const validatedUnit = validateFertigationUnit(fertilizer.unit || 'kg/acre')
+
+            // Validate fertilizer name
+            if (!fertilizer.name || !fertilizer.name.trim()) {
+              throw new Error('Fertilizer name cannot be empty')
+            }
+
+            // Validate quantity
+            if (!fertilizer.quantity || fertilizer.quantity <= 0) {
+              throw new Error(`Invalid quantity for fertilizer "${fertilizer.name}"`)
+            }
+
+            return {
+              name: fertilizer.name.trim(),
+              quantity: fertilizer.quantity,
+              unit: validatedUnit
+            }
+          }
+        )
+
+        // Update the single fertigation record with the fertilizers array
+        // Only include area if it's a valid positive number
+        const updateFarmArea = dashboardData?.farm?.area
+        const updatePayload: any = {
           farm_id: parseInt(farmId),
           date: originalDate,
-          fertilizer: data.fertilizer?.trim() || 'Unknown',
-          quantity: data.quantity || 0,
-          unit: data.unit || 'kg/acre',
-          area: data.area || dashboardData?.farm?.area || 0,
-          purpose: data.purpose || 'General',
-          notes: dayNotes || '',
+          fertilizers: validatedFertilizers,
+          notes: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
-        })
+        }
+
+        // Only include area if it's a valid positive number
+        if (typeof updateFarmArea === 'number' && updateFarmArea > 0) {
+          updatePayload.area = updateFarmArea
+        }
+
+        record = await SupabaseService.updateFertigationRecord(originalId, updatePayload)
         break
+      }
 
       case 'soil_test': {
         const reportMeta = (logEntry.meta?.report || null) as ReportAttachmentMeta | null
 
-        const combineNotes = [dayNotes]
+        const combineNotes = [data.notes || '']
         if (reportMeta?.summary) combineNotes.push(reportMeta.summary)
 
         const parsedParameters = reportMeta?.parsedParameters || {}
@@ -912,7 +1007,7 @@ export default function FarmDetailsPage() {
         // Create parameters object with all the nutrient values
         const reportMeta = (logEntry.meta?.report || null) as ReportAttachmentMeta | null
 
-        const combineNotes = [dayNotes]
+        const combineNotes = [data.notes || '']
         if (reportMeta?.summary) combineNotes.push(reportMeta.summary)
 
         const parameters: Record<string, number> = { ...(reportMeta?.parsedParameters || {}) }
@@ -1264,11 +1359,17 @@ export default function FarmDetailsPage() {
         <main className="relative z-10 mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
           <div className="space-y-6">
             <QuickActions />
+            <TestReminderNotification farmId={Number.parseInt(farmId, 10)} />
+            <TasksOverviewCard
+              farmId={Number.parseInt(farmId, 10)}
+              tasks={dashboardData?.pendingTasks || []}
+              farmName={farm?.name ? capitalize(farm.name) : undefined}
+              loading={loading}
+              onTasksUpdated={loadDashboardData}
+            />
             <ActivityFeed
               recentActivities={dashboardData?.recentActivities || []}
-              pendingTasks={dashboardData?.pendingTasks || []}
               loading={loading}
-              onCompleteTask={completeTask}
               onDeleteRecord={canDeleteRecords ? handleDeleteRecord : undefined}
               onEditDateGroup={canUpdateRecords ? handleEditDateGroup : undefined}
               onDeleteDateGroup={canDeleteRecords ? handleDeleteDateGroup : undefined}

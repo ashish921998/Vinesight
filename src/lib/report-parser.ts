@@ -1,11 +1,13 @@
 import OpenAI, { toFile } from 'openai'
 import type { Response as OpenAIResponse } from 'openai/resources/responses/responses.js'
+import { canonicalizeParameterKey } from './parameter-canonicalization'
 
 export interface ParsedReportResult {
   parameters: Record<string, number>
   summary?: string | null
   rawNotes?: string | null
   confidence?: number | null
+  testDate?: string | null
 }
 
 interface StructuredParameterEntry {
@@ -18,6 +20,7 @@ interface StructuredReportPayload {
   summary: string | null
   rawNotes: string | null
   confidence: number | null
+  testDate: string | null
 }
 
 type TestType = 'soil' | 'petiole'
@@ -91,6 +94,7 @@ export class ReportParser {
     if (testType === 'soil') {
       return `Extract all nutrient and soil health parameters from the attached soil test report.
 Return numeric values for pH, EC (electrical conductivity), organic carbon, nitrogen, phosphorus, potassium, calcium, magnesium, sulfur, iron, manganese, zinc, copper, boron, molybdenum, sodium, chloride, calcium carbonate, carbonate, bicarbonate, and any other nutrients you can find (include micronutrients if present).
+Also extract the test date or analysis date if present in the report (return in YYYY-MM-DD format).
 Also return a short summary of key findings, any recommendations or notes, and a confidence score between 0 and 1 describing how certain you are about the extracted numbers.
 
 Respond strictly as JSON with the shape:
@@ -100,12 +104,14 @@ Respond strictly as JSON with the shape:
   ],
   "summary": string | null,
   "rawNotes": string | null,
-  "confidence": number | null
+  "confidence": number | null,
+  "testDate": string | null
 }`
     }
 
     return `Extract nutrient values from the attached petiole analysis report.
 Return numeric values for macronutrients and micronutrients (nitrogen, phosphorus, potassium, calcium, magnesium, sulfur, iron, manganese, zinc, copper, boron, etc.) when available.
+Also extract the test date or analysis date if present in the report (return in YYYY-MM-DD format).
 Include a short summary of the analysis, any notes, and a confidence score between 0 and 1 representing extraction certainty.
 
 Respond strictly as JSON with the shape:
@@ -115,7 +121,8 @@ Respond strictly as JSON with the shape:
   ],
   "summary": string | null,
   "rawNotes": string | null,
-  "confidence": number | null
+  "confidence": number | null,
+  "testDate": string | null
 }`
   }
 
@@ -124,7 +131,8 @@ Respond strictly as JSON with the shape:
       parameters: this.normalizeParameters(payload.parameters || []),
       summary: payload.summary,
       rawNotes: payload.rawNotes,
-      confidence: payload.confidence
+      confidence: payload.confidence,
+      testDate: payload.testDate
     }
   }
 
@@ -186,56 +194,7 @@ Respond strictly as JSON with the shape:
   }
 
   private static canonicalParameterKey(key: string): string | null {
-    const normalized = key.toLowerCase().replace(/[^a-z0-9]/g, '')
-
-    const mappings: Record<string, string> = {
-      soilph: 'ph',
-      ph: 'ph',
-      electricalconductivity: 'ec',
-      ec: 'ec',
-      organiccarbon: 'organicCarbon',
-      organicmatter: 'organicMatter',
-      oc: 'organicCarbon',
-      nitrogen: 'nitrogen',
-      n: 'nitrogen',
-      phosphorus: 'phosphorus',
-      phosphorous: 'phosphorus',
-      p: 'phosphorus',
-      potassium: 'potassium',
-      k: 'potassium',
-      calciumcarbonate: 'calciumcarbonate',
-      caco3: 'calciumcarbonate',
-      calcium: 'calcium',
-      ca: 'calcium',
-      magnesium: 'magnesium',
-      mg: 'magnesium',
-      sulphur: 'sulfur',
-      sulfur: 'sulfur',
-      s: 'sulfur',
-      iron: 'iron',
-      ferrous: 'iron',
-      fe: 'iron',
-      manganese: 'manganese',
-      mn: 'manganese',
-      zinc: 'zinc',
-      zn: 'zinc',
-      copper: 'copper',
-      cu: 'copper',
-      boron: 'boron',
-      b: 'boron',
-      molybdenum: 'molybdenum',
-      mo: 'molybdenum',
-      sodium: 'sodium',
-      na: 'sodium',
-      chloride: 'chloride',
-      cl: 'chloride',
-      carbonate: 'carbonate',
-      co3: 'carbonate',
-      bicarbonate: 'bicarbonate',
-      hco3: 'bicarbonate'
-    }
-
-    return mappings[normalized] ?? null
+    return canonicalizeParameterKey(key)
   }
 
   private static buildSchema() {
@@ -264,9 +223,12 @@ Respond strictly as JSON with the shape:
           type: ['number', 'null'],
           minimum: 0,
           maximum: 1
+        },
+        testDate: {
+          type: ['string', 'null']
         }
       },
-      required: ['parameters', 'summary', 'rawNotes', 'confidence'],
+      required: ['parameters', 'summary', 'rawNotes', 'confidence', 'testDate'],
       additionalProperties: false
     } as const
   }

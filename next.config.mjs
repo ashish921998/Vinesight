@@ -125,7 +125,7 @@ export default withSentryConfig(nextConfig, {
 
   org: 'vinesight-6s',
 
-  project: 'javascript-nextjs',
+  project: 'vinesight',
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
