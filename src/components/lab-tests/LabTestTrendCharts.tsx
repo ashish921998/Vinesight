@@ -68,12 +68,26 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     .map((record) => ({
       date: record.date,
       displayDate: format(new Date(record.date), 'MMM dd, yyyy'),
+      // Primary parameters
       ph: record.parameters.ph || null,
       ec: record.parameters.ec || null,
+      // Macronutrients
       nitrogen: record.parameters.nitrogen || null,
       phosphorus: record.parameters.phosphorus || null,
       potassium: record.parameters.potassium || null,
-      organicMatter: record.parameters.organicMatter || null
+      // Secondary nutrients
+      calcium: record.parameters.calcium || null,
+      magnesium: record.parameters.magnesium || null,
+      sulfur: record.parameters.sulfur || null,
+      // Organic matter
+      organicCarbon: record.parameters.organicCarbon || null,
+      organicMatter: record.parameters.organicMatter || null,
+      // Micronutrients
+      iron: record.parameters.iron || null,
+      manganese: record.parameters.manganese || null,
+      zinc: record.parameters.zinc || null,
+      copper: record.parameters.copper || null,
+      boron: record.parameters.boron || null
     }))
 
   // Prepare petiole test data
@@ -82,20 +96,34 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     .map((record) => ({
       date: record.date,
       displayDate: format(new Date(record.date), 'MMM dd, yyyy'),
+      // Major nutrients
       total_nitrogen: record.parameters.total_nitrogen || null,
+      nitrate_nitrogen: record.parameters.nitrate_nitrogen || null,
+      ammonical_nitrogen: record.parameters.ammonical_nitrogen || null,
       phosphorus: record.parameters.phosphorus || null,
       potassium: record.parameters.potassium || null,
+      // Secondary nutrients
       calcium: record.parameters.calcium || null,
       magnesium: record.parameters.magnesium || null,
+      sulphur: record.parameters.sulphur || null,
+      // Micronutrients
       ferrous: record.parameters.ferrous || null,
+      manganese: record.parameters.manganese || null,
       zinc: record.parameters.zinc || null,
-      boron: record.parameters.boron || null
+      copper: record.parameters.copper || null,
+      boron: record.parameters.boron || null,
+      molybdenum: record.parameters.molybdenum || null,
+      // Other elements
+      sodium: record.parameters.sodium || null,
+      chloride: record.parameters.chloride || null
     }))
 
   // Soil parameter options
   const soilParamOptions = [
+    // Primary parameters
     { key: 'ph', label: 'pH', unit: '', color: '#3b82f6', optimalMin: 6.5, optimalMax: 7.5 },
     { key: 'ec', label: 'EC', unit: 'dS/m', color: '#10b981', optimalMin: 0.5, optimalMax: 2.0 },
+    // Macronutrients
     {
       key: 'nitrogen',
       label: 'Nitrogen',
@@ -120,6 +148,26 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       optimalMin: 250,
       optimalMax: 400
     },
+    // Secondary nutrients
+    { key: 'calcium', label: 'Calcium', unit: 'ppm', color: '#14b8a6', optimalMin: 800, optimalMax: 1500 },
+    {
+      key: 'magnesium',
+      label: 'Magnesium',
+      unit: 'ppm',
+      color: '#d946ef',
+      optimalMin: 150,
+      optimalMax: 300
+    },
+    { key: 'sulfur', label: 'Sulfur', unit: 'ppm', color: '#f97316', optimalMin: 15, optimalMax: 30 },
+    // Organic matter
+    {
+      key: 'organicCarbon',
+      label: 'Organic Carbon',
+      unit: '%',
+      color: '#84cc16',
+      optimalMin: 1.0,
+      optimalMax: 2.5
+    },
     {
       key: 'organicMatter',
       label: 'Organic Matter',
@@ -127,11 +175,18 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       color: '#06b6d4',
       optimalMin: 2.0,
       optimalMax: 5.0
-    }
+    },
+    // Micronutrients
+    { key: 'iron', label: 'Iron', unit: 'ppm', color: '#dc2626', optimalMin: 4.5, optimalMax: 10.0 },
+    { key: 'manganese', label: 'Manganese', unit: 'ppm', color: '#7c3aed', optimalMin: 5, optimalMax: 15 },
+    { key: 'zinc', label: 'Zinc', unit: 'ppm', color: '#6366f1', optimalMin: 1.0, optimalMax: 3.0 },
+    { key: 'copper', label: 'Copper', unit: 'ppm', color: '#ea580c', optimalMin: 0.5, optimalMax: 2.0 },
+    { key: 'boron', label: 'Boron', unit: 'ppm', color: '#ec4899', optimalMin: 0.5, optimalMax: 1.5 }
   ]
 
   // Petiole parameter options
   const petioleParamOptions = [
+    // Major nutrients
     {
       key: 'total_nitrogen',
       label: 'Total Nitrogen',
@@ -139,6 +194,22 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       color: '#3b82f6',
       optimalMin: 2.0,
       optimalMax: 3.5
+    },
+    {
+      key: 'nitrate_nitrogen',
+      label: 'Nitrate Nitrogen',
+      unit: 'ppm',
+      color: '#0ea5e9',
+      optimalMin: 500,
+      optimalMax: 1500
+    },
+    {
+      key: 'ammonical_nitrogen',
+      label: 'Ammonical Nitrogen',
+      unit: 'ppm',
+      color: '#38bdf8',
+      optimalMin: 500,
+      optimalMax: 1500
     },
     {
       key: 'phosphorus',
@@ -156,6 +227,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       optimalMin: 1.8,
       optimalMax: 2.5
     },
+    // Secondary nutrients
     {
       key: 'calcium',
       label: 'Calcium',
@@ -173,6 +245,15 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       optimalMax: 0.8
     },
     {
+      key: 'sulphur',
+      label: 'Sulphur',
+      unit: '%',
+      color: '#f97316',
+      optimalMin: 0.15,
+      optimalMax: 0.3
+    },
+    // Micronutrients
+    {
       key: 'ferrous',
       label: 'Iron',
       unit: 'ppm',
@@ -180,7 +261,23 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       optimalMin: 80,
       optimalMax: 120
     },
+    {
+      key: 'manganese',
+      label: 'Manganese',
+      unit: 'ppm',
+      color: '#7c3aed',
+      optimalMin: 50,
+      optimalMax: 150
+    },
     { key: 'zinc', label: 'Zinc', unit: 'ppm', color: '#6366f1', optimalMin: 50, optimalMax: 80 },
+    {
+      key: 'copper',
+      label: 'Copper',
+      unit: 'ppm',
+      color: '#ea580c',
+      optimalMin: 10,
+      optimalMax: 25
+    },
     {
       key: 'boron',
       label: 'Boron',
@@ -188,6 +285,24 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       color: '#ec4899',
       optimalMin: 25,
       optimalMax: 50
+    },
+    {
+      key: 'molybdenum',
+      label: 'Molybdenum',
+      unit: 'ppm',
+      color: '#84cc16',
+      optimalMin: 0.05,
+      optimalMax: 0.5
+    },
+    // Other elements
+    { key: 'sodium', label: 'Sodium', unit: '%', color: '#14b8a6', optimalMin: 0.1, optimalMax: 0.5 },
+    {
+      key: 'chloride',
+      label: 'Chloride',
+      unit: '%',
+      color: '#d946ef',
+      optimalMin: 0.1,
+      optimalMax: 0.5
     }
   ]
 
