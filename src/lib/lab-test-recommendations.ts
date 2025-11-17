@@ -27,6 +27,13 @@ const PRIORITY_ORDER: Record<RecommendationPriority, number> = {
   optimal: 4
 }
 
+/**
+ * Helper function to check if a parameter value is valid (not null, undefined, or non-numeric)
+ */
+function isValidParameter(value: number | undefined | null): value is number {
+  return value !== undefined && value !== null && typeof value === 'number' && !isNaN(value)
+}
+
 export interface SoilTestParameters {
   ph?: number
   ec?: number // Electrical Conductivity (dS/m)
@@ -48,6 +55,7 @@ export interface SoilTestParameters {
 export interface PetioleTestParameters {
   total_nitrogen?: number // %
   nitrate_nitrogen?: number // ppm
+  ammonium_nitrogen?: number // ppm
   phosphorus?: number // %
   potassium?: number // %
   calcium?: number // %
@@ -58,6 +66,9 @@ export interface PetioleTestParameters {
   zinc?: number // ppm
   copper?: number // ppm
   boron?: number // ppm
+  molybdenum?: number // ppm
+  sodium?: number // %
+  chloride?: number // %
 }
 
 /**
@@ -75,7 +86,7 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
   // Lab reports can have extreme values that are still legitimate measurements
 
   // pH Analysis
-  if (parameters.ph !== undefined) {
+  if (isValidParameter(parameters.ph)) {
     if (parameters.ph < 5.5) {
       recommendations.push({
         priority: 'critical',
@@ -134,7 +145,7 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
   }
 
   // EC (Salinity) Analysis
-  if (parameters.ec !== undefined) {
+  if (isValidParameter(parameters.ec)) {
     if (parameters.ec >= 4.0) {
       recommendations.push({
         priority: 'critical',
@@ -175,7 +186,7 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
   }
 
   // Nitrogen Analysis
-  if (parameters.nitrogen !== undefined) {
+  if (isValidParameter(parameters.nitrogen)) {
     if (parameters.nitrogen < 150) {
       recommendations.push({
         priority: 'high',
@@ -252,7 +263,7 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
   }
 
   // Potassium Analysis
-  if (parameters.potassium !== undefined) {
+  if (isValidParameter(parameters.potassium)) {
     if (parameters.potassium < 200) {
       recommendations.push({
         priority: 'high',
@@ -284,7 +295,7 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
   }
 
   // Organic Matter Analysis
-  if (parameters.organicMatter !== undefined) {
+  if (isValidParameter(parameters.organicMatter)) {
     if (parameters.organicMatter < 1.0) {
       recommendations.push({
         priority: 'high',
@@ -316,7 +327,7 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
   }
 
   // Micronutrient Analysis (brief checks)
-  if (parameters.zinc !== undefined && parameters.zinc < 1.0) {
+  if (isValidParameter(parameters.zinc) && parameters.zinc < 1.0) {
     recommendations.push({
       priority: 'moderate',
       type: 'action',
@@ -327,7 +338,7 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
     })
   }
 
-  if (parameters.boron !== undefined && parameters.boron < 0.5) {
+  if (isValidParameter(parameters.boron) && parameters.boron < 0.5) {
     recommendations.push({
       priority: 'moderate',
       type: 'action',
@@ -338,7 +349,7 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
     })
   }
 
-  if (parameters.iron !== undefined && parameters.iron < 5.0) {
+  if (isValidParameter(parameters.iron) && parameters.iron < 5.0) {
     recommendations.push({
       priority: 'moderate',
       type: 'action',
@@ -374,7 +385,7 @@ export function generatePetioleTestRecommendations(
   // Lab reports can have extreme values that are still legitimate measurements
 
   // Total Nitrogen Analysis
-  if (parameters.total_nitrogen !== undefined) {
+  if (isValidParameter(parameters.total_nitrogen)) {
     if (parameters.total_nitrogen < 2.0) {
       recommendations.push({
         priority: 'high',
@@ -405,8 +416,8 @@ export function generatePetioleTestRecommendations(
     }
   }
 
-  // Phosphorus Analysis
-  if (parameters.phosphorus !== undefined) {
+  // Phosphorus Analysis (petiole)
+  if (isValidParameter(parameters.phosphorus)) {
     if (parameters.phosphorus < 0.2) {
       recommendations.push({
         priority: 'high',
@@ -437,8 +448,8 @@ export function generatePetioleTestRecommendations(
     }
   }
 
-  // Potassium Analysis
-  if (parameters.potassium !== undefined) {
+  // Potassium Analysis (petiole)
+  if (isValidParameter(parameters.potassium)) {
     if (parameters.potassium < 1.5) {
       recommendations.push({
         priority: 'critical',
@@ -479,7 +490,7 @@ export function generatePetioleTestRecommendations(
   }
 
   // Calcium Analysis
-  if (parameters.calcium !== undefined) {
+  if (isValidParameter(parameters.calcium)) {
     if (parameters.calcium < 1.5) {
       recommendations.push({
         priority: 'high',
@@ -511,7 +522,7 @@ export function generatePetioleTestRecommendations(
   }
 
   // Magnesium Analysis
-  if (parameters.magnesium !== undefined) {
+  if (isValidParameter(parameters.magnesium)) {
     if (parameters.magnesium < 0.3) {
       recommendations.push({
         priority: 'high',
@@ -543,7 +554,7 @@ export function generatePetioleTestRecommendations(
   }
 
   // Micronutrients (brief checks)
-  if (parameters.zinc !== undefined && parameters.zinc < 20) {
+  if (isValidParameter(parameters.zinc) && parameters.zinc < 20) {
     recommendations.push({
       priority: 'moderate',
       type: 'action',
@@ -554,7 +565,7 @@ export function generatePetioleTestRecommendations(
     })
   }
 
-  if (parameters.boron !== undefined && parameters.boron < 30) {
+  if (isValidParameter(parameters.boron) && parameters.boron < 30) {
     recommendations.push({
       priority: 'moderate',
       type: 'action',
@@ -565,7 +576,7 @@ export function generatePetioleTestRecommendations(
     })
   }
 
-  if (parameters.ferrous !== undefined && parameters.ferrous < 50) {
+  if (isValidParameter(parameters.ferrous) && parameters.ferrous < 50) {
     recommendations.push({
       priority: 'moderate',
       type: 'action',

@@ -102,7 +102,7 @@ export function LabTestModal({
   const petioleFields = [
     { key: 'total_nitrogen', label: 'Total Nitrogen (%)', type: 'number', step: '0.01' },
     { key: 'nitrate_nitrogen', label: 'Nitrate Nitrogen (ppm)', type: 'number', step: '1' },
-    { key: 'ammonical_nitrogen', label: 'Ammonical Nitrogen (ppm)', type: 'number', step: '1' },
+    { key: 'ammonium_nitrogen', label: 'Ammonium Nitrogen (ppm)', type: 'number', step: '1' },
     { key: 'phosphorus', label: 'Phosphorus (%)', type: 'number', step: '0.01' },
     { key: 'potassium', label: 'Potassium (%)', type: 'number', step: '0.01' },
     { key: 'calcium', label: 'Calcium (%)', type: 'number', step: '0.01' },
@@ -141,7 +141,7 @@ export function LabTestModal({
   const petioleRanges: Record<string, { min: number; max: number }> = {
     total_nitrogen: { min: 1.51, max: 2.21 },
     nitrate_nitrogen: { min: 700, max: 1000 },
-    ammonical_nitrogen: { min: 400, max: 700 },
+    ammonium_nitrogen: { min: 400, max: 700 },
     phosphorus: { min: 0.31, max: 0.51 },
     potassium: { min: 1.51, max: 2.01 },
     calcium: { min: 1.51, max: 2.21 },
@@ -264,12 +264,16 @@ export function LabTestModal({
           'nitrate nitrogen': 'nitrate_nitrogen',
           no3_n: 'nitrate_nitrogen',
           no3n: 'nitrate_nitrogen',
-          // Ammonical nitrogen variations (petiole only)
-          ammonicalnitrogen: 'ammonical_nitrogen',
-          ammonical_nitrogen: 'ammonical_nitrogen',
-          'ammonical nitrogen': 'ammonical_nitrogen',
-          nh4_n: 'ammonical_nitrogen',
-          nh4n: 'ammonical_nitrogen',
+          // Ammonium nitrogen variations (petiole only)
+          ammonicalnitrogen: 'ammonium_nitrogen',
+          ammonical_nitrogen: 'ammonium_nitrogen',
+          ammoniacal_nitrogen: 'ammonium_nitrogen',
+          ammonium_nitrogen: 'ammonium_nitrogen',
+          'ammonical nitrogen': 'ammonium_nitrogen',
+          'ammoniacal nitrogen': 'ammonium_nitrogen',
+          'ammonium nitrogen': 'ammonium_nitrogen',
+          nh4_n: 'ammonium_nitrogen',
+          nh4n: 'ammonium_nitrogen',
           // Phosphorus variations
           total_phosphorus: 'phosphorus',
           total_phosphorus_as_p: 'phosphorus',

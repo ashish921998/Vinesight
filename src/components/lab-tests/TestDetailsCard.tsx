@@ -351,7 +351,7 @@ export function TestDetailsCard({
                     const petioleOrder = [
                       'total_nitrogen',
                       'nitrate_nitrogen',
-                      'ammonical_nitrogen',
+                      'ammonium_nitrogen',
                       'phosphorus',
                       'potassium',
                       'calcium',
