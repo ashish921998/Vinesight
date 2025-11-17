@@ -100,17 +100,26 @@ export function LabTestModal({
 
   // Field definitions for petiole tests
   const petioleFields = [
+    // Major Nutrients
     { key: 'total_nitrogen', label: 'Total Nitrogen (%)', type: 'number', step: '0.01' },
+    { key: 'nitrate_nitrogen', label: 'Nitrate Nitrogen (ppm)', type: 'number', step: '1' },
+    { key: 'ammonical_nitrogen', label: 'Ammonical Nitrogen (ppm)', type: 'number', step: '1' },
     { key: 'phosphorus', label: 'Phosphorus (%)', type: 'number', step: '0.01' },
     { key: 'potassium', label: 'Potassium (%)', type: 'number', step: '0.01' },
+    // Secondary Nutrients
     { key: 'calcium', label: 'Calcium (%)', type: 'number', step: '0.01' },
     { key: 'magnesium', label: 'Magnesium (%)', type: 'number', step: '0.01' },
-    { key: 'sulfur', label: 'Sulfur (%)', type: 'number', step: '0.01' },
-    { key: 'iron', label: 'Iron (ppm)', type: 'number', step: '1' },
+    { key: 'sulphur', label: 'Sulphur (%)', type: 'number', step: '0.01' },
+    // Micro Nutrients
+    { key: 'ferrous', label: 'Ferrous/Iron (ppm)', type: 'number', step: '1' },
     { key: 'manganese', label: 'Manganese (ppm)', type: 'number', step: '1' },
     { key: 'zinc', label: 'Zinc (ppm)', type: 'number', step: '1' },
     { key: 'copper', label: 'Copper (ppm)', type: 'number', step: '1' },
-    { key: 'boron', label: 'Boron (ppm)', type: 'number', step: '1' }
+    { key: 'boron', label: 'Boron (ppm)', type: 'number', step: '1' },
+    { key: 'molybdenum', label: 'Molybdenum (ppm)', type: 'number', step: '0.01' },
+    // Other Elements
+    { key: 'sodium', label: 'Sodium (%)', type: 'number', step: '0.01' },
+    { key: 'chloride', label: 'Chloride (%)', type: 'number', step: '0.01' }
   ]
 
   const fields = testType === 'soil' ? soilFields : petioleFields
@@ -134,17 +143,26 @@ export function LabTestModal({
   }
 
   const petioleRanges: Record<string, { min: number; max: number }> = {
+    // Major Nutrients
     total_nitrogen: { min: 0.5, max: 5.0 },
+    nitrate_nitrogen: { min: 100, max: 5000 },
+    ammonical_nitrogen: { min: 100, max: 5000 },
     phosphorus: { min: 0.1, max: 1.0 },
     potassium: { min: 0.5, max: 5.0 },
+    // Secondary Nutrients
     calcium: { min: 0.5, max: 5.0 },
     magnesium: { min: 0.1, max: 2.0 },
-    sulfur: { min: 0.05, max: 1.0 },
-    iron: { min: 20, max: 300 },
+    sulphur: { min: 0.05, max: 1.0 },
+    // Micro Nutrients
+    ferrous: { min: 20, max: 300 },
     manganese: { min: 10, max: 200 },
     zinc: { min: 10, max: 200 },
     copper: { min: 2, max: 50 },
-    boron: { min: 10, max: 100 }
+    boron: { min: 10, max: 100 },
+    molybdenum: { min: 0.05, max: 2.0 },
+    // Other Elements
+    sodium: { min: 0.05, max: 2.0 },
+    chloride: { min: 0.05, max: 2.0 }
   }
 
   const ranges = testType === 'soil' ? soilRanges : petioleRanges

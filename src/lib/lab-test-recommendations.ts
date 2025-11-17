@@ -46,18 +46,26 @@ export interface SoilTestParameters {
 }
 
 export interface PetioleTestParameters {
+  // Major Nutrients
   total_nitrogen?: number // %
   nitrate_nitrogen?: number // ppm
+  ammonical_nitrogen?: number // ppm (NH₄-N)
   phosphorus?: number // %
   potassium?: number // %
+  // Secondary Nutrients
   calcium?: number // %
   magnesium?: number // %
   sulphur?: number // %
-  ferrous?: number // ppm
-  manganese?: number // ppm
-  zinc?: number // ppm
-  copper?: number // ppm
-  boron?: number // ppm
+  // Micro Nutrients
+  ferrous?: number // ppm (Fe)
+  manganese?: number // ppm (Mn)
+  zinc?: number // ppm (Zn)
+  copper?: number // ppm (Cu)
+  boron?: number // ppm (B)
+  molybdenum?: number // ppm (Mo)
+  // Other Elements
+  sodium?: number // %
+  chloride?: number // %
 }
 
 /**
@@ -85,18 +93,26 @@ const SOIL_VALIDATION_RANGES = {
  * Validation ranges for petiole test parameters
  */
 const PETIOLE_VALIDATION_RANGES = {
+  // Major Nutrients
   total_nitrogen: { min: 0, max: 10, unit: '%' },
   nitrate_nitrogen: { min: 0, max: 10000, unit: 'ppm' },
+  ammonical_nitrogen: { min: 0, max: 10000, unit: 'ppm' },
   phosphorus: { min: 0, max: 2, unit: '%' },
   potassium: { min: 0, max: 6, unit: '%' },
+  // Secondary Nutrients
   calcium: { min: 0, max: 6, unit: '%' },
   magnesium: { min: 0, max: 2, unit: '%' },
   sulphur: { min: 0, max: 2, unit: '%' },
+  // Micro Nutrients
   ferrous: { min: 0, max: 500, unit: 'ppm' },
   manganese: { min: 0, max: 500, unit: 'ppm' },
   zinc: { min: 0, max: 200, unit: 'ppm' },
   copper: { min: 0, max: 50, unit: 'ppm' },
-  boron: { min: 0, max: 200, unit: 'ppm' }
+  boron: { min: 0, max: 200, unit: 'ppm' },
+  molybdenum: { min: 0, max: 5, unit: 'ppm' },
+  // Other Elements
+  sodium: { min: 0, max: 5, unit: '%' },
+  chloride: { min: 0, max: 5, unit: '%' }
 } as const
 
 /**
@@ -116,9 +132,13 @@ const PARAMETER_DISPLAY_NAMES: Record<string, string> = {
   iron: 'Iron',
   // Petiole-only parameters
   total_nitrogen: 'Total Nitrogen',
-  nitrate_nitrogen: 'Nitrate Nitrogen',
+  nitrate_nitrogen: 'Nitrate Nitrogen (NO₃-N)',
+  ammonical_nitrogen: 'Ammonical Nitrogen (NH₄-N)',
   sulphur: 'Sulphur',
   ferrous: 'Iron (Ferrous)',
+  molybdenum: 'Molybdenum',
+  sodium: 'Sodium',
+  chloride: 'Chloride',
   // Shared parameters (used in both soil and petiole)
   phosphorus: 'Phosphorus',
   potassium: 'Potassium',
@@ -716,7 +736,7 @@ export function generatePetioleTestRecommendations(
     })
   }
 
-  // Note: Some validated parameters (nitrate_nitrogen, sulphur, manganese, copper)
+  // Note: Some validated parameters (nitrate_nitrogen, ammonical_nitrogen, sulphur, manganese, copper, molybdenum, sodium, chloride)
   // are validation-only for now and don't generate specific recommendations in this version.
   // They are validated to catch data entry errors but recommendations may be added in future versions.
 
