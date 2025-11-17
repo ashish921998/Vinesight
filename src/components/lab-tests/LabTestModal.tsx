@@ -236,7 +236,9 @@ export function LabTestModal({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to parse report')
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || `Failed to parse report (${response.status})`
+        throw new Error(errorMessage)
       }
 
       const result = await response.json()
