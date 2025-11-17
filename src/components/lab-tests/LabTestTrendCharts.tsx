@@ -63,59 +63,59 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
   }
 
   // Prepare soil test data
-  const soilTrendData: TrendData[] = soilTests
+  const soilTrendData: TrendData[] = [...soilTests]
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .map((record) => ({
       date: record.date,
       displayDate: format(new Date(record.date), 'MMM dd, yyyy'),
       // Primary parameters
-      ph: record.parameters.ph || null,
-      ec: record.parameters.ec || null,
+      ph: record.parameters.ph ?? null,
+      ec: record.parameters.ec ?? null,
       // Macronutrients
-      nitrogen: record.parameters.nitrogen || null,
-      phosphorus: record.parameters.phosphorus || null,
-      potassium: record.parameters.potassium || null,
+      nitrogen: record.parameters.nitrogen ?? null,
+      phosphorus: record.parameters.phosphorus ?? null,
+      potassium: record.parameters.potassium ?? null,
       // Secondary nutrients
-      calcium: record.parameters.calcium || null,
-      magnesium: record.parameters.magnesium || null,
-      sulfur: record.parameters.sulfur || null,
+      calcium: record.parameters.calcium ?? null,
+      magnesium: record.parameters.magnesium ?? null,
+      sulfur: record.parameters.sulfur ?? null,
       // Organic matter
-      organicCarbon: record.parameters.organicCarbon || null,
-      organicMatter: record.parameters.organicMatter || null,
+      organicCarbon: record.parameters.organicCarbon ?? null,
+      organicMatter: record.parameters.organicMatter ?? null,
       // Micronutrients
-      iron: record.parameters.iron || null,
-      manganese: record.parameters.manganese || null,
-      zinc: record.parameters.zinc || null,
-      copper: record.parameters.copper || null,
-      boron: record.parameters.boron || null
+      iron: record.parameters.iron ?? null,
+      manganese: record.parameters.manganese ?? null,
+      zinc: record.parameters.zinc ?? null,
+      copper: record.parameters.copper ?? null,
+      boron: record.parameters.boron ?? null
     }))
 
   // Prepare petiole test data
-  const petioleTrendData: TrendData[] = petioleTests
+  const petioleTrendData: TrendData[] = [...petioleTests]
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .map((record) => ({
       date: record.date,
       displayDate: format(new Date(record.date), 'MMM dd, yyyy'),
       // Major nutrients
-      total_nitrogen: record.parameters.total_nitrogen || null,
-      nitrate_nitrogen: record.parameters.nitrate_nitrogen || null,
-      ammonical_nitrogen: record.parameters.ammonical_nitrogen || null,
-      phosphorus: record.parameters.phosphorus || null,
-      potassium: record.parameters.potassium || null,
+      total_nitrogen: record.parameters.total_nitrogen ?? null,
+      nitrate_nitrogen: record.parameters.nitrate_nitrogen ?? null,
+      ammonical_nitrogen: record.parameters.ammonical_nitrogen ?? null,
+      phosphorus: record.parameters.phosphorus ?? null,
+      potassium: record.parameters.potassium ?? null,
       // Secondary nutrients
-      calcium: record.parameters.calcium || null,
-      magnesium: record.parameters.magnesium || null,
-      sulphur: record.parameters.sulphur || null,
+      calcium: record.parameters.calcium ?? null,
+      magnesium: record.parameters.magnesium ?? null,
+      sulfur: record.parameters.sulfur ?? null,
       // Micronutrients
-      ferrous: record.parameters.ferrous || null,
-      manganese: record.parameters.manganese || null,
-      zinc: record.parameters.zinc || null,
-      copper: record.parameters.copper || null,
-      boron: record.parameters.boron || null,
-      molybdenum: record.parameters.molybdenum || null,
+      iron: record.parameters.iron ?? null,
+      manganese: record.parameters.manganese ?? null,
+      zinc: record.parameters.zinc ?? null,
+      copper: record.parameters.copper ?? null,
+      boron: record.parameters.boron ?? null,
+      molybdenum: record.parameters.molybdenum ?? null,
       // Other elements
-      sodium: record.parameters.sodium || null,
-      chloride: record.parameters.chloride || null
+      sodium: record.parameters.sodium ?? null,
+      chloride: record.parameters.chloride ?? null
     }))
 
   // Soil parameter options
@@ -287,8 +287,8 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       optimalMax: 0.8
     },
     {
-      key: 'sulphur',
-      label: 'Sulphur',
+      key: 'sulfur',
+      label: 'Sulfur',
       unit: '%',
       color: '#f97316',
       optimalMin: 0.15,
@@ -296,7 +296,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     },
     // Micronutrients
     {
-      key: 'ferrous',
+      key: 'iron',
       label: 'Iron',
       unit: 'ppm',
       color: '#06b6d4',

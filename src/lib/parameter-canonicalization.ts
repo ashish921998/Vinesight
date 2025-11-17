@@ -4,7 +4,7 @@
  */
 
 /**
- * Canonicalizes a parameter key to a standard form
+ * Canonicalizes a parameter key to a standard form (generic, test-type agnostic)
  * @param key The parameter key to canonicalize (case-insensitive)
  * @returns The canonical key or null if no mapping exists
  */
@@ -47,12 +47,12 @@ export function canonicalizeParameterKey(key: string): string | null {
     ca: 'calcium',
     magnesium: 'magnesium',
     mg: 'magnesium',
-    sulphur: 'sulphur',
-    sulfur: 'sulphur',
-    s: 'sulphur',
-    iron: 'ferrous',
-    ferrous: 'ferrous',
-    fe: 'ferrous',
+    sulphur: 'sulfur',
+    sulfur: 'sulfur',
+    s: 'sulfur',
+    iron: 'iron',
+    ferrous: 'iron',
+    fe: 'iron',
     manganese: 'manganese',
     mn: 'manganese',
     zinc: 'zinc',
@@ -77,7 +77,31 @@ export function canonicalizeParameterKey(key: string): string | null {
 }
 
 /**
- * Applies canonicalization to a record of parameters
+ * Applies canonicalization to a record of parameters (soil test specific)
+ * Uses generic canonicalization which maps everything to canonical forms like 'iron', 'sulfur'
+ * @param parameters Record of parameter names to values
+ * @returns Record with canonicalized keys for soil tests
+ */
+export function canonicalizeSoilParameters(
+  parameters: Record<string, number>
+): Record<string, number> {
+  return canonicalizeParameters(parameters)
+}
+
+/**
+ * Applies canonicalization to a record of parameters (petiole test specific)
+ * Uses generic canonicalization which keeps everything in canonical iron/sulfur form
+ * @param parameters Record of parameter names to values
+ * @returns Record with canonicalized keys for petiole tests
+ */
+export function canonicalizePetioleParameters(
+  parameters: Record<string, number>
+): Record<string, number> {
+  return canonicalizeParameters(parameters)
+}
+
+/**
+ * Applies generic canonicalization to a record of parameters (fallback, test-type agnostic)
  * @param parameters Record of parameter names to values
  * @returns Record with canonicalized keys
  */

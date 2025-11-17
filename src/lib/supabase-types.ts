@@ -1,5 +1,9 @@
 // Type adapters to bridge application types with Supabase database types
 import { Database, Json } from '@/types/database'
+import {
+  canonicalizeSoilParameters,
+  canonicalizePetioleParameters
+} from './parameter-canonicalization'
 
 // Import application types from both sources
 import type {
@@ -661,11 +665,12 @@ export function toDatabaseTaskReminderUpdate(
 export function toApplicationSoilTestRecord(
   dbRecord: DatabaseSoilTestRecord
 ): import('./supabase').SoilTestRecord {
+  const params = (dbRecord.parameters as Record<string, number>) || {}
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
-    parameters: (dbRecord.parameters as Record<string, number>) || {},
+    parameters: canonicalizeSoilParameters(params),
     date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
     recommendations: dbRecord.recommendations || undefined,
     notes: dbRecord.notes || undefined,
@@ -736,12 +741,13 @@ export function toDatabaseSoilTestUpdate(
 export function toApplicationPetioleTestRecord(
   dbRecord: DatabasePetioleTestRecord
 ): import('./supabase').PetioleTestRecord {
+  const params = (dbRecord.parameters as Record<string, number>) || {}
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
     date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
-    parameters: (dbRecord.parameters as Record<string, number>) || {},
+    parameters: canonicalizePetioleParameters(params),
     recommendations: dbRecord.recommendations || undefined,
     notes: dbRecord.notes || undefined,
     report_url: dbRecord.report_url || undefined,
