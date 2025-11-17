@@ -64,32 +64,32 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
 
   // Prepare soil test data
   const soilTrendData: TrendData[] = soilTests
-    .sort((a, b) => new Date(a.test.date).getTime() - new Date(b.test.date).getTime())
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .map((record) => ({
-      date: record.test.date,
-      displayDate: format(new Date(record.test.date), 'MMM dd, yyyy'),
-      ph: record.test.parameters.ph || null,
-      ec: record.test.parameters.ec || null,
-      nitrogen: record.test.parameters.nitrogen || null,
-      phosphorus: record.test.parameters.phosphorus || null,
-      potassium: record.test.parameters.potassium || null,
-      organicMatter: record.test.parameters.organicMatter || null
+      date: record.date,
+      displayDate: format(new Date(record.date), 'MMM dd, yyyy'),
+      ph: record.parameters.ph || null,
+      ec: record.parameters.ec || null,
+      nitrogen: record.parameters.nitrogen || null,
+      phosphorus: record.parameters.phosphorus || null,
+      potassium: record.parameters.potassium || null,
+      organicMatter: record.parameters.organicMatter || null
     }))
 
   // Prepare petiole test data
   const petioleTrendData: TrendData[] = petioleTests
-    .sort((a, b) => new Date(a.test.date).getTime() - new Date(b.test.date).getTime())
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .map((record) => ({
-      date: record.test.date,
-      displayDate: format(new Date(record.test.date), 'MMM dd, yyyy'),
-      total_nitrogen: record.test.parameters.total_nitrogen || null,
-      phosphorus: record.test.parameters.phosphorus || null,
-      potassium: record.test.parameters.potassium || null,
-      calcium: record.test.parameters.calcium || null,
-      magnesium: record.test.parameters.magnesium || null,
-      ferrous: record.test.parameters.ferrous || null,
-      zinc: record.test.parameters.zinc || null,
-      boron: record.test.parameters.boron || null
+      date: record.date,
+      displayDate: format(new Date(record.date), 'MMM dd, yyyy'),
+      total_nitrogen: record.parameters.total_nitrogen || null,
+      phosphorus: record.parameters.phosphorus || null,
+      potassium: record.parameters.potassium || null,
+      calcium: record.parameters.calcium || null,
+      magnesium: record.parameters.magnesium || null,
+      ferrous: record.parameters.ferrous || null,
+      zinc: record.parameters.zinc || null,
+      boron: record.parameters.boron || null
     }))
 
   // Soil parameter options
