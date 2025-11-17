@@ -218,8 +218,8 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
   }
 
   // Phosphorus Analysis (with pH interaction)
-  if (parameters.phosphorus !== undefined) {
-    const highPH = parameters.ph !== undefined && parameters.ph > 8.0
+  if (isValidParameter(parameters.phosphorus)) {
+    const highPH = isValidParameter(parameters.ph) && parameters.ph > 8.0
 
     if (parameters.phosphorus < 20) {
       if (highPH) {
@@ -587,9 +587,9 @@ export function generatePetioleTestRecommendations(
     })
   }
 
-  // Note: Some validated parameters (nitrate_nitrogen, sulphur, manganese, copper)
-  // are validation-only for now and don't generate specific recommendations in this version.
-  // They are validated to catch data entry errors but recommendations may be added in future versions.
+  // Note: Some parameters (nitrate_nitrogen, sulphur, manganese, copper)
+  // don't generate specific recommendations in this version yet.
+  // Recommendations for these parameters may be added in future versions.
 
   // Sort by priority
   return recommendations.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
