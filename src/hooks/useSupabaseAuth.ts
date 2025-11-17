@@ -20,6 +20,8 @@ interface SignUpWithEmailParams {
   email: string
   password: string
   confirmPassword?: string
+  firstName?: string
+  lastName?: string
 }
 
 interface ResetPasswordParams {
@@ -114,7 +116,13 @@ export function useSupabaseAuth() {
     }
   }
 
-  const signUpWithEmail = async ({ email, password, confirmPassword }: SignUpWithEmailParams) => {
+  const signUpWithEmail = async ({
+    email,
+    password,
+    confirmPassword,
+    firstName,
+    lastName
+  }: SignUpWithEmailParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
 
     // Validate password confirmation if provided
@@ -130,7 +138,11 @@ export function useSupabaseAuth() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            first_name: firstName,
+            last_name: lastName
+          }
         }
       })
 
