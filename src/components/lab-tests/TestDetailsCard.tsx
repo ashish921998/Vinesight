@@ -329,9 +329,60 @@ export function TestDetailsCard({
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {Object.entries(test.parameters)
-                    .filter(([_, value]) => value !== null && value !== undefined && value !== '')
-                    .map(([key, value]) => {
+                  {(() => {
+                    // Define the display order matching LabTestModal
+                    const soilOrder = [
+                      'ph',
+                      'ec',
+                      'organic_carbon',
+                      'nitrogen',
+                      'phosphorus',
+                      'potassium',
+                      'calcium',
+                      'magnesium',
+                      'sulfur',
+                      'iron',
+                      'manganese',
+                      'zinc',
+                      'copper',
+                      'boron'
+                    ]
+
+                    const petioleOrder = [
+                      'total_nitrogen',
+                      'nitrate_nitrogen',
+                      'ammonium_nitrogen',
+                      'phosphorus',
+                      'potassium',
+                      'calcium',
+                      'magnesium',
+                      'sulfur',
+                      'iron',
+                      'manganese',
+                      'zinc',
+                      'copper',
+                      'boron',
+                      'molybdenum',
+                      'sodium',
+                      'chloride'
+                    ]
+
+                    const paramOrder = testType === 'soil' ? soilOrder : petioleOrder
+
+                    // Sort parameters according to the defined order
+                    const sortedParams = Object.entries(test.parameters)
+                      .filter(([_, value]) => value !== null && value !== undefined && value !== '')
+                      .sort(([keyA], [keyB]) => {
+                        const indexA = paramOrder.indexOf(keyA)
+                        const indexB = paramOrder.indexOf(keyB)
+                        // If not in order array, put at end
+                        if (indexA === -1 && indexB === -1) return 0
+                        if (indexA === -1) return 1
+                        if (indexB === -1) return -1
+                        return indexA - indexB
+                      })
+
+                    return sortedParams.map(([key, value]) => {
                       const change = getChange(key)
                       return (
                         <div
@@ -354,7 +405,8 @@ export function TestDetailsCard({
                           )}
                         </div>
                       )
-                    })}
+                    })
+                  })()}
                 </div>
               </CardContent>
             </Card>
