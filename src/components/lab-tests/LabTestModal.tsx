@@ -57,10 +57,13 @@ export function LabTestModal({
         setNotes(existingTest.notes || '')
 
         // Convert parameters to strings for form inputs
+        // Apply canonicalization for legacy keys (e.g., ammonical_nitrogen -> ammonium_nitrogen)
         const params: Record<string, string> = {}
         Object.entries(existingTest.parameters).forEach(([key, value]) => {
           if (value !== null && value !== undefined && value !== '') {
-            params[key] = String(value)
+            // Canonicalize legacy key names
+            const canonicalKey = key === 'ammonical_nitrogen' ? 'ammonium_nitrogen' : key
+            params[canonicalKey] = String(value)
           }
         })
         setParameters(params)
