@@ -21,18 +21,18 @@ export function canonicalizeParameterKey(key: string): string | null {
     organicmatter: 'organicMatter',
     oc: 'organicCarbon',
     // Specific nitrogen types for petiole tests (check these first before generic nitrogen)
-    totalnitrogen: 'total_nitrogen',
-    totalnitrogenasn: 'total_nitrogen',
-    nitratenitrogen: 'nitrate_nitrogen',
-    nitratenitrogenasno3n: 'nitrate_nitrogen',
-    no3n: 'nitrate_nitrogen',
-    ammonicalnitrogen: 'ammonical_nitrogen',
-    ammoniacalnitrogen: 'ammonical_nitrogen',
-    ammoniumnitrogen: 'ammonical_nitrogen',
-    ammonicalnitrogenasnh4n: 'ammonical_nitrogen',
-    ammoniacalnitrogenasnh4n: 'ammonical_nitrogen',
-    ammoniumnitrogenasnh4n: 'ammonical_nitrogen',
-    nh4n: 'ammonical_nitrogen',
+    totalnitrogen: 'totalNitrogen',
+    totalnitrogenasn: 'totalNitrogen',
+    nitratenitrogen: 'nitrateNitrogen',
+    nitratenitrogenasno3n: 'nitrateNitrogen',
+    no3n: 'nitrateNitrogen',
+    ammonicalnitrogen: 'ammonicalNitrogen',
+    ammoniacalnitrogen: 'ammonicalNitrogen',
+    ammoniumnitrogen: 'ammonicalNitrogen',
+    ammonicalnitrogenasnh4n: 'ammonicalNitrogen',
+    ammoniacalnitrogenasnh4n: 'ammonicalNitrogen',
+    ammoniumnitrogenasnh4n: 'ammonicalNitrogen',
+    nh4n: 'ammonicalNitrogen',
     // Generic nitrogen for soil tests
     nitrogen: 'nitrogen',
     n: 'nitrogen',
@@ -74,30 +74,6 @@ export function canonicalizeParameterKey(key: string): string | null {
   }
 
   return mappings[normalized] ?? null
-}
-
-/**
- * Applies canonicalization to a record of parameters (soil test specific)
- * Uses generic canonicalization which maps everything to canonical forms like 'iron', 'sulfur'
- * @param parameters Record of parameter names to values
- * @returns Record with canonicalized keys for soil tests
- */
-export function canonicalizeSoilParameters(
-  parameters: Record<string, number>
-): Record<string, number> {
-  return canonicalizeParameters(parameters)
-}
-
-/**
- * Applies canonicalization to a record of parameters (petiole test specific)
- * Uses generic canonicalization which keeps everything in canonical iron/sulfur form
- * @param parameters Record of parameter names to values
- * @returns Record with canonicalized keys for petiole tests
- */
-export function canonicalizePetioleParameters(
-  parameters: Record<string, number>
-): Record<string, number> {
-  return canonicalizeParameters(parameters)
 }
 
 /**

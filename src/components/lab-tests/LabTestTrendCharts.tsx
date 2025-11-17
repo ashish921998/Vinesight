@@ -28,7 +28,7 @@ interface LabTestTrendChartsProps {
 interface TrendData {
   date: string
   displayDate: string
-  [key: string]: string | number
+  [key: string]: string | number | null
 }
 
 export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChartsProps) {
@@ -361,7 +361,12 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     const recent = data[data.length - 1][param]
     const previous = data[data.length - 2][param]
     if (recent === null || previous === null) return null
-    const change = ((Number(recent) - Number(previous)) / Number(previous)) * 100
+    const prevNum = Number(previous)
+    if (prevNum === 0) {
+      const recentNum = Number(recent)
+      return { change: recentNum === 0 ? 0 : 100, direction: recentNum > 0 ? 'up' : 'stable' }
+    }
+    const change = ((Number(recent) - prevNum) / prevNum) * 100
     return { change, direction: change > 5 ? 'up' : change < -5 ? 'down' : 'stable' }
   }
 
