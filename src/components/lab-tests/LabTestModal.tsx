@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { SupabaseService } from '@/lib/supabase-service'
 import { Loader2, Upload, X, FileText, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
+import { canonicalizeParameterKey } from '@/lib/parameter-canonicalization'
 
 interface LabTestModalProps {
   isOpen: boolean
@@ -57,10 +58,13 @@ export function LabTestModal({
         setNotes(existingTest.notes || '')
 
         // Convert parameters to strings for form inputs
+        // Apply canonicalization for legacy keys (e.g., ammonical_nitrogen -> ammonium_nitrogen)
         const params: Record<string, string> = {}
         Object.entries(existingTest.parameters).forEach(([key, value]) => {
           if (value !== null && value !== undefined && value !== '') {
-            params[key] = String(value)
+            // Canonicalize legacy key names using shared canonicalization function
+            const canonicalKey = canonicalizeParameterKey(key) || key
+            params[canonicalKey] = String(value)
           }
         })
         setParameters(params)
@@ -101,6 +105,8 @@ export function LabTestModal({
   // Field definitions for petiole tests
   const petioleFields = [
     { key: 'total_nitrogen', label: 'Total Nitrogen (%)', type: 'number', step: '0.01' },
+    { key: 'nitrate_nitrogen', label: 'Nitrate Nitrogen (ppm)', type: 'number', step: '1' },
+    { key: 'ammonium_nitrogen', label: 'Ammonium Nitrogen (ppm)', type: 'number', step: '1' },
     { key: 'phosphorus', label: 'Phosphorus (%)', type: 'number', step: '0.01' },
     { key: 'potassium', label: 'Potassium (%)', type: 'number', step: '0.01' },
     { key: 'calcium', label: 'Calcium (%)', type: 'number', step: '0.01' },
@@ -110,7 +116,10 @@ export function LabTestModal({
     { key: 'manganese', label: 'Manganese (ppm)', type: 'number', step: '1' },
     { key: 'zinc', label: 'Zinc (ppm)', type: 'number', step: '1' },
     { key: 'copper', label: 'Copper (ppm)', type: 'number', step: '1' },
-    { key: 'boron', label: 'Boron (ppm)', type: 'number', step: '1' }
+    { key: 'boron', label: 'Boron (ppm)', type: 'number', step: '1' },
+    { key: 'molybdenum', label: 'Molybdenum (ppm)', type: 'number', step: '0.01' },
+    { key: 'sodium', label: 'Sodium (%)', type: 'number', step: '0.01' },
+    { key: 'chloride', label: 'Chloride (%)', type: 'number', step: '0.01' }
   ]
 
   const fields = testType === 'soil' ? soilFields : petioleFields
@@ -134,17 +143,22 @@ export function LabTestModal({
   }
 
   const petioleRanges: Record<string, { min: number; max: number }> = {
-    total_nitrogen: { min: 0.5, max: 5.0 },
-    phosphorus: { min: 0.1, max: 1.0 },
-    potassium: { min: 0.5, max: 5.0 },
-    calcium: { min: 0.5, max: 5.0 },
-    magnesium: { min: 0.1, max: 2.0 },
-    sulfur: { min: 0.05, max: 1.0 },
-    iron: { min: 20, max: 300 },
-    manganese: { min: 10, max: 200 },
-    zinc: { min: 10, max: 200 },
-    copper: { min: 2, max: 50 },
-    boron: { min: 10, max: 100 }
+    total_nitrogen: { min: 1.51, max: 2.21 },
+    nitrate_nitrogen: { min: 700, max: 1000 },
+    ammonium_nitrogen: { min: 400, max: 700 },
+    phosphorus: { min: 0.31, max: 0.51 },
+    potassium: { min: 1.51, max: 2.01 },
+    calcium: { min: 1.51, max: 2.21 },
+    magnesium: { min: 0.31, max: 0.61 },
+    sulfur: { min: 0.15, max: 0.51 },
+    iron: { min: 80, max: 120 },
+    manganese: { min: 40, max: 100 },
+    zinc: { min: 50, max: 80 },
+    copper: { min: 5, max: 15 },
+    boron: { min: 25, max: 50 },
+    molybdenum: { min: 0.25, max: 0.51 },
+    sodium: { min: 0.01, max: 0.51 },
+    chloride: { min: 0.05, max: 0.25 }
   }
 
   const ranges = testType === 'soil' ? soilRanges : petioleRanges
@@ -223,7 +237,9 @@ export function LabTestModal({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to parse report')
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || `Failed to parse report (${response.status})`
+        throw new Error(errorMessage)
       }
 
       const result = await response.json()
@@ -248,40 +264,107 @@ export function LabTestModal({
           total_nitrogen: 'total_nitrogen',
           'total nitrogen': 'total_nitrogen',
           nitrogen_n: testType === 'soil' ? 'nitrogen' : 'total_nitrogen',
+          // Nitrate nitrogen variations (petiole only)
+          nitratenitrogen: 'nitrate_nitrogen',
+          nitrate_nitrogen: 'nitrate_nitrogen',
+          'nitrate nitrogen': 'nitrate_nitrogen',
+          no3_n: 'nitrate_nitrogen',
+          no3n: 'nitrate_nitrogen',
+          // Ammonium nitrogen variations (petiole only)
+          ammonicalnitrogen: 'ammonium_nitrogen',
+          ammonical_nitrogen: 'ammonium_nitrogen',
+          ammoniacal_nitrogen: 'ammonium_nitrogen',
+          ammonium_nitrogen: 'ammonium_nitrogen',
+          'ammonical nitrogen': 'ammonium_nitrogen',
+          'ammoniacal nitrogen': 'ammonium_nitrogen',
+          'ammonium nitrogen': 'ammonium_nitrogen',
+          nh4_n: 'ammonium_nitrogen',
+          nh4n: 'ammonium_nitrogen',
           // Phosphorus variations
+          total_phosphorus: 'phosphorus',
+          total_phosphorus_as_p: 'phosphorus',
+          totalphosphorus: 'phosphorus',
           phosphorus_p: 'phosphorus',
           phosphorusp: 'phosphorus',
           // Potassium variations
+          total_potassium: 'potassium',
+          total_potassium_as_k: 'potassium',
+          totalpotassium: 'potassium',
           potassium_k: 'potassium',
           potassiumk: 'potassium',
           // Calcium variations
+          total_calcium: 'calcium',
+          total_calcium_as_ca: 'calcium',
+          totalcalcium: 'calcium',
           calcium_ca: 'calcium',
           calciumca: 'calcium',
           // Magnesium variations
+          total_magnesium: 'magnesium',
+          total_magnesium_as_mg: 'magnesium',
+          totalmagnesium: 'magnesium',
           magnesium_mg: 'magnesium',
           magnesiummg: 'magnesium',
           // Sulfur variations (both spellings)
+          total_sulphur: 'sulfur',
+          total_sulphur_as_s: 'sulfur',
+          total_sulfur: 'sulfur',
+          total_sulfur_as_s: 'sulfur',
+          totalsulphur: 'sulfur',
+          totalsulfur: 'sulfur',
           sulphur_s: 'sulfur',
           sulphurs: 'sulfur',
           sulfur_s: 'sulfur',
           sulfurs: 'sulfur',
           // Iron variations (ferrous)
+          total_iron: 'iron',
+          total_iron_as_fe: 'iron',
+          totaliron: 'iron',
           ferrous_fe: 'iron',
           ferrousfe: 'iron',
           iron_fe: 'iron',
           ironfe: 'iron',
           // Manganese variations
+          total_manganese: 'manganese',
+          total_manganese_as_mn: 'manganese',
+          totalmanganese: 'manganese',
           manganese_mn: 'manganese',
           manganesemn: 'manganese',
           // Zinc variations
+          total_zinc: 'zinc',
+          total_zinc_as_zn: 'zinc',
+          totalzinc: 'zinc',
           zinc_zn: 'zinc',
           zinczn: 'zinc',
           // Copper variations
+          total_copper: 'copper',
+          total_copper_as_cu: 'copper',
+          totalcopper: 'copper',
           copper_cu: 'copper',
           coppercu: 'copper',
           // Boron variations
+          total_boron: 'boron',
+          total_boron_as_b: 'boron',
+          totalboron: 'boron',
           boron_b: 'boron',
-          boronb: 'boron'
+          boronb: 'boron',
+          // Molybdenum variations (petiole only)
+          total_molybdenum: 'molybdenum',
+          total_molybdenum_as_mo: 'molybdenum',
+          totalmolybdenum: 'molybdenum',
+          molybdenum_mo: 'molybdenum',
+          molybdenummo: 'molybdenum',
+          // Sodium variations (petiole only)
+          total_sodium: 'sodium',
+          total_sodium_as_na: 'sodium',
+          totalsodium: 'sodium',
+          sodium_na: 'sodium',
+          sodiumna: 'sodium',
+          // Chloride variations (petiole only)
+          total_chloride: 'chloride',
+          total_chloride_as_cl: 'chloride',
+          totalchloride: 'chloride',
+          chloride_cl: 'chloride',
+          chloridecl: 'chloride'
         }
 
         // Auto-fill form fields with extracted parameters
