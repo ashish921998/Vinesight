@@ -32,6 +32,71 @@ interface SignInWithGoogleParams {
   redirectTo?: string
 }
 
+interface SanitizedNameResult {
+  isValid: boolean
+  value?: string
+  error?: string
+}
+
+/**
+ * Sanitizes and validates a name field
+ * - Trims whitespace
+ * - Removes control characters and newlines
+ * - Collapses repeated spaces
+ * - Enforces max length of 50 characters
+ */
+function sanitizeAndValidateName(name: string | undefined, fieldName: string): SanitizedNameResult {
+  // Return early if name is undefined or empty
+  if (!name) {
+    return {
+      isValid: false,
+      error: `${fieldName} is required`
+    }
+  }
+
+  // Trim whitespace
+  let sanitized = name.trim()
+
+  // Check if empty after trimming
+  if (!sanitized) {
+    return {
+      isValid: false,
+      error: `${fieldName} cannot be empty or contain only whitespace`
+    }
+  }
+
+  // Remove control characters and newlines (ASCII 0-31 and 127)
+  sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, '')
+
+  // Collapse repeated spaces into single space
+  sanitized = sanitized.replace(/\s+/g, ' ')
+
+  // Trim again after sanitization
+  sanitized = sanitized.trim()
+
+  // Check if empty after full sanitization
+  if (!sanitized) {
+    return {
+      isValid: false,
+      error: `${fieldName} contains only invalid characters`
+    }
+  }
+
+  // Check length and truncate if necessary
+  const MAX_LENGTH = 50
+  if (sanitized.length > MAX_LENGTH) {
+    return {
+      isValid: false,
+      error: `${fieldName} must not exceed ${MAX_LENGTH} characters (currently ${sanitized.length} characters)`
+    }
+  }
+
+  return {
+    isValid: true,
+    value: sanitized
+  }
+}
+
 export function useSupabaseAuth() {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
@@ -132,13 +197,33 @@ export function useSupabaseAuth() {
       return { success: false, error }
     }
 
+    // Validate and sanitize name fields if provided
+    const userMetadata: Record<string, string> = {}
+
+    if (firstName !== undefined) {
+      const firstNameResult = sanitizeAndValidateName(firstName, 'First name')
+      if (!firstNameResult.isValid) {
+        const error = firstNameResult.error || 'Invalid first name'
+        setAuthState((prev) => ({ ...prev, error, loading: false }))
+        toast.error(error)
+        return { success: false, error }
+      }
+      userMetadata.first_name = firstNameResult.value!
+    }
+
+    if (lastName !== undefined) {
+      const lastNameResult = sanitizeAndValidateName(lastName, 'Last name')
+      if (!lastNameResult.isValid) {
+        const error = lastNameResult.error || 'Invalid last name'
+        setAuthState((prev) => ({ ...prev, error, loading: false }))
+        toast.error(error)
+        return { success: false, error }
+      }
+      userMetadata.last_name = lastNameResult.value!
+    }
+
     try {
       const supabase = createClient()
-
-      // Build user metadata object only with defined values
-      const userMetadata: Record<string, string> = {}
-      if (firstName) userMetadata.first_name = firstName
-      if (lastName) userMetadata.last_name = lastName
 
       const { data, error } = await supabase.auth.signUp({
         email,
