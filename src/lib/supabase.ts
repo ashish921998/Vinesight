@@ -104,7 +104,7 @@ export interface ExpenseRecord {
   id?: number
   farm_id: number
   date: string
-  type: 'labor' | 'materials' | 'equipment' | 'other'
+  type: 'labor' | 'materials' | 'equipment' | 'fuel' | 'other'
   description: string
   cost: number
   date_of_pruning?: Date // Date object of pruning when this record was created (snapshot from farm level)

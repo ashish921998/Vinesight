@@ -101,7 +101,7 @@ export interface FertigationFormData extends BaseFormData {
   fertilizers: Array<{ id: string; name: string; quantity: number; unit: string }>
 }
 
-type ExpenseCategory = 'labor' | 'materials' | 'equipment' | 'other'
+type ExpenseCategory = 'labor' | 'materials' | 'equipment' | 'fuel' | 'other'
 
 export interface ExpenseFormData extends BaseFormData {
   recordType: 'expense'
@@ -1239,6 +1239,7 @@ export function EditRecordModal({
                       <SelectItem value="labor">Labor</SelectItem>
                       <SelectItem value="materials">Materials</SelectItem>
                       <SelectItem value="equipment">Equipment</SelectItem>
+                      <SelectItem value="fuel">Fuel</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>

@@ -162,7 +162,7 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         type: 'select',
         label: 'Category',
         required: true,
-        options: ['labor', 'materials', 'equipment', 'other']
+        options: ['labor', 'materials', 'equipment', 'fuel', 'other']
       },
       {
         name: 'description',

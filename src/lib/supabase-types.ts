@@ -499,7 +499,7 @@ export function toApplicationExpenseRecord(
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
-    type: dbRecord.type as 'labor' | 'materials' | 'equipment' | 'other',
+    type: dbRecord.type as 'labor' | 'materials' | 'equipment' | 'fuel' | 'other',
     description: dbRecord.description,
     cost: dbRecord.cost,
     date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
