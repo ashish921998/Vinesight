@@ -1,16 +1,43 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { TrendingUp } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { TrendingUp, TrendingDown, Minus, Info } from 'lucide-react'
 import { type LabTestRecord } from './TestDetailsCard'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  ReferenceLine
+} from 'recharts'
+import { format } from 'date-fns'
 
 interface LabTestTrendChartsProps {
   soilTests: LabTestRecord[]
   petioleTests: LabTestRecord[]
 }
 
+interface TrendData {
+  date: string
+  displayDate: string
+  [key: string]: string | number
+}
+
 export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChartsProps) {
+  const [selectedSoilParams, setSelectedSoilParams] = useState<string[]>(['ph', 'ec'])
+  const [selectedPetioleParams, setSelectedPetioleParams] = useState<string[]>([
+    'total_nitrogen',
+    'potassium'
+  ])
+
   // Check if we have enough data for trends
   const hasSoilTrends = soilTests.length >= 2
   const hasPetioleTrends = petioleTests.length >= 2
@@ -24,7 +51,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
               <TrendingUp className="h-8 w-8 text-muted-foreground" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Trend charts coming soon</h3>
+              <h3 className="text-lg font-semibold text-foreground">No trend data yet</h3>
               <p className="text-sm text-muted-foreground mt-1">
                 Add at least 2 tests to see parameter trends over time
               </p>
@@ -35,88 +62,413 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     )
   }
 
-  // TODO: Once Victory charts library is installed, implement actual trend charts here
-  // Charts to show:
-  // - Soil: pH trend, EC trend, NPK trends
-  // - Petiole: N, P, K trends, Ca, Mg trends
-  // Features:
-  // - Color-coded zones (optimal/watch/action ranges)
-  // - Hover tooltips with exact values
-  // - Toggle between soil and petiole
-  // - Download chart as image
+  // Prepare soil test data
+  const soilTrendData: TrendData[] = soilTests
+    .sort((a, b) => new Date(a.test.date).getTime() - new Date(b.test.date).getTime())
+    .map((record) => ({
+      date: record.test.date,
+      displayDate: format(new Date(record.test.date), 'MMM dd, yyyy'),
+      ph: record.test.parameters.ph || null,
+      ec: record.test.parameters.ec || null,
+      nitrogen: record.test.parameters.nitrogen || null,
+      phosphorus: record.test.parameters.phosphorus || null,
+      potassium: record.test.parameters.potassium || null,
+      organicMatter: record.test.parameters.organicMatter || null
+    }))
+
+  // Prepare petiole test data
+  const petioleTrendData: TrendData[] = petioleTests
+    .sort((a, b) => new Date(a.test.date).getTime() - new Date(b.test.date).getTime())
+    .map((record) => ({
+      date: record.test.date,
+      displayDate: format(new Date(record.test.date), 'MMM dd, yyyy'),
+      total_nitrogen: record.test.parameters.total_nitrogen || null,
+      phosphorus: record.test.parameters.phosphorus || null,
+      potassium: record.test.parameters.potassium || null,
+      calcium: record.test.parameters.calcium || null,
+      magnesium: record.test.parameters.magnesium || null,
+      ferrous: record.test.parameters.ferrous || null,
+      zinc: record.test.parameters.zinc || null,
+      boron: record.test.parameters.boron || null
+    }))
+
+  // Soil parameter options
+  const soilParamOptions = [
+    { key: 'ph', label: 'pH', unit: '', color: '#3b82f6', optimalMin: 6.5, optimalMax: 7.5 },
+    { key: 'ec', label: 'EC', unit: 'dS/m', color: '#10b981', optimalMin: 0.5, optimalMax: 2.0 },
+    {
+      key: 'nitrogen',
+      label: 'Nitrogen',
+      unit: 'ppm',
+      color: '#8b5cf6',
+      optimalMin: 200,
+      optimalMax: 400
+    },
+    {
+      key: 'phosphorus',
+      label: 'Phosphorus',
+      unit: 'ppm',
+      color: '#f59e0b',
+      optimalMin: 30,
+      optimalMax: 60
+    },
+    {
+      key: 'potassium',
+      label: 'Potassium',
+      unit: 'ppm',
+      color: '#ef4444',
+      optimalMin: 250,
+      optimalMax: 400
+    },
+    {
+      key: 'organicMatter',
+      label: 'Organic Matter',
+      unit: '%',
+      color: '#06b6d4',
+      optimalMin: 2.0,
+      optimalMax: 5.0
+    }
+  ]
+
+  // Petiole parameter options
+  const petioleParamOptions = [
+    {
+      key: 'total_nitrogen',
+      label: 'Total Nitrogen',
+      unit: '%',
+      color: '#3b82f6',
+      optimalMin: 2.0,
+      optimalMax: 3.5
+    },
+    {
+      key: 'phosphorus',
+      label: 'Phosphorus',
+      unit: '%',
+      color: '#f59e0b',
+      optimalMin: 0.3,
+      optimalMax: 0.5
+    },
+    {
+      key: 'potassium',
+      label: 'Potassium',
+      unit: '%',
+      color: '#ef4444',
+      optimalMin: 1.8,
+      optimalMax: 2.5
+    },
+    {
+      key: 'calcium',
+      label: 'Calcium',
+      unit: '%',
+      color: '#10b981',
+      optimalMin: 1.5,
+      optimalMax: 2.5
+    },
+    {
+      key: 'magnesium',
+      label: 'Magnesium',
+      unit: '%',
+      color: '#8b5cf6',
+      optimalMin: 0.4,
+      optimalMax: 0.8
+    },
+    {
+      key: 'ferrous',
+      label: 'Iron',
+      unit: 'ppm',
+      color: '#06b6d4',
+      optimalMin: 80,
+      optimalMax: 120
+    },
+    { key: 'zinc', label: 'Zinc', unit: 'ppm', color: '#6366f1', optimalMin: 50, optimalMax: 80 },
+    {
+      key: 'boron',
+      label: 'Boron',
+      unit: 'ppm',
+      color: '#ec4899',
+      optimalMin: 25,
+      optimalMax: 50
+    }
+  ]
+
+  // Calculate trend direction
+  const getTrendDirection = (data: TrendData[], param: string) => {
+    if (data.length < 2) return null
+    const recent = data[data.length - 1][param]
+    const previous = data[data.length - 2][param]
+    if (recent === null || previous === null) return null
+    const change = ((Number(recent) - Number(previous)) / Number(previous)) * 100
+    return { change, direction: change > 5 ? 'up' : change < -5 ? 'down' : 'stable' }
+  }
+
+  const toggleSoilParam = (param: string) => {
+    setSelectedSoilParams((prev) =>
+      prev.includes(param) ? prev.filter((p) => p !== param) : [...prev, param]
+    )
+  }
+
+  const togglePetioleParam = (param: string) => {
+    setSelectedPetioleParams((prev) =>
+      prev.includes(param) ? prev.filter((p) => p !== param) : [...prev, param]
+    )
+  }
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg" aria-label="Parameter Trends">
-              📈 Parameter Trends
-            </CardTitle>
-            <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700">
-              Charts Coming Soon
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-muted/30 rounded-lg p-8 text-center border-2 border-dashed">
-            <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold text-foreground mb-2">Interactive Charts Coming Soon</h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              We&apos;re building interactive trend charts to visualize how your soil and plant
-              health parameters change over time. This will include pH, EC, NPK levels, and more
-              with color-coded optimal ranges.
-            </p>
-            <div className="mt-4 text-xs text-muted-foreground">
-              <strong>Available data:</strong> {hasSoilTrends && `${soilTests.length} soil tests`}
-              {hasSoilTrends && hasPetioleTrends && ', '}
-              {hasPetioleTrends && `${petioleTests.length} petiole tests`}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue={hasSoilTrends ? 'soil' : 'petiole'} className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="soil" disabled={!hasSoilTrends}>
+            🌱 Soil Trends {hasSoilTrends && `(${soilTests.length})`}
+          </TabsTrigger>
+          <TabsTrigger value="petiole" disabled={!hasPetioleTrends}>
+            🍃 Petiole Trends {hasPetioleTrends && `(${petioleTests.length})`}
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Preview of what's coming */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {hasSoilTrends && (
-          <Card className="bg-gradient-to-br from-green-50 to-blue-50">
+        {/* Soil Trends Tab */}
+        <TabsContent value="soil" className="space-y-4">
+          <Card>
             <CardHeader>
-              <CardTitle className="text-sm" aria-label="Soil Trends">
-                🌱 Soil Trends
-              </CardTitle>
+              <CardTitle>Soil Parameter Trends</CardTitle>
+              <CardDescription>
+                Track how your soil health parameters change over time
+              </CardDescription>
             </CardHeader>
-            <CardContent className="text-xs text-muted-foreground">
-              • pH levels over time
-              <br />
-              • EC (salinity) trends
-              <br />
-              • NPK nutrient changes
-              <br />
-              • Micronutrient tracking
-              <br />
+            <CardContent className="space-y-4">
+              {/* Parameter Selection */}
+              <div>
+                <p className="text-sm font-medium mb-2">Select Parameters to Display:</p>
+                <div className="flex flex-wrap gap-2">
+                  {soilParamOptions.map((param) => {
+                    const hasData = soilTrendData.some((d) => d[param.key] !== null)
+                    const trend = getTrendDirection(soilTrendData, param.key)
+
+                    return (
+                      <Button
+                        key={param.key}
+                        variant={selectedSoilParams.includes(param.key) ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => toggleSoilParam(param.key)}
+                        disabled={!hasData}
+                        className="flex items-center gap-1"
+                      >
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: param.color }}
+                        />
+                        {param.label}
+                        {trend && (
+                          <span className="ml-1">
+                            {trend.direction === 'up' && (
+                              <TrendingUp className="h-3 w-3 text-green-600" />
+                            )}
+                            {trend.direction === 'down' && (
+                              <TrendingDown className="h-3 w-3 text-red-600" />
+                            )}
+                            {trend.direction === 'stable' && (
+                              <Minus className="h-3 w-3 text-gray-600" />
+                            )}
+                          </span>
+                        )}
+                      </Button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Chart */}
+              {selectedSoilParams.length > 0 ? (
+                <div className="h-80 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={soilTrendData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis
+                        dataKey="displayDate"
+                        tick={{ fontSize: 12 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: '12px' }} />
+                      {selectedSoilParams.map((paramKey) => {
+                        const param = soilParamOptions.find((p) => p.key === paramKey)
+                        if (!param) return null
+                        return (
+                          <Line
+                            key={param.key}
+                            type="monotone"
+                            dataKey={param.key}
+                            name={`${param.label}${param.unit ? ` (${param.unit})` : ''}`}
+                            stroke={param.color}
+                            strokeWidth={2}
+                            dot={{ fill: param.color, r: 4 }}
+                            connectNulls
+                          />
+                        )
+                      })}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="h-80 flex items-center justify-center bg-muted/30 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    Select at least one parameter to view trends
+                  </p>
+                </div>
+              )}
+
+              {/* Optimal Ranges Info */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                  <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+                  <div className="text-xs text-blue-900">
+                    <p className="font-medium mb-1">Optimal Ranges for Grape Farming:</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {soilParamOptions.map((param) => (
+                        <div key={param.key}>
+                          <strong>{param.label}:</strong> {param.optimalMin}-{param.optimalMax}{' '}
+                          {param.unit}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
-        )}
-        {hasPetioleTrends && (
-          <Card className="bg-gradient-to-br from-emerald-50 to-teal-50">
+        </TabsContent>
+
+        {/* Petiole Trends Tab */}
+        <TabsContent value="petiole" className="space-y-4">
+          <Card>
             <CardHeader>
-              <CardTitle className="text-sm" aria-label="Petiole Trends">
-                🍃 Petiole Trends
-              </CardTitle>
+              <CardTitle>Petiole Parameter Trends</CardTitle>
+              <CardDescription>
+                Monitor plant nutrient uptake and health indicators over time
+              </CardDescription>
             </CardHeader>
-            <CardContent className="text-xs text-muted-foreground">
-              • Nitrogen uptake trends
-              <br />
-              • P, K absorption patterns
-              <br />
-              • Ca, Mg balance tracking
-              <br />
-              • Growth stage correlations
-              <br />
+            <CardContent className="space-y-4">
+              {/* Parameter Selection */}
+              <div>
+                <p className="text-sm font-medium mb-2">Select Parameters to Display:</p>
+                <div className="flex flex-wrap gap-2">
+                  {petioleParamOptions.map((param) => {
+                    const hasData = petioleTrendData.some((d) => d[param.key] !== null)
+                    const trend = getTrendDirection(petioleTrendData, param.key)
+
+                    return (
+                      <Button
+                        key={param.key}
+                        variant={
+                          selectedPetioleParams.includes(param.key) ? 'default' : 'outline'
+                        }
+                        size="sm"
+                        onClick={() => togglePetioleParam(param.key)}
+                        disabled={!hasData}
+                        className="flex items-center gap-1"
+                      >
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: param.color }}
+                        />
+                        {param.label}
+                        {trend && (
+                          <span className="ml-1">
+                            {trend.direction === 'up' && (
+                              <TrendingUp className="h-3 w-3 text-green-600" />
+                            )}
+                            {trend.direction === 'down' && (
+                              <TrendingDown className="h-3 w-3 text-red-600" />
+                            )}
+                            {trend.direction === 'stable' && (
+                              <Minus className="h-3 w-3 text-gray-600" />
+                            )}
+                          </span>
+                        )}
+                      </Button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Chart */}
+              {selectedPetioleParams.length > 0 ? (
+                <div className="h-80 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={petioleTrendData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis
+                        dataKey="displayDate"
+                        tick={{ fontSize: 12 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: '12px' }} />
+                      {selectedPetioleParams.map((paramKey) => {
+                        const param = petioleParamOptions.find((p) => p.key === paramKey)
+                        if (!param) return null
+                        return (
+                          <Line
+                            key={param.key}
+                            type="monotone"
+                            dataKey={param.key}
+                            name={`${param.label}${param.unit ? ` (${param.unit})` : ''}`}
+                            stroke={param.color}
+                            strokeWidth={2}
+                            dot={{ fill: param.color, r: 4 }}
+                            connectNulls
+                          />
+                        )
+                      })}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="h-80 flex items-center justify-center bg-muted/30 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    Select at least one parameter to view trends
+                  </p>
+                </div>
+              )}
+
+              {/* Optimal Ranges Info */}
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                  <Info className="h-4 w-4 text-emerald-600 mt-0.5" />
+                  <div className="text-xs text-emerald-900">
+                    <p className="font-medium mb-1">Optimal Ranges for Grape Petioles:</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {petioleParamOptions.map((param) => (
+                        <div key={param.key}>
+                          <strong>{param.label}:</strong> {param.optimalMin}-{param.optimalMax}{' '}
+                          {param.unit}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
