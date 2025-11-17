@@ -134,15 +134,18 @@ export function useSupabaseAuth() {
 
     try {
       const supabase = createClient()
+
+      // Build user metadata object only with defined values
+      const userMetadata: Record<string, string> = {}
+      if (firstName) userMetadata.first_name = firstName
+      if (lastName) userMetadata.last_name = lastName
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
-          data: {
-            first_name: firstName,
-            last_name: lastName
-          }
+          ...(Object.keys(userMetadata).length > 0 && { data: userMetadata })
         }
       })
 

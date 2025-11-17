@@ -44,7 +44,11 @@ export default function SignupForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+    const trimmedFirstName = firstName.trim()
+    const trimmedLastName = lastName.trim()
+    const trimmedEmail = email.trim()
+
+    if (!trimmedFirstName || !trimmedLastName || !trimmedEmail || !password || !confirmPassword) {
       return
     }
 
@@ -53,11 +57,11 @@ export default function SignupForm() {
     }
 
     const result = await signUpWithEmail({
-      email,
+      email: trimmedEmail,
       password,
       confirmPassword,
-      firstName,
-      lastName
+      firstName: trimmedFirstName,
+      lastName: trimmedLastName
     })
 
     if (result.success) {
@@ -119,6 +123,7 @@ export default function SignupForm() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
+                  maxLength={50}
                   className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                   placeholder="Enter your first name"
                 />
@@ -136,6 +141,7 @@ export default function SignupForm() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   required
+                  maxLength={50}
                   className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                   placeholder="Enter your last name"
                 />
