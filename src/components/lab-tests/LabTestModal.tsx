@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { SupabaseService } from '@/lib/supabase-service'
 import { Loader2, Upload, X, FileText, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
+import { canonicalizeParameterKey } from '@/lib/parameter-canonicalization'
 
 interface LabTestModalProps {
   isOpen: boolean
@@ -61,8 +62,8 @@ export function LabTestModal({
         const params: Record<string, string> = {}
         Object.entries(existingTest.parameters).forEach(([key, value]) => {
           if (value !== null && value !== undefined && value !== '') {
-            // Canonicalize legacy key names
-            const canonicalKey = key === 'ammonical_nitrogen' ? 'ammonium_nitrogen' : key
+            // Canonicalize legacy key names using shared canonicalization function
+            const canonicalKey = canonicalizeParameterKey(key) || key
             params[canonicalKey] = String(value)
           }
         })

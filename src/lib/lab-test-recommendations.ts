@@ -37,8 +37,8 @@ function isValidParameter(value: number | undefined | null): value is number {
 export interface SoilTestParameters {
   ph?: number
   ec?: number // Electrical Conductivity (dS/m)
-  organicCarbon?: number // %
-  organicMatter?: number // %
+  organic_carbon?: number // %
+  organic_matter?: number // %
   nitrogen?: number // ppm
   phosphorus?: number // ppm
   potassium?: number // ppm
@@ -60,8 +60,8 @@ export interface PetioleTestParameters {
   potassium?: number // %
   calcium?: number // %
   magnesium?: number // %
-  sulphur?: number // %
-  ferrous?: number // ppm
+  sulfur?: number // %
+  iron?: number // ppm
   manganese?: number // ppm
   zinc?: number // ppm
   copper?: number // ppm
@@ -72,18 +72,71 @@ export interface PetioleTestParameters {
 }
 
 /**
+ * Validation ranges for soil test parameters
+ * These catch clearly invalid data (negative values, extreme outliers)
+ * while still allowing for legitimate edge cases
+ */
+const SOIL_VALIDATION_RANGES: Record<string, { min: number; max: number }> = {
+  ph: { min: 0, max: 14 },
+  ec: { min: 0, max: 20 }, // dS/m - extreme but possible
+  organic_carbon: { min: 0, max: 20 }, // %
+  organic_matter: { min: 0, max: 30 }, // %
+  nitrogen: { min: 0, max: 2000 }, // ppm
+  phosphorus: { min: 0, max: 500 }, // ppm
+  potassium: { min: 0, max: 2000 }, // ppm
+  calcium: { min: 0, max: 50000 }, // ppm
+  magnesium: { min: 0, max: 10000 }, // ppm
+  sulfur: { min: 0, max: 500 }, // ppm
+  iron: { min: 0, max: 200 }, // ppm
+  manganese: { min: 0, max: 200 }, // ppm
+  zinc: { min: 0, max: 50 }, // ppm
+  copper: { min: 0, max: 100 }, // ppm
+  boron: { min: 0, max: 10 } // ppm
+}
+
+/**
+ * Validate soil test parameters and return list of invalid parameters
+ */
+function validateSoilParameters(parameters: SoilTestParameters): string[] {
+  const invalid: string[] = []
+
+  Object.entries(parameters).forEach(([key, value]) => {
+    if (!isValidParameter(value)) return // Skip null/undefined
+
+    const range = SOIL_VALIDATION_RANGES[key]
+    if (!range) return // No validation range defined
+
+    if (value < range.min || value > range.max) {
+      invalid.push(key)
+    }
+  })
+
+  return invalid
+}
+
+/**
  * Generate recommendations for soil test results
  *
- * Note: We no longer validate against predefined ranges because lab test results
- * can legitimately fall outside typical ranges. If custom ranges are provided
- * by the lab report, those should be used by the caller. Otherwise, we generate
- * recommendations based on the actual values without validation errors.
+ * Validates parameters to catch clearly invalid data (negative values, extreme outliers)
+ * before generating recommendations. Invalid data triggers a data quality warning.
  */
 export function generateSoilTestRecommendations(parameters: SoilTestParameters): Recommendation[] {
   const recommendations: Recommendation[] = []
 
-  // Skip validation - accept all numeric values as valid
-  // Lab reports can have extreme values that are still legitimate measurements
+  // Validate parameters first - catch negative values, NaN, Infinity, extreme outliers
+  const invalidParams = validateSoilParameters(parameters)
+
+  if (invalidParams.length > 0) {
+    recommendations.push({
+      priority: 'critical',
+      type: 'action',
+      parameter: 'Data Quality',
+      technical: `Invalid test data detected: ${invalidParams.join(', ')}. Please verify lab results for errors.`,
+      simple: `Check lab report - some values look incorrect (${invalidParams.join(', ')})`,
+      icon: '⚠️'
+    })
+    return recommendations
+  }
 
   // pH Analysis
   if (isValidParameter(parameters.ph)) {
@@ -295,22 +348,22 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
   }
 
   // Organic Matter Analysis
-  if (isValidParameter(parameters.organicMatter)) {
-    if (parameters.organicMatter < 1.0) {
+  if (isValidParameter(parameters.organic_matter)) {
+    if (parameters.organic_matter < 1.0) {
       recommendations.push({
         priority: 'high',
         type: 'action',
         parameter: 'Organic Matter',
-        technical: `Very low organic matter (${parameters.organicMatter}%). Apply 5-7 tons/acre well-decomposed FYM or compost to improve soil health.`,
+        technical: `Very low organic matter (${parameters.organic_matter}%). Apply 5-7 tons/acre well-decomposed FYM or compost to improve soil health.`,
         simple: `Organic matter very low. Add compost 5-7 tons.`,
         icon: '🟡'
       })
-    } else if (parameters.organicMatter > 3.0) {
+    } else if (parameters.organic_matter > 3.0) {
       recommendations.push({
         priority: 'optimal',
         type: 'optimal',
         parameter: 'Organic Matter',
-        technical: `Excellent organic matter content (${parameters.organicMatter}%). Soil structure and microbial activity are healthy.`,
+        technical: `Excellent organic matter content (${parameters.organic_matter}%). Soil structure and microbial activity are healthy.`,
         simple: `Organic matter excellent. Soil is healthy.`,
         icon: '✅'
       })
@@ -319,7 +372,7 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
         priority: 'moderate',
         type: 'watch',
         parameter: 'Organic Matter',
-        technical: `Organic matter is moderate (${parameters.organicMatter}%). Continue adding 2-3 tons/acre compost annually.`,
+        technical: `Organic matter is moderate (${parameters.organic_matter}%). Continue adding 2-3 tons/acre compost annually.`,
         simple: `Organic matter okay. Add 2-3 tons compost yearly.`,
         icon: '⚠️'
       })
@@ -360,29 +413,83 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
     })
   }
 
-  // Note: Some validated parameters (calcium, magnesium, sulfur, manganese, copper, organicCarbon)
-  // are validation-only for now and don't generate specific recommendations in this version.
-  // They are validated to catch data entry errors but recommendations may be added in future versions.
+  // Note: Some parameters (calcium, magnesium, sulfur, manganese, copper, organic_carbon)
+  // currently don't generate specific recommendations in this version.
+  // Recommendations for them may be added in future versions.
 
   // Sort recommendations by priority
   return recommendations.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
 }
 
 /**
+ * Validation ranges for petiole test parameters
+ * These catch clearly invalid data (negative values, extreme outliers)
+ * while still allowing for legitimate edge cases
+ */
+const PETIOLE_VALIDATION_RANGES: Record<string, { min: number; max: number }> = {
+  total_nitrogen: { min: 0, max: 10 }, // %
+  nitrate_nitrogen: { min: 0, max: 5000 }, // ppm
+  ammonium_nitrogen: { min: 0, max: 3000 }, // ppm
+  phosphorus: { min: 0, max: 2 }, // %
+  potassium: { min: 0, max: 6 }, // %
+  calcium: { min: 0, max: 6 }, // %
+  magnesium: { min: 0, max: 3 }, // %
+  sulfur: { min: 0, max: 2 }, // %
+  iron: { min: 0, max: 500 }, // ppm
+  manganese: { min: 0, max: 500 }, // ppm
+  zinc: { min: 0, max: 300 }, // ppm
+  copper: { min: 0, max: 100 }, // ppm
+  boron: { min: 0, max: 200 }, // ppm
+  molybdenum: { min: 0, max: 5 }, // ppm
+  sodium: { min: 0, max: 3 }, // %
+  chloride: { min: 0, max: 2 } // %
+}
+
+/**
+ * Validate petiole test parameters and return list of invalid parameters
+ */
+function validatePetioleParameters(parameters: PetioleTestParameters): string[] {
+  const invalid: string[] = []
+
+  Object.entries(parameters).forEach(([key, value]) => {
+    if (!isValidParameter(value)) return // Skip null/undefined
+
+    const range = PETIOLE_VALIDATION_RANGES[key]
+    if (!range) return // No validation range defined
+
+    if (value < range.min || value > range.max) {
+      invalid.push(key)
+    }
+  })
+
+  return invalid
+}
+
+/**
  * Generate recommendations for petiole test results
  *
- * Note: We no longer validate against predefined ranges because lab test results
- * can legitimately fall outside typical ranges. If custom ranges are provided
- * by the lab report, those should be used by the caller. Otherwise, we generate
- * recommendations based on the actual values without validation errors.
+ * Validates parameters to catch clearly invalid data (negative values, extreme outliers)
+ * before generating recommendations. Invalid data triggers a data quality warning.
  */
 export function generatePetioleTestRecommendations(
   parameters: PetioleTestParameters
 ): Recommendation[] {
   const recommendations: Recommendation[] = []
 
-  // Skip validation - accept all numeric values as valid
-  // Lab reports can have extreme values that are still legitimate measurements
+  // Validate parameters first - catch negative values, NaN, Infinity, extreme outliers
+  const invalidParams = validatePetioleParameters(parameters)
+
+  if (invalidParams.length > 0) {
+    recommendations.push({
+      priority: 'critical',
+      type: 'action',
+      parameter: 'Data Quality',
+      technical: `Invalid test data detected: ${invalidParams.join(', ')}. Please verify lab results for errors.`,
+      simple: `Check lab report - some values look incorrect (${invalidParams.join(', ')})`,
+      icon: '⚠️'
+    })
+    return recommendations
+  }
 
   // Total Nitrogen Analysis
   if (isValidParameter(parameters.total_nitrogen)) {
@@ -576,18 +683,20 @@ export function generatePetioleTestRecommendations(
     })
   }
 
-  if (isValidParameter(parameters.ferrous) && parameters.ferrous < 50) {
+  // Support both 'iron' (current) and 'ferrous' (legacy) keys
+  const ironValue = parameters.iron ?? (parameters as any).ferrous
+  if (isValidParameter(ironValue) && ironValue < 50) {
     recommendations.push({
       priority: 'moderate',
       type: 'action',
       parameter: 'Iron',
-      technical: `Low petiole iron (${parameters.ferrous} ppm). Apply chelated iron foliar spray or through fertigation. Symptoms: yellowing between leaf veins.`,
+      technical: `Low petiole iron (${ironValue} ppm). Apply chelated iron foliar spray or through fertigation. Symptoms: yellowing between leaf veins.`,
       simple: `Iron low. Spray on leaves. Leaves may turn yellow.`,
       icon: '⚠️'
     })
   }
 
-  // Note: Some parameters (nitrate_nitrogen, sulphur, manganese, copper)
+  // Note: Some parameters (nitrate_nitrogen, sulfur, manganese, copper)
   // don't generate specific recommendations in this version yet.
   // Recommendations for these parameters may be added in future versions.
 
