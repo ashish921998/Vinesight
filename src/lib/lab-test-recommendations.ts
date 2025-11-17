@@ -61,10 +61,104 @@ interface PetioleTestParameters {
 }
 
 /**
+ * Validation ranges for soil test parameters
+ */
+const SOIL_VALIDATION_RANGES = {
+  ph: { min: 0, max: 14, unit: 'pH' },
+  ec: { min: 0, max: 10, unit: 'dS/m' },
+  organicCarbon: { min: 0, max: 10, unit: '%' },
+  organicMatter: { min: 0, max: 15, unit: '%' },
+  nitrogen: { min: 0, max: 1000, unit: 'ppm' },
+  phosphorus: { min: 0, max: 200, unit: 'ppm' },
+  potassium: { min: 0, max: 1000, unit: 'ppm' },
+  calcium: { min: 0, max: 5000, unit: 'ppm' },
+  magnesium: { min: 0, max: 1000, unit: 'ppm' },
+  sulfur: { min: 0, max: 100, unit: 'ppm' },
+  iron: { min: 0, max: 200, unit: 'ppm' },
+  manganese: { min: 0, max: 200, unit: 'ppm' },
+  zinc: { min: 0, max: 50, unit: 'ppm' },
+  copper: { min: 0, max: 50, unit: 'ppm' },
+  boron: { min: 0, max: 10, unit: 'ppm' }
+} as const
+
+/**
+ * Validation ranges for petiole test parameters
+ */
+const PETIOLE_VALIDATION_RANGES = {
+  total_nitrogen: { min: 0, max: 10, unit: '%' },
+  nitrate_nitrogen: { min: 0, max: 10000, unit: 'ppm' },
+  phosphorus: { min: 0, max: 2, unit: '%' },
+  potassium: { min: 0, max: 6, unit: '%' },
+  calcium: { min: 0, max: 6, unit: '%' },
+  magnesium: { min: 0, max: 2, unit: '%' },
+  sulphur: { min: 0, max: 2, unit: '%' },
+  ferrous: { min: 0, max: 500, unit: 'ppm' },
+  manganese: { min: 0, max: 500, unit: 'ppm' },
+  zinc: { min: 0, max: 200, unit: 'ppm' },
+  copper: { min: 0, max: 50, unit: 'ppm' },
+  boron: { min: 0, max: 200, unit: 'ppm' }
+} as const
+
+/**
+ * Validate a numeric parameter against expected range
+ */
+function validateParameter(
+  value: number | undefined,
+  paramName: string,
+  range: { min: number; max: number; unit: string }
+): { isValid: boolean; message?: string } {
+  if (value === undefined) {
+    return { isValid: true } // Optional parameters are valid if undefined
+  }
+
+  if (typeof value !== 'number' || isNaN(value)) {
+    return {
+      isValid: false,
+      message: `${paramName} must be a valid number (got: ${value})`
+    }
+  }
+
+  if (value < range.min || value > range.max) {
+    return {
+      isValid: false,
+      message: `${paramName} (${value} ${range.unit}) is out of valid range (${range.min}-${range.max} ${range.unit})`
+    }
+  }
+
+  return { isValid: true }
+}
+
+/**
  * Generate recommendations for soil test results
  */
 export function generateSoilTestRecommendations(parameters: SoilTestParameters): Recommendation[] {
   const recommendations: Recommendation[] = []
+
+  // Validate all input parameters
+  const invalidParameters: string[] = []
+
+  Object.entries(parameters).forEach(([key, value]) => {
+    const range = SOIL_VALIDATION_RANGES[key as keyof typeof SOIL_VALIDATION_RANGES]
+    if (range) {
+      const validation = validateParameter(value, key, range)
+      if (!validation.isValid && validation.message) {
+        invalidParameters.push(validation.message)
+      }
+    }
+  })
+
+  // If any parameters are invalid, return critical validation error
+  if (invalidParameters.length > 0) {
+    recommendations.push({
+      priority: 'critical',
+      type: 'action',
+      parameter: 'Data Quality',
+      technical: `Invalid test data detected: ${invalidParameters.join('; ')}. Please verify test results with the laboratory before proceeding with recommendations.`,
+      simple: `चुकीचे चाचणी डेटा आढळला. कृपया प्रयोगशाळेशी तपासा. / Invalid test data found. Please verify with laboratory.`,
+      icon: '❌'
+    })
+    return recommendations
+  }
 
   // pH Analysis
   if (parameters.ph !== undefined) {
@@ -352,6 +446,32 @@ export function generatePetioleTestRecommendations(
   parameters: PetioleTestParameters
 ): Recommendation[] {
   const recommendations: Recommendation[] = []
+
+  // Validate all input parameters
+  const invalidParameters: string[] = []
+
+  Object.entries(parameters).forEach(([key, value]) => {
+    const range = PETIOLE_VALIDATION_RANGES[key as keyof typeof PETIOLE_VALIDATION_RANGES]
+    if (range) {
+      const validation = validateParameter(value, key, range)
+      if (!validation.isValid && validation.message) {
+        invalidParameters.push(validation.message)
+      }
+    }
+  })
+
+  // If any parameters are invalid, return critical validation error
+  if (invalidParameters.length > 0) {
+    recommendations.push({
+      priority: 'critical',
+      type: 'action',
+      parameter: 'Data Quality',
+      technical: `Invalid test data detected: ${invalidParameters.join('; ')}. Please verify test results with the laboratory before proceeding with recommendations.`,
+      simple: `चुकीचे चाचणी डेटा आढळला. कृपया प्रयोगशाळेशी तपासा. / Invalid test data found. Please verify with laboratory.`,
+      icon: '❌'
+    })
+    return recommendations
+  }
 
   // Total Nitrogen Analysis
   if (parameters.total_nitrogen !== undefined) {
