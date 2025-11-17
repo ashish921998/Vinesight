@@ -149,7 +149,14 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       optimalMax: 400
     },
     // Secondary nutrients
-    { key: 'calcium', label: 'Calcium', unit: 'ppm', color: '#14b8a6', optimalMin: 800, optimalMax: 1500 },
+    {
+      key: 'calcium',
+      label: 'Calcium',
+      unit: 'ppm',
+      color: '#14b8a6',
+      optimalMin: 800,
+      optimalMax: 1500
+    },
     {
       key: 'magnesium',
       label: 'Magnesium',
@@ -158,7 +165,14 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       optimalMin: 150,
       optimalMax: 300
     },
-    { key: 'sulfur', label: 'Sulfur', unit: 'ppm', color: '#f97316', optimalMin: 15, optimalMax: 30 },
+    {
+      key: 'sulfur',
+      label: 'Sulfur',
+      unit: 'ppm',
+      color: '#f97316',
+      optimalMin: 15,
+      optimalMax: 30
+    },
     // Organic matter
     {
       key: 'organicCarbon',
@@ -177,11 +191,39 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       optimalMax: 5.0
     },
     // Micronutrients
-    { key: 'iron', label: 'Iron', unit: 'ppm', color: '#dc2626', optimalMin: 4.5, optimalMax: 10.0 },
-    { key: 'manganese', label: 'Manganese', unit: 'ppm', color: '#7c3aed', optimalMin: 5, optimalMax: 15 },
+    {
+      key: 'iron',
+      label: 'Iron',
+      unit: 'ppm',
+      color: '#dc2626',
+      optimalMin: 4.5,
+      optimalMax: 10.0
+    },
+    {
+      key: 'manganese',
+      label: 'Manganese',
+      unit: 'ppm',
+      color: '#7c3aed',
+      optimalMin: 5,
+      optimalMax: 15
+    },
     { key: 'zinc', label: 'Zinc', unit: 'ppm', color: '#6366f1', optimalMin: 1.0, optimalMax: 3.0 },
-    { key: 'copper', label: 'Copper', unit: 'ppm', color: '#ea580c', optimalMin: 0.5, optimalMax: 2.0 },
-    { key: 'boron', label: 'Boron', unit: 'ppm', color: '#ec4899', optimalMin: 0.5, optimalMax: 1.5 }
+    {
+      key: 'copper',
+      label: 'Copper',
+      unit: 'ppm',
+      color: '#ea580c',
+      optimalMin: 0.5,
+      optimalMax: 2.0
+    },
+    {
+      key: 'boron',
+      label: 'Boron',
+      unit: 'ppm',
+      color: '#ec4899',
+      optimalMin: 0.5,
+      optimalMax: 1.5
+    }
   ]
 
   // Petiole parameter options
@@ -295,7 +337,14 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       optimalMax: 0.5
     },
     // Other elements
-    { key: 'sodium', label: 'Sodium', unit: '%', color: '#14b8a6', optimalMin: 0.1, optimalMax: 0.5 },
+    {
+      key: 'sodium',
+      label: 'Sodium',
+      unit: '%',
+      color: '#14b8a6',
+      optimalMin: 0.1,
+      optimalMax: 0.5
+    },
     {
       key: 'chloride',
       label: 'Chloride',
@@ -482,9 +531,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
                     return (
                       <Button
                         key={param.key}
-                        variant={
-                          selectedPetioleParams.includes(param.key) ? 'default' : 'outline'
-                        }
+                        variant={selectedPetioleParams.includes(param.key) ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => togglePetioleParam(param.key)}
                         disabled={!hasData}
