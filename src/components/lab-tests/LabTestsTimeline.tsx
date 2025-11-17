@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select'
 import { TestDetailsCard, type LabTestRecord } from './TestDetailsCard'
 import { Beaker, Calendar, Filter, Plus } from 'lucide-react'
-import { subMonths, isAfter, startOfDay } from 'date-fns'
+import { subMonths, isAfter, isSameDay, startOfDay } from 'date-fns'
 
 interface LabTestsTimelineProps {
   soilTests: LabTestRecord[]
@@ -77,9 +77,11 @@ export function LabTestsTimeline({
             ? subMonths(now, 12)
             : subMonths(now, 4) // season (approx 4 months)
 
-      filtered = filtered.filter((item) =>
-        isAfter(startOfDay(new Date(item.test.date)), startOfDay(cutoffDate))
-      )
+      filtered = filtered.filter((item) => {
+        const testDate = startOfDay(new Date(item.test.date))
+        const cutoff = startOfDay(cutoffDate)
+        return isAfter(testDate, cutoff) || isSameDay(testDate, cutoff)
+      })
     }
 
     return filtered
@@ -108,7 +110,7 @@ export function LabTestsTimeline({
     <div className="space-y-2 sm:space-y-4">
       {/* Header with Actions */}
       <div className="flex flex-col gap-2 sm:gap-3">
-        <div className="hidden sm:block">
+        <div>
           <h2 className="text-xl sm:text-2xl font-bold text-foreground">Lab Test History</h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
             Track soil and petiole test results over time
@@ -204,7 +206,7 @@ export function LabTestsTimeline({
                     : '—'}
                 </div>
                 <div className="text-[10px] sm:text-xs text-purple-600 font-medium truncate">
-                  Days
+                  Since Last
                 </div>
               </div>
             </div>

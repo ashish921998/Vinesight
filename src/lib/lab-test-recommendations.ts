@@ -74,7 +74,7 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
         type: 'action',
         parameter: 'pH',
         technical: `Soil is highly acidic (pH ${parameters.ph}). Apply agricultural lime (CaCO₃) at 2-3 tons/acre to raise pH to optimal range (6.5-7.5).`,
-        simple: `खूप आम्लयुक्त माती आहे. चुना 2-3 टन प्रति एकर टाका. / Soil is too acidic. Add lime 2-3 bags per acre.`,
+        simple: `खूप आम्लयुक्त माती आहे. चुना 2-3 टन प्रति एकर टाका. / Soil is too acidic. Add lime 2-3 tons per acre.`,
         icon: '🔴'
       })
     } else if (parameters.ph < 6.0) {
@@ -83,7 +83,7 @@ export function generateSoilTestRecommendations(parameters: SoilTestParameters):
         type: 'action',
         parameter: 'pH',
         technical: `Soil is moderately acidic (pH ${parameters.ph}). Apply 1-2 tons/acre agricultural lime before planting season.`,
-        simple: `माती थोडी आम्लयुक्त आहे. चुना 1-2 टन टाका. / Soil is slightly acidic. Add lime 1-2 bags per acre.`,
+        simple: `माती थोडी आम्लयुक्त आहे. चुना 1-2 टन टाका. / Soil is slightly acidic. Add lime 1-2 tons per acre.`,
         icon: '🟡'
       })
     } else if (parameters.ph > 8.5) {
