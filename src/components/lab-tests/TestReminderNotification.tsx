@@ -40,26 +40,27 @@ export function TestReminderNotification({
   const loadReminders = useCallback(async () => {
     setLoading(true)
     try {
-      const [reminderData, tasks] = await Promise.all([
-        checkTestReminders(farmId),
-        SupabaseService.getPendingTasks(farmId)
-      ])
-
+      // Fetch reminders independently - always show if tests are overdue
+      const reminderData = await checkTestReminders(farmId)
       setReminders(reminderData)
 
-      // Check if there are already pending tasks for soil or petiole tests
-      const hasSoilTask = tasks.some(
-        (task) =>
-          task.type === 'soil_test' && (task.status === 'pending' || task.status === 'in_progress')
-      )
-      const hasPetioleTask = tasks.some(
-        (task) =>
-          task.type === 'petiole_test' &&
-          (task.status === 'pending' || task.status === 'in_progress')
-      )
+      // Fetch pending tasks separately - tolerate failures
+      try {
+        const tasks = await SupabaseService.getPendingTasks(farmId)
 
-      setHasSoilTestTask(hasSoilTask)
-      setHasPetioleTestTask(hasPetioleTask)
+        // Check if there are already pending tasks for soil or petiole tests
+        // Note: getPendingTasks already filters by 'pending' and 'in_progress' statuses
+        const hasSoilTask = tasks.some((task) => task.type === 'soil_test')
+        const hasPetioleTask = tasks.some((task) => task.type === 'petiole_test')
+
+        setHasSoilTestTask(hasSoilTask)
+        setHasPetioleTestTask(hasPetioleTask)
+      } catch (taskError) {
+        console.error('Error loading pending tasks (non-critical):', taskError)
+        // Default to empty - show reminders if tasks can't be fetched
+        setHasSoilTestTask(false)
+        setHasPetioleTestTask(false)
+      }
     } catch (error) {
       console.error('Error loading test reminders:', error)
     } finally {
