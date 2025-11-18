@@ -6,7 +6,6 @@ import { SupabaseService } from '@/lib/supabase-service'
 import { LabTestsTimeline } from '@/components/lab-tests/LabTestsTimeline'
 import { LabTestTrendCharts } from '@/components/lab-tests/LabTestTrendCharts'
 import { LabTestModal } from '@/components/lab-tests/LabTestModal'
-import { type LabTestRecord } from '@/components/lab-tests/TestDetailsCard'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -20,6 +19,7 @@ import {
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { LabTestRecord } from '@/types/lab-tests'
 
 function LabTestsPage() {
   const params = useParams()
@@ -58,8 +58,8 @@ function LabTestsPage() {
         SupabaseService.getFarmById(farmId)
       ])
 
-      setSoilTests(soilTestsData || [])
-      setPetioleTests(petioleTestsData || [])
+      setSoilTests((soilTestsData || []) as LabTestRecord[])
+      setPetioleTests((petioleTestsData || []) as LabTestRecord[])
       setFarmName(farmData?.name || 'Farm')
     } catch (error) {
       console.error('Error loading lab tests:', error)
@@ -102,7 +102,7 @@ function LabTestsPage() {
   }
 
   const handleConfirmDelete = async () => {
-    if (!deletingTest) return
+    if (!deletingTest || !deletingTest.test.id) return
 
     try {
       setIsDeleting(true)
@@ -209,7 +209,23 @@ function LabTestsPage() {
         testType="soil"
         farmId={farmId}
         mode={editingTest?.type === 'soil' ? 'edit' : 'add'}
-        existingTest={editingTest?.type === 'soil' ? editingTest.test : undefined}
+        existingTest={
+          editingTest?.type === 'soil' && editingTest.test.id && editingTest.test.parameters
+            ? {
+                id: editingTest.test.id,
+                date:
+                  typeof editingTest.test.date === 'string'
+                    ? editingTest.test.date
+                    : editingTest.test.date.toISOString().split('T')[0],
+                date_of_pruning:
+                  typeof editingTest.test.date_of_pruning === 'string'
+                    ? editingTest.test.date_of_pruning
+                    : (editingTest.test.date_of_pruning?.toISOString().split('T')[0] ?? null),
+                parameters: editingTest.test.parameters,
+                notes: editingTest.test.notes
+              }
+            : undefined
+        }
       />
 
       {/* Petiole Test Modal */}
@@ -219,7 +235,23 @@ function LabTestsPage() {
         testType="petiole"
         farmId={farmId}
         mode={editingTest?.type === 'petiole' ? 'edit' : 'add'}
-        existingTest={editingTest?.type === 'petiole' ? editingTest.test : undefined}
+        existingTest={
+          editingTest?.type === 'petiole' && editingTest.test.id && editingTest.test.parameters
+            ? {
+                id: editingTest.test.id,
+                date:
+                  typeof editingTest.test.date === 'string'
+                    ? editingTest.test.date
+                    : editingTest.test.date.toISOString().split('T')[0],
+                date_of_pruning:
+                  typeof editingTest.test.date_of_pruning === 'string'
+                    ? editingTest.test.date_of_pruning
+                    : (editingTest.test.date_of_pruning?.toISOString().split('T')[0] ?? null),
+                parameters: editingTest.test.parameters,
+                notes: editingTest.test.notes
+              }
+            : undefined
+        }
       />
 
       {/* Delete Confirmation Dialog */}
