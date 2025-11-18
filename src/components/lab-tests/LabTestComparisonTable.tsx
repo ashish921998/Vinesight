@@ -17,6 +17,40 @@ interface LabTestComparisonTableProps {
   petioleTests: LabTestRecord[]
 }
 
+// Legend component for color and trend guide
+function Legend() {
+  return (
+    <div className="p-3 border-t bg-gray-50">
+      <div className="flex items-start gap-2">
+        <Info className="h-3.5 w-3.5 text-gray-600 mt-0.5 flex-shrink-0" />
+        <div className="text-[10px] text-gray-700 space-y-1.5">
+          <p className="font-medium">Color Guide:</p>
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-green-50 border border-green-200 rounded" />
+              <span>Optimal</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-yellow-50 border border-yellow-200 rounded" />
+              <span>Warning</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-red-50 border border-red-200 rounded" />
+              <span>Critical</span>
+            </div>
+          </div>
+          <p className="mt-1.5">
+            <span className="font-medium">Trend:</span>{' '}
+            <TrendingUp className="h-3 w-3 text-green-600 inline" /> Increase{' '}
+            <TrendingDown className="h-3 w-3 text-red-600 inline mx-1" /> Decrease{' '}
+            <Minus className="h-3 w-3 text-gray-500 inline" /> Stable
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestComparisonTableProps) {
   // Check if we have enough data for comparison
   const hasSoilTests = soilTests.length >= 1
@@ -226,36 +260,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
               <div className="overflow-x-auto">
                 {renderComparisonTable(soilTests, soilParamOptions)}
               </div>
-
-              {/* Legend */}
-              <div className="p-3 border-t bg-gray-50">
-                <div className="flex items-start gap-2">
-                  <Info className="h-3.5 w-3.5 text-gray-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-[10px] text-gray-700 space-y-1.5">
-                    <p className="font-medium">Color Guide:</p>
-                    <div className="flex flex-wrap gap-2 sm:gap-3">
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 bg-green-50 border border-green-200 rounded" />
-                        <span>Optimal</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 bg-yellow-50 border border-yellow-200 rounded" />
-                        <span>Warning</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 bg-red-50 border border-red-200 rounded" />
-                        <span>Critical</span>
-                      </div>
-                    </div>
-                    <p className="mt-1.5">
-                      <span className="font-medium">Trend:</span>{' '}
-                      <TrendingUp className="h-3 w-3 text-green-600 inline" /> Increase{' '}
-                      <TrendingDown className="h-3 w-3 text-red-600 inline mx-1" /> Decrease{' '}
-                      <Minus className="h-3 w-3 text-gray-500 inline" /> Stable
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <Legend />
             </CardContent>
           </Card>
         </TabsContent>
@@ -273,36 +278,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
               <div className="overflow-x-auto">
                 {renderComparisonTable(petioleTests, petioleParamOptions)}
               </div>
-
-              {/* Legend */}
-              <div className="p-3 border-t bg-gray-50">
-                <div className="flex items-start gap-2">
-                  <Info className="h-3.5 w-3.5 text-gray-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-[10px] text-gray-700 space-y-1.5">
-                    <p className="font-medium">Color Guide:</p>
-                    <div className="flex flex-wrap gap-2 sm:gap-3">
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 bg-green-50 border border-green-200 rounded" />
-                        <span>Optimal</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 bg-yellow-50 border border-yellow-200 rounded" />
-                        <span>Warning</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 bg-red-50 border border-red-200 rounded" />
-                        <span>Critical</span>
-                      </div>
-                    </div>
-                    <p className="mt-1.5">
-                      <span className="font-medium">Trend:</span>{' '}
-                      <TrendingUp className="h-3 w-3 text-green-600 inline" /> Increase{' '}
-                      <TrendingDown className="h-3 w-3 text-red-600 inline mx-1" /> Decrease{' '}
-                      <Minus className="h-3 w-3 text-gray-500 inline" /> Stable
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <Legend />
             </CardContent>
           </Card>
         </TabsContent>
