@@ -34,11 +34,15 @@ function LabTestsPage() {
 
   // View mode state - initialize with server-safe default
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart')
+  const [userSelected, setUserSelected] = useState(false)
 
   // Set initial view mode based on screen size (client-side only)
   useEffect(() => {
     const handleResize = () => {
-      setViewMode(window.innerWidth < 640 ? 'table' : 'chart')
+      // Only update viewMode based on window size if user hasn't manually selected
+      if (!userSelected) {
+        setViewMode(window.innerWidth < 640 ? 'table' : 'chart')
+      }
     }
 
     // Set initial value
@@ -49,7 +53,7 @@ function LabTestsPage() {
 
     // Cleanup
     return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  }, [userSelected])
 
   // Modal states
   const [showAddSoilModal, setShowAddSoilModal] = useState(false)
@@ -122,7 +126,7 @@ function LabTestsPage() {
   }
 
   const handleConfirmDelete = async () => {
-    if (!deletingTest) return
+    if (!deletingTest || !deletingTest.test.id) return
 
     try {
       setIsDeleting(true)
@@ -155,6 +159,21 @@ function LabTestsPage() {
 
     // Reload tests to get the latest data
     await loadLabTests()
+  }
+
+  // Helper to transform LabTestRecord to modal format
+  const transformTestForModal = (test: LabTestRecord) => {
+    if (!test.id) return undefined
+    return {
+      id: test.id,
+      date: test.date,
+      date_of_pruning:
+        test.date_of_pruning instanceof Date
+          ? test.date_of_pruning.toISOString().split('T')[0]
+          : test.date_of_pruning || null,
+      parameters: test.parameters || {},
+      notes: test.notes || null
+    }
   }
 
   if (loading) {
@@ -225,7 +244,10 @@ function LabTestsPage() {
               <Button
                 variant={viewMode === 'chart' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setViewMode('chart')}
+                onClick={() => {
+                  setViewMode('chart')
+                  setUserSelected(true)
+                }}
                 className="flex items-center gap-1.5 h-8 sm:h-9 text-xs"
               >
                 <LineChart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -235,7 +257,10 @@ function LabTestsPage() {
               <Button
                 variant={viewMode === 'table' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setViewMode('table')}
+                onClick={() => {
+                  setViewMode('table')
+                  setUserSelected(true)
+                }}
                 className="flex items-center gap-1.5 h-8 sm:h-9 text-xs"
               >
                 <Table2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -261,7 +286,9 @@ function LabTestsPage() {
         testType="soil"
         farmId={farmId}
         mode={editingTest?.type === 'soil' ? 'edit' : 'add'}
-        existingTest={editingTest?.type === 'soil' ? editingTest.test : undefined}
+        existingTest={
+          editingTest?.type === 'soil' ? transformTestForModal(editingTest.test) : undefined
+        }
       />
 
       {/* Petiole Test Modal */}
@@ -271,7 +298,9 @@ function LabTestsPage() {
         testType="petiole"
         farmId={farmId}
         mode={editingTest?.type === 'petiole' ? 'edit' : 'add'}
-        existingTest={editingTest?.type === 'petiole' ? editingTest.test : undefined}
+        existingTest={
+          editingTest?.type === 'petiole' ? transformTestForModal(editingTest.test) : undefined
+        }
       />
 
       {/* Delete Confirmation Dialog */}

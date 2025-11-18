@@ -1,13 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { getLatestSoilTest, type LabTestWithRecommendations } from '@/lib/lab-test-integration'
 import { FlaskConical, Download, Calendar, X } from 'lucide-react'
-import { format, differenceInDays } from 'date-fns'
+import { format } from 'date-fns'
 
 interface SoilTestLoadBannerProps {
   farmId: number
@@ -36,8 +35,8 @@ export function SoilTestLoadBanner({ farmId, onLoadTest }: SoilTestLoadBannerPro
   }
 
   const handleLoadTest = () => {
-    if (!latestTest) return
-    onLoadTest(latestTest.test.parameters)
+    if (!latestTest || !latestTest.test.parameters) return
+    onLoadTest(latestTest.test.parameters as Record<string, any>)
   }
 
   // Don't show if dismissed or no test available or loading
