@@ -4,7 +4,7 @@
  */
 
 /**
- * Canonicalizes a parameter key to a standard form
+ * Canonicalizes a parameter key to a standard form (generic, test-type agnostic)
  * @param key The parameter key to canonicalize (case-insensitive)
  * @returns The canonical key or null if no mapping exists
  */
@@ -17,22 +17,22 @@ export function canonicalizeParameterKey(key: string): string | null {
     electricalconductivity: 'ec',
     soilec: 'ec',
     ec: 'ec',
-    organiccarbon: 'organic_carbon',
-    organicmatter: 'organic_matter',
-    oc: 'organic_carbon',
+    organiccarbon: 'organicCarbon',
+    organicmatter: 'organicMatter',
+    oc: 'organicCarbon',
     // Specific nitrogen types for petiole tests (check these first before generic nitrogen)
     totalnitrogen: 'total_nitrogen',
     totalnitrogenasn: 'total_nitrogen',
     nitratenitrogen: 'nitrate_nitrogen',
     nitratenitrogenasno3n: 'nitrate_nitrogen',
     no3n: 'nitrate_nitrogen',
-    ammonicalnitrogen: 'ammonium_nitrogen',
-    ammoniacalnitrogen: 'ammonium_nitrogen',
-    ammoniumnitrogen: 'ammonium_nitrogen',
-    ammonicalnitrogenasnh4n: 'ammonium_nitrogen',
-    ammoniacalnitrogenasnh4n: 'ammonium_nitrogen',
-    ammoniumnitrogenasnh4n: 'ammonium_nitrogen',
-    nh4n: 'ammonium_nitrogen',
+    ammonicalnitrogen: 'ammonical_nitrogen',
+    ammoniacalnitrogen: 'ammonical_nitrogen',
+    ammoniumnitrogen: 'ammonical_nitrogen',
+    ammonicalnitrogenasnh4n: 'ammonical_nitrogen',
+    ammoniacalnitrogenasnh4n: 'ammonical_nitrogen',
+    ammoniumnitrogenasnh4n: 'ammonical_nitrogen',
+    nh4n: 'ammonical_nitrogen',
     // Generic nitrogen for soil tests
     nitrogen: 'nitrogen',
     n: 'nitrogen',
@@ -41,8 +41,8 @@ export function canonicalizeParameterKey(key: string): string | null {
     p: 'phosphorus',
     potassium: 'potassium',
     k: 'potassium',
-    calciumcarbonate: 'calcium_carbonate',
-    caco3: 'calcium_carbonate',
+    calciumcarbonate: 'calciumCarbonate',
+    caco3: 'calciumCarbonate',
     calcium: 'calcium',
     ca: 'calcium',
     magnesium: 'magnesium',
@@ -77,7 +77,7 @@ export function canonicalizeParameterKey(key: string): string | null {
 }
 
 /**
- * Applies canonicalization to a record of parameters
+ * Applies generic canonicalization to a record of parameters (fallback, test-type agnostic)
  * @param parameters Record of parameter names to values
  * @returns Record with canonicalized keys
  */
