@@ -122,19 +122,22 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
               <th className="sticky left-0 z-20 bg-gray-50 px-2 py-2 text-left text-[10px] font-semibold text-gray-900 border-r-2 border-gray-300 min-w-[80px] sm:min-w-[100px]">
                 Parameter
               </th>
-              {sortedTests.map((test, idx) => (
-                <th
-                  key={test.id ?? `test-${idx}-${test.date}`}
-                  className="px-2 py-2 text-center text-[10px] font-semibold text-gray-900 min-w-[90px] sm:min-w-[110px]"
-                >
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-semibold">{format(new Date(test.date), 'MMM dd')}</span>
-                    <span className="font-normal text-gray-600">
-                      {format(new Date(test.date), 'yyyy')}
-                    </span>
-                  </div>
-                </th>
-              ))}
+              {sortedTests.map((test, idx) => {
+                const dateKey = typeof test.date === 'string' ? test.date : test.date.toISOString()
+                return (
+                  <th
+                    key={test.id ?? `test-${idx}-${dateKey}`}
+                    className="px-2 py-2 text-center text-[10px] font-semibold text-gray-900 min-w-[90px] sm:min-w-[110px]"
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-semibold">{format(new Date(test.date), 'MMM dd')}</span>
+                      <span className="font-normal text-gray-600">
+                        {format(new Date(test.date), 'yyyy')}
+                      </span>
+                    </div>
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
@@ -156,10 +159,12 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
                       : null
                   const cellColor = getCellColor(value, param)
                   const trend = getTrendIndicator(value, prevValue)
+                  const dateKey =
+                    typeof test.date === 'string' ? test.date : test.date.toISOString()
 
                   return (
                     <td
-                      key={test.id ?? `test-${idx}-${test.date}`}
+                      key={test.id ?? `test-${idx}-${dateKey}`}
                       className={cn(
                         'px-2 py-2.5 text-center text-[11px] font-medium whitespace-nowrap',
                         cellColor
