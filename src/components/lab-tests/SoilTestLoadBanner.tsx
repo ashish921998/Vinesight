@@ -35,7 +35,7 @@ export function SoilTestLoadBanner({ farmId, onLoadTest }: SoilTestLoadBannerPro
   }
 
   const handleLoadTest = () => {
-    if (!latestTest) return
+    if (!latestTest || !latestTest.test.parameters) return
     onLoadTest(latestTest.test.parameters as Record<string, any>)
   }
 

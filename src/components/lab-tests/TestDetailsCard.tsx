@@ -19,19 +19,7 @@ import {
 import { FileText, Edit, Trash2, Calendar, FileCheck, Sprout } from 'lucide-react'
 import { format } from 'date-fns'
 import { FertilizerPlanGenerator } from './FertilizerPlanGenerator'
-
-export interface LabTestRecord {
-  id: number
-  date: string
-  date_of_pruning?: string | null
-  parameters: Record<string, any>
-  notes?: string | null
-  report_filename?: string | null
-  report_url?: string | null
-  report_storage_path?: string | null
-  extraction_status?: string | null
-  created_at?: string | null
-}
+import type { LabTestRecord } from '@/types/lab-tests'
 
 interface TestDetailsCardProps {
   test: LabTestRecord

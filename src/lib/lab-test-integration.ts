@@ -1,12 +1,3 @@
-/**
- * Lab Test Integration Service
- * Provides utilities to integrate lab tests with other features:
- * - Pre-fill calculators
- * - Generate fertilizer plans
- * - Create reminder tasks
- * - Tag expenses
- */
-
 import { SupabaseService } from './supabase-service'
 import type { Database } from '@/types/database'
 import {
@@ -15,20 +6,10 @@ import {
   type Recommendation
 } from './lab-test-recommendations'
 import { differenceInDays, addMonths, format } from 'date-fns'
+import type { LabTestRecord } from '@/types/lab-tests'
 
 type SoilTestRecord = Database['public']['Tables']['soil_test_records']['Row']
 type PetioleTestRecord = Database['public']['Tables']['petiole_test_records']['Row']
-
-// Unified type that handles both soil and petiole test records
-type LabTestRecord = {
-  id?: number
-  date: string
-  farm_id?: number | null
-  parameters?: Record<string, any>
-  notes?: string | null
-  created_at?: string | null
-  [key: string]: any // Allow additional fields from specific test types
-}
 
 export interface LabTestWithRecommendations {
   test: LabTestRecord
@@ -48,7 +29,10 @@ export async function getLatestSoilTest(
     if (!tests || tests.length === 0) return null
 
     const test = tests[0]
-    const recommendations = generateSoilTestRecommendations(test.parameters as any)
+    // Only generate recommendations if parameters exist
+    const recommendations = test.parameters
+      ? generateSoilTestRecommendations(test.parameters as any)
+      : []
     const age = differenceInDays(new Date(), new Date(test.date))
 
     return {
@@ -74,7 +58,10 @@ export async function getLatestPetioleTest(
     if (!tests || tests.length === 0) return null
 
     const test = tests[0]
-    const recommendations = generatePetioleTestRecommendations(test.parameters as any)
+    // Only generate recommendations if parameters exist
+    const recommendations = test.parameters
+      ? generatePetioleTestRecommendations(test.parameters as any)
+      : []
     const age = differenceInDays(new Date(), new Date(test.date))
 
     return {
