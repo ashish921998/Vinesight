@@ -1,5 +1,5 @@
 import { SupabaseService } from './supabase-service'
-import type { Database } from '@/types/database'
+import type { SoilTestRecord, PetioleTestRecord } from './supabase'
 import {
   generateSoilTestRecommendations,
   generatePetioleTestRecommendations,
@@ -7,9 +7,6 @@ import {
 } from './lab-test-recommendations'
 import { differenceInDays, addMonths, format } from 'date-fns'
 import type { LabTestRecord } from '@/types/lab-tests'
-
-type SoilTestRecord = Database['public']['Tables']['soil_test_records']['Row']
-type PetioleTestRecord = Database['public']['Tables']['petiole_test_records']['Row']
 
 export interface LabTestWithRecommendations {
   test: LabTestRecord

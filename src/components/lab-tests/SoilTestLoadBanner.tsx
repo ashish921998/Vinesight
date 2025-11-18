@@ -39,8 +39,8 @@ export function SoilTestLoadBanner({ farmId, onLoadTest }: SoilTestLoadBannerPro
     onLoadTest(latestTest.test.parameters as Record<string, any>)
   }
 
-  // Don't show if dismissed or no test available or loading
-  if (dismissed || !latestTest || loading) return null
+  // Don't show if dismissed or no test available or no parameters or loading
+  if (dismissed || !latestTest || !latestTest.test.parameters || loading) return null
 
   // Show warning if test is old (>730 days / 2 years)
   const testAge = latestTest.age

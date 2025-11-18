@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { SupabaseService } from '@/lib/supabase-service'
 import { LabTestsTimeline } from '@/components/lab-tests/LabTestsTimeline'
 import { LabTestTrendCharts } from '@/components/lab-tests/LabTestTrendCharts'
+import { LabTestComparisonTable } from '@/components/lab-tests/LabTestComparisonTable'
 import { LabTestModal } from '@/components/lab-tests/LabTestModal'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -16,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, Loader2, LineChart, Table2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { LabTestRecord } from '@/types/lab-tests'
@@ -30,6 +31,29 @@ function LabTestsPage() {
   const [soilTests, setSoilTests] = useState<LabTestRecord[]>([])
   const [petioleTests, setPetioleTests] = useState<LabTestRecord[]>([])
   const [farmName, setFarmName] = useState<string>('')
+
+  // View mode state - initialize with server-safe default
+  const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart')
+  const [userSelected, setUserSelected] = useState(false)
+
+  // Set initial view mode based on screen size (client-side only)
+  useEffect(() => {
+    const handleResize = () => {
+      // Only update viewMode based on window size if user hasn't manually selected
+      if (!userSelected) {
+        setViewMode(window.innerWidth < 640 ? 'table' : 'chart')
+      }
+    }
+
+    // Set initial value
+    handleResize()
+
+    // Add resize listener
+    window.addEventListener('resize', handleResize)
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize)
+  }, [userSelected])
 
   // Modal states
   const [showAddSoilModal, setShowAddSoilModal] = useState(false)
@@ -137,6 +161,21 @@ function LabTestsPage() {
     await loadLabTests()
   }
 
+  // Helper to transform LabTestRecord to modal format
+  const transformTestForModal = (test: LabTestRecord) => {
+    if (!test.id) return undefined
+    return {
+      id: test.id,
+      date: typeof test.date === 'string' ? test.date : test.date.toISOString().split('T')[0],
+      date_of_pruning:
+        typeof test.date_of_pruning === 'string'
+          ? test.date_of_pruning
+          : (test.date_of_pruning?.toISOString().split('T')[0] ?? null),
+      parameters: test.parameters ?? {},
+      notes: test.notes
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -197,8 +236,46 @@ function LabTestsPage() {
           />
         </TabsContent>
 
-        <TabsContent value="trends" className="mt-0">
-          <LabTestTrendCharts soilTests={soilTests} petioleTests={petioleTests} />
+        <TabsContent value="trends" className="mt-0 space-y-3">
+          {/* View Mode Toggle */}
+          <div className="flex items-center justify-between gap-2 px-1">
+            <p className="text-xs sm:text-sm text-muted-foreground">Choose your preferred view:</p>
+            <div className="flex gap-1 sm:gap-2">
+              <Button
+                variant={viewMode === 'chart' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setViewMode('chart')
+                  setUserSelected(true)
+                }}
+                className="flex items-center gap-1.5 h-8 sm:h-9 text-xs"
+              >
+                <LineChart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Charts</span>
+                <span className="sm:hidden">Chart</span>
+              </Button>
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setViewMode('table')
+                  setUserSelected(true)
+                }}
+                className="flex items-center gap-1.5 h-8 sm:h-9 text-xs"
+              >
+                <Table2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Table</span>
+                <span className="sm:hidden">Table</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Conditional Rendering based on view mode */}
+          {viewMode === 'chart' ? (
+            <LabTestTrendCharts soilTests={soilTests} petioleTests={petioleTests} />
+          ) : (
+            <LabTestComparisonTable soilTests={soilTests} petioleTests={petioleTests} />
+          )}
         </TabsContent>
       </Tabs>
 
@@ -210,21 +287,7 @@ function LabTestsPage() {
         farmId={farmId}
         mode={editingTest?.type === 'soil' ? 'edit' : 'add'}
         existingTest={
-          editingTest?.type === 'soil' && editingTest.test.id && editingTest.test.parameters
-            ? {
-                id: editingTest.test.id,
-                date:
-                  typeof editingTest.test.date === 'string'
-                    ? editingTest.test.date
-                    : editingTest.test.date.toISOString().split('T')[0],
-                date_of_pruning:
-                  typeof editingTest.test.date_of_pruning === 'string'
-                    ? editingTest.test.date_of_pruning
-                    : (editingTest.test.date_of_pruning?.toISOString().split('T')[0] ?? null),
-                parameters: editingTest.test.parameters,
-                notes: editingTest.test.notes
-              }
-            : undefined
+          editingTest?.type === 'soil' ? transformTestForModal(editingTest.test) : undefined
         }
       />
 
@@ -236,21 +299,7 @@ function LabTestsPage() {
         farmId={farmId}
         mode={editingTest?.type === 'petiole' ? 'edit' : 'add'}
         existingTest={
-          editingTest?.type === 'petiole' && editingTest.test.id && editingTest.test.parameters
-            ? {
-                id: editingTest.test.id,
-                date:
-                  typeof editingTest.test.date === 'string'
-                    ? editingTest.test.date
-                    : editingTest.test.date.toISOString().split('T')[0],
-                date_of_pruning:
-                  typeof editingTest.test.date_of_pruning === 'string'
-                    ? editingTest.test.date_of_pruning
-                    : (editingTest.test.date_of_pruning?.toISOString().split('T')[0] ?? null),
-                parameters: editingTest.test.parameters,
-                notes: editingTest.test.notes
-              }
-            : undefined
+          editingTest?.type === 'petiole' ? transformTestForModal(editingTest.test) : undefined
         }
       />
 

@@ -45,8 +45,8 @@ export function TestDetailsCard({
   // Generate recommendations
   const recommendations =
     testType === 'soil'
-      ? generateSoilTestRecommendations(test.parameters as any)
-      : generatePetioleTestRecommendations(test.parameters as any)
+      ? generateSoilTestRecommendations(test.parameters || {})
+      : generatePetioleTestRecommendations(test.parameters || {})
 
   // Helper to format parameter value
   const formatValue = (value: any, decimals: number = 2): string => {
@@ -61,6 +61,8 @@ export function TestDetailsCard({
   ): { value: number; direction: 'up' | 'down' | 'same' } | null => {
     if (
       !previousTest ||
+      !previousTest.parameters ||
+      !test.parameters ||
       previousTest.parameters[param] === undefined ||
       previousTest.parameters[param] === null ||
       previousTest.parameters[param] === '' ||
@@ -198,7 +200,7 @@ export function TestDetailsCard({
             {/* Key Parameters Preview */}
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
               {keyParams.map((param) => {
-                const value = test.parameters[param.key]
+                const value = test.parameters?.[param.key]
                 const change = getChange(param.key)
 
                 return (
@@ -358,7 +360,7 @@ export function TestDetailsCard({
                     const paramOrder = testType === 'soil' ? soilOrder : petioleOrder
 
                     // Sort parameters according to the defined order
-                    const sortedParams = Object.entries(test.parameters)
+                    const sortedParams = Object.entries(test.parameters || {})
                       .filter(([_, value]) => value !== null && value !== undefined && value !== '')
                       .sort(([keyA], [keyB]) => {
                         const indexA = paramOrder.indexOf(keyA)
