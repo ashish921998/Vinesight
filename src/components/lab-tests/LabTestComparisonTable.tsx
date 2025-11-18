@@ -311,9 +311,8 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
     }
 
     return (
-      <div className="overflow-x-auto -mx-3 sm:-mx-6">
-        <div className="inline-block min-w-full align-middle">
-          <table className="min-w-full divide-y divide-gray-200 border">
+      <div className="w-full overflow-x-auto">
+        <table className="w-full divide-y divide-gray-200 border">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
                 <th className="sticky left-0 z-20 bg-gray-50 px-2 py-2 text-left text-[10px] font-semibold text-gray-900 border-r-2 border-gray-300 min-w-[80px] sm:min-w-[100px]">
@@ -379,7 +378,6 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
               ))}
             </tbody>
           </table>
-        </div>
       </div>
     )
   }
@@ -417,8 +415,10 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
                 Compare soil parameters across all test dates
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-0">
-              {renderComparisonTable(soilTests, soilParamOptions, 'soil')}
+            <CardContent className="p-0 overflow-hidden">
+              <div className="overflow-x-auto">
+                {renderComparisonTable(soilTests, soilParamOptions, 'soil')}
+              </div>
 
               {/* Legend */}
               <div className="p-3 border-t bg-gray-50">
@@ -462,8 +462,10 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
                 Compare petiole parameters across all test dates
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-0">
-              {renderComparisonTable(petioleTests, petioleParamOptions, 'petiole')}
+            <CardContent className="p-0 overflow-hidden">
+              <div className="overflow-x-auto">
+                {renderComparisonTable(petioleTests, petioleParamOptions, 'petiole')}
+              </div>
 
               {/* Legend */}
               <div className="p-3 border-t bg-gray-50">
