@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TrendingUp, TrendingDown, Minus, Info } from 'lucide-react'
-import { type LabTestRecord } from './TestDetailsCard'
+import { type LabTestRecord } from '@/types/lab-tests'
 import {
   LineChart,
   Line,

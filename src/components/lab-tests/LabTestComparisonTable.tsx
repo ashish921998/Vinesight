@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TrendingUp, TrendingDown, Minus, Info } from 'lucide-react'
-import { type LabTestRecord } from './TestDetailsCard'
+import { type LabTestRecord } from '@/types/lab-tests'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 
