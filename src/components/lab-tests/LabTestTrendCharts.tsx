@@ -123,12 +123,29 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
   // Soil parameter options
   const soilParamOptions = [
     // Primary parameters
-    { key: 'ph', label: 'pH', unit: '', color: '#3b82f6', optimalMin: 6.5, optimalMax: 7.5 },
-    { key: 'ec', label: 'EC', unit: 'dS/m', color: '#10b981', optimalMin: 0.5, optimalMax: 2.0 },
+    {
+      key: 'ph',
+      label: 'pH',
+      shortLabel: 'pH',
+      unit: '',
+      color: '#3b82f6',
+      optimalMin: 6.5,
+      optimalMax: 7.5
+    },
+    {
+      key: 'ec',
+      label: 'EC',
+      shortLabel: 'EC',
+      unit: 'dS/m',
+      color: '#10b981',
+      optimalMin: 0.5,
+      optimalMax: 2.0
+    },
     // Macronutrients
     {
       key: 'nitrogen',
       label: 'Nitrogen',
+      shortLabel: 'N',
       unit: 'ppm',
       color: '#8b5cf6',
       optimalMin: 200,
@@ -137,6 +154,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'phosphorus',
       label: 'Phosphorus',
+      shortLabel: 'P',
       unit: 'ppm',
       color: '#f59e0b',
       optimalMin: 30,
@@ -145,6 +163,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'potassium',
       label: 'Potassium',
+      shortLabel: 'K',
       unit: 'ppm',
       color: '#ef4444',
       optimalMin: 250,
@@ -154,6 +173,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'calcium',
       label: 'Calcium',
+      shortLabel: 'Ca',
       unit: 'ppm',
       color: '#14b8a6',
       optimalMin: 800,
@@ -162,6 +182,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'magnesium',
       label: 'Magnesium',
+      shortLabel: 'Mg',
       unit: 'ppm',
       color: '#d946ef',
       optimalMin: 150,
@@ -170,6 +191,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'sulfur',
       label: 'Sulfur',
+      shortLabel: 'S',
       unit: 'ppm',
       color: '#f97316',
       optimalMin: 15,
@@ -179,6 +201,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'organicCarbon',
       label: 'Organic Carbon',
+      shortLabel: 'OC',
       unit: '%',
       color: '#84cc16',
       optimalMin: 1.0,
@@ -187,6 +210,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'organicMatter',
       label: 'Organic Matter',
+      shortLabel: 'OM',
       unit: '%',
       color: '#06b6d4',
       optimalMin: 2.0,
@@ -196,6 +220,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'iron',
       label: 'Iron',
+      shortLabel: 'Fe',
       unit: 'ppm',
       color: '#dc2626',
       optimalMin: 4.5,
@@ -204,15 +229,25 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'manganese',
       label: 'Manganese',
+      shortLabel: 'Mn',
       unit: 'ppm',
       color: '#7c3aed',
       optimalMin: 5,
       optimalMax: 15
     },
-    { key: 'zinc', label: 'Zinc', unit: 'ppm', color: '#6366f1', optimalMin: 1.0, optimalMax: 3.0 },
+    {
+      key: 'zinc',
+      label: 'Zinc',
+      shortLabel: 'Zn',
+      unit: 'ppm',
+      color: '#6366f1',
+      optimalMin: 1.0,
+      optimalMax: 3.0
+    },
     {
       key: 'copper',
       label: 'Copper',
+      shortLabel: 'Cu',
       unit: 'ppm',
       color: '#ea580c',
       optimalMin: 0.5,
@@ -221,6 +256,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'boron',
       label: 'Boron',
+      shortLabel: 'B',
       unit: 'ppm',
       color: '#ec4899',
       optimalMin: 0.5,
@@ -234,6 +270,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'total_nitrogen',
       label: 'Total Nitrogen',
+      shortLabel: 'TN',
       unit: '%',
       color: '#3b82f6',
       optimalMin: 2.0,
@@ -242,6 +279,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'nitrate_nitrogen',
       label: 'Nitrate Nitrogen',
+      shortLabel: 'NO₃-N',
       unit: 'ppm',
       color: '#0ea5e9',
       optimalMin: 500,
@@ -250,6 +288,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'ammonical_nitrogen',
       label: 'Ammonical Nitrogen',
+      shortLabel: 'NH₄-N',
       unit: 'ppm',
       color: '#38bdf8',
       optimalMin: 500,
@@ -258,6 +297,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'phosphorus',
       label: 'Phosphorus',
+      shortLabel: 'P',
       unit: '%',
       color: '#f59e0b',
       optimalMin: 0.3,
@@ -266,6 +306,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'potassium',
       label: 'Potassium',
+      shortLabel: 'K',
       unit: '%',
       color: '#ef4444',
       optimalMin: 1.8,
@@ -275,6 +316,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'calcium',
       label: 'Calcium',
+      shortLabel: 'Ca',
       unit: '%',
       color: '#10b981',
       optimalMin: 1.5,
@@ -283,6 +325,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'magnesium',
       label: 'Magnesium',
+      shortLabel: 'Mg',
       unit: '%',
       color: '#8b5cf6',
       optimalMin: 0.4,
@@ -291,6 +334,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'sulfur',
       label: 'Sulfur',
+      shortLabel: 'S',
       unit: '%',
       color: '#f97316',
       optimalMin: 0.15,
@@ -300,6 +344,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'iron',
       label: 'Iron',
+      shortLabel: 'Fe',
       unit: 'ppm',
       color: '#06b6d4',
       optimalMin: 80,
@@ -308,15 +353,25 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'manganese',
       label: 'Manganese',
+      shortLabel: 'Mn',
       unit: 'ppm',
       color: '#7c3aed',
       optimalMin: 50,
       optimalMax: 150
     },
-    { key: 'zinc', label: 'Zinc', unit: 'ppm', color: '#6366f1', optimalMin: 50, optimalMax: 80 },
+    {
+      key: 'zinc',
+      label: 'Zinc',
+      shortLabel: 'Zn',
+      unit: 'ppm',
+      color: '#6366f1',
+      optimalMin: 50,
+      optimalMax: 80
+    },
     {
       key: 'copper',
       label: 'Copper',
+      shortLabel: 'Cu',
       unit: 'ppm',
       color: '#ea580c',
       optimalMin: 10,
@@ -325,6 +380,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'boron',
       label: 'Boron',
+      shortLabel: 'B',
       unit: 'ppm',
       color: '#ec4899',
       optimalMin: 25,
@@ -333,6 +389,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'molybdenum',
       label: 'Molybdenum',
+      shortLabel: 'Mo',
       unit: 'ppm',
       color: '#84cc16',
       optimalMin: 0.05,
@@ -342,6 +399,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'sodium',
       label: 'Sodium',
+      shortLabel: 'Na',
       unit: '%',
       color: '#14b8a6',
       optimalMin: 0.1,
@@ -350,6 +408,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     {
       key: 'chloride',
       label: 'Chloride',
+      shortLabel: 'Cl',
       unit: '%',
       color: '#d946ef',
       optimalMin: 0.1,
@@ -443,7 +502,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
                             style={{ backgroundColor: param.color }}
                           />
                           <span className="hidden sm:inline">{param.label}</span>
-                          <span className="sm:hidden">{param.label.substring(0, 3)}</span>
+                          <span className="sm:hidden">{param.shortLabel}</span>
                           {trend && (
                             <span className="ml-1 flex-shrink-0">
                               {trend.direction === 'up' && (
@@ -576,7 +635,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
                             style={{ backgroundColor: param.color }}
                           />
                           <span className="hidden sm:inline">{param.label}</span>
-                          <span className="sm:hidden">{param.label.substring(0, 3)}</span>
+                          <span className="sm:hidden">{param.shortLabel}</span>
                           {trend && (
                             <span className="ml-1 flex-shrink-0">
                               {trend.direction === 'up' && (
