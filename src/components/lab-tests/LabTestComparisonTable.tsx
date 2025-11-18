@@ -4,6 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TrendingUp, TrendingDown, Minus, Info } from 'lucide-react'
 import { type LabTestRecord } from '@/types/lab-tests'
+import {
+  type ParamOption,
+  soilParamOptions,
+  petioleParamOptions
+} from '@/constants/lab-test-parameters'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 
@@ -11,215 +16,6 @@ interface LabTestComparisonTableProps {
   soilTests: LabTestRecord[]
   petioleTests: LabTestRecord[]
 }
-
-interface ParamOption {
-  key: string
-  label: string
-  shortLabel: string
-  unit: string
-  optimalMin: number
-  optimalMax: number
-}
-
-// Soil parameter options
-const soilParamOptions: ParamOption[] = [
-  { key: 'ph', label: 'pH', shortLabel: 'pH', unit: '', optimalMin: 6.5, optimalMax: 7.5 },
-  { key: 'ec', label: 'EC', shortLabel: 'EC', unit: 'dS/m', optimalMin: 0.5, optimalMax: 2.0 },
-  {
-    key: 'nitrogen',
-    label: 'Nitrogen',
-    shortLabel: 'N',
-    unit: 'ppm',
-    optimalMin: 200,
-    optimalMax: 400
-  },
-  {
-    key: 'phosphorus',
-    label: 'Phosphorus',
-    shortLabel: 'P',
-    unit: 'ppm',
-    optimalMin: 30,
-    optimalMax: 60
-  },
-  {
-    key: 'potassium',
-    label: 'Potassium',
-    shortLabel: 'K',
-    unit: 'ppm',
-    optimalMin: 250,
-    optimalMax: 400
-  },
-  {
-    key: 'calcium',
-    label: 'Calcium',
-    shortLabel: 'Ca',
-    unit: 'ppm',
-    optimalMin: 800,
-    optimalMax: 1500
-  },
-  {
-    key: 'magnesium',
-    label: 'Magnesium',
-    shortLabel: 'Mg',
-    unit: 'ppm',
-    optimalMin: 150,
-    optimalMax: 300
-  },
-  {
-    key: 'sulfur',
-    label: 'Sulfur',
-    shortLabel: 'S',
-    unit: 'ppm',
-    optimalMin: 15,
-    optimalMax: 30
-  },
-  {
-    key: 'organicCarbon',
-    label: 'Organic Carbon',
-    shortLabel: 'OC',
-    unit: '%',
-    optimalMin: 1.0,
-    optimalMax: 2.5
-  },
-  {
-    key: 'organicMatter',
-    label: 'Organic Matter',
-    shortLabel: 'OM',
-    unit: '%',
-    optimalMin: 2.0,
-    optimalMax: 5.0
-  },
-  { key: 'iron', label: 'Iron', shortLabel: 'Fe', unit: 'ppm', optimalMin: 4.5, optimalMax: 10.0 },
-  {
-    key: 'manganese',
-    label: 'Manganese',
-    shortLabel: 'Mn',
-    unit: 'ppm',
-    optimalMin: 5,
-    optimalMax: 15
-  },
-  { key: 'zinc', label: 'Zinc', shortLabel: 'Zn', unit: 'ppm', optimalMin: 1.0, optimalMax: 3.0 },
-  {
-    key: 'copper',
-    label: 'Copper',
-    shortLabel: 'Cu',
-    unit: 'ppm',
-    optimalMin: 0.5,
-    optimalMax: 2.0
-  },
-  { key: 'boron', label: 'Boron', shortLabel: 'B', unit: 'ppm', optimalMin: 0.5, optimalMax: 1.5 }
-]
-
-// Petiole parameter options
-const petioleParamOptions: ParamOption[] = [
-  {
-    key: 'total_nitrogen',
-    label: 'Total Nitrogen',
-    shortLabel: 'TN',
-    unit: '%',
-    optimalMin: 2.0,
-    optimalMax: 3.5
-  },
-  {
-    key: 'nitrate_nitrogen',
-    label: 'Nitrate N',
-    shortLabel: 'NO₃-N',
-    unit: 'ppm',
-    optimalMin: 500,
-    optimalMax: 1500
-  },
-  {
-    key: 'ammonical_nitrogen',
-    label: 'Ammonical N',
-    shortLabel: 'NH₄-N',
-    unit: 'ppm',
-    optimalMin: 500,
-    optimalMax: 1500
-  },
-  {
-    key: 'phosphorus',
-    label: 'Phosphorus',
-    shortLabel: 'P',
-    unit: '%',
-    optimalMin: 0.3,
-    optimalMax: 0.5
-  },
-  {
-    key: 'potassium',
-    label: 'Potassium',
-    shortLabel: 'K',
-    unit: '%',
-    optimalMin: 1.8,
-    optimalMax: 2.5
-  },
-  {
-    key: 'calcium',
-    label: 'Calcium',
-    shortLabel: 'Ca',
-    unit: '%',
-    optimalMin: 1.5,
-    optimalMax: 2.5
-  },
-  {
-    key: 'magnesium',
-    label: 'Magnesium',
-    shortLabel: 'Mg',
-    unit: '%',
-    optimalMin: 0.4,
-    optimalMax: 0.8
-  },
-  {
-    key: 'sulfur',
-    label: 'Sulfur',
-    shortLabel: 'S',
-    unit: '%',
-    optimalMin: 0.15,
-    optimalMax: 0.3
-  },
-  { key: 'iron', label: 'Iron', shortLabel: 'Fe', unit: 'ppm', optimalMin: 80, optimalMax: 120 },
-  {
-    key: 'manganese',
-    label: 'Manganese',
-    shortLabel: 'Mn',
-    unit: 'ppm',
-    optimalMin: 50,
-    optimalMax: 150
-  },
-  { key: 'zinc', label: 'Zinc', shortLabel: 'Zn', unit: 'ppm', optimalMin: 50, optimalMax: 80 },
-  {
-    key: 'copper',
-    label: 'Copper',
-    shortLabel: 'Cu',
-    unit: 'ppm',
-    optimalMin: 10,
-    optimalMax: 25
-  },
-  { key: 'boron', label: 'Boron', shortLabel: 'B', unit: 'ppm', optimalMin: 25, optimalMax: 50 },
-  {
-    key: 'molybdenum',
-    label: 'Molybdenum',
-    shortLabel: 'Mo',
-    unit: 'ppm',
-    optimalMin: 0.05,
-    optimalMax: 0.5
-  },
-  {
-    key: 'sodium',
-    label: 'Sodium',
-    shortLabel: 'Na',
-    unit: '%',
-    optimalMin: 0.1,
-    optimalMax: 0.5
-  },
-  {
-    key: 'chloride',
-    label: 'Chloride',
-    shortLabel: 'Cl',
-    unit: '%',
-    optimalMin: 0.1,
-    optimalMax: 0.5
-  }
-]
 
 export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestComparisonTableProps) {
   // Check if we have enough data for comparison
@@ -328,7 +124,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
               </th>
               {sortedTests.map((test, idx) => (
                 <th
-                  key={test.id}
+                  key={test.id ?? `test-${idx}-${test.date}`}
                   className="px-2 py-2 text-center text-[10px] font-semibold text-gray-900 min-w-[90px] sm:min-w-[110px]"
                 >
                   <div className="flex flex-col gap-0.5">
@@ -363,7 +159,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
 
                   return (
                     <td
-                      key={test.id}
+                      key={test.id ?? `test-${idx}-${test.date}`}
                       className={cn(
                         'px-2 py-2.5 text-center text-[11px] font-medium whitespace-nowrap',
                         cellColor
