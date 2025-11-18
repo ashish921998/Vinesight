@@ -248,8 +248,11 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
   ]
 
   // Helper function to get cell color based on value and optimal range
-  const getCellColor = (value: number | null, param: ParamOption): string => {
-    if (value === null) return 'bg-gray-100'
+  const getCellColor = (
+    value: number | null | undefined,
+    param: ParamOption
+  ): string => {
+    if (value == null) return 'bg-gray-100'
 
     const { optimalMin, optimalMax } = param
     const warningThreshold = 0.2 // 20% outside optimal range
@@ -270,10 +273,10 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
 
   // Helper function to get trend indicator
   const getTrendIndicator = (
-    currentValue: number | null,
-    previousValue: number | null
+    currentValue: number | null | undefined,
+    previousValue: number | null | undefined
   ): JSX.Element | null => {
-    if (currentValue === null || previousValue === null) return null
+    if (currentValue == null || previousValue == null) return null
 
     const change = ((currentValue - previousValue) / previousValue) * 100
 
@@ -346,9 +349,11 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
                     </div>
                   </td>
                   {sortedTests.map((test, idx) => {
-                    const value = test.parameters[param.key] as number | null
+                    const value = test.parameters[param.key] as number | null | undefined
                     const prevValue =
-                      idx > 0 ? (sortedTests[idx - 1].parameters[param.key] as number | null) : null
+                      idx > 0
+                        ? (sortedTests[idx - 1].parameters[param.key] as number | null | undefined)
+                        : null
                     const cellColor = getCellColor(value, param)
                     const trend = getTrendIndicator(value, prevValue)
 
@@ -360,7 +365,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
                           cellColor
                         )}
                       >
-                        {value !== null ? (
+                        {value != null ? (
                           <div className="flex items-center justify-center">
                             <span>{value.toFixed(param.unit === '%' ? 2 : 1)}</span>
                             {trend}
