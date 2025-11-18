@@ -163,7 +163,7 @@ function LabTestsPage() {
 
   // Helper to transform LabTestRecord to modal format
   const transformTestForModal = (test: LabTestRecord) => {
-    if (!test.id || !test.parameters) return undefined
+    if (!test.id) return undefined
     return {
       id: test.id,
       date: typeof test.date === 'string' ? test.date : test.date.toISOString().split('T')[0],
@@ -171,7 +171,7 @@ function LabTestsPage() {
         typeof test.date_of_pruning === 'string'
           ? test.date_of_pruning
           : (test.date_of_pruning?.toISOString().split('T')[0] ?? null),
-      parameters: test.parameters,
+      parameters: test.parameters ?? {},
       notes: test.notes
     }
   }
