@@ -9,8 +9,11 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoginButton } from '@/components/auth/LoginButton'
 import { PasswordInput } from '@/components/ui/password-input'
+import { VALIDATION } from '@/lib/constants'
 
 export default function SignupForm() {
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -42,7 +45,11 @@ export default function SignupForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!email || !password || !confirmPassword) {
+    const trimmedFirstName = firstName.trim()
+    const trimmedLastName = lastName.trim()
+    const trimmedEmail = email.trim()
+
+    if (!trimmedFirstName || !trimmedLastName || !trimmedEmail || !password || !confirmPassword) {
       return
     }
 
@@ -51,9 +58,11 @@ export default function SignupForm() {
     }
 
     const result = await signUpWithEmail({
-      email,
+      email: trimmedEmail,
       password,
-      confirmPassword
+      confirmPassword,
+      firstName: trimmedFirstName,
+      lastName: trimmedLastName
     })
 
     if (result.success) {
@@ -101,6 +110,45 @@ export default function SignupForm() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="firstName"
+                  className="block text-sm font-medium text-card-foreground mb-2"
+                >
+                  First name
+                </label>
+                <input
+                  id="firstName"
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  maxLength={VALIDATION.MAX_NAME_LENGTH}
+                  className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
+                  placeholder="Enter your first name"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-medium text-card-foreground mb-2"
+                >
+                  Last name
+                </label>
+                <input
+                  id="lastName"
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                  maxLength={VALIDATION.MAX_NAME_LENGTH}
+                  className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
+                  placeholder="Enter your last name"
+                />
+              </div>
+            </div>
+
             <div>
               <label
                 htmlFor="email"
@@ -154,7 +202,13 @@ export default function SignupForm() {
             <Button
               type="submit"
               disabled={
-                loading || password !== confirmPassword || !email || !password || !confirmPassword
+                loading ||
+                password !== confirmPassword ||
+                !firstName.trim() ||
+                !lastName.trim() ||
+                !email.trim() ||
+                !password ||
+                !confirmPassword
               }
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
             >
