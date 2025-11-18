@@ -1,12 +1,3 @@
-/**
- * Lab Test Integration Service
- * Provides utilities to integrate lab tests with other features:
- * - Pre-fill calculators
- * - Generate fertilizer plans
- * - Create reminder tasks
- * - Tag expenses
- */
-
 import { SupabaseService } from './supabase-service'
 import type { SoilTestRecord, PetioleTestRecord } from './supabase'
 import {
@@ -15,9 +6,10 @@ import {
   type Recommendation
 } from './lab-test-recommendations'
 import { differenceInDays, addMonths, format } from 'date-fns'
+import type { LabTestRecord } from '@/types/lab-tests'
 
 export interface LabTestWithRecommendations {
-  test: SoilTestRecord | PetioleTestRecord
+  test: LabTestRecord
   type: 'soil' | 'petiole'
   recommendations: Recommendation[]
   age: number // days since test
@@ -34,7 +26,10 @@ export async function getLatestSoilTest(
     if (!tests || tests.length === 0) return null
 
     const test = tests[0]
-    const recommendations = generateSoilTestRecommendations(test.parameters as any)
+    // Only generate recommendations if parameters exist
+    const recommendations = test.parameters
+      ? generateSoilTestRecommendations(test.parameters as any)
+      : []
     const age = differenceInDays(new Date(), new Date(test.date))
 
     return {
@@ -60,7 +55,10 @@ export async function getLatestPetioleTest(
     if (!tests || tests.length === 0) return null
 
     const test = tests[0]
-    const recommendations = generatePetioleTestRecommendations(test.parameters as any)
+    // Only generate recommendations if parameters exist
+    const recommendations = test.parameters
+      ? generatePetioleTestRecommendations(test.parameters as any)
+      : []
     const age = differenceInDays(new Date(), new Date(test.date))
 
     return {
@@ -84,7 +82,7 @@ export async function checkTestReminders(farmId: number): Promise<{
   soilTestAge?: number
   petioleTestAge?: number
 }> {
-  const SOIL_TEST_INTERVAL_DAYS = 120 // 4 months
+  const SOIL_TEST_INTERVAL_DAYS = 730 // 2 years
   const PETIOLE_TEST_INTERVAL_DAYS = 90 // 3 months
 
   const [latestSoil, latestPetiole] = await Promise.all([

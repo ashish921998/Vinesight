@@ -42,9 +42,9 @@ export function SoilTestLoadBanner({ farmId, onLoadTest }: SoilTestLoadBannerPro
   // Don't show if dismissed or no test available or no parameters or loading
   if (dismissed || !latestTest || !latestTest.test.parameters || loading) return null
 
-  // Show warning if test is old (>120 days)
+  // Show warning if test is old (>730 days / 2 years)
   const testAge = latestTest.age
-  const isOld = testAge > 120
+  const isOld = testAge > 730
 
   return (
     <Alert
@@ -77,7 +77,7 @@ export function SoilTestLoadBanner({ farmId, onLoadTest }: SoilTestLoadBannerPro
             Load test results to pre-fill soil parameters (pH, EC, N, P, K, micronutrients) instead
             of entering manually.
             {isOld &&
-              ' Note: This test is over 4 months old. Consider taking a new test for accurate recommendations.'}
+              ' Note: This test is over 2 years old. Consider taking a new test for accurate recommendations.'}
           </p>
           <div className="flex gap-2 pt-2">
             <Button

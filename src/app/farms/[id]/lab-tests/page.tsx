@@ -7,7 +7,6 @@ import { LabTestsTimeline } from '@/components/lab-tests/LabTestsTimeline'
 import { LabTestTrendCharts } from '@/components/lab-tests/LabTestTrendCharts'
 import { LabTestComparisonTable } from '@/components/lab-tests/LabTestComparisonTable'
 import { LabTestModal } from '@/components/lab-tests/LabTestModal'
-import { type LabTestRecord } from '@/components/lab-tests/TestDetailsCard'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -21,6 +20,7 @@ import {
 import { ArrowLeft, Loader2, LineChart, Table2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { LabTestRecord } from '@/types/lab-tests'
 
 function LabTestsPage() {
   const params = useParams()
@@ -82,8 +82,8 @@ function LabTestsPage() {
         SupabaseService.getFarmById(farmId)
       ])
 
-      setSoilTests(soilTestsData || [])
-      setPetioleTests(petioleTestsData || [])
+      setSoilTests((soilTestsData || []) as LabTestRecord[])
+      setPetioleTests((petioleTestsData || []) as LabTestRecord[])
       setFarmName(farmData?.name || 'Farm')
     } catch (error) {
       console.error('Error loading lab tests:', error)
@@ -163,16 +163,16 @@ function LabTestsPage() {
 
   // Helper to transform LabTestRecord to modal format
   const transformTestForModal = (test: LabTestRecord) => {
-    if (!test.id) return undefined
+    if (!test.id || !test.parameters) return undefined
     return {
       id: test.id,
-      date: test.date,
+      date: typeof test.date === 'string' ? test.date : test.date.toISOString().split('T')[0],
       date_of_pruning:
-        test.date_of_pruning instanceof Date
-          ? test.date_of_pruning.toISOString().split('T')[0]
-          : test.date_of_pruning || null,
-      parameters: test.parameters || {},
-      notes: test.notes || null
+        typeof test.date_of_pruning === 'string'
+          ? test.date_of_pruning
+          : (test.date_of_pruning?.toISOString().split('T')[0] ?? null),
+      parameters: test.parameters,
+      notes: test.notes
     }
   }
 
