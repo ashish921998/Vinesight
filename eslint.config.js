@@ -5,7 +5,7 @@ const compat = new FlatCompat({
   baseDirectory: import.meta.dirname
 })
 
-export default [
+const config = [
   {
     ignores: ['.next/**', 'node_modules/**']
   },
@@ -14,8 +14,10 @@ export default [
   }),
   {
     rules: {
-      'no-console': 'warn'
+      'no-console': ['warn', { allow: ['warn', 'error'] }]
     }
   },
   pluginPrettierRecommended
 ]
+
+export default config

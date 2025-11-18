@@ -1149,13 +1149,6 @@ export class SupabaseService {
     const supabase = getTypedSupabaseClient()
     const dbUpdates = toDatabaseTaskReminderUpdate(updates)
 
-    // Debug logging
-    if (process.env.NODE_ENV === 'development') {
-      console.log('updateTask - ID:', id)
-      console.log('updateTask - App Updates:', updates)
-      console.log('updateTask - DB Updates:', dbUpdates)
-    }
-
     const { data, error } = await supabase
       .from('task_reminders')
       .update(dbUpdates as any)
@@ -1526,6 +1519,17 @@ export class SupabaseService {
   }
 
   // Real-time subscriptions
+  /**
+   * Subscribe to real-time changes for a specific farm.
+   * @param farmId - The farm ID to subscribe to
+   * @param callback - Called when farm data changes
+   * @returns Subscription handle - call `.unsubscribe()` to clean up
+   * @example
+   * const subscription = SupabaseService.subscribeToFarmChanges(farmId, (payload) => {
+   *   console.log('Farm changed:', payload)
+   * })
+   * // Later: subscription.unsubscribe()
+   */
   static subscribeToFarmChanges(farmId: number, callback: (payload: any) => void) {
     const supabase = getTypedSupabaseClient()
     return supabase
@@ -1543,6 +1547,17 @@ export class SupabaseService {
       .subscribe()
   }
 
+  /**
+   * Subscribe to real-time changes for task reminders of a specific farm.
+   * @param farmId - The farm ID to subscribe to
+   * @param callback - Called when task reminders change
+   * @returns Subscription handle - call `.unsubscribe()` to clean up
+   * @example
+   * const subscription = SupabaseService.subscribeToTaskChanges(farmId, (payload) => {
+   *   console.log('Task changed:', payload)
+   * })
+   * // Later: subscription.unsubscribe()
+   */
   static subscribeToTaskChanges(farmId: number, callback: (payload: any) => void) {
     const supabase = getTypedSupabaseClient()
     return supabase

@@ -96,6 +96,7 @@ export async function POST(request: NextRequest) {
     let rawNotes: string | null | undefined
     let summary: string | null | undefined
     let confidence: number | null | undefined
+    let testDate: string | null | undefined
 
     try {
       const parsed = await ReportParser.parseTestReport(file, testType)
@@ -104,6 +105,7 @@ export async function POST(request: NextRequest) {
       rawNotes = parsed.rawNotes
       summary = parsed.summary
       confidence = parsed.confidence
+      testDate = parsed.testDate
     } catch (error) {
       // Log the full error server-side
       if (error instanceof Error) {
@@ -143,7 +145,8 @@ export async function POST(request: NextRequest) {
         parameters: parsedParameters,
         rawNotes,
         summary,
-        confidence
+        confidence,
+        testDate
       }
     })
   } catch (error) {

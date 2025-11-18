@@ -115,7 +115,6 @@ export class WeatherService {
         throw new Error('No weather data received from Open-Meteo API')
       }
 
-      console.log('Using Open-Meteo API with ET0 data')
       return this.parseWeatherData(forecastData, coords)
     } catch (error) {
       console.error('Error fetching weather data from Open-Meteo:', error)
@@ -353,13 +352,9 @@ export class WeatherService {
       forecast[0].et0 > 0
     ) {
       et0OpenMeteo = forecast[0].et0
-      console.log('ET0 from Open-Meteo:', et0OpenMeteo)
-    } else {
-      console.log('Open-Meteo ET0 not available')
     }
 
     // Always calculate ET0 locally using FAO Penman-Monteith equation
-    console.log('Calculating ET0 locally with improved FAO Penman-Monteith')
     const temp = current.temperature // °C
     const humidity = current.humidity // %
     const windSpeed = current.windSpeed // km/h
@@ -407,7 +402,6 @@ export class WeatherService {
     if (openMeteoData && openMeteoData[0]) {
       // Use actual shortwave radiation data from Open-Meteo
       solarRadiation = openMeteoData[0].shortwaveRadiationSum
-      console.log('Using actual solar radiation from Open-Meteo:', solarRadiation, 'MJ/m²/day')
     } else {
       // Fallback to improved estimation if Open-Meteo data not available
       solarRadiation = this.estimateSolarRadiationImproved(
@@ -415,7 +409,6 @@ export class WeatherService {
         current.cloudCover,
         temp
       )
-      console.log('Using estimated solar radiation:', solarRadiation, 'MJ/m²/day')
     }
 
     // Get max/min temperatures for accurate net longwave radiation calculation
@@ -466,24 +459,6 @@ export class WeatherService {
     if (et0Final !== et0Calculated) {
       console.warn('ET0 value clamped from', et0Calculated.toFixed(2), 'to', et0Final.toFixed(2))
     }
-
-    console.log('ET0 calculation details:', {
-      temp,
-      humidity,
-      windSpeed,
-      pressure,
-      altitude,
-      es: es.toFixed(3),
-      ea: ea.toFixed(3),
-      vpd: vpd.toFixed(3),
-      delta: delta.toFixed(4),
-      gamma: gamma.toFixed(4),
-      rn: rn.toFixed(2),
-      rso: rso.toFixed(2),
-      denominator: denominator.toFixed(4),
-      et0Calculated: et0Calculated.toFixed(2),
-      et0Final: et0Final.toFixed(2)
-    })
 
     // Calculate ETc using both ET0 values
     const dailyETcOpenMeteo = et0OpenMeteo > 0 ? Math.max(0, et0OpenMeteo * kc) : 0

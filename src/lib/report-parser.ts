@@ -7,6 +7,7 @@ export interface ParsedReportResult {
   summary?: string | null
   rawNotes?: string | null
   confidence?: number | null
+  testDate?: string | null
 }
 
 interface StructuredParameterEntry {
@@ -19,6 +20,7 @@ interface StructuredReportPayload {
   summary: string | null
   rawNotes: string | null
   confidence: number | null
+  testDate: string | null
 }
 
 type TestType = 'soil' | 'petiole'
@@ -92,6 +94,7 @@ export class ReportParser {
     if (testType === 'soil') {
       return `Extract all nutrient and soil health parameters from the attached soil test report.
 Return numeric values for pH, EC (electrical conductivity), organic carbon, nitrogen, phosphorus, potassium, calcium, magnesium, sulfur, iron, manganese, zinc, copper, boron, molybdenum, sodium, chloride, calcium carbonate, carbonate, bicarbonate, and any other nutrients you can find (include micronutrients if present).
+Also extract the test date or analysis date if present in the report (return in YYYY-MM-DD format).
 Also return a short summary of key findings, any recommendations or notes, and a confidence score between 0 and 1 describing how certain you are about the extracted numbers.
 
 Respond strictly as JSON with the shape:
@@ -101,12 +104,14 @@ Respond strictly as JSON with the shape:
   ],
   "summary": string | null,
   "rawNotes": string | null,
-  "confidence": number | null
+  "confidence": number | null,
+  "testDate": string | null
 }`
     }
 
     return `Extract nutrient values from the attached petiole analysis report.
 Return numeric values for macronutrients and micronutrients (nitrogen, phosphorus, potassium, calcium, magnesium, sulfur, iron, manganese, zinc, copper, boron, etc.) when available.
+Also extract the test date or analysis date if present in the report (return in YYYY-MM-DD format).
 Include a short summary of the analysis, any notes, and a confidence score between 0 and 1 representing extraction certainty.
 
 Respond strictly as JSON with the shape:
@@ -116,7 +121,8 @@ Respond strictly as JSON with the shape:
   ],
   "summary": string | null,
   "rawNotes": string | null,
-  "confidence": number | null
+  "confidence": number | null,
+  "testDate": string | null
 }`
   }
 
@@ -125,7 +131,8 @@ Respond strictly as JSON with the shape:
       parameters: this.normalizeParameters(payload.parameters || []),
       summary: payload.summary,
       rawNotes: payload.rawNotes,
-      confidence: payload.confidence
+      confidence: payload.confidence,
+      testDate: payload.testDate
     }
   }
 
@@ -216,9 +223,12 @@ Respond strictly as JSON with the shape:
           type: ['number', 'null'],
           minimum: 0,
           maximum: 1
+        },
+        testDate: {
+          type: ['string', 'null']
         }
       },
-      required: ['parameters', 'summary', 'rawNotes', 'confidence'],
+      required: ['parameters', 'summary', 'rawNotes', 'confidence', 'testDate'],
       additionalProperties: false
     } as const
   }
