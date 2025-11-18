@@ -307,7 +307,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
 
     // Filter params that have at least one non-null value
     const availableParams = params.filter((param) =>
-      sortedTests.some((test) => test.parameters[param.key] != null)
+      sortedTests.some((test) => test.parameters?.[param.key] != null)
     )
 
     if (availableParams.length === 0) {
@@ -353,10 +353,10 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
                   </div>
                 </td>
                 {sortedTests.map((test, idx) => {
-                  const value = test.parameters[param.key] as number | null | undefined
+                  const value = test.parameters?.[param.key] as number | null | undefined
                   const prevValue =
                     idx > 0
-                      ? (sortedTests[idx - 1].parameters[param.key] as number | null | undefined)
+                      ? (sortedTests[idx - 1].parameters?.[param.key] as number | null | undefined)
                       : null
                   const cellColor = getCellColor(value, param)
                   const trend = getTrendIndicator(value, prevValue)

@@ -71,25 +71,25 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       date: record.date,
       displayDate: format(new Date(record.date), 'MMM dd, yyyy'),
       // Primary parameters
-      ph: record.parameters.ph ?? null,
-      ec: record.parameters.ec ?? null,
+      ph: record.parameters?.ph ?? null,
+      ec: record.parameters?.ec ?? null,
       // Macronutrients
-      nitrogen: record.parameters.nitrogen ?? null,
-      phosphorus: record.parameters.phosphorus ?? null,
-      potassium: record.parameters.potassium ?? null,
+      nitrogen: record.parameters?.nitrogen ?? null,
+      phosphorus: record.parameters?.phosphorus ?? null,
+      potassium: record.parameters?.potassium ?? null,
       // Secondary nutrients
-      calcium: record.parameters.calcium ?? null,
-      magnesium: record.parameters.magnesium ?? null,
-      sulfur: record.parameters.sulfur ?? null,
+      calcium: record.parameters?.calcium ?? null,
+      magnesium: record.parameters?.magnesium ?? null,
+      sulfur: record.parameters?.sulfur ?? null,
       // Organic matter
-      organicCarbon: record.parameters.organicCarbon ?? null,
-      organicMatter: record.parameters.organicMatter ?? null,
+      organicCarbon: record.parameters?.organicCarbon ?? null,
+      organicMatter: record.parameters?.organicMatter ?? null,
       // Micronutrients
-      iron: record.parameters.iron ?? null,
-      manganese: record.parameters.manganese ?? null,
-      zinc: record.parameters.zinc ?? null,
-      copper: record.parameters.copper ?? null,
-      boron: record.parameters.boron ?? null
+      iron: record.parameters?.iron ?? null,
+      manganese: record.parameters?.manganese ?? null,
+      zinc: record.parameters?.zinc ?? null,
+      copper: record.parameters?.copper ?? null,
+      boron: record.parameters?.boron ?? null
     }))
 
   // Prepare petiole test data
@@ -99,25 +99,25 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
       date: record.date,
       displayDate: format(new Date(record.date), 'MMM dd, yyyy'),
       // Major nutrients
-      total_nitrogen: record.parameters.total_nitrogen ?? null,
-      nitrate_nitrogen: record.parameters.nitrate_nitrogen ?? null,
-      ammonical_nitrogen: record.parameters.ammonical_nitrogen ?? null,
-      phosphorus: record.parameters.phosphorus ?? null,
-      potassium: record.parameters.potassium ?? null,
+      total_nitrogen: record.parameters?.total_nitrogen ?? null,
+      nitrate_nitrogen: record.parameters?.nitrate_nitrogen ?? null,
+      ammonical_nitrogen: record.parameters?.ammonical_nitrogen ?? null,
+      phosphorus: record.parameters?.phosphorus ?? null,
+      potassium: record.parameters?.potassium ?? null,
       // Secondary nutrients
-      calcium: record.parameters.calcium ?? null,
-      magnesium: record.parameters.magnesium ?? null,
-      sulfur: record.parameters.sulfur ?? null,
+      calcium: record.parameters?.calcium ?? null,
+      magnesium: record.parameters?.magnesium ?? null,
+      sulfur: record.parameters?.sulfur ?? null,
       // Micronutrients
-      iron: record.parameters.iron ?? null,
-      manganese: record.parameters.manganese ?? null,
-      zinc: record.parameters.zinc ?? null,
-      copper: record.parameters.copper ?? null,
-      boron: record.parameters.boron ?? null,
-      molybdenum: record.parameters.molybdenum ?? null,
+      iron: record.parameters?.iron ?? null,
+      manganese: record.parameters?.manganese ?? null,
+      zinc: record.parameters?.zinc ?? null,
+      copper: record.parameters?.copper ?? null,
+      boron: record.parameters?.boron ?? null,
+      molybdenum: record.parameters?.molybdenum ?? null,
       // Other elements
-      sodium: record.parameters.sodium ?? null,
-      chloride: record.parameters.chloride ?? null
+      sodium: record.parameters?.sodium ?? null,
+      chloride: record.parameters?.chloride ?? null
     }))
 
   // Soil parameter options
