@@ -24,5 +24,6 @@ export const DATABASE = {
 // Form validation constants
 export const VALIDATION = {
   MIN_NOTES_LENGTH: 1,
-  MAX_PHOTOS_PER_DAY: 50
+  MAX_PHOTOS_PER_DAY: 50,
+  MAX_NAME_LENGTH: 50
 } as const

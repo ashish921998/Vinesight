@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { User, AuthError } from '@supabase/supabase-js'
 import { toast } from 'sonner'
+import { VALIDATION } from '@/lib/constants'
 
 interface AuthState {
   user: User | null
@@ -90,11 +91,10 @@ function sanitizeAndValidateName(name: string | undefined, fieldName: string): S
   }
 
   // Check length and truncate if necessary
-  const MAX_LENGTH = 50
-  if (sanitized.length > MAX_LENGTH) {
+  if (sanitized.length > VALIDATION.MAX_NAME_LENGTH) {
     return {
       isValid: false,
-      error: `${fieldName} must not exceed ${MAX_LENGTH} characters (currently ${sanitized.length} characters)`
+      error: `${fieldName} must not exceed ${VALIDATION.MAX_NAME_LENGTH} characters (currently ${sanitized.length} characters)`
     }
   }
 

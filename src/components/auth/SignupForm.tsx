@@ -9,6 +9,7 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoginButton } from '@/components/auth/LoginButton'
 import { PasswordInput } from '@/components/ui/password-input'
+import { VALIDATION } from '@/lib/constants'
 
 export default function SignupForm() {
   const [firstName, setFirstName] = useState('')
@@ -123,7 +124,7 @@ export default function SignupForm() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
-                  maxLength={50}
+                  maxLength={VALIDATION.MAX_NAME_LENGTH}
                   className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                   placeholder="Enter your first name"
                 />
@@ -141,7 +142,7 @@ export default function SignupForm() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   required
-                  maxLength={50}
+                  maxLength={VALIDATION.MAX_NAME_LENGTH}
                   className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                   placeholder="Enter your last name"
                 />
