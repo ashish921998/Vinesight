@@ -19,7 +19,12 @@
     "size": "npm run build && du -sh .next/static",
     "typecheck": "tsc --noEmit",
     "prepare": "husky || true",
-    "postinstall": "[ -n \"$CI\" ] || husky install || true"
+    "postinstall": "[ -n \"$CI\" ] || husky install || true",
+    "db:studio": "drizzle-kit studio",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:pull": "drizzle-kit introspect"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.11",
@@ -56,6 +61,8 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "dexie": "^4.0.9",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.7",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.12",
     "groq-sdk": "^0.30.0",
@@ -68,6 +75,7 @@
     "next-themes": "^0.4.6",
     "openai": "^5.23.2",
     "openmeteo": "^1.2.2",
+    "postgres": "^3.4.7",
     "react": "19.1.0",
     "react-day-picker": "^9.9.0",
     "react-dom": "19.1.0",
@@ -93,6 +101,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "drizzle-kit": "^0.31.7",
     "eslint": "^9.36.0",
     "eslint-config-next": "15.5.0",
     "eslint-config-prettier": "^10.1.8",
