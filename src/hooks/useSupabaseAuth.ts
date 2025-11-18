@@ -66,7 +66,14 @@ function sanitizeAndValidateName(name: string | undefined, fieldName: string): S
   }
 
   // Remove control characters and newlines (ASCII 0-31 and 127)
-  sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, '')
+  // Using character-code filter instead of regex to avoid lint warnings
+  sanitized = sanitized
+    .split('')
+    .filter((char) => {
+      const code = char.charCodeAt(0)
+      return code >= 32 && code !== 127
+    })
+    .join('')
 
   // Collapse repeated spaces into single space
   sanitized = sanitized.replace(/\s+/g, ' ')
