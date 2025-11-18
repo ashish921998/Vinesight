@@ -116,6 +116,108 @@ const PETIOLE_VALIDATION_RANGES = {
 } as const
 
 /**
+ * Standard optimal ranges for petiole test parameters
+ * These are the recommended ranges for healthy grape vines
+ */
+export const PETIOLE_STANDARD_RANGES = {
+  // Major Nutrients
+  total_nitrogen: { min: 1.51, max: 2.21, unit: '%' },
+  nitrate_nitrogen: { min: 700, max: 1000, unit: 'ppm' },
+  ammonical_nitrogen: { min: 400, max: 700, unit: 'ppm' },
+  phosphorus: { min: 0.31, max: 0.51, unit: '%' },
+  potassium: { min: 1.51, max: 2.01, unit: '%' },
+  // Secondary Nutrients
+  calcium: { min: 1.51, max: 2.21, unit: '%' },
+  magnesium: { min: 0.31, max: 0.61, unit: '%' },
+  sulphur: { min: 0.15, max: 0.51, unit: '%' },
+  // Micro Nutrients
+  ferrous: { min: 80, max: 120, unit: 'ppm' },
+  manganese: { min: 40, max: 100, unit: 'ppm' },
+  zinc: { min: 50, max: 80, unit: 'ppm' },
+  copper: { min: 5, max: 15, unit: 'ppm' },
+  boron: { min: 25, max: 50, unit: 'ppm' },
+  molybdenum: { min: 0.25, max: 0.51, unit: 'ppm' },
+  // Other Elements
+  sodium: { min: 0.01, max: 0.51, unit: '%' },
+  chloride: { min: 0.05, max: 0.25, unit: '%' }
+} as const
+
+/**
+ * Standard optimal ranges for soil test parameters
+ */
+export const SOIL_STANDARD_RANGES = {
+  ph: { min: 6.5, max: 7.5, unit: '' },
+  ec: { min: 0.5, max: 1.5, unit: 'dS/m' },
+  organic_carbon: { min: 0.5, max: 1.0, unit: '%' },
+  nitrogen: { min: 150, max: 400, unit: 'ppm' },
+  phosphorus: { min: 20, max: 80, unit: 'ppm' },
+  potassium: { min: 200, max: 500, unit: 'ppm' },
+  calcium: { min: 1000, max: 3000, unit: 'ppm' },
+  magnesium: { min: 150, max: 500, unit: 'ppm' },
+  sulfur: { min: 10, max: 40, unit: 'ppm' },
+  iron: { min: 5, max: 50, unit: 'ppm' },
+  manganese: { min: 5, max: 50, unit: 'ppm' },
+  zinc: { min: 1, max: 10, unit: 'ppm' },
+  copper: { min: 0.2, max: 5, unit: 'ppm' },
+  boron: { min: 0.5, max: 2, unit: 'ppm' }
+} as const
+
+/**
+ * Parameter classifications for display grouping
+ */
+export const PETIOLE_PARAMETER_CLASSIFICATIONS = {
+  major: [
+    { key: 'total_nitrogen', label: 'Total Nitrogen (N)' },
+    { key: 'nitrate_nitrogen', label: 'Nitrate Nitrogen (NO₃-N)' },
+    { key: 'ammonical_nitrogen', label: 'Ammonical Nitrogen (NH₄-N)' },
+    { key: 'phosphorus', label: 'Phosphorus (P)' },
+    { key: 'potassium', label: 'Potassium (K)' }
+  ],
+  secondary: [
+    { key: 'calcium', label: 'Calcium (Ca)' },
+    { key: 'magnesium', label: 'Magnesium (Mg)' },
+    { key: 'sulphur', label: 'Sulphur (S)' }
+  ],
+  micro: [
+    { key: 'ferrous', label: 'Ferrous (Fe)' },
+    { key: 'manganese', label: 'Manganese (Mn)' },
+    { key: 'zinc', label: 'Zinc (Zn)' },
+    { key: 'copper', label: 'Copper (Cu)' },
+    { key: 'boron', label: 'Boron (B)' },
+    { key: 'molybdenum', label: 'Molybdenum (Mo)' }
+  ],
+  other: [
+    { key: 'sodium', label: 'Sodium (Na)' },
+    { key: 'chloride', label: 'Chloride (Cl)' }
+  ]
+} as const
+
+export const SOIL_PARAMETER_CLASSIFICATIONS = {
+  major: [
+    { key: 'nitrogen', label: 'Nitrogen (N)' },
+    { key: 'phosphorus', label: 'Phosphorus (P)' },
+    { key: 'potassium', label: 'Potassium (K)' }
+  ],
+  secondary: [
+    { key: 'calcium', label: 'Calcium (Ca)' },
+    { key: 'magnesium', label: 'Magnesium (Mg)' },
+    { key: 'sulfur', label: 'Sulfur (S)' }
+  ],
+  micro: [
+    { key: 'iron', label: 'Iron (Fe)' },
+    { key: 'manganese', label: 'Manganese (Mn)' },
+    { key: 'zinc', label: 'Zinc (Zn)' },
+    { key: 'copper', label: 'Copper (Cu)' },
+    { key: 'boron', label: 'Boron (B)' }
+  ],
+  other: [
+    { key: 'ph', label: 'pH' },
+    { key: 'ec', label: 'EC' },
+    { key: 'organic_carbon', label: 'Organic Carbon' }
+  ]
+} as const
+
+/**
  * User-friendly parameter names for error messages
  * Note: Some parameter names are shared between soil and petiole tests
  * (e.g., phosphorus, potassium, calcium, magnesium, zinc, copper, boron, manganese)

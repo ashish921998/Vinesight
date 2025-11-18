@@ -14,7 +14,11 @@ import {
 import { TestRecommendations } from './TestRecommendations'
 import {
   generateSoilTestRecommendations,
-  generatePetioleTestRecommendations
+  generatePetioleTestRecommendations,
+  PETIOLE_STANDARD_RANGES,
+  SOIL_STANDARD_RANGES,
+  PETIOLE_PARAMETER_CLASSIFICATIONS,
+  SOIL_PARAMETER_CLASSIFICATIONS
 } from '@/lib/lab-test-recommendations'
 import { FileText, Edit, Trash2, Calendar, FileCheck, Sprout } from 'lucide-react'
 import { format } from 'date-fns'
@@ -65,6 +69,52 @@ export function TestDetailsCard({
     if (value === null || value === undefined || value === '') return '—'
     if (typeof value === 'number') return value.toFixed(decimals)
     return String(value)
+  }
+
+  // Helper to get parameter status against standard range
+  const getParameterStatus = (
+    value: number | null | undefined,
+    standardRange: { min: number; max: number; unit: string } | undefined
+  ): {
+    status: 'optimal' | 'low' | 'high'
+    icon: string
+    difference: string
+  } => {
+    if (
+      value === null ||
+      value === undefined ||
+      value === '' ||
+      !standardRange ||
+      typeof value !== 'number'
+    ) {
+      return { status: 'optimal', icon: '—', difference: '—' }
+    }
+
+    const { min, max, unit } = standardRange
+
+    if (value >= min && value <= max) {
+      return {
+        status: 'optimal',
+        icon: '✅',
+        difference: 'Within range'
+      }
+    } else if (value < min) {
+      const lowDiff = min - value
+      const highDiff = max - value
+      return {
+        status: 'low',
+        icon: '❌',
+        difference: `▼ Low by ${lowDiff.toFixed(2)}–${highDiff.toFixed(2)} ${unit}`
+      }
+    } else {
+      const lowDiff = value - min
+      const highDiff = value - max
+      return {
+        status: 'high',
+        icon: '⚠️',
+        difference: `▲ Higher by ${highDiff.toFixed(2)}–${lowDiff.toFixed(2)} ${unit}`
+      }
+    }
   }
 
   // Helper to calculate change from previous test
@@ -322,94 +372,115 @@ export function TestDetailsCard({
           </DialogHeader>
 
           <div className="space-y-6 mt-4">
-            {/* All Parameters */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">📊 All Parameters</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {(() => {
-                    // Define the display order matching LabTestModal
-                    const soilOrder = [
-                      'ph',
-                      'ec',
-                      'organic_carbon',
-                      'nitrogen',
-                      'phosphorus',
-                      'potassium',
-                      'calcium',
-                      'magnesium',
-                      'sulfur',
-                      'iron',
-                      'manganese',
-                      'zinc',
-                      'copper',
-                      'boron'
-                    ]
+            {/* Parameters by Classification */}
+            {(() => {
+              const classifications =
+                testType === 'soil' ? SOIL_PARAMETER_CLASSIFICATIONS : PETIOLE_PARAMETER_CLASSIFICATIONS
+              const standardRanges = testType === 'soil' ? SOIL_STANDARD_RANGES : PETIOLE_STANDARD_RANGES
 
-                    const petioleOrder = [
-                      'total_nitrogen',
-                      'nitrate_nitrogen',
-                      'ammonium_nitrogen',
-                      'phosphorus',
-                      'potassium',
-                      'calcium',
-                      'magnesium',
-                      'sulfur',
-                      'iron',
-                      'manganese',
-                      'zinc',
-                      'copper',
-                      'boron',
-                      'molybdenum',
-                      'sodium',
-                      'chloride'
-                    ]
+              const classificationTitles = {
+                major: '1️⃣ Major Nutrients',
+                secondary: '2️⃣ Secondary Nutrients',
+                micro: '3️⃣ Micro Nutrients',
+                other: '4️⃣ Other Elements'
+              }
 
-                    const paramOrder = testType === 'soil' ? soilOrder : petioleOrder
+              return Object.entries(classifications).map(([classification, params]) => {
+                // Filter parameters that have values
+                const availableParams = params.filter(
+                  (param) =>
+                    test.parameters[param.key] !== null &&
+                    test.parameters[param.key] !== undefined &&
+                    test.parameters[param.key] !== ''
+                )
 
-                    // Sort parameters according to the defined order
-                    const sortedParams = Object.entries(test.parameters)
-                      .filter(([_, value]) => value !== null && value !== undefined && value !== '')
-                      .sort(([keyA], [keyB]) => {
-                        const indexA = paramOrder.indexOf(keyA)
-                        const indexB = paramOrder.indexOf(keyB)
-                        // If not in order array, put at end
-                        if (indexA === -1 && indexB === -1) return 0
-                        if (indexA === -1) return 1
-                        if (indexB === -1) return -1
-                        return indexA - indexB
-                      })
+                if (availableParams.length === 0) return null
 
-                    return sortedParams.map(([key, value]) => {
-                      const change = getChange(key)
-                      return (
-                        <div
-                          key={key}
-                          className="border rounded-lg p-3 bg-muted/30 hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="text-xs text-muted-foreground font-medium capitalize">
-                            {key.replace(/_/g, ' ')}
-                          </div>
-                          <div className="text-base font-semibold text-foreground mt-1">
-                            {formatValue(value)}
-                          </div>
-                          {change && change.direction !== 'same' && (
-                            <div
-                              className={`text-xs mt-1 ${change.direction === 'up' ? 'text-blue-600' : 'text-orange-600'}`}
-                            >
-                              {change.direction === 'up' ? '↑' : '↓'}{' '}
-                              {Math.abs(change.value).toFixed(2)} from last test
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })
-                  })()}
-                </div>
-              </CardContent>
-            </Card>
+                return (
+                  <Card key={classification}>
+                    <CardHeader>
+                      <CardTitle className="text-base">
+                        {classificationTitles[classification as keyof typeof classificationTitles]}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b">
+                              <th className="text-left py-2 px-2 font-semibold">Nutrient</th>
+                              <th className="text-left py-2 px-2 font-semibold">Your Value</th>
+                              <th className="text-left py-2 px-2 font-semibold">
+                                Recommended Standard
+                              </th>
+                              <th className="text-left py-2 px-2 font-semibold">Difference</th>
+                              <th className="text-left py-2 px-2 font-semibold">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {availableParams.map((param) => {
+                              const value = test.parameters[param.key]
+                              const standardRange =
+                                standardRanges[param.key as keyof typeof standardRanges]
+                              const paramStatus = getParameterStatus(value, standardRange)
+
+                              return (
+                                <tr key={param.key} className="border-b last:border-0">
+                                  <td className="py-3 px-2 font-medium">{param.label}</td>
+                                  <td className="py-3 px-2">
+                                    {formatValue(value)}{' '}
+                                    {value !== null &&
+                                      value !== undefined &&
+                                      value !== '' &&
+                                      standardRange?.unit}
+                                  </td>
+                                  <td className="py-3 px-2">
+                                    {standardRange
+                                      ? `${standardRange.min.toFixed(2)}–${standardRange.max.toFixed(2)} ${standardRange.unit}`
+                                      : '—'}
+                                  </td>
+                                  <td className="py-3 px-2">
+                                    <span
+                                      className={
+                                        paramStatus.status === 'low'
+                                          ? 'text-red-600'
+                                          : paramStatus.status === 'high'
+                                            ? 'text-orange-600'
+                                            : 'text-green-600'
+                                      }
+                                    >
+                                      {paramStatus.difference}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-2 text-center">
+                                    <span
+                                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                        paramStatus.status === 'optimal'
+                                          ? 'bg-green-100 text-green-800'
+                                          : paramStatus.status === 'low'
+                                            ? 'bg-red-100 text-red-800'
+                                            : 'bg-orange-100 text-orange-800'
+                                      }`}
+                                    >
+                                      {paramStatus.icon}{' '}
+                                      {paramStatus.status === 'optimal'
+                                        ? 'Optimal'
+                                        : paramStatus.status === 'low'
+                                          ? 'Low'
+                                          : 'High'}
+                                    </span>
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })
+            })()}
 
             {/* Recommendations */}
             <TestRecommendations recommendations={recommendations} testType={testType} />
