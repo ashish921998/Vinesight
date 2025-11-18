@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { User, AuthError } from '@supabase/supabase-js'
 import { toast } from 'sonner'
+import { VALIDATION } from '@/lib/constants'
 
 interface AuthState {
   user: User | null
@@ -20,6 +21,8 @@ interface SignUpWithEmailParams {
   email: string
   password: string
   confirmPassword?: string
+  firstName?: string
+  lastName?: string
 }
 
 interface ResetPasswordParams {
@@ -28,6 +31,77 @@ interface ResetPasswordParams {
 
 interface SignInWithGoogleParams {
   redirectTo?: string
+}
+
+interface SanitizedNameResult {
+  isValid: boolean
+  value?: string
+  error?: string
+}
+
+/**
+ * Sanitizes and validates a name field
+ * - Returns valid for undefined (optional parameter)
+ * - Trims whitespace
+ * - Removes control characters and newlines
+ * - Collapses repeated spaces
+ * - Enforces max length of 50 characters
+ */
+function sanitizeAndValidateName(name: string | undefined, fieldName: string): SanitizedNameResult {
+  // Return valid if name is undefined (optional parameter)
+  if (name === undefined) {
+    return {
+      isValid: true
+    }
+  }
+
+  // Trim whitespace
+  let sanitized = name.trim()
+
+  // Check if empty after trimming
+  if (!sanitized) {
+    return {
+      isValid: false,
+      error: `${fieldName} cannot be empty or contain only whitespace`
+    }
+  }
+
+  // Remove control characters and newlines (ASCII 0-31 and 127)
+  // Using character-code filter instead of regex to avoid lint warnings
+  sanitized = sanitized
+    .split('')
+    .filter((char) => {
+      const code = char.charCodeAt(0)
+      return code >= 32 && code !== 127
+    })
+    .join('')
+
+  // Collapse repeated spaces into single space
+  sanitized = sanitized.replace(/\s+/g, ' ')
+
+  // Trim again after sanitization
+  sanitized = sanitized.trim()
+
+  // Check if empty after full sanitization
+  if (!sanitized) {
+    return {
+      isValid: false,
+      error: `${fieldName} contains only invalid characters`
+    }
+  }
+
+  // Check length and truncate if necessary
+  if (sanitized.length > VALIDATION.MAX_NAME_LENGTH) {
+    return {
+      isValid: false,
+      error: `${fieldName} must not exceed ${VALIDATION.MAX_NAME_LENGTH} characters (currently ${sanitized.length} characters)`
+    }
+  }
+
+  return {
+    isValid: true,
+    value: sanitized
+  }
 }
 
 export function useSupabaseAuth() {
@@ -114,7 +188,13 @@ export function useSupabaseAuth() {
     }
   }
 
-  const signUpWithEmail = async ({ email, password, confirmPassword }: SignUpWithEmailParams) => {
+  const signUpWithEmail = async ({
+    email,
+    password,
+    confirmPassword,
+    firstName,
+    lastName
+  }: SignUpWithEmailParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
 
     // Validate password confirmation if provided
@@ -124,13 +204,49 @@ export function useSupabaseAuth() {
       return { success: false, error }
     }
 
+    // Validate and sanitize name fields
+    const userMetadata: Record<string, string> = {}
+
+    const firstNameResult = sanitizeAndValidateName(firstName, 'First name')
+    if (!firstNameResult.isValid) {
+      const error = firstNameResult.error || 'Invalid first name'
+      setAuthState((prev) => ({ ...prev, error, loading: false }))
+      toast.error(error)
+      return { success: false, error }
+    }
+    if (firstNameResult.value) {
+      userMetadata.first_name = firstNameResult.value
+    }
+
+    const lastNameResult = sanitizeAndValidateName(lastName, 'Last name')
+    if (!lastNameResult.isValid) {
+      const error = lastNameResult.error || 'Invalid last name'
+      setAuthState((prev) => ({ ...prev, error, loading: false }))
+      toast.error(error)
+      return { success: false, error }
+    }
+    if (lastNameResult.value) {
+      userMetadata.last_name = lastNameResult.value
+    }
+
+    // Create full_name field for UI display
+    if (userMetadata.first_name && userMetadata.last_name) {
+      userMetadata.full_name = `${userMetadata.first_name} ${userMetadata.last_name}`
+    } else if (userMetadata.first_name) {
+      userMetadata.full_name = userMetadata.first_name
+    } else if (userMetadata.last_name) {
+      userMetadata.full_name = userMetadata.last_name
+    }
+
     try {
       const supabase = createClient()
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          ...(Object.keys(userMetadata).length > 0 && { data: userMetadata })
         }
       })
 
