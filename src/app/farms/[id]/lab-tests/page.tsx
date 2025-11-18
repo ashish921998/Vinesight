@@ -58,8 +58,10 @@ function LabTestsPage() {
         SupabaseService.getFarmById(farmId)
       ])
 
-      setSoilTests(soilTestsData || [])
-      setPetioleTests(petioleTestsData || [])
+      setSoilTests((soilTestsData || []).filter((test) => test.id !== undefined) as LabTestRecord[])
+      setPetioleTests(
+        (petioleTestsData || []).filter((test) => test.id !== undefined) as LabTestRecord[]
+      )
       setFarmName(farmData?.name || 'Farm')
     } catch (error) {
       console.error('Error loading lab tests:', error)

@@ -41,7 +41,15 @@ export async function getLatestSoilTest(
     const age = differenceInDays(new Date(), new Date(test.date))
 
     return {
-      test,
+      test: {
+        ...test,
+        created_at: test.created_at ?? null,
+        date_of_pruning: test.date_of_pruning
+          ? test.date_of_pruning instanceof Date
+            ? test.date_of_pruning.toISOString()
+            : test.date_of_pruning
+          : null
+      } as unknown as SoilTestRecord,
       type: 'soil',
       recommendations,
       age
@@ -67,7 +75,15 @@ export async function getLatestPetioleTest(
     const age = differenceInDays(new Date(), new Date(test.date))
 
     return {
-      test,
+      test: {
+        ...test,
+        created_at: test.created_at ?? null,
+        date_of_pruning: test.date_of_pruning
+          ? test.date_of_pruning instanceof Date
+            ? test.date_of_pruning.toISOString()
+            : test.date_of_pruning
+          : null
+      } as unknown as PetioleTestRecord,
       type: 'petiole',
       recommendations,
       age

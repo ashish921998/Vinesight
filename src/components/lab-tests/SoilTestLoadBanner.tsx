@@ -36,8 +36,8 @@ export function SoilTestLoadBanner({ farmId, onLoadTest }: SoilTestLoadBannerPro
   }
 
   const handleLoadTest = () => {
-    if (!latestTest) return
-    onLoadTest(latestTest.test.parameters)
+    if (!latestTest || !latestTest.test.parameters) return
+    onLoadTest(latestTest.test.parameters as Record<string, any>)
   }
 
   // Don't show if dismissed or no test available or loading

@@ -288,10 +288,13 @@ export function BottomNavigation() {
           await SupabaseService.addFertigationRecord({
             farm_id: farmId,
             date: currentDate,
-            fertilizer: formData.fertilizer?.trim() || 'Unknown',
-            quantity: parseFloat(formData.quantity || '0'),
-            unit: 'kg/acre',
-            purpose: '', // Default value
+            fertilizers: [
+              {
+                name: formData.fertilizer?.trim() || 'Unknown',
+                quantity: parseFloat(formData.quantity || '0'),
+                unit: 'kg/acre'
+              }
+            ],
             area: 0,
             notes: formData.notes || '',
             date_of_pruning: pruningDate

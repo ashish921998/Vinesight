@@ -78,15 +78,15 @@ export function FertilizerPlanGenerator({
     try {
       const tasks = plan.flatMap((item) =>
         item.applications.map((app) => ({
-          farm_id: farmId,
+          farmId: farmId,
           title: `${app.method === 'soil' ? 'Apply' : app.method === 'foliar' ? 'Spray' : 'Add to fertigation'}: ${app.product}`,
           description: `${app.purpose}\n\nDosage: ${app.dosage}\nMethod: ${app.method}\n\nGrowth Stage: ${item.growthStage}\n\nBased on ${testType} test from ${format(new Date(test.date), 'MMM dd, yyyy')}\n\n${item.notes}`,
-          due_date: format(item.date, 'yyyy-MM-dd'),
+          dueDate: format(item.date, 'yyyy-MM-dd'),
           priority:
             app.recommendationSource.includes('pH') || app.recommendationSource.includes('EC')
               ? ('high' as const)
               : ('medium' as const),
-          category: 'fertilization' as const,
+          type: 'fertilization' as const,
           status: 'pending' as const
         }))
       )

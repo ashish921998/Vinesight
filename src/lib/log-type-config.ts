@@ -19,7 +19,14 @@ import {
  * but rather a free-form note attached to a date. It's handled via special cases
  * in the helper functions below rather than being part of this union type.
  */
-export type LogType = 'irrigation' | 'spray' | 'harvest' | 'expense' | 'fertigation'
+export type LogType =
+  | 'irrigation'
+  | 'spray'
+  | 'harvest'
+  | 'expense'
+  | 'fertigation'
+  | 'soil_test'
+  | 'petiole_test'
 
 export interface FormField {
   name: string
@@ -207,6 +214,22 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         maxLength: 2000
       }
     ]
+  },
+  soil_test: {
+    icon: TestTube,
+    color: 'text-teal-600',
+    bgColor: 'bg-teal-50',
+    borderColor: 'border-teal-200',
+    label: 'Soil Test',
+    fields: []
+  },
+  petiole_test: {
+    icon: Beaker,
+    color: 'text-cyan-600',
+    bgColor: 'bg-cyan-50',
+    borderColor: 'border-cyan-200',
+    label: 'Petiole Test',
+    fields: []
   }
 }
 

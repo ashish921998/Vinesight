@@ -36,7 +36,7 @@ class WarehouseService {
     } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
 
-    let query = supabase
+    let query = (supabase as any)
       .from('warehouse_items')
       .select('*')
       .eq('user_id', user.id)
@@ -65,7 +65,7 @@ class WarehouseService {
     } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('warehouse_items')
       .select('*')
       .eq('id', id)
@@ -90,7 +90,7 @@ class WarehouseService {
     } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('warehouse_items')
       .select('*')
       .eq('user_id', user.id)
@@ -105,7 +105,7 @@ class WarehouseService {
     // Filter items where quantity <= reorder_quantity
     const lowStockItems = (data || [])
       .map(warehouseItemFromDB)
-      .filter((item) => item.reorderQuantity && item.quantity <= item.reorderQuantity)
+      .filter((item: WarehouseItem) => item.reorderQuantity && item.quantity <= item.reorderQuantity)
 
     return lowStockItems
   }
@@ -136,7 +136,7 @@ class WarehouseService {
       throw new Error('Reorder quantity must be a positive number')
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('warehouse_items')
       .insert({
         user_id: user.id,
@@ -197,7 +197,7 @@ class WarehouseService {
       throw new Error('No fields provided to update')
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('warehouse_items')
       .update(updateData)
       .eq('id', id)
@@ -222,7 +222,7 @@ class WarehouseService {
     } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('warehouse_items')
       .delete()
       .eq('id', id)
@@ -330,7 +330,7 @@ class WarehouseService {
     } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
 
-    let supabaseQuery = supabase
+    let supabaseQuery = (supabase as any)
       .from('warehouse_items')
       .select('*')
       .eq('user_id', user.id)
