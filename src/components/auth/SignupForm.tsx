@@ -203,9 +203,9 @@ export default function SignupForm() {
               disabled={
                 loading ||
                 password !== confirmPassword ||
-                !firstName ||
-                !lastName ||
-                !email ||
+                !firstName.trim() ||
+                !lastName.trim() ||
+                !email.trim() ||
                 !password ||
                 !confirmPassword
               }

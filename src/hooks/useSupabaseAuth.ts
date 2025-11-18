@@ -222,6 +222,15 @@ export function useSupabaseAuth() {
       userMetadata.last_name = lastNameResult.value!
     }
 
+    // Create full_name field for UI display
+    if (userMetadata.first_name && userMetadata.last_name) {
+      userMetadata.full_name = `${userMetadata.first_name} ${userMetadata.last_name}`
+    } else if (userMetadata.first_name) {
+      userMetadata.full_name = userMetadata.first_name
+    } else if (userMetadata.last_name) {
+      userMetadata.full_name = userMetadata.last_name
+    }
+
     try {
       const supabase = createClient()
 
