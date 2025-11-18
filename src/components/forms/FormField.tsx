@@ -61,11 +61,7 @@ export const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Form
       // For number inputs, keep the raw string value to allow partial inputs like "." or ".5"
       // The parsing to number will happen when the form is submitted or validated
       const newValue =
-        type === 'number'
-          ? e.target.value === ''
-            ? ''
-            : e.target.value
-          : e.target.value
+        type === 'number' ? (e.target.value === '' ? '' : e.target.value) : e.target.value
       onChange(newValue)
     }
 
