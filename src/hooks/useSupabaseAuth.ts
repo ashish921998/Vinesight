@@ -40,17 +40,17 @@ interface SanitizedNameResult {
 
 /**
  * Sanitizes and validates a name field
+ * - Returns valid for undefined (optional parameter)
  * - Trims whitespace
  * - Removes control characters and newlines
  * - Collapses repeated spaces
  * - Enforces max length of 50 characters
  */
 function sanitizeAndValidateName(name: string | undefined, fieldName: string): SanitizedNameResult {
-  // Return early if name is undefined or empty
-  if (!name) {
+  // Return valid if name is undefined (optional parameter)
+  if (name === undefined) {
     return {
-      isValid: false,
-      error: `${fieldName} is required`
+      isValid: true
     }
   }
 
@@ -197,29 +197,29 @@ export function useSupabaseAuth() {
       return { success: false, error }
     }
 
-    // Validate and sanitize name fields if provided
+    // Validate and sanitize name fields
     const userMetadata: Record<string, string> = {}
 
-    if (firstName !== undefined) {
-      const firstNameResult = sanitizeAndValidateName(firstName, 'First name')
-      if (!firstNameResult.isValid) {
-        const error = firstNameResult.error || 'Invalid first name'
-        setAuthState((prev) => ({ ...prev, error, loading: false }))
-        toast.error(error)
-        return { success: false, error }
-      }
-      userMetadata.first_name = firstNameResult.value!
+    const firstNameResult = sanitizeAndValidateName(firstName, 'First name')
+    if (!firstNameResult.isValid) {
+      const error = firstNameResult.error || 'Invalid first name'
+      setAuthState((prev) => ({ ...prev, error, loading: false }))
+      toast.error(error)
+      return { success: false, error }
+    }
+    if (firstNameResult.value) {
+      userMetadata.first_name = firstNameResult.value
     }
 
-    if (lastName !== undefined) {
-      const lastNameResult = sanitizeAndValidateName(lastName, 'Last name')
-      if (!lastNameResult.isValid) {
-        const error = lastNameResult.error || 'Invalid last name'
-        setAuthState((prev) => ({ ...prev, error, loading: false }))
-        toast.error(error)
-        return { success: false, error }
-      }
-      userMetadata.last_name = lastNameResult.value!
+    const lastNameResult = sanitizeAndValidateName(lastName, 'Last name')
+    if (!lastNameResult.isValid) {
+      const error = lastNameResult.error || 'Invalid last name'
+      setAuthState((prev) => ({ ...prev, error, loading: false }))
+      toast.error(error)
+      return { success: false, error }
+    }
+    if (lastNameResult.value) {
+      userMetadata.last_name = lastNameResult.value
     }
 
     // Create full_name field for UI display
