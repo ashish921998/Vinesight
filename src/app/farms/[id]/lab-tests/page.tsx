@@ -220,9 +220,7 @@ function LabTestsPage() {
         <TabsContent value="trends" className="mt-0 space-y-3">
           {/* View Mode Toggle */}
           <div className="flex items-center justify-between gap-2 px-1">
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Choose your preferred view:
-            </p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Choose your preferred view:</p>
             <div className="flex gap-1 sm:gap-2">
               <Button
                 variant={viewMode === 'chart' ? 'default' : 'outline'}
