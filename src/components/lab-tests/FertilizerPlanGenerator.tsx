@@ -19,7 +19,7 @@ import {
 } from '@/lib/lab-test-integration'
 import { SupabaseService } from '@/lib/supabase-service'
 import type { Recommendation } from '@/lib/lab-test-recommendations'
-import type { LabTestRecord } from './TestDetailsCard'
+import type { LabTestRecord } from '@/types/lab-tests'
 import { Calendar, Sprout, DollarSign, CheckCircle, Download, Plus, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
