@@ -19,8 +19,19 @@ import { differenceInDays, addMonths, format } from 'date-fns'
 type SoilTestRecord = Database['public']['Tables']['soil_test_records']['Row']
 type PetioleTestRecord = Database['public']['Tables']['petiole_test_records']['Row']
 
+// Unified type that handles both soil and petiole test records
+type LabTestRecord = {
+  id?: number
+  date: string
+  farm_id?: number | null
+  parameters?: Record<string, any>
+  notes?: string | null
+  created_at?: string | null
+  [key: string]: any // Allow additional fields from specific test types
+}
+
 export interface LabTestWithRecommendations {
-  test: SoilTestRecord | PetioleTestRecord
+  test: LabTestRecord
   type: 'soil' | 'petiole'
   recommendations: Recommendation[]
   age: number // days since test
@@ -87,7 +98,7 @@ export async function checkTestReminders(farmId: number): Promise<{
   soilTestAge?: number
   petioleTestAge?: number
 }> {
-  const SOIL_TEST_INTERVAL_DAYS = 120 // 4 months
+  const SOIL_TEST_INTERVAL_DAYS = 730 // 2 years
   const PETIOLE_TEST_INTERVAL_DAYS = 90 // 3 months
 
   const [latestSoil, latestPetiole] = await Promise.all([

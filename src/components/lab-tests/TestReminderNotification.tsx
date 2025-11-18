@@ -30,6 +30,8 @@ export function TestReminderNotification({
   const [loading, setLoading] = useState(true)
   const [dismissed, setDismissed] = useState(false)
   const [creatingTask, setCreatingTask] = useState(false)
+  const [hasSoilTestTask, setHasSoilTestTask] = useState(false)
+  const [hasPetioleTestTask, setHasPetioleTestTask] = useState(false)
 
   useEffect(() => {
     setDismissed(false)
@@ -38,8 +40,26 @@ export function TestReminderNotification({
   const loadReminders = useCallback(async () => {
     setLoading(true)
     try {
-      const reminderData = await checkTestReminders(farmId)
+      const [reminderData, tasks] = await Promise.all([
+        checkTestReminders(farmId),
+        SupabaseService.getPendingTasks(farmId)
+      ])
+
       setReminders(reminderData)
+
+      // Check if there are already pending tasks for soil or petiole tests
+      const hasSoilTask = tasks.some(
+        (task) =>
+          task.type === 'soil_test' && (task.status === 'pending' || task.status === 'in_progress')
+      )
+      const hasPetioleTask = tasks.some(
+        (task) =>
+          task.type === 'petiole_test' &&
+          (task.status === 'pending' || task.status === 'in_progress')
+      )
+
+      setHasSoilTestTask(hasSoilTask)
+      setHasPetioleTestTask(hasPetioleTask)
     } catch (error) {
       console.error('Error loading test reminders:', error)
     } finally {
@@ -61,7 +81,7 @@ export function TestReminderNotification({
       const title = testType === 'soil' ? 'Conduct Soil Test' : 'Conduct Petiole Test'
       const description =
         testType === 'soil'
-          ? 'It has been over 4 months since the last soil test. Schedule a new soil test to check pH, EC, and nutrient levels for optimal fertilizer planning.'
+          ? 'It has been over 2 years since the last soil test. Schedule a new soil test to check pH, EC, and nutrient levels for optimal fertilizer planning.'
           : 'It has been over 3 months since the last petiole test. Conduct a petiole test during active growth to monitor plant nutrient uptake and adjust fertigation.'
 
       await SupabaseService.addTaskReminder({
@@ -86,42 +106,51 @@ export function TestReminderNotification({
 
   // Don't show if loading, dismissed, or no reminders needed
   if (loading || dismissed || !reminders) return null
-  if (!reminders.soilTestNeeded && !reminders.petioleTestNeeded) return null
+
+  // Don't show soil test reminder if there's already a pending/in-progress task for it
+  const showSoilReminder = reminders.soilTestNeeded && !hasSoilTestTask
+  const showPetioleReminder = reminders.petioleTestNeeded && !hasPetioleTestTask
+
+  // Don't show component if there are no reminders to show
+  if (!showSoilReminder && !showPetioleReminder) return null
 
   // Compact version for dashboard cards
   if (compact) {
     return (
-      <Card className="bg-amber-50 border-amber-300">
+      <Card className="bg-primary/5 border-primary/20">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-              <Bell className="h-4 w-4 text-amber-600" />
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Bell className="h-4 w-4 text-primary" />
             </div>
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-sm text-amber-900">Lab Test Reminder</h3>
-                <Badge variant="outline" className="text-xs bg-amber-100 border-amber-400">
-                  {reminders.soilTestNeeded && reminders.petioleTestNeeded
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-semibold text-sm text-foreground">Lab Test Reminder</h3>
+                <Badge
+                  variant="outline"
+                  className="text-xs bg-primary/10 border-primary/30 text-primary whitespace-nowrap"
+                >
+                  {showSoilReminder && showPetioleReminder
                     ? 'Both Due'
-                    : reminders.soilTestNeeded
+                    : showSoilReminder
                       ? 'Soil Test'
                       : 'Petiole Test'}
                 </Badge>
               </div>
-              <p className="text-xs text-amber-800 leading-relaxed">
-                {reminders.soilTestNeeded && (
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {showSoilReminder && (
                   <>
-                    <strong>Soil test:</strong> Last test was{' '}
+                    <strong className="text-foreground">Soil test:</strong> Last test was{' '}
                     {reminders.soilTestAge
                       ? `${reminders.soilTestAge} days ago`
-                      : 'over 4 months ago'}
+                      : 'over 2 years ago'}
                     {'.'}
-                    {reminders.petioleTestNeeded && <br />}
+                    {showPetioleReminder && <br />}
                   </>
                 )}
-                {reminders.petioleTestNeeded && (
+                {showPetioleReminder && (
                   <>
-                    <strong>Petiole test:</strong> Last test was{' '}
+                    <strong className="text-foreground">Petiole test:</strong> Last test was{' '}
                     {reminders.petioleTestAge
                       ? `${reminders.petioleTestAge} days ago`
                       : 'over 3 months ago'}
@@ -129,19 +158,19 @@ export function TestReminderNotification({
                   </>
                 )}
               </p>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={handleAddTest} className="h-7 text-xs">
-                  <Plus className="h-3 w-3 mr-1" />
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button size="sm" onClick={handleAddTest} className="h-8 text-xs px-3">
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
                   Add Test
                 </Button>
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => setDismissed(true)}
-                  className="h-7 text-xs"
+                  className="h-8 w-8 p-0"
                   aria-label="Dismiss reminder"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
@@ -153,90 +182,120 @@ export function TestReminderNotification({
 
   // Full version for main pages
   return (
-    <Alert className="bg-amber-50 border-amber-300">
-      <FlaskConical className="h-4 w-4 text-amber-600" />
-      <AlertTitle className="text-amber-900 font-semibold">Time for Lab Tests</AlertTitle>
-      <AlertDescription className="space-y-3">
-        <div className="text-sm text-amber-800">
-          {reminders.soilTestNeeded && (
-            <div className="flex items-start gap-2 mb-2">
-              <div className="mt-0.5">🌱</div>
-              <div>
-                <strong>Soil Test Overdue:</strong> Your last soil test was{' '}
-                {reminders.soilTestAge ? (
-                  <>
-                    <Badge variant="outline" className="mx-1 bg-amber-100 border-amber-400">
-                      {reminders.soilTestAge} days ago
-                    </Badge>
-                  </>
-                ) : (
-                  'over 4 months ago'
-                )}
-                . Regular soil testing (every 3-4 months) helps track pH, salinity, and nutrient
-                levels for better fertilizer planning.
-              </div>
-            </div>
-          )}
-          {reminders.petioleTestNeeded && (
-            <div className="flex items-start gap-2">
-              <div className="mt-0.5">🍃</div>
-              <div>
-                <strong>Petiole Test Overdue:</strong> Your last petiole test was{' '}
-                {reminders.petioleTestAge ? (
-                  <>
-                    <Badge variant="outline" className="mx-1 bg-amber-100 border-amber-400">
-                      {reminders.petioleTestAge} days ago
-                    </Badge>
-                  </>
-                ) : (
-                  'over 3 months ago'
-                )}
-                . Petiole tests during active growth help monitor nutrient uptake and adjust
-                fertigation timing.
-              </div>
-            </div>
+    <Alert className="bg-primary/5 border-primary/20 shadow-sm">
+      <div className="flex items-start gap-3 mb-3">
+        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <FlaskConical className="h-5 w-5 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <AlertTitle className="text-foreground font-semibold text-base mb-1">
+            Lab Test Reminder
+          </AlertTitle>
+          {showSoilReminder && showPetioleReminder ? (
+            <Badge
+              variant="outline"
+              className="bg-primary/10 border-primary/30 text-primary text-xs"
+            >
+              Both Tests Due
+            </Badge>
+          ) : (
+            <Badge
+              variant="outline"
+              className="bg-primary/10 border-primary/30 text-primary text-xs"
+            >
+              {showSoilReminder ? 'Soil Test Due' : 'Petiole Test Due'}
+            </Badge>
           )}
         </div>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setDismissed(true)}
+          className="h-9 w-9 p-0 -mt-1 -mr-2"
+          aria-label="Dismiss reminder"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
 
-        <div className="flex flex-wrap gap-2 pt-2">
-          <Button size="sm" onClick={handleAddTest} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add Lab Test Now
-          </Button>
-          {reminders.soilTestNeeded && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleCreateReminder('soil')}
-              disabled={creatingTask}
-              className="flex items-center gap-2"
-            >
-              <Calendar className="h-4 w-4" />
-              {creatingTask ? 'Creating...' : 'Remind Me (Soil)'}
-            </Button>
-          )}
-          {reminders.petioleTestNeeded && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleCreateReminder('petiole')}
-              disabled={creatingTask}
-              className="flex items-center gap-2"
-            >
-              <Calendar className="h-4 w-4" />
-              {creatingTask ? 'Creating...' : 'Remind Me (Petiole)'}
-            </Button>
-          )}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setDismissed(true)}
-            className="flex items-center gap-2"
-          >
-            <X className="h-4 w-4" />
-            Dismiss
-          </Button>
-        </div>
+      <AlertDescription className="space-y-2">
+        {showSoilReminder && (
+          <div className="rounded-2xl bg-background/50 border border-border/40 p-3">
+            <div className="flex items-start gap-2.5 mb-2.5">
+              <div className="text-lg leading-none mt-0.5">🌱</div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-foreground text-sm mb-1">Soil Test</div>
+                <p className="text-muted-foreground text-xs leading-snug">
+                  Last test{' '}
+                  {reminders.soilTestAge ? (
+                    <span className="font-semibold text-primary">
+                      {reminders.soilTestAge} days ago
+                    </span>
+                  ) : (
+                    <span className="font-semibold text-primary">2+ years ago</span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button onClick={handleAddTest} size="sm" className="w-full h-9 text-xs">
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                Add Test
+              </Button>
+              {!hasSoilTestTask && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCreateReminder('soil')}
+                  disabled={creatingTask}
+                  className="w-full h-9 text-xs"
+                >
+                  <Calendar className="h-3.5 w-3.5 mr-1" />
+                  {creatingTask ? 'Creating...' : 'Remind Later'}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {showPetioleReminder && (
+          <div className="rounded-2xl bg-background/50 border border-border/40 p-3">
+            <div className="flex items-start gap-2.5 mb-2.5">
+              <div className="text-lg leading-none mt-0.5">🍃</div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-foreground text-sm mb-1">Petiole Test</div>
+                <p className="text-muted-foreground text-xs leading-snug">
+                  Last test{' '}
+                  {reminders.petioleTestAge ? (
+                    <span className="font-semibold text-primary">
+                      {reminders.petioleTestAge} days ago
+                    </span>
+                  ) : (
+                    <span className="font-semibold text-primary">3+ months ago</span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button onClick={handleAddTest} size="sm" className="w-full h-9 text-xs">
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                Add Test
+              </Button>
+              {!hasPetioleTestTask && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCreateReminder('petiole')}
+                  disabled={creatingTask}
+                  className="w-full h-9 text-xs"
+                >
+                  <Calendar className="h-3.5 w-3.5 mr-1" />
+                  {creatingTask ? 'Creating...' : 'Remind Later'}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
       </AlertDescription>
     </Alert>
   )

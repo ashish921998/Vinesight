@@ -1,13 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { getLatestSoilTest, type LabTestWithRecommendations } from '@/lib/lab-test-integration'
 import { FlaskConical, Download, Calendar, X } from 'lucide-react'
-import { format, differenceInDays } from 'date-fns'
+import { format } from 'date-fns'
 
 interface SoilTestLoadBannerProps {
   farmId: number
@@ -37,15 +36,15 @@ export function SoilTestLoadBanner({ farmId, onLoadTest }: SoilTestLoadBannerPro
 
   const handleLoadTest = () => {
     if (!latestTest) return
-    onLoadTest(latestTest.test.parameters)
+    onLoadTest(latestTest.test.parameters as Record<string, any>)
   }
 
   // Don't show if dismissed or no test available or loading
   if (dismissed || !latestTest || loading) return null
 
-  // Show warning if test is old (>120 days)
+  // Show warning if test is old (>730 days / 2 years)
   const testAge = latestTest.age
-  const isOld = testAge > 120
+  const isOld = testAge > 730
 
   return (
     <Alert
@@ -78,7 +77,7 @@ export function SoilTestLoadBanner({ farmId, onLoadTest }: SoilTestLoadBannerPro
             Load test results to pre-fill soil parameters (pH, EC, N, P, K, micronutrients) instead
             of entering manually.
             {isOld &&
-              ' Note: This test is over 4 months old. Consider taking a new test for accurate recommendations.'}
+              ' Note: This test is over 2 years old. Consider taking a new test for accurate recommendations.'}
           </p>
           <div className="flex gap-2 pt-2">
             <Button
