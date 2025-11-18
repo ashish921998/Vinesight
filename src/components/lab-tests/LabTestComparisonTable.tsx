@@ -21,33 +21,8 @@ interface ParamOption {
   optimalMax: number
 }
 
-export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestComparisonTableProps) {
-  // Check if we have enough data for comparison
-  const hasSoilTests = soilTests.length >= 1
-  const hasPetioleTests = petioleTests.length >= 1
-
-  if (!hasSoilTests && !hasPetioleTests) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="p-6 text-center">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-              <TrendingUp className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-base font-semibold text-foreground">No comparison data yet</h3>
-              <p className="text-xs text-muted-foreground px-4">
-                Add at least 1 test to see parameter comparison
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  // Soil parameter options
-  const soilParamOptions: ParamOption[] = [
+// Soil parameter options
+const soilParamOptions: ParamOption[] = [
     { key: 'ph', label: 'pH', shortLabel: 'pH', unit: '', optimalMin: 6.5, optimalMax: 7.5 },
     { key: 'ec', label: 'EC', shortLabel: 'EC', unit: 'dS/m', optimalMin: 0.5, optimalMax: 2.0 },
     {
@@ -135,8 +110,8 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
     { key: 'boron', label: 'Boron', shortLabel: 'B', unit: 'ppm', optimalMin: 0.5, optimalMax: 1.5 }
   ]
 
-  // Petiole parameter options
-  const petioleParamOptions: ParamOption[] = [
+// Petiole parameter options
+const petioleParamOptions: ParamOption[] = [
     {
       key: 'total_nitrogen',
       label: 'Total Nitrogen',
@@ -246,6 +221,31 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
     }
   ]
 
+export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestComparisonTableProps) {
+  // Check if we have enough data for comparison
+  const hasSoilTests = soilTests.length >= 1
+  const hasPetioleTests = petioleTests.length >= 1
+
+  if (!hasSoilTests && !hasPetioleTests) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="p-6 text-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-semibold text-foreground">No comparison data yet</h3>
+              <p className="text-xs text-muted-foreground px-4">
+                Add at least 1 test to see parameter comparison
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   // Helper function to get cell color based on value and optimal range
   const getCellColor = (
     value: number | null | undefined,
@@ -277,6 +277,17 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
   ): JSX.Element | null => {
     if (currentValue == null || previousValue == null) return null
 
+    // Handle division by zero case
+    if (previousValue === 0) {
+      if (currentValue === 0) {
+        return <Minus className="h-3 w-3 text-gray-500 inline ml-1" />
+      }
+      if (currentValue > 0) {
+        return <TrendingUp className="h-3 w-3 text-green-600 inline ml-1" />
+      }
+      return <TrendingDown className="h-3 w-3 text-red-600 inline ml-1" />
+    }
+
     const change = ((currentValue - previousValue) / previousValue) * 100
 
     if (Math.abs(change) < 5) {
@@ -291,7 +302,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
   }
 
   // Render comparison table
-  const renderComparisonTable = (tests: LabTestRecord[], params: ParamOption[], type: string) => {
+  const renderComparisonTable = (tests: LabTestRecord[], params: ParamOption[]) => {
     // Sort tests by date (oldest to newest)
     const sortedTests = [...tests].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -417,7 +428,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
             </CardHeader>
             <CardContent className="p-0 overflow-hidden">
               <div className="overflow-x-auto">
-                {renderComparisonTable(soilTests, soilParamOptions, 'soil')}
+                {renderComparisonTable(soilTests, soilParamOptions)}
               </div>
 
               {/* Legend */}
@@ -464,7 +475,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
             </CardHeader>
             <CardContent className="p-0 overflow-hidden">
               <div className="overflow-x-auto">
-                {renderComparisonTable(petioleTests, petioleParamOptions, 'petiole')}
+                {renderComparisonTable(petioleTests, petioleParamOptions)}
               </div>
 
               {/* Legend */}

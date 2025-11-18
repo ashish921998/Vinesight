@@ -32,13 +32,24 @@ function LabTestsPage() {
   const [petioleTests, setPetioleTests] = useState<LabTestRecord[]>([])
   const [farmName, setFarmName] = useState<string>('')
 
-  // View mode state - default to table on mobile, chart on desktop
-  const [viewMode, setViewMode] = useState<'chart' | 'table'>(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth < 640 ? 'table' : 'chart'
+  // View mode state - initialize with server-safe default
+  const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart')
+
+  // Set initial view mode based on screen size (client-side only)
+  useEffect(() => {
+    const handleResize = () => {
+      setViewMode(window.innerWidth < 640 ? 'table' : 'chart')
     }
-    return 'chart'
-  })
+
+    // Set initial value
+    handleResize()
+
+    // Add resize listener
+    window.addEventListener('resize', handleResize)
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Modal states
   const [showAddSoilModal, setShowAddSoilModal] = useState(false)
