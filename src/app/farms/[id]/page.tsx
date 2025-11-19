@@ -66,6 +66,7 @@ export default function FarmDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [weatherSummary, setWeatherSummary] = useState<FarmWeatherSummary | null>(null)
+  const [allFarms, setAllFarms] = useState<Farm[]>([])
 
   // Modal states
   const [showDataLogsModal, setShowDataLogsModal] = useState(false)
@@ -104,6 +105,19 @@ export default function FarmDetailsPage() {
       setLoading(false)
     }
   }, [farmId])
+
+  // Load all farms for farm switcher
+  useEffect(() => {
+    const loadAllFarms = async () => {
+      try {
+        const farms = await SupabaseService.getAllFarms()
+        setAllFarms(farms)
+      } catch (error) {
+        logger.error('Error loading all farms:', error)
+      }
+    }
+    loadAllFarms()
+  }, [])
 
   useEffect(() => {
     if (farmId) {
@@ -1220,6 +1234,10 @@ export default function FarmDetailsPage() {
     }
   }
 
+  const handleFarmChange = (newFarmId: number) => {
+    router.push(`/farms/${newFarmId}`)
+  }
+
   const farm = dashboardData?.farm
 
   useEffect(() => {
@@ -1342,6 +1360,8 @@ export default function FarmDetailsPage() {
             onOpenWeatherDetails={() => router.push('/weather')}
             onEditFarm={handleEditFarm}
             onDeleteFarm={handleDeleteFarm}
+            allFarms={allFarms}
+            onFarmChange={handleFarmChange}
           />
         )}
 

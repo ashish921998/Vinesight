@@ -3,6 +3,7 @@
 import type { ElementType } from 'react'
 import {
   ArrowUpRight,
+  ChevronDown,
   ClipboardList,
   Cloud,
   CloudRain,
@@ -26,6 +27,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { type Farm } from '@/types/types'
 import { capitalize, formatRemainingWater, calculateDaysAfterPruning } from '@/lib/utils'
 import { WEATHER_THRESHOLDS } from '@/constants/weather'
@@ -51,6 +59,8 @@ interface FarmHeaderProps {
   onOpenWeatherDetails?: () => void
   onEditFarm?: (farm: Farm) => void
   onDeleteFarm?: (farmId: number) => void
+  allFarms?: Farm[]
+  onFarmChange?: (farmId: number) => void
 }
 
 export function FarmHeader({
@@ -66,7 +76,9 @@ export function FarmHeader({
   weatherSummary,
   onOpenWeatherDetails,
   onEditFarm,
-  onDeleteFarm
+  onDeleteFarm,
+  allFarms,
+  onFarmChange
 }: FarmHeaderProps) {
   const getWeatherConditionIcon = () => {
     if (!weatherSummary) return Sun
@@ -234,12 +246,50 @@ export function FarmHeader({
                 <div className="flex w-full items-start gap-2 sm:items-start">
                   <div className="flex min-w-0 w-full flex-col gap-2">
                     <div className="flex items-center justify-between gap-2 sm:items-start">
-                      <h1
-                        className="w-full truncate text-xl font-semibold tracking-tight text-foreground sm:max-w-[540px] sm:text-3xl"
-                        title={capitalize(farm.name)}
-                      >
-                        {capitalize(farm.name)}
-                      </h1>
+                      {allFarms && allFarms.length > 1 && onFarmChange ? (
+                        <Select
+                          value={farm.id?.toString()}
+                          onValueChange={(value) => onFarmChange(parseInt(value))}
+                        >
+                          <SelectTrigger className="h-auto w-auto border-none bg-transparent p-0 text-xl font-semibold tracking-tight text-foreground hover:text-primary focus:ring-0 focus:ring-offset-0 sm:text-3xl [&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-6 sm:[&>svg]:w-6">
+                            <div className="flex items-center gap-2">
+                              <SelectValue>
+                                <span className="truncate max-w-[200px] sm:max-w-[400px]">
+                                  {capitalize(farm.name)}
+                                </span>
+                              </SelectValue>
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            {allFarms.map((f) => (
+                              <SelectItem
+                                key={f.id}
+                                value={f.id?.toString() || ''}
+                                className="cursor-pointer"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Sprout className="h-4 w-4 text-primary" />
+                                  <div>
+                                    <div className="font-medium">{capitalize(f.name)}</div>
+                                    {f.region && (
+                                      <div className="text-xs text-muted-foreground">
+                                        {capitalize(f.region)}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <h1
+                          className="w-full truncate text-xl font-semibold tracking-tight text-foreground sm:max-w-[540px] sm:text-3xl"
+                          title={capitalize(farm.name)}
+                        >
+                          {capitalize(farm.name)}
+                        </h1>
+                      )}
                       {(onAddLogs || onEditFarm || onDeleteFarm) && (
                         <div className="ml-auto flex items-center gap-1 sm:hidden">
                           {onAddLogs && (
