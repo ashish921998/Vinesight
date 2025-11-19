@@ -66,6 +66,7 @@ export default function FarmDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [weatherSummary, setWeatherSummary] = useState<FarmWeatherSummary | null>(null)
+  const [allFarms, setAllFarms] = useState<Farm[]>([])
 
   // Modal states
   const [showDataLogsModal, setShowDataLogsModal] = useState(false)
@@ -85,6 +86,7 @@ export default function FarmDetailsPage() {
 
   // Farm edit modal states
   const [showFarmModal, setShowFarmModal] = useState(false)
+  const [editingFarm, setEditingFarm] = useState<Farm | null>(null)
   const [farmSubmitLoading, setFarmSubmitLoading] = useState(false)
 
   // AI Features state
@@ -104,6 +106,28 @@ export default function FarmDetailsPage() {
       setLoading(false)
     }
   }, [farmId])
+
+  // Load all farms for farm switcher
+  useEffect(() => {
+    let isMounted = true
+
+    const loadAllFarms = async () => {
+      try {
+        const farms = await SupabaseService.getAllFarms()
+        if (isMounted) {
+          setAllFarms(farms)
+        }
+      } catch (error) {
+        logger.error('Error loading all farms:', error)
+      }
+    }
+
+    loadAllFarms()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   useEffect(() => {
     if (farmId) {
@@ -1188,6 +1212,7 @@ export default function FarmDetailsPage() {
 
   // Farm edit and delete handlers
   const handleEditFarm = (farm: Farm) => {
+    setEditingFarm(farm)
     setShowFarmModal(true)
   }
 
@@ -1206,14 +1231,42 @@ export default function FarmDetailsPage() {
     }
   }
 
+  const handleFarmChange = (newFarmId: number) => {
+    if (!Number.isFinite(newFarmId)) {
+      logger.error('Invalid farm id selected in farm switcher', { newFarmId })
+      return
+    }
+    router.push(`/farms/${newFarmId}`)
+  }
+
+  const handleAddFarm = () => {
+    setEditingFarm(null)
+    setShowFarmModal(true)
+  }
+
   const handleFarmSubmit = async (farmData: any) => {
     try {
       setFarmSubmitLoading(true)
-      await SupabaseService.updateFarm(parseInt(farmId), farmData)
-      await loadDashboardData()
-      setShowFarmModal(false)
+
+      if (editingFarm) {
+        // Edit mode: update existing farm
+        await SupabaseService.updateFarm(parseInt(farmId), farmData)
+        await loadDashboardData()
+        setShowFarmModal(false)
+        setEditingFarm(null)
+      } else {
+        // Create mode: add new farm and navigate to it
+        const newFarm = await SupabaseService.createFarm(farmData)
+        setShowFarmModal(false)
+        setEditingFarm(null)
+
+        // Navigate to the newly created farm's details page
+        if (newFarm && newFarm.id) {
+          router.push(`/farms/${newFarm.id}`)
+        }
+      }
     } catch (error) {
-      logger.error('Error updating farm:', error)
+      logger.error(editingFarm ? 'Error updating farm:' : 'Error creating farm:', error)
       throw error
     } finally {
       setFarmSubmitLoading(false)
@@ -1327,23 +1380,24 @@ export default function FarmDetailsPage() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
-        {farm && (
-          <FarmHeader
-            farm={farm}
-            loading={loading}
-            pendingTasksCount={dashboardData?.pendingTasksCount}
-            totalLogs={totalLogs}
-            totalHarvest={dashboardData?.totalHarvest}
-            totalWaterUsage={dashboardData?.totalWaterUsage}
-            onAddLogs={openDataLogsModal}
-            onOpenWaterCalculator={() => setShowWaterCalculationModal(true)}
-            onViewLogEntries={() => router.push(`/farms/${farmId}/logs`)}
-            weatherSummary={weatherSummary}
-            onOpenWeatherDetails={() => router.push('/weather')}
-            onEditFarm={handleEditFarm}
-            onDeleteFarm={handleDeleteFarm}
-          />
-        )}
+        <FarmHeader
+          farm={farm || ({} as Farm)}
+          loading={loading || !farm}
+          pendingTasksCount={dashboardData?.pendingTasksCount}
+          totalLogs={totalLogs}
+          totalHarvest={dashboardData?.totalHarvest}
+          totalWaterUsage={dashboardData?.totalWaterUsage}
+          onAddLogs={openDataLogsModal}
+          onOpenWaterCalculator={() => setShowWaterCalculationModal(true)}
+          onViewLogEntries={() => router.push(`/farms/${farmId}/logs`)}
+          weatherSummary={weatherSummary}
+          onOpenWeatherDetails={() => router.push('/weather')}
+          onEditFarm={handleEditFarm}
+          onDeleteFarm={handleDeleteFarm}
+          allFarms={allFarms}
+          onFarmChange={handleFarmChange}
+          onAddFarm={handleAddFarm}
+        />
 
         <main className="relative z-10 mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
           <div className="space-y-6">
@@ -1424,16 +1478,17 @@ export default function FarmDetailsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Farm Edit Modal */}
-        {dashboardData?.farm && (
-          <FarmModal
-            isOpen={showFarmModal}
-            onClose={() => setShowFarmModal(false)}
-            onSubmit={handleFarmSubmit}
-            editingFarm={dashboardData.farm}
-            isSubmitting={farmSubmitLoading}
-          />
-        )}
+        {/* Farm Modal (Create/Edit) */}
+        <FarmModal
+          isOpen={showFarmModal}
+          onClose={() => {
+            setShowFarmModal(false)
+            setEditingFarm(null)
+          }}
+          onSubmit={handleFarmSubmit}
+          editingFarm={editingFarm}
+          isSubmitting={farmSubmitLoading}
+        />
       </div>
     </ProtectedRoute>
   )
