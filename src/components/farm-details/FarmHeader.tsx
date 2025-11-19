@@ -2,22 +2,15 @@
 
 import type { ElementType } from 'react'
 import {
-  ArrowUpRight,
   ClipboardList,
-  Cloud,
-  CloudRain,
-  Droplets,
   Gauge,
   Grape,
   ListChecks,
   MoreVertical,
   Plus,
-  Ruler,
   Scissors,
   Sprout,
-  Sun,
-  Thermometer,
-  MapPin
+  Thermometer
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -35,7 +28,6 @@ import {
 } from '@/components/ui/select'
 import { type Farm } from '@/types/types'
 import { capitalize, formatRemainingWater, calculateDaysAfterPruning } from '@/lib/utils'
-import { WEATHER_THRESHOLDS } from '@/constants/weather'
 
 export type FarmWeatherSummary = {
   temperature: number | null
@@ -79,46 +71,8 @@ export function FarmHeader({
   allFarms,
   onFarmChange
 }: FarmHeaderProps) {
-  const getWeatherConditionIcon = () => {
-    if (!weatherSummary) return Sun
-    switch (weatherSummary.condition) {
-      case 'rain':
-        return CloudRain
-      case 'humid':
-        return Cloud
-      default:
-        return Sun
-    }
-  }
-
-  const weatherConditionLabel = (() => {
-    if (!weatherSummary) return null
-    switch (weatherSummary.condition) {
-      case 'rain':
-        return 'Rain expected'
-      case 'humid':
-        return 'Humid conditions'
-      default:
-        return 'Clear skies'
-    }
-  })()
-
-  const WeatherConditionIcon = getWeatherConditionIcon()
   const temperatureLabel =
     weatherSummary && weatherSummary.temperature !== null ? `${weatherSummary.temperature}°C` : null
-  const humidityLabel =
-    weatherSummary && weatherSummary.humidity !== null ? `${weatherSummary.humidity}% RH` : null
-  const precipitationLabel =
-    weatherSummary && weatherSummary.precipitation !== null
-      ? weatherSummary.precipitation > WEATHER_THRESHOLDS.RAIN_MM
-        ? `${weatherSummary.precipitation.toFixed(1)}mm rain`
-        : 'No rain today'
-      : null
-  const hasRainForecast =
-    weatherSummary !== undefined &&
-    weatherSummary !== null &&
-    weatherSummary.precipitation !== null &&
-    weatherSummary.precipitation > WEATHER_THRESHOLDS.RAIN_MM
 
   const formatNumber = (value: number | null | undefined, options?: Intl.NumberFormatOptions) => {
     if (value === null || value === undefined) return '—'
@@ -147,7 +101,6 @@ export function FarmHeader({
   }
 
   const daysAfterPruning = calculateDaysAfterPruning(farm.dateOfPruning)
-  const locationLabel = farm.locationName || (farm.region ? capitalize(farm.region) : null)
 
   const tagItems = [
     daysAfterPruning !== null
@@ -413,58 +366,6 @@ export function FarmHeader({
                     )}
                   </div>
                 )}
-                {/* {weatherSummary && (
-                  <div className="rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/12 via-primary/6 to-transparent px-3 py-3 sm:px-5 sm:py-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-5">
-                      <div className="flex min-w-0 flex-1 items-start gap-3">
-                        <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm sm:h-10 sm:w-10">
-                          <WeatherConditionIcon className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
-                        </span>
-                        <div className="flex min-w-0 flex-col gap-1">
-                          <span className="truncate text-sm font-semibold text-primary">
-                            {weatherConditionLabel}
-                          </span>
-                          <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground sm:text-xs">
-                            {temperatureLabel && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-background/90 px-2.5 py-1 text-foreground/80 shadow-sm">
-                                <Thermometer className="h-3 w-3 text-primary" />
-                                {temperatureLabel}
-                              </span>
-                            )}
-                            {humidityLabel && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-background/90 px-2.5 py-1 text-foreground/80 shadow-sm">
-                                <Droplets className="h-3 w-3 text-primary" />
-                                {humidityLabel}
-                              </span>
-                            )}
-                            {precipitationLabel && (
-                              <span
-                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 shadow-sm ${
-                                  hasRainForecast
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'bg-background/90 text-foreground/80'
-                                }`}
-                              >
-                                <CloudRain className="h-3 w-3" />
-                                {precipitationLabel}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      {onOpenWeatherDetails && (
-                        <Button
-                          size="sm"
-                          onClick={onOpenWeatherDetails}
-                          className="inline-flex h-9 items-center gap-1 rounded-full border border-primary/30 bg-background px-3 text-xs font-semibold text-primary shadow-sm transition hover:bg-primary/10 sm:h-10 sm:px-4 sm:text-sm"
-                        >
-                          Weather
-                          <ArrowUpRight className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )} */}
               </div>
             </div>
             {(onAddLogs || onEditFarm || onDeleteFarm) && (
