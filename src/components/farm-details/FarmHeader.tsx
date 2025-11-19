@@ -288,7 +288,9 @@ export function FarmHeader({
                                   <div className="flex items-center gap-3">
                                     <Sprout className="h-5 w-5 flex-shrink-0 text-primary" />
                                     <div className="min-w-0 flex-1">
-                                      <div className="truncate font-medium">{capitalize(f.name)}</div>
+                                      <div className="truncate font-medium">
+                                        {capitalize(f.name)}
+                                      </div>
                                       {f.region && (
                                         <div className="truncate text-xs text-muted-foreground">
                                           {capitalize(f.region)}
