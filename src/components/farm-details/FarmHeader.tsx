@@ -63,6 +63,7 @@ const FARM_SELECT_MOBILE_OFFSET = 180 // Space reserved for Log + Edit buttons o
 const FARM_SELECT_TEXT_MAX_MOBILE = 140 // Max text width before truncation on mobile (Tailwind: max-w-[140px])
 const FARM_SELECT_TEXT_MAX_DESKTOP = 450 // Max text width before truncation on desktop (Tailwind: sm:max-w-[450px])
 const FARM_SELECT_DROPDOWN_MAX_WIDTH = 320 // Max width for dropdown menu (inline style)
+const FARM_SELECT_LIST_MAX_HEIGHT = 390 // Max height for farm list (shows ~6 farms at 65px each)
 
 export function FarmHeader({
   farm,
@@ -278,7 +279,12 @@ export function FarmHeader({
                             }}
                             className="w-[calc(100vw-2rem)] rounded-xl p-0 sm:w-auto sm:max-w-none"
                           >
-                            <div className="max-h-[50vh] overflow-y-auto p-1">
+                            <div
+                              style={{
+                                maxHeight: `${FARM_SELECT_LIST_MAX_HEIGHT}px`
+                              }}
+                              className="overflow-y-auto p-1"
+                            >
                               {allFarms
                                 .filter((f) => f.id !== null && f.id !== undefined)
                                 .map((f) => (
