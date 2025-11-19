@@ -55,11 +55,13 @@ interface FarmHeaderProps {
 }
 
 // Farm switcher layout constants
-const FARM_SELECT_MIN_WIDTH = 200 // Minimum width for select trigger
-const FARM_SELECT_MOBILE_OFFSET = 180 // Space reserved for Log + Edit buttons on mobile
-const FARM_SELECT_TEXT_MAX_MOBILE = 140 // Max text width before truncation on mobile
-const FARM_SELECT_TEXT_MAX_DESKTOP = 450 // Max text width before truncation on desktop
-const FARM_SELECT_DROPDOWN_MAX_WIDTH = 320 // Max width for dropdown menu
+// Note: FARM_SELECT_MIN_WIDTH and FARM_SELECT_MOBILE_OFFSET use inline styles for dynamic calc()
+// Text max-width values (140px, 450px) are used directly in Tailwind classes for responsive behavior
+const FARM_SELECT_MIN_WIDTH = 200 // Minimum width for select trigger (inline style)
+const FARM_SELECT_MOBILE_OFFSET = 180 // Space reserved for Log + Edit buttons on mobile (inline style)
+const FARM_SELECT_TEXT_MAX_MOBILE = 140 // Max text width before truncation on mobile (Tailwind: max-w-[140px])
+const FARM_SELECT_TEXT_MAX_DESKTOP = 450 // Max text width before truncation on desktop (Tailwind: sm:max-w-[450px])
+const FARM_SELECT_DROPDOWN_MAX_WIDTH = 320 // Max width for dropdown menu (inline style)
 
 export function FarmHeader({
   farm,
@@ -260,10 +262,7 @@ export function FarmHeader({
                             <div className="flex min-w-0 items-center gap-2">
                               <SelectValue>
                                 <span
-                                  style={{
-                                    maxWidth: `${FARM_SELECT_TEXT_MAX_MOBILE}px`
-                                  }}
-                                  className="block truncate sm:max-w-[450px]"
+                                  className="block truncate max-w-[140px] sm:max-w-[450px]"
                                   title={capitalize(farm.name)}
                                 >
                                   {capitalize(farm.name)}
