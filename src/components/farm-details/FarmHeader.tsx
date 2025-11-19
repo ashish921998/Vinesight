@@ -257,25 +257,27 @@ export function FarmHeader({
                             </div>
                           </SelectTrigger>
                           <SelectContent className="max-h-[60vh] w-[calc(100vw-2rem)] max-w-[320px] rounded-xl sm:w-auto sm:max-w-none">
-                            {allFarms.map((f) => (
-                              <SelectItem
-                                key={f.id}
-                                value={f.id?.toString() || ''}
-                                className="cursor-pointer py-3"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <Sprout className="h-5 w-5 flex-shrink-0 text-primary" />
-                                  <div className="min-w-0 flex-1">
-                                    <div className="truncate font-medium">{capitalize(f.name)}</div>
-                                    {f.region && (
-                                      <div className="truncate text-xs text-muted-foreground">
-                                        {capitalize(f.region)}
-                                      </div>
-                                    )}
+                            {allFarms
+                              .filter((f) => f.id !== null && f.id !== undefined)
+                              .map((f) => (
+                                <SelectItem
+                                  key={f.id}
+                                  value={f.id.toString()}
+                                  className="cursor-pointer py-3"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Sprout className="h-5 w-5 flex-shrink-0 text-primary" />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="truncate font-medium">{capitalize(f.name)}</div>
+                                      {f.region && (
+                                        <div className="truncate text-xs text-muted-foreground">
+                                          {capitalize(f.region)}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              </SelectItem>
-                            ))}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                       ) : (
