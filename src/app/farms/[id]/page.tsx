@@ -108,15 +108,24 @@ export default function FarmDetailsPage() {
 
   // Load all farms for farm switcher
   useEffect(() => {
+    let isMounted = true
+
     const loadAllFarms = async () => {
       try {
         const farms = await SupabaseService.getAllFarms()
-        setAllFarms(farms)
+        if (isMounted) {
+          setAllFarms(farms)
+        }
       } catch (error) {
         logger.error('Error loading all farms:', error)
       }
     }
+
     loadAllFarms()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   useEffect(() => {
@@ -1235,6 +1244,10 @@ export default function FarmDetailsPage() {
   }
 
   const handleFarmChange = (newFarmId: number) => {
+    if (!Number.isFinite(newFarmId)) {
+      logger.error('Invalid farm id selected in farm switcher', { newFarmId })
+      return
+    }
     router.push(`/farms/${newFarmId}`)
   }
 

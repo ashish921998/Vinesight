@@ -3,7 +3,6 @@
 import type { ElementType } from 'react'
 import {
   ArrowUpRight,
-  ChevronDown,
   ClipboardList,
   Cloud,
   CloudRain,
@@ -249,12 +248,21 @@ export function FarmHeader({
                       {allFarms && allFarms.length > 1 && onFarmChange ? (
                         <Select
                           value={farm.id?.toString()}
-                          onValueChange={(value) => onFarmChange(parseInt(value))}
+                          onValueChange={(value) => {
+                            const parsedId = Number.parseInt(value, 10)
+                            if (Number.isNaN(parsedId)) {
+                              return
+                            }
+                            onFarmChange(parsedId)
+                          }}
                         >
                           <SelectTrigger className="h-auto w-auto border-none bg-transparent p-0 text-xl font-semibold tracking-tight text-foreground hover:text-primary focus:ring-0 focus:ring-offset-0 sm:text-3xl [&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-6 sm:[&>svg]:w-6">
                             <div className="flex items-center gap-2">
                               <SelectValue>
-                                <span className="truncate max-w-[200px] sm:max-w-[400px]">
+                                <span
+                                  className="truncate max-w-[200px] sm:max-w-[400px]"
+                                  title={capitalize(farm.name)}
+                                >
                                   {capitalize(farm.name)}
                                 </span>
                               </SelectValue>
