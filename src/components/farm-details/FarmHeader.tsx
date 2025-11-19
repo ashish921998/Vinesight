@@ -252,11 +252,11 @@ export function FarmHeader({
                             onFarmChange(parsedId)
                           }}
                         >
-                          <SelectTrigger className="h-auto min-h-[44px] w-auto min-w-[200px] max-w-[calc(100vw-180px)] rounded-xl border border-border/50 bg-muted/30 px-3 py-2 text-left text-base font-semibold tracking-tight text-foreground transition-colors active:bg-muted/50 sm:max-w-[540px] sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:text-3xl sm:hover:text-primary [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-muted-foreground sm:[&>svg]:h-6 sm:[&>svg]:w-6">
+                          <SelectTrigger className="h-[48px] w-auto min-w-[200px] max-w-[calc(100vw-180px)] rounded-xl border border-border/50 bg-muted/30 px-3 text-left text-base font-semibold tracking-tight text-foreground transition-colors active:bg-muted/50 sm:h-auto sm:max-w-[540px] sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:text-3xl sm:hover:text-primary [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-muted-foreground sm:[&>svg]:h-6 sm:[&>svg]:w-6">
                             <div className="flex min-w-0 items-center gap-2">
                               <SelectValue>
                                 <span
-                                  className="block truncate"
+                                  className="block truncate max-w-[140px] sm:max-w-[450px]"
                                   title={capitalize(farm.name)}
                                 >
                                   {capitalize(farm.name)}
