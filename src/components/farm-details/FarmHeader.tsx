@@ -243,8 +243,8 @@ export function FarmHeader({
               </span>
               <div className="flex min-w-0 w-full flex-col gap-3">
                 <div className="flex w-full items-start gap-2 sm:items-start">
-                  <div className="flex min-w-0 w-full flex-col gap-2">
-                    <div className="flex items-center justify-between gap-2 sm:items-start">
+                  <div className="flex min-w-0 w-full flex-col gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:items-start sm:gap-2">
                       {allFarms && allFarms.length > 1 && onFarmChange ? (
                         <Select
                           value={farm.id?.toString()}
@@ -256,11 +256,11 @@ export function FarmHeader({
                             onFarmChange(parsedId)
                           }}
                         >
-                          <SelectTrigger className="h-auto w-auto border-none bg-transparent p-0 text-xl font-semibold tracking-tight text-foreground hover:text-primary focus:ring-0 focus:ring-offset-0 sm:text-3xl [&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-6 sm:[&>svg]:w-6">
-                            <div className="flex items-center gap-2">
+                          <SelectTrigger className="h-auto min-h-[44px] w-auto min-w-[200px] max-w-[calc(100vw-180px)] rounded-xl border border-border/50 bg-muted/30 px-3 py-2 text-left text-base font-semibold tracking-tight text-foreground transition-colors active:bg-muted/50 sm:max-w-[540px] sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:text-3xl sm:hover:text-primary [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-muted-foreground sm:[&>svg]:h-6 sm:[&>svg]:w-6">
+                            <div className="flex min-w-0 items-center gap-2">
                               <SelectValue>
                                 <span
-                                  className="truncate max-w-[200px] sm:max-w-[400px]"
+                                  className="block truncate"
                                   title={capitalize(farm.name)}
                                 >
                                   {capitalize(farm.name)}
@@ -268,19 +268,19 @@ export function FarmHeader({
                               </SelectValue>
                             </div>
                           </SelectTrigger>
-                          <SelectContent className="rounded-xl">
+                          <SelectContent className="max-h-[60vh] w-[calc(100vw-2rem)] max-w-[320px] rounded-xl sm:w-auto sm:max-w-none">
                             {allFarms.map((f) => (
                               <SelectItem
                                 key={f.id}
                                 value={f.id?.toString() || ''}
-                                className="cursor-pointer"
+                                className="cursor-pointer py-3"
                               >
-                                <div className="flex items-center gap-2">
-                                  <Sprout className="h-4 w-4 text-primary" />
-                                  <div>
-                                    <div className="font-medium">{capitalize(f.name)}</div>
+                                <div className="flex items-center gap-3">
+                                  <Sprout className="h-5 w-5 flex-shrink-0 text-primary" />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="truncate font-medium">{capitalize(f.name)}</div>
                                     {f.region && (
-                                      <div className="text-xs text-muted-foreground">
+                                      <div className="truncate text-xs text-muted-foreground">
                                         {capitalize(f.region)}
                                       </div>
                                     )}
@@ -299,7 +299,7 @@ export function FarmHeader({
                         </h1>
                       )}
                       {(onAddLogs || onEditFarm || onDeleteFarm) && (
-                        <div className="ml-auto flex items-center gap-1 sm:hidden">
+                        <div className="flex shrink-0 items-center gap-1 sm:ml-auto sm:hidden">
                           {onAddLogs && (
                             <Button
                               size="sm"
