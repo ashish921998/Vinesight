@@ -54,6 +54,13 @@ interface FarmHeaderProps {
   onFarmChange?: (farmId: number) => void
 }
 
+// Farm switcher layout constants
+const FARM_SELECT_MIN_WIDTH = 200 // Minimum width for select trigger
+const FARM_SELECT_MOBILE_OFFSET = 180 // Space reserved for Log + Edit buttons on mobile
+const FARM_SELECT_TEXT_MAX_MOBILE = 140 // Max text width before truncation on mobile
+const FARM_SELECT_TEXT_MAX_DESKTOP = 450 // Max text width before truncation on desktop
+const FARM_SELECT_DROPDOWN_MAX_WIDTH = 320 // Max width for dropdown menu
+
 export function FarmHeader({
   farm,
   loading,
@@ -244,11 +251,19 @@ export function FarmHeader({
                         >
                           <SelectTrigger
                             disabled={loading}
-                            className="h-[48px] w-auto min-w-[200px] max-w-[calc(100vw-180px)] rounded-xl border border-border/50 bg-muted/30 px-3 text-left text-base font-semibold tracking-tight text-foreground transition-colors active:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:max-w-[540px] sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:text-3xl sm:hover:text-primary [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-muted-foreground sm:[&>svg]:h-6 sm:[&>svg]:w-6">
+                            style={{
+                              minWidth: `${FARM_SELECT_MIN_WIDTH}px`,
+                              maxWidth: `calc(100vw - ${FARM_SELECT_MOBILE_OFFSET}px)`
+                            }}
+                            className="h-[48px] w-auto rounded-xl border border-border/50 bg-muted/30 px-3 text-left text-base font-semibold tracking-tight text-foreground transition-colors active:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:max-w-[540px] sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:text-3xl sm:hover:text-primary [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-muted-foreground sm:[&>svg]:h-6 sm:[&>svg]:w-6"
+                          >
                             <div className="flex min-w-0 items-center gap-2">
                               <SelectValue>
                                 <span
-                                  className="block truncate max-w-[140px] sm:max-w-[450px]"
+                                  style={{
+                                    maxWidth: `${FARM_SELECT_TEXT_MAX_MOBILE}px`
+                                  }}
+                                  className="block truncate sm:max-w-[450px]"
                                   title={capitalize(farm.name)}
                                 >
                                   {capitalize(farm.name)}
@@ -256,7 +271,12 @@ export function FarmHeader({
                               </SelectValue>
                             </div>
                           </SelectTrigger>
-                          <SelectContent className="max-h-[60vh] w-[calc(100vw-2rem)] max-w-[320px] rounded-xl sm:w-auto sm:max-w-none">
+                          <SelectContent
+                            style={{
+                              maxWidth: `${FARM_SELECT_DROPDOWN_MAX_WIDTH}px`
+                            }}
+                            className="max-h-[60vh] w-[calc(100vw-2rem)] rounded-xl sm:w-auto sm:max-w-none"
+                          >
                             {allFarms
                               .filter((f) => f.id !== null && f.id !== undefined)
                               .map((f) => (
