@@ -8,7 +8,6 @@ import {
   CloudRain,
   Droplets,
   Gauge,
-  Grape,
   ListChecks,
   MoreVertical,
   Plus,
@@ -237,10 +236,7 @@ export function FarmHeader({
       <div className="flex flex-col gap-6 p-4 sm:p-6">
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-            <div className="flex w-full items-start gap-3 sm:flex-1 sm:gap-4">
-              <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:h-14 sm:w-14">
-                <Grape className="h-6 w-6 sm:h-7 sm:w-7" />
-              </span>
+            <div className="flex w-full items-start sm:flex-1">
               <div className="flex min-w-0 w-full flex-col gap-3">
                 <div className="flex w-full items-start gap-2 sm:items-start">
                   <div className="flex min-w-0 w-full flex-col gap-3">
