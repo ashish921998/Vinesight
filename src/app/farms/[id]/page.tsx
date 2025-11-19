@@ -86,6 +86,7 @@ export default function FarmDetailsPage() {
 
   // Farm edit modal states
   const [showFarmModal, setShowFarmModal] = useState(false)
+  const [editingFarm, setEditingFarm] = useState<Farm | null>(null)
   const [farmSubmitLoading, setFarmSubmitLoading] = useState(false)
 
   // AI Features state
@@ -1211,6 +1212,7 @@ export default function FarmDetailsPage() {
 
   // Farm edit and delete handlers
   const handleEditFarm = (farm: Farm) => {
+    setEditingFarm(farm)
     setShowFarmModal(true)
   }
 
@@ -1229,20 +1231,6 @@ export default function FarmDetailsPage() {
     }
   }
 
-  const handleFarmSubmit = async (farmData: any) => {
-    try {
-      setFarmSubmitLoading(true)
-      await SupabaseService.updateFarm(parseInt(farmId), farmData)
-      await loadDashboardData()
-      setShowFarmModal(false)
-    } catch (error) {
-      logger.error('Error updating farm:', error)
-      throw error
-    } finally {
-      setFarmSubmitLoading(false)
-    }
-  }
-
   const handleFarmChange = (newFarmId: number) => {
     if (!Number.isFinite(newFarmId)) {
       logger.error('Invalid farm id selected in farm switcher', { newFarmId })
@@ -1252,7 +1240,37 @@ export default function FarmDetailsPage() {
   }
 
   const handleAddFarm = () => {
-    router.push('/farms')
+    setEditingFarm(null)
+    setShowFarmModal(true)
+  }
+
+  const handleFarmSubmit = async (farmData: any) => {
+    try {
+      setFarmSubmitLoading(true)
+
+      if (editingFarm) {
+        // Edit mode: update existing farm
+        await SupabaseService.updateFarm(parseInt(farmId), farmData)
+        await loadDashboardData()
+        setShowFarmModal(false)
+        setEditingFarm(null)
+      } else {
+        // Create mode: add new farm and navigate to it
+        const newFarm = await SupabaseService.createFarm(farmData)
+        setShowFarmModal(false)
+        setEditingFarm(null)
+
+        // Navigate to the newly created farm's details page
+        if (newFarm && newFarm.id) {
+          router.push(`/farms/${newFarm.id}`)
+        }
+      }
+    } catch (error) {
+      logger.error(editingFarm ? 'Error updating farm:' : 'Error creating farm:', error)
+      throw error
+    } finally {
+      setFarmSubmitLoading(false)
+    }
   }
 
   const farm = dashboardData?.farm
@@ -1460,16 +1478,17 @@ export default function FarmDetailsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Farm Edit Modal */}
-        {dashboardData?.farm && (
-          <FarmModal
-            isOpen={showFarmModal}
-            onClose={() => setShowFarmModal(false)}
-            onSubmit={handleFarmSubmit}
-            editingFarm={dashboardData.farm}
-            isSubmitting={farmSubmitLoading}
-          />
-        )}
+        {/* Farm Modal (Create/Edit) */}
+        <FarmModal
+          isOpen={showFarmModal}
+          onClose={() => {
+            setShowFarmModal(false)
+            setEditingFarm(null)
+          }}
+          onSubmit={handleFarmSubmit}
+          editingFarm={editingFarm}
+          isSubmitting={farmSubmitLoading}
+        />
       </div>
     </ProtectedRoute>
   )
