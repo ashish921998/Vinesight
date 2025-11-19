@@ -1251,6 +1251,10 @@ export default function FarmDetailsPage() {
     router.push(`/farms/${newFarmId}`)
   }
 
+  const handleAddFarm = () => {
+    router.push('/farms')
+  }
+
   const farm = dashboardData?.farm
 
   useEffect(() => {
@@ -1374,6 +1378,7 @@ export default function FarmDetailsPage() {
           onDeleteFarm={handleDeleteFarm}
           allFarms={allFarms}
           onFarmChange={handleFarmChange}
+          onAddFarm={handleAddFarm}
         />
 
         <main className="relative z-10 mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">

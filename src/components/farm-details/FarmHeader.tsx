@@ -52,6 +52,7 @@ interface FarmHeaderProps {
   onDeleteFarm?: (farmId: number) => void
   allFarms?: Farm[]
   onFarmChange?: (farmId: number) => void
+  onAddFarm?: () => void
 }
 
 // Farm switcher layout constants
@@ -78,7 +79,8 @@ export function FarmHeader({
   onEditFarm,
   onDeleteFarm,
   allFarms,
-  onFarmChange
+  onFarmChange,
+  onAddFarm
 }: FarmHeaderProps) {
   const temperatureLabel =
     weatherSummary && weatherSummary.temperature !== null ? `${weatherSummary.temperature}°C` : null
@@ -299,6 +301,23 @@ export function FarmHeader({
                                   </div>
                                 </SelectItem>
                               ))}
+                            {onAddFarm && (
+                              <>
+                                <div className="my-1 h-px bg-border" />
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    onAddFarm()
+                                  }}
+                                  className="relative flex w-full cursor-pointer select-none items-center rounded-sm py-3 pl-2 pr-8 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Plus className="h-5 w-5 flex-shrink-0 text-primary" />
+                                    <div className="font-medium text-primary">Add New Farm</div>
+                                  </div>
+                                </button>
+                              </>
+                            )}
                           </SelectContent>
                         </Select>
                       ) : (
