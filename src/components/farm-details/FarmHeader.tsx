@@ -8,6 +8,7 @@ import {
   CloudRain,
   Droplets,
   Gauge,
+  Grape,
   ListChecks,
   MoreVertical,
   Plus,
@@ -172,17 +173,52 @@ export function FarmHeader({
       : null
   ].filter(Boolean) as Array<{ icon: ElementType; label: string; emphasis?: boolean }>
 
-  if (loading) {
+  if (loading || !farm?.id) {
     return (
-      <section className="bg-primary text-primary-foreground">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="h-36 rounded-2xl border border-primary-foreground/20 bg-primary-foreground/10" />
+      <section className="overflow-hidden border border-border bg-card shadow-sm">
+        <div className="flex flex-col gap-6 p-4 sm:p-6">
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+              <div className="flex w-full items-start sm:flex-1">
+                <div className="flex min-w-0 w-full flex-col gap-3">
+                  <div className="flex w-full items-start gap-2 sm:items-start">
+                    <div className="flex min-w-0 w-full flex-col gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:items-start sm:gap-2">
+                        {/* Loading skeleton for farm name */}
+                        <div className="h-[48px] w-[200px] animate-pulse rounded-xl bg-muted sm:h-10 sm:w-[300px]" />
+                        <div className="flex shrink-0 items-center gap-1 sm:ml-auto sm:hidden">
+                          <div className="h-8 w-14 animate-pulse rounded-full bg-muted" />
+                          <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-border/70" />
+        <div className="px-4 pb-4 pt-3 sm:px-6 sm:pb-6 sm:pt-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="flex h-full min-h-[120px] w-full flex-col justify-between rounded-2xl border border-border/60 bg-muted/20 p-3 sm:min-h-[136px] sm:p-3.5"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="h-3 w-20 animate-pulse rounded bg-muted" />
+                  <div className="h-9 w-9 animate-pulse rounded-xl bg-muted sm:h-10 sm:w-10" />
+                </div>
+                <div className="mt-2 h-7 w-16 animate-pulse rounded bg-muted sm:h-8" />
+                <div className="h-3 w-full animate-pulse rounded bg-muted" />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     )
   }
-
-  if (!farm) return null
 
   const hasPendingTasks = (pendingTasksCount ?? 0) > 0
 
@@ -251,8 +287,11 @@ export function FarmHeader({
                             }
                             onFarmChange(parsedId)
                           }}
+                          disabled={loading}
                         >
-                          <SelectTrigger className="h-[48px] w-auto min-w-[200px] max-w-[calc(100vw-180px)] rounded-xl border border-border/50 bg-muted/30 px-3 text-left text-base font-semibold tracking-tight text-foreground transition-colors active:bg-muted/50 sm:h-auto sm:max-w-[540px] sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:text-3xl sm:hover:text-primary [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-muted-foreground sm:[&>svg]:h-6 sm:[&>svg]:w-6">
+                          <SelectTrigger
+                            disabled={loading}
+                            className="h-[48px] w-auto min-w-[200px] max-w-[calc(100vw-180px)] rounded-xl border border-border/50 bg-muted/30 px-3 text-left text-base font-semibold tracking-tight text-foreground transition-colors active:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:max-w-[540px] sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:text-3xl sm:hover:text-primary [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-muted-foreground sm:[&>svg]:h-6 sm:[&>svg]:w-6">
                             <div className="flex min-w-0 items-center gap-2">
                               <SelectValue>
                                 <span
@@ -300,7 +339,8 @@ export function FarmHeader({
                             <Button
                               size="sm"
                               onClick={onAddLogs}
-                              className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                              disabled={loading}
+                              className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
                             >
                               <Plus className="h-4 w-4" />
                               Log
@@ -312,7 +352,8 @@ export function FarmHeader({
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  className="h-8 w-8 shrink-0 rounded-full border border-border/60 bg-muted/70 text-muted-foreground transition hover:border-primary/60 hover:text-primary"
+                                  disabled={loading}
+                                  className="h-8 w-8 shrink-0 rounded-full border border-border/60 bg-muted/70 text-muted-foreground transition hover:border-primary/60 hover:text-primary disabled:opacity-50"
                                   aria-label="Open farm actions"
                                 >
                                   <MoreVertical className="h-4 w-4" />
@@ -431,7 +472,8 @@ export function FarmHeader({
                 {onAddLogs && (
                   <Button
                     onClick={onAddLogs}
-                    className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                    disabled={loading}
+                    className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
                   >
                     <Plus className="h-4 w-4" />
                     Log activity
@@ -443,7 +485,8 @@ export function FarmHeader({
                       <Button
                         variant="outline"
                         size="icon"
-                        className="mt-1 h-11 w-11 shrink-0 rounded-full border-border/70 bg-card text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                        disabled={loading}
+                        className="mt-1 h-11 w-11 shrink-0 rounded-full border-border/70 bg-card text-muted-foreground hover:bg-primary/10 hover:text-primary disabled:opacity-50"
                         aria-label="Open farm actions"
                       >
                         <MoreVertical className="h-4 w-4" />

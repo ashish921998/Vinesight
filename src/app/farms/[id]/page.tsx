@@ -1358,25 +1358,23 @@ export default function FarmDetailsPage() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
-        {farm && (
-          <FarmHeader
-            farm={farm}
-            loading={loading}
-            pendingTasksCount={dashboardData?.pendingTasksCount}
-            totalLogs={totalLogs}
-            totalHarvest={dashboardData?.totalHarvest}
-            totalWaterUsage={dashboardData?.totalWaterUsage}
-            onAddLogs={openDataLogsModal}
-            onOpenWaterCalculator={() => setShowWaterCalculationModal(true)}
-            onViewLogEntries={() => router.push(`/farms/${farmId}/logs`)}
-            weatherSummary={weatherSummary}
-            onOpenWeatherDetails={() => router.push('/weather')}
-            onEditFarm={handleEditFarm}
-            onDeleteFarm={handleDeleteFarm}
-            allFarms={allFarms}
-            onFarmChange={handleFarmChange}
-          />
-        )}
+        <FarmHeader
+          farm={farm || ({} as Farm)}
+          loading={loading || !farm}
+          pendingTasksCount={dashboardData?.pendingTasksCount}
+          totalLogs={totalLogs}
+          totalHarvest={dashboardData?.totalHarvest}
+          totalWaterUsage={dashboardData?.totalWaterUsage}
+          onAddLogs={openDataLogsModal}
+          onOpenWaterCalculator={() => setShowWaterCalculationModal(true)}
+          onViewLogEntries={() => router.push(`/farms/${farmId}/logs`)}
+          weatherSummary={weatherSummary}
+          onOpenWeatherDetails={() => router.push('/weather')}
+          onEditFarm={handleEditFarm}
+          onDeleteFarm={handleDeleteFarm}
+          allFarms={allFarms}
+          onFarmChange={handleFarmChange}
+        />
 
         <main className="relative z-10 mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
           <div className="space-y-6">
