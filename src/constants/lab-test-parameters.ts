@@ -159,8 +159,8 @@ export const petioleParamOptions: ParamOption[] = [
     label: 'Total Nitrogen',
     shortLabel: 'TN',
     unit: '%',
-    optimalMin: 2.0,
-    optimalMax: 3.5,
+    optimalMin: 1.51,
+    optimalMax: 2.21,
     color: '#3b82f6'
   },
   {
@@ -168,8 +168,8 @@ export const petioleParamOptions: ParamOption[] = [
     label: 'Nitrate N',
     shortLabel: 'NO₃-N',
     unit: 'ppm',
-    optimalMin: 500,
-    optimalMax: 1500,
+    optimalMin: 700,
+    optimalMax: 1000,
     color: '#0ea5e9'
   },
   {
@@ -177,8 +177,8 @@ export const petioleParamOptions: ParamOption[] = [
     label: 'Ammonical N',
     shortLabel: 'NH₄-N',
     unit: 'ppm',
-    optimalMin: 500,
-    optimalMax: 1500,
+    optimalMin: 400,
+    optimalMax: 700,
     color: '#38bdf8'
   },
   {
@@ -186,8 +186,8 @@ export const petioleParamOptions: ParamOption[] = [
     label: 'Phosphorus',
     shortLabel: 'P',
     unit: '%',
-    optimalMin: 0.3,
-    optimalMax: 0.5,
+    optimalMin: 0.31,
+    optimalMax: 0.51,
     color: '#f59e0b'
   },
   {
@@ -195,8 +195,8 @@ export const petioleParamOptions: ParamOption[] = [
     label: 'Potassium',
     shortLabel: 'K',
     unit: '%',
-    optimalMin: 1.8,
-    optimalMax: 2.5,
+    optimalMin: 1.51,
+    optimalMax: 2.01,
     color: '#ef4444'
   },
   {
@@ -204,8 +204,8 @@ export const petioleParamOptions: ParamOption[] = [
     label: 'Calcium',
     shortLabel: 'Ca',
     unit: '%',
-    optimalMin: 1.5,
-    optimalMax: 2.5,
+    optimalMin: 1.51,
+    optimalMax: 2.21,
     color: '#10b981'
   },
   {
@@ -213,8 +213,8 @@ export const petioleParamOptions: ParamOption[] = [
     label: 'Magnesium',
     shortLabel: 'Mg',
     unit: '%',
-    optimalMin: 0.4,
-    optimalMax: 0.8,
+    optimalMin: 0.31,
+    optimalMax: 0.61,
     color: '#8b5cf6'
   },
   {
@@ -223,7 +223,7 @@ export const petioleParamOptions: ParamOption[] = [
     shortLabel: 'S',
     unit: '%',
     optimalMin: 0.15,
-    optimalMax: 0.3,
+    optimalMax: 0.51,
     color: '#f97316'
   },
   {
@@ -240,8 +240,8 @@ export const petioleParamOptions: ParamOption[] = [
     label: 'Manganese',
     shortLabel: 'Mn',
     unit: 'ppm',
-    optimalMin: 50,
-    optimalMax: 150,
+    optimalMin: 40,
+    optimalMax: 100,
     color: '#7c3aed'
   },
   {
@@ -258,8 +258,8 @@ export const petioleParamOptions: ParamOption[] = [
     label: 'Copper',
     shortLabel: 'Cu',
     unit: 'ppm',
-    optimalMin: 10,
-    optimalMax: 25,
+    optimalMin: 5,
+    optimalMax: 15,
     color: '#ea580c'
   },
   {
@@ -276,8 +276,8 @@ export const petioleParamOptions: ParamOption[] = [
     label: 'Molybdenum',
     shortLabel: 'Mo',
     unit: 'ppm',
-    optimalMin: 0.05,
-    optimalMax: 0.5,
+    optimalMin: 0.25,
+    optimalMax: 0.51,
     color: '#84cc16'
   },
   {
@@ -285,8 +285,8 @@ export const petioleParamOptions: ParamOption[] = [
     label: 'Sodium',
     shortLabel: 'Na',
     unit: '%',
-    optimalMin: 0.1,
-    optimalMax: 0.5,
+    optimalMin: 0.01,
+    optimalMax: 0.51,
     color: '#14b8a6'
   },
   {
@@ -294,8 +294,8 @@ export const petioleParamOptions: ParamOption[] = [
     label: 'Chloride',
     shortLabel: 'Cl',
     unit: '%',
-    optimalMin: 0.2,
-    optimalMax: 0.8,
+    optimalMin: 0.05,
+    optimalMax: 0.25,
     color: '#d946ef'
   }
 ]
