@@ -29,9 +29,27 @@ export const soilParamOptions: ParamOption[] = [
     label: 'EC',
     shortLabel: 'EC',
     unit: 'dS/m',
-    optimalMin: 0.5,
-    optimalMax: 2.0,
+    optimalMin: 0,
+    optimalMax: 1.0,
     color: '#10b981'
+  },
+  {
+    key: 'organicCarbon',
+    label: 'Organic Carbon',
+    shortLabel: 'OC',
+    unit: '%',
+    optimalMin: 1.01,
+    optimalMax: 3.0,
+    color: '#84cc16'
+  },
+  {
+    key: 'organicMatter',
+    label: 'Organic Matter',
+    shortLabel: 'OM',
+    unit: '%',
+    optimalMin: 2.0,
+    optimalMax: 5.0,
+    color: '#06b6d4'
   },
   {
     key: 'nitrogen',
@@ -47,8 +65,8 @@ export const soilParamOptions: ParamOption[] = [
     label: 'Phosphorus',
     shortLabel: 'P',
     unit: 'ppm',
-    optimalMin: 30,
-    optimalMax: 60,
+    optimalMin: 10,
+    optimalMax: 20,
     color: '#f59e0b'
   },
   {
@@ -56,8 +74,8 @@ export const soilParamOptions: ParamOption[] = [
     label: 'Potassium',
     shortLabel: 'K',
     unit: 'ppm',
-    optimalMin: 250,
-    optimalMax: 400,
+    optimalMin: 120,
+    optimalMax: 200,
     color: '#ef4444'
   },
   {
@@ -65,8 +83,8 @@ export const soilParamOptions: ParamOption[] = [
     label: 'Calcium',
     shortLabel: 'Ca',
     unit: 'ppm',
-    optimalMin: 800,
-    optimalMax: 1500,
+    optimalMin: 1000,
+    optimalMax: 4500,
     color: '#14b8a6'
   },
   {
@@ -74,8 +92,8 @@ export const soilParamOptions: ParamOption[] = [
     label: 'Magnesium',
     shortLabel: 'Mg',
     unit: 'ppm',
-    optimalMin: 150,
-    optimalMax: 300,
+    optimalMin: 500,
+    optimalMax: 1000,
     color: '#d946ef'
   },
   {
@@ -83,35 +101,17 @@ export const soilParamOptions: ParamOption[] = [
     label: 'Sulfur',
     shortLabel: 'S',
     unit: 'ppm',
-    optimalMin: 15,
-    optimalMax: 30,
+    optimalMin: 10,
+    optimalMax: 20,
     color: '#f97316'
-  },
-  {
-    key: 'organicCarbon',
-    label: 'Organic Carbon',
-    shortLabel: 'OC',
-    unit: '%',
-    optimalMin: 1.0,
-    optimalMax: 2.5,
-    color: '#84cc16'
-  },
-  {
-    key: 'organicMatter',
-    label: 'Organic Matter',
-    shortLabel: 'OM',
-    unit: '%',
-    optimalMin: 2.0,
-    optimalMax: 5.0,
-    color: '#06b6d4'
   },
   {
     key: 'iron',
     label: 'Iron',
     shortLabel: 'Fe',
     unit: 'ppm',
-    optimalMin: 4.5,
-    optimalMax: 10.0,
+    optimalMin: 3.1,
+    optimalMax: 5.0,
     color: '#dc2626'
   },
   {
@@ -119,8 +119,8 @@ export const soilParamOptions: ParamOption[] = [
     label: 'Manganese',
     shortLabel: 'Mn',
     unit: 'ppm',
-    optimalMin: 5,
-    optimalMax: 15,
+    optimalMin: 0.6,
+    optimalMax: 1.0,
     color: '#7c3aed'
   },
   {
@@ -129,7 +129,7 @@ export const soilParamOptions: ParamOption[] = [
     shortLabel: 'Zn',
     unit: 'ppm',
     optimalMin: 1.0,
-    optimalMax: 3.0,
+    optimalMax: 1.5,
     color: '#6366f1'
   },
   {
@@ -137,8 +137,8 @@ export const soilParamOptions: ParamOption[] = [
     label: 'Copper',
     shortLabel: 'Cu',
     unit: 'ppm',
-    optimalMin: 0.5,
-    optimalMax: 2.0,
+    optimalMin: 0.3,
+    optimalMax: 0.5,
     color: '#ea580c'
   },
   {
@@ -146,8 +146,8 @@ export const soilParamOptions: ParamOption[] = [
     label: 'Boron',
     shortLabel: 'B',
     unit: 'ppm',
-    optimalMin: 0.5,
-    optimalMax: 1.5,
+    optimalMin: 0,
+    optimalMax: 0.5,
     color: '#ec4899'
   }
 ]
