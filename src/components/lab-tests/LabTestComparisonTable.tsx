@@ -106,7 +106,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
   const getTrendIndicator = (
     currentValue: number | null | undefined,
     previousValue: number | null | undefined
-  ): JSX.Element | null => {
+  ): React.ReactElement | null => {
     if (currentValue == null || previousValue == null) return null
 
     // Handle division by zero case
