@@ -681,7 +681,7 @@ export default function FarmDetailsPage() {
         pushParameter('copper', data.copper)
         pushParameter('boron', data.boron)
         pushParameter('nitrate_nitrogen', data.nitrate_nitrogen)
-        pushParameter('ammonium_nitrogen', data.ammonium_nitrogen)
+        pushParameter('ammonical_nitrogen', data.ammonical_nitrogen)
 
         record = await SupabaseService.addPetioleTestRecord({
           farm_id: parseInt(farmId),
@@ -1052,7 +1052,7 @@ export default function FarmDetailsPage() {
         pushParameter('copper', data.copper)
         pushParameter('boron', data.boron)
         pushParameter('nitrate_nitrogen', data.nitrate_nitrogen)
-        pushParameter('ammonium_nitrogen', data.ammonium_nitrogen)
+        pushParameter('ammonical_nitrogen', data.ammonical_nitrogen)
 
         record = await SupabaseService.updatePetioleTestRecord(originalId, {
           farm_id: parseInt(farmId),

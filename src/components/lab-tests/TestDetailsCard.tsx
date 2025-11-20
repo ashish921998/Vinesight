@@ -467,7 +467,7 @@ export function TestDetailsCard({
                 const majorNutrients = [
                   'total_nitrogen',
                   'nitrate_nitrogen',
-                  'ammonium_nitrogen',
+                  'ammonical_nitrogen',
                   'phosphorus',
                   'potassium'
                 ]
