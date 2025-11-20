@@ -11,6 +11,7 @@ import {
 } from '@/constants/lab-test-parameters'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { formatLabTestValue } from '@/lib/lab-test-utils'
 
 interface LabTestComparisonTableProps {
   soilTests: LabTestRecord[]
@@ -49,11 +50,6 @@ function Legend() {
       </div>
     </div>
   )
-}
-
-// Helper function to format values with appropriate decimal places
-function formatValue(value: number, unit: string): string {
-  return value.toFixed(unit === '%' ? 2 : 1)
 }
 
 export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestComparisonTableProps) {
@@ -186,7 +182,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
                   <div className="flex flex-col">
                     <span className="font-semibold">{param.shortLabel}</span>
                     <span className="text-[9px] text-gray-600 font-normal">
-                      {formatValue(param.optimalMin, param.unit)}-{formatValue(param.optimalMax, param.unit)}
+                      {formatLabTestValue(param.optimalMin, param.unit)}-{formatLabTestValue(param.optimalMax, param.unit)}
                       {param.unit ? ` ${param.unit}` : ''}
                     </span>
                   </div>
@@ -212,7 +208,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
                     >
                       {value != null ? (
                         <div className="flex items-center justify-center">
-                          <span>{formatValue(value, param.unit)}</span>
+                          <span>{formatLabTestValue(value, param.unit)}</span>
                           {trend}
                         </div>
                       ) : (

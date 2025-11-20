@@ -20,6 +20,7 @@ import {
   ReferenceLine
 } from 'recharts'
 import { format } from 'date-fns'
+import { formatLabTestValue } from '@/lib/lab-test-utils'
 
 interface LabTestTrendChartsProps {
   soilTests: LabTestRecord[]
@@ -30,11 +31,6 @@ interface TrendData {
   date: string
   displayDate: string
   [key: string]: string | number | null
-}
-
-// Helper function to format values with appropriate decimal places
-function formatValue(value: number, unit: string): string {
-  return value.toFixed(unit === '%' ? 2 : 1)
 }
 
 export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChartsProps) {
@@ -298,7 +294,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
                         <div key={param.key} className="truncate">
                           <strong className="text-[11px] sm:text-xs">{param.label}:</strong>{' '}
                           <span className="text-[11px] sm:text-xs">
-                            {formatValue(param.optimalMin, param.unit)}-{formatValue(param.optimalMax, param.unit)} {param.unit}
+                            {formatLabTestValue(param.optimalMin, param.unit)}-{formatLabTestValue(param.optimalMax, param.unit)}{param.unit ? ` ${param.unit}` : ''}
                           </span>
                         </div>
                       ))}
@@ -431,7 +427,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
                         <div key={param.key} className="truncate">
                           <strong className="text-[11px] sm:text-xs">{param.label}:</strong>{' '}
                           <span className="text-[11px] sm:text-xs">
-                            {formatValue(param.optimalMin, param.unit)}-{formatValue(param.optimalMax, param.unit)} {param.unit}
+                            {formatLabTestValue(param.optimalMin, param.unit)}-{formatLabTestValue(param.optimalMax, param.unit)}{param.unit ? ` ${param.unit}` : ''}
                           </span>
                         </div>
                       ))}
