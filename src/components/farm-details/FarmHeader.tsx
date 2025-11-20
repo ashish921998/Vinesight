@@ -287,27 +287,31 @@ export function FarmHeader({
                             >
                               {allFarms
                                 .filter((f) => f.id !== null && f.id !== undefined)
-                                .map((f) => (
-                                  <SelectItem
-                                    key={f.id}
-                                    value={f.id.toString()}
-                                    className="cursor-pointer py-3"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <Sprout className="h-5 w-5 flex-shrink-0 text-primary" />
-                                      <div className="min-w-0 flex-1">
-                                        <div className="truncate font-medium">
-                                          {capitalize(f.name)}
-                                        </div>
-                                        {f.region && (
-                                          <div className="truncate text-xs text-muted-foreground">
-                                            {capitalize(f.region)}
+                                .map((f) => {
+                                  // Type guard ensures f.id is defined after filter
+                                  const farmId = f.id!
+                                  return (
+                                    <SelectItem
+                                      key={farmId}
+                                      value={farmId.toString()}
+                                      className="cursor-pointer py-3"
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <Sprout className="h-5 w-5 flex-shrink-0 text-primary" />
+                                        <div className="min-w-0 flex-1">
+                                          <div className="truncate font-medium">
+                                            {capitalize(f.name)}
                                           </div>
-                                        )}
+                                          {f.region && (
+                                            <div className="truncate text-xs text-muted-foreground">
+                                              {capitalize(f.region)}
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>
-                                  </SelectItem>
-                                ))}
+                                    </SelectItem>
+                                  )
+                                })}
                             </div>
                             {onAddFarm && (
                               <div className="sticky bottom-0 border-t border-border bg-popover p-1">
