@@ -46,13 +46,21 @@ export function TestDetailsCard({
 
   // Fetch fresh signed URL when opening report viewer
   const handleOpenReportViewer = async () => {
+    setShowReportViewer(true)
+
+    // If there's no storage path, use the legacy report_url directly
     if (!test.report_storage_path) {
-      console.error('No report storage path available')
+      if (test.report_url) {
+        setFreshReportUrl(test.report_url)
+      } else {
+        console.error('No report URL or storage path available')
+        setFreshReportUrl(null)
+      }
       return
     }
 
+    // Fetch fresh signed URL from storage path
     setLoadingReportUrl(true)
-    setShowReportViewer(true)
 
     try {
       const response = await fetch('/api/test-reports/signed-url', {
@@ -409,12 +417,27 @@ export function TestDetailsCard({
                 ]
                 const other = ['sodium', 'chloride']
 
+                // Find all parameters that aren't in any classification
+                const allKnownParams = [
+                  ...chemicalProperties,
+                  ...majorNutrients,
+                  ...secondaryNutrients,
+                  ...microNutrients,
+                  ...other
+                ]
+                const unknownParams = Object.keys(test.parameters || {}).filter(
+                  (key) => !allKnownParams.includes(key)
+                )
+
                 const sections = [
                   { title: '🧪 Chemical Properties', params: chemicalProperties },
                   { title: '🌿 Major Nutrients', params: majorNutrients },
                   { title: '⚗️ Secondary Nutrients', params: secondaryNutrients },
                   { title: '💧 Micro Nutrients', params: microNutrients },
-                  { title: '📋 Other', params: other }
+                  { title: '📋 Other', params: other },
+                  ...(unknownParams.length > 0
+                    ? [{ title: '📊 Additional Parameters', params: unknownParams }]
+                    : [])
                 ]
 
                 return sections.map(({ title, params }) => {
@@ -459,11 +482,25 @@ export function TestDetailsCard({
                 ]
                 const other = ['sodium', 'chloride']
 
+                // Find all parameters that aren't in any classification
+                const allKnownParams = [
+                  ...majorNutrients,
+                  ...secondaryNutrients,
+                  ...microNutrients,
+                  ...other
+                ]
+                const unknownParams = Object.keys(test.parameters || {}).filter(
+                  (key) => !allKnownParams.includes(key)
+                )
+
                 const sections = [
                   { title: '🌿 Major Nutrients', params: majorNutrients },
                   { title: '⚗️ Secondary Nutrients', params: secondaryNutrients },
                   { title: '💧 Micro Nutrients', params: microNutrients },
-                  { title: '📋 Other', params: other }
+                  { title: '📋 Other', params: other },
+                  ...(unknownParams.length > 0
+                    ? [{ title: '📊 Additional Parameters', params: unknownParams }]
+                    : [])
                 ]
 
                 return sections.map(({ title, params }) => {
