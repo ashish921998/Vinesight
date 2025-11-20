@@ -20,6 +20,7 @@ import {
   ReferenceLine
 } from 'recharts'
 import { format } from 'date-fns'
+import { formatLabTestValue } from '@/lib/lab-test-utils'
 
 interface LabTestTrendChartsProps {
   soilTests: LabTestRecord[]
@@ -293,7 +294,9 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
                         <div key={param.key} className="truncate">
                           <strong className="text-[11px] sm:text-xs">{param.label}:</strong>{' '}
                           <span className="text-[11px] sm:text-xs">
-                            {param.optimalMin}-{param.optimalMax} {param.unit}
+                            {formatLabTestValue(param.optimalMin, param.unit)}-
+                            {formatLabTestValue(param.optimalMax, param.unit)}
+                            {param.unit ? ` ${param.unit}` : ''}
                           </span>
                         </div>
                       ))}
@@ -426,7 +429,9 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
                         <div key={param.key} className="truncate">
                           <strong className="text-[11px] sm:text-xs">{param.label}:</strong>{' '}
                           <span className="text-[11px] sm:text-xs">
-                            {param.optimalMin}-{param.optimalMax} {param.unit}
+                            {formatLabTestValue(param.optimalMin, param.unit)}-
+                            {formatLabTestValue(param.optimalMax, param.unit)}
+                            {param.unit ? ` ${param.unit}` : ''}
                           </span>
                         </div>
                       ))}

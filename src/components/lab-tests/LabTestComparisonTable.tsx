@@ -11,6 +11,7 @@ import {
 } from '@/constants/lab-test-parameters'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { formatLabTestValue } from '@/lib/lab-test-utils'
 
 interface LabTestComparisonTableProps {
   soilTests: LabTestRecord[]
@@ -101,7 +102,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
   const getTrendIndicator = (
     currentValue: number | null | undefined,
     previousValue: number | null | undefined
-  ): JSX.Element | null => {
+  ): React.ReactElement | null => {
     if (currentValue == null || previousValue == null) return null
 
     // Handle division by zero case
@@ -181,7 +182,9 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
                   <div className="flex flex-col">
                     <span className="font-semibold">{param.shortLabel}</span>
                     <span className="text-[9px] text-gray-600 font-normal">
-                      {param.unit || '-'}
+                      {formatLabTestValue(param.optimalMin, param.unit)}-
+                      {formatLabTestValue(param.optimalMax, param.unit)}
+                      {param.unit ? ` ${param.unit}` : ''}
                     </span>
                   </div>
                 </td>
@@ -206,7 +209,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
                     >
                       {value != null ? (
                         <div className="flex items-center justify-center">
-                          <span>{value.toFixed(param.unit === '%' ? 2 : 1)}</span>
+                          <span>{formatLabTestValue(value, param.unit)}</span>
                           {trend}
                         </div>
                       ) : (

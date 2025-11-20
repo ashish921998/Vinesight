@@ -103,7 +103,7 @@ export function LabTestModal({
     // Major Nutrients
     { key: 'total_nitrogen', label: 'Total Nitrogen (%)', type: 'number', step: '0.01' },
     { key: 'nitrate_nitrogen', label: 'Nitrate Nitrogen (ppm)', type: 'number', step: '1' },
-    { key: 'ammonium_nitrogen', label: 'Ammonium Nitrogen (ppm)', type: 'number', step: '1' },
+    { key: 'ammonical_nitrogen', label: 'Ammonical Nitrogen (ppm)', type: 'number', step: '1' },
     { key: 'phosphorus', label: 'Phosphorus (%)', type: 'number', step: '0.01' },
     { key: 'potassium', label: 'Potassium (%)', type: 'number', step: '0.01' },
     // Secondary Nutrients
@@ -146,7 +146,7 @@ export function LabTestModal({
     // Major Nutrients
     total_nitrogen: { min: 0.5, max: 5.0 },
     nitrate_nitrogen: { min: 100, max: 5000 },
-    ammonium_nitrogen: { min: 100, max: 5000 },
+    ammonical_nitrogen: { min: 100, max: 5000 },
     phosphorus: { min: 0.1, max: 1.0 },
     potassium: { min: 0.5, max: 5.0 },
     // Secondary Nutrients
