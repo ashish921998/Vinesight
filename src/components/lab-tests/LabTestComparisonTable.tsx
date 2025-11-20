@@ -182,7 +182,8 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
                   <div className="flex flex-col">
                     <span className="font-semibold">{param.shortLabel}</span>
                     <span className="text-[9px] text-gray-600 font-normal">
-                      {formatLabTestValue(param.optimalMin, param.unit)}-{formatLabTestValue(param.optimalMax, param.unit)}
+                      {formatLabTestValue(param.optimalMin, param.unit)}-
+                      {formatLabTestValue(param.optimalMax, param.unit)}
                       {param.unit ? ` ${param.unit}` : ''}
                     </span>
                   </div>
