@@ -32,6 +32,11 @@ interface TrendData {
   [key: string]: string | number | null
 }
 
+// Helper function to format values with appropriate decimal places
+function formatValue(value: number, unit: string): string {
+  return value.toFixed(unit === '%' ? 2 : 1)
+}
+
 export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChartsProps) {
   const [selectedSoilParams, setSelectedSoilParams] = useState<string[]>(['ph', 'ec'])
   const [selectedPetioleParams, setSelectedPetioleParams] = useState<string[]>([
@@ -293,7 +298,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
                         <div key={param.key} className="truncate">
                           <strong className="text-[11px] sm:text-xs">{param.label}:</strong>{' '}
                           <span className="text-[11px] sm:text-xs">
-                            {param.optimalMin}-{param.optimalMax} {param.unit}
+                            {formatValue(param.optimalMin, param.unit)}-{formatValue(param.optimalMax, param.unit)} {param.unit}
                           </span>
                         </div>
                       ))}
@@ -426,7 +431,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
                         <div key={param.key} className="truncate">
                           <strong className="text-[11px] sm:text-xs">{param.label}:</strong>{' '}
                           <span className="text-[11px] sm:text-xs">
-                            {param.optimalMin}-{param.optimalMax} {param.unit}
+                            {formatValue(param.optimalMin, param.unit)}-{formatValue(param.optimalMax, param.unit)} {param.unit}
                           </span>
                         </div>
                       ))}

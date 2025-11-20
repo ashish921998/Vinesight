@@ -51,6 +51,11 @@ function Legend() {
   )
 }
 
+// Helper function to format values with appropriate decimal places
+function formatValue(value: number, unit: string): string {
+  return value.toFixed(unit === '%' ? 2 : 1)
+}
+
 export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestComparisonTableProps) {
   // Check if we have enough data for comparison
   const hasSoilTests = soilTests.length >= 1
@@ -181,7 +186,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
                   <div className="flex flex-col">
                     <span className="font-semibold">{param.shortLabel}</span>
                     <span className="text-[9px] text-gray-600 font-normal">
-                      {param.optimalMin}-{param.optimalMax}
+                      {formatValue(param.optimalMin, param.unit)}-{formatValue(param.optimalMax, param.unit)}
                       {param.unit ? ` ${param.unit}` : ''}
                     </span>
                   </div>
@@ -207,7 +212,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
                     >
                       {value != null ? (
                         <div className="flex items-center justify-center">
-                          <span>{value.toFixed(param.unit === '%' ? 2 : 1)}</span>
+                          <span>{formatValue(value, param.unit)}</span>
                           {trend}
                         </div>
                       ) : (
