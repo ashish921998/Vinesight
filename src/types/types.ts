@@ -60,6 +60,20 @@ export function taskReminderFromDB(
   }
 }
 
+// Soil texture types for farms
+export type SoilType =
+  | 'sand'
+  | 'loamy_sand'
+  | 'sandy_loam'
+  | 'loam'
+  | 'silt_loam'
+  | 'silt'
+  | 'clay_loam'
+  | 'silty_clay_loam'
+  | 'sandy_clay'
+  | 'silty_clay'
+  | 'clay'
+
 // Complete farm interface with camelCase properties
 export interface Farm {
   id?: number
@@ -83,6 +97,8 @@ export interface Farm {
   locationSource?: 'manual' | 'search' | 'current' // how location was set
   locationUpdatedAt?: string // when location was last updated
   dateOfPruning?: Date // Date object when pruning was done
+  soilType?: SoilType // soil texture classification
+  waterRetention?: number // water holding capacity in percentage (0-100)
   createdAt?: string
   updatedAt?: string
   userId?: string // For multi-user support

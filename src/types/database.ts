@@ -861,6 +861,7 @@ export type Database = {
           region: string
           remaining_water: number | null
           row_spacing: number
+          soil_type: string | null
           system_discharge: number | null
           timezone: string | null
           total_tank_capacity: number | null
@@ -868,6 +869,7 @@ export type Database = {
           user_id: string | null
           vine_spacing: number
           water_calculation_updated_at: string | null
+          water_retention: number | null
         }
         Insert: {
           area: number
@@ -887,6 +889,7 @@ export type Database = {
           region: string
           remaining_water?: number | null
           row_spacing?: number | null
+          soil_type?: string | null
           system_discharge?: number | null
           timezone?: string | null
           total_tank_capacity?: number | null
@@ -894,6 +897,7 @@ export type Database = {
           user_id?: string | null
           vine_spacing?: number | null
           water_calculation_updated_at?: string | null
+          water_retention?: number | null
         }
         Update: {
           area?: number
@@ -913,6 +917,7 @@ export type Database = {
           region?: string
           remaining_water?: number | null
           row_spacing?: number | null
+          soil_type?: string | null
           system_discharge?: number | null
           timezone?: string | null
           total_tank_capacity?: number | null
@@ -920,6 +925,7 @@ export type Database = {
           user_id?: string | null
           vine_spacing?: number | null
           water_calculation_updated_at?: string | null
+          water_retention?: number | null
         }
         Relationships: []
       }

@@ -16,7 +16,7 @@ import { LocationForm } from '@/components/calculators/ETc/LocationForm'
 import { Combobox } from '@/components/ui/combobox'
 import { getAllCrops, getVarietiesForCrop, getDefaultVariety } from '@/lib/crop-data'
 import type { LocationResult } from '@/lib/open-meteo-geocoding'
-import type { Farm } from '@/types/types'
+import type { Farm, SoilType } from '@/types/types'
 
 interface FarmModalProps {
   isOpen: boolean
@@ -38,7 +38,24 @@ interface FormData {
   totalTankCapacity: string
   systemDischarge: string
   dateOfPruning?: Date
+  soilType: string
+  waterRetention: string
 }
+
+// Soil type options for dropdown
+const SOIL_TYPE_OPTIONS: { value: SoilType; label: string }[] = [
+  { value: 'sand', label: 'Sand' },
+  { value: 'loamy_sand', label: 'Loamy Sand' },
+  { value: 'sandy_loam', label: 'Sandy Loam' },
+  { value: 'loam', label: 'Loam' },
+  { value: 'silt_loam', label: 'Silt Loam' },
+  { value: 'silt', label: 'Silt' },
+  { value: 'clay_loam', label: 'Clay Loam' },
+  { value: 'silty_clay_loam', label: 'Silty Clay Loam' },
+  { value: 'sandy_clay', label: 'Sandy Clay' },
+  { value: 'silty_clay', label: 'Silty Clay' },
+  { value: 'clay', label: 'Clay' }
+]
 
 interface LocationData {
   latitude: string
@@ -65,7 +82,9 @@ export function FarmModal({
     rowSpacing: editingFarm?.rowSpacing?.toString() || '',
     totalTankCapacity: editingFarm?.totalTankCapacity?.toString() || '',
     systemDischarge: editingFarm?.systemDischarge?.toString() || '',
-    dateOfPruning: editingFarm?.dateOfPruning || new Date()
+    dateOfPruning: editingFarm?.dateOfPruning || new Date(),
+    soilType: editingFarm?.soilType || '',
+    waterRetention: editingFarm?.waterRetention?.toString() || ''
   }))
 
   const [locationData, setLocationData] = useState<LocationData>(() => ({
@@ -89,7 +108,9 @@ export function FarmModal({
         rowSpacing: editingFarm.rowSpacing?.toString() || '',
         totalTankCapacity: editingFarm.totalTankCapacity?.toString() || '',
         systemDischarge: editingFarm.systemDischarge?.toString() || '',
-        dateOfPruning: editingFarm.dateOfPruning || new Date()
+        dateOfPruning: editingFarm.dateOfPruning || new Date(),
+        soilType: editingFarm.soilType || '',
+        waterRetention: editingFarm.waterRetention?.toString() || ''
       })
 
       setLocationData({
@@ -111,7 +132,9 @@ export function FarmModal({
         rowSpacing: '',
         totalTankCapacity: '',
         systemDischarge: '',
-        dateOfPruning: new Date()
+        dateOfPruning: new Date(),
+        soilType: '',
+        waterRetention: ''
       })
 
       setLocationData({
@@ -176,6 +199,8 @@ export function FarmModal({
         : undefined,
       systemDischarge: formData.systemDischarge ? parseFloat(formData.systemDischarge) : undefined,
       dateOfPruning: formData.dateOfPruning || undefined,
+      soilType: formData.soilType || undefined,
+      waterRetention: formData.waterRetention ? parseFloat(formData.waterRetention) : undefined,
       latitude: locationData.latitude ? parseFloat(locationData.latitude) : undefined,
       longitude: locationData.longitude ? parseFloat(locationData.longitude) : undefined,
       elevation: locationData.elevation ? parseInt(locationData.elevation) : undefined,
@@ -388,6 +413,52 @@ export function FarmModal({
               <p className="text-xs text-gray-500 mt-1">
                 Optional: Default irrigation system discharge rate
               </p>
+            </div>
+
+            {/* Soil and Water Section */}
+            <div className="pt-4 border-t border-gray-200">
+              <div className="mb-3">
+                <h4 className="text-sm font-medium text-gray-700 mb-1">Soil & Water Properties</h4>
+                <p className="text-xs text-gray-500">
+                  Soil characteristics help with irrigation and nutrient calculations
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Soil Type */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Soil Type</Label>
+                  <Combobox
+                    options={SOIL_TYPE_OPTIONS}
+                    value={formData.soilType}
+                    onValueChange={(value) => handleInputChange('soilType', value)}
+                    placeholder="Select soil type"
+                    searchPlaceholder="Search soil types..."
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Optional: Type of soil in your farm</p>
+                </div>
+
+                {/* Water Retention */}
+                <div>
+                  <Label htmlFor="waterRetention" className="text-sm font-medium text-gray-700">
+                    Water Retention (%)
+                  </Label>
+                  <Input
+                    id="waterRetention"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    value={formData.waterRetention}
+                    onChange={(e) => handleInputChange('waterRetention', e.target.value)}
+                    placeholder="25"
+                    className="mt-1 h-11"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Optional: Soil water holding capacity
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Pruning Section */}
