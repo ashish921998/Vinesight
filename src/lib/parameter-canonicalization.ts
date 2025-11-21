@@ -27,17 +27,17 @@ export function canonicalizeParameterKey(key: string): string | null {
     ecdsm: 'ec',
 
     // Organic Carbon
-    oc: 'organic_carbon',
-    organiccarbon: 'organic_carbon',
-    orgcarbon: 'organic_carbon',
-    organiccarbonasc: 'organic_carbon',
-    carbon: 'organic_carbon',
-    orgc: 'organic_carbon',
+    oc: 'organicCarbon',
+    organiccarbon: 'organicCarbon',
+    orgcarbon: 'organicCarbon',
+    organiccarbonasc: 'organicCarbon',
+    carbon: 'organicCarbon',
+    orgc: 'organicCarbon',
 
     // Organic Matter
-    om: 'organic_matter',
-    organicmatter: 'organic_matter',
-    orgmatter: 'organic_matter',
+    om: 'organicMatter',
+    organicmatter: 'organicMatter',
+    orgmatter: 'organicMatter',
 
     // Generic Nitrogen (for soil tests)
     nitrogen: 'nitrogen',
@@ -106,9 +106,9 @@ export function canonicalizeParameterKey(key: string): string | null {
     exchangeablecalcium: 'calcium',
 
     // Calcium Carbonate (soil specific)
-    calciumcarbonate: 'calcium_carbonate',
-    caco3: 'calcium_carbonate',
-    lime: 'calcium_carbonate',
+    calciumcarbonate: 'calciumCarbonate',
+    caco3: 'calciumCarbonate',
+    lime: 'calciumCarbonate',
 
     // Magnesium
     magnesium: 'magnesium',
