@@ -253,62 +253,14 @@ export function LabTestModal({
 
       // Check if extraction was successful
       if (result.extraction?.status === 'success' && result.extraction.parameters) {
-        // Key mapping to normalize API response keys to our field keys
-        // Note: Soil tests use 'nitrogen', petiole tests use 'total_nitrogen'
-        const keyMapping: Record<string, string> = {
-          // Organic carbon variations (soil only)
-          organiccarbon: 'organic_carbon',
-          organicCarbon: 'organic_carbon',
-          organic_carbon_percent: 'organic_carbon',
-          'organic carbon': 'organic_carbon',
-          // Nitrogen variations - keep as total_nitrogen for petiole, nitrogen for soil
-          totalnitrogen: 'total_nitrogen',
-          total_nitrogen: 'total_nitrogen',
-          'total nitrogen': 'total_nitrogen',
-          nitrogen_n: testType === 'soil' ? 'nitrogen' : 'total_nitrogen',
-          // Phosphorus variations
-          phosphorus_p: 'phosphorus',
-          phosphorusp: 'phosphorus',
-          // Potassium variations
-          potassium_k: 'potassium',
-          potassiumk: 'potassium',
-          // Calcium variations
-          calcium_ca: 'calcium',
-          calciumca: 'calcium',
-          // Magnesium variations
-          magnesium_mg: 'magnesium',
-          magnesiummg: 'magnesium',
-          // Sulfur variations (both spellings)
-          sulphur_s: 'sulfur',
-          sulphurs: 'sulfur',
-          sulfur_s: 'sulfur',
-          sulfurs: 'sulfur',
-          // Iron variations (ferrous)
-          ferrous_fe: 'iron',
-          ferrousfe: 'iron',
-          iron_fe: 'iron',
-          ironfe: 'iron',
-          // Manganese variations
-          manganese_mn: 'manganese',
-          manganesemn: 'manganese',
-          // Zinc variations
-          zinc_zn: 'zinc',
-          zinczn: 'zinc',
-          // Copper variations
-          copper_cu: 'copper',
-          coppercu: 'copper',
-          // Boron variations
-          boron_b: 'boron',
-          boronb: 'boron'
-        }
-
         // Auto-fill form fields with extracted parameters
+        // Backend canonicalization already normalizes most keys, but we need to handle
+        // a few edge cases where backend returns different format than form field keys
         const extractedParams: Record<string, string> = {}
         Object.entries(result.extraction.parameters).forEach(([key, value]) => {
           if (typeof value === 'number' && !isNaN(value)) {
-            // Normalize the key using mapping, or use as-is if no mapping exists
-            const normalizedKey = keyMapping[key.toLowerCase()] || key.toLowerCase()
-            extractedParams[normalizedKey] = String(value)
+            // Use the key as-is (backend already canonicalizes)
+            extractedParams[key] = String(value)
           }
         })
 
