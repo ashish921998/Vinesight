@@ -83,7 +83,7 @@ export async function checkTestReminders(farmId: number): Promise<{
   petioleTestAge?: number
 }> {
   const SOIL_TEST_INTERVAL_DAYS = 730 // 2 years
-  const PETIOLE_TEST_INTERVAL_DAYS = 90 // 3 months
+  const PETIOLE_TEST_INTERVAL_DAYS = 30 // 30 days
 
   const [latestSoil, latestPetiole] = await Promise.all([
     getLatestSoilTest(farmId),

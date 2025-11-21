@@ -1399,24 +1399,36 @@ export default function FarmDetailsPage() {
           onAddFarm={handleAddFarm}
         />
 
-        <main className="relative z-10 mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
-          <div className="space-y-6">
+        <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+          {/* Quick Actions Section */}
+          <div className="mb-6">
             <QuickActions />
-            <TestReminderNotification farmId={Number.parseInt(farmId, 10)} />
-            <TasksOverviewCard
-              farmId={Number.parseInt(farmId, 10)}
-              tasks={dashboardData?.pendingTasks || []}
-              farmName={farm?.name ? capitalize(farm.name) : undefined}
-              loading={loading}
-              onTasksUpdated={loadDashboardData}
-            />
-            <ActivityFeed
-              recentActivities={dashboardData?.recentActivities || []}
-              loading={loading}
-              onEditDateGroup={handleEditDateGroup}
-              onDeleteDateGroup={handleDeleteDateGroup}
-              farmId={farmId}
-            />
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            {/* Left Column - Tasks & Reminders (1/3 width on desktop) */}
+            <div className="space-y-6 lg:col-span-1">
+              <TestReminderNotification farmId={Number.parseInt(farmId, 10)} compact />
+              <TasksOverviewCard
+                farmId={Number.parseInt(farmId, 10)}
+                tasks={dashboardData?.pendingTasks || []}
+                farmName={farm?.name ? capitalize(farm.name) : undefined}
+                loading={loading}
+                onTasksUpdated={loadDashboardData}
+              />
+            </div>
+
+            {/* Right Column - Activity Feed (2/3 width on desktop) */}
+            <div className="lg:col-span-2">
+              <ActivityFeed
+                recentActivities={dashboardData?.recentActivities || []}
+                loading={loading}
+                onEditDateGroup={handleEditDateGroup}
+                onDeleteDateGroup={handleDeleteDateGroup}
+                farmId={farmId}
+              />
+            </div>
           </div>
         </main>
 
