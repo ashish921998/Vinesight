@@ -83,7 +83,7 @@ export function TestReminderNotification({
       const description =
         testType === 'soil'
           ? 'It has been over 2 years since the last soil test. Schedule a new soil test to check pH, EC, and nutrient levels for optimal fertilizer planning.'
-          : 'It has been over 3 months since the last petiole test. Conduct a petiole test during active growth to monitor plant nutrient uptake and adjust fertigation.'
+          : 'It has been over 30 days since the last petiole test. Conduct a petiole test during active growth to monitor plant nutrient uptake and adjust fertigation.'
 
       await SupabaseService.addTaskReminder({
         farmId,
@@ -154,7 +154,7 @@ export function TestReminderNotification({
                     <strong className="text-foreground">Petiole test:</strong> Last test was{' '}
                     {reminders.petioleTestAge
                       ? `${reminders.petioleTestAge} days ago`
-                      : 'over 3 months ago'}
+                      : 'over 30 days ago'}
                     .
                   </>
                 )}
@@ -272,7 +272,7 @@ export function TestReminderNotification({
                       {reminders.petioleTestAge} days ago
                     </span>
                   ) : (
-                    <span className="font-semibold text-primary">3+ months ago</span>
+                    <span className="font-semibold text-primary">30+ days ago</span>
                   )}
                 </p>
               </div>
