@@ -30,15 +30,15 @@ export function Navbar() {
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border shadow-sm">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-              <Sprout className="h-5 w-5 text-white" />
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <Sprout className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+            <span className="text-xl font-bold text-primary">
               VineSight
             </span>
           </div>
@@ -46,20 +46,21 @@ export function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navigation.map((item) => (
-              <button
+              <Button
                 key={item.name}
+                variant="ghost"
                 onClick={() => scrollToSection(item.href)}
-                className="text-gray-600 hover:text-gray-900 font-medium transition-colors flex items-center gap-2"
+                className="text-muted-foreground hover:text-foreground font-medium"
               >
-                {item.icon && <item.icon className="h-4 w-4" />}
+                {item.icon && <item.icon className="h-4 w-4 mr-2" />}
                 {item.name}
-              </button>
+              </Button>
             ))}
           </div>
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <LoginButton className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-2 rounded-lg font-medium transition-all transform hover:scale-105">
+            <LoginButton className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-medium transition-all transform hover:scale-105">
               Sign In
             </LoginButton>
           </div>
@@ -79,22 +80,23 @@ export function Navbar() {
 
       {/* Mobile Navigation */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200">
+        <div className="md:hidden bg-background border-t border-border">
           <div className="px-4 py-6 space-y-4">
             {navigation.map((item) => (
-              <button
+              <Button
                 key={item.name}
+                variant="ghost"
                 onClick={() => scrollToSection(item.href)}
-                className="block w-full text-left px-4 py-3 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-colors flex items-center gap-3"
+                className="w-full justify-start px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-accent font-medium"
               >
-                {item.icon && <item.icon className="h-5 w-5" />}
+                {item.icon && <item.icon className="h-5 w-5 mr-3" />}
                 {item.name}
                 <ArrowRight className="h-4 w-4 ml-auto" />
-              </button>
+              </Button>
             ))}
 
-            <div className="pt-4 border-t border-gray-200">
-              <LoginButton className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 rounded-lg font-medium">
+            <div className="pt-4 border-t border-border">
+              <LoginButton className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 rounded-lg font-medium">
                 Sign In to Get Started
               </LoginButton>
             </div>
