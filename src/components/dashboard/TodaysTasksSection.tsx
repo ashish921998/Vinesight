@@ -196,7 +196,9 @@ export function TodaysTasksSection({
               <div>
                 <h4 className="text-sm font-semibold text-foreground">No tasks added</h4>
                 <p className="text-xs text-muted-foreground">
-                  Use the + button above to add your first task for today.
+                  {onAddTask
+                    ? 'Use the + button above to add your first task for today.'
+                    : 'Use your task board to add work for today.'}
                 </p>
               </div>
             </div>

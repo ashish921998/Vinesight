@@ -43,6 +43,7 @@ export function ActivityFeed({
 }: ActivityFeedProps) {
   const router = useRouter()
   const groupedActivities = recentActivities ? groupActivitiesByDate(recentActivities) : []
+  const canNavigateToLogs = Boolean(farmId)
 
   const header = (
     <div className="flex items-center gap-2 text-foreground">
@@ -60,9 +61,11 @@ export function ActivityFeed({
           Start logging irrigation, spray, or notes to build your history.
         </p>
       </div>
-      <Button variant="outline" onClick={() => router.push(`/farms/${farmId}/logs?tab=log`)}>
-        Add first log
-      </Button>
+      {canNavigateToLogs && (
+        <Button variant="outline" onClick={() => router.push(`/farms/${farmId}/logs?tab=log`)}>
+          Add first log
+        </Button>
+      )}
     </div>
   )
 
@@ -247,16 +250,18 @@ export function ActivityFeed({
         {groupedActivities.length > 0 ? (
           <>
             {renderTimeline()}
-            <div className="mt-6">
-              <Button
-                variant="outline"
-                className="w-full rounded-full border-border/70 text-foreground"
-                onClick={() => router.push(`/farms/${farmId}/logs`)}
-              >
-                View full logbook
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
+            {canNavigateToLogs && (
+              <div className="mt-6">
+                <Button
+                  variant="outline"
+                  className="w-full rounded-full border-border/70 text-foreground"
+                  onClick={() => router.push(`/farms/${farmId}/logs`)}
+                >
+                  View full logbook
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </>
         ) : (
           emptyStateCard
