@@ -253,62 +253,28 @@ export function LabTestModal({
 
       // Check if extraction was successful
       if (result.extraction?.status === 'success' && result.extraction.parameters) {
-        // Key mapping to normalize API response keys to our field keys
-        // Note: Soil tests use 'nitrogen', petiole tests use 'total_nitrogen'
-        const keyMapping: Record<string, string> = {
-          // Organic carbon variations (soil only)
-          organiccarbon: 'organic_carbon',
+        // Build a set of valid field keys for the current test type
+        const validFieldKeys = new Set(fields.map((f) => f.key))
+
+        // Map from canonicalized keys (camelCase) to form field keys (snake_case)
+        // This handles cases where backend canonicalization differs from form field keys
+        const canonicalToFieldKey: Record<string, string> = {
           organicCarbon: 'organic_carbon',
-          organic_carbon_percent: 'organic_carbon',
-          'organic carbon': 'organic_carbon',
-          // Nitrogen variations - keep as total_nitrogen for petiole, nitrogen for soil
-          totalnitrogen: 'total_nitrogen',
-          total_nitrogen: 'total_nitrogen',
-          'total nitrogen': 'total_nitrogen',
-          nitrogen_n: testType === 'soil' ? 'nitrogen' : 'total_nitrogen',
-          // Phosphorus variations
-          phosphorus_p: 'phosphorus',
-          phosphorusp: 'phosphorus',
-          // Potassium variations
-          potassium_k: 'potassium',
-          potassiumk: 'potassium',
-          // Calcium variations
-          calcium_ca: 'calcium',
-          calciumca: 'calcium',
-          // Magnesium variations
-          magnesium_mg: 'magnesium',
-          magnesiummg: 'magnesium',
-          // Sulfur variations (both spellings)
-          sulphur_s: 'sulfur',
-          sulphurs: 'sulfur',
-          sulfur_s: 'sulfur',
-          sulfurs: 'sulfur',
-          // Iron variations (ferrous)
-          ferrous_fe: 'iron',
-          ferrousfe: 'iron',
-          iron_fe: 'iron',
-          ironfe: 'iron',
-          // Manganese variations
-          manganese_mn: 'manganese',
-          manganesemn: 'manganese',
-          // Zinc variations
-          zinc_zn: 'zinc',
-          zinczn: 'zinc',
-          // Copper variations
-          copper_cu: 'copper',
-          coppercu: 'copper',
-          // Boron variations
-          boron_b: 'boron',
-          boronb: 'boron'
+          organicMatter: 'organic_matter',
+          calciumCarbonate: 'calcium_carbonate'
         }
 
         // Auto-fill form fields with extracted parameters
         const extractedParams: Record<string, string> = {}
         Object.entries(result.extraction.parameters).forEach(([key, value]) => {
           if (typeof value === 'number' && !isNaN(value)) {
-            // Normalize the key using mapping, or use as-is if no mapping exists
-            const normalizedKey = keyMapping[key.toLowerCase()] || key.toLowerCase()
-            extractedParams[normalizedKey] = String(value)
+            // Map canonicalized key to form field key if needed
+            const fieldKey = canonicalToFieldKey[key] || key
+
+            // Only include parameters that match known field keys
+            if (validFieldKeys.has(fieldKey)) {
+              extractedParams[fieldKey] = String(value)
+            }
           }
         })
 
