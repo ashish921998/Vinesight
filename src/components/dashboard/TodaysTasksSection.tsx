@@ -194,23 +194,12 @@ export function TodaysTasksSection({
                 <CheckCircle2 className="h-4 w-4" />
               </span>
               <div>
-                <h4 className="text-sm font-semibold text-foreground">Desk is clear</h4>
+                <h4 className="text-sm font-semibold text-foreground">No tasks added</h4>
                 <p className="text-xs text-muted-foreground">
-                  Use the window to capture the next task before the day fills up.
+                  Use the + button above to add your first task for today.
                 </p>
               </div>
             </div>
-            {onAddTask && (
-              <Button
-                variant="secondary"
-                size="sm"
-                className="rounded-full bg-primary/10 text-primary shadow-none"
-                onClick={onAddTask}
-              >
-                <Plus className="mr-2 h-3.5 w-3.5" />
-                New task
-              </Button>
-            )}
           </div>
         </div>
       ) : (
