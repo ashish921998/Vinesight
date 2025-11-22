@@ -25,60 +25,7 @@ interface StructuredReportPayload {
 
 type TestType = 'soil' | 'petiole'
 
-const DEFAULT_MODEL = 'gpt-4o-mini'
-
-/**
- * Expected ranges for soil test parameters.
- * Used to detect and correct likely unit conversion errors.
- */
-const SOIL_PARAMETER_RANGES: Record<string, { min: number; max: number; unit: string }> = {
-  ph: { min: 3.5, max: 10.5, unit: '' },
-  ec: { min: 0.01, max: 10.0, unit: 'dS/m' },
-  organicCarbon: { min: 0.05, max: 15.0, unit: '%' },
-  organicMatter: { min: 0.1, max: 20.0, unit: '%' },
-  nitrogen: { min: 1, max: 1000, unit: 'ppm' },
-  phosphorus: { min: 0.5, max: 500, unit: 'ppm' },
-  potassium: { min: 5, max: 2000, unit: 'ppm' },
-  calcium: { min: 50, max: 30000, unit: 'ppm' },
-  magnesium: { min: 10, max: 10000, unit: 'ppm' },
-  sulfur: { min: 1, max: 500, unit: 'ppm' },
-  calciumCarbonate: { min: 0.1, max: 50, unit: '%' },
-  iron: { min: 0.1, max: 200, unit: 'ppm' },
-  manganese: { min: 0.1, max: 200, unit: 'ppm' },
-  zinc: { min: 0.05, max: 50, unit: 'ppm' },
-  copper: { min: 0.05, max: 50, unit: 'ppm' },
-  boron: { min: 0.05, max: 20, unit: 'ppm' },
-  molybdenum: { min: 0.01, max: 10, unit: 'ppm' },
-  sodium: { min: 1, max: 5000, unit: 'ppm' },
-  chloride: { min: 1, max: 5000, unit: 'ppm' }
-}
-
-/**
- * Expected ranges for petiole test parameters.
- * Used to detect and correct likely unit conversion errors.
- */
-const PETIOLE_PARAMETER_RANGES: Record<string, { min: number; max: number; unit: string }> = {
-  // Major Nutrients (%)
-  total_nitrogen: { min: 0.3, max: 6.0, unit: '%' },
-  nitrate_nitrogen: { min: 50, max: 10000, unit: 'ppm' },
-  ammonical_nitrogen: { min: 50, max: 10000, unit: 'ppm' },
-  phosphorus: { min: 0.05, max: 2.0, unit: '%' },
-  potassium: { min: 0.3, max: 6.0, unit: '%' },
-  // Secondary Nutrients (%)
-  calcium: { min: 0.2, max: 6.0, unit: '%' },
-  magnesium: { min: 0.05, max: 3.0, unit: '%' },
-  sulfur: { min: 0.02, max: 2.0, unit: '%' },
-  // Micro Nutrients (ppm / mg/kg)
-  iron: { min: 10, max: 500, unit: 'ppm' },
-  manganese: { min: 5, max: 500, unit: 'ppm' },
-  zinc: { min: 5, max: 300, unit: 'ppm' },
-  copper: { min: 1, max: 100, unit: 'ppm' },
-  boron: { min: 5, max: 200, unit: 'ppm' },
-  molybdenum: { min: 0.01, max: 50, unit: 'ppm' },
-  // Other (%)
-  sodium: { min: 0.005, max: 3.0, unit: '%' },
-  chloride: { min: 0.01, max: 3.0, unit: '%' }
-}
+const DEFAULT_MODEL = 'gpt-4o'
 
 export class ReportParser {
   private static getClient() {
@@ -147,25 +94,40 @@ export class ReportParser {
     if (testType === 'soil') {
       return `Extract all nutrient and soil health parameters from the attached soil test report.
 
-IMPORTANT: Return the EXACT numeric values as they appear in the report. Do NOT convert units or normalize values.
-- For values in % (percent), return the number as-is (e.g., 0.45% → 0.45)
-- For values in ppm or mg/kg, return the number as-is (e.g., 250 ppm → 250, NOT 0.025)
-- For pH values, return as-is (e.g., 7.2)
-- For EC values in dS/m or mS/cm, return as-is
-- Never divide or multiply values to convert between units
+CRITICAL INSTRUCTIONS:
+1. This document contains a TABLE with multiple columns
+2. The table has columns: Sr. No., Parameter, Unit, Actual Result, Limit, Status
+3. You MUST read values from the "Actual Result" column - NOT from "Limit" column
+4. The "Limit" column contains reference ranges (e.g., "6.5 - 7.5", "75 - 150") - DO NOT use these values
+5. The "Actual Result" column contains single numbers - these are the values you need
+6. DO NOT guess or fabricate values - only extract what you can clearly read
 
-Extract these parameters when available:
-- Basic: ph, ec (electrical conductivity)
-- Organic: organic_carbon (%), organic_matter (%)
-- Macronutrients: nitrogen (ppm), phosphorus (ppm), potassium (ppm)
-- Secondary: calcium (ppm), magnesium (ppm), sulfur (ppm), calcium_carbonate (%)
-- Micronutrients: iron (ppm), manganese (ppm), zinc (ppm), copper (ppm), boron (ppm), molybdenum (ppm)
-- Other: sodium, chloride, carbonate, bicarbonate
+EXAMPLE FROM THIS REPORT FORMAT:
+- Row: "pH" | "-" | "8.11" | "6.5 - 7.5" | "High" → Extract ph = 8.11 (from Actual Result, NOT 6.5-7.5)
+- Row: "Organic Carbon" | "%" | "1.47" | "1.01 - 3.0" | "Optimal" → Extract organic_carbon = 1.47
+- Row: "Nitrogen as N" | "ppm" | "156" | "75 - 150" | "High" → Extract nitrogen = 156
+- Row: "Phosphorus as P" | "ppm" | "42" | "10 - 20" | "High" → Extract phosphorus = 42
+- Row: "Calcium as Ca" | "ppm" | "7754" | "1000 - 4500" | "High" → Extract calcium = 7754
 
-Also extract the test date or analysis date if present in the report (return in YYYY-MM-DD format).
-Also return a short summary of key findings, any recommendations or notes, and a confidence score between 0 and 1 describing how certain you are about the extracted numbers.
+VALUE RULES:
+- Return EXACT numbers from "Actual Result" column
+- For % values: 1.47% → 1.47
+- For ppm values: 156 ppm → 156, 7754 ppm → 7754
+- NEVER use values from Limit column
+- If "Actual Result" shows "Nil" or "-", skip that parameter
 
-Respond strictly as JSON with the shape:
+Parameters to extract from "Actual Result" column:
+- ph, ec (electrical conductivity)
+- organic_carbon (%), organic_matter (%)
+- nitrogen, phosphorus, potassium (all in ppm)
+- calcium, magnesium, sulfur (all in ppm)
+- calcium_carbonate (%)
+- iron, manganese, zinc, copper, boron, molybdenum (all in ppm)
+- sodium, chloride, carbonate, bicarbonate (all in ppm)
+
+Also find "Analysis Date" field in the header section (format: DD-Mon-YYYY like "09-Apr-2024") and convert to YYYY-MM-DD.
+
+Respond strictly as JSON:
 {
   "parameters": [
     { "name": "parameter_name", "value": number }
@@ -179,21 +141,31 @@ Respond strictly as JSON with the shape:
 
     return `Extract nutrient values from the attached petiole analysis report.
 
-IMPORTANT: Return the EXACT numeric values as they appear in the report. Do NOT convert units or normalize values.
-- For values in % (percent), return the number as-is (e.g., 1.36% → 1.36)
-- For values in mg/kg or ppm, return the number as-is (e.g., 350 mg/kg → 350, NOT 0.35)
-- Never divide or multiply values to convert between units
+CRITICAL INSTRUCTIONS:
+1. This document contains a TABLE with multiple columns
+2. The table typically has columns: Sr. No., Parameter, Unit, Actual Result, Limit/Range, Status
+3. You MUST read values from the "Actual Result" column - NOT from "Limit" or "Range" column
+4. The "Limit" column contains reference ranges (e.g., "0.8 - 1.2", "1000 - 2000") - DO NOT use these values
+5. The "Actual Result" column contains single numbers - these are the values you need
+6. DO NOT guess or fabricate values - only extract what you can clearly read
 
-Extract these parameters when available:
-- Macronutrients: total_nitrogen (%), nitrate_nitrogen (mg/kg or ppm), ammonical_nitrogen (mg/kg or ppm), phosphorus (%), potassium (%)
-- Secondary nutrients: calcium (%), magnesium (%), sulfur (%)
-- Micronutrients: iron (mg/kg), manganese (mg/kg), zinc (mg/kg), copper (mg/kg), boron (mg/kg), molybdenum (mg/kg)
-- Other: sodium (%), chloride (%)
+VALUE RULES:
+- Return EXACT numbers from "Actual Result" column
+- For % values: 1.36% → 1.36
+- For mg/kg or ppm values: 350 mg/kg → 350, 1500 ppm → 1500
+- NEVER use values from Limit/Range column
+- If "Actual Result" shows "Nil", "-", or "BDL", skip that parameter
 
-Also extract the test date or analysis date if present in the report (return in YYYY-MM-DD format).
-Include a short summary of the analysis, any notes, and a confidence score between 0 and 1 representing extraction certainty.
+Parameters to extract from "Actual Result" column:
+- total_nitrogen (%), nitrate_nitrogen (mg/kg or ppm), ammonical_nitrogen (mg/kg or ppm)
+- phosphorus (%), potassium (%)
+- calcium (%), magnesium (%), sulfur (%)
+- iron (mg/kg), manganese (mg/kg), zinc (mg/kg), copper (mg/kg), boron (mg/kg), molybdenum (mg/kg)
+- sodium (%), chloride (%)
 
-Respond strictly as JSON with the shape:
+Also find "Analysis Date" field in the header section and convert to YYYY-MM-DD format.
+
+Respond strictly as JSON:
 {
   "parameters": [
     { "name": "parameter_name", "value": number }
@@ -222,85 +194,24 @@ Respond strictly as JSON with the shape:
   }
 
   /**
-   * Validates parsed parameters against expected ranges and attempts to correct
-   * likely unit conversion errors (e.g., ppm parsed as % or vice versa).
+   * Returns parameters as-is without modification.
+   *
+   * Previously this method attempted to "correct" unit conversion errors by
+   * multiplying/dividing values outside expected ranges. This was removed
+   * because it violates the requirement to return exact lab numbers:
+   * - Legitimate low readings (e.g., sodium <1 ppm) were incorrectly multiplied
+   * - Legitimate high readings (e.g., peaty soils >20% organic matter) were
+   *   incorrectly divided
+   *
+   * The AI prompt handles unit normalization during extraction; post-processing
+   * should not alter values.
    */
   private static validateAndCorrectParameters(
     parameters: Record<string, number>,
-    testType: TestType
+    _testType: TestType
   ): Record<string, number> {
-    const ranges = testType === 'soil' ? SOIL_PARAMETER_RANGES : PETIOLE_PARAMETER_RANGES
-    const corrected: Record<string, number> = {}
-
-    for (const [key, value] of Object.entries(parameters)) {
-      const range = ranges[key]
-
-      if (!range) {
-        // No range defined, keep as-is
-        corrected[key] = value
-        continue
-      }
-
-      // Check if value is within expected range
-      if (value >= range.min && value <= range.max) {
-        corrected[key] = value
-        continue
-      }
-
-      // Attempt to detect and correct unit conversion errors
-      const correctedValue = this.attemptUnitCorrection(value, range)
-      corrected[key] = correctedValue
-    }
-
-    return corrected
-  }
-
-  /**
-   * Attempts to correct likely unit conversion errors.
-   * Common errors:
-   * - ppm values divided by 1000 (350 → 0.35)
-   * - % values multiplied by 100 (1.36 → 136)
-   */
-  private static attemptUnitCorrection(
-    value: number,
-    range: { min: number; max: number; unit: string }
-  ): number {
-    const { min, max, unit } = range
-
-    // If already in range, return as-is
-    if (value >= min && value <= max) {
-      return value
-    }
-
-    // For ppm/mg/kg parameters that might have been incorrectly divided by 1000
-    // e.g., 350 mg/kg parsed as 0.35
-    if (unit === 'ppm' && value < min && value > 0) {
-      const multiplied = value * 1000
-      if (multiplied >= min && multiplied <= max) {
-        return multiplied
-      }
-    }
-
-    // For % parameters that might have been incorrectly multiplied by 100
-    // e.g., 1.36% parsed as 136
-    if (unit === '%' && value > max) {
-      const divided = value / 100
-      if (divided >= min && divided <= max) {
-        return divided
-      }
-    }
-
-    // For % parameters that might have been parsed from ppm without conversion
-    // e.g., percentage shown as whole number (136 instead of 1.36)
-    if (unit === '%' && value > max && value < 1000) {
-      const divided = value / 100
-      if (divided >= min && divided <= max) {
-        return divided
-      }
-    }
-
-    // Return original value if no correction applies
-    return value
+    // Return exact values from the lab report without modification
+    return { ...parameters }
   }
 
   private static normalizeParameters(parameters: StructuredParameterEntry[]) {
