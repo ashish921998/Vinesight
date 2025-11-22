@@ -253,14 +253,28 @@ export function LabTestModal({
 
       // Check if extraction was successful
       if (result.extraction?.status === 'success' && result.extraction.parameters) {
+        // Build a set of valid field keys for the current test type
+        const validFieldKeys = new Set(fields.map((f) => f.key))
+
+        // Map from canonicalized keys (camelCase) to form field keys (snake_case)
+        // This handles cases where backend canonicalization differs from form field keys
+        const canonicalToFieldKey: Record<string, string> = {
+          organicCarbon: 'organic_carbon',
+          organicMatter: 'organic_matter',
+          calciumCarbonate: 'calcium_carbonate'
+        }
+
         // Auto-fill form fields with extracted parameters
-        // Backend canonicalization already normalizes most keys, but we need to handle
-        // a few edge cases where backend returns different format than form field keys
         const extractedParams: Record<string, string> = {}
         Object.entries(result.extraction.parameters).forEach(([key, value]) => {
           if (typeof value === 'number' && !isNaN(value)) {
-            // Use the key as-is (backend already canonicalizes)
-            extractedParams[key] = String(value)
+            // Map canonicalized key to form field key if needed
+            const fieldKey = canonicalToFieldKey[key] || key
+
+            // Only include parameters that match known field keys
+            if (validFieldKeys.has(fieldKey)) {
+              extractedParams[fieldKey] = String(value)
+            }
           }
         })
 
