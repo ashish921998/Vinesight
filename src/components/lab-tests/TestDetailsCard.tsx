@@ -19,19 +19,7 @@ import {
 import { FileText, Edit, Trash2, Calendar, FileCheck, Sprout } from 'lucide-react'
 import { format } from 'date-fns'
 import { FertilizerPlanGenerator } from './FertilizerPlanGenerator'
-
-export interface LabTestRecord {
-  id: number
-  date: string
-  date_of_pruning?: string | null
-  parameters: Record<string, any>
-  notes?: string | null
-  report_filename?: string | null
-  report_url?: string | null
-  report_storage_path?: string | null
-  extraction_status?: string | null
-  created_at?: string | null
-}
+import type { LabTestRecord } from '@/types/lab-tests'
 
 interface TestDetailsCardProps {
   test: LabTestRecord
@@ -53,12 +41,67 @@ export function TestDetailsCard({
   const [showDetails, setShowDetails] = useState(false)
   const [showReportViewer, setShowReportViewer] = useState(false)
   const [showFertilizerPlan, setShowFertilizerPlan] = useState(false)
+  const [freshReportUrl, setFreshReportUrl] = useState<string | null>(null)
+  const [loadingReportUrl, setLoadingReportUrl] = useState(false)
+
+  // Fetch fresh signed URL when opening report viewer
+  const handleOpenReportViewer = async () => {
+    setShowReportViewer(true)
+
+    // If there's no storage path, use the legacy report_url directly
+    if (!test.report_storage_path) {
+      if (test.report_url) {
+        setFreshReportUrl(test.report_url)
+      } else {
+        console.error('No report URL or storage path available')
+        setFreshReportUrl(null)
+      }
+      return
+    }
+
+    // Fetch fresh signed URL from storage path
+    setLoadingReportUrl(true)
+
+    try {
+      const response = await fetch('/api/test-reports/signed-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          path: test.report_storage_path,
+          expiresIn: 3600 // 1 hour
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        console.error('Failed to get signed URL:', error)
+        throw new Error(error.message || 'Failed to load report')
+      }
+
+      const data = await response.json()
+      setFreshReportUrl(data.signedUrl)
+    } catch (error) {
+      console.error('Error fetching signed URL:', error)
+      // Fallback to the old URL if available
+      setFreshReportUrl(test.report_url || null)
+    } finally {
+      setLoadingReportUrl(false)
+    }
+  }
+
+  // Reset fresh URL when closing report viewer
+  const handleCloseReportViewer = (open: boolean) => {
+    setShowReportViewer(open)
+    if (!open) {
+      setFreshReportUrl(null)
+    }
+  }
 
   // Generate recommendations
   const recommendations =
     testType === 'soil'
-      ? generateSoilTestRecommendations(test.parameters as any)
-      : generatePetioleTestRecommendations(test.parameters as any)
+      ? generateSoilTestRecommendations(test.parameters || {})
+      : generatePetioleTestRecommendations(test.parameters || {})
 
   // Helper to format parameter value
   const formatValue = (value: any, decimals: number = 2): string => {
@@ -73,6 +116,8 @@ export function TestDetailsCard({
   ): { value: number; direction: 'up' | 'down' | 'same' } | null => {
     if (
       !previousTest ||
+      !previousTest.parameters ||
+      !test.parameters ||
       previousTest.parameters[param] === undefined ||
       previousTest.parameters[param] === null ||
       previousTest.parameters[param] === '' ||
@@ -210,7 +255,7 @@ export function TestDetailsCard({
             {/* Key Parameters Preview */}
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
               {keyParams.map((param) => {
-                const value = test.parameters[param.key]
+                const value = test.parameters?.[param.key]
                 const change = getChange(param.key)
 
                 return (
@@ -276,11 +321,11 @@ export function TestDetailsCard({
                   <span className="hidden sm:inline">View Full Details</span>
                   <span className="sm:hidden">Details</span>
                 </Button>
-                {test.report_url && (
+                {(test.report_url || test.report_storage_path) && (
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowReportViewer(true)}
+                    onClick={handleOpenReportViewer}
                     className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm h-7 sm:h-9 px-2 sm:px-3 rounded-2xl"
                     aria-label="View Report"
                   >
@@ -321,43 +366,167 @@ export function TestDetailsCard({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6 mt-4">
-            {/* All Parameters */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">📊 All Parameters</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {Object.entries(test.parameters)
+          <div className="space-y-4 mt-4">
+            {/* All Parameters - Organized by Classification */}
+            {(() => {
+              // Helper to render parameter card
+              const renderParameter = (key: string, value: any) => {
+                const change = getChange(key)
+                return (
+                  <div
+                    key={key}
+                    className="border rounded-lg p-3 bg-muted/30 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="text-xs text-muted-foreground font-medium capitalize">
+                      {key.replace(/_/g, ' ')}
+                    </div>
+                    <div className="text-base font-semibold text-foreground mt-1">
+                      {formatValue(value)}
+                    </div>
+                    {change && change.direction !== 'same' && (
+                      <div
+                        className={`text-xs mt-1 ${change.direction === 'up' ? 'text-blue-600' : 'text-orange-600'}`}
+                      >
+                        {change.direction === 'up' ? '↑' : '↓'} {Math.abs(change.value).toFixed(2)}{' '}
+                        from last test
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+
+              if (testType === 'soil') {
+                // Soil Test Classifications
+                const chemicalProperties = [
+                  'ph',
+                  'ec',
+                  'organic_carbon',
+                  'calcium_carbonate',
+                  'carbonate',
+                  'bicarbonate'
+                ]
+                const majorNutrients = ['nitrogen', 'phosphorus', 'potassium']
+                const secondaryNutrients = ['calcium', 'magnesium', 'sulfur']
+                const microNutrients = [
+                  'iron',
+                  'manganese',
+                  'zinc',
+                  'copper',
+                  'boron',
+                  'molybdenum'
+                ]
+                const other = ['sodium', 'chloride']
+
+                // Find all parameters that aren't in any classification
+                const allKnownParams = [
+                  ...chemicalProperties,
+                  ...majorNutrients,
+                  ...secondaryNutrients,
+                  ...microNutrients,
+                  ...other
+                ]
+                const unknownParams = Object.keys(test.parameters || {}).filter(
+                  (key) => !allKnownParams.includes(key)
+                )
+
+                const sections = [
+                  { title: '🧪 Chemical Properties', params: chemicalProperties },
+                  { title: '🌿 Major Nutrients', params: majorNutrients },
+                  { title: '⚗️ Secondary Nutrients', params: secondaryNutrients },
+                  { title: '💧 Micro Nutrients', params: microNutrients },
+                  { title: '📋 Other', params: other },
+                  ...(unknownParams.length > 0
+                    ? [{ title: '📊 Additional Parameters', params: unknownParams }]
+                    : [])
+                ]
+
+                return sections.map(({ title, params }) => {
+                  const availableParams = params
+                    .map((param) => [param, test.parameters?.[param]])
                     .filter(([_, value]) => value !== null && value !== undefined && value !== '')
-                    .map(([key, value]) => {
-                      const change = getChange(key)
-                      return (
-                        <div
-                          key={key}
-                          className="border rounded-lg p-3 bg-muted/30 hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="text-xs text-muted-foreground font-medium capitalize">
-                            {key.replace(/_/g, ' ')}
-                          </div>
-                          <div className="text-base font-semibold text-foreground mt-1">
-                            {formatValue(value)}
-                          </div>
-                          {change && change.direction !== 'same' && (
-                            <div
-                              className={`text-xs mt-1 ${change.direction === 'up' ? 'text-blue-600' : 'text-orange-600'}`}
-                            >
-                              {change.direction === 'up' ? '↑' : '↓'}{' '}
-                              {Math.abs(change.value).toFixed(2)} from last test
-                            </div>
+
+                  if (availableParams.length === 0) return null
+
+                  return (
+                    <Card key={title}>
+                      <CardHeader>
+                        <CardTitle className="text-base">{title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                          {availableParams.map(([key, value]) =>
+                            renderParameter(key as string, value)
                           )}
                         </div>
-                      )
-                    })}
-                </div>
-              </CardContent>
-            </Card>
+                      </CardContent>
+                    </Card>
+                  )
+                })
+              } else {
+                // Petiole Test Classifications
+                const majorNutrients = [
+                  'total_nitrogen',
+                  'nitrate_nitrogen',
+                  'ammonical_nitrogen',
+                  'phosphorus',
+                  'potassium'
+                ]
+                const secondaryNutrients = ['calcium', 'magnesium', 'sulfur']
+                const microNutrients = [
+                  'iron',
+                  'manganese',
+                  'zinc',
+                  'copper',
+                  'boron',
+                  'molybdenum'
+                ]
+                const other = ['sodium', 'chloride']
+
+                // Find all parameters that aren't in any classification
+                const allKnownParams = [
+                  ...majorNutrients,
+                  ...secondaryNutrients,
+                  ...microNutrients,
+                  ...other
+                ]
+                const unknownParams = Object.keys(test.parameters || {}).filter(
+                  (key) => !allKnownParams.includes(key)
+                )
+
+                const sections = [
+                  { title: '🌿 Major Nutrients', params: majorNutrients },
+                  { title: '⚗️ Secondary Nutrients', params: secondaryNutrients },
+                  { title: '💧 Micro Nutrients', params: microNutrients },
+                  { title: '📋 Other', params: other },
+                  ...(unknownParams.length > 0
+                    ? [{ title: '📊 Additional Parameters', params: unknownParams }]
+                    : [])
+                ]
+
+                return sections.map(({ title, params }) => {
+                  const availableParams = params
+                    .map((param) => [param, test.parameters?.[param]])
+                    .filter(([_, value]) => value !== null && value !== undefined && value !== '')
+
+                  if (availableParams.length === 0) return null
+
+                  return (
+                    <Card key={title}>
+                      <CardHeader>
+                        <CardTitle className="text-base">{title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                          {availableParams.map(([key, value]) =>
+                            renderParameter(key as string, value)
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })
+              }
+            })()}
 
             {/* Recommendations */}
             <TestRecommendations recommendations={recommendations} testType={testType} />
@@ -390,8 +559,8 @@ export function TestDetailsCard({
                           : '⚠️ Manual entry'}
                       </div>
                     </div>
-                    {test.report_url && (
-                      <Button variant="outline" size="sm" onClick={() => setShowReportViewer(true)}>
+                    {(test.report_url || test.report_storage_path) && (
+                      <Button variant="outline" size="sm" onClick={handleOpenReportViewer}>
                         <FileText className="h-4 w-4 mr-2" />
                         View Report
                       </Button>
@@ -405,16 +574,25 @@ export function TestDetailsCard({
       </Dialog>
 
       {/* Report Viewer Dialog */}
-      {test.report_url && (
-        <Dialog open={showReportViewer} onOpenChange={setShowReportViewer}>
-          <DialogContent className="max-w-5xl max-h-[90vh]">
-            <DialogHeader>
-              <DialogTitle>Lab Report - {test.report_filename}</DialogTitle>
-            </DialogHeader>
-            <div className="w-full h-[70vh]">
-              {test.report_filename?.toLowerCase().endsWith('.pdf') ? (
+      <Dialog open={showReportViewer} onOpenChange={handleCloseReportViewer}>
+        <DialogContent className="max-w-5xl max-h-[90vh]">
+          <DialogHeader className="pr-10">
+            <DialogTitle className="text-sm sm:text-base md:text-lg break-words pr-2">
+              Lab Report - {test.report_filename}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="w-full h-[70vh]">
+            {loadingReportUrl ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center space-y-2">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+                  <p className="text-sm text-muted-foreground">Loading report...</p>
+                </div>
+              </div>
+            ) : freshReportUrl ? (
+              test.report_filename?.toLowerCase().endsWith('.pdf') ? (
                 <iframe
-                  src={test.report_url}
+                  src={freshReportUrl}
                   className="w-full h-full border rounded"
                   title={
                     test.report_filename ? `Lab Report: ${test.report_filename}` : 'Lab Test Report'
@@ -422,15 +600,19 @@ export function TestDetailsCard({
                 />
               ) : (
                 <img
-                  src={test.report_url}
+                  src={freshReportUrl}
                   alt="Lab Report"
                   className="w-full h-full object-contain"
                 />
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+              )
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-sm text-muted-foreground">Failed to load report</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Fertilizer Plan Generator Dialog */}
       <FertilizerPlanGenerator

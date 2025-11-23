@@ -24,13 +24,6 @@ export function QuickActions() {
       iconClass: 'bg-accent/20 text-accent-foreground'
     },
     {
-      title: 'Performance reports',
-      description: 'Generate seasonal summaries and share-ready exports.',
-      icon: BarChart3,
-      onClick: () => router.push('/reports'),
-      iconClass: 'bg-secondary/30 text-secondary-foreground'
-    },
-    {
       title: 'Lab Tests',
       description: 'Track soil and petiole test history with insights.',
       icon: FlaskConical,

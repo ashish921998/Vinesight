@@ -100,17 +100,26 @@ export function LabTestModal({
 
   // Field definitions for petiole tests
   const petioleFields = [
+    // Major Nutrients
     { key: 'total_nitrogen', label: 'Total Nitrogen (%)', type: 'number', step: '0.01' },
+    { key: 'nitrate_nitrogen', label: 'Nitrate Nitrogen (ppm)', type: 'number', step: '1' },
+    { key: 'ammonical_nitrogen', label: 'Ammonical Nitrogen (ppm)', type: 'number', step: '1' },
     { key: 'phosphorus', label: 'Phosphorus (%)', type: 'number', step: '0.01' },
     { key: 'potassium', label: 'Potassium (%)', type: 'number', step: '0.01' },
+    // Secondary Nutrients
     { key: 'calcium', label: 'Calcium (%)', type: 'number', step: '0.01' },
     { key: 'magnesium', label: 'Magnesium (%)', type: 'number', step: '0.01' },
     { key: 'sulfur', label: 'Sulfur (%)', type: 'number', step: '0.01' },
+    // Micro Nutrients
     { key: 'iron', label: 'Iron (ppm)', type: 'number', step: '1' },
     { key: 'manganese', label: 'Manganese (ppm)', type: 'number', step: '1' },
     { key: 'zinc', label: 'Zinc (ppm)', type: 'number', step: '1' },
     { key: 'copper', label: 'Copper (ppm)', type: 'number', step: '1' },
-    { key: 'boron', label: 'Boron (ppm)', type: 'number', step: '1' }
+    { key: 'boron', label: 'Boron (ppm)', type: 'number', step: '1' },
+    { key: 'molybdenum', label: 'Molybdenum (ppm)', type: 'number', step: '0.01' },
+    // Other Elements
+    { key: 'sodium', label: 'Sodium (%)', type: 'number', step: '0.01' },
+    { key: 'chloride', label: 'Chloride (%)', type: 'number', step: '0.01' }
   ]
 
   const fields = testType === 'soil' ? soilFields : petioleFields
@@ -134,17 +143,26 @@ export function LabTestModal({
   }
 
   const petioleRanges: Record<string, { min: number; max: number }> = {
+    // Major Nutrients
     total_nitrogen: { min: 0.5, max: 5.0 },
+    nitrate_nitrogen: { min: 100, max: 5000 },
+    ammonical_nitrogen: { min: 100, max: 5000 },
     phosphorus: { min: 0.1, max: 1.0 },
     potassium: { min: 0.5, max: 5.0 },
+    // Secondary Nutrients
     calcium: { min: 0.5, max: 5.0 },
     magnesium: { min: 0.1, max: 2.0 },
     sulfur: { min: 0.05, max: 1.0 },
+    // Micro Nutrients
     iron: { min: 20, max: 300 },
     manganese: { min: 10, max: 200 },
     zinc: { min: 10, max: 200 },
     copper: { min: 2, max: 50 },
-    boron: { min: 10, max: 100 }
+    boron: { min: 10, max: 100 },
+    molybdenum: { min: 0.05, max: 2.0 },
+    // Other Elements
+    sodium: { min: 0.05, max: 2.0 },
+    chloride: { min: 0.05, max: 2.0 }
   }
 
   const ranges = testType === 'soil' ? soilRanges : petioleRanges
@@ -235,62 +253,28 @@ export function LabTestModal({
 
       // Check if extraction was successful
       if (result.extraction?.status === 'success' && result.extraction.parameters) {
-        // Key mapping to normalize API response keys to our field keys
-        // Note: Soil tests use 'nitrogen', petiole tests use 'total_nitrogen'
-        const keyMapping: Record<string, string> = {
-          // Organic carbon variations (soil only)
-          organiccarbon: 'organic_carbon',
+        // Build a set of valid field keys for the current test type
+        const validFieldKeys = new Set(fields.map((f) => f.key))
+
+        // Map from canonicalized keys (camelCase) to form field keys (snake_case)
+        // This handles cases where backend canonicalization differs from form field keys
+        const canonicalToFieldKey: Record<string, string> = {
           organicCarbon: 'organic_carbon',
-          organic_carbon_percent: 'organic_carbon',
-          'organic carbon': 'organic_carbon',
-          // Nitrogen variations - keep as total_nitrogen for petiole, nitrogen for soil
-          totalnitrogen: 'total_nitrogen',
-          total_nitrogen: 'total_nitrogen',
-          'total nitrogen': 'total_nitrogen',
-          nitrogen_n: testType === 'soil' ? 'nitrogen' : 'total_nitrogen',
-          // Phosphorus variations
-          phosphorus_p: 'phosphorus',
-          phosphorusp: 'phosphorus',
-          // Potassium variations
-          potassium_k: 'potassium',
-          potassiumk: 'potassium',
-          // Calcium variations
-          calcium_ca: 'calcium',
-          calciumca: 'calcium',
-          // Magnesium variations
-          magnesium_mg: 'magnesium',
-          magnesiummg: 'magnesium',
-          // Sulfur variations (both spellings)
-          sulphur_s: 'sulfur',
-          sulphurs: 'sulfur',
-          sulfur_s: 'sulfur',
-          sulfurs: 'sulfur',
-          // Iron variations (ferrous)
-          ferrous_fe: 'iron',
-          ferrousfe: 'iron',
-          iron_fe: 'iron',
-          ironfe: 'iron',
-          // Manganese variations
-          manganese_mn: 'manganese',
-          manganesemn: 'manganese',
-          // Zinc variations
-          zinc_zn: 'zinc',
-          zinczn: 'zinc',
-          // Copper variations
-          copper_cu: 'copper',
-          coppercu: 'copper',
-          // Boron variations
-          boron_b: 'boron',
-          boronb: 'boron'
+          organicMatter: 'organic_matter',
+          calciumCarbonate: 'calcium_carbonate'
         }
 
         // Auto-fill form fields with extracted parameters
         const extractedParams: Record<string, string> = {}
         Object.entries(result.extraction.parameters).forEach(([key, value]) => {
           if (typeof value === 'number' && !isNaN(value)) {
-            // Normalize the key using mapping, or use as-is if no mapping exists
-            const normalizedKey = keyMapping[key.toLowerCase()] || key.toLowerCase()
-            extractedParams[normalizedKey] = String(value)
+            // Map canonicalized key to form field key if needed
+            const fieldKey = canonicalToFieldKey[key] || key
+
+            // Only include parameters that match known field keys
+            if (validFieldKeys.has(fieldKey)) {
+              extractedParams[fieldKey] = String(value)
+            }
           }
         })
 

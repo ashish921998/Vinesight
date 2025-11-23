@@ -252,7 +252,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   if (farms.length === 0) {
     return (
       <EmptyStateDashboard
-        userName={user?.email?.split('@')[0]}
+        userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
         onCreateFarm={() => router.push('/farms')}
       />
     )
