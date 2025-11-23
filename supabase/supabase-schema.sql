@@ -93,6 +93,12 @@ CREATE TABLE expense_records (
   cost DECIMAL(12,2) NOT NULL,
   date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   remarks TEXT,
+  -- Labor-specific fields (nullable, only used when type = 'labor')
+  num_workers INTEGER, -- Number of laborers
+  hours_worked DECIMAL(6,2), -- Total hours worked
+  work_type VARCHAR(50), -- Type of work (pruning, harvesting, spraying, weeding, etc.)
+  rate_per_unit DECIMAL(10,2), -- Hourly or daily wage rate
+  worker_names TEXT, -- Comma-separated worker names
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

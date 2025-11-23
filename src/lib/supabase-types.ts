@@ -495,16 +495,29 @@ export function toDatabaseHarvestUpdate(
 export function toApplicationExpenseRecord(
   dbRecord: DatabaseExpenseRecord
 ): import('./supabase').ExpenseRecord {
+  const record = dbRecord as DatabaseExpenseRecord & {
+    num_workers?: number | null
+    hours_worked?: number | null
+    work_type?: string | null
+    rate_per_unit?: number | null
+    worker_names?: string | null
+  }
   return {
-    id: dbRecord.id,
-    farm_id: dbRecord.farm_id!,
-    date: dbRecord.date,
-    type: dbRecord.type as 'labor' | 'materials' | 'equipment' | 'fuel' | 'other',
-    description: dbRecord.description,
-    cost: dbRecord.cost,
-    date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
-    remarks: dbRecord.remarks || undefined,
-    created_at: dbRecord.created_at || undefined
+    id: record.id,
+    farm_id: record.farm_id!,
+    date: record.date,
+    type: record.type as 'labor' | 'materials' | 'equipment' | 'fuel' | 'other',
+    description: record.description,
+    cost: record.cost,
+    date_of_pruning: record.date_of_pruning ? new Date(record.date_of_pruning) : undefined,
+    remarks: record.remarks || undefined,
+    // Labor-specific fields
+    num_workers: record.num_workers || undefined,
+    hours_worked: record.hours_worked || undefined,
+    work_type: record.work_type || undefined,
+    rate_per_unit: record.rate_per_unit || undefined,
+    worker_names: record.worker_names || undefined,
+    created_at: record.created_at || undefined
   }
 }
 
@@ -518,14 +531,20 @@ export function toDatabaseExpenseInsert(
     description: appRecord.description,
     cost: appRecord.cost,
     date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
-    remarks: appRecord.remarks || null
+    remarks: appRecord.remarks || null,
+    // Labor-specific fields
+    num_workers: appRecord.num_workers || null,
+    hours_worked: appRecord.hours_worked || null,
+    work_type: appRecord.work_type || null,
+    rate_per_unit: appRecord.rate_per_unit || null,
+    worker_names: appRecord.worker_names || null
   } as DatabaseExpenseRecordInsert
 }
 
 export function toDatabaseExpenseUpdate(
   appUpdates: Partial<import('./supabase').ExpenseRecord>
 ): DatabaseExpenseRecordUpdate {
-  const update: DatabaseExpenseRecordUpdate = {}
+  const update: DatabaseExpenseRecordUpdate = {} as any
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
@@ -535,6 +554,12 @@ export function toDatabaseExpenseUpdate(
   if (appUpdates.date_of_pruning !== undefined)
     update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.remarks !== undefined) update.remarks = appUpdates.remarks || null
+  // Labor-specific fields
+  if (appUpdates.num_workers !== undefined) update.num_workers = appUpdates.num_workers || null
+  if (appUpdates.hours_worked !== undefined) update.hours_worked = appUpdates.hours_worked || null
+  if (appUpdates.work_type !== undefined) update.work_type = appUpdates.work_type || null
+  if (appUpdates.rate_per_unit !== undefined) update.rate_per_unit = appUpdates.rate_per_unit || null
+  if (appUpdates.worker_names !== undefined) update.worker_names = appUpdates.worker_names || null
 
   return update
 }

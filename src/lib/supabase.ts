@@ -109,6 +109,12 @@ export interface ExpenseRecord {
   cost: number
   date_of_pruning?: Date // Date object of pruning when this record was created (snapshot from farm level)
   remarks?: string
+  // Labor-specific fields (only used when type = 'labor')
+  num_workers?: number // Number of laborers
+  hours_worked?: number // Total hours worked
+  work_type?: string // Type of work (pruning, harvesting, spraying, weeding, etc.)
+  rate_per_unit?: number // Hourly or daily wage rate
+  worker_names?: string // Comma-separated worker names
   created_at?: string
 }
 

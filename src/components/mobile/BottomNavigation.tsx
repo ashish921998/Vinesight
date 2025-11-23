@@ -175,8 +175,8 @@ const logTypes = [
       {
         name: 'category',
         label: 'Category',
-        type: 'text' as const,
-        placeholder: 'e.g., Labor, Materials, Fuel',
+        type: 'select' as const,
+        options: ['labor', 'materials', 'equipment', 'fuel', 'other'],
         required: true
       },
       {
@@ -185,6 +185,48 @@ const logTypes = [
         type: 'text' as const,
         placeholder: 'e.g., Pruning labor',
         required: true
+      },
+      // Labor-specific fields (conditionally shown)
+      {
+        name: 'num_workers',
+        label: 'Number of Workers',
+        type: 'number' as const,
+        step: '1',
+        min: '1',
+        placeholder: '5',
+        laborOnly: true
+      },
+      {
+        name: 'hours_worked',
+        label: 'Hours Worked',
+        type: 'number' as const,
+        step: '0.5',
+        min: '0.5',
+        placeholder: '8',
+        laborOnly: true
+      },
+      {
+        name: 'work_type',
+        label: 'Type of Work',
+        type: 'select' as const,
+        options: ['pruning', 'harvesting', 'spraying', 'weeding', 'planting', 'maintenance', 'other'],
+        laborOnly: true
+      },
+      {
+        name: 'rate_per_unit',
+        label: 'Rate (₹/day or ₹/hour)',
+        type: 'number' as const,
+        step: '1',
+        min: '0',
+        placeholder: '500',
+        laborOnly: true
+      },
+      {
+        name: 'worker_names',
+        label: 'Worker Names (optional)',
+        type: 'text' as const,
+        placeholder: 'e.g., Ram, Shyam, Mohan',
+        laborOnly: true
       },
       {
         name: 'notes',
@@ -315,11 +357,19 @@ export function BottomNavigation() {
           await SupabaseService.addExpenseRecord({
             farm_id: farmId,
             date: currentDate,
-            type: (formData.category || 'other') as 'labor' | 'materials' | 'equipment' | 'other',
+            type: (formData.category || 'other') as 'labor' | 'materials' | 'equipment' | 'fuel' | 'other',
             description: formData.description || '',
             cost: parseFloat(formData.amount || '0'),
             remarks: formData.notes || '',
-            date_of_pruning: pruningDate
+            date_of_pruning: pruningDate,
+            // Labor-specific fields (only included if category is 'labor')
+            ...(formData.category === 'labor' && {
+              num_workers: formData.num_workers ? parseInt(formData.num_workers) : undefined,
+              hours_worked: formData.hours_worked ? parseFloat(formData.hours_worked) : undefined,
+              work_type: formData.work_type || undefined,
+              rate_per_unit: formData.rate_per_unit ? parseFloat(formData.rate_per_unit) : undefined,
+              worker_names: formData.worker_names || undefined
+            })
           })
           break
       }
@@ -402,7 +452,15 @@ export function BottomNavigation() {
             {/* Dynamic Fields */}
             {canShowFields && selectedLogTypeObj && (
               <div className="space-y-4 pt-2">
-                {selectedLogTypeObj.fields.map((field) => (
+                {selectedLogTypeObj.fields
+                  .filter((field) => {
+                    // Filter out labor-only fields unless category is 'labor'
+                    if ((field as any).laborOnly) {
+                      return formData.category === 'labor'
+                    }
+                    return true
+                  })
+                  .map((field) => (
                   <div key={field.name} className="space-y-2">
                     <Label className="text-sm font-medium text-gray-700">{field.label}</Label>
                     {field.type === 'textarea' ? (
@@ -413,6 +471,22 @@ export function BottomNavigation() {
                         className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-20 resize-none"
                         required={field.required}
                       />
+                    ) : field.type === 'select' ? (
+                      <Select
+                        value={formData[field.name] || ''}
+                        onValueChange={(value) => handleFormDataChange(field.name, value)}
+                      >
+                        <SelectTrigger className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12">
+                          <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(field as any).options?.map((option: string) => (
+                            <SelectItem key={option} value={option}>
+                              {option.charAt(0).toUpperCase() + option.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     ) : (
                       <Input
                         type={field.type}

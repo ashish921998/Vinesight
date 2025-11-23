@@ -109,6 +109,12 @@ export interface ExpenseFormData extends BaseFormData {
   description: string
   cost: string
   remarks: string
+  // Labor-specific fields
+  num_workers: string
+  hours_worked: string
+  work_type: string
+  rate_per_unit: string
+  worker_names: string
 }
 
 export interface SoilTestFormData extends BaseFormData {
@@ -321,7 +327,13 @@ export function EditRecordModal({
         type: (expenseRecord.type as ExpenseCategory) || 'other',
         description: expenseRecord.description || '',
         cost: expenseRecord.cost?.toString() || '',
-        remarks: expenseRecord.remarks || ''
+        remarks: expenseRecord.remarks || '',
+        // Labor-specific fields
+        num_workers: expenseRecord.num_workers?.toString() || '',
+        hours_worked: expenseRecord.hours_worked?.toString() || '',
+        work_type: expenseRecord.work_type || '',
+        rate_per_unit: expenseRecord.rate_per_unit?.toString() || '',
+        worker_names: expenseRecord.worker_names || ''
       })
     } else if (recordType === 'soil_test') {
       const soilTestRecord = record as SoilTestRecord
@@ -640,7 +652,23 @@ export function EditRecordModal({
           type: expenseForm.type,
           description: expenseForm.description,
           cost: toNum(expenseForm.cost),
-          remarks: expenseForm.remarks
+          remarks: expenseForm.remarks,
+          // Labor-specific fields (only include if type is 'labor')
+          ...(expenseForm.type === 'labor' && {
+            num_workers: toNum(expenseForm.num_workers),
+            hours_worked: toNum(expenseForm.hours_worked),
+            work_type: expenseForm.work_type || undefined,
+            rate_per_unit: toNum(expenseForm.rate_per_unit),
+            worker_names: expenseForm.worker_names || undefined
+          }),
+          // Clear labor fields if switching away from labor
+          ...(expenseForm.type !== 'labor' && {
+            num_workers: undefined,
+            hours_worked: undefined,
+            work_type: undefined,
+            rate_per_unit: undefined,
+            worker_names: undefined
+          })
         })
       } else if (recordType === 'soil_test') {
         if (!soilTestForm) throw new Error('Soil test form is not ready')
@@ -1281,6 +1309,120 @@ export function EditRecordModal({
                     required
                   />
                 </div>
+
+                {/* Labor-specific fields - shown only when category is 'labor' */}
+                {expenseForm?.type === 'labor' && (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="num_workers" className="text-sm font-medium text-gray-700">
+                          Number of Workers
+                        </Label>
+                        <Input
+                          id="num_workers"
+                          type="number"
+                          step="1"
+                          min="1"
+                          value={expenseForm?.num_workers ?? ''}
+                          onChange={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              num_workers: e.target.value
+                            }))
+                          }
+                          placeholder="e.g., 5"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="hours_worked" className="text-sm font-medium text-gray-700">
+                          Hours Worked
+                        </Label>
+                        <Input
+                          id="hours_worked"
+                          type="number"
+                          step="0.5"
+                          min="0.5"
+                          value={expenseForm?.hours_worked ?? ''}
+                          onChange={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              hours_worked: e.target.value
+                            }))
+                          }
+                          placeholder="e.g., 8"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="work_type" className="text-sm font-medium text-gray-700">
+                          Type of Work
+                        </Label>
+                        <Select
+                          value={expenseForm?.work_type ?? ''}
+                          onValueChange={(value) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              work_type: value
+                            }))
+                          }
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select work type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pruning">Pruning</SelectItem>
+                            <SelectItem value="harvesting">Harvesting</SelectItem>
+                            <SelectItem value="spraying">Spraying</SelectItem>
+                            <SelectItem value="weeding">Weeding</SelectItem>
+                            <SelectItem value="planting">Planting</SelectItem>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="rate_per_unit" className="text-sm font-medium text-gray-700">
+                          Rate (₹/day or ₹/hour)
+                        </Label>
+                        <Input
+                          id="rate_per_unit"
+                          type="number"
+                          step="1"
+                          min="0"
+                          value={expenseForm?.rate_per_unit ?? ''}
+                          onChange={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              rate_per_unit: e.target.value
+                            }))
+                          }
+                          placeholder="e.g., 500"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="worker_names" className="text-sm font-medium text-gray-700">
+                        Worker Names (optional)
+                      </Label>
+                      <Input
+                        id="worker_names"
+                        value={expenseForm?.worker_names ?? ''}
+                        onChange={(e) =>
+                          updateFormData('expense', (current) => ({
+                            ...current,
+                            worker_names: e.target.value
+                          }))
+                        }
+                        placeholder="e.g., Ram, Shyam, Mohan"
+                        className="mt-1"
+                      />
+                    </div>
+                  </>
+                )}
               </>
             )}
 
