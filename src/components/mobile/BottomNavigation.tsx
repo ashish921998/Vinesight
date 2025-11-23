@@ -275,6 +275,19 @@ export function BottomNavigation() {
     }))
   }
 
+  // Format number value on blur - removes leading zeros
+  const formatNumberValue = (fieldName: string, value: string) => {
+    if (!value) return
+    const num = parseFloat(value)
+    if (!isNaN(num)) {
+      // Format number: removes leading zeros, keeps decimal places if present
+      const formatted = num.toString()
+      if (formatted !== value) {
+        handleFormDataChange(fieldName, formatted)
+      }
+    }
+  }
+
   const resetModal = () => {
     setSelectedFarm('')
     setSelectedLogType('')
@@ -494,6 +507,7 @@ export function BottomNavigation() {
                         min={field.min}
                         value={formData[field.name] || ''}
                         onChange={(e) => handleFormDataChange(field.name, e.target.value)}
+                        onBlur={(e) => field.type === 'number' && formatNumberValue(field.name, e.target.value)}
                         placeholder={field.placeholder}
                         className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12"
                         required={field.required}

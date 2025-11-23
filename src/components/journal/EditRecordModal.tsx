@@ -166,6 +166,13 @@ export function EditRecordModal({
     return Number.isFinite(n) ? n : undefined
   }
 
+  // Format number string - removes leading zeros (e.g., "0400" -> "400")
+  const formatNumberString = (value: string): string => {
+    if (!value) return value
+    const num = parseFloat(value)
+    return !isNaN(num) ? num.toString() : value
+  }
+
   type FormByType<T extends EditRecordType> = Extract<EditRecordFormData, { recordType: T }>
 
   const updateFormData = <T extends EditRecordType>(
@@ -1305,6 +1312,12 @@ export function EditRecordModal({
                         cost: e.target.value
                       }))
                     }
+                    onBlur={(e) =>
+                      updateFormData('expense', (current) => ({
+                        ...current,
+                        cost: formatNumberString(e.target.value)
+                      }))
+                    }
                     className="mt-1"
                     required
                   />
@@ -1330,6 +1343,12 @@ export function EditRecordModal({
                               num_workers: e.target.value
                             }))
                           }
+                          onBlur={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              num_workers: formatNumberString(e.target.value)
+                            }))
+                          }
                           placeholder="e.g., 5"
                           className="mt-1"
                         />
@@ -1348,6 +1367,12 @@ export function EditRecordModal({
                             updateFormData('expense', (current) => ({
                               ...current,
                               hours_worked: e.target.value
+                            }))
+                          }
+                          onBlur={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              hours_worked: formatNumberString(e.target.value)
                             }))
                           }
                           placeholder="e.g., 8"
@@ -1397,6 +1422,12 @@ export function EditRecordModal({
                             updateFormData('expense', (current) => ({
                               ...current,
                               rate_per_unit: e.target.value
+                            }))
+                          }
+                          onBlur={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              rate_per_unit: formatNumberString(e.target.value)
                             }))
                           }
                           placeholder="e.g., 500"
