@@ -1336,6 +1336,12 @@ export function EditRecordModal({
                     onChange={(e) =>
                       updateFormData('expense', (current) => ({
                         ...current,
+                        cost: e.target.value
+                      }))
+                    }
+                    onBlur={(e) =>
+                      updateFormData('expense', (current) => ({
+                        ...current,
                         cost: formatNumberString(e.target.value)
                       }))
                     }
@@ -1361,6 +1367,12 @@ export function EditRecordModal({
                           onChange={(e) =>
                             updateFormData('expense', (current) => ({
                               ...current,
+                              num_workers: e.target.value
+                            }))
+                          }
+                          onBlur={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
                               num_workers: formatNumberString(e.target.value)
                             }))
                           }
@@ -1379,6 +1391,12 @@ export function EditRecordModal({
                           pattern="[0-9]*\.?[0-9]*"
                           value={expenseForm?.hours_worked ?? ''}
                           onChange={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              hours_worked: e.target.value
+                            }))
+                          }
+                          onBlur={(e) =>
                             updateFormData('expense', (current) => ({
                               ...current,
                               hours_worked: formatNumberString(e.target.value)
@@ -1428,6 +1446,12 @@ export function EditRecordModal({
                           pattern="[0-9]*\.?[0-9]*"
                           value={expenseForm?.rate_per_unit ?? ''}
                           onChange={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              rate_per_unit: e.target.value
+                            }))
+                          }
+                          onBlur={(e) =>
                             updateFormData('expense', (current) => ({
                               ...current,
                               rate_per_unit: formatNumberString(e.target.value)

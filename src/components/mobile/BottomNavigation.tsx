@@ -268,24 +268,11 @@ export function BottomNavigation() {
     }
   }
 
-  const handleFormDataChange = (fieldName: string, value: string, isNumberField: boolean = false) => {
-    let formattedValue = value
-
-    // Auto-format number fields - remove leading zeros
-    if (isNumberField && value) {
-      // Only format if it's a valid number and not just a decimal point or minus sign
-      if (/^-?\d*\.?\d*$/.test(value) && value !== '.' && value !== '-' && value !== '-.') {
-        const num = parseFloat(value)
-        if (!isNaN(num)) {
-          formattedValue = num.toString()
-        }
-      }
-    }
-
+  const handleFormDataChange = (fieldName: string, value: string) => {
     setFormData((prev) => {
       const next = {
         ...prev,
-        [fieldName]: formattedValue
+        [fieldName]: value
       }
 
       // Clear labor-specific fields when switching category away from 'labor'
@@ -299,6 +286,20 @@ export function BottomNavigation() {
 
       return next
     })
+  }
+
+  // Format number on blur - removes leading zeros (e.g., "00400" -> "400")
+  const handleNumberBlur = (fieldName: string) => {
+    const value = formData[fieldName]
+    if (value && /^-?\d*\.?\d*$/.test(value) && value !== '.' && value !== '-' && value !== '-.') {
+      const num = parseFloat(value)
+      if (!isNaN(num)) {
+        setFormData((prev) => ({
+          ...prev,
+          [fieldName]: num.toString()
+        }))
+      }
+    }
   }
 
   const resetModal = () => {
@@ -519,7 +520,8 @@ export function BottomNavigation() {
                         inputMode={field.type === 'number' ? 'decimal' : undefined}
                         pattern={field.type === 'number' ? '[0-9]*\\.?[0-9]*' : undefined}
                         value={formData[field.name] || ''}
-                        onChange={(e) => handleFormDataChange(field.name, e.target.value, field.type === 'number')}
+                        onChange={(e) => handleFormDataChange(field.name, e.target.value)}
+                        onBlur={field.type === 'number' ? () => handleNumberBlur(field.name) : undefined}
                         placeholder={field.placeholder}
                         className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12"
                         required={field.required}
