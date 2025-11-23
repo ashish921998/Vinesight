@@ -268,24 +268,24 @@ export function BottomNavigation() {
     }
   }
 
-  const handleFormDataChange = (fieldName: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: value
-    }))
-  }
+  const handleFormDataChange = (fieldName: string, value: string, isNumberField: boolean = false) => {
+    let formattedValue = value
 
-  // Format number value on blur - removes leading zeros
-  const formatNumberValue = (fieldName: string, value: string) => {
-    if (!value) return
-    const num = parseFloat(value)
-    if (!isNaN(num)) {
-      // Format number: removes leading zeros, keeps decimal places if present
-      const formatted = num.toString()
-      if (formatted !== value) {
-        handleFormDataChange(fieldName, formatted)
+    // Auto-format number fields - remove leading zeros
+    if (isNumberField && value) {
+      // Only format if it's a valid number and not just a decimal point or minus sign
+      if (/^-?\d*\.?\d*$/.test(value) && value !== '.' && value !== '-' && value !== '-.') {
+        const num = parseFloat(value)
+        if (!isNaN(num)) {
+          formattedValue = num.toString()
+        }
       }
     }
+
+    setFormData((prev) => ({
+      ...prev,
+      [fieldName]: formattedValue
+    }))
   }
 
   const resetModal = () => {
@@ -502,12 +502,11 @@ export function BottomNavigation() {
                       </Select>
                     ) : (
                       <Input
-                        type={field.type}
-                        step={field.step}
-                        min={field.min}
+                        type={field.type === 'number' ? 'text' : field.type}
+                        inputMode={field.type === 'number' ? 'decimal' : undefined}
+                        pattern={field.type === 'number' ? '[0-9]*\\.?[0-9]*' : undefined}
                         value={formData[field.name] || ''}
-                        onChange={(e) => handleFormDataChange(field.name, e.target.value)}
-                        onBlur={(e) => field.type === 'number' && formatNumberValue(field.name, e.target.value)}
+                        onChange={(e) => handleFormDataChange(field.name, e.target.value, field.type === 'number')}
                         placeholder={field.placeholder}
                         className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12"
                         required={field.required}

@@ -169,8 +169,14 @@ export function EditRecordModal({
   // Format number string - removes leading zeros (e.g., "0400" -> "400")
   const formatNumberString = (value: string): string => {
     if (!value) return value
-    const num = parseFloat(value)
-    return !isNaN(num) ? num.toString() : value
+    // Only format if it's a valid number and not just a decimal point or minus sign
+    if (/^-?\d*\.?\d*$/.test(value) && value !== '.' && value !== '-' && value !== '-.') {
+      const num = parseFloat(value)
+      if (!isNaN(num)) {
+        return num.toString()
+      }
+    }
+    return value
   }
 
   type FormByType<T extends EditRecordType> = Extract<EditRecordFormData, { recordType: T }>
@@ -1302,17 +1308,11 @@ export function EditRecordModal({
                   </Label>
                   <Input
                     id="cost"
-                    type="number"
-                    step="0.01"
-                    min="0"
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*\.?[0-9]*"
                     value={expenseForm?.cost ?? ''}
                     onChange={(e) =>
-                      updateFormData('expense', (current) => ({
-                        ...current,
-                        cost: e.target.value
-                      }))
-                    }
-                    onBlur={(e) =>
                       updateFormData('expense', (current) => ({
                         ...current,
                         cost: formatNumberString(e.target.value)
@@ -1333,17 +1333,11 @@ export function EditRecordModal({
                         </Label>
                         <Input
                           id="num_workers"
-                          type="number"
-                          step="1"
-                          min="1"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           value={expenseForm?.num_workers ?? ''}
                           onChange={(e) =>
-                            updateFormData('expense', (current) => ({
-                              ...current,
-                              num_workers: e.target.value
-                            }))
-                          }
-                          onBlur={(e) =>
                             updateFormData('expense', (current) => ({
                               ...current,
                               num_workers: formatNumberString(e.target.value)
@@ -1359,17 +1353,11 @@ export function EditRecordModal({
                         </Label>
                         <Input
                           id="hours_worked"
-                          type="number"
-                          step="0.5"
-                          min="0.5"
+                          type="text"
+                          inputMode="decimal"
+                          pattern="[0-9]*\.?[0-9]*"
                           value={expenseForm?.hours_worked ?? ''}
                           onChange={(e) =>
-                            updateFormData('expense', (current) => ({
-                              ...current,
-                              hours_worked: e.target.value
-                            }))
-                          }
-                          onBlur={(e) =>
                             updateFormData('expense', (current) => ({
                               ...current,
                               hours_worked: formatNumberString(e.target.value)
@@ -1414,17 +1402,11 @@ export function EditRecordModal({
                         </Label>
                         <Input
                           id="rate_per_unit"
-                          type="number"
-                          step="1"
-                          min="0"
+                          type="text"
+                          inputMode="decimal"
+                          pattern="[0-9]*\.?[0-9]*"
                           value={expenseForm?.rate_per_unit ?? ''}
                           onChange={(e) =>
-                            updateFormData('expense', (current) => ({
-                              ...current,
-                              rate_per_unit: e.target.value
-                            }))
-                          }
-                          onBlur={(e) =>
                             updateFormData('expense', (current) => ({
                               ...current,
                               rate_per_unit: formatNumberString(e.target.value)
