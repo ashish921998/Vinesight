@@ -282,10 +282,23 @@ export function BottomNavigation() {
       }
     }
 
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: formattedValue
-    }))
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        [fieldName]: formattedValue
+      }
+
+      // Clear labor-specific fields when switching category away from 'labor'
+      if (fieldName === 'category' && value !== 'labor') {
+        delete next.num_workers
+        delete next.hours_worked
+        delete next.work_type
+        delete next.rate_per_unit
+        delete next.worker_names
+      }
+
+      return next
+    })
   }
 
   const resetModal = () => {
@@ -377,10 +390,10 @@ export function BottomNavigation() {
             date_of_pruning: pruningDate,
             // Labor-specific fields (only included if category is 'labor')
             ...(formData.category === 'labor' && {
-              num_workers: formData.num_workers ? parseInt(formData.num_workers) : undefined,
-              hours_worked: formData.hours_worked ? parseFloat(formData.hours_worked) : undefined,
+              num_workers: formData.num_workers !== undefined && formData.num_workers !== '' ? parseInt(formData.num_workers) : undefined,
+              hours_worked: formData.hours_worked !== undefined && formData.hours_worked !== '' ? parseFloat(formData.hours_worked) : undefined,
               work_type: formData.work_type || undefined,
-              rate_per_unit: formData.rate_per_unit ? parseFloat(formData.rate_per_unit) : undefined,
+              rate_per_unit: formData.rate_per_unit !== undefined && formData.rate_per_unit !== '' ? parseFloat(formData.rate_per_unit) : undefined,
               worker_names: formData.worker_names || undefined
             })
           })
