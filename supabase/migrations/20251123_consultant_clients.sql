@@ -77,8 +77,8 @@ CREATE TABLE IF NOT EXISTS client_lab_reports (
   id SERIAL PRIMARY KEY,
   client_id INTEGER NOT NULL REFERENCES consultant_clients(id) ON DELETE CASCADE,
   client_farm_id INTEGER REFERENCES client_farms(id) ON DELETE SET NULL,
-  linked_soil_test_id INTEGER REFERENCES soil_tests(id) ON DELETE SET NULL,
-  linked_petiole_test_id INTEGER REFERENCES petiole_tests(id) ON DELETE SET NULL,
+  linked_soil_test_id INTEGER REFERENCES soil_test_records(id) ON DELETE SET NULL,
+  linked_petiole_test_id INTEGER REFERENCES petiole_test_records(id) ON DELETE SET NULL,
 
   -- Report type and date
   report_type TEXT NOT NULL CHECK (report_type IN ('soil', 'petiole')),

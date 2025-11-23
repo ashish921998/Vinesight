@@ -531,12 +531,20 @@ export async function deleteRecommendationItem(id: number): Promise<void> {
   if (error) throw new Error(error.message)
 }
 
-export async function bulkCreateRecommendationItems(items: FertilizerRecommendationItemInsert[]): Promise<FertilizerRecommendationItem[]> {
+export async function bulkCreateRecommendationItems(
+  recommendationId: number,
+  items: Omit<FertilizerRecommendationItemInsert, 'recommendationId'>[]
+): Promise<FertilizerRecommendationItem[]> {
   const supabase = createClient()
+
+  const itemsWithRecommendationId = items.map(item => ({
+    ...toSnakeCase(item),
+    recommendation_id: recommendationId
+  }))
 
   const { data: results, error } = await supabase
     .from('fertilizer_recommendation_items')
-    .insert(items.map(item => toSnakeCase(item)))
+    .insert(itemsWithRecommendationId)
     .select()
 
   if (error) throw new Error(error.message)
