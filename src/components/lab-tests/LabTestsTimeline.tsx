@@ -11,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { TestDetailsCard, type LabTestRecord } from './TestDetailsCard'
+import { TestDetailsCard } from './TestDetailsCard'
+import { type LabTestRecord } from '@/types/lab-tests'
 import { Beaker, Calendar, Filter, Plus } from 'lucide-react'
 import { subMonths, isAfter, isSameDay, startOfDay } from 'date-fns'
 

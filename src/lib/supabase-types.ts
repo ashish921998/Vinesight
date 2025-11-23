@@ -1,5 +1,6 @@
 // Type adapters to bridge application types with Supabase database types
 import { Database, Json } from '@/types/database'
+import { canonicalizeParameters } from './parameter-canonicalization'
 
 // Import application types from both sources
 import type {
@@ -686,11 +687,12 @@ export function toDatabaseTaskReminderUpdate(
 export function toApplicationSoilTestRecord(
   dbRecord: DatabaseSoilTestRecord
 ): import('./supabase').SoilTestRecord {
+  const params = (dbRecord.parameters as Record<string, number>) || {}
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
-    parameters: (dbRecord.parameters as Record<string, number>) || {},
+    parameters: canonicalizeParameters(params),
     date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
     recommendations: dbRecord.recommendations || undefined,
     notes: dbRecord.notes || undefined,
@@ -713,7 +715,7 @@ export function toDatabaseSoilTestInsert(
   return {
     farm_id: appRecord.farm_id,
     date: appRecord.date,
-    parameters: appRecord.parameters,
+    parameters: canonicalizeParameters(appRecord.parameters || {}),
     date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
     recommendations: appRecord.recommendations || null,
     notes: appRecord.notes || null,
@@ -735,7 +737,8 @@ export function toDatabaseSoilTestUpdate(
 
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.date !== undefined) update.date = appUpdates.date
-  if (appUpdates.parameters !== undefined) update.parameters = appUpdates.parameters
+  if (appUpdates.parameters !== undefined)
+    update.parameters = canonicalizeParameters(appUpdates.parameters || {})
   if (appUpdates.date_of_pruning !== undefined)
     update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
   if (appUpdates.recommendations !== undefined)
@@ -761,12 +764,13 @@ export function toDatabaseSoilTestUpdate(
 export function toApplicationPetioleTestRecord(
   dbRecord: DatabasePetioleTestRecord
 ): import('./supabase').PetioleTestRecord {
+  const params = (dbRecord.parameters as Record<string, number>) || {}
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id!,
     date: dbRecord.date,
     date_of_pruning: dbRecord.date_of_pruning ? new Date(dbRecord.date_of_pruning) : undefined,
-    parameters: (dbRecord.parameters as Record<string, number>) || {},
+    parameters: canonicalizeParameters(params),
     recommendations: dbRecord.recommendations || undefined,
     notes: dbRecord.notes || undefined,
     report_url: dbRecord.report_url || undefined,
@@ -789,7 +793,7 @@ export function toDatabasePetioleTestInsert(
     farm_id: appRecord.farm_id,
     date: appRecord.date,
     date_of_pruning: dateToISOString(appRecord.date_of_pruning) as any,
-    parameters: appRecord.parameters || {},
+    parameters: canonicalizeParameters(appRecord.parameters || {}),
     recommendations: appRecord.recommendations || null,
     notes: appRecord.notes || null,
     report_url: appRecord.report_url || null,
@@ -814,7 +818,7 @@ export function toDatabasePetioleTestUpdate(
     update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning) as any
 
   if (appUpdates.parameters !== undefined) {
-    update.parameters = appUpdates.parameters
+    update.parameters = canonicalizeParameters(appUpdates.parameters || {})
   }
 
   if (appUpdates.recommendations !== undefined)

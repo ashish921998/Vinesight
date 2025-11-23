@@ -25,7 +25,7 @@ interface StructuredReportPayload {
 
 type TestType = 'soil' | 'petiole'
 
-const DEFAULT_MODEL = 'gpt-4o-mini'
+const DEFAULT_MODEL = 'gpt-4o'
 
 export class ReportParser {
   private static getClient() {
@@ -80,7 +80,7 @@ export class ReportParser {
       })
 
       const parsed = this.extractStructuredPayload(response)
-      return this.toParsedResult(parsed)
+      return this.toParsedResult(parsed, testType)
     } finally {
       void this.safeDeleteUploadedFile(client, uploadedFile.id)
     }
@@ -93,11 +93,41 @@ export class ReportParser {
   private static getPrompt(testType: TestType) {
     if (testType === 'soil') {
       return `Extract all nutrient and soil health parameters from the attached soil test report.
-Return numeric values for pH, EC (electrical conductivity), organic carbon, nitrogen, phosphorus, potassium, calcium, magnesium, sulfur, iron, manganese, zinc, copper, boron, molybdenum, sodium, chloride, calcium carbonate, carbonate, bicarbonate, and any other nutrients you can find (include micronutrients if present).
-Also extract the test date or analysis date if present in the report (return in YYYY-MM-DD format).
-Also return a short summary of key findings, any recommendations or notes, and a confidence score between 0 and 1 describing how certain you are about the extracted numbers.
 
-Respond strictly as JSON with the shape:
+CRITICAL INSTRUCTIONS:
+1. This document contains a TABLE with multiple columns
+2. The table has columns: Sr. No., Parameter, Unit, Actual Result, Limit, Status
+3. You MUST read values from the "Actual Result" column - NOT from "Limit" column
+4. The "Limit" column contains reference ranges (e.g., "6.5 - 7.5", "75 - 150") - DO NOT use these values
+5. The "Actual Result" column contains single numbers - these are the values you need
+6. DO NOT guess or fabricate values - only extract what you can clearly read
+
+EXAMPLE FROM THIS REPORT FORMAT:
+- Row: "pH" | "-" | "8.11" | "6.5 - 7.5" | "High" → Extract ph = 8.11 (from Actual Result, NOT 6.5-7.5)
+- Row: "Organic Carbon" | "%" | "1.47" | "1.01 - 3.0" | "Optimal" → Extract organic_carbon = 1.47
+- Row: "Nitrogen as N" | "ppm" | "156" | "75 - 150" | "High" → Extract nitrogen = 156
+- Row: "Phosphorus as P" | "ppm" | "42" | "10 - 20" | "High" → Extract phosphorus = 42
+- Row: "Calcium as Ca" | "ppm" | "7754" | "1000 - 4500" | "High" → Extract calcium = 7754
+
+VALUE RULES:
+- Return EXACT numbers from "Actual Result" column
+- For % values: 1.47% → 1.47
+- For ppm values: 156 ppm → 156, 7754 ppm → 7754
+- NEVER use values from Limit column
+- If "Actual Result" shows "Nil" or "-", skip that parameter
+
+Parameters to extract from "Actual Result" column:
+- ph, ec (electrical conductivity)
+- organic_carbon (%), organic_matter (%)
+- nitrogen, phosphorus, potassium (all in ppm)
+- calcium, magnesium, sulfur (all in ppm)
+- calcium_carbonate (%)
+- iron, manganese, zinc, copper, boron, molybdenum (all in ppm)
+- sodium, chloride, carbonate, bicarbonate (all in ppm)
+
+Also find "Analysis Date" field in the header section (format: DD-Mon-YYYY like "09-Apr-2024") and convert to YYYY-MM-DD.
+
+Respond strictly as JSON:
 {
   "parameters": [
     { "name": "parameter_name", "value": number }
@@ -110,11 +140,32 @@ Respond strictly as JSON with the shape:
     }
 
     return `Extract nutrient values from the attached petiole analysis report.
-Return numeric values for macronutrients and micronutrients (nitrogen, phosphorus, potassium, calcium, magnesium, sulfur, iron, manganese, zinc, copper, boron, etc.) when available.
-Also extract the test date or analysis date if present in the report (return in YYYY-MM-DD format).
-Include a short summary of the analysis, any notes, and a confidence score between 0 and 1 representing extraction certainty.
 
-Respond strictly as JSON with the shape:
+CRITICAL INSTRUCTIONS:
+1. This document contains a TABLE with multiple columns
+2. The table typically has columns: Sr. No., Parameter, Unit, Actual Result, Limit/Range, Status
+3. You MUST read values from the "Actual Result" column - NOT from "Limit" or "Range" column
+4. The "Limit" column contains reference ranges (e.g., "0.8 - 1.2", "1000 - 2000") - DO NOT use these values
+5. The "Actual Result" column contains single numbers - these are the values you need
+6. DO NOT guess or fabricate values - only extract what you can clearly read
+
+VALUE RULES:
+- Return EXACT numbers from "Actual Result" column
+- For % values: 1.36% → 1.36
+- For mg/kg or ppm values: 350 mg/kg → 350, 1500 ppm → 1500
+- NEVER use values from Limit/Range column
+- If "Actual Result" shows "Nil", "-", or "BDL", skip that parameter
+
+Parameters to extract from "Actual Result" column:
+- total_nitrogen (%), nitrate_nitrogen (mg/kg or ppm), ammonical_nitrogen (mg/kg or ppm)
+- phosphorus (%), potassium (%)
+- calcium (%), magnesium (%), sulfur (%)
+- iron (mg/kg), manganese (mg/kg), zinc (mg/kg), copper (mg/kg), boron (mg/kg), molybdenum (mg/kg)
+- sodium (%), chloride (%)
+
+Also find "Analysis Date" field in the header section and convert to YYYY-MM-DD format.
+
+Respond strictly as JSON:
 {
   "parameters": [
     { "name": "parameter_name", "value": number }
@@ -126,14 +177,41 @@ Respond strictly as JSON with the shape:
 }`
   }
 
-  private static toParsedResult(payload: StructuredReportPayload): ParsedReportResult {
+  private static toParsedResult(
+    payload: StructuredReportPayload,
+    testType: TestType
+  ): ParsedReportResult {
+    const normalizedParams = this.normalizeParameters(payload.parameters || [])
+    const validatedParams = this.validateAndCorrectParameters(normalizedParams, testType)
+
     return {
-      parameters: this.normalizeParameters(payload.parameters || []),
+      parameters: validatedParams,
       summary: payload.summary,
       rawNotes: payload.rawNotes,
       confidence: payload.confidence,
       testDate: payload.testDate
     }
+  }
+
+  /**
+   * Returns parameters as-is without modification.
+   *
+   * Previously this method attempted to "correct" unit conversion errors by
+   * multiplying/dividing values outside expected ranges. This was removed
+   * because it violates the requirement to return exact lab numbers:
+   * - Legitimate low readings (e.g., sodium <1 ppm) were incorrectly multiplied
+   * - Legitimate high readings (e.g., peaty soils >20% organic matter) were
+   *   incorrectly divided
+   *
+   * The AI prompt handles unit normalization during extraction; post-processing
+   * should not alter values.
+   */
+  private static validateAndCorrectParameters(
+    parameters: Record<string, number>,
+    _testType: TestType
+  ): Record<string, number> {
+    // Return exact values from the lab report without modification
+    return { ...parameters }
   }
 
   private static normalizeParameters(parameters: StructuredParameterEntry[]) {
