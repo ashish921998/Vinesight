@@ -289,8 +289,8 @@ export function BottomNavigation() {
   }
 
   // Format number on blur - removes leading zeros (e.g., "00400" -> "400")
-  const handleNumberBlur = (fieldName: string) => {
-    const value = formData[fieldName]
+  const handleNumberBlur = (fieldName: string, e: React.FocusEvent<HTMLInputElement>) => {
+    const value = e.target.value
     if (value && /^-?\d*\.?\d*$/.test(value) && value !== '.' && value !== '-' && value !== '-.') {
       const num = parseFloat(value)
       if (!isNaN(num)) {
@@ -521,7 +521,7 @@ export function BottomNavigation() {
                         pattern={field.type === 'number' ? '[0-9]*\\.?[0-9]*' : undefined}
                         value={formData[field.name] || ''}
                         onChange={(e) => handleFormDataChange(field.name, e.target.value)}
-                        onBlur={field.type === 'number' ? () => handleNumberBlur(field.name) : undefined}
+                        onBlur={field.type === 'number' ? (e) => handleNumberBlur(field.name, e) : undefined}
                         placeholder={field.placeholder}
                         className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12"
                         required={field.required}
