@@ -59,6 +59,27 @@ function isPetioleRecord(record: SoilTestRecord | PetioleTestRecord): record is 
   return 'sample_id' in record
 }
 
+// Local field configs for soil and petiole tests (separate from main log types)
+const soilTestFields: FormField[] = [
+  { name: 'pH', type: 'number', label: 'pH', required: false, min: 0, max: 14, step: 0.1 },
+  { name: 'ec', type: 'number', label: 'EC (mS/cm)', required: false, min: 0, step: 0.01 },
+  { name: 'nitrogen', type: 'number', label: 'Nitrogen (kg/ha)', required: false, min: 0, step: 0.1 },
+  { name: 'phosphorus', type: 'number', label: 'Phosphorus (kg/ha)', required: false, min: 0, step: 0.1 },
+  { name: 'potassium', type: 'number', label: 'Potassium (kg/ha)', required: false, min: 0, step: 0.1 },
+  { name: 'organic_carbon', type: 'number', label: 'Organic Carbon (%)', required: false, min: 0, max: 100, step: 0.01 }
+]
+
+const petioleTestFields: FormField[] = [
+  { name: 'nitrogen', type: 'number', label: 'Nitrogen (%)', required: false, min: 0, max: 100, step: 0.01 },
+  { name: 'phosphorus', type: 'number', label: 'Phosphorus (%)', required: false, min: 0, max: 100, step: 0.01 },
+  { name: 'potassium', type: 'number', label: 'Potassium (%)', required: false, min: 0, max: 100, step: 0.01 },
+  { name: 'calcium', type: 'number', label: 'Calcium (%)', required: false, min: 0, max: 100, step: 0.01 },
+  { name: 'magnesium', type: 'number', label: 'Magnesium (%)', required: false, min: 0, max: 100, step: 0.01 },
+  { name: 'boron', type: 'number', label: 'Boron (ppm)', required: false, min: 0, step: 0.1 },
+  { name: 'zinc', type: 'number', label: 'Zinc (ppm)', required: false, min: 0, step: 0.1 },
+  { name: 'iron', type: 'number', label: 'Iron (ppm)', required: false, min: 0, step: 0.1 }
+]
+
 export type EditRecordType =
   | 'irrigation'
   | 'spray'
@@ -1443,11 +1464,9 @@ export function EditRecordModal({
               <>
                 {/* Dynamic Soil Test Fields */}
                 <div
-                  className={`space-y-3 ${logTypeConfigs[record && isPetioleRecord(record) ? 'petiole_test' : 'soil_test'].fields.length > 1 ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : ''}`}
+                  className={`space-y-3 ${(record && isPetioleRecord(record) ? petioleTestFields : soilTestFields).length > 1 ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : ''}`}
                 >
-                  {logTypeConfigs[
-                    record && isPetioleRecord(record) ? 'petiole_test' : 'soil_test'
-                  ].fields.map((field) => (
+                  {(record && isPetioleRecord(record) ? petioleTestFields : soilTestFields).map((field) => (
                     <div key={field.name}>
                       <Label htmlFor={field.name} className="text-sm font-medium text-gray-700">
                         {field.label}
