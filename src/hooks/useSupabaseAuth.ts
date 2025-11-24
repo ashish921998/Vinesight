@@ -123,7 +123,11 @@ export function useSupabaseAuth() {
         } = await supabase.auth.getUser()
 
         if (error) {
-          setAuthState((prev) => ({ ...prev, error: error.message }))
+          // Don't set error state for "Auth session missing" - this is expected
+          // on pages like login where user is not yet authenticated
+          if (error.message !== 'Auth session missing!') {
+            setAuthState((prev) => ({ ...prev, error: error.message }))
+          }
         } else {
           setAuthState((prev) => ({ ...prev, user: user ?? null }))
         }
