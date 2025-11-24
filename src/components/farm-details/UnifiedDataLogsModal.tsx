@@ -38,6 +38,19 @@ interface LogEntry {
   isValid: boolean
 }
 
+// Format number string - removes leading zeros (e.g., "0400" -> "400")
+const formatNumberString = (value: string): string => {
+  if (!value) return value
+  // Only format if it's a valid number and not just a decimal point or minus sign
+  if (/^-?\d*\.?\d*$/.test(value) && value !== '.' && value !== '-' && value !== '-.') {
+    const num = parseFloat(value)
+    if (!isNaN(num)) {
+      return num.toString()
+    }
+  }
+  return value
+}
+
 interface UnifiedDataLogsModalProps {
   isOpen: boolean
   onClose: () => void
@@ -1113,7 +1126,23 @@ export function UnifiedDataLogsModal({
   }
 
   const renderFormField = (field: FormField) => {
+    // Check conditional visibility
+    if (field.conditionalOn) {
+      const conditionFieldValue = currentFormData[field.conditionalOn.field]
+      const requiredValue = field.conditionalOn.value
+      const matches = Array.isArray(requiredValue)
+        ? requiredValue.includes(conditionFieldValue)
+        : conditionFieldValue === requiredValue
+      if (!matches) {
+        return null
+      }
+    }
+
     const value = currentFormData[field.name] || ''
+
+    // Helper to format option labels (capitalize and replace underscores)
+    const formatOptionLabel = (option: string) =>
+      option.charAt(0).toUpperCase() + option.slice(1).replace(/_/g, ' ')
 
     switch (field.type) {
       case 'select':
@@ -1138,7 +1167,7 @@ export function UnifiedDataLogsModal({
               <SelectContent>
                 {field.options?.map((option) => (
                   <SelectItem key={option} value={option}>
-                    {option}
+                    {formatOptionLabel(option)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -1203,6 +1232,15 @@ export function UnifiedDataLogsModal({
                     setCurrentFormData((prev) => ({
                       ...prev,
                       [field.name]: inputValue
+                    }))
+                  }
+                } else {
+                  // Format number string on blur (removes leading zeros like "0400" -> "400")
+                  const formattedValue = formatNumberString(inputValue)
+                  if (formattedValue !== inputValue) {
+                    setCurrentFormData((prev) => ({
+                      ...prev,
+                      [field.name]: formattedValue
                     }))
                   }
                 }

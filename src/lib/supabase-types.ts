@@ -559,7 +559,8 @@ export function toDatabaseExpenseUpdate(
   if (appUpdates.num_workers !== undefined) update.num_workers = appUpdates.num_workers || null
   if (appUpdates.hours_worked !== undefined) update.hours_worked = appUpdates.hours_worked || null
   if (appUpdates.work_type !== undefined) update.work_type = appUpdates.work_type || null
-  if (appUpdates.rate_per_unit !== undefined) update.rate_per_unit = appUpdates.rate_per_unit || null
+  if (appUpdates.rate_per_unit !== undefined)
+    update.rate_per_unit = appUpdates.rate_per_unit || null
   if (appUpdates.worker_names !== undefined) update.worker_names = appUpdates.worker_names || null
 
   return update

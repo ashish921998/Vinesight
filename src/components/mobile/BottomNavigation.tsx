@@ -209,7 +209,15 @@ const logTypes = [
         name: 'work_type',
         label: 'Type of Work',
         type: 'select' as const,
-        options: ['pruning', 'harvesting', 'spraying', 'weeding', 'planting', 'maintenance', 'other'],
+        options: [
+          'pruning',
+          'harvesting',
+          'spraying',
+          'weeding',
+          'planting',
+          'maintenance',
+          'other'
+        ],
         laborOnly: true
       },
       {
@@ -288,12 +296,32 @@ export function BottomNavigation() {
     })
   }
 
-  // Format number on blur - removes leading zeros (e.g., "00400" -> "400")
-  const handleNumberBlur = (fieldName: string, e: React.FocusEvent<HTMLInputElement>) => {
+  // Format and validate number on blur - removes leading zeros and enforces min/step constraints
+  const handleNumberBlur = (
+    fieldName: string,
+    e: React.FocusEvent<HTMLInputElement>,
+    field: { min?: string; step?: string }
+  ) => {
     const value = e.target.value
     if (value && /^-?\d*\.?\d*$/.test(value) && value !== '.' && value !== '-' && value !== '-.') {
-      const num = parseFloat(value)
+      let num = parseFloat(value)
       if (!isNaN(num)) {
+        // Enforce minimum value
+        const minVal = field.min ? parseFloat(field.min) : undefined
+        if (minVal !== undefined && num < minVal) {
+          num = minVal
+        }
+
+        // Enforce step (e.g., step="1" means integers only)
+        const stepVal = field.step ? parseFloat(field.step) : undefined
+        if (stepVal !== undefined && stepVal === 1) {
+          // Integer field - round to nearest integer
+          num = Math.round(num)
+        } else if (stepVal !== undefined && stepVal > 0) {
+          // Round to nearest step
+          num = Math.round(num / stepVal) * stepVal
+        }
+
         setFormData((prev) => ({
           ...prev,
           [fieldName]: num.toString()
@@ -384,17 +412,31 @@ export function BottomNavigation() {
           await SupabaseService.addExpenseRecord({
             farm_id: farmId,
             date: currentDate,
-            type: (formData.category || 'other') as 'labor' | 'materials' | 'equipment' | 'fuel' | 'other',
+            type: (formData.category || 'other') as
+              | 'labor'
+              | 'materials'
+              | 'equipment'
+              | 'fuel'
+              | 'other',
             description: formData.description || '',
             cost: parseFloat(formData.amount || '0'),
             remarks: formData.notes || '',
             date_of_pruning: pruningDate,
             // Labor-specific fields (only included if category is 'labor')
             ...(formData.category === 'labor' && {
-              num_workers: formData.num_workers !== undefined && formData.num_workers !== '' ? parseInt(formData.num_workers) : undefined,
-              hours_worked: formData.hours_worked !== undefined && formData.hours_worked !== '' ? parseFloat(formData.hours_worked) : undefined,
+              num_workers:
+                formData.num_workers !== undefined && formData.num_workers !== ''
+                  ? parseInt(formData.num_workers)
+                  : undefined,
+              hours_worked:
+                formData.hours_worked !== undefined && formData.hours_worked !== ''
+                  ? parseFloat(formData.hours_worked)
+                  : undefined,
               work_type: formData.work_type || undefined,
-              rate_per_unit: formData.rate_per_unit !== undefined && formData.rate_per_unit !== '' ? parseFloat(formData.rate_per_unit) : undefined,
+              rate_per_unit:
+                formData.rate_per_unit !== undefined && formData.rate_per_unit !== ''
+                  ? parseFloat(formData.rate_per_unit)
+                  : undefined,
               worker_names: formData.worker_names || undefined
             })
           })
@@ -488,47 +530,63 @@ export function BottomNavigation() {
                     return true
                   })
                   .map((field) => (
-                  <div key={field.name} className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">{field.label}</Label>
-                    {field.type === 'textarea' ? (
-                      <Textarea
-                        value={formData[field.name] || ''}
-                        onChange={(e) => handleFormDataChange(field.name, e.target.value)}
-                        placeholder={field.placeholder}
-                        className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-20 resize-none"
-                        required={field.required}
-                      />
-                    ) : field.type === 'select' ? (
-                      <Select
-                        value={formData[field.name] || ''}
-                        onValueChange={(value) => handleFormDataChange(field.name, value)}
-                      >
-                        <SelectTrigger className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12">
-                          <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(field as any).options?.map((option: string) => (
-                            <SelectItem key={option} value={option}>
-                              {option.charAt(0).toUpperCase() + option.slice(1)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Input
-                        type={field.type === 'number' ? 'text' : field.type}
-                        inputMode={field.type === 'number' ? 'decimal' : undefined}
-                        pattern={field.type === 'number' ? '[0-9]*\\.?[0-9]*' : undefined}
-                        value={formData[field.name] || ''}
-                        onChange={(e) => handleFormDataChange(field.name, e.target.value)}
-                        onBlur={field.type === 'number' ? (e) => handleNumberBlur(field.name, e) : undefined}
-                        placeholder={field.placeholder}
-                        className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12"
-                        required={field.required}
-                      />
-                    )}
-                  </div>
-                ))}
+                    <div key={field.name} className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">{field.label}</Label>
+                      {field.type === 'textarea' ? (
+                        <Textarea
+                          value={formData[field.name] || ''}
+                          onChange={(e) => handleFormDataChange(field.name, e.target.value)}
+                          placeholder={field.placeholder}
+                          className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-20 resize-none"
+                          required={field.required}
+                        />
+                      ) : field.type === 'select' ? (
+                        <Select
+                          value={formData[field.name] || ''}
+                          onValueChange={(value) => handleFormDataChange(field.name, value)}
+                        >
+                          <SelectTrigger className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12">
+                            <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(field as any).options?.map((option: string) => (
+                              <SelectItem key={option} value={option}>
+                                {option.charAt(0).toUpperCase() + option.slice(1)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          type={field.type === 'number' ? 'text' : field.type}
+                          inputMode={
+                            field.type === 'number'
+                              ? (field as any).step === '1'
+                                ? 'numeric'
+                                : 'decimal'
+                              : undefined
+                          }
+                          pattern={
+                            field.type === 'number'
+                              ? (field as any).step === '1'
+                                ? '[0-9]*'
+                                : '[0-9]*\\.?[0-9]*'
+                              : undefined
+                          }
+                          value={formData[field.name] || ''}
+                          onChange={(e) => handleFormDataChange(field.name, e.target.value)}
+                          onBlur={
+                            field.type === 'number'
+                              ? (e) => handleNumberBlur(field.name, e, field as any)
+                              : undefined
+                          }
+                          placeholder={field.placeholder}
+                          className="border-gray-300 focus:border-primary focus:ring-primary rounded-lg h-12"
+                          required={field.required}
+                        />
+                      )}
+                    </div>
+                  ))}
               </div>
             )}
 

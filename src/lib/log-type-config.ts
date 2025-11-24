@@ -32,6 +32,11 @@ export interface FormField {
   max?: number
   step?: number
   maxLength?: number
+  // Conditional display: only show field when another field has a specific value
+  conditionalOn?: {
+    field: string
+    value: string | string[]
+  }
 }
 
 export interface LogTypeConfig {
@@ -165,6 +170,15 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         placeholder: 'Brief description',
         maxLength: 1000
       },
+      // Labor entry mode selector (shown only when type = 'labor')
+      {
+        name: 'labor_entry_mode',
+        type: 'select',
+        label: 'Entry Mode',
+        required: false,
+        options: ['quick', 'itemized'],
+        conditionalOn: { field: 'type', value: 'labor' }
+      },
       {
         name: 'cost',
         type: 'number',
@@ -172,6 +186,62 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         required: true,
         min: 0,
         step: 0.01
+      },
+      // Labor itemized fields (shown only when type = 'labor' AND labor_entry_mode = 'itemized')
+      {
+        name: 'num_workers',
+        type: 'number',
+        label: 'Number of Workers',
+        required: false,
+        min: 1,
+        step: 1,
+        placeholder: 'e.g., 5',
+        conditionalOn: { field: 'labor_entry_mode', value: 'itemized' }
+      },
+      {
+        name: 'hours_worked',
+        type: 'number',
+        label: 'Hours Worked',
+        required: false,
+        min: 0.5,
+        step: 0.5,
+        placeholder: 'e.g., 8',
+        conditionalOn: { field: 'labor_entry_mode', value: 'itemized' }
+      },
+      {
+        name: 'work_type',
+        type: 'select',
+        label: 'Type of Work',
+        required: false,
+        options: [
+          'pruning',
+          'harvesting',
+          'spraying',
+          'weeding',
+          'planting',
+          'maintenance',
+          'other'
+        ],
+        conditionalOn: { field: 'labor_entry_mode', value: 'itemized' }
+      },
+      {
+        name: 'rate_per_unit',
+        type: 'number',
+        label: 'Rate (₹/day or ₹/hour)',
+        required: false,
+        min: 0,
+        step: 1,
+        placeholder: 'e.g., 500',
+        conditionalOn: { field: 'labor_entry_mode', value: 'itemized' }
+      },
+      {
+        name: 'worker_names',
+        type: 'text',
+        label: 'Worker Names',
+        required: false,
+        placeholder: 'Comma-separated names (optional)',
+        maxLength: 500,
+        conditionalOn: { field: 'labor_entry_mode', value: 'itemized' }
       },
       {
         name: 'vendor',
