@@ -1056,7 +1056,7 @@ export default function WorkersPage() {
                   <Users className="h-5 w-5 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-2xl font-bold break-words">{activeWorkers}</p>
+                  <p className="text-lg sm:text-2xl font-bold break-words">{activeWorkers}</p>
                   <p className="text-xs text-muted-foreground">Active Workers</p>
                 </div>
               </div>
