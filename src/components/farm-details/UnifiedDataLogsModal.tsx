@@ -28,6 +28,7 @@ import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-con
 import { type Chemical } from '@/lib/chemical-formatter'
 import { SupabaseService } from '@/lib/supabase-service'
 import { generateSaveButtonLabel } from '@/lib/daily-note-utils'
+import { formatNumberString } from '@/lib/number-utils'
 import { WarehouseItemSelect } from '@/components/warehouse/WarehouseItemSelect'
 import { warehouseService } from '@/lib/warehouse-service'
 
@@ -36,19 +37,6 @@ interface LogEntry {
   type: LogType
   data: Record<string, any>
   isValid: boolean
-}
-
-// Format number string - removes leading zeros (e.g., "0400" -> "400")
-const formatNumberString = (value: string): string => {
-  if (!value) return value
-  // Only format if it's a valid number and not just a decimal point or minus sign
-  if (/^-?\d*\.?\d*$/.test(value) && value !== '.' && value !== '-' && value !== '-.') {
-    const num = parseFloat(value)
-    if (!isNaN(num)) {
-      return num.toString()
-    }
-  }
-  return value
 }
 
 interface UnifiedDataLogsModalProps {

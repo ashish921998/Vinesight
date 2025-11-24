@@ -52,7 +52,6 @@ import {
   ChevronLeft,
   IndianRupee,
   Loader2,
-  Pencil,
   Plus,
   Trash2,
   User,
@@ -73,6 +72,9 @@ import type {
 import { cn } from '@/lib/utils'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { createClient } from '@/lib/supabase'
+import { WorkersListView } from '@/components/workers/WorkersListView'
+import { AttendanceView } from '@/components/workers/AttendanceView'
+import { AnalyticsView } from '@/components/workers/AnalyticsView'
 
 interface Farm {
   id: number
@@ -1000,680 +1002,6 @@ export default function WorkersPage() {
     ? settlementCalculation.gross_amount - (parseFloat(advanceDeduction) || 0)
     : 0
 
-  const renderWorkersView = () => {
-    if (loading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      )
-    }
-    if (workers.length === 0) {
-      return (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-            <h3 className="font-medium mb-1">No workers yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Add your first worker to start tracking
-            </p>
-            <Button
-              onClick={handleOpenAddModal}
-              className="bg-primary hover:bg-primary/90 text-white rounded-full px-6"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add Worker
-            </Button>
-          </CardContent>
-        </Card>
-      )
-    }
-
-    return (
-      <div className="space-y-3">
-        {workers.map((worker) => (
-          <Card
-            key={worker.id}
-            className={cn(
-              'cursor-pointer border-none bg-gradient-to-r from-white to-primary/10 shadow-sm rounded-3xl transition hover:shadow-md',
-              !worker.is_active && 'opacity-60'
-            )}
-            onClick={() => handleOpenWorkerDetail(worker)}
-          >
-            <CardContent className="p-4 sm:p-5">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <User className="h-5 w-5" />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-lg font-semibold text-foreground">{worker.name}</h3>
-                    <Badge className="text-xs" variant={worker.is_active ? 'outline' : 'secondary'}>
-                      {worker.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </div>
-                  <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-                    <div className="flex items-center gap-1">
-                      <IndianRupee className="h-4 w-4" />
-                      <span className="font-medium text-foreground">
-                        ₹{worker.daily_rate.toLocaleString('en-IN')}
-                      </span>
-                      <span>/day</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-amber-600">
-                      <Wallet className="h-4 w-4" />
-                      <span className="font-semibold">
-                        ₹{(worker.advance_balance || 0).toLocaleString('en-IN')}
-                      </span>
-                      <span className="text-xs uppercase tracking-wide">advance</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-primary"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleOpenEditModal(worker)
-                    }}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-red-600 hover:text-red-700"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setDeleteWorker(worker)
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    )
-  }
-
-  const renderAttendanceView = () => {
-    if (farms.length === 0) {
-      return (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground mb-4">No farms found. Create a farm first.</p>
-            <Button onClick={() => router.push('/farms')}>Go to Farms</Button>
-          </CardContent>
-        </Card>
-      )
-    }
-
-    const activeWorkers = workers.filter((worker) => worker.is_active)
-    if (activeWorkers.length === 0) {
-      return (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            No active workers available. Add workers to start recording attendance.
-          </CardContent>
-        </Card>
-      )
-    }
-
-    const selectedHistoryWorker = activeWorkers.find(
-      (worker) => worker.id === attendanceHistoryWorkerId
-    )
-    const sortedAttendance = [...attendanceHistory].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    )
-    const farmNameLookup = new Map(farms.map((farm) => [farm.id, farm.name]))
-
-    const latestAttendanceLabel =
-      sortedAttendance.length > 0
-        ? format(new Date(sortedAttendance[0].date), 'dd MMM, yyyy')
-        : 'No records yet'
-
-    return (
-      <div className="space-y-4 pb-32">
-        <Card className="border-none bg-gradient-to-br from-primary/10 via-white to-white shadow-sm">
-          <CardContent className="space-y-5 p-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-                  Worker focus
-                </p>
-                <h3 className="text-xl font-semibold mt-1">
-                  {selectedHistoryWorker ? selectedHistoryWorker.name : 'Choose a worker'}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Review attendance history or record a fresh entry for any farm and day.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-primary/20 bg-white px-4 py-3 text-sm shadow-sm">
-                <p className="text-xs uppercase text-muted-foreground">Last recorded</p>
-                <p className="font-semibold text-primary">{latestAttendanceLabel}</p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground uppercase">Worker</Label>
-              <Select
-                value={attendanceHistoryWorkerId?.toString() || ''}
-                onValueChange={(value) => setAttendanceHistoryWorkerId(parseInt(value, 10))}
-              >
-                <SelectTrigger className="h-12 rounded-2xl border-primary/20 bg-white">
-                  <SelectValue placeholder="Select worker" />
-                </SelectTrigger>
-                <SelectContent>
-                  {activeWorkers.map((worker) => (
-                    <SelectItem key={worker.id} value={worker.id.toString()}>
-                      {worker.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              onClick={handleOpenAttendanceModal}
-              className="w-full rounded-full bg-primary hover:bg-primary/90 text-white"
-              size="lg"
-            >
-              <Check className="h-4 w-4 mr-2" />
-              Record Attendance
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold">Past attendance</h3>
-              <p className="text-sm text-muted-foreground">
-                {selectedHistoryWorker
-                  ? `Showing recent records for ${selectedHistoryWorker.name}`
-                  : 'Select a worker to view their attendance history'}
-              </p>
-            </div>
-
-            {attendanceHistoryLoading ? (
-              <div className="flex items-center justify-center py-10">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : !selectedHistoryWorker ? (
-              <p className="text-center text-muted-foreground py-6">
-                Choose a worker to see attendance.
-              </p>
-            ) : sortedAttendance.length === 0 ? (
-              <p className="text-center text-muted-foreground py-6">No attendance recorded yet.</p>
-            ) : (
-              <div className="space-y-3 max-h-[30rem] overflow-y-auto pr-1">
-                {sortedAttendance.slice(0, 50).map((record) => {
-                  const baseRate =
-                    record.daily_rate_override ?? selectedHistoryWorker?.daily_rate ?? 0
-                  const computedAmount =
-                    baseRate *
-                    (record.work_status === 'full_day'
-                      ? 1
-                      : record.work_status === 'half_day'
-                        ? 0.5
-                        : 0)
-                  return (
-                    <div
-                      key={record.id}
-                      className="rounded-2xl border border-muted bg-white/90 shadow-sm p-4"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">
-                            {format(new Date(record.date), 'EEE, MMM d')}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {record.farm_id
-                              ? farmNameLookup.get(record.farm_id) || `Farm #${record.farm_id}`
-                              : 'Multiple farms'}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              'px-3 py-1 rounded-full',
-                              record.work_status === 'full_day' && 'bg-green-50 text-green-700',
-                              record.work_status === 'half_day' && 'bg-amber-50 text-amber-700',
-                              record.work_status === 'absent' && 'bg-muted text-muted-foreground'
-                            )}
-                          >
-                            {record.work_status === 'full_day'
-                              ? 'Full day'
-                              : record.work_status === 'half_day'
-                                ? 'Half day'
-                                : 'Absent'}
-                          </Badge>
-                          <span className="text-sm font-medium capitalize text-muted-foreground">
-                            {record.work_type.replace(/_/g, ' ')}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground"
-                            onClick={() => handleOpenEditAttendance(record)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-500"
-                            onClick={() => handleRequestDeleteAttendance(record)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="mt-3 flex flex-wrap items-end justify-between gap-3 border-t pt-3">
-                        <div>
-                          {record.notes ? (
-                            <p className="text-sm text-muted-foreground">{record.notes}</p>
-                          ) : (
-                            <p className="text-xs text-muted-foreground">No notes added.</p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-semibold text-primary">
-                            ₹{computedAmount.toLocaleString('en-IN')}
-                          </p>
-                          <p className="text-xs text-muted-foreground">Recorded amount</p>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  const renderAnalyticsView = () => (
-    <div className="space-y-4 pb-32">
-      <Card className="border-none bg-gradient-to-br from-primary/10 via-white to-white shadow-sm rounded-3xl">
-        <CardContent className="space-y-5 p-5">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold">
-                AI
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">
-                  Analytics
-                </p>
-                <h3 className="text-xl font-semibold text-foreground">Labor cost insights</h3>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Choose a date range and farm to understand salaries, advances, and temporary payouts.
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground uppercase">From</Label>
-              <Input
-                type="date"
-                value={analyticsStartDate}
-                onChange={(e) => setAnalyticsStartDate(e.target.value)}
-                className="h-12 rounded-2xl border-primary/20 bg-white"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground uppercase">To</Label>
-              <Input
-                type="date"
-                value={analyticsEndDate}
-                onChange={(e) => setAnalyticsEndDate(e.target.value)}
-                className="h-12 rounded-2xl border-primary/20 bg-white"
-              />
-            </div>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground uppercase">Farm</Label>
-              <Select
-                value={analyticsFarmId?.toString() || 'all'}
-                onValueChange={(value) =>
-                  setAnalyticsFarmId(value === 'all' ? null : parseInt(value, 10))
-                }
-              >
-                <SelectTrigger className="h-12 rounded-2xl border-primary/20 bg-white">
-                  <SelectValue placeholder="All farms" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All farms</SelectItem>
-                  {farms.map((farm) => (
-                    <SelectItem key={farm.id} value={farm.id.toString()}>
-                      {farm.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="rounded-2xl border border-dashed border-primary/30 bg-white/70 p-4 text-sm text-muted-foreground">
-              Filters are applied automatically. Adjust the range or farm and the analytics refresh
-              instantly.
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {analyticsLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : (
-        <>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Card className="rounded-2xl border-none bg-white shadow-sm">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase text-primary">Fixed workers</p>
-                  <p className="text-3xl font-bold mt-1">
-                    ₹{fixedAnalytics.salaryTotal.toLocaleString('en-IN')}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Advance recovered: ₹{fixedAnalytics.advanceRecovered.toLocaleString('en-IN')}
-                  </p>
-                </div>
-                <div className="rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-semibold">
-                  Fixed
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="rounded-2xl border-none bg-white shadow-sm">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase text-amber-600">
-                    Temporary workers
-                  </p>
-                  <p className="text-3xl font-bold mt-1">
-                    ₹{tempAnalytics.totalPaid.toLocaleString('en-IN')}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Total hours:{' '}
-                    {tempAnalytics.byWorker.reduce((sum, entry) => sum + entry.hours, 0).toFixed(1)}
-                  </p>
-                </div>
-                <div className="rounded-full bg-amber-100 text-amber-700 px-3 py-1 text-xs font-semibold">
-                  Temp
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="border-none rounded-3xl shadow-sm">
-            <CardContent className="space-y-4 p-5">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-                    Fixed worker breakdown
-                  </p>
-                  <h3 className="text-lg font-semibold">Salaries vs. recovered advances</h3>
-                </div>
-                <div className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                  {fixedAnalytics.byWorker.length} workers
-                </div>
-              </div>
-
-              {fixedAnalytics.byWorker.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No records for this range.</p>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {fixedAnalytics.byWorker.map((entry) => (
-                    <div key={entry.worker_id} className="rounded-2xl border border-muted p-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold">{entry.worker_name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {entry.days.toFixed(1)} days · ₹{entry.advance.toLocaleString('en-IN')}{' '}
-                            recovered
-                          </p>
-                        </div>
-                        <p className="text-base font-semibold">
-                          ₹{entry.salary.toLocaleString('en-IN')}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="rounded-2xl border border-dashed border-primary/30 p-4 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="text-xs uppercase text-muted-foreground">Drill down</p>
-                    <h4 className="text-base font-semibold">Detailed salary & advance logs</h4>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowFixedDetails((prev) => !prev)}
-                  >
-                    {showFixedDetails ? 'Hide Details' : 'View Details'}
-                  </Button>
-                </div>
-
-                {showFixedDetails && fixedAnalytics.byWorker.length > 0 && (
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Worker</Label>
-                      <Select
-                        value={
-                          selectedFixedWorker === 'all' ? 'all' : selectedFixedWorker.toString()
-                        }
-                        onValueChange={(value) =>
-                          setSelectedFixedWorker(value === 'all' ? 'all' : parseInt(value, 10))
-                        }
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Choose worker" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All workers</SelectItem>
-                          {fixedAnalytics.byWorker.map((entry) => (
-                            <SelectItem key={entry.worker_id} value={entry.worker_id.toString()}>
-                              {entry.worker_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <Card>
-                        <CardContent className="p-3 space-y-2">
-                          <p className="text-xs text-muted-foreground uppercase">Salary timeline</p>
-                          <div className="h-48 overflow-y-auto pr-2 space-y-1">
-                            {fixedAnalytics.attendanceRecords
-                              .filter((record) =>
-                                selectedFixedWorker === 'all'
-                                  ? true
-                                  : record.worker_id === selectedFixedWorker
-                              )
-                              .map((record) => {
-                                const worker = (record as any).worker as Worker
-                                const rate = record.daily_rate_override ?? worker?.daily_rate ?? 0
-                                const amount = rate * (record.work_status === 'full_day' ? 1 : 0.5)
-                                return (
-                                  <div
-                                    key={`${record.worker_id}-${record.date}-${record.work_type}`}
-                                    className="flex items-center justify-between text-xs border-b py-1"
-                                  >
-                                    <span>
-                                      {format(new Date(record.date), 'MMM d')} – {record.work_type}
-                                    </span>
-                                    <span>₹{amount.toLocaleString('en-IN')}</span>
-                                  </div>
-                                )
-                              })}
-                            {fixedAnalytics.attendanceRecords.filter((record) =>
-                              selectedFixedWorker === 'all'
-                                ? true
-                                : record.worker_id === selectedFixedWorker
-                            ).length === 0 && (
-                              <p className="text-xs text-muted-foreground">No salary entries</p>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="p-3 space-y-2">
-                          <p className="text-xs text-muted-foreground uppercase">
-                            Advance deductions
-                          </p>
-                          <div className="h-48 overflow-y-auto pr-2 space-y-1">
-                            {fixedAnalytics.advanceTransactions
-                              .filter((tx) =>
-                                selectedFixedWorker === 'all'
-                                  ? true
-                                  : tx.worker_id === selectedFixedWorker
-                              )
-                              .map((tx) => (
-                                <div
-                                  key={tx.id}
-                                  className="flex items-center justify-between text-xs border-b py-1"
-                                >
-                                  <span>{format(new Date(tx.date), 'MMM d')}</span>
-                                  <span>₹{tx.amount.toLocaleString('en-IN')}</span>
-                                </div>
-                              ))}
-                            {fixedAnalytics.advanceTransactions.filter((tx) =>
-                              selectedFixedWorker === 'all'
-                                ? true
-                                : tx.worker_id === selectedFixedWorker
-                            ).length === 0 && (
-                              <p className="text-xs text-muted-foreground">No deductions</p>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-none rounded-3xl shadow-sm">
-            <CardContent className="space-y-4 p-5">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">
-                    Temporary workers
-                  </p>
-                  <h3 className="text-lg font-semibold">Payments to short-term labor</h3>
-                </div>
-                <div className="inline-flex rounded-full border border-amber-100 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">
-                  {tempAnalytics.byWorker.length} workers
-                </div>
-              </div>
-
-              {tempAnalytics.byWorker.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No temporary workers recorded.</p>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {tempAnalytics.byWorker.map((entry) => (
-                    <div key={entry.name} className="rounded-2xl border border-muted p-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold">{entry.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {entry.hours.toFixed(1)} hours
-                          </p>
-                        </div>
-                        <p className="text-base font-semibold">
-                          ₹{entry.totalPaid.toLocaleString('en-IN')}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="rounded-2xl border border-dashed border-amber-200 p-4 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="text-xs uppercase text-muted-foreground">Drill down</p>
-                    <h4 className="text-base font-semibold">Detailed shift tracker</h4>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowTempDetails((prev) => !prev)}
-                  >
-                    {showTempDetails ? 'Hide Details' : 'View Details'}
-                  </Button>
-                </div>
-
-                {showTempDetails && tempAnalytics.byWorker.length > 0 && (
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Worker</Label>
-                      <Select
-                        value={selectedTempWorker}
-                        onValueChange={(value) => setSelectedTempWorker(value)}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Choose worker" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All temporary workers</SelectItem>
-                          {tempAnalytics.byWorker.map((entry) => (
-                            <SelectItem key={entry.name} value={entry.name}>
-                              {entry.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="h-48 overflow-y-auto border rounded-lg p-3 space-y-2">
-                      {tempAnalytics.entries
-                        .filter((entry) =>
-                          selectedTempWorker === 'all' ? true : entry.name === selectedTempWorker
-                        )
-                        .map((entry) => (
-                          <div
-                            key={entry.id}
-                            className="flex items-center justify-between text-sm border-b pb-1"
-                          >
-                            <div>
-                              <p className="font-medium">{entry.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {format(new Date(entry.date), 'MMM d')} · {entry.hours_worked}h
-                              </p>
-                            </div>
-                            <span>₹{entry.amount_paid.toLocaleString('en-IN')}</span>
-                          </div>
-                        ))}
-                      {tempAnalytics.entries.filter((entry) =>
-                        selectedTempWorker === 'all' ? true : entry.name === selectedTempWorker
-                      ).length === 0 && <p className="text-xs text-muted-foreground">No entries</p>}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
-    </div>
-  )
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -1778,9 +1106,52 @@ export default function WorkersPage() {
           </div>
         </div>
 
-        {viewMode === 'workers' && renderWorkersView()}
-        {viewMode === 'attendance' && renderAttendanceView()}
-        {viewMode === 'analytics' && renderAnalyticsView()}
+        {viewMode === 'workers' && (
+          <WorkersListView
+            workers={workers}
+            loading={loading}
+            onOpenAddModal={handleOpenAddModal}
+            onOpenWorkerDetail={handleOpenWorkerDetail}
+            onOpenEditModal={handleOpenEditModal}
+            onDeleteWorker={setDeleteWorker}
+          />
+        )}
+        {viewMode === 'attendance' && (
+          <AttendanceView
+            farms={farms}
+            workers={workers}
+            attendanceHistoryWorkerId={attendanceHistoryWorkerId}
+            attendanceHistory={attendanceHistory}
+            attendanceHistoryLoading={attendanceHistoryLoading}
+            onFarmNavigation={() => router.push('/farms')}
+            onAttendanceHistoryWorkerChange={setAttendanceHistoryWorkerId}
+            onOpenAttendanceModal={handleOpenAttendanceModal}
+            onOpenEditAttendance={handleOpenEditAttendance}
+            onRequestDeleteAttendance={handleRequestDeleteAttendance}
+          />
+        )}
+        {viewMode === 'analytics' && (
+          <AnalyticsView
+            farms={farms}
+            analyticsLoading={analyticsLoading}
+            analyticsStartDate={analyticsStartDate}
+            analyticsEndDate={analyticsEndDate}
+            analyticsFarmId={analyticsFarmId}
+            fixedAnalytics={fixedAnalytics}
+            tempAnalytics={tempAnalytics}
+            showFixedDetails={showFixedDetails}
+            selectedFixedWorker={selectedFixedWorker}
+            showTempDetails={showTempDetails}
+            selectedTempWorker={selectedTempWorker}
+            onStartDateChange={setAnalyticsStartDate}
+            onEndDateChange={setAnalyticsEndDate}
+            onFarmIdChange={setAnalyticsFarmId}
+            onToggleFixedDetails={() => setShowFixedDetails((prev) => !prev)}
+            onSelectedFixedWorkerChange={setSelectedFixedWorker}
+            onToggleTempDetails={() => setShowTempDetails((prev) => !prev)}
+            onSelectedTempWorkerChange={setSelectedTempWorker}
+          />
+        )}
       </div>
 
       {/* Record Attendance Modal */}

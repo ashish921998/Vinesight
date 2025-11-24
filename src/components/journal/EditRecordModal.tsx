@@ -33,7 +33,8 @@ import {
 import { SupabaseService } from '@/lib/supabase-service'
 import { toast } from 'sonner'
 import type { ReportAttachmentMeta } from '@/types/reports'
-import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-config'
+import { type FormField } from '@/lib/log-type-config'
+import { formatNumberString } from '@/lib/number-utils'
 import type {
   IrrigationRecord,
   SprayRecord,
@@ -253,19 +254,6 @@ export function EditRecordModal({
   const toNum = (s: string) => {
     const n = parseFloat(s)
     return Number.isFinite(n) ? n : undefined
-  }
-
-  // Format number string - removes leading zeros (e.g., "0400" -> "400")
-  const formatNumberString = (value: string): string => {
-    if (!value) return value
-    // Only format if it's a valid number and not just a decimal point or minus sign
-    if (/^-?\d*\.?\d*$/.test(value) && value !== '.' && value !== '-' && value !== '-.') {
-      const num = parseFloat(value)
-      if (!isNaN(num)) {
-        return num.toString()
-      }
-    }
-    return value
   }
 
   type FormByType<T extends EditRecordType> = Extract<EditRecordFormData, { recordType: T }>
@@ -748,6 +736,36 @@ export function EditRecordModal({
         })
       } else if (recordType === 'expense') {
         if (!expenseForm) throw new Error('Expense form is not ready')
+
+        // Validate numeric fields for labor expenses
+        if (expenseForm.type === 'labor') {
+          const decimalPattern = /^-?\d*\.?\d*$/
+
+          // Validate cost field
+          if (expenseForm.cost && !decimalPattern.test(expenseForm.cost)) {
+            toast.error('Cost must be a valid number')
+            return
+          }
+
+          // Validate num_workers (should be integer)
+          if (expenseForm.num_workers && !/^\d*$/.test(expenseForm.num_workers)) {
+            toast.error('Number of workers must be a valid whole number')
+            return
+          }
+
+          // Validate hours_worked
+          if (expenseForm.hours_worked && !decimalPattern.test(expenseForm.hours_worked)) {
+            toast.error('Hours worked must be a valid number')
+            return
+          }
+
+          // Validate rate_per_unit
+          if (expenseForm.rate_per_unit && !decimalPattern.test(expenseForm.rate_per_unit)) {
+            toast.error('Rate must be a valid number')
+            return
+          }
+        }
+
         await SupabaseService.updateExpenseRecord(record.id!, {
           date: expenseForm.date,
           type: expenseForm.type,
@@ -757,17 +775,17 @@ export function EditRecordModal({
           ...(expenseForm.type === 'labor' && {
             num_workers: toNum(expenseForm.num_workers),
             hours_worked: toNum(expenseForm.hours_worked),
-            work_type: expenseForm.work_type || undefined,
+            work_type: expenseForm.work_type || null,
             rate_per_unit: toNum(expenseForm.rate_per_unit),
-            worker_names: expenseForm.worker_names || undefined
+            worker_names: expenseForm.worker_names || null
           }),
-          // Clear labor fields if switching away from labor
+          // Clear labor fields if switching away from labor (use null to actually clear in DB)
           ...(expenseForm.type !== 'labor' && {
-            num_workers: undefined,
-            hours_worked: undefined,
-            work_type: undefined,
-            rate_per_unit: undefined,
-            worker_names: undefined
+            num_workers: null,
+            hours_worked: null,
+            work_type: null,
+            rate_per_unit: null,
+            worker_names: null
           })
         })
       } else if (recordType === 'soil_test') {

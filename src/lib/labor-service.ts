@@ -7,6 +7,7 @@
  */
 
 import { createClient } from '@/lib/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import type {
   Worker,
   WorkerCreateInput,
@@ -24,9 +25,18 @@ import type {
   TemporaryWorkerEntryInput
 } from '@/lib/supabase'
 
-// Helper to get untyped supabase client for new tables
-// Using type assertion since labor tables are not yet in auto-generated types
-const getUntypedClient = () => createClient() as any
+// Minimal typed interface for labor-related tables to retain autocomplete and catch typos
+interface LaborTables {
+  workers: any
+  worker_attendance: any
+  worker_transactions: any
+  worker_settlements: any
+  temporary_worker_entries: any
+  work_types: any
+}
+
+// Helper to get client with labor table names typed while keeping payloads untyped
+const getUntypedClient = () => createClient() as unknown as SupabaseClient<LaborTables>
 
 // ============================================
 // Work Types
@@ -285,8 +295,8 @@ export async function createAttendance(
       date: input.date,
       work_status: input.work_status,
       work_type: input.work_type,
-      daily_rate_override: input.daily_rate_override || null,
-      notes: input.notes || null
+      daily_rate_override: input.daily_rate_override ?? null,
+      notes: input.notes ?? null
     })
     .select()
     .single()
@@ -361,12 +371,12 @@ export async function createTransaction(
     .from('worker_transactions')
     .insert({
       worker_id: input.worker_id,
-      farm_id: input.farm_id || null,
+      farm_id: input.farm_id ?? null,
       date: input.date,
       type: input.type,
       amount: input.amount,
-      settlement_id: input.settlement_id || null,
-      notes: input.notes || null
+      settlement_id: input.settlement_id ?? null,
+      notes: input.notes ?? null
     })
     .select()
     .single()
@@ -536,90 +546,67 @@ export async function createSettlement(
 ): Promise<WorkerSettlement> {
   const supabase = getUntypedClient()
 
+  // Always insert as draft - confirmSettlement is the single place that confirms and creates transactions
   const { data: settlement, error: settlementError } = await supabase
     .from('worker_settlements')
     .insert({
       worker_id: input.worker_id,
-      farm_id: input.farm_id || null,
+      farm_id: input.farm_id ?? null,
       period_start: input.period_start,
       period_end: input.period_end,
       days_worked: input.days_worked,
       gross_amount: input.gross_amount,
       advance_deducted: input.advance_deducted,
       net_payment: input.net_payment,
-      status: autoConfirm ? 'confirmed' : 'draft',
-      notes: input.notes || null,
-      confirmed_at: autoConfirm ? new Date().toISOString() : null
+      status: 'draft',
+      notes: input.notes ?? null,
+      confirmed_at: null
     })
     .select()
     .single()
 
   if (settlementError) throw settlementError
 
-  // If auto-confirming, create the transaction records
+  // If auto-confirming, use atomic confirmation to ensure data consistency
   if (autoConfirm) {
-    await confirmSettlement(settlement.id)
+    try {
+      return await confirmSettlementAtomic(settlement.id)
+    } catch (error) {
+      // Roll back the created settlement if atomic confirmation fails
+      try {
+        await supabase.from('worker_settlements').delete().eq('id', settlement.id)
+      } catch (rollbackError) {
+        // Log rollback error but throw the original error
+        console.error(
+          'Failed to roll back settlement after atomic confirmation error:',
+          rollbackError
+        )
+      }
+      throw error
+    }
   }
 
   return settlement
 }
 
-// Confirm a draft settlement and create transaction records
-export async function confirmSettlement(settlementId: number): Promise<WorkerSettlement> {
+// Confirm a draft settlement atomically using server-side function
+export async function confirmSettlementAtomic(settlementId: number): Promise<WorkerSettlement> {
   const supabase = getUntypedClient()
 
-  // Get the settlement
-  const { data: settlement, error: fetchError } = await supabase
-    .from('worker_settlements')
-    .select('*')
-    .eq('id', settlementId)
-    .single()
+  // Call the atomic server-side function
+  const { data, error } = await supabase.rpc('confirm_settlement_atomic', {
+    settlement_id_param: settlementId
+  })
 
-  if (fetchError) throw fetchError
-  if (!settlement) throw new Error('Settlement not found')
-  if (settlement.status === 'confirmed') throw new Error('Settlement already confirmed')
+  if (error) throw error
+  if (!data || data.length === 0) throw new Error('Settlement confirmation failed')
 
-  const today = new Date().toISOString().split('T')[0]
+  return data[0] as WorkerSettlement
+}
 
-  // Create advance deduction transaction if applicable
-  if (settlement.advance_deducted > 0) {
-    await createTransaction({
-      worker_id: settlement.worker_id,
-      farm_id: settlement.farm_id,
-      date: today,
-      type: 'advance_deducted',
-      amount: settlement.advance_deducted,
-      settlement_id: settlementId,
-      notes: `Advance deduction for settlement ${settlement.period_start} to ${settlement.period_end}`
-    })
-  }
-
-  // Create payment transaction
-  if (settlement.net_payment > 0) {
-    await createTransaction({
-      worker_id: settlement.worker_id,
-      farm_id: settlement.farm_id,
-      date: today,
-      type: 'payment',
-      amount: settlement.net_payment,
-      settlement_id: settlementId,
-      notes: `Payment for settlement ${settlement.period_start} to ${settlement.period_end}`
-    })
-  }
-
-  // Update settlement status
-  const { data: updated, error: updateError } = await supabase
-    .from('worker_settlements')
-    .update({
-      status: 'confirmed',
-      confirmed_at: new Date().toISOString()
-    })
-    .eq('id', settlementId)
-    .select()
-    .single()
-
-  if (updateError) throw updateError
-  return updated
+// Legacy function - kept for backward compatibility but uses atomic version
+export async function confirmSettlement(settlementId: number): Promise<WorkerSettlement> {
+  return confirmSettlementAtomic(settlementId)
 }
 
 // ============================================

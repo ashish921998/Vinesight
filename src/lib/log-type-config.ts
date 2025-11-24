@@ -176,8 +176,7 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         label: 'Notes (Optional)',
         required: false,
         placeholder: 'e.g., Additional details about this expense...',
-        maxLength: 2000,
-        conditionalOn: { field: 'type', value: ['materials', 'equipment', 'fuel', 'other'] }
+        maxLength: 2000
       }
     ]
   },
