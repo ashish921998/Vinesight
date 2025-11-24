@@ -33,7 +33,8 @@ import {
 import { SupabaseService } from '@/lib/supabase-service'
 import { toast } from 'sonner'
 import type { ReportAttachmentMeta } from '@/types/reports'
-import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-config'
+import { type FormField } from '@/lib/log-type-config'
+import { formatNumberString } from '@/lib/number-utils'
 import type {
   IrrigationRecord,
   SprayRecord,
@@ -58,6 +59,96 @@ interface SprayDataUpdate {
 function isPetioleRecord(record: SoilTestRecord | PetioleTestRecord): record is PetioleTestRecord {
   return 'sample_id' in record
 }
+
+// Local field configs for soil and petiole tests (separate from main log types)
+const soilTestFields: FormField[] = [
+  { name: 'pH', type: 'number', label: 'pH', required: false, min: 0, max: 14, step: 0.1 },
+  { name: 'ec', type: 'number', label: 'EC (mS/cm)', required: false, min: 0, step: 0.01 },
+  {
+    name: 'nitrogen',
+    type: 'number',
+    label: 'Nitrogen (kg/ha)',
+    required: false,
+    min: 0,
+    step: 0.1
+  },
+  {
+    name: 'phosphorus',
+    type: 'number',
+    label: 'Phosphorus (kg/ha)',
+    required: false,
+    min: 0,
+    step: 0.1
+  },
+  {
+    name: 'potassium',
+    type: 'number',
+    label: 'Potassium (kg/ha)',
+    required: false,
+    min: 0,
+    step: 0.1
+  },
+  {
+    name: 'organic_carbon',
+    type: 'number',
+    label: 'Organic Carbon (%)',
+    required: false,
+    min: 0,
+    max: 100,
+    step: 0.01
+  }
+]
+
+const petioleTestFields: FormField[] = [
+  {
+    name: 'nitrogen',
+    type: 'number',
+    label: 'Nitrogen (%)',
+    required: false,
+    min: 0,
+    max: 100,
+    step: 0.01
+  },
+  {
+    name: 'phosphorus',
+    type: 'number',
+    label: 'Phosphorus (%)',
+    required: false,
+    min: 0,
+    max: 100,
+    step: 0.01
+  },
+  {
+    name: 'potassium',
+    type: 'number',
+    label: 'Potassium (%)',
+    required: false,
+    min: 0,
+    max: 100,
+    step: 0.01
+  },
+  {
+    name: 'calcium',
+    type: 'number',
+    label: 'Calcium (%)',
+    required: false,
+    min: 0,
+    max: 100,
+    step: 0.01
+  },
+  {
+    name: 'magnesium',
+    type: 'number',
+    label: 'Magnesium (%)',
+    required: false,
+    min: 0,
+    max: 100,
+    step: 0.01
+  },
+  { name: 'boron', type: 'number', label: 'Boron (ppm)', required: false, min: 0, step: 0.1 },
+  { name: 'zinc', type: 'number', label: 'Zinc (ppm)', required: false, min: 0, step: 0.1 },
+  { name: 'iron', type: 'number', label: 'Iron (ppm)', required: false, min: 0, step: 0.1 }
+]
 
 export type EditRecordType =
   | 'irrigation'
@@ -101,14 +192,19 @@ export interface FertigationFormData extends BaseFormData {
   fertilizers: Array<{ id: string; name: string; quantity: number; unit: string }>
 }
 
-type ExpenseCategory = 'labor' | 'materials' | 'equipment' | 'other'
+type ExpenseCategory = 'labor' | 'materials' | 'equipment' | 'fuel' | 'other'
 
 export interface ExpenseFormData extends BaseFormData {
   recordType: 'expense'
   type: ExpenseCategory
-  description: string
   cost: string
   remarks: string
+  // Labor-specific fields
+  num_workers: string
+  hours_worked: string
+  work_type: string
+  rate_per_unit: string
+  worker_names: string
 }
 
 export interface SoilTestFormData extends BaseFormData {
@@ -319,9 +415,14 @@ export function EditRecordModal({
         date: expenseRecord.date,
         notes: '',
         type: (expenseRecord.type as ExpenseCategory) || 'other',
-        description: expenseRecord.description || '',
         cost: expenseRecord.cost?.toString() || '',
-        remarks: expenseRecord.remarks || ''
+        remarks: expenseRecord.remarks || '',
+        // Labor-specific fields
+        num_workers: expenseRecord.num_workers?.toString() || '',
+        hours_worked: expenseRecord.hours_worked?.toString() || '',
+        work_type: expenseRecord.work_type || '',
+        rate_per_unit: expenseRecord.rate_per_unit?.toString() || '',
+        worker_names: expenseRecord.worker_names || ''
       })
     } else if (recordType === 'soil_test') {
       const soilTestRecord = record as SoilTestRecord
@@ -635,12 +736,57 @@ export function EditRecordModal({
         })
       } else if (recordType === 'expense') {
         if (!expenseForm) throw new Error('Expense form is not ready')
+
+        // Validate numeric fields for labor expenses
+        if (expenseForm.type === 'labor') {
+          const decimalPattern = /^-?\d*\.?\d*$/
+
+          // Validate cost field
+          if (expenseForm.cost && !decimalPattern.test(expenseForm.cost)) {
+            toast.error('Cost must be a valid number')
+            return
+          }
+
+          // Validate num_workers (should be integer)
+          if (expenseForm.num_workers && !/^\d*$/.test(expenseForm.num_workers)) {
+            toast.error('Number of workers must be a valid whole number')
+            return
+          }
+
+          // Validate hours_worked
+          if (expenseForm.hours_worked && !decimalPattern.test(expenseForm.hours_worked)) {
+            toast.error('Hours worked must be a valid number')
+            return
+          }
+
+          // Validate rate_per_unit
+          if (expenseForm.rate_per_unit && !decimalPattern.test(expenseForm.rate_per_unit)) {
+            toast.error('Rate must be a valid number')
+            return
+          }
+        }
+
         await SupabaseService.updateExpenseRecord(record.id!, {
           date: expenseForm.date,
           type: expenseForm.type,
-          description: expenseForm.description,
           cost: toNum(expenseForm.cost),
-          remarks: expenseForm.remarks
+          remarks: expenseForm.remarks,
+          // Labor-specific fields (only include if type is 'labor')
+          ...(expenseForm.type === 'labor' && {
+            num_workers: toNum(expenseForm.num_workers),
+            hours_worked: toNum(expenseForm.hours_worked),
+            work_type: expenseForm.work_type || null,
+            rate_per_unit: toNum(expenseForm.rate_per_unit),
+            worker_names: expenseForm.worker_names || null
+          }),
+          // Clear labor fields if switching away from labor (use null to actually clear in DB)
+          ...(expenseForm.type !== 'labor' && {
+            num_workers: null,
+            hours_worked: null,
+            work_type: null,
+            rate_per_unit: null,
+            worker_names: null
+          })
         })
       } else if (recordType === 'soil_test') {
         if (!soilTestForm) throw new Error('Soil test form is not ready')
@@ -1239,26 +1385,10 @@ export function EditRecordModal({
                       <SelectItem value="labor">Labor</SelectItem>
                       <SelectItem value="materials">Materials</SelectItem>
                       <SelectItem value="equipment">Equipment</SelectItem>
+                      <SelectItem value="fuel">Fuel</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div>
-                  <Label htmlFor="description" className="text-sm font-medium text-gray-700">
-                    Description *
-                  </Label>
-                  <Input
-                    id="description"
-                    value={expenseForm?.description ?? ''}
-                    onChange={(e) =>
-                      updateFormData('expense', (current) => ({
-                        ...current,
-                        description: e.target.value
-                      }))
-                    }
-                    className="mt-1"
-                    required
-                  />
                 </div>
                 <div>
                   <Label htmlFor="cost" className="text-sm font-medium text-gray-700">
@@ -1266,9 +1396,9 @@ export function EditRecordModal({
                   </Label>
                   <Input
                     id="cost"
-                    type="number"
-                    step="0.01"
-                    min="0"
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*\\.?[0-9]*"
                     value={expenseForm?.cost ?? ''}
                     onChange={(e) =>
                       updateFormData('expense', (current) => ({
@@ -1276,10 +1406,151 @@ export function EditRecordModal({
                         cost: e.target.value
                       }))
                     }
+                    onBlur={(e) =>
+                      updateFormData('expense', (current) => ({
+                        ...current,
+                        cost: formatNumberString(e.target.value)
+                      }))
+                    }
                     className="mt-1"
                     required
                   />
                 </div>
+
+                {/* Labor-specific fields - shown only when category is 'labor' */}
+                {expenseForm?.type === 'labor' && (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="num_workers" className="text-sm font-medium text-gray-700">
+                          Number of Workers
+                        </Label>
+                        <Input
+                          id="num_workers"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={expenseForm?.num_workers ?? ''}
+                          onChange={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              num_workers: e.target.value
+                            }))
+                          }
+                          onBlur={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              num_workers: formatNumberString(e.target.value)
+                            }))
+                          }
+                          placeholder="e.g., 5"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="hours_worked" className="text-sm font-medium text-gray-700">
+                          Hours Worked
+                        </Label>
+                        <Input
+                          id="hours_worked"
+                          type="text"
+                          inputMode="decimal"
+                          pattern="[0-9]*\\.?[0-9]*"
+                          value={expenseForm?.hours_worked ?? ''}
+                          onChange={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              hours_worked: e.target.value
+                            }))
+                          }
+                          onBlur={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              hours_worked: formatNumberString(e.target.value)
+                            }))
+                          }
+                          placeholder="e.g., 8"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="work_type" className="text-sm font-medium text-gray-700">
+                          Type of Work
+                        </Label>
+                        <Select
+                          value={expenseForm?.work_type ?? ''}
+                          onValueChange={(value) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              work_type: value
+                            }))
+                          }
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select work type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pruning">Pruning</SelectItem>
+                            <SelectItem value="harvesting">Harvesting</SelectItem>
+                            <SelectItem value="spraying">Spraying</SelectItem>
+                            <SelectItem value="weeding">Weeding</SelectItem>
+                            <SelectItem value="planting">Planting</SelectItem>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label
+                          htmlFor="rate_per_unit"
+                          className="text-sm font-medium text-gray-700"
+                        >
+                          Rate (₹/day or ₹/hour)
+                        </Label>
+                        <Input
+                          id="rate_per_unit"
+                          type="text"
+                          inputMode="decimal"
+                          pattern="[0-9]*\\.?[0-9]*"
+                          value={expenseForm?.rate_per_unit ?? ''}
+                          onChange={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              rate_per_unit: e.target.value
+                            }))
+                          }
+                          onBlur={(e) =>
+                            updateFormData('expense', (current) => ({
+                              ...current,
+                              rate_per_unit: formatNumberString(e.target.value)
+                            }))
+                          }
+                          placeholder="e.g., 500"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="worker_names" className="text-sm font-medium text-gray-700">
+                        Worker Names (optional)
+                      </Label>
+                      <Input
+                        id="worker_names"
+                        value={expenseForm?.worker_names ?? ''}
+                        onChange={(e) =>
+                          updateFormData('expense', (current) => ({
+                            ...current,
+                            worker_names: e.target.value
+                          }))
+                        }
+                        placeholder="e.g., Ram, Shyam, Mohan"
+                        className="mt-1"
+                      />
+                    </div>
+                  </>
+                )}
               </>
             )}
 
@@ -1287,37 +1558,37 @@ export function EditRecordModal({
               <>
                 {/* Dynamic Soil Test Fields */}
                 <div
-                  className={`space-y-3 ${logTypeConfigs[record && isPetioleRecord(record) ? 'petiole_test' : 'soil_test'].fields.length > 1 ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : ''}`}
+                  className={`space-y-3 ${(record && isPetioleRecord(record) ? petioleTestFields : soilTestFields).length > 1 ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : ''}`}
                 >
-                  {logTypeConfigs[
-                    record && isPetioleRecord(record) ? 'petiole_test' : 'soil_test'
-                  ].fields.map((field) => (
-                    <div key={field.name}>
-                      <Label htmlFor={field.name} className="text-sm font-medium text-gray-700">
-                        {field.label}
-                        {field.required && <span className="text-red-500 ml-1">*</span>}
-                      </Label>
-                      <Input
-                        id={field.name}
-                        type="number"
-                        step={field.step}
-                        min={field.min}
-                        max={field.max}
-                        value={soilTestForm?.parameters?.[field.name] ?? ''}
-                        onChange={(e) => {
-                          const parsed = parseFloat(e.target.value)
-                          updateFormData('soil_test', (current) => ({
-                            ...current,
-                            parameters: {
-                              ...current.parameters,
-                              [field.name]: Number.isNaN(parsed) ? 0 : parsed
-                            }
-                          }))
-                        }}
-                        className="mt-1"
-                      />
-                    </div>
-                  ))}
+                  {(record && isPetioleRecord(record) ? petioleTestFields : soilTestFields).map(
+                    (field) => (
+                      <div key={field.name}>
+                        <Label htmlFor={field.name} className="text-sm font-medium text-gray-700">
+                          {field.label}
+                          {field.required && <span className="text-red-500 ml-1">*</span>}
+                        </Label>
+                        <Input
+                          id={field.name}
+                          type="number"
+                          step={field.step}
+                          min={field.min}
+                          max={field.max}
+                          value={soilTestForm?.parameters?.[field.name] ?? ''}
+                          onChange={(e) => {
+                            const parsed = parseFloat(e.target.value)
+                            updateFormData('soil_test', (current) => ({
+                              ...current,
+                              parameters: {
+                                ...current.parameters,
+                                [field.name]: Number.isNaN(parsed) ? 0 : parsed
+                              }
+                            }))
+                          }}
+                          className="mt-1"
+                        />
+                      </div>
+                    )
+                  )}
                 </div>
                 <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 space-y-2">
                   <div className="flex items-start justify-between gap-2">

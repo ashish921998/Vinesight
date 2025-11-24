@@ -22,7 +22,6 @@ export default function PestAlertsPage() {
       setFarm(data.farm)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error loading farm data:', error)
       }
     } finally {

@@ -104,11 +104,17 @@ export interface ExpenseRecord {
   id?: number
   farm_id: number
   date: string
-  type: 'labor' | 'materials' | 'equipment' | 'other'
-  description: string
+  type: 'labor' | 'materials' | 'equipment' | 'fuel' | 'other'
   cost: number
   date_of_pruning?: Date // Date object of pruning when this record was created (snapshot from farm level)
   remarks?: string
+  // Labor-specific fields (only used when type = 'labor')
+  // Allow null to explicitly clear these fields when switching away from labor type
+  num_workers?: number | null // Number of laborers
+  hours_worked?: number | null // Total hours worked
+  work_type?: string | null // Type of work (pruning, harvesting, spraying, weeding, etc.)
+  rate_per_unit?: number | null // Hourly or daily wage rate
+  worker_names?: string | null // Comma-separated worker names
   created_at?: string
 }
 
@@ -197,4 +203,176 @@ export interface PetioleTestRecord {
   parsed_parameters?: Record<string, number> | null
   raw_notes?: string | null
   created_at?: string
+}
+
+// ============================================
+// Labor Management Module Types
+// ============================================
+
+export type WorkStatus = 'full_day' | 'half_day' | 'absent'
+export type TransactionType = 'advance_given' | 'advance_deducted' | 'payment'
+export type SettlementStatus = 'draft' | 'confirmed'
+
+export interface WorkType {
+  id: number
+  user_id: string | null // null for default system work types
+  name: string
+  is_default: boolean
+  created_at: string
+}
+
+export interface Worker {
+  id: number
+  user_id: string
+  name: string
+  daily_rate: number
+  advance_balance: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface WorkerCreateInput {
+  name: string
+  daily_rate: number
+  advance_balance: number
+}
+
+export interface WorkerUpdateInput {
+  name?: string
+  daily_rate?: number
+  advance_balance?: number
+  is_active?: boolean
+}
+
+export interface WorkerAttendance {
+  id: number
+  worker_id: number
+  farm_id: number
+  date: string
+  work_status: WorkStatus
+  work_type: string
+  daily_rate_override?: number | null // null means use worker's default rate
+  notes?: string | null
+  created_at: string
+  updated_at: string
+  // Joined fields
+  worker?: Worker
+}
+
+export interface WorkerAttendanceCreateInput {
+  worker_id: number
+  farm_id: number
+  date: string
+  work_status: WorkStatus
+  work_type: string
+  daily_rate_override?: number | null
+  notes?: string
+}
+
+export interface WorkerSettlement {
+  id: number
+  worker_id: number
+  farm_id?: number | null // null if settlement spans multiple farms
+  period_start: string
+  period_end: string
+  days_worked: number
+  gross_amount: number
+  advance_deducted: number
+  net_payment: number
+  status: SettlementStatus
+  notes?: string | null
+  created_at: string
+  confirmed_at?: string | null
+  // Joined fields
+  worker?: Worker
+}
+
+export interface WorkerSettlementCreateInput {
+  worker_id: number
+  farm_id?: number | null
+  period_start: string
+  period_end: string
+  days_worked: number
+  gross_amount: number
+  advance_deducted: number
+  net_payment: number
+  notes?: string
+}
+
+export interface WorkerTransaction {
+  id: number
+  worker_id: number
+  farm_id?: number | null
+  date: string
+  type: TransactionType
+  amount: number
+  settlement_id?: number | null
+  notes?: string | null
+  created_at: string
+  // Joined fields
+  worker?: Worker
+  settlement?: WorkerSettlement
+}
+
+export interface WorkerTransactionCreateInput {
+  worker_id: number
+  farm_id?: number | null
+  date: string
+  type: TransactionType
+  amount: number
+  settlement_id?: number | null
+  notes?: string
+}
+
+export interface TemporaryWorkerEntry {
+  id: number
+  farm_id: number
+  user_id: string
+  date: string
+  name: string
+  hours_worked: number
+  amount_paid: number
+  notes?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface TemporaryWorkerEntryInput {
+  farm_id: number
+  date: string
+  name: string
+  hours_worked: number
+  amount_paid: number
+  notes?: string
+}
+
+// Summary types for analytics
+export interface WorkerAttendanceSummary {
+  worker_id: number
+  worker_name: string
+  farm_id: number
+  week_start: string
+  full_days: number
+  half_days: number
+  total_days: number
+  gross_earnings: number
+}
+
+export interface LaborAnalytics {
+  total_labor_cost: number
+  total_days_worked: number
+  by_work_type: Array<{
+    work_type: string
+    total_cost: number
+    total_days: number
+    avg_daily_rate: number
+  }>
+  by_worker: Array<{
+    worker_id: number
+    worker_name: string
+    total_cost: number
+    total_days: number
+    advance_balance: number
+  }>
 }

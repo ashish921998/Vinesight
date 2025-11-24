@@ -78,7 +78,6 @@ export function WeatherCard({ farm }: WeatherCardProps) {
         } catch (luxError) {
           // Log error for debugging in development only
           if (process.env.NODE_ENV === 'development') {
-            // eslint-disable-next-line no-console
             console.error('Error fetching solar radiation data:', luxError)
           }
         }
@@ -88,7 +87,6 @@ export function WeatherCard({ farm }: WeatherCardProps) {
     } catch (err) {
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error fetching weather data:', err)
       }
       setError('Failed to fetch weather data')
@@ -133,7 +131,6 @@ export function WeatherCard({ farm }: WeatherCardProps) {
     } catch (error) {
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error fetching hourly solar radiation:', error)
       }
     }
