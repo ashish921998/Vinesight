@@ -613,7 +613,6 @@ export default function FarmDetailsPage() {
           farm_id: parseInt(farmId),
           date: date,
           type: data.type || 'other',
-          description: data.description || '',
           cost: parseFloat(data.cost || '0'),
           remarks: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
@@ -974,7 +973,6 @@ export default function FarmDetailsPage() {
           farm_id: parseInt(farmId),
           date: originalDate,
           type: data.type || 'other',
-          description: data.description || '',
           cost: parseFloat(data.cost || '0'),
           remarks: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning

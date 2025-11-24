@@ -196,7 +196,6 @@ type ExpenseCategory = 'labor' | 'materials' | 'equipment' | 'fuel' | 'other'
 export interface ExpenseFormData extends BaseFormData {
   recordType: 'expense'
   type: ExpenseCategory
-  description: string
   cost: string
   remarks: string
   // Labor-specific fields
@@ -428,7 +427,6 @@ export function EditRecordModal({
         date: expenseRecord.date,
         notes: '',
         type: (expenseRecord.type as ExpenseCategory) || 'other',
-        description: expenseRecord.description || '',
         cost: expenseRecord.cost?.toString() || '',
         remarks: expenseRecord.remarks || '',
         // Labor-specific fields
@@ -753,7 +751,6 @@ export function EditRecordModal({
         await SupabaseService.updateExpenseRecord(record.id!, {
           date: expenseForm.date,
           type: expenseForm.type,
-          description: expenseForm.description,
           cost: toNum(expenseForm.cost),
           remarks: expenseForm.remarks,
           // Labor-specific fields (only include if type is 'labor')
@@ -1374,23 +1371,6 @@ export function EditRecordModal({
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div>
-                  <Label htmlFor="description" className="text-sm font-medium text-gray-700">
-                    Description *
-                  </Label>
-                  <Input
-                    id="description"
-                    value={expenseForm?.description ?? ''}
-                    onChange={(e) =>
-                      updateFormData('expense', (current) => ({
-                        ...current,
-                        description: e.target.value
-                      }))
-                    }
-                    className="mt-1"
-                    required
-                  />
                 </div>
                 <div>
                   <Label htmlFor="cost" className="text-sm font-medium text-gray-700">

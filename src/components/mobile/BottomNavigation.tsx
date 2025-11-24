@@ -179,13 +179,6 @@ const logTypes = [
         options: ['labor', 'materials', 'equipment', 'fuel', 'other'],
         required: true
       },
-      {
-        name: 'description',
-        label: 'Description',
-        type: 'text' as const,
-        placeholder: 'e.g., Pruning labor',
-        required: true
-      },
       // Labor-specific fields (conditionally shown)
       {
         name: 'num_workers',
@@ -418,7 +411,6 @@ export function BottomNavigation() {
               | 'equipment'
               | 'fuel'
               | 'other',
-            description: formData.description || '',
             cost: parseFloat(formData.amount || '0'),
             remarks: formData.notes || '',
             date_of_pruning: pruningDate,
