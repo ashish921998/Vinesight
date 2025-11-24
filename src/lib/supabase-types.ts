@@ -510,14 +510,14 @@ export function toApplicationExpenseRecord(
     type: record.type as 'labor' | 'materials' | 'equipment' | 'fuel' | 'other',
     cost: record.cost,
     date_of_pruning: record.date_of_pruning ? new Date(record.date_of_pruning) : undefined,
-    remarks: record.remarks || undefined,
+    remarks: record.remarks ?? undefined,
     // Labor-specific fields
-    num_workers: record.num_workers || undefined,
-    hours_worked: record.hours_worked || undefined,
-    work_type: record.work_type || undefined,
-    rate_per_unit: record.rate_per_unit || undefined,
-    worker_names: record.worker_names || undefined,
-    created_at: record.created_at || undefined
+    num_workers: record.num_workers ?? undefined,
+    hours_worked: record.hours_worked ?? undefined,
+    work_type: record.work_type ?? undefined,
+    rate_per_unit: record.rate_per_unit ?? undefined,
+    worker_names: record.worker_names ?? undefined,
+    created_at: record.created_at ?? undefined
   }
 }
 
@@ -529,17 +529,18 @@ export function toDatabaseExpenseInsert(
     date: appRecord.date,
     type: appRecord.type,
     cost: appRecord.cost,
+    description: appRecord.remarks || '', // Required NOT NULL column
     date_of_pruning: dateToISOString(appRecord.date_of_pruning),
-    remarks: appRecord.remarks || null
+    remarks: appRecord.remarks ?? null
   }
 
   // Only include labor-specific fields when type is 'labor'
   if (appRecord.type === 'labor') {
-    baseRecord.num_workers = appRecord.num_workers || null
-    baseRecord.hours_worked = appRecord.hours_worked || null
-    baseRecord.work_type = appRecord.work_type || null
-    baseRecord.rate_per_unit = appRecord.rate_per_unit || null
-    baseRecord.worker_names = appRecord.worker_names || null
+    baseRecord.num_workers = appRecord.num_workers ?? null
+    baseRecord.hours_worked = appRecord.hours_worked ?? null
+    baseRecord.work_type = appRecord.work_type ?? null
+    baseRecord.rate_per_unit = appRecord.rate_per_unit ?? null
+    baseRecord.worker_names = appRecord.worker_names ?? null
   }
 
   return baseRecord as DatabaseExpenseRecordInsert
@@ -556,14 +557,14 @@ export function toDatabaseExpenseUpdate(
   if (appUpdates.cost !== undefined) update.cost = appUpdates.cost
   if (appUpdates.date_of_pruning !== undefined)
     update.date_of_pruning = dateToISOString(appUpdates.date_of_pruning)
-  if (appUpdates.remarks !== undefined) update.remarks = appUpdates.remarks || null
+  if (appUpdates.remarks !== undefined) update.remarks = appUpdates.remarks ?? null
   // Labor-specific fields - only include when explicitly provided
-  if (appUpdates.num_workers !== undefined) update.num_workers = appUpdates.num_workers || null
-  if (appUpdates.hours_worked !== undefined) update.hours_worked = appUpdates.hours_worked || null
-  if (appUpdates.work_type !== undefined) update.work_type = appUpdates.work_type || null
+  if (appUpdates.num_workers !== undefined) update.num_workers = appUpdates.num_workers ?? null
+  if (appUpdates.hours_worked !== undefined) update.hours_worked = appUpdates.hours_worked ?? null
+  if (appUpdates.work_type !== undefined) update.work_type = appUpdates.work_type ?? null
   if (appUpdates.rate_per_unit !== undefined)
-    update.rate_per_unit = appUpdates.rate_per_unit || null
-  if (appUpdates.worker_names !== undefined) update.worker_names = appUpdates.worker_names || null
+    update.rate_per_unit = appUpdates.rate_per_unit ?? null
+  if (appUpdates.worker_names !== undefined) update.worker_names = appUpdates.worker_names ?? null
 
   return update as DatabaseExpenseRecordUpdate
 }

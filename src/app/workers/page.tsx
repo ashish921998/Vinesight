@@ -724,7 +724,12 @@ export default function WorkersPage() {
 
   const statusToFraction = (status: WorkStatus | 'not_set') => {
     if (status === 'half_day') return 0.5
-    if (status === 'full_day' || status === 'not_set') return 1
+    if (status === 'full_day') return 1
+    if (status === 'not_set') {
+      throw new Error(
+        "Status 'not_set' reached statusToFraction - this indicates a bug in status handling"
+      )
+    }
     return 0
   }
 

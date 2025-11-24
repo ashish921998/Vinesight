@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 import { FarmerDashboard } from '@/components/dashboard/FarmerDashboard'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
@@ -39,12 +40,7 @@ export default function DashboardPage() {
           <p className="text-muted-foreground mb-4">
             Unable to verify authentication. Please check your internet connection and try again.
           </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-          >
-            Retry
-          </button>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
         </div>
       </div>
     )

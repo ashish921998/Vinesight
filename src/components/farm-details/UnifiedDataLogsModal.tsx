@@ -1142,12 +1142,24 @@ export function UnifiedDataLogsModal({
             </Label>
             <Select
               value={value}
-              onValueChange={(newValue) =>
-                setCurrentFormData((prev) => ({
-                  ...prev,
-                  [field.name]: newValue
-                }))
-              }
+              onValueChange={(newValue) => {
+                setCurrentFormData((prev) => {
+                  const updated = {
+                    ...prev,
+                    [field.name]: newValue
+                  }
+
+                  // Clear values of conditional fields that depend on this field
+                  const formFields = logTypeConfigs[selectedLogType as LogType]?.fields || []
+                  formFields.forEach((f) => {
+                    if (f.conditionalOn?.field === field.name) {
+                      delete updated[f.name]
+                    }
+                  })
+
+                  return updated
+                })
+              }}
             >
               <SelectTrigger className="h-9">
                 <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />

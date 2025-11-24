@@ -78,7 +78,13 @@ export async function addCustomWorkType(name: string): Promise<WorkType> {
 
 export async function getWorkers(includeInactive = false): Promise<Worker[]> {
   const supabase = getUntypedClient()
-  let query = supabase.from('workers').select('*').order('name')
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
+  let query = supabase.from('workers').select('*').eq('user_id', user.id).order('name')
 
   if (!includeInactive) {
     query = query.eq('is_active', true)
@@ -92,7 +98,18 @@ export async function getWorkers(includeInactive = false): Promise<Worker[]> {
 
 export async function getWorkerById(workerId: number): Promise<Worker | null> {
   const supabase = getUntypedClient()
-  const { data, error } = await supabase.from('workers').select('*').eq('id', workerId).single()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
+  const { data, error } = await supabase
+    .from('workers')
+    .select('*')
+    .eq('id', workerId)
+    .eq('user_id', user.id)
+    .single()
 
   if (error) {
     if (error.code === 'PGRST116') return null // Not found
@@ -127,6 +144,12 @@ export async function createWorker(input: WorkerCreateInput): Promise<Worker> {
 
 export async function updateWorker(workerId: number, input: WorkerUpdateInput): Promise<Worker> {
   const supabase = getUntypedClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
   const { data, error } = await supabase
     .from('workers')
     .update({
@@ -134,6 +157,7 @@ export async function updateWorker(workerId: number, input: WorkerUpdateInput): 
       updated_at: new Date().toISOString()
     })
     .eq('id', workerId)
+    .eq('user_id', user.id)
     .select()
     .single()
 
@@ -143,8 +167,17 @@ export async function updateWorker(workerId: number, input: WorkerUpdateInput): 
 
 export async function deleteWorker(workerId: number): Promise<void> {
   const supabase = getUntypedClient()
-  // Hard delete - permanently remove worker from database
-  const { error } = await supabase.from('workers').delete().eq('id', workerId)
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
+  const { error } = await supabase
+    .from('workers')
+    .delete()
+    .eq('id', workerId)
+    .eq('user_id', user.id)
 
   if (error) throw error
 }
@@ -159,6 +192,12 @@ export async function getAttendanceByDateRange(
   endDate: string
 ): Promise<WorkerAttendance[]> {
   const supabase = getUntypedClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
   const { data, error } = await supabase
     .from('worker_attendance')
     .select('*, worker:workers(*)')
@@ -168,7 +207,8 @@ export async function getAttendanceByDateRange(
     .order('date', { ascending: false })
 
   if (error) throw error
-  return data || []
+
+  return (data || []).filter((record: any) => record.worker?.user_id === user.id)
 }
 
 export async function getAttendanceByWorker(
@@ -177,6 +217,15 @@ export async function getAttendanceByWorker(
   endDate?: string
 ): Promise<WorkerAttendance[]> {
   const supabase = getUntypedClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
+  const worker = await getWorkerById(workerId)
+  if (!worker) return []
+
   let query = supabase
     .from('worker_attendance')
     .select('*')
@@ -197,6 +246,12 @@ export async function getAttendanceByDate(
   date: string
 ): Promise<WorkerAttendance[]> {
   const supabase = getUntypedClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
   const { data, error } = await supabase
     .from('worker_attendance')
     .select('*, worker:workers(*)')
@@ -205,7 +260,8 @@ export async function getAttendanceByDate(
     .order('worker_id')
 
   if (error) throw error
-  return data || []
+
+  return (data || []).filter((record: any) => record.worker?.user_id === user.id)
 }
 
 // ============================================
@@ -263,6 +319,23 @@ export async function updateTemporaryWorkerEntry(
   input: Partial<TemporaryWorkerEntryInput>
 ): Promise<TemporaryWorkerEntry> {
   const supabase = getUntypedClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
+  const { data: existingEntry, error: fetchError } = await supabase
+    .from('temporary_worker_entries')
+    .select('*')
+    .eq('id', entryId)
+    .single()
+
+  if (fetchError || !existingEntry) throw new Error('Entry not found')
+
+  const entry = existingEntry as any
+  if (entry.user_id !== user.id) throw new Error('Not authorized to update this entry')
+
   const { data, error } = await supabase
     .from('temporary_worker_entries')
     .update({ ...input, updated_at: new Date().toISOString() })
@@ -276,6 +349,23 @@ export async function updateTemporaryWorkerEntry(
 
 export async function deleteTemporaryWorkerEntry(entryId: number): Promise<void> {
   const supabase = getUntypedClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
+  const { data: existingEntry, error: fetchError } = await supabase
+    .from('temporary_worker_entries')
+    .select('*')
+    .eq('id', entryId)
+    .single()
+
+  if (fetchError || !existingEntry) throw new Error('Entry not found')
+
+  const entry = existingEntry as any
+  if (entry.user_id !== user.id) throw new Error('Not authorized to delete this entry')
+
   const { error } = await supabase.from('temporary_worker_entries').delete().eq('id', entryId)
   if (error) throw error
 }
@@ -284,6 +374,9 @@ export async function createAttendance(
   input: WorkerAttendanceCreateInput
 ): Promise<WorkerAttendance> {
   const supabase = getUntypedClient()
+  const worker = await getWorkerById(input.worker_id)
+  if (!worker) throw new Error('Worker not found')
+
   const { data, error } = await supabase
     .from('worker_attendance')
     .insert({
@@ -307,6 +400,23 @@ export async function updateAttendance(
   input: Partial<WorkerAttendanceCreateInput>
 ): Promise<WorkerAttendance> {
   const supabase = getUntypedClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
+  const { data: existingRecord, error: fetchError } = await supabase
+    .from('worker_attendance')
+    .select('*, worker:workers(*)')
+    .eq('id', attendanceId)
+    .single()
+
+  if (fetchError || !existingRecord) throw new Error('Attendance record not found')
+
+  const record = existingRecord as any
+  if (record.worker?.user_id !== user.id) throw new Error('Not authorized to update this record')
+
   const { data, error } = await supabase
     .from('worker_attendance')
     .update({
@@ -323,6 +433,23 @@ export async function updateAttendance(
 
 export async function deleteAttendance(attendanceId: number): Promise<void> {
   const supabase = getUntypedClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
+  const { data: existingRecord, error: fetchError } = await supabase
+    .from('worker_attendance')
+    .select('*, worker:workers(*)')
+    .eq('id', attendanceId)
+    .single()
+
+  if (fetchError || !existingRecord) throw new Error('Attendance record not found')
+
+  const record = existingRecord as any
+  if (record.worker?.user_id !== user.id) throw new Error('Not authorized to delete this record')
+
   const { error } = await supabase.from('worker_attendance').delete().eq('id', attendanceId)
 
   if (error) throw error
@@ -333,6 +460,12 @@ export async function bulkCreateAttendance(
   entries: WorkerAttendanceCreateInput[]
 ): Promise<WorkerAttendance[]> {
   const supabase = getUntypedClient()
+
+  for (const entry of entries) {
+    const worker = await getWorkerById(entry.worker_id)
+    if (!worker) throw new Error(`Worker ${entry.worker_id} not found`)
+  }
+
   const { data, error } = await supabase.from('worker_attendance').insert(entries).select()
 
   if (error) throw error
@@ -348,6 +481,9 @@ export async function getTransactionsByWorker(
   limit = 50
 ): Promise<WorkerTransaction[]> {
   const supabase = getUntypedClient()
+  const worker = await getWorkerById(workerId)
+  if (!worker) return []
+
   const { data, error } = await supabase
     .from('worker_transactions')
     .select('*')
@@ -364,6 +500,9 @@ export async function createTransaction(
   input: WorkerTransactionCreateInput
 ): Promise<WorkerTransaction> {
   const supabase = getUntypedClient()
+  const worker = await getWorkerById(input.worker_id)
+  if (!worker) throw new Error('Worker not found')
+
   const { data, error } = await supabase
     .from('worker_transactions')
     .insert({
@@ -387,6 +526,23 @@ export async function updateTransaction(
   updates: Partial<WorkerTransactionCreateInput>
 ): Promise<WorkerTransaction> {
   const supabase = getUntypedClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
+  const { data: existingTx, error: fetchError } = await supabase
+    .from('worker_transactions')
+    .select('*, worker:workers(*)')
+    .eq('id', transactionId)
+    .single()
+
+  if (fetchError || !existingTx) throw new Error('Transaction not found')
+
+  const tx = existingTx as any
+  if (tx.worker?.user_id !== user.id) throw new Error('Not authorized to update this transaction')
+
   const { data, error } = await supabase
     .from('worker_transactions')
     .update({
@@ -402,6 +558,23 @@ export async function updateTransaction(
 
 export async function deleteTransaction(transactionId: number): Promise<void> {
   const supabase = getUntypedClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
+  const { data: existingTx, error: fetchError } = await supabase
+    .from('worker_transactions')
+    .select('*, worker:workers(*)')
+    .eq('id', transactionId)
+    .single()
+
+  if (fetchError || !existingTx) throw new Error('Transaction not found')
+
+  const tx = existingTx as any
+  if (tx.worker?.user_id !== user.id) throw new Error('Not authorized to delete this transaction')
+
   const { error } = await supabase.from('worker_transactions').delete().eq('id', transactionId)
   if (error) throw error
 }
@@ -411,16 +584,23 @@ export async function getAdvanceDeductionsByDate(
   date: string
 ): Promise<WorkerTransaction[]> {
   const supabase = getUntypedClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
   const { data, error } = await supabase
     .from('worker_transactions')
-    .select('*')
+    .select('*, worker:workers(*)')
     .eq('farm_id', farmId)
     .eq('date', date)
     .eq('type', 'advance_deducted')
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return data || []
+
+  return (data || []).filter((record: any) => record.worker?.user_id === user.id)
 }
 
 // Give advance to worker

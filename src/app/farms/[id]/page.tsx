@@ -1616,7 +1616,7 @@ export default function FarmDetailsPage() {
     { label: 'Logs', icon: NotebookText, href: `/farms/${farmId}/logs` },
     { label: 'Workers', icon: Users, href: '/workers' },
     { label: 'Lab tests', icon: FlaskConical, href: `/farms/${farmId}/lab-tests` },
-    { label: 'Reports', icon: BarChart3, href: `/farms/${farmId}/reports` }
+    { label: 'Reports', icon: BarChart3, href: '/reports' }
   ]
 
   const renderWorkTabs = () => (

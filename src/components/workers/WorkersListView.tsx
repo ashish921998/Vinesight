@@ -59,10 +59,19 @@ export function WorkersListView({
         <Card
           key={worker.id}
           className={cn(
-            'cursor-pointer border-none bg-gradient-to-r from-white to-primary/10 shadow-sm rounded-3xl transition hover:shadow-md',
+            'cursor-pointer border-none bg-gradient-to-r from-white to-primary/10 shadow-sm rounded-3xl transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
             !worker.is_active && 'opacity-60'
           )}
+          tabIndex={0}
+          role="button"
+          aria-label={`View details for ${worker.name}`}
           onClick={() => onOpenWorkerDetail(worker)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              onOpenWorkerDetail(worker)
+            }
+          }}
         >
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center gap-4">
@@ -98,6 +107,7 @@ export function WorkersListView({
                   variant="ghost"
                   size="icon"
                   className="text-muted-foreground hover:text-primary"
+                  aria-label={`Edit ${worker.name}`}
                   onClick={(e) => {
                     e.stopPropagation()
                     onOpenEditModal(worker)
@@ -109,6 +119,7 @@ export function WorkersListView({
                   variant="ghost"
                   size="icon"
                   className="text-red-600 hover:text-red-700"
+                  aria-label={`Delete ${worker.name}`}
                   onClick={(e) => {
                     e.stopPropagation()
                     onDeleteWorker(worker)

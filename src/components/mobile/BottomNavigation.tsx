@@ -313,6 +313,9 @@ export function BottomNavigation() {
         } else if (stepVal !== undefined && stepVal > 0) {
           // Round to nearest step
           num = Math.round(num / stepVal) * stepVal
+          // Normalize to avoid floating-point artifacts (e.g., 0.30000000000000004)
+          const decimalPlaces = stepVal.toString().split('.')[1]?.length || 0
+          num = parseFloat(num.toFixed(decimalPlaces))
         }
 
         setFormData((prev) => ({
