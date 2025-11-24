@@ -110,7 +110,6 @@ export default function FarmTasksPage() {
     } catch (error) {
       // Log detailed error for debugging without exposing to user
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Failed to load tasks:', error)
       }
       // Show generic error message to user (don't expose internal error details)

@@ -58,7 +58,6 @@ export default function FarmEfficiencyPage() {
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error loading farms:', error)
       }
     }
@@ -218,7 +217,6 @@ export default function FarmEfficiencyPage() {
       setMetrics(efficiencyMetrics)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error loading farm efficiency metrics:', error)
       }
       // Provide default metrics if data loading fails

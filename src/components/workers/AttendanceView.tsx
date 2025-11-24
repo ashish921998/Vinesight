@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { Loader2, Check, Pencil, Trash2 } from 'lucide-react'
+import { Loader2, Pencil, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import type { Worker, WorkerAttendance } from '@/lib/supabase'
@@ -78,7 +78,7 @@ export function AttendanceView({
 
   const latestAttendanceLabel =
     sortedAttendance.length > 0
-      ? format(new Date(sortedAttendance[0].date), 'dd MMM, yyyy')
+      ? format(new Date(`${sortedAttendance[0].date}T00:00:00`), 'dd MMM, yyyy')
       : 'No records yet'
 
   return (
@@ -165,7 +165,7 @@ export function AttendanceView({
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-foreground">
-                          {format(new Date(record.date), 'EEE, MMM d')}
+                          {format(new Date(`${record.date}T00:00:00`), 'EEE, MMM d')}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {record.farm_id

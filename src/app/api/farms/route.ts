@@ -42,7 +42,6 @@ export async function GET(request: NextRequest) {
     if (error) {
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Database error:', error)
       }
       return NextResponse.json({ error: 'Failed to fetch farms' }, { status: 500 })
@@ -52,7 +51,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     // Log error for debugging in development only
     if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
       console.error('API error:', error)
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -139,7 +137,6 @@ export async function POST(request: NextRequest) {
     if (error) {
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Database error:', error)
       }
       return NextResponse.json({ error: 'Failed to create farm' }, { status: 500 })
@@ -149,7 +146,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     // Log error for debugging in development only
     if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
       console.error('API error:', error)
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

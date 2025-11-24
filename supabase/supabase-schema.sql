@@ -472,6 +472,96 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_farms_updated_at BEFORE UPDATE ON farms 
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- Atomic settlement confirmation helper
+DROP FUNCTION IF EXISTS confirm_settlement_atomic(INTEGER);
+
+CREATE OR REPLACE FUNCTION confirm_settlement_atomic(settlement_id_param INTEGER)
+RETURNS TABLE (
+  id INTEGER,
+  worker_id INTEGER,
+  farm_id INTEGER,
+  period_start DATE,
+  period_end DATE,
+  days_worked DECIMAL(10,2),
+  gross_amount DECIMAL(10,2),
+  advance_deducted DECIMAL(10,2),
+  net_payment DECIMAL(10,2),
+  status TEXT,
+  notes TEXT,
+  confirmed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE,
+  updated_at TIMESTAMP WITH TIME ZONE
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  settlement_record RECORD;
+  current_timestamp_val TIMESTAMP WITH TIME ZONE := NOW();
+  current_date_val DATE := CURRENT_DATE;
+BEGIN
+  SELECT * INTO settlement_record
+  FROM worker_settlements ws
+  WHERE ws.id = settlement_id_param
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Settlement with id % not found', settlement_id_param;
+  END IF;
+
+  IF settlement_record.status = 'confirmed' THEN
+    RAISE EXCEPTION 'Settlement with id % is already confirmed', settlement_id_param;
+  END IF;
+
+  IF settlement_record.status != 'draft' THEN
+    RAISE EXCEPTION 'Settlement with id % is not in draft status', settlement_id_param;
+  END IF;
+
+  IF settlement_record.advance_deducted > 0 THEN
+    UPDATE workers
+    SET advance_balance = GREATEST(0, advance_balance - settlement_record.advance_deducted),
+        updated_at = current_timestamp_val
+    WHERE id = settlement_record.worker_id;
+
+    INSERT INTO worker_transactions (worker_id, farm_id, date, type, amount, settlement_id, notes)
+    VALUES (
+      settlement_record.worker_id,
+      settlement_record.farm_id,
+      current_date_val,
+      'advance_deducted',
+      settlement_record.advance_deducted,
+      settlement_id_param,
+      'Advance deduction for settlement ' || settlement_record.period_start || ' to ' || settlement_record.period_end
+    );
+  END IF;
+
+  IF settlement_record.net_payment > 0 THEN
+    INSERT INTO worker_transactions (worker_id, farm_id, date, type, amount, settlement_id, notes)
+    VALUES (
+      settlement_record.worker_id,
+      settlement_record.farm_id,
+      current_date_val,
+      'payment',
+      settlement_record.net_payment,
+      settlement_id_param,
+      'Payment for settlement ' || settlement_record.period_start || ' to ' || settlement_record.period_end
+    );
+  END IF;
+
+  UPDATE worker_settlements
+  SET status = 'confirmed', confirmed_at = current_timestamp_val, updated_at = current_timestamp_val
+  WHERE worker_settlements.id = settlement_id_param;
+
+  RETURN QUERY
+  SELECT ws.id, ws.worker_id, ws.farm_id, ws.period_start, ws.period_end, ws.days_worked, ws.gross_amount,
+         ws.advance_deducted, ws.net_payment, ws.status, ws.notes, ws.confirmed_at, ws.created_at, ws.updated_at
+  FROM worker_settlements ws
+  WHERE ws.id = settlement_id_param;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION confirm_settlement_atomic(INTEGER) TO authenticated;
+
 -- Insert some sample data (optional - you can remove this section)
 -- Note: This will only work after you set up authentication
 /*

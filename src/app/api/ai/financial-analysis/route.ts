@@ -106,7 +106,6 @@ Return ONLY valid JSON:
   } catch (error) {
     // Log error for debugging in development only
     if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
       console.error('Financial analysis API error:', error)
     }
 

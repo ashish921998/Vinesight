@@ -630,6 +630,16 @@ export async function getSettlementsByWorker(
   limit = 20
 ): Promise<WorkerSettlement[]> {
   const supabase = getUntypedClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
+  // Verify worker ownership
+  const worker = await getWorkerById(workerId)
+  if (!worker) throw new Error('Worker not found or access denied')
+
   const { data, error } = await supabase
     .from('worker_settlements')
     .select('*')

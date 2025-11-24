@@ -65,7 +65,6 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Failed to fetch tasks:', error)
       }
       return NextResponse.json({ error: 'Failed to fetch tasks' }, { status: 500 })
@@ -78,7 +77,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ tasks })
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
       console.error('Tasks API error (GET):', error)
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -160,7 +158,6 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Failed to create task:', error)
       }
       return NextResponse.json({ error: 'Failed to create task' }, { status: 500 })
@@ -173,7 +170,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ task }, { status: 201 })
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
       console.error('Tasks API error (POST):', error)
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

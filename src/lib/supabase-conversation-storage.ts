@@ -325,7 +325,6 @@ class SupabaseConversationStorage {
 
     // Log migration success in development only
     if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
     }
   }
 

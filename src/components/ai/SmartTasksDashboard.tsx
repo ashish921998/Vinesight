@@ -44,7 +44,6 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
     } catch (error) {
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error loading recommendations:', error)
       }
     } finally {
@@ -82,7 +81,6 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
           console.error('Error generating new recommendations:', error)
         }
       }
@@ -103,7 +101,6 @@ export function SmartTasksDashboard({ farmId, userId, className }: SmartTasksDas
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
           console.error('Error updating task:', error)
         }
       }
