@@ -108,7 +108,7 @@ export default function WorkersPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [formData, setFormData] = useState<WorkerCreateInput>({
     name: '',
-    daily_rate: 300,
+    daily_rate: 0,
     advance_balance: 0
   })
 
@@ -126,6 +126,7 @@ export default function WorkersPage() {
 
   // Settlement modal
   const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false)
+  const [settlementWorker, setSettlementWorker] = useState<Worker | null>(null)
   const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null)
   const [settlementPeriod, setSettlementPeriod] = useState<'this_week' | 'last_week' | 'custom'>(
     'this_week'
@@ -143,6 +144,7 @@ export default function WorkersPage() {
       earnings: number
     }>
   } | null>(null)
+  const [totalSalaryInput, setTotalSalaryInput] = useState('')
   const [advanceDeduction, setAdvanceDeduction] = useState('')
   const [isCalculating, setIsCalculating] = useState(false)
   const [isConfirmingSettlement, setIsConfirmingSettlement] = useState(false)
@@ -440,9 +442,8 @@ export default function WorkersPage() {
     loadAttendanceHistory(attendanceHistoryWorkerId)
   }, [viewMode, attendanceHistoryWorkerId, loadAttendanceHistory])
 
-  // Worker CRUD handlers
   const handleOpenAddModal = () => {
-    setFormData({ name: '', daily_rate: 300, advance_balance: 0 })
+    setFormData({ name: '', daily_rate: 0, advance_balance: 0 })
     setEditingWorker(null)
     setIsAddModalOpen(true)
   }
@@ -500,12 +501,12 @@ export default function WorkersPage() {
     if (!deleteWorker) return
     try {
       await LaborService.deleteWorker(deleteWorker.id)
-      toast.success('Worker deactivated successfully')
+      toast.success('Worker deleted successfully')
       setDeleteWorker(null)
       fetchData()
     } catch (error) {
       console.error('Error deleting worker:', error)
-      toast.error('Failed to deactivate worker')
+      toast.error('Failed to delete worker')
     }
   }
 
@@ -581,19 +582,21 @@ export default function WorkersPage() {
   }, [settlementPeriod])
 
   const handleCalculateSettlement = async () => {
-    if (!selectedWorker || !settlementStartDate || !settlementEndDate) return
+    if (!settlementWorker || !settlementStartDate || !settlementEndDate) return
 
     setIsCalculating(true)
     try {
       const calculation = await LaborService.calculateSettlement(
-        selectedWorker.id,
+        settlementWorker.id,
         selectedFarmId,
         settlementStartDate,
         settlementEndDate
       )
       setSettlementCalculation(calculation)
-      const maxDeduction = Math.min(selectedWorker.advance_balance || 0, calculation.gross_amount)
-      setAdvanceDeduction(maxDeduction.toString())
+      // Pre-fill total salary with calculated gross amount (editable)
+      setTotalSalaryInput(calculation.gross_amount.toString())
+      // Pre-fill advance deduction with 0 (user fills this)
+      setAdvanceDeduction('0')
     } catch (error) {
       console.error('Error calculating settlement:', error)
       toast.error('Failed to calculate settlement')
@@ -603,25 +606,39 @@ export default function WorkersPage() {
   }
 
   const handleConfirmSettlement = async () => {
-    if (!selectedWorker || !settlementCalculation) return
+    if (!settlementWorker || !settlementCalculation) return
 
+    const totalSalary = parseFloat(totalSalaryInput) || 0
     const deduction = parseFloat(advanceDeduction) || 0
-    if (deduction < 0 || deduction > (selectedWorker.advance_balance || 0)) {
-      toast.error('Invalid deduction amount')
+
+    if (totalSalary < 0) {
+      toast.error('Total salary cannot be negative')
+      return
+    }
+    if (deduction < 0) {
+      toast.error('Advance deduction cannot be negative')
+      return
+    }
+    if (deduction > (settlementWorker.advance_balance || 0)) {
+      toast.error('Deduction exceeds available advance balance')
+      return
+    }
+    if (deduction > totalSalary) {
+      toast.error('Deduction cannot exceed total salary')
       return
     }
 
     setIsConfirmingSettlement(true)
     try {
-      const netPayment = settlementCalculation.gross_amount - deduction
+      const netPayment = totalSalary - deduction
       await LaborService.createSettlement(
         {
-          worker_id: selectedWorker.id,
+          worker_id: settlementWorker.id,
           farm_id: selectedFarmId || undefined,
           period_start: settlementStartDate,
           period_end: settlementEndDate,
           days_worked: settlementCalculation.days_worked,
-          gross_amount: settlementCalculation.gross_amount,
+          gross_amount: totalSalary,
           advance_deducted: deduction,
           net_payment: netPayment,
           notes: ''
@@ -631,8 +648,10 @@ export default function WorkersPage() {
       toast.success(`Settlement confirmed! Net payment: ₹${netPayment.toLocaleString('en-IN')}`)
       setIsSettlementModalOpen(false)
       setSettlementCalculation(null)
+      setSettlementWorker(null)
+      setTotalSalaryInput('')
+      setAdvanceDeduction('')
       fetchData()
-      handleOpenWorkerDetail(selectedWorker)
     } catch (error) {
       console.error('Error confirming settlement:', error)
       toast.error('Failed to confirm settlement')
@@ -999,7 +1018,7 @@ export default function WorkersPage() {
   const totalAdvanceBalance = workers.reduce((sum, w) => sum + (w.advance_balance || 0), 0)
   const activeWorkers = workers.filter((w) => w.is_active).length
   const netPayment = settlementCalculation
-    ? settlementCalculation.gross_amount - (parseFloat(advanceDeduction) || 0)
+    ? (parseFloat(totalSalaryInput) || 0) - (parseFloat(advanceDeduction) || 0)
     : 0
 
   if (authLoading) {
@@ -1092,15 +1111,25 @@ export default function WorkersPage() {
                   <Check className="h-4 w-4 mr-1" />
                   Record Attendance
                 </Button>
-              ) : viewMode !== 'analytics' ? (
-                <Button
-                  onClick={handleOpenAddModal}
-                  size="lg"
-                  className="w-full rounded-full bg-primary hover:bg-primary/90 text-white"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Worker
-                </Button>
+              ) : viewMode === 'workers' ? (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleOpenAddModal}
+                    size="lg"
+                    className="flex-1 rounded-full bg-primary hover:bg-primary/90 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Worker
+                  </Button>
+                  <Button
+                    onClick={() => setIsSettlementModalOpen(true)}
+                    size="lg"
+                    className="flex-1 rounded-full bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <IndianRupee className="h-4 w-4 mr-1" />
+                    Settle
+                  </Button>
+                </div>
               ) : null}
             </div>
           </div>
@@ -1508,15 +1537,16 @@ export default function WorkersPage() {
       <AlertDialog open={!!deleteWorker} onOpenChange={() => setDeleteWorker(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Deactivate Worker?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Worker?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will deactivate {deleteWorker?.name}. Their history will be preserved.
+              This will permanently delete {deleteWorker?.name} and all their associated records.
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteWorker} className="bg-red-600 hover:bg-red-700">
-              Deactivate
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1574,7 +1604,10 @@ export default function WorkersPage() {
                     </div>
                   </Button>
                   <Button
-                    onClick={() => setIsSettlementModalOpen(true)}
+                    onClick={() => {
+                      setSettlementWorker(selectedWorker)
+                      setIsSettlementModalOpen(true)
+                    }}
                     className="h-auto py-3 bg-green-600 hover:bg-green-700"
                   >
                     <div className="flex flex-col items-center gap-1">
@@ -1755,9 +1788,42 @@ export default function WorkersPage() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Settle Payment</DialogTitle>
-            <DialogDescription>Calculate payment for {selectedWorker?.name}</DialogDescription>
+            <DialogDescription>
+              {settlementWorker
+                ? `Calculate payment for ${settlementWorker.name}`
+                : 'Select a worker and period to calculate payment'}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {/* Worker Select - Required */}
+            <div className="space-y-2">
+              <Label>Worker *</Label>
+              <Select
+                value={settlementWorker?.id.toString() || ''}
+                onValueChange={(v) => {
+                  const worker = workers.find((w) => w.id === parseInt(v, 10))
+                  setSettlementWorker(worker || null)
+                  setSettlementCalculation(null)
+                  setTotalSalaryInput('')
+                  setAdvanceDeduction('')
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select worker" />
+                </SelectTrigger>
+                <SelectContent>
+                  {workers
+                    .filter((w) => w.is_active)
+                    .map((worker) => (
+                      <SelectItem key={worker.id} value={worker.id.toString()}>
+                        {worker.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Farm Select - Optional */}
             {farms.length > 1 && (
               <div className="space-y-2">
                 <Label>Farm (optional)</Label>
@@ -1783,8 +1849,9 @@ export default function WorkersPage() {
               </div>
             )}
 
+            {/* Period Select - Required */}
             <div className="space-y-2">
-              <Label>Period</Label>
+              <Label>Period *</Label>
               <Select
                 value={settlementPeriod}
                 onValueChange={(v) => {
@@ -1833,7 +1900,7 @@ export default function WorkersPage() {
             {!settlementCalculation && (
               <Button
                 onClick={handleCalculateSettlement}
-                disabled={isCalculating}
+                disabled={isCalculating || !settlementWorker}
                 className="w-full"
               >
                 {isCalculating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -1843,6 +1910,7 @@ export default function WorkersPage() {
 
             {settlementCalculation && (
               <>
+                {/* Summary Card */}
                 <Card className="bg-gray-50">
                   <CardContent className="p-4 space-y-2">
                     <div className="flex justify-between">
@@ -1853,11 +1921,11 @@ export default function WorkersPage() {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Days</span>
+                      <span className="text-muted-foreground">Days Worked</span>
                       <span className="font-medium">{settlementCalculation.days_worked}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Gross</span>
+                      <span className="text-muted-foreground">Calculated Gross</span>
                       <span className="font-medium">
                         ₹{settlementCalculation.gross_amount.toLocaleString('en-IN')}
                       </span>
@@ -1865,26 +1933,44 @@ export default function WorkersPage() {
                     <div className="flex justify-between text-amber-600">
                       <span>Advance Balance</span>
                       <span className="font-medium">
-                        ₹{(selectedWorker?.advance_balance || 0).toLocaleString('en-IN')}
+                        ₹{(settlementWorker?.advance_balance || 0).toLocaleString('en-IN')}
                       </span>
                     </div>
                   </CardContent>
                 </Card>
 
+                {/* Editable Total Salary */}
                 <div className="space-y-2">
-                  <Label>Advance Deduction (₹)</Label>
+                  <Label>Total Salary (₹) *</Label>
                   <Input
                     type="number"
                     min="0"
-                    max={Math.min(
-                      selectedWorker?.advance_balance || 0,
-                      settlementCalculation.gross_amount
-                    )}
-                    value={advanceDeduction}
-                    onChange={(e) => setAdvanceDeduction(e.target.value)}
+                    value={totalSalaryInput}
+                    onChange={(e) => setTotalSalaryInput(e.target.value)}
+                    placeholder="Enter total salary to pay"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Pre-filled with calculated gross. You can edit this amount.
+                  </p>
                 </div>
 
+                {/* Editable Cut from Advance */}
+                <div className="space-y-2">
+                  <Label>Cut from Advance (₹)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max={settlementWorker?.advance_balance || 0}
+                    value={advanceDeduction}
+                    onChange={(e) => setAdvanceDeduction(e.target.value)}
+                    placeholder="0"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Max: ₹{(settlementWorker?.advance_balance || 0).toLocaleString('en-IN')}
+                  </p>
+                </div>
+
+                {/* Net Payment Display */}
                 <Card className="bg-green-50 border-green-200">
                   <CardContent className="p-4">
                     <div className="flex justify-between items-center">
@@ -1893,6 +1979,7 @@ export default function WorkersPage() {
                         ₹{netPayment.toLocaleString('en-IN')}
                       </span>
                     </div>
+                    <p className="text-xs text-green-700 mt-1">Total Salary - Cut from Advance</p>
                   </CardContent>
                 </Card>
               </>
@@ -1904,6 +1991,9 @@ export default function WorkersPage() {
               onClick={() => {
                 setIsSettlementModalOpen(false)
                 setSettlementCalculation(null)
+                setSettlementWorker(null)
+                setTotalSalaryInput('')
+                setAdvanceDeduction('')
               }}
             >
               Cancel
@@ -1911,7 +2001,7 @@ export default function WorkersPage() {
             {settlementCalculation && (
               <Button
                 onClick={handleConfirmSettlement}
-                disabled={isConfirmingSettlement || netPayment < 0}
+                disabled={isConfirmingSettlement || netPayment < 0 || !totalSalaryInput}
                 className="bg-green-600 hover:bg-green-700"
               >
                 {isConfirmingSettlement && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}

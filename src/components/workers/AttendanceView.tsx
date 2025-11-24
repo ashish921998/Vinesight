@@ -121,14 +121,6 @@ export function AttendanceView({
               </SelectContent>
             </Select>
           </div>
-          <Button
-            onClick={onOpenAttendanceModal}
-            className="w-full rounded-full bg-primary hover:bg-primary/90 text-white"
-            size="lg"
-          >
-            <Check className="h-4 w-4 mr-2" />
-            Record Attendance
-          </Button>
         </CardContent>
       </Card>
 

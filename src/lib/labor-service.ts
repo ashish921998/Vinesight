@@ -143,11 +143,8 @@ export async function updateWorker(workerId: number, input: WorkerUpdateInput): 
 
 export async function deleteWorker(workerId: number): Promise<void> {
   const supabase = getUntypedClient()
-  // Soft delete by setting is_active to false
-  const { error } = await supabase
-    .from('workers')
-    .update({ is_active: false, updated_at: new Date().toISOString() })
-    .eq('id', workerId)
+  // Hard delete - permanently remove worker from database
+  const { error } = await supabase.from('workers').delete().eq('id', workerId)
 
   if (error) throw error
 }
