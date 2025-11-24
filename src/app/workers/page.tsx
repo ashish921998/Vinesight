@@ -150,7 +150,7 @@ export default function WorkersPage() {
   const [isConfirmingSettlement, setIsConfirmingSettlement] = useState(false)
 
   // Attendance tab state
-  const [attendanceFarmId, setAttendanceFarmId] = useState<number | null>(null)
+  const [attendanceFarmIds, setAttendanceFarmIds] = useState<number[]>([])
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false)
   const [attendanceFormEntries, setAttendanceFormEntries] = useState<AttendanceFormEntry[]>([])
@@ -236,7 +236,7 @@ export default function WorkersPage() {
 
       // Auto-select farm if only one
       if (farmsResult.data && farmsResult.data.length === 1) {
-        setAttendanceFarmId(farmsResult.data[0].id)
+        setAttendanceFarmIds([farmsResult.data[0].id])
       }
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -416,10 +416,10 @@ export default function WorkersPage() {
   }
 
   useEffect(() => {
-    if (viewMode === 'attendance' && !attendanceFarmId && farms.length > 0) {
-      setAttendanceFarmId(farms[0].id)
+    if (viewMode === 'attendance' && attendanceFarmIds.length === 0 && farms.length > 0) {
+      setAttendanceFarmIds([farms[0].id])
     }
-  }, [viewMode, attendanceFarmId, farms])
+  }, [viewMode, attendanceFarmIds, farms])
 
   useEffect(() => {
     if (viewMode !== 'attendance') return
@@ -682,8 +682,7 @@ export default function WorkersPage() {
       toast.error('Add a farm before recording attendance')
       return
     }
-    const defaultFarmId = attendanceFarmId ?? farms[0].id
-    setAttendanceFarmId(defaultFarmId)
+    setAttendanceFarmIds(attendanceFarmIds.length > 0 ? attendanceFarmIds : [farms[0].id])
     setSelectedDate(format(new Date(), 'yyyy-MM-dd'))
     setAttendanceFormEntries([createAttendanceEntry(false)])
     setIsAttendanceModalOpen(true)
@@ -885,8 +884,8 @@ export default function WorkersPage() {
   }
 
   const handleSaveAttendanceEntries = async () => {
-    if (!attendanceFarmId) {
-      toast.error('Please select a farm')
+    if (attendanceFarmIds.length === 0) {
+      toast.error('Please select at least one farm')
       return
     }
     if (attendanceFormEntries.length === 0) {
@@ -895,12 +894,11 @@ export default function WorkersPage() {
     }
 
     const date = selectedDate
-    const farmId = attendanceFarmId
     const deductionNote = `Attendance deduction for ${format(new Date(date), 'dd MMM yyyy')}`
-    const attendancePayload: Parameters<typeof LaborService.bulkCreateAttendance>[0] = []
     const tempOperations: Promise<any>[] = []
     const deductionOperations: Promise<any>[] = []
 
+    // Validate all entries first
     for (const entry of attendanceFormEntries) {
       const salaryValue = parseFloat(entry.salary)
       if (Number.isNaN(salaryValue) || salaryValue <= 0) {
@@ -913,83 +911,90 @@ export default function WorkersPage() {
           toast.error('Temporary worker name is required')
           return
         }
-        const hoursWorked = entry.status === 'full_day' ? 8 : 4
-        tempOperations.push(
-          LaborService.createTemporaryWorkerEntry({
-            farm_id: farmId,
-            date,
-            name: entry.tempName.trim(),
-            hours_worked: hoursWorked,
-            amount_paid: salaryValue,
-            notes: undefined
-          })
-        )
-        continue
-      }
-
-      if (!entry.workerId) {
-        toast.error('Select a worker for each entry')
-        return
-      }
-      const worker = workers.find((w) => w.id === entry.workerId)
-      const deductionValue = parseFloat(entry.advanceDeduction)
-      if (!Number.isNaN(deductionValue) && deductionValue < 0) {
-        toast.error('Advance deduction cannot be negative')
-        return
-      }
-      if (
-        !Number.isNaN(deductionValue) &&
-        worker &&
-        deductionValue > (worker.advance_balance || 0)
-      ) {
-        toast.error(`Deduction for ${worker.name} exceeds available advance balance`)
-        return
-      }
-
-      const dayFraction = statusToFraction(entry.status)
-      if (dayFraction <= 0) {
-        toast.error('Invalid attendance status selected')
-        return
-      }
-      const perDayRate = salaryValue / dayFraction
-      if (!Number.isFinite(perDayRate) || perDayRate <= 0) {
-        toast.error('Enter valid salary for each worker')
-        return
-      }
-      const defaultRate = worker?.daily_rate
-      const attendanceRecord: WorkerAttendanceCreateInput = {
-        worker_id: entry.workerId,
-        farm_id: farmId,
-        date,
-        work_status: entry.status as WorkStatus,
-        work_type: 'other',
-        daily_rate_override: perDayRate,
-        notes: undefined
-      }
-      if (defaultRate && Math.abs(perDayRate - defaultRate) <= 0.01) {
-        delete attendanceRecord.daily_rate_override
-      }
-      attendancePayload.push(attendanceRecord)
-
-      if (!Number.isNaN(deductionValue) && deductionValue > 0) {
-        deductionOperations.push(
-          LaborService.createTransaction({
-            worker_id: entry.workerId,
-            farm_id: farmId,
-            date,
-            type: 'advance_deducted',
-            amount: deductionValue,
-            notes: deductionNote
-          })
-        )
+      } else {
+        if (!entry.workerId) {
+          toast.error('Select a worker for each entry')
+          return
+        }
+        const worker = workers.find((w) => w.id === entry.workerId)
+        const deductionValue = parseFloat(entry.advanceDeduction)
+        if (!Number.isNaN(deductionValue) && deductionValue < 0) {
+          toast.error('Advance deduction cannot be negative')
+          return
+        }
+        if (
+          !Number.isNaN(deductionValue) &&
+          worker &&
+          deductionValue > (worker.advance_balance || 0)
+        ) {
+          toast.error(`Deduction for ${worker.name} exceeds available advance balance`)
+          return
+        }
       }
     }
 
     setIsSavingAttendanceEntries(true)
     try {
-      if (attendancePayload.length > 0) {
-        await LaborService.bulkCreateAttendance(attendancePayload)
+      // Save for each selected farm
+      for (const farmId of attendanceFarmIds) {
+        const attendancePayload: Parameters<typeof LaborService.bulkCreateAttendance>[0] = []
+
+        for (const entry of attendanceFormEntries) {
+          const salaryValue = parseFloat(entry.salary)
+
+          if (entry.isTemporary) {
+            const hoursWorked = entry.status === 'full_day' ? 8 : 4
+            tempOperations.push(
+              LaborService.createTemporaryWorkerEntry({
+                farm_id: farmId,
+                date,
+                name: entry.tempName.trim(),
+                hours_worked: hoursWorked,
+                amount_paid: salaryValue,
+                notes: undefined
+              })
+            )
+            continue
+          }
+
+          const worker = workers.find((w) => w.id === entry.workerId)
+          const dayFraction = statusToFraction(entry.status)
+          const perDayRate = salaryValue / dayFraction
+          const defaultRate = worker?.daily_rate
+          const attendanceRecord: WorkerAttendanceCreateInput = {
+            worker_id: entry.workerId!,
+            farm_id: farmId,
+            date,
+            work_status: entry.status as WorkStatus,
+            work_type: 'other',
+            daily_rate_override: perDayRate,
+            notes: undefined
+          }
+          if (defaultRate && Math.abs(perDayRate - defaultRate) <= 0.01) {
+            delete attendanceRecord.daily_rate_override
+          }
+          attendancePayload.push(attendanceRecord)
+
+          const deductionValue = parseFloat(entry.advanceDeduction)
+          if (!Number.isNaN(deductionValue) && deductionValue > 0) {
+            deductionOperations.push(
+              LaborService.createTransaction({
+                worker_id: entry.workerId!,
+                farm_id: farmId,
+                date,
+                type: 'advance_deducted',
+                amount: deductionValue,
+                notes: deductionNote
+              })
+            )
+          }
+        }
+
+        if (attendancePayload.length > 0) {
+          await LaborService.bulkCreateAttendance(attendancePayload)
+        }
       }
+
       if (tempOperations.length > 0) {
         await Promise.all(tempOperations)
       }
@@ -1043,15 +1048,15 @@ export default function WorkersPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-4">
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
           <Card className="rounded-2xl">
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-xl">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-primary/10 rounded-xl flex-shrink-0">
                   <Users className="h-5 w-5 text-primary" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{activeWorkers}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-2xl font-bold break-words">{activeWorkers}</p>
                   <p className="text-xs text-muted-foreground">Active Workers</p>
                 </div>
               </div>
@@ -1059,12 +1064,12 @@ export default function WorkersPage() {
           </Card>
           <Card className="rounded-2xl">
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-xl">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-primary/10 rounded-xl flex-shrink-0">
                   <Wallet className="h-5 w-5 text-primary" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">
+                <div className="min-w-0 flex-1">
+                  <p className="text-lg sm:text-2xl font-bold break-words">
                     ₹{totalAdvanceBalance.toLocaleString('en-IN')}
                   </p>
                   <p className="text-xs text-muted-foreground">Total Advance</p>
@@ -1180,42 +1185,45 @@ export default function WorkersPage() {
 
       {/* Record Attendance Modal */}
       <Dialog open={isAttendanceModalOpen} onOpenChange={setIsAttendanceModalOpen}>
-        <DialogContent className="sm:max-w-3xl">
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Record Attendance</DialogTitle>
             <DialogDescription>
-              Choose a farm, date, and add fixed or temporary workers present for the day.
+              Choose farms, date, and add fixed or temporary workers present for the day.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="attendance-farm">Farm</Label>
-                <Select
-                  value={attendanceFarmId?.toString() || ''}
-                  onValueChange={(value) => setAttendanceFarmId(parseInt(value, 10))}
-                >
-                  <SelectTrigger id="attendance-farm">
-                    <SelectValue placeholder="Select farm" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {farms.map((farm) => (
-                      <SelectItem key={farm.id} value={farm.id.toString()}>
-                        {farm.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-2">
+              <Label>Farms *</Label>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {farms.map((farm) => (
+                  <div key={farm.id} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`farm-${farm.id}`}
+                      checked={attendanceFarmIds.includes(farm.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setAttendanceFarmIds((prev) => [...prev, farm.id])
+                        } else {
+                          setAttendanceFarmIds((prev) => prev.filter((id) => id !== farm.id))
+                        }
+                      }}
+                    />
+                    <Label htmlFor={`farm-${farm.id}`} className="font-normal cursor-pointer">
+                      {farm.name}
+                    </Label>
+                  </div>
+                ))}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="attendance-date">Date</Label>
-                <Input
-                  id="attendance-date"
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                />
-              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="attendance-date">Date *</Label>
+              <Input
+                id="attendance-date"
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+              />
             </div>
 
             <div className="space-y-4">
