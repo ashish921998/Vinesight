@@ -86,7 +86,7 @@ interface AttendanceFormEntry {
   isTemporary: boolean
   workerId?: number
   tempName: string
-  status: WorkStatus | 'not_set'
+  status: WorkStatus
   salary: string
   advanceDeduction: string
 }
@@ -671,7 +671,7 @@ export default function WorkersPage() {
       isTemporary,
       workerId: !isTemporary ? defaultWorker?.id : undefined,
       tempName: '',
-      status: 'not_set',
+      status: 'full_day',
       salary: !isTemporary && defaultWorker ? defaultWorker.daily_rate.toString() : '',
       advanceDeduction: ''
     }
@@ -722,15 +722,9 @@ export default function WorkersPage() {
     )
   }
 
-  const statusToFraction = (status: WorkStatus | 'not_set') => {
+  const statusToFraction = (status: WorkStatus) => {
     if (status === 'half_day') return 0.5
-    if (status === 'full_day') return 1
-    if (status === 'not_set') {
-      throw new Error(
-        "Status 'not_set' reached statusToFraction - this indicates a bug in status handling"
-      )
-    }
-    return 0
+    return 1 // full_day is the default
   }
 
   const handleWorkerSelect = (entryId: string, workerId?: number) => {
@@ -908,10 +902,6 @@ export default function WorkersPage() {
     const deductionOperations: Promise<any>[] = []
 
     for (const entry of attendanceFormEntries) {
-      if (entry.status === 'not_set') {
-        toast.error('Select full day or half day for each worker')
-        return
-      }
       const salaryValue = parseFloat(entry.salary)
       if (Number.isNaN(salaryValue) || salaryValue <= 0) {
         toast.error('Enter valid salary for each worker')
@@ -1306,7 +1296,7 @@ export default function WorkersPage() {
                         <div className="space-y-2">
                           <Label>Attendance *</Label>
                           <Select
-                            value={entry.status === 'not_set' ? '' : entry.status}
+                            value={entry.status}
                             onValueChange={(value: WorkStatus) =>
                               handleAttendanceStatusChange(entry.id, value)
                             }

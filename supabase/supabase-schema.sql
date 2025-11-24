@@ -497,9 +497,18 @@ SECURITY DEFINER
 AS $$
 DECLARE
   settlement_record RECORD;
+  worker_owner_id UUID;
+  current_user_id UUID;
   current_timestamp_val TIMESTAMP WITH TIME ZONE := NOW();
   current_date_val DATE := CURRENT_DATE;
 BEGIN
+  -- Get the current user ID from JWT claims
+  current_user_id := auth.uid();
+  
+  IF current_user_id IS NULL THEN
+    RAISE EXCEPTION 'User not authenticated';
+  END IF;
+
   SELECT * INTO settlement_record
   FROM worker_settlements ws
   WHERE ws.id = settlement_id_param
@@ -515,6 +524,20 @@ BEGIN
 
   IF settlement_record.status != 'draft' THEN
     RAISE EXCEPTION 'Settlement with id % is not in draft status', settlement_id_param;
+  END IF;
+
+  -- Verify ownership: fetch the worker's owner (user_id) from the workers table
+  SELECT user_id INTO worker_owner_id
+  FROM workers
+  WHERE id = settlement_record.worker_id;
+
+  IF worker_owner_id IS NULL THEN
+    RAISE EXCEPTION 'Worker with id % not found', settlement_record.worker_id;
+  END IF;
+
+  -- Compare the worker's owner with the current user
+  IF worker_owner_id != current_user_id THEN
+    RAISE EXCEPTION 'Access denied: User % does not own worker %', current_user_id, settlement_record.worker_id;
   END IF;
 
   IF settlement_record.advance_deducted > 0 THEN
