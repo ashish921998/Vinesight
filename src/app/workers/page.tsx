@@ -160,6 +160,11 @@ export default function WorkersPage() {
     hasChanges: boolean
     isSaving: boolean
   } | null>(null)
+  const [modalAttendanceSaveFunction, setModalAttendanceSaveFunction] = useState<{
+    fn: () => Promise<void>
+    hasChanges: boolean
+    isSaving: boolean
+  } | null>(null)
   const [attendanceFormEntries, setAttendanceFormEntries] = useState<AttendanceFormEntry[]>([])
   const [isSavingAttendanceEntries, setIsSavingAttendanceEntries] = useState(false)
   const [attendanceHistoryWorkerId, setAttendanceHistoryWorkerId] = useState<number | null>(null)
@@ -1001,24 +1006,17 @@ export default function WorkersPage() {
 
         const deductionValue = parseFloat(entry.advanceDeduction)
         if (!Number.isNaN(deductionValue) && deductionValue > 0) {
-          // Deductions still need one entry per farm
-          // Handle floating-point precision: assign remainder to last farm to ensure sum equals original
-          const baseAmount = Math.floor((deductionValue / attendanceFarmIds.length) * 100) / 100
-          const remainder = deductionValue - baseAmount * (attendanceFarmIds.length - 1)
-          for (let i = 0; i < attendanceFarmIds.length; i++) {
-            const farmId = attendanceFarmIds[i]
-            const amount = i === attendanceFarmIds.length - 1 ? remainder : baseAmount
-            deductionOperations.push(
-              LaborService.createTransaction({
-                worker_id: entry.workerId!,
-                farm_id: farmId,
-                date,
-                type: 'advance_deducted',
-                amount,
-                notes: deductionNote
-              })
-            )
-          }
+          // Record full deduction as single worker-level transaction
+          deductionOperations.push(
+            LaborService.createTransaction({
+              worker_id: entry.workerId!,
+              farm_id: null,
+              date,
+              type: 'advance_deducted',
+              amount: deductionValue,
+              notes: deductionNote
+            })
+          )
         }
       }
 
@@ -1064,6 +1062,13 @@ export default function WorkersPage() {
   const handleSaveFunctionUpdate = useCallback(
     (saveFn: () => Promise<void>, hasChanges: boolean, isSaving: boolean) => {
       setAttendanceSaveFunction({ fn: saveFn, hasChanges, isSaving })
+    },
+    []
+  )
+
+  const handleModalSaveFunctionUpdate = useCallback(
+    (saveFn: () => Promise<void>, hasChanges: boolean, isSaving: boolean) => {
+      setModalAttendanceSaveFunction({ fn: saveFn, hasChanges, isSaving })
     },
     []
   )
@@ -1244,7 +1249,7 @@ export default function WorkersPage() {
               farms={farms}
               workers={workers}
               onAttendanceSaved={handleAttendanceSaved}
-              onSaveFunction={handleSaveFunctionUpdate}
+              onSaveFunction={handleModalSaveFunctionUpdate}
             />
           </div>
           <DialogFooter className="px-6 py-4 border-t bg-white">
@@ -1252,10 +1257,12 @@ export default function WorkersPage() {
               Cancel
             </Button>
             <Button
-              onClick={() => attendanceSaveFunction?.fn()}
-              disabled={!attendanceSaveFunction?.hasChanges || attendanceSaveFunction?.isSaving}
+              onClick={() => modalAttendanceSaveFunction?.fn()}
+              disabled={
+                !modalAttendanceSaveFunction?.hasChanges || modalAttendanceSaveFunction?.isSaving
+              }
             >
-              {attendanceSaveFunction?.isSaving && (
+              {modalAttendanceSaveFunction?.isSaving && (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               )}
               Save Changes

@@ -294,7 +294,7 @@ export function AttendanceSheet({
               } else if (cell.status !== null && cell.farmIds.length > 0) {
                 // Create attendance if status is set and farms are selected
                 // Create a single record with farm_ids array
-                await LaborService.createAttendance({
+                const createdRecord = await LaborService.createAttendance({
                   worker_id: cell.workerId,
                   farm_ids: cell.farmIds, // Use cell's selected farm IDs
                   date: cell.date,
@@ -302,6 +302,23 @@ export function AttendanceSheet({
                   work_type: cell.workType || 'other', // Default to 'other' if not set
                   daily_rate_override: cell.status === 'absent' ? 0 : undefined
                 })
+
+                // Store the created record's ID so future edits update instead of creating duplicates
+                const key = `${cell.workerId}-${cell.date}`
+                successfulCellKeys.add(key)
+                setCellData((prev) => {
+                  const newMap = new Map(prev)
+                  const cellEntry = newMap.get(key)
+                  if (cellEntry) {
+                    newMap.set(key, {
+                      ...cellEntry,
+                      existingRecordId: createdRecord.id,
+                      isModified: false
+                    })
+                  }
+                  return newMap
+                })
+                return
               }
 
               // Only mark as successful if no exception was thrown
