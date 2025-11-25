@@ -373,8 +373,8 @@ export function AttendanceView({
               <span className="text-xs md:text-sm text-muted-foreground">Avg. Daily Rate</span>
               <span className="text-sm md:text-base font-semibold">
                 ₹
-                {stats.totalRecords > 0
-                  ? (stats.totalAmount / (stats.fullDays + stats.halfDays * 0.5 || 1)).toFixed(0)
+                {stats.fullDays + stats.halfDays * 0.5 > 0
+                  ? (stats.totalAmount / (stats.fullDays + stats.halfDays * 0.5)).toFixed(0)
                   : 0}
               </span>
             </div>

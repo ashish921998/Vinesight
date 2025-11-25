@@ -292,7 +292,7 @@ export default function WorkersPage() {
         .neq('work_status', 'absent')
 
       if (analyticsFarmId) {
-        attendanceQuery = attendanceQuery.eq('farm_id', analyticsFarmId)
+        attendanceQuery = attendanceQuery.contains('farm_ids', [analyticsFarmId])
       }
 
       const { data: attendanceData, error: attendanceError } = await attendanceQuery

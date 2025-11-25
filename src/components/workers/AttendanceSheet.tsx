@@ -32,7 +32,7 @@ interface AttendanceSheetProps {
   onSaveFunction?: (saveFn: () => Promise<void>, hasChanges: boolean, isSaving: boolean) => void
 }
 
-type AttendanceStatus = 'full_day' | 'half_day' | 'absent' | null
+type AttendanceStatus = WorkStatus | null
 
 interface CellData {
   workerId: number
@@ -363,13 +363,23 @@ export function AttendanceSheet({
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => navigateWeek('prev')}>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => navigateWeek('prev')}
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <div className="text-sm font-medium min-w-[140px] text-center">
               {format(weekStart, 'MMM d')} - {format(addDays(weekStart, 6), 'MMM d, yyyy')}
             </div>
-            <Button variant="outline" size="icon" onClick={() => navigateWeek('next')}>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => navigateWeek('next')}
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -469,6 +479,7 @@ export function AttendanceSheet({
                             <div className="flex flex-col gap-1.5 items-center">
                               {/* Attendance Status Button */}
                               <button
+                                type="button"
                                 onClick={() => handleCellClick(worker.id, dateStr)}
                                 className={cn(
                                   'w-8 h-8 rounded-md flex items-center justify-center text-sm font-medium transition-all hover:opacity-80',
@@ -505,6 +516,7 @@ export function AttendanceSheet({
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <button
+                                    type="button"
                                     className={cn(
                                       'h-7 px-2 text-[10px] bg-white border rounded-md w-full text-left hover:bg-gray-50 transition-colors',
                                       cell?.farmIds && cell.farmIds.length > 0
