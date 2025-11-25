@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Loader2,
   Pencil,
@@ -74,10 +74,17 @@ export function AttendanceView({
   const selectedHistoryWorker = activeWorkers.find(
     (worker) => worker.id === attendanceHistoryWorkerId
   )
-  const sortedAttendance = [...attendanceHistory].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  const sortedAttendance = React.useMemo(
+    () =>
+      [...attendanceHistory].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      ),
+    [attendanceHistory]
   )
-  const farmNameLookup = new Map(farms.map((farm) => [farm.id, farm.name]))
+  const farmNameLookup = React.useMemo(
+    () => new Map(farms.map((farm) => [farm.id, farm.name])),
+    [farms]
+  )
 
   const latestAttendanceLabel =
     sortedAttendance.length > 0
