@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Calculator, User, Brain, Package } from 'lucide-react'
+import { Home, Calculator, User, Users, Package } from 'lucide-react'
 
 const navigationItems = [
   {
@@ -18,9 +18,9 @@ const navigationItems = [
     color: 'text-primary'
   },
   {
-    name: 'AI',
-    href: '/ai-assistant',
-    icon: Brain,
+    name: 'Workers',
+    href: '/workers',
+    icon: Users,
     color: 'text-primary'
   },
   {

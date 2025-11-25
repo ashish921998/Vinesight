@@ -32,13 +32,11 @@ import { toast } from 'sonner'
 import type { LucideIcon } from 'lucide-react'
 import {
   BarChart3,
+  Brain,
   ChevronDown,
-  CalendarClock,
   Droplets,
   FlaskConical,
   NotebookText,
-  Sprout,
-  Users,
   X
 } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -1614,7 +1612,7 @@ export default function FarmDetailsPage() {
   const showFieldSignalSections = loading || hasActiveFieldSignals
   const moduleShortcuts = [
     { label: 'Logs', icon: NotebookText, href: `/farms/${farmId}/logs` },
-    { label: 'Workers', icon: Users, href: '/workers' },
+    { label: 'AI', icon: Brain, href: '/ai-assistant' },
     { label: 'Lab tests', icon: FlaskConical, href: `/farms/${farmId}/lab-tests` },
     { label: 'Reports', icon: BarChart3, href: '/reports' }
   ]
