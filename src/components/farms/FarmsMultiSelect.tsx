@@ -74,8 +74,17 @@ export const FarmsMultiSelect = React.forwardRef<HTMLButtonElement, FarmsMultiSe
         <PopoverContent id={listId} className="w-[--radix-popover-trigger-width] p-1" align="start">
           {/* All Farms Option */}
           <div
-            className="relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+            role="option"
+            tabIndex={0}
+            aria-selected={isAllSelected}
+            className="relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
             onClick={handleAllFarmsToggle}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                handleAllFarmsToggle()
+              }
+            }}
           >
             <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
               {isAllSelected && <Check className="h-4 w-4" />}
@@ -93,12 +102,21 @@ export const FarmsMultiSelect = React.forwardRef<HTMLButtonElement, FarmsMultiSe
               return (
                 <div
                   key={farm.id}
+                  role="option"
+                  tabIndex={isAllSelected ? -1 : 0}
+                  aria-selected={isSelected}
                   className={cn(
-                    'relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground',
+                    'relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
                     isAllSelected && 'pointer-events-none opacity-50'
                   )}
                   onClick={() => {
                     if (!isAllSelected) {
+                      handleFarmToggle(farm.id)
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if ((e.key === 'Enter' || e.key === ' ') && !isAllSelected) {
+                      e.preventDefault()
                       handleFarmToggle(farm.id)
                     }
                   }}

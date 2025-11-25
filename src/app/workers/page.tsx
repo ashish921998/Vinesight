@@ -1002,14 +1002,19 @@ export default function WorkersPage() {
         const deductionValue = parseFloat(entry.advanceDeduction)
         if (!Number.isNaN(deductionValue) && deductionValue > 0) {
           // Deductions still need one entry per farm
-          for (const farmId of attendanceFarmIds) {
+          // Handle floating-point precision: assign remainder to last farm to ensure sum equals original
+          const baseAmount = Math.floor((deductionValue / attendanceFarmIds.length) * 100) / 100
+          const remainder = deductionValue - baseAmount * (attendanceFarmIds.length - 1)
+          for (let i = 0; i < attendanceFarmIds.length; i++) {
+            const farmId = attendanceFarmIds[i]
+            const amount = i === attendanceFarmIds.length - 1 ? remainder : baseAmount
             deductionOperations.push(
               LaborService.createTransaction({
                 worker_id: entry.workerId!,
                 farm_id: farmId,
                 date,
                 type: 'advance_deducted',
-                amount: deductionValue / attendanceFarmIds.length, // Split deduction across farms
+                amount,
                 notes: deductionNote
               })
             )

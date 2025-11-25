@@ -259,6 +259,7 @@ export function AttendanceSheet({
     try {
       const BATCH_SIZE = 10 // Process 10 records concurrently
       const errors: string[] = []
+      const successfulCellKeys = new Set<string>()
 
       // Split modified cells into batches
       const batches: (typeof modifiedCells)[] = []
@@ -302,6 +303,10 @@ export function AttendanceSheet({
                   daily_rate_override: cell.status === 'absent' ? 0 : undefined
                 })
               }
+
+              // Only mark as successful if no exception was thrown
+              const key = `${cell.workerId}-${cell.date}`
+              successfulCellKeys.add(key)
             } catch (error) {
               console.error(`Error saving attendance for worker ${cell.workerId}:`, error)
               errors.push(`Worker ${cell.workerId} on ${cell.date}`)
@@ -317,11 +322,11 @@ export function AttendanceSheet({
       }
       onAttendanceSaved()
 
-      // Mark all cells as not modified
+      // Only mark successfully saved cells as not modified
       setCellData((prev) => {
         const newMap = new Map(prev)
         for (const [key, cell] of newMap) {
-          if (cell.isModified) {
+          if (cell.isModified && successfulCellKeys.has(key)) {
             newMap.set(key, { ...cell, isModified: false })
           }
         }

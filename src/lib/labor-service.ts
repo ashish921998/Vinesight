@@ -256,10 +256,21 @@ export async function getAttendanceByWorkerIds(
 
   if (!user) throw new Error('User not authenticated')
 
+  // Verify all workers belong to this user
+  const { data: workers, error: workersError } = await supabase
+    .from('workers')
+    .select('id')
+    .in('id', workerIds)
+    .eq('user_id', user.id)
+
+  if (workersError) throw workersError
+  const validWorkerIds = workers?.map((w) => w.id) || []
+  if (validWorkerIds.length === 0) return []
+
   const { data, error } = await supabase
     .from('worker_attendance')
     .select('*')
-    .in('worker_id', workerIds)
+    .in('worker_id', validWorkerIds)
     .gte('date', startDate)
     .lte('date', endDate)
     .order('date', { ascending: false })
