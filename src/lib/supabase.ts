@@ -248,7 +248,7 @@ export interface WorkerUpdateInput {
 export interface WorkerAttendance {
   id: number
   worker_id: number
-  farm_id: number
+  farm_ids: number[] // Array of farm IDs
   date: string
   work_status: WorkStatus
   work_type: string
@@ -262,7 +262,7 @@ export interface WorkerAttendance {
 
 export interface WorkerAttendanceCreateInput {
   worker_id: number
-  farm_id: number
+  farm_ids: number[] // Array of farm IDs
   date: string
   work_status: WorkStatus
   work_type: string

@@ -458,7 +458,3 @@ A progressive web and mobile app designed to digitize grape farming operations f
 - **Community Learning:**
   - `Practice_Success_Score = avg(adoption_outcomes) * confidence_interval * regional_relevance`
   - `Farmer_Similarity = cosine_similarity(farm_features, practices, outcomes)`
-
----
-
-**Last Updated:** January 5, 2025

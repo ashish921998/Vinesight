@@ -201,7 +201,7 @@ export async function getAttendanceByDateRange(
   const { data, error } = await supabase
     .from('worker_attendance')
     .select('*, worker:workers(*)')
-    .eq('farm_id', farmId)
+    .contains('farm_ids', [farmId]) // Check if farm_ids array contains farmId
     .gte('date', startDate)
     .lte('date', endDate)
     .order('date', { ascending: false })
@@ -241,6 +241,44 @@ export async function getAttendanceByWorker(
   return data || []
 }
 
+// Batch fetch attendance for multiple workers in a single query
+export async function getAttendanceByWorkerIds(
+  workerIds: number[],
+  startDate: string,
+  endDate: string
+): Promise<WorkerAttendance[]> {
+  if (workerIds.length === 0) return []
+
+  const supabase = getUntypedClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('User not authenticated')
+
+  // Verify all workers belong to this user
+  const { data: workers, error: workersError } = await supabase
+    .from('workers')
+    .select('id')
+    .in('id', workerIds)
+    .eq('user_id', user.id)
+
+  if (workersError) throw workersError
+  const validWorkerIds = workers?.map((w) => w.id) || []
+  if (validWorkerIds.length === 0) return []
+
+  const { data, error } = await supabase
+    .from('worker_attendance')
+    .select('*')
+    .in('worker_id', validWorkerIds)
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date', { ascending: false })
+
+  if (error) throw error
+  return data || []
+}
+
 export async function getAttendanceByDate(
   farmId: number,
   date: string
@@ -255,7 +293,7 @@ export async function getAttendanceByDate(
   const { data, error } = await supabase
     .from('worker_attendance')
     .select('*, worker:workers(*)')
-    .eq('farm_id', farmId)
+    .contains('farm_ids', [farmId]) // Check if farm_ids array contains farmId
     .eq('date', date)
     .order('worker_id')
 
@@ -381,7 +419,7 @@ export async function createAttendance(
     .from('worker_attendance')
     .insert({
       worker_id: input.worker_id,
-      farm_id: input.farm_id,
+      farm_ids: input.farm_ids, // Array of farm IDs
       date: input.date,
       work_status: input.work_status,
       work_type: input.work_type,
@@ -685,7 +723,7 @@ export async function calculateSettlement(
     .order('date')
 
   if (farmId) {
-    query = query.eq('farm_id', farmId)
+    query = query.contains('farm_ids', [farmId]) // Check if farm_ids array contains farmId
   }
 
   const { data: attendance, error } = await query
@@ -829,7 +867,7 @@ export async function getLaborAnalytics(
     .neq('work_status', 'absent')
 
   if (farmId) {
-    attendanceQuery = attendanceQuery.eq('farm_id', farmId)
+    attendanceQuery = attendanceQuery.contains('farm_ids', [farmId]) // Check if farm_ids array contains farmId
   }
 
   const { data: attendance, error: attendanceError } = await attendanceQuery
@@ -909,6 +947,7 @@ export const LaborService = {
   // Attendance
   getAttendanceByDateRange,
   getAttendanceByWorker,
+  getAttendanceByWorkerIds,
   getAttendanceByDate,
   createAttendance,
   updateAttendance,
