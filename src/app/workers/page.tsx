@@ -9,7 +9,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -67,6 +66,7 @@ import type {
   WorkerAttendanceCreateInput,
   WorkerTransaction,
   WorkStatus,
+  WorkType,
   TemporaryWorkerEntry
 } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -75,6 +75,8 @@ import { createClient } from '@/lib/supabase'
 import { WorkersListView } from '@/components/workers/WorkersListView'
 import { AttendanceView } from '@/components/workers/AttendanceView'
 import { AnalyticsView } from '@/components/workers/AnalyticsView'
+import { FarmsMultiSelect } from '@/components/farms/FarmsMultiSelect'
+import { AttendanceSheet } from '@/components/workers/AttendanceSheet'
 
 interface Farm {
   id: number
@@ -99,7 +101,7 @@ export default function WorkersPage() {
   const [workers, setWorkers] = useState<Worker[]>([])
   const [farms, setFarms] = useState<Farm[]>([])
   const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState<'workers' | 'attendance' | 'analytics'>('workers')
+  const [viewMode, setViewMode] = useState<'workers' | 'attendance' | 'analytics'>('attendance')
 
   // Worker modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -153,6 +155,11 @@ export default function WorkersPage() {
   const [attendanceFarmIds, setAttendanceFarmIds] = useState<number[]>([])
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false)
+  const [attendanceSaveFunction, setAttendanceSaveFunction] = useState<{
+    fn: () => Promise<void>
+    hasChanges: boolean
+    isSaving: boolean
+  } | null>(null)
   const [attendanceFormEntries, setAttendanceFormEntries] = useState<AttendanceFormEntry[]>([])
   const [isSavingAttendanceEntries, setIsSavingAttendanceEntries] = useState(false)
   const [attendanceHistoryWorkerId, setAttendanceHistoryWorkerId] = useState<number | null>(null)
@@ -175,6 +182,7 @@ export default function WorkersPage() {
     notes: ''
   })
   const [isSavingAttendanceEdit, setIsSavingAttendanceEdit] = useState(false)
+  const [workTypes, setWorkTypes] = useState<WorkType[]>([])
   const [attendanceRecordToDelete, setAttendanceRecordToDelete] = useState<WorkerAttendance | null>(
     null
   )
@@ -251,6 +259,20 @@ export default function WorkersPage() {
       fetchData()
     }
   }, [authLoading, user, fetchData])
+
+  // Load work types on mount
+  useEffect(() => {
+    const loadWorkTypes = async () => {
+      try {
+        const types = await LaborService.getWorkTypes()
+        setWorkTypes(types)
+      } catch (error) {
+        console.error('Error loading work types:', error)
+        toast.error('Failed to load work types')
+      }
+    }
+    loadWorkTypes()
+  }, [])
 
   const fetchAnalyticsData = useCallback(async () => {
     if (viewMode !== 'analytics') return
@@ -935,15 +957,16 @@ export default function WorkersPage() {
 
     setIsSavingAttendanceEntries(true)
     try {
-      // Save for each selected farm
-      for (const farmId of attendanceFarmIds) {
-        const attendancePayload: Parameters<typeof LaborService.bulkCreateAttendance>[0] = []
+      const attendancePayload: Parameters<typeof LaborService.bulkCreateAttendance>[0] = []
 
-        for (const entry of attendanceFormEntries) {
-          const salaryValue = parseFloat(entry.salary)
+      // Process each entry once with all selected farms
+      for (const entry of attendanceFormEntries) {
+        const salaryValue = parseFloat(entry.salary)
 
-          if (entry.isTemporary) {
-            const hoursWorked = entry.status === 'full_day' ? 8 : 4
+        if (entry.isTemporary) {
+          // Temporary workers still need separate entries per farm
+          const hoursWorked = entry.status === 'full_day' ? 8 : 4
+          for (const farmId of attendanceFarmIds) {
             tempOperations.push(
               LaborService.createTemporaryWorkerEntry({
                 farm_id: farmId,
@@ -954,45 +977,48 @@ export default function WorkersPage() {
                 notes: undefined
               })
             )
-            continue
           }
+          continue
+        }
 
-          const worker = workers.find((w) => w.id === entry.workerId)
-          const dayFraction = statusToFraction(entry.status)
-          const perDayRate = salaryValue / dayFraction
-          const defaultRate = worker?.daily_rate
-          const attendanceRecord: WorkerAttendanceCreateInput = {
-            worker_id: entry.workerId!,
-            farm_id: farmId,
-            date,
-            work_status: entry.status as WorkStatus,
-            work_type: 'other',
-            daily_rate_override: perDayRate,
-            notes: undefined
-          }
-          if (defaultRate && Math.abs(perDayRate - defaultRate) <= 0.01) {
-            delete attendanceRecord.daily_rate_override
-          }
-          attendancePayload.push(attendanceRecord)
+        const worker = workers.find((w) => w.id === entry.workerId)
+        const dayFraction = statusToFraction(entry.status)
+        const perDayRate = salaryValue / dayFraction
+        const defaultRate = worker?.daily_rate
+        const attendanceRecord: WorkerAttendanceCreateInput = {
+          worker_id: entry.workerId!,
+          farm_ids: attendanceFarmIds, // Array of all selected farm IDs
+          date,
+          work_status: entry.status as WorkStatus,
+          work_type: 'other',
+          daily_rate_override: perDayRate,
+          notes: undefined
+        }
+        if (defaultRate && Math.abs(perDayRate - defaultRate) <= 0.01) {
+          delete attendanceRecord.daily_rate_override
+        }
+        attendancePayload.push(attendanceRecord)
 
-          const deductionValue = parseFloat(entry.advanceDeduction)
-          if (!Number.isNaN(deductionValue) && deductionValue > 0) {
+        const deductionValue = parseFloat(entry.advanceDeduction)
+        if (!Number.isNaN(deductionValue) && deductionValue > 0) {
+          // Deductions still need one entry per farm
+          for (const farmId of attendanceFarmIds) {
             deductionOperations.push(
               LaborService.createTransaction({
                 worker_id: entry.workerId!,
                 farm_id: farmId,
                 date,
                 type: 'advance_deducted',
-                amount: deductionValue,
+                amount: deductionValue / attendanceFarmIds.length, // Split deduction across farms
                 notes: deductionNote
               })
             )
           }
         }
+      }
 
-        if (attendancePayload.length > 0) {
-          await LaborService.bulkCreateAttendance(attendancePayload)
-        }
+      if (attendancePayload.length > 0) {
+        await LaborService.bulkCreateAttendance(attendancePayload)
       }
 
       if (tempOperations.length > 0) {
@@ -1021,6 +1047,22 @@ export default function WorkersPage() {
     ? (parseFloat(totalSalaryInput) || 0) - (parseFloat(advanceDeduction) || 0)
     : 0
 
+  // Memoized callbacks for AttendanceSheet to prevent infinite loops
+  const handleAttendanceSaved = useCallback(() => {
+    setIsAttendanceModalOpen(false)
+    fetchData()
+    if (attendanceHistoryWorkerId) {
+      loadAttendanceHistory(attendanceHistoryWorkerId)
+    }
+  }, [attendanceHistoryWorkerId, fetchData, loadAttendanceHistory])
+
+  const handleSaveFunctionUpdate = useCallback(
+    (saveFn: () => Promise<void>, hasChanges: boolean, isSaving: boolean) => {
+      setAttendanceSaveFunction({ fn: saveFn, hasChanges, isSaving })
+    },
+    []
+  )
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -1047,10 +1089,10 @@ export default function WorkersPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-4">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-          <Card className="rounded-2xl">
-            <CardContent className="p-4">
+        {/* Summary Stats */}
+        <Card className="rounded-2xl mb-4">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-primary/10 rounded-xl flex-shrink-0">
                   <Users className="h-5 w-5 text-primary" />
@@ -1060,10 +1102,6 @@ export default function WorkersPage() {
                   <p className="text-xs text-muted-foreground">Active Workers</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl">
-            <CardContent className="p-4">
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-primary/10 rounded-xl flex-shrink-0">
                   <Wallet className="h-5 w-5 text-primary" />
@@ -1075,9 +1113,9 @@ export default function WorkersPage() {
                   <p className="text-xs text-muted-foreground">Total Advance</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Controls */}
         <div className="bg-white border rounded-2xl p-4 mb-5 space-y-4">
@@ -1104,12 +1142,17 @@ export default function WorkersPage() {
             <div className="w-full max-w-sm sm:max-w-md mx-auto sm:mx-0">
               {viewMode === 'attendance' ? (
                 <Button
-                  onClick={handleOpenAttendanceModal}
+                  onClick={() => attendanceSaveFunction?.fn()}
+                  disabled={!attendanceSaveFunction?.hasChanges || attendanceSaveFunction?.isSaving}
                   size="lg"
                   className="w-full rounded-full bg-primary hover:bg-primary/90 text-white"
                 >
-                  <Check className="h-4 w-4 mr-1" />
-                  Record Attendance
+                  {attendanceSaveFunction?.isSaving ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Check className="h-4 w-4 mr-1" />
+                  )}
+                  Save Changes
                 </Button>
               ) : viewMode === 'workers' ? (
                 <div className="flex gap-2">
@@ -1146,18 +1189,16 @@ export default function WorkersPage() {
           />
         )}
         {viewMode === 'attendance' && (
-          <AttendanceView
-            farms={farms}
-            workers={workers}
-            attendanceHistoryWorkerId={attendanceHistoryWorkerId}
-            attendanceHistory={attendanceHistory}
-            attendanceHistoryLoading={attendanceHistoryLoading}
-            onFarmNavigation={() => router.push('/farms')}
-            onAttendanceHistoryWorkerChange={setAttendanceHistoryWorkerId}
-            onOpenAttendanceModal={handleOpenAttendanceModal}
-            onOpenEditAttendance={handleOpenEditAttendance}
-            onRequestDeleteAttendance={handleRequestDeleteAttendance}
-          />
+          <Card className="rounded-2xl">
+            <CardContent className="p-4">
+              <AttendanceSheet
+                farms={farms}
+                workers={workers}
+                onAttendanceSaved={handleAttendanceSaved}
+                onSaveFunction={handleSaveFunctionUpdate}
+              />
+            </CardContent>
+          </Card>
         )}
         {viewMode === 'analytics' && (
           <AnalyticsView
@@ -1185,185 +1226,34 @@ export default function WorkersPage() {
 
       {/* Record Attendance Modal */}
       <Dialog open={isAttendanceModalOpen} onOpenChange={setIsAttendanceModalOpen}>
-        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-6xl max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b">
             <DialogTitle>Record Attendance</DialogTitle>
             <DialogDescription>
-              Choose farms, date, and add fixed or temporary workers present for the day.
+              Click on cells to mark attendance: Full Day (F), Half Day (H), Absent (A), or Not Set
+              (-).
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>Farms *</Label>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {farms.map((farm) => (
-                  <div key={farm.id} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`farm-${farm.id}`}
-                      checked={attendanceFarmIds.includes(farm.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setAttendanceFarmIds((prev) => [...prev, farm.id])
-                        } else {
-                          setAttendanceFarmIds((prev) => prev.filter((id) => id !== farm.id))
-                        }
-                      }}
-                    />
-                    <Label htmlFor={`farm-${farm.id}`} className="font-normal cursor-pointer">
-                      {farm.name}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="attendance-date">Date *</Label>
-              <Input
-                id="attendance-date"
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-4">
-              {attendanceFormEntries.map((entry, index) => {
-                const activeWorkers = workers.filter((worker) => worker.is_active)
-                return (
-                  <Card key={entry.id}>
-                    <CardContent className="space-y-4">
-                      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                        <div>
-                          <p className="font-semibold">Worker {index + 1}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {entry.isTemporary ? 'Temporary worker' : 'Fixed worker'}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id={`temp-${entry.id}`}
-                            checked={entry.isTemporary}
-                            onCheckedChange={(checked) =>
-                              handleToggleTemporary(entry.id, Boolean(checked))
-                            }
-                          />
-                          <Label htmlFor={`temp-${entry.id}`} className="text-sm">
-                            Temporary worker
-                          </Label>
-                          {attendanceFormEntries.length > 1 && (
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="text-red-500"
-                              onClick={() => handleRemoveAttendanceEntry(entry.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="grid gap-4 md:grid-cols-2">
-                        {entry.isTemporary ? (
-                          <div className="space-y-2 md:col-span-2">
-                            <Label>Name *</Label>
-                            <Input
-                              value={entry.tempName}
-                              onChange={(e) =>
-                                updateAttendanceFormEntry(entry.id, 'tempName', e.target.value)
-                              }
-                              placeholder="Temporary worker name"
-                            />
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <Label>Worker *</Label>
-                            <Select
-                              value={entry.workerId?.toString() || ''}
-                              onValueChange={(value) =>
-                                handleWorkerSelect(
-                                  entry.id,
-                                  value ? parseInt(value, 10) : undefined
-                                )
-                              }
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Choose worker" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {activeWorkers.map((worker) => (
-                                  <SelectItem key={worker.id} value={worker.id.toString()}>
-                                    {worker.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-
-                        <div className="space-y-2">
-                          <Label>Attendance *</Label>
-                          <Select
-                            value={entry.status}
-                            onValueChange={(value: WorkStatus) =>
-                              handleAttendanceStatusChange(entry.id, value)
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="full_day">Full Day</SelectItem>
-                              <SelectItem value="half_day">Half Day</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Day Salary (₹) *</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            value={entry.salary}
-                            onChange={(e) =>
-                              updateAttendanceFormEntry(entry.id, 'salary', e.target.value)
-                            }
-                            placeholder="Enter salary"
-                          />
-                        </div>
-
-                        {!entry.isTemporary && (
-                          <div className="space-y-2">
-                            <Label>Deduct From Advance (₹)</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              value={entry.advanceDeduction}
-                              onChange={(e) =>
-                                updateAttendanceFormEntry(
-                                  entry.id,
-                                  'advanceDeduction',
-                                  e.target.value
-                                )
-                              }
-                              placeholder="0"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            <AttendanceSheet
+              farms={farms}
+              workers={workers}
+              onAttendanceSaved={handleAttendanceSaved}
+              onSaveFunction={handleSaveFunctionUpdate}
+            />
           </div>
-          <DialogFooter>
+          <DialogFooter className="px-6 py-4 border-t bg-white">
             <Button variant="outline" onClick={() => setIsAttendanceModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveAttendanceEntries} disabled={isSavingAttendanceEntries}>
-              {isSavingAttendanceEntries && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Save Attendance
+            <Button
+              onClick={() => attendanceSaveFunction?.fn()}
+              disabled={!attendanceSaveFunction?.hasChanges || attendanceSaveFunction?.isSaving}
+            >
+              {attendanceSaveFunction?.isSaving && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1403,11 +1293,21 @@ export default function WorkersPage() {
             </div>
             <div className="space-y-2">
               <Label>Work Type</Label>
-              <Input
+              <Select
                 value={editAttendanceForm.workType}
-                onChange={(e) => handleEditFormChange('workType', e.target.value)}
-                placeholder="e.g. other"
-              />
+                onValueChange={(value) => handleEditFormChange('workType', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select work type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {workTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.name}>
+                      {type.name.charAt(0).toUpperCase() + type.name.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Day Salary (₹)</Label>
@@ -1788,7 +1688,7 @@ export default function WorkersPage() {
 
       {/* Settlement Modal */}
       <Dialog open={isSettlementModalOpen} onOpenChange={setIsSettlementModalOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Settle Payment</DialogTitle>
             <DialogDescription>
@@ -1797,7 +1697,7 @@ export default function WorkersPage() {
                 : 'Select a worker and period to calculate payment'}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="flex-1 overflow-y-auto space-y-4 py-4">
             {/* Worker Select - Required */}
             <div className="space-y-2">
               <Label>Worker *</Label>
