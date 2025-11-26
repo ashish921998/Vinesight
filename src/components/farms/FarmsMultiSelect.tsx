@@ -34,8 +34,11 @@ export const FarmsMultiSelect = React.forwardRef<HTMLButtonElement, FarmsMultiSe
 
     const handleFarmToggle = (farmId: number) => {
       if (selectedFarmIds.includes(farmId)) {
-        onSelectionChange(selectedFarmIds.filter((id) => id !== farmId))
+        // Deselecting a farm
+        const newSelection = selectedFarmIds.filter((id) => id !== farmId)
+        onSelectionChange(newSelection)
       } else {
+        // Selecting a farm
         onSelectionChange([...selectedFarmIds, farmId])
       }
     }
@@ -72,62 +75,57 @@ export const FarmsMultiSelect = React.forwardRef<HTMLButtonElement, FarmsMultiSe
           </button>
         </PopoverTrigger>
         <PopoverContent id={listId} className="w-[--radix-popover-trigger-width] p-1" align="start">
-          {/* All Farms Option */}
-          <div
-            role="option"
-            tabIndex={0}
-            aria-selected={isAllSelected}
-            className="relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-            onClick={handleAllFarmsToggle}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                handleAllFarmsToggle()
-              }
-            }}
-          >
-            <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-              {isAllSelected && <Check className="h-4 w-4" />}
-            </span>
-            <span className="font-medium">All Farms</span>
-          </div>
+          <div role="listbox" aria-labelledby={listId}>
+            {/* All Farms Option */}
+            <div
+              role="option"
+              tabIndex={0}
+              aria-selected={isAllSelected}
+              className="relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+              onClick={handleAllFarmsToggle}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  handleAllFarmsToggle()
+                }
+              }}
+            >
+              <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+                {isAllSelected && <Check className="h-4 w-4" />}
+              </span>
+              <span className="font-medium">All Farms</span>
+            </div>
 
-          {/* Separator */}
-          <div className="-mx-1 my-1 h-px bg-muted" />
+            {/* Separator */}
+            <div className="-mx-1 my-1 h-px bg-muted" />
 
-          {/* Individual Farm Options */}
-          <div className="max-h-64 overflow-y-auto">
-            {farms.map((farm) => {
-              const isSelected = selectedFarmIds.includes(farm.id)
-              return (
-                <div
-                  key={farm.id}
-                  role="option"
-                  tabIndex={isAllSelected ? -1 : 0}
-                  aria-selected={isSelected}
-                  className={cn(
-                    'relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
-                    isAllSelected && 'pointer-events-none opacity-50'
-                  )}
-                  onClick={() => {
-                    if (!isAllSelected) {
-                      handleFarmToggle(farm.id)
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if ((e.key === 'Enter' || e.key === ' ') && !isAllSelected) {
-                      e.preventDefault()
-                      handleFarmToggle(farm.id)
-                    }
-                  }}
-                >
-                  <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-                    {isSelected && <Check className="h-4 w-4" />}
-                  </span>
-                  <span className="truncate">{farm.name}</span>
-                </div>
-              )
-            })}
+            {/* Individual Farm Options */}
+            <div className="max-h-64 overflow-y-auto">
+              {farms.map((farm) => {
+                const isSelected = selectedFarmIds.includes(farm.id)
+                return (
+                  <div
+                    key={farm.id}
+                    role="option"
+                    tabIndex={0}
+                    aria-selected={isSelected}
+                    className="relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                    onClick={() => handleFarmToggle(farm.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        handleFarmToggle(farm.id)
+                      }
+                    }}
+                  >
+                    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+                      {isSelected && <Check className="h-4 w-4" />}
+                    </span>
+                    <span className="truncate">{farm.name}</span>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </PopoverContent>
       </Popover>

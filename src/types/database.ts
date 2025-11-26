@@ -722,7 +722,6 @@ export type Database = {
           created_at: string | null
           date: string
           date_of_pruning: string | null
-          description: string
           farm_id: number | null
           id: number
           remarks: string | null
@@ -733,7 +732,6 @@ export type Database = {
           created_at?: string | null
           date: string
           date_of_pruning?: string | null
-          description: string
           farm_id?: number | null
           id?: number
           remarks?: string | null
@@ -744,7 +742,6 @@ export type Database = {
           created_at?: string | null
           date?: string
           date_of_pruning?: string | null
-          description?: string
           farm_id?: number | null
           id?: number
           remarks?: string | null

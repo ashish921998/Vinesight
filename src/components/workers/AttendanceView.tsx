@@ -361,10 +361,12 @@ export function AttendanceView({
               <span className="text-sm md:text-base font-semibold">{stats.totalRecords}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs md:text-sm text-muted-foreground">Attendance Rate</span>
+              <span className="text-xs md:text-sm text-muted-foreground">Effective Attendance</span>
               <span className="text-sm md:text-base font-semibold">
                 {stats.totalRecords > 0
-                  ? (((stats.fullDays + stats.halfDays) / stats.totalRecords) * 100).toFixed(1)
+                  ? (((stats.fullDays + stats.halfDays * 0.5) / stats.totalRecords) * 100).toFixed(
+                      1
+                    )
                   : 0}
                 %
               </span>

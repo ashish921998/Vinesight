@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { format, addDays, startOfWeek, isSameDay } from 'date-fns'
+import { format, addDays, startOfWeek, isSameDay, differenceInDays, subDays } from 'date-fns'
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -19,6 +19,7 @@ import type { Worker, WorkStatus, WorkType } from '@/lib/supabase'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Input } from '@/components/ui/input'
 
 interface Farm {
   id: number
@@ -65,8 +66,11 @@ export function AttendanceSheet({
   onAttendanceSaved,
   onSaveFunction
 }: AttendanceSheetProps) {
-  const [weekStart, setWeekStart] = React.useState(() =>
-    startOfWeek(new Date(), { weekStartsOn: 1 })
+  // Initialize with current week by default
+  const defaultWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
+  const [startDate, setStartDate] = React.useState(() => format(defaultWeekStart, 'yyyy-MM-dd'))
+  const [endDate, setEndDate] = React.useState(() =>
+    format(addDays(defaultWeekStart, 6), 'yyyy-MM-dd')
   )
   const [cellData, setCellData] = React.useState<Map<string, CellData>>(new Map())
   const [loading, setLoading] = React.useState(false)
@@ -74,10 +78,20 @@ export function AttendanceSheet({
   const [workTypes, setWorkTypes] = React.useState<WorkType[]>([])
 
   const activeWorkers = React.useMemo(() => workers.filter((w) => w.is_active), [workers])
-  const weekDates = React.useMemo(
-    () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
-    [weekStart]
-  )
+
+  // Generate dates array from startDate to endDate
+  const dateRange = React.useMemo(() => {
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    const days = differenceInDays(end, start) + 1
+
+    if (days <= 0 || days > 31) {
+      // Invalid range or too large
+      return []
+    }
+
+    return Array.from({ length: days }, (_, i) => addDays(start, i))
+  }, [startDate, endDate])
 
   // Stable identifier for worker IDs to prevent unnecessary effect re-runs
   const activeWorkerIds = React.useMemo(
@@ -101,12 +115,12 @@ export function AttendanceSheet({
     loadWorkTypes()
   }, [])
 
-  // Load existing attendance data for the week - single batch query
+  // Load existing attendance data for the date range - single batch query
   React.useEffect(() => {
     let isCancelled = false
 
     const loadAttendance = async () => {
-      if (activeWorkers.length === 0) {
+      if (activeWorkers.length === 0 || dateRange.length === 0) {
         if (!isCancelled) {
           setCellData(new Map())
           setLoading(false)
@@ -123,7 +137,7 @@ export function AttendanceSheet({
 
         // Initialize all cells with empty farm selection
         for (const worker of activeWorkers) {
-          for (const date of weekDates) {
+          for (const date of dateRange) {
             const dateStr = format(date, 'yyyy-MM-dd')
             const key = getCellKey(worker.id, dateStr)
             newCellData.set(key, {
@@ -138,8 +152,6 @@ export function AttendanceSheet({
         }
 
         // Batch load attendance for all workers in a single query
-        const startDate = format(weekDates[0], 'yyyy-MM-dd')
-        const endDate = format(weekDates[weekDates.length - 1], 'yyyy-MM-dd')
         const workerIds = activeWorkers.map((w) => w.id)
 
         const records = await LaborService.getAttendanceByWorkerIds(workerIds, startDate, endDate)
@@ -178,7 +190,7 @@ export function AttendanceSheet({
       isCancelled = true
     }
     // Using activeWorkerIds (string) as stable dependency to prevent re-runs when worker array reference changes
-  }, [weekStart, activeWorkerIds, farms.length])
+  }, [startDate, endDate, activeWorkerIds, farms.length, activeWorkers, dateRange])
 
   const handleCellClick = (workerId: number, date: string) => {
     const key = getCellKey(workerId, date)
@@ -363,8 +375,18 @@ export function AttendanceSheet({
     return modifiedCells.length > 0
   }, [cellData])
 
-  const navigateWeek = (direction: 'prev' | 'next') => {
-    setWeekStart((prev) => addDays(prev, direction === 'prev' ? -7 : 7))
+  const navigateDateRange = (direction: 'prev' | 'next') => {
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    const days = differenceInDays(end, start) + 1
+
+    if (direction === 'prev') {
+      setStartDate(format(subDays(start, days), 'yyyy-MM-dd'))
+      setEndDate(format(subDays(end, days), 'yyyy-MM-dd'))
+    } else {
+      setStartDate(format(addDays(start, days), 'yyyy-MM-dd'))
+      setEndDate(format(addDays(end, days), 'yyyy-MM-dd'))
+    }
   }
 
   // Expose save function to parent
@@ -378,29 +400,69 @@ export function AttendanceSheet({
     <div className="space-y-4">
       {/* Controls */}
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
               size="icon"
-              onClick={() => navigateWeek('prev')}
+              onClick={() => navigateDateRange('prev')}
+              title="Previous period"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="text-sm font-medium min-w-[140px] text-center">
-              {format(weekStart, 'MMM d')} - {format(addDays(weekStart, 6), 'MMM d, yyyy')}
-            </div>
             <Button
               type="button"
               variant="outline"
               size="icon"
-              onClick={() => navigateWeek('next')}
+              onClick={() => navigateDateRange('next')}
+              title="Next period"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="start-date" className="text-sm whitespace-nowrap">
+                From:
+              </Label>
+              <Input
+                id="start-date"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-[150px] h-9"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="end-date" className="text-sm whitespace-nowrap">
+                To:
+              </Label>
+              <Input
+                id="end-date"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-[150px] h-9"
+              />
+            </div>
+          </div>
         </div>
+
+        {dateRange.length > 0 && (
+          <div className="text-xs text-muted-foreground">
+            Showing {dateRange.length} day{dateRange.length !== 1 ? 's' : ''} (
+            {format(new Date(startDate), 'MMM d')} - {format(new Date(endDate), 'MMM d, yyyy')})
+          </div>
+        )}
+
+        {dateRange.length === 0 && (
+          <div className="text-xs text-red-600">
+            Invalid date range. Please ensure start date is before or equal to end date, and range
+            is not more than 31 days.
+          </div>
+        )}
       </div>
 
       {/* Attendance Grid */}
@@ -449,7 +511,7 @@ export function AttendanceSheet({
                     <th className="text-left py-2 px-3 bg-gray-50 border border-gray-200 font-medium text-sm sticky left-0 z-10 min-w-[140px] w-[140px]">
                       Worker
                     </th>
-                    {weekDates.map((date) => {
+                    {dateRange.map((date) => {
                       const dateStr = format(date, 'yyyy-MM-dd')
                       return (
                         <th
@@ -477,7 +539,7 @@ export function AttendanceSheet({
                           Rs.{worker.daily_rate}/day
                         </div>
                       </td>
-                      {weekDates.map((date) => {
+                      {dateRange.map((date) => {
                         const dateStr = format(date, 'yyyy-MM-dd')
                         const key = getCellKey(worker.id, dateStr)
                         const cell = cellData.get(key)

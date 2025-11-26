@@ -612,7 +612,7 @@ export default function FarmDetailsPage() {
           date: date,
           type: data.type || 'other',
           cost: parseFloat(data.cost || '0'),
-          remarks: data.notes || '',
+          remarks: data.remarks || data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break

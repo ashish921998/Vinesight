@@ -89,7 +89,6 @@ CREATE TABLE expense_records (
   farm_id BIGINT REFERENCES farms(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   type VARCHAR(20) CHECK (type IN ('labor', 'materials', 'equipment', 'fuel', 'other')) NOT NULL,
-  description TEXT NOT NULL,
   cost DECIMAL(12,2) NOT NULL,
   date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
   remarks TEXT,
