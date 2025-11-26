@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Montserrat, Merriweather, Source_Code_Pro } from 'next/font/google'
 import './globals.css'
 import { I18nProvider } from '@/components/providers/I18nProvider'
+import { OrganizationProvider } from '@/contexts/OrganizationContext'
 import { AsyncErrorBoundary } from '@/components/ErrorBoundary'
 import { SentryErrorBoundary } from '@/components/SentryErrorBoundary'
 import { Suspense } from 'react'
@@ -171,7 +172,9 @@ export default function RootLayout({
             >
               <GlobalAuthErrorHandler />
               <I18nProvider>
-                <LayoutContent>{children}</LayoutContent>
+                <OrganizationProvider>
+                  <LayoutContent>{children}</LayoutContent>
+                </OrganizationProvider>
               </I18nProvider>
             </Suspense>
           </AsyncErrorBoundary>

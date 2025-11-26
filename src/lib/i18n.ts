@@ -17,6 +17,7 @@ const resources = {
         analytics: 'Analytics',
         weather: 'Weather',
         reminders: 'Reminders',
+        clients: 'My Clients',
         reports: 'Reports',
         farmEfficiency: 'Farm Efficiency',
         settings: 'Settings'
@@ -315,6 +316,7 @@ const resources = {
         analytics: 'विश्लेषण',
         weather: 'मौसम',
         reminders: 'रिमाइंडर',
+        clients: 'मेरे क्लाइंट',
         reports: 'रिपोर्ट',
         farmEfficiency: 'फार्म दक्षता',
         settings: 'सेटिंग्स'
@@ -614,6 +616,7 @@ const resources = {
         analytics: 'विश्लेषण',
         weather: 'हवामान',
         reminders: 'स्मरणपत्र',
+        clients: 'माझे क्लायंट',
         reports: 'अहवाल',
         farmEfficiency: 'शेत कार्यक्षमता',
         settings: 'सेटिंग्ज'

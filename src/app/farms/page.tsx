@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import { CanCreate, CanUpdate, CanDelete } from '@/components/rbac/PermissionGuard'
 import { capitalize } from '@/lib/utils'
 
 export default function FarmsPage() {
@@ -106,14 +107,16 @@ export default function FarmsPage() {
                   {farms.length} {farms.length === 1 ? 'vineyard' : 'vineyards'}
                 </p>
               </div>
-              <Button
-                onClick={handleAdd}
-                size="sm"
-                className="h-9 px-3 text-sm font-medium bg-green-600 hover:bg-green-700"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Add Farm
-              </Button>
+              <CanCreate resource="farms">
+                <Button
+                  onClick={handleAdd}
+                  size="sm"
+                  className="h-9 px-3 text-sm font-medium bg-green-600 hover:bg-green-700"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Farm
+                </Button>
+              </CanCreate>
             </div>
           </div>
         </div>
@@ -202,25 +205,29 @@ export default function FarmsPage() {
                                   align="end"
                                   className="w-48 bg-white border border-gray-200 shadow-lg"
                                 >
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.preventDefault()
-                                      handleEdit(farm)
-                                    }}
-                                  >
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit Farm
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.preventDefault()
-                                      handleDelete(farm.id!)
-                                    }}
-                                    className="text-red-600 focus:text-red-600"
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete Farm
-                                  </DropdownMenuItem>
+                                  <CanUpdate resource="farms" farmId={farm.id}>
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        handleEdit(farm)
+                                      }}
+                                    >
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Edit Farm
+                                    </DropdownMenuItem>
+                                  </CanUpdate>
+                                  <CanDelete resource="farms" farmId={farm.id}>
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        handleDelete(farm.id!)
+                                      }}
+                                      className="text-red-600 focus:text-red-600"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete Farm
+                                    </DropdownMenuItem>
+                                  </CanDelete>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                               <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
@@ -274,10 +281,12 @@ export default function FarmsPage() {
                   <p className="text-gray-500 mb-6 text-sm max-w-sm mx-auto">
                     Start by adding your first vineyard to begin tracking your farming operations
                   </p>
-                  <Button onClick={handleAdd} className="h-12 px-6 bg-green-600 hover:bg-green-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Your First Farm
-                  </Button>
+                  <CanCreate resource="farms">
+                    <Button onClick={handleAdd} className="h-12 px-6 bg-green-600 hover:bg-green-700">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Your First Farm
+                    </Button>
+                  </CanCreate>
                 </CardContent>
               </Card>
             )}
