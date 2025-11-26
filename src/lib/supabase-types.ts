@@ -529,7 +529,6 @@ export function toDatabaseExpenseInsert(
     date: appRecord.date,
     type: appRecord.type,
     cost: appRecord.cost,
-    description: appRecord.remarks || '', // Required NOT NULL column
     date_of_pruning: dateToISOString(appRecord.date_of_pruning),
     remarks: appRecord.remarks ?? null
   }

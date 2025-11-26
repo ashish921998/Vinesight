@@ -171,11 +171,11 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         step: 0.01
       },
       {
-        name: 'notes',
+        name: 'remarks',
         type: 'textarea',
-        label: 'Notes (Optional)',
+        label: 'Remarks (Optional)',
         required: false,
-        placeholder: 'e.g., Additional details about this expense...',
+        placeholder: 'e.g., Diesel for tractor, fertilizer purchase...',
         maxLength: 2000
       }
     ]

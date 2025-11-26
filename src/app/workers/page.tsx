@@ -267,16 +267,24 @@ export default function WorkersPage() {
 
   // Load work types on mount
   useEffect(() => {
+    let cancelled = false
     const loadWorkTypes = async () => {
       try {
         const types = await LaborService.getWorkTypes()
-        setWorkTypes(types)
+        if (!cancelled) {
+          setWorkTypes(types)
+        }
       } catch (error) {
         console.error('Error loading work types:', error)
-        toast.error('Failed to load work types')
+        if (!cancelled) {
+          toast.error('Failed to load work types')
+        }
       }
     }
     loadWorkTypes()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const fetchAnalyticsData = useCallback(async () => {
@@ -1007,10 +1015,11 @@ export default function WorkersPage() {
         const deductionValue = parseFloat(entry.advanceDeduction)
         if (!Number.isNaN(deductionValue) && deductionValue > 0) {
           // Record full deduction as single worker-level transaction
+          // Use the first farm ID from selected farms for the transaction
           deductionOperations.push(
             LaborService.createTransaction({
               worker_id: entry.workerId!,
-              farm_id: null,
+              farm_id: attendanceFarmIds[0] || null,
               date,
               type: 'advance_deducted',
               amount: deductionValue,

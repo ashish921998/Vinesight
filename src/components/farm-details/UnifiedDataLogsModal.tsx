@@ -1150,7 +1150,7 @@ export function UnifiedDataLogsModal({
                   }
 
                   // Clear values of conditional fields that depend on this field
-                  const formFields = logTypeConfigs[selectedLogType as LogType]?.fields || []
+                  const formFields = logTypeConfigs[currentLogType as LogType]?.fields || []
                   formFields.forEach((f) => {
                     if (f.conditionalOn?.field === field.name) {
                       delete updated[f.name]
