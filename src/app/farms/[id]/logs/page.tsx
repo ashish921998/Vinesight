@@ -41,6 +41,7 @@ import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-ty
 import { cn, capitalize } from '@/lib/utils'
 import { toast } from 'sonner'
 import { parseFarmId, handleDailyNotesAndPhotosAfterLogs } from '@/lib/daily-note-utils'
+import { usePermissions } from '@/hooks/usePermissions'
 
 import { type Farm } from '@/types/types'
 
@@ -151,12 +152,16 @@ const LogsList = React.memo(function LogsList({
   logs,
   onEdit,
   onDelete,
-  currentFarm
+  currentFarm,
+  canUpdate = true,
+  canDelete = true
 }: {
   logs: ActivityLog[]
   onEdit: (log: ActivityLog) => void
   onDelete: (log: ActivityLog) => void
   currentFarm: Farm | null
+  canUpdate?: boolean
+  canDelete?: boolean
 }) {
   return (
     <div className="space-y-2">
@@ -171,17 +176,17 @@ const LogsList = React.memo(function LogsList({
             role="button"
             tabIndex={0}
             aria-label={`Edit ${log.type} log from ${log.date}`}
-            onClick={() => onEdit(log)}
+            onClick={() => canUpdate && onEdit(log)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
-                onEdit(log)
+                canUpdate && onEdit(log)
               }
             }}
             onKeyUp={(e) => {
               if (e.key === ' ') {
                 e.preventDefault()
-                onEdit(log)
+                canUpdate && onEdit(log)
               }
             }}
           >
@@ -214,30 +219,34 @@ const LogsList = React.memo(function LogsList({
               </div>
 
               <div className="flex items-center gap-1 flex-shrink-0">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onEdit(log)
-                  }}
-                  className="h-7 w-7 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                  title="Edit this log"
-                >
-                  <Edit className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDelete(log)
-                  }}
-                  className="h-7 w-7 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
-                  title="Delete this log"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+                {canUpdate && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onEdit(log)
+                    }}
+                    className="h-7 w-7 p-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                    title="Edit this log"
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                )}
+                {canDelete && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDelete(log)
+                    }}
+                    className="h-7 w-7 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
+                    title="Delete this log"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -252,6 +261,7 @@ export default function FarmLogsPage() {
   const params = useParams()
   const router = useRouter()
   const farmId = params.id as string
+  const { hasPermission } = usePermissions()
 
   const [selectedFarm, setSelectedFarm] = useState<string>(farmId)
   const [farms, setFarms] = useState<Farm[]>([])
@@ -959,6 +969,8 @@ export default function FarmLogsPage() {
                 onEdit={handleEditRecord}
                 onDelete={handleDeleteRecord}
                 currentFarm={currentFarm}
+                canUpdate={hasPermission('records', 'update', parseInt(selectedFarm))}
+                canDelete={hasPermission('records', 'delete', parseInt(selectedFarm))}
               />
             ) : (
               <div className="text-center py-6 text-gray-500">
