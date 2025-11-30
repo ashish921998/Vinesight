@@ -111,7 +111,6 @@ export function useETcCalculator() {
     } catch (error) {
       // Log error in development only
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Calculation error:', error)
       }
       setError('Error performing calculation. Please check your inputs.')

@@ -59,7 +59,6 @@ export default function AIInsightsPage() {
       setInsightsByCategory(insights)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error loading AI insights:', error)
       }
       // Initialize with empty categories instead of mock data
@@ -112,7 +111,6 @@ export default function AIInsightsPage() {
       setCriticalAlerts(alerts)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error loading critical alerts:', error)
       }
     }
@@ -124,7 +122,6 @@ export default function AIInsightsPage() {
       setPestPredictions(predictions)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error loading pest predictions:', error)
       }
     }
@@ -139,7 +136,6 @@ export default function AIInsightsPage() {
       setFarmerProfile(profile)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error loading farmer profile:', error)
       }
     }
@@ -162,7 +158,6 @@ export default function AIInsightsPage() {
       }, 100)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error loading AI insights:', error)
       }
     } finally {
@@ -188,7 +183,6 @@ export default function AIInsightsPage() {
         const result = await AIInsightsService.executeInsightAction(insight)
         if (result.success) {
           if (process.env.NODE_ENV === 'development') {
-            // eslint-disable-next-line no-console
           }
           // Refresh insights after execution
           await loadData()
@@ -209,7 +203,6 @@ export default function AIInsightsPage() {
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error handling insight action:', error)
       }
     }
@@ -249,7 +242,6 @@ export default function AIInsightsPage() {
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error handling alert action:', error)
       }
     }
@@ -702,7 +694,6 @@ export default function AIInsightsPage() {
                           className="px-3"
                           onClick={() => {
                             if (process.env.NODE_ENV === 'development') {
-                              // eslint-disable-next-line no-console
                             }
                           }}
                         >

@@ -28,6 +28,7 @@ import { logTypeConfigs, type LogType, type FormField } from '@/lib/log-type-con
 import { type Chemical } from '@/lib/chemical-formatter'
 import { SupabaseService } from '@/lib/supabase-service'
 import { generateSaveButtonLabel } from '@/lib/daily-note-utils'
+import { formatNumberString } from '@/lib/number-utils'
 import { WarehouseItemSelect } from '@/components/warehouse/WarehouseItemSelect'
 import { warehouseService } from '@/lib/warehouse-service'
 
@@ -1113,7 +1114,23 @@ export function UnifiedDataLogsModal({
   }
 
   const renderFormField = (field: FormField) => {
+    // Check conditional visibility
+    if (field.conditionalOn) {
+      const conditionFieldValue = currentFormData[field.conditionalOn.field]
+      const requiredValue = field.conditionalOn.value
+      const matches = Array.isArray(requiredValue)
+        ? requiredValue.includes(conditionFieldValue)
+        : conditionFieldValue === requiredValue
+      if (!matches) {
+        return null
+      }
+    }
+
     const value = currentFormData[field.name] || ''
+
+    // Helper to format option labels (capitalize and replace underscores)
+    const formatOptionLabel = (option: string) =>
+      option.charAt(0).toUpperCase() + option.slice(1).replace(/_/g, ' ')
 
     switch (field.type) {
       case 'select':
@@ -1125,12 +1142,24 @@ export function UnifiedDataLogsModal({
             </Label>
             <Select
               value={value}
-              onValueChange={(newValue) =>
-                setCurrentFormData((prev) => ({
-                  ...prev,
-                  [field.name]: newValue
-                }))
-              }
+              onValueChange={(newValue) => {
+                setCurrentFormData((prev) => {
+                  const updated = {
+                    ...prev,
+                    [field.name]: newValue
+                  }
+
+                  // Clear values of conditional fields that depend on this field
+                  const formFields = logTypeConfigs[currentLogType as LogType]?.fields || []
+                  formFields.forEach((f) => {
+                    if (f.conditionalOn?.field === field.name) {
+                      delete updated[f.name]
+                    }
+                  })
+
+                  return updated
+                })
+              }}
             >
               <SelectTrigger className="h-9">
                 <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
@@ -1138,7 +1167,7 @@ export function UnifiedDataLogsModal({
               <SelectContent>
                 {field.options?.map((option) => (
                   <SelectItem key={option} value={option}>
-                    {option}
+                    {formatOptionLabel(option)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -1203,6 +1232,15 @@ export function UnifiedDataLogsModal({
                     setCurrentFormData((prev) => ({
                       ...prev,
                       [field.name]: inputValue
+                    }))
+                  }
+                } else {
+                  // Format number string on blur (removes leading zeros like "0400" -> "400")
+                  const formattedValue = formatNumberString(inputValue)
+                  if (formattedValue !== inputValue) {
+                    setCurrentFormData((prev) => ({
+                      ...prev,
+                      [field.name]: formattedValue
                     }))
                   }
                 }

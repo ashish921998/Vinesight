@@ -33,13 +33,12 @@ import { WEATHER_THRESHOLDS } from '@/constants/weather'
 import { toast } from 'sonner'
 import type { LucideIcon } from 'lucide-react'
 import {
-  ArrowUpRight,
+  BarChart3,
+  Brain,
   ChevronDown,
-  CalendarClock,
   Droplets,
   FlaskConical,
   NotebookText,
-  Sprout,
   X
 } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -616,9 +615,8 @@ export default function FarmDetailsPage() {
           farm_id: parseInt(farmId),
           date: date,
           type: data.type || 'other',
-          description: data.description || '',
           cost: parseFloat(data.cost || '0'),
-          remarks: data.notes || '',
+          remarks: data.remarks || data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
         })
         break
@@ -977,7 +975,6 @@ export default function FarmDetailsPage() {
           farm_id: parseInt(farmId),
           date: originalDate,
           type: data.type || 'other',
-          description: data.description || '',
           cost: parseFloat(data.cost || '0'),
           remarks: data.notes || '',
           date_of_pruning: dashboardData?.farm?.dateOfPruning
@@ -1625,9 +1622,10 @@ export default function FarmDetailsPage() {
   const hasActiveFieldSignals = activeFieldSignals.length > 0
   const showFieldSignalSections = loading || hasActiveFieldSignals
   const moduleShortcuts = [
-    { label: 'Logs', description: 'Daily logbook', href: `/farms/${farmId}/logs` },
-    { label: 'Reports', description: 'Performance hub', href: '/reports' },
-    { label: 'Lab tests', description: 'Diagnostics', href: `/farms/${farmId}/lab-tests` }
+    { label: 'Logs', icon: NotebookText, href: `/farms/${farmId}/logs` },
+    { label: 'AI', icon: Brain, href: '/ai-assistant' },
+    { label: 'Lab tests', icon: FlaskConical, href: `/farms/${farmId}/lab-tests` },
+    { label: 'Reports', icon: BarChart3, href: '/reports' }
   ]
 
   const renderWorkTabs = () => (
@@ -1642,20 +1640,22 @@ export default function FarmDetailsPage() {
               Switch between today’s plan and recent logs.
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-2 rounded-2xl border border-border/60 bg-muted/20 p-2 sm:grid-cols-3">
-            {moduleShortcuts.map((link) => (
-              <button
-                key={link.label}
-                type="button"
-                className="group flex items-center justify-between gap-2 rounded-xl border border-transparent bg-card/80 px-3 py-2 text-left text-sm font-semibold text-foreground transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-                onClick={() => router.push(link.href)}
-                aria-label={`Open ${link.label}`}
-                title={link.description}
-              >
-                <span>{link.label}</span>
-                <ArrowUpRight className="h-4 w-4 text-muted-foreground transition group-hover:text-primary" />
-              </button>
-            ))}
+          <div className="grid grid-cols-4 gap-1.5 rounded-2xl border border-border/60 bg-muted/20 p-1.5">
+            {moduleShortcuts.map((link) => {
+              const Icon = link.icon
+              return (
+                <button
+                  key={link.label}
+                  type="button"
+                  className="group flex flex-col items-center gap-1 rounded-xl border border-border/40 bg-card px-1.5 py-2.5 shadow-sm transition active:scale-95 active:shadow-none hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                  onClick={() => router.push(link.href)}
+                  aria-label={`Open ${link.label}`}
+                >
+                  <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                  <span className="text-[11px] font-medium text-foreground">{link.label}</span>
+                </button>
+              )
+            })}
           </div>
           <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-muted/30 p-1 sm:w-auto sm:min-w-[260px]">
             <TabsTrigger

@@ -52,11 +52,9 @@ export default function RemindersPage() {
   const loadFarms = useCallback(async () => {
     try {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
       }
       const farmList = await CloudDataService.getAllFarms()
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
       }
       setFarms(farmList)
       if (farmList.length > 0 && !selectedFarm) {
@@ -64,7 +62,6 @@ export default function RemindersPage() {
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error loading farms:', error)
       }
     } finally {
@@ -80,7 +77,6 @@ export default function RemindersPage() {
       setTasks(taskList)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error loading tasks:', error)
       }
     }
@@ -119,7 +115,6 @@ export default function RemindersPage() {
       if (editingTask) {
         // For editing, we'd need an update method in CloudDataService
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
         }
       } else {
         await SupabaseService.addTaskReminder({
@@ -137,7 +132,6 @@ export default function RemindersPage() {
       await loadTasks()
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error saving task:', error)
       }
     }
@@ -153,7 +147,6 @@ export default function RemindersPage() {
       await loadTasks()
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error completing task:', error)
       }
     }
@@ -184,7 +177,6 @@ export default function RemindersPage() {
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Error saving task from template:', error)
       }
     }

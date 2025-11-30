@@ -32,6 +32,11 @@ export interface FormField {
   max?: number
   step?: number
   maxLength?: number
+  // Conditional display: only show field when another field has a specific value
+  conditionalOn?: {
+    field: string
+    value: string | string[]
+  }
 }
 
 export interface LogTypeConfig {
@@ -155,15 +160,7 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         type: 'select',
         label: 'Category',
         required: true,
-        options: ['labor', 'materials', 'equipment', 'other']
-      },
-      {
-        name: 'description',
-        type: 'text',
-        label: 'Description',
-        required: true,
-        placeholder: 'Brief description',
-        maxLength: 1000
+        options: ['materials', 'equipment', 'fuel', 'other']
       },
       {
         name: 'cost',
@@ -174,19 +171,11 @@ export const logTypeConfigs: Record<LogType, LogTypeConfig> = {
         step: 0.01
       },
       {
-        name: 'vendor',
-        type: 'text',
-        label: 'Vendor',
-        required: false,
-        placeholder: 'Vendor name (optional)',
-        maxLength: 1000
-      },
-      {
-        name: 'notes',
+        name: 'remarks',
         type: 'textarea',
-        label: 'Notes (Optional)',
+        label: 'Remarks (Optional)',
         required: false,
-        placeholder: 'e.g., Additional details about this expense...',
+        placeholder: 'e.g., Diesel for tractor, fertilizer purchase...',
         maxLength: 2000
       }
     ]

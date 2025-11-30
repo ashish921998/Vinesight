@@ -49,7 +49,6 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     if (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Failed to fetch task:', error)
       }
       return NextResponse.json({ error: 'Failed to fetch task' }, { status: 500 })
@@ -65,7 +64,6 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     return NextResponse.json({ task })
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
       console.error('Tasks API error (GET by id):', error)
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -147,7 +145,6 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
     if (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Failed to update task:', error)
       }
       return NextResponse.json({ error: 'Failed to update task' }, { status: 500 })
@@ -160,7 +157,6 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     return NextResponse.json({ task })
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
       console.error('Tasks API error (PATCH):', error)
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -196,7 +192,6 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
 
     if (error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('Failed to delete task:', error)
       }
       return NextResponse.json({ error: 'Failed to delete task' }, { status: 500 })
@@ -205,7 +200,6 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     return NextResponse.json({ success: true })
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
       console.error('Tasks API error (DELETE):', error)
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

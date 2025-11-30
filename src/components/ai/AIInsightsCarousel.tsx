@@ -97,7 +97,6 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
           // Show success feedback - can be removed in production as it's debug logging
           if (process.env.NODE_ENV === 'development') {
             if (process.env.NODE_ENV === 'development') {
-              // eslint-disable-next-line no-console
             }
           }
           // Refresh insights after execution
@@ -108,7 +107,6 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
         if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
           console.error('Error handling insight action:', error)
         }
       }
@@ -484,7 +482,6 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
                           // Mark as acknowledged - TODO: implement actual acknowledgment logic
                           if (process.env.NODE_ENV === 'development') {
                             if (process.env.NODE_ENV === 'development') {
-                              // eslint-disable-next-line no-console
                             }
                           }
                         }}

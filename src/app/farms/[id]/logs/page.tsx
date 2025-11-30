@@ -534,7 +534,6 @@ export default function FarmLogsPage() {
           farm_id: farmIdNum,
           date: date,
           type: data.type || 'other',
-          description: data.description || '',
           cost: parseFloat(data.cost || '0'),
           remarks: data.notes || '',
           date_of_pruning: currentFarm?.dateOfPruning
