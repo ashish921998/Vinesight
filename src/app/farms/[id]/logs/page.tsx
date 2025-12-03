@@ -56,7 +56,8 @@ import {
   X,
   Check,
   ChevronsUpDown,
-  Scissors
+  Scissors,
+  Droplets
 } from 'lucide-react'
 import { searchLogs } from '@/actions/search-logs'
 
@@ -721,6 +722,15 @@ export default function FarmLogsPage() {
             </Button>
             <h1 className="text-lg font-semibold text-gray-900">Farm Logs</h1>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="inline-flex items-center gap-2"
+            onClick={() => router.push(`/farms/${farmId}/soil-profiling`)}
+          >
+            <Droplets className="h-4 w-4" />
+            Soil profiling
+          </Button>
         </div>
 
         {/* Select Farm card (unchanged) */}

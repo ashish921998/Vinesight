@@ -1489,6 +1489,97 @@ export type Database = {
           }
         ]
       }
+      soil_profiles: {
+        Row: {
+          created_at: string | null
+          farm_id: number
+          fusarium_pct: number | null
+          id: number
+        }
+        Insert: {
+          created_at?: string | null
+          farm_id: number
+          fusarium_pct?: number | null
+          id?: number
+        }
+        Update: {
+          created_at?: string | null
+          farm_id?: number
+          fusarium_pct?: number | null
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'soil_profiles_farm_id_fkey'
+            columns: ['farm_id']
+            isOneToOne: false
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      soil_sections: {
+        Row: {
+          ai_confidence: number | null
+          analyzed_at: string | null
+          awc_range: string | null
+          created_at: string | null
+          depth_m: number | null
+          ec_ds_m: number | null
+          id: number
+          moisture_pct_ai: number | null
+          moisture_pct_user: number | null
+          name: string
+          photo_path: string | null
+          predicted_texture: string | null
+          profile_id: number
+          smd_range: string | null
+          width_m: number | null
+        }
+        Insert: {
+          ai_confidence?: number | null
+          analyzed_at?: string | null
+          awc_range?: string | null
+          created_at?: string | null
+          depth_m?: number | null
+          ec_ds_m?: number | null
+          id?: number
+          moisture_pct_ai?: number | null
+          moisture_pct_user?: number | null
+          name: string
+          photo_path?: string | null
+          predicted_texture?: string | null
+          profile_id: number
+          smd_range?: string | null
+          width_m?: number | null
+        }
+        Update: {
+          ai_confidence?: number | null
+          analyzed_at?: string | null
+          awc_range?: string | null
+          created_at?: string | null
+          depth_m?: number | null
+          ec_ds_m?: number | null
+          id?: number
+          moisture_pct_ai?: number | null
+          moisture_pct_user?: number | null
+          name?: string
+          photo_path?: string | null
+          predicted_texture?: string | null
+          profile_id?: number | null
+          smd_range?: string | null
+          width_m?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'soil_sections_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'soil_profiles'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       petiole_test_records: {
         Row: {
           created_at: string | null

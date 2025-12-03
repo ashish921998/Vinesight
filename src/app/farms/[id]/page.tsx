@@ -48,6 +48,8 @@ import {
   handleDailyNotesAndPhotosAfterLogs
 } from '@/lib/daily-note-utils'
 import { TasksOverviewCard } from '@/components/tasks/TasksOverviewCard'
+import { SoilProfileService } from '@/lib/soil-profile-service'
+import type { SoilProfile } from '@/lib/supabase'
 
 interface DashboardData {
   farm: Farm | null
@@ -146,6 +148,8 @@ export default function FarmDetailsPage() {
     id: number | null
     notes: string
   } | null>(null)
+  const [latestSoilProfile, setLatestSoilProfile] = useState<SoilProfile | null>(null)
+  const [loadingSoilProfile, setLoadingSoilProfile] = useState(false)
 
   // Farm edit modal states
   const [showFarmModal, setShowFarmModal] = useState(false)
@@ -171,6 +175,20 @@ export default function FarmDetailsPage() {
     }
   }, [farmId])
 
+  const loadSoilProfile = useCallback(async () => {
+    try {
+      setLoadingSoilProfile(true)
+      const profile = await SoilProfileService.getLatestProfile(parseInt(farmId))
+      setLatestSoilProfile(profile)
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error loading soil profile', error)
+      }
+    } finally {
+      setLoadingSoilProfile(false)
+    }
+  }, [farmId])
+
   // Load all farms for farm switcher
   useEffect(() => {
     let isMounted = true
@@ -187,11 +205,12 @@ export default function FarmDetailsPage() {
     }
 
     loadAllFarms()
+    loadSoilProfile()
 
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [loadSoilProfile])
 
   useEffect(() => {
     if (isMobile) {
@@ -1614,7 +1633,8 @@ export default function FarmDetailsPage() {
     { label: 'Logs', icon: NotebookText, href: `/farms/${farmId}/logs` },
     { label: 'AI', icon: Brain, href: '/ai-assistant' },
     { label: 'Lab tests', icon: FlaskConical, href: `/farms/${farmId}/lab-tests` },
-    { label: 'Reports', icon: BarChart3, href: '/reports' }
+    { label: 'Reports', icon: BarChart3, href: '/reports' },
+    { label: 'Soil profiling', icon: Droplets, href: `/farms/${farmId}/soil-profiling` }
   ]
 
   const renderWorkTabs = () => (
@@ -1629,7 +1649,7 @@ export default function FarmDetailsPage() {
               Switch between today’s plan and recent logs.
             </p>
           </div>
-          <div className="grid grid-cols-4 gap-1.5 rounded-2xl border border-border/60 bg-muted/20 p-1.5">
+          <div className="grid grid-cols-5 gap-1.5 rounded-2xl border border-border/60 bg-muted/20 p-1.5">
             {moduleShortcuts.map((link) => {
               const Icon = link.icon
               return (

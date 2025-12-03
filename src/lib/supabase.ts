@@ -205,6 +205,35 @@ export interface PetioleTestRecord {
   created_at?: string
 }
 
+export type SoilSectionName = 'top' | 'bottom' | 'left' | 'right'
+
+export interface SoilSection {
+  id?: number
+  profile_id: number
+  name: SoilSectionName
+  depth_m?: number | null
+  width_m?: number | null
+  photo_path?: string | null
+  ec_ds_m?: number | null
+  moisture_pct_ai?: number | null
+  moisture_pct_user: number
+  predicted_texture?: string | null
+  ai_confidence?: number | null
+  awc_range?: string | null
+  smd_range?: string | null
+  analyzed_at?: string | null
+  created_at?: string | null
+  photo_url?: string | null
+}
+
+export interface SoilProfile {
+  id?: number
+  farm_id: number
+  fusarium_pct?: number | null
+  sections?: SoilSection[]
+  created_at?: string | null
+}
+
 // ============================================
 // Labor Management Module Types
 // ============================================

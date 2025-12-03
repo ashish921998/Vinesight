@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowRight, BarChart3, Brain, ClipboardList, FlaskConical } from 'lucide-react'
+import { ArrowRight, BarChart3, Brain, ClipboardList, Droplets, FlaskConical } from 'lucide-react'
 
 export function QuickActions() {
   const router = useRouter()
@@ -29,6 +29,13 @@ export function QuickActions() {
       icon: FlaskConical,
       onClick: () => router.push(`/farms/${farmId}/lab-tests`),
       iconClass: 'bg-blue-500/10 text-blue-600'
+    },
+    {
+      title: 'Soil profiling',
+      description: 'Capture palm impressions and AI moisture per section.',
+      icon: Droplets,
+      onClick: () => router.push(`/farms/${farmId}/soil-profiling`),
+      iconClass: 'bg-green-500/10 text-green-600'
     }
   ]
 
