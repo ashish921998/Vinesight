@@ -83,6 +83,13 @@ export interface Farm {
   locationSource?: 'manual' | 'search' | 'current' // how location was set
   locationUpdatedAt?: string // when location was last updated
   dateOfPruning?: Date // Date object when pruning was done
+  bulkDensity?: number // g/ml
+  cationExchangeCapacity?: number // meq/100g
+  soilWaterRetention?: number // mm/m
+  soilTextureClass?: string // e.g., clay, loam
+  sandPercentage?: number // % of sand fraction
+  siltPercentage?: number // % of silt fraction
+  clayPercentage?: number // % of clay fraction
   createdAt?: string
   updatedAt?: string
   userId?: string // For multi-user support

@@ -172,7 +172,14 @@ export function toApplicationFarm(dbFarm: DatabaseFarm): Farm {
     createdAt: dbFarm.created_at ?? undefined,
     updatedAt: dbFarm.updated_at ?? undefined,
     userId: dbFarm.user_id ?? undefined,
-    dateOfPruning: dbFarm.date_of_pruning ? new Date(dbFarm.date_of_pruning) : undefined
+    dateOfPruning: dbFarm.date_of_pruning ? new Date(dbFarm.date_of_pruning) : undefined,
+    bulkDensity: dbFarm.bulk_density ?? undefined,
+    cationExchangeCapacity: dbFarm.cation_exchange_capacity ?? undefined,
+    soilWaterRetention: dbFarm.soil_water_retention ?? undefined,
+    soilTextureClass: dbFarm.soil_texture_class ?? undefined,
+    sandPercentage: dbFarm.sand_percentage ?? undefined,
+    siltPercentage: dbFarm.silt_percentage ?? undefined,
+    clayPercentage: dbFarm.clay_percentage ?? undefined
   }
 }
 
@@ -187,8 +194,8 @@ export function toDatabaseFarmInsert(
     area: appFarm.area,
     crop_variety: appFarm.cropVariety,
     planting_date: appFarm.plantingDate,
-    vine_spacing: appFarm.vineSpacing || 0,
-    row_spacing: appFarm.rowSpacing || 0,
+    vine_spacing: appFarm.vineSpacing ?? null,
+    row_spacing: appFarm.rowSpacing ?? null,
     total_tank_capacity: appFarm.totalTankCapacity || null,
     system_discharge: appFarm.systemDischarge || null,
     remaining_water: appFarm.remainingWater || null,
@@ -201,7 +208,14 @@ export function toDatabaseFarmInsert(
     location_source: appFarm.locationSource || null,
     location_updated_at: appFarm.locationUpdatedAt || null,
     user_id: appFarm.user_id || null,
-    date_of_pruning: dateToISOString(appFarm.dateOfPruning) as any
+    date_of_pruning: dateToISOString(appFarm.dateOfPruning),
+    bulk_density: appFarm.bulkDensity ?? null,
+    cation_exchange_capacity: appFarm.cationExchangeCapacity ?? null,
+    soil_water_retention: appFarm.soilWaterRetention ?? null,
+    soil_texture_class: appFarm.soilTextureClass || null,
+    sand_percentage: appFarm.sandPercentage ?? null,
+    silt_percentage: appFarm.siltPercentage ?? null,
+    clay_percentage: appFarm.clayPercentage ?? null
   } as DatabaseFarmInsert
 }
 
@@ -244,11 +258,25 @@ export function toDatabaseFarmUpdate(appFarmUpdates: Partial<Farm>): DatabaseFar
             ? dateValue
             : null
 
-      update.date_of_pruning = dateString as any
+      update.date_of_pruning = dateString
     } else {
-      update.date_of_pruning = null as any
+      update.date_of_pruning = null
     }
   }
+  if (appFarmUpdates.bulkDensity !== undefined)
+    update.bulk_density = appFarmUpdates.bulkDensity ?? null
+  if (appFarmUpdates.cationExchangeCapacity !== undefined)
+    update.cation_exchange_capacity = appFarmUpdates.cationExchangeCapacity ?? null
+  if (appFarmUpdates.soilWaterRetention !== undefined)
+    update.soil_water_retention = appFarmUpdates.soilWaterRetention ?? null
+  if (appFarmUpdates.soilTextureClass !== undefined)
+    update.soil_texture_class = appFarmUpdates.soilTextureClass || null
+  if (appFarmUpdates.sandPercentage !== undefined)
+    update.sand_percentage = appFarmUpdates.sandPercentage ?? null
+  if (appFarmUpdates.siltPercentage !== undefined)
+    update.silt_percentage = appFarmUpdates.siltPercentage ?? null
+  if (appFarmUpdates.clayPercentage !== undefined)
+    update.clay_percentage = appFarmUpdates.clayPercentage ?? null
 
   return update as DatabaseFarmUpdate
 }

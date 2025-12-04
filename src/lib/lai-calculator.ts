@@ -91,6 +91,9 @@ export class LAICalculator {
    * Calculate plant density (vines per acre)
    */
   private static calculatePlantDensity(vineSpacing: number, rowSpacing: number): number {
+    if (vineSpacing <= 0 || rowSpacing <= 0) {
+      throw new Error('Vine spacing and row spacing must be greater than 0')
+    }
     return 10000 / (vineSpacing * rowSpacing)
   }
 
