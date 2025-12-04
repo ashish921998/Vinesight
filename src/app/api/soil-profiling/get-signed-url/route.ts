@@ -59,6 +59,16 @@ export async function POST(request: NextRequest) {
     })
   }
 
+  // Validate that photoPath belongs to this farm
+  // Photos follow the convention: soil-profiles/{farmId}/{section}-{timestamp}.{ext}
+  const expectedPrefix = `soil-profiles/${farmIdNum}/`
+  if (!photoPath.startsWith(expectedPrefix)) {
+    return new Response(JSON.stringify({ error: 'Photo path does not belong to this farm' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+
   try {
     const { data: signedUrlData, error: signedUrlError } = await adminClient.storage
       .from(SOIL_BUCKET)

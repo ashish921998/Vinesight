@@ -11,7 +11,8 @@ export interface Farm {
   name: string
   region: string
   area: number
-  grapeVariety: string
+  crop: string
+  cropVariety: string
   plantingDate: string
   vineSpacing?: number
   rowSpacing?: number
@@ -26,6 +27,14 @@ export interface Farm {
   timezone?: string
   locationSource?: 'manual' | 'search' | 'gps'
   locationUpdatedAt?: string
+  dateOfPruning?: string
+  bulkDensity?: number
+  cationExchangeCapacity?: number
+  soilWaterRetention?: number
+  soilTextureClass?: string
+  sandPercentage?: number
+  siltPercentage?: number
+  clayPercentage?: number
   createdAt?: string
   updatedAt?: string
   userId?: string
@@ -38,23 +47,32 @@ export interface DatabaseFarm {
   name: string
   region: string
   area: number
-  grape_variety: string
+  crop: string
+  crop_variety: string
   planting_date: string
   vine_spacing?: number
   row_spacing?: number
-  total_tank_capacity?: number
-  system_discharge?: number
-  remaining_water?: number
-  water_calculation_updated_at?: string
-  latitude?: number
-  longitude?: number
-  elevation?: number
-  location_name?: string
-  timezone?: string
-  location_source?: 'manual' | 'search' | 'gps'
-  location_updated_at?: string
-  created_at?: string
-  updated_at?: string
+  total_tank_capacity?: number | null
+  system_discharge?: number | null
+  remaining_water?: number | null
+  water_calculation_updated_at?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  elevation?: number | null
+  timezone?: string | null
+  location_name?: string | null
+  location_source?: string | null
+  location_updated_at?: string | null
+  bulk_density?: number | null
+  cation_exchange_capacity?: number | null
+  soil_water_retention?: number | null
+  soil_texture_class?: string | null
+  sand_percentage?: number | null
+  silt_percentage?: number | null
+  clay_percentage?: number | null
+  date_of_pruning?: string | null
+  created_at?: string | null
+  updated_at?: string | null
 }
 ```
 
@@ -379,7 +397,7 @@ export interface ProfitabilityAnalysis {
 export interface MarketIntelligence {
   id: string
   region: string
-  grapeVariety?: string
+  cropVariety?: string
 
   priceData: {
     current: number
@@ -427,7 +445,7 @@ export interface CommunityInsight {
   farmCharacteristics: {
     region: string
     farmSize: 'small' | 'medium' | 'large'
-    grapeVariety: string
+    cropVariety: string
     soilType: string
     climaticConditions: string
   }

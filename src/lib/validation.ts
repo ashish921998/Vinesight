@@ -99,6 +99,43 @@ export const FarmSchema = z.object({
     .min(1, 'Row spacing must be at least 1 meter')
     .max(20, 'Row spacing must be less than 20 meters')
     .finite('Row spacing must be a valid number')
+    .optional(),
+  bulk_density: z
+    .number()
+    .min(0.5, 'Bulk density must be greater than 0.5 g/mL')
+    .max(3, 'Bulk density seems unrealistic')
+    .finite('Bulk density must be a valid number')
+    .optional(),
+  cation_exchange_capacity: z
+    .number()
+    .min(0, 'CEC must be zero or positive')
+    .max(200, 'CEC values above 200 are unusual')
+    .finite('CEC must be a valid number')
+    .optional(),
+  soil_water_retention: z
+    .number()
+    .min(0, 'Soil water retention must be non-negative')
+    .max(500, 'Soil water retention seems too high')
+    .finite('Soil water retention must be a valid number')
+    .optional(),
+  soil_texture_class: z.string().max(50, 'Soil texture descriptor is too long').optional(),
+  sand_percentage: z
+    .number()
+    .min(0, 'Sand percentage cannot be negative')
+    .max(100, 'Sand percentage cannot exceed 100')
+    .finite('Sand percentage must be a valid number')
+    .optional(),
+  silt_percentage: z
+    .number()
+    .min(0, 'Silt percentage cannot be negative')
+    .max(100, 'Silt percentage cannot exceed 100')
+    .finite('Silt percentage must be a valid number')
+    .optional(),
+  clay_percentage: z
+    .number()
+    .min(0, 'Clay percentage cannot be negative')
+    .max(100, 'Clay percentage cannot exceed 100')
+    .finite('Clay percentage must be a valid number')
     .optional()
 })
 

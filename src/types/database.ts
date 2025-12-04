@@ -842,6 +842,9 @@ export type Database = {
       farms: {
         Row: {
           area: number
+          bulk_density: number | null
+          cation_exchange_capacity: number | null
+          clay_percentage: number | null
           crop: string
           created_at: string | null
           crop_variety: string
@@ -858,6 +861,10 @@ export type Database = {
           region: string
           remaining_water: number | null
           row_spacing: number
+          sand_percentage: number | null
+          silt_percentage: number | null
+          soil_texture_class: string | null
+          soil_water_retention: number | null
           system_discharge: number | null
           timezone: string | null
           total_tank_capacity: number | null
@@ -868,6 +875,9 @@ export type Database = {
         }
         Insert: {
           area: number
+          bulk_density?: number | null
+          cation_exchange_capacity?: number | null
+          clay_percentage?: number | null
           crop?: string
           created_at?: string | null
           crop_variety: string
@@ -884,6 +894,10 @@ export type Database = {
           region: string
           remaining_water?: number | null
           row_spacing?: number | null
+          sand_percentage?: number | null
+          silt_percentage?: number | null
+          soil_texture_class?: string | null
+          soil_water_retention?: number | null
           system_discharge?: number | null
           timezone?: string | null
           total_tank_capacity?: number | null
@@ -894,6 +908,9 @@ export type Database = {
         }
         Update: {
           area?: number
+          bulk_density?: number | null
+          cation_exchange_capacity?: number | null
+          clay_percentage?: number | null
           crop?: string
           created_at?: string | null
           crop_variety?: string
@@ -910,6 +927,10 @@ export type Database = {
           region?: string
           remaining_water?: number | null
           row_spacing?: number | null
+          sand_percentage?: number | null
+          silt_percentage?: number | null
+          soil_texture_class?: string | null
+          soil_water_retention?: number | null
           system_discharge?: number | null
           timezone?: string | null
           total_tank_capacity?: number | null

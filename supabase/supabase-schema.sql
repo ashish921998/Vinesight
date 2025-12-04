@@ -7,15 +7,34 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Create farms table
 CREATE TABLE farms (
   id BIGSERIAL PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   region VARCHAR(255) NOT NULL,
   area DECIMAL(10,2) NOT NULL, -- in hectares
-  grape_variety VARCHAR(255) NOT NULL,
+  crop VARCHAR(255) NOT NULL,
+  crop_variety VARCHAR(255) NOT NULL,
   planting_date DATE NOT NULL,
   vine_spacing DECIMAL(5,2) NOT NULL, -- in meters
   row_spacing DECIMAL(5,2) NOT NULL, -- in meters
+  total_tank_capacity DECIMAL(12,2),
+  system_discharge DECIMAL(10,4),
+  remaining_water DECIMAL(12,2),
+  water_calculation_updated_at TIMESTAMP WITH TIME ZONE,
+  latitude DECIMAL(10,6),
+  longitude DECIMAL(10,6),
+  elevation DECIMAL(8,2),
+  timezone VARCHAR(50),
+  location_name VARCHAR(255),
+  location_source VARCHAR(50),
+  location_updated_at TIMESTAMP WITH TIME ZONE,
+  bulk_density DECIMAL(6,4),
+  cation_exchange_capacity DECIMAL(7,3),
+  soil_water_retention DECIMAL(7,2),
+  soil_texture_class VARCHAR(100),
+  sand_percentage DECIMAL(7,2),
+  silt_percentage DECIMAL(7,2),
+  clay_percentage DECIMAL(7,2),
   date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -612,8 +631,8 @@ GRANT EXECUTE ON FUNCTION confirm_settlement_atomic(INTEGER) TO authenticated;
 -- Insert some sample data (optional - you can remove this section)
 -- Note: This will only work after you set up authentication
 /*
-INSERT INTO farms (name, region, area, grape_variety, planting_date, vine_spacing, row_spacing, user_id) VALUES
-('Nashik Vineyard Main', 'Nashik, Maharashtra', 2.5, 'Thompson Seedless', '2020-03-15', 3.0, 9.0, auth.uid()),
-('Pune Valley Farm', 'Pune, Maharashtra', 1.8, 'Flame Seedless', '2019-11-20', 2.5, 8.0, auth.uid()),
-('Sangli Export Vineyard', 'Sangli, Maharashtra', 4.2, 'Red Globe', '2018-12-10', 3.5, 10.0, auth.uid());
+INSERT INTO farms (name, region, area, crop, crop_variety, planting_date, vine_spacing, row_spacing, user_id) VALUES
+('Nashik Vineyard Main', 'Nashik, Maharashtra', 2.5, 'Grapes', 'Thompson Seedless', '2020-03-15', 3.0, 9.0, auth.uid()),
+('Pune Valley Farm', 'Pune, Maharashtra', 1.8, 'Grapes', 'Flame Seedless', '2019-11-20', 2.5, 8.0, auth.uid()),
+('Sangli Export Vineyard', 'Sangli, Maharashtra', 4.2, 'Grapes', 'Red Globe', '2018-12-10', 3.5, 10.0, auth.uid());
 */
