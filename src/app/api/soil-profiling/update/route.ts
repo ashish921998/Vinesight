@@ -1,16 +1,6 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { createServerSupabaseClient } from '@/lib/auth-utils'
-import type { Database } from '@/types/database'
-
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-
-if (!SERVICE_ROLE_KEY || !SUPABASE_URL) {
-  throw new Error('Supabase service role key and URL must be configured')
-}
-
-const adminClient = createClient<Database>(SUPABASE_URL, SERVICE_ROLE_KEY)
+import { getServiceRoleSupabaseClient } from '@/lib/supabase-admin-client'
 
 export async function POST(request: NextRequest) {
   const serverSupabase = await createServerSupabaseClient()
@@ -22,6 +12,15 @@ export async function POST(request: NextRequest) {
   if (userError || !user) {
     return new Response(JSON.stringify({ error: 'Authentication required' }), {
       status: 401,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+
+  const adminClient = getServiceRoleSupabaseClient()
+  if (!adminClient) {
+    console.error('Supabase service role key and URL must be configured for soil profile update')
+    return new Response(JSON.stringify({ error: 'Server misconfiguration' }), {
+      status: 500,
       headers: { 'Content-Type': 'application/json' }
     })
   }
