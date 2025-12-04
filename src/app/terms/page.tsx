@@ -3,30 +3,30 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  ArrowLeft,
-  FileText,
-  Shield,
-  Users,
   AlertTriangle,
-  CheckCircle,
-  Scale,
-  Phone,
-  Mail,
-  Globe,
+  ArrowLeft,
   Calendar,
-  CreditCard
+  CheckCircle,
+  CreditCard,
+  FileText,
+  Globe,
+  Mail,
+  Phone,
+  Scale,
+  Shield,
+  Users
 } from 'lucide-react'
-import { SEOSchema } from '@/components/SEOSchema'
 import Link from 'next/link'
+import { SEOSchema } from '@/components/SEOSchema'
 
 export default function TermsOfServicePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-lime-50 to-sky-50">
       <SEOSchema
-        title="Terms of Service - VineSight Grape Farming Assistant"
-        description="Terms and conditions for using VineSight's grape farming platform. Legal terms for Indian grape farmers and agricultural services."
+        title="Terms of Service - FarmAI"
+        description="Terms and conditions for using FarmAI. Understand your rights, responsibilities, and how we run the platform."
         type="guide"
-        image="https://vinesight.vercel.app/og-image.png"
+        image="/og-image.png"
       />
 
       {/* Header */}
@@ -43,13 +43,13 @@ export default function TermsOfServicePage() {
 
           <div className="text-center max-w-3xl mx-auto">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center">
                 <Scale className="h-7 w-7 text-white" />
               </div>
               <h1 className="text-4xl font-bold text-gray-900">Terms of Service</h1>
             </div>
-            <p className="text-xl text-gray-600 mb-4">Terms and conditions for using VineSight</p>
-            <p className="text-sm text-gray-500">Last updated: January 15, 2024</p>
+            <p className="text-xl text-gray-600 mb-4">The rules for using FarmAI</p>
+            <p className="text-sm text-gray-500">Last updated: December 3, 2025</p>
           </div>
         </div>
       </div>
@@ -57,29 +57,28 @@ export default function TermsOfServicePage() {
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Overview */}
         <div className="mb-12">
-          <Card className="border-2 border-purple-200 bg-purple-50">
+          <Card className="border-2 border-emerald-200 bg-emerald-50">
             <CardContent className="p-8">
               <div className="flex items-start gap-4">
-                <FileText className="h-8 w-8 text-purple-600 mt-1" />
+                <FileText className="h-8 w-8 text-emerald-600 mt-1" />
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-3">Agreement Overview</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-3">Agreement overview</h2>
                   <p className="text-gray-700 mb-4">
-                    These Terms of Service (&quot;Terms&quot;) govern your access to and use of
-                    VineSight&apos;s agricultural platform and services. By using our platform, you
-                    agree to these terms and our Privacy Policy.
+                    These Terms govern your access to FarmAI. By creating an account or using the
+                    platform you agree to follow them and our Privacy Policy.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5 text-purple-600" />
-                      <span className="font-medium text-sm">Fair Use Policy</span>
+                      <CheckCircle className="h-5 w-5 text-emerald-600" />
+                      <span className="font-medium text-sm">Fair use</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Shield className="h-5 w-5 text-purple-600" />
-                      <span className="font-medium text-sm">Data Protection</span>
+                      <Shield className="h-5 w-5 text-emerald-600" />
+                      <span className="font-medium text-sm">Data protection</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-purple-600" />
-                      <span className="font-medium text-sm">Community Standards</span>
+                      <Users className="h-5 w-5 text-emerald-600" />
+                      <span className="font-medium text-sm">Responsible AI</span>
                     </div>
                   </div>
                 </div>
@@ -88,89 +87,98 @@ export default function TermsOfServicePage() {
           </Card>
         </div>
 
-        {/* Content Sections */}
         <div className="space-y-8">
-          {/* Acceptance of Terms */}
+          {/* Acceptance */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckCircle className="h-6 w-6 text-green-600" />
-                Acceptance of Terms
+                Acceptance and eligibility
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-700">
-                By accessing or using VineSight&apos;s services, you acknowledge that you have read,
-                understood, and agree to be bound by these Terms. If you do not agree to these
-                Terms, you may not use our services.
+                You must accept these Terms and be legally capable of entering into agreements in
+                your region to use FarmAI. If you use FarmAI on behalf of an organization, you
+                confirm you have authority to bind that organization.
               </p>
-
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h3 className="font-semibold text-green-900 mb-2">Eligibility Requirements</h3>
+                <h3 className="font-semibold text-green-900 mb-2">You agree to:</h3>
                 <ul className="space-y-1 text-green-800 text-sm">
-                  <li>• Must be at least 18 years old or have parental consent</li>
-                  <li>• Must be engaged in or interested in agricultural activities</li>
-                  <li>• Must provide accurate and complete registration information</li>
-                  <li>• Must comply with all applicable local, state, and national laws</li>
+                  <li>• Provide accurate registration and billing information</li>
+                  <li>• Be at least 18, or use with appropriate guardian consent</li>
+                  <li>• Comply with applicable laws and agricultural regulations</li>
+                  <li>• Not misuse FarmAI, its APIs, or underlying infrastructure</li>
                 </ul>
               </div>
             </CardContent>
           </Card>
 
-          {/* Service Description */}
+          {/* Services */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Globe className="h-6 w-6 text-blue-600" />
-                Service Description
+                <Users className="h-6 w-6 text-sky-700" />
+                What FarmAI provides
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-700">
-                VineSight provides a comprehensive digital platform for grape farming management,
-                including:
+                FarmAI delivers digital tools to manage farms, analyze data, and receive AI-powered
+                assistance.
               </p>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Core Features</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Platform services</h3>
                   <ul className="space-y-2 text-gray-700">
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                      <span className="text-sm">Farm management and record keeping</span>
+                      <CheckCircle className="h-4 w-4 text-sky-700 mt-0.5" />
+                      <span className="text-sm">
+                        Farm records, dashboards, and team collaboration
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                      <span className="text-sm">Scientific calculators (ETc, MAD, nutrients)</span>
+                      <CheckCircle className="h-4 w-4 text-sky-700 mt-0.5" />
+                      <span className="text-sm">
+                        Scientific calculators, weather overlays, and alerts
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                      <span className="text-sm">Weather data and irrigation planning</span>
+                      <CheckCircle className="h-4 w-4 text-sky-700 mt-0.5" />
+                      <span className="text-sm">Storage for files and imagery you upload</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                      <span className="text-sm">Expense tracking and profitability analysis</span>
+                      <CheckCircle className="h-4 w-4 text-sky-700 mt-0.5" />
+                      <span className="text-sm">Billing, subscriptions, and user management</span>
                     </li>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">AI-Powered Services</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">AI assistance</h3>
                   <ul className="space-y-2 text-gray-700">
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                      <span className="text-sm">Disease and pest prediction</span>
+                      <CheckCircle className="h-4 w-4 text-sky-700 mt-0.5" />
+                      <span className="text-sm">
+                        Recommendations and summaries generated by AI models
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                      <span className="text-sm">Personalized farming recommendations</span>
+                      <CheckCircle className="h-4 w-4 text-sky-700 mt-0.5" />
+                      <span className="text-sm">
+                        Optional analysis of imagery or documents you submit
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                      <span className="text-sm">Market intelligence and pricing insights</span>
+                      <CheckCircle className="h-4 w-4 text-sky-700 mt-0.5" />
+                      <span className="text-sm">
+                        Access to third-party AI providers under their terms
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                      <span className="text-sm">AI assistant for farming queries</span>
+                      <CheckCircle className="h-4 w-4 text-sky-700 mt-0.5" />
+                      <span className="text-sm">
+                        Controls to manage context shared with the assistant
+                      </span>
                     </li>
                   </ul>
                 </div>
@@ -178,70 +186,127 @@ export default function TermsOfServicePage() {
             </CardContent>
           </Card>
 
-          {/* User Responsibilities */}
+          {/* Responsibilities */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="h-6 w-6 text-orange-600" />
-                User Responsibilities
+                <Shield className="h-6 w-6 text-orange-600" />
+                Your responsibilities
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-4">
+              <div className="space-y-3 text-gray-700">
+                <p>To keep FarmAI secure and reliable for everyone, you agree to:</p>
+                <ul className="space-y-2 ml-4">
+                  <li className="flex items-start gap-2">
+                    <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
+                    <span>Maintain the confidentiality of your login credentials</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
+                    <span>
+                      Not interfere with or reverse-engineer the platform or its safeguards
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
+                    <span>Ensure you have rights to the data and content you upload</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
+                    <span>Use outputs responsibly and validate before operational decisions</span>
+                  </li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Privacy */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-6 w-6 text-sky-700" />
+                Privacy and data use
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-gray-700">
+              <p>
+                Our use of personal and farm data is described in the{' '}
+                <Link href="/privacy" className="text-emerald-700 underline">
+                  Privacy Policy
+                </Link>
+                . By using FarmAI you consent to that policy, including how we work with service and
+                AI providers to deliver the product.
+              </p>
+              <p>
+                You grant FarmAI a limited license to host, process, and analyze content you submit
+                solely to provide the services. You retain ownership of your data.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Payments */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-6 w-6 text-purple-700" />
+                Payments and subscriptions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Account Security</h3>
-                  <ul className="space-y-2 text-gray-700 ml-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Billing terms</h3>
+                  <ul className="space-y-2 text-gray-700">
                     <li className="flex items-start gap-2">
-                      <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                      <span>
-                        Maintain the security and confidentiality of your account credentials
+                      <CheckCircle className="h-4 w-4 text-purple-700 mt-0.5" />
+                      <span className="text-sm">
+                        Fees, plan limits, and renewal periods are shown at checkout
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                      <span>Notify us immediately of any unauthorized access to your account</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                      <span>Keep your contact information current and accurate</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Data Accuracy</h3>
-                  <ul className="space-y-2 text-gray-700 ml-4">
-                    <li className="flex items-start gap-2">
-                      <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                      <span>
-                        Provide accurate and complete information about your farm and operations
+                      <CheckCircle className="h-4 w-4 text-purple-700 mt-0.5" />
+                      <span className="text-sm">
+                        Taxes may be added based on your billing location
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                      <span>Update information promptly when circumstances change</span>
+                      <CheckCircle className="h-4 w-4 text-purple-700 mt-0.5" />
+                      <span className="text-sm">
+                        Unpaid or failed charges may pause or end access
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                      <span>Verify AI recommendations against local conditions and expertise</span>
+                      <CheckCircle className="h-4 w-4 text-purple-700 mt-0.5" />
+                      <span className="text-sm">
+                        App Store purchases are billed by Apple; manage or cancel via iOS Settings →
+                        Apple ID → Subscriptions.
+                      </span>
                     </li>
                   </ul>
                 </div>
-
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Acceptable Use</h3>
-                  <ul className="space-y-2 text-gray-700 ml-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    Changes and cancellation
+                  </h3>
+                  <ul className="space-y-2 text-gray-700">
                     <li className="flex items-start gap-2">
-                      <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                      <span>Use services only for legitimate agricultural purposes</span>
+                      <CheckCircle className="h-4 w-4 text-purple-700 mt-0.5" />
+                      <span className="text-sm">
+                        You may change plans or cancel in-app; changes apply to future periods
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                      <span>Respect intellectual property rights and community guidelines</span>
+                      <CheckCircle className="h-4 w-4 text-purple-700 mt-0.5" />
+                      <span className="text-sm">
+                        Refunds are governed by the plan-specific policy shown at purchase
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                      <span>Comply with all applicable laws and regulations</span>
+                      <CheckCircle className="h-4 w-4 text-purple-700 mt-0.5" />
+                      <span className="text-sm">
+                        We may adjust pricing with prior notice for future renewals
+                      </span>
                     </li>
                   </ul>
                 </div>
@@ -249,240 +314,120 @@ export default function TermsOfServicePage() {
             </CardContent>
           </Card>
 
-          {/* Prohibited Activities */}
+          {/* App Store Terms */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-6 w-6 text-emerald-700" />
+                Apple App Store terms
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-gray-700">
+              <p className="text-sm">
+                For the FarmAI iOS app, these additional terms apply to satisfy App Store Review
+                Guidelines:
+              </p>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
+                  <span>
+                    The agreement is between you and FarmAI; Apple is not responsible for the app.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
+                  <span>Support, maintenance, and privacy inquiries are handled by FarmAI.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
+                  <span>
+                    In-app purchases through Apple follow Apple Media Services terms; refunds are
+                    managed by Apple where required.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
+                  <span>
+                    You must comply with Apple&apos;s App Store and device terms when using the app.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
+                  <span>Apple is a third-party beneficiary of this agreement for the iOS app.</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* AI and Accuracy */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-6 w-6 text-red-600" />
-                Prohibited Activities
+                AI, accuracy, and risk
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-800 font-medium mb-2">
-                  The following activities are strictly prohibited:
-                </p>
-                <ul className="space-y-2 text-red-700 text-sm">
-                  <li>• Sharing account credentials or allowing unauthorized access</li>
-                  <li>• Attempting to reverse engineer, decompile, or extract our algorithms</li>
-                  <li>• Using automated tools to access our services without permission</li>
-                  <li>• Uploading malicious content or attempting to compromise system security</li>
-                  <li>• Misrepresenting your identity or providing false information</li>
-                  <li>• Using the platform for illegal activities or to harm others</li>
-                  <li>• Attempting to circumvent usage limits or access restrictions</li>
-                </ul>
-              </div>
-
-              <p className="text-gray-700">
-                Violations of these prohibitions may result in immediate account suspension or
-                termination, and may be reported to relevant authorities if illegal activity is
-                suspected.
+            <CardContent className="space-y-4 text-gray-700">
+              <p>
+                FarmAI provides recommendations and AI-generated outputs to support decisions, but
+                final choices remain yours. Always validate outputs before operational use,
+                especially where safety, compliance, or financial outcomes are involved.
               </p>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="w-2 h-2 bg-red-500 rounded-full mt-2"></span>
+                  <span>AI outputs may be incorrect, incomplete, or outdated</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-2 h-2 bg-red-500 rounded-full mt-2"></span>
+                  <span>Environmental factors can change quickly; confirm with local experts</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-2 h-2 bg-red-500 rounded-full mt-2"></span>
+                  <span>FarmAI is not liable for losses resulting from reliance on outputs</span>
+                </li>
+              </ul>
             </CardContent>
           </Card>
 
-          {/* Intellectual Property */}
+          {/* IP and Ownership */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Shield className="h-6 w-6 text-purple-600" />
-                Intellectual Property Rights
+                <Scale className="h-6 w-6 text-sky-700" />
+                Intellectual property and licenses
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Our Rights</h3>
-                  <ul className="space-y-2 text-gray-700">
-                    <li className="flex items-start gap-2">
-                      <Shield className="h-4 w-4 text-purple-600 mt-0.5" />
-                      <span className="text-sm">VineSight platform, software, and algorithms</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Shield className="h-4 w-4 text-purple-600 mt-0.5" />
-                      <span className="text-sm">Trademarks, logos, and brand materials</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Shield className="h-4 w-4 text-purple-600 mt-0.5" />
-                      <span className="text-sm">AI models and prediction systems</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Shield className="h-4 w-4 text-purple-600 mt-0.5" />
-                      <span className="text-sm">User interface and experience design</span>
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Your Rights</h3>
-                  <ul className="space-y-2 text-gray-700">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                      <span className="text-sm">Your farming data remains your property</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                      <span className="text-sm">Photos and content you upload</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                      <span className="text-sm">Right to export your data anytime</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                      <span className="text-sm">Limited license to use our platform</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Service Availability & Changes */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-6 w-6 text-indigo-600" />
-                Service Availability & Changes
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Service Availability</h3>
-                  <p className="text-gray-700 mb-2">
-                    We strive to provide reliable service but cannot guarantee 100% uptime due to:
-                  </p>
-                  <ul className="space-y-1 text-gray-700 ml-4 text-sm">
-                    <li>• Scheduled maintenance and updates</li>
-                    <li>• Internet connectivity issues</li>
-                    <li>• Third-party service dependencies (weather data, mapping services)</li>
-                    <li>• Unexpected technical difficulties</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Service Modifications
-                  </h3>
-                  <p className="text-gray-700">
-                    We reserve the right to modify, update, or discontinue features with reasonable
-                    notice. Major changes affecting core functionality will be communicated at least
-                    30 days in advance.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Payment Terms */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-6 w-6 text-green-600" />
-                Payment Terms
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Free Services</h3>
-                  <p className="text-gray-700 mb-2">
-                    Basic features are available at no cost, including:
-                  </p>
-                  <ul className="space-y-1 text-gray-700 text-sm">
-                    <li>• Farm registration and basic record keeping</li>
-                    <li>• Weather data and ETc calculations</li>
-                    <li>• Limited AI assistant interactions</li>
-                    <li>• Basic analytics and reporting</li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Premium Features</h3>
-                  <p className="text-gray-700 mb-2">Advanced features may require subscription:</p>
-                  <ul className="space-y-1 text-gray-700 text-sm">
-                    <li>• Advanced AI predictions and recommendations</li>
-                    <li>• Unlimited data storage and history</li>
-                    <li>• Priority customer support</li>
-                    <li>• Integration with IoT devices</li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-900 mb-2">Payment Policy</h4>
-                <ul className="space-y-1 text-green-800 text-sm">
-                  <li>• All prices are in Indian Rupees (INR) unless otherwise specified</li>
-                  <li>• Subscriptions are billed monthly or annually as selected</li>
-                  <li>• Refunds available within 7 days of purchase for annual plans</li>
-                  <li>• You can cancel your subscription at any time</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Disclaimers */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-6 w-6 text-yellow-600" />
-                Important Disclaimers
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <h3 className="font-semibold text-yellow-900 mb-2">Agricultural Guidance</h3>
-                <p className="text-yellow-800 text-sm mb-2">
-                  VineSight provides information and recommendations based on data analysis and
-                  agricultural science. However, farming decisions should always consider:
-                </p>
-                <ul className="space-y-1 text-yellow-800 text-sm">
-                  <li>• Local conditions and micro-climate variations</li>
-                  <li>• Expert advice from agricultural extension officers</li>
-                  <li>• Regulatory requirements and safety guidelines</li>
-                  <li>• Your own experience and observation</li>
-                </ul>
-              </div>
-
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h3 className="font-semibold text-red-900 mb-2">Limitation of Liability</h3>
-                <p className="text-red-800 text-sm">
-                  VineSight provides services &quot;as is&quot; and cannot be held liable for crop
-                  losses, equipment damage, or other agricultural outcomes resulting from use of our
-                  platform. Users are responsible for validating all recommendations against local
-                  conditions and expert advice.
-                </p>
-              </div>
+            <CardContent className="space-y-3 text-gray-700">
+              <p>
+                FarmAI and its logos, software, and content are owned by us or our licensors. We
+                grant you a limited, non-exclusive, non-transferable license to use the platform in
+                line with these Terms.
+              </p>
+              <p>
+                You retain ownership of the data and content you submit. You give FarmAI permission
+                to host, process, and use that content solely to operate and improve the services.
+              </p>
             </CardContent>
           </Card>
 
           {/* Termination */}
           <Card>
             <CardHeader>
-              <CardTitle>Account Termination</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-6 w-6 text-emerald-700" />
+                Suspension and termination
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">By You</h3>
-                  <p className="text-gray-700 mb-2">
-                    You may terminate your account at any time by:
-                  </p>
-                  <ul className="space-y-1 text-gray-700 text-sm">
-                    <li>• Using account deletion option in settings</li>
-                    <li>• Contacting our support team</li>
-                    <li>• Your data will be deleted within 30 days</li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">By Us</h3>
-                  <p className="text-gray-700 mb-2">We may suspend/terminate accounts for:</p>
-                  <ul className="space-y-1 text-gray-700 text-sm">
-                    <li>• Violation of these terms</li>
-                    <li>• Illegal or harmful activities</li>
-                    <li>• Extended inactivity (with notice)</li>
-                  </ul>
-                </div>
-              </div>
+            <CardContent className="space-y-3 text-gray-700">
+              <p>
+                You may stop using FarmAI at any time. We may suspend or terminate access if you
+                breach these Terms, fail to pay fees, or misuse the platform.
+              </p>
+              <p>
+                On termination we may delete or archive your account data per our retention policy.
+                You remain responsible for charges incurred before termination.
+              </p>
             </CardContent>
           </Card>
 
@@ -490,97 +435,50 @@ export default function TermsOfServicePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Scale className="h-6 w-6 text-purple-600" />
-                Governing Law & Disputes
+                <Globe className="h-6 w-6 text-purple-700" />
+                Governing law and changes
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-gray-700 mb-4">
-                These Terms are governed by the laws of India. Any disputes will be resolved
-                through:
+            <CardContent className="space-y-3 text-gray-700">
+              <p>
+                These Terms are governed by the laws of the jurisdiction where FarmAI is organized,
+                without regard to conflict-of-law principles. Local mandatory consumer rights still
+                apply.
               </p>
-
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Users className="h-4 w-4 text-purple-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">1. Direct Communication</h4>
-                    <p className="text-sm text-gray-600">
-                      We encourage resolving disputes through direct communication with our support
-                      team
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Scale className="h-4 w-4 text-purple-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">2. Arbitration</h4>
-                    <p className="text-sm text-gray-600">
-                      Unresolved disputes may be subject to binding arbitration under Indian
-                      Arbitration law
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <FileText className="h-4 w-4 text-purple-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">3. Jurisdiction</h4>
-                    <p className="text-sm text-gray-600">
-                      Courts in Maharashtra, India have exclusive jurisdiction for any legal
-                      proceedings
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <p>
+                We may update these Terms to reflect product or legal changes. If updates are
+                material, we will notify you through the app or email before they take effect. Your
+                continued use after changes means you accept the revised Terms.
+              </p>
             </CardContent>
           </Card>
 
-          {/* Contact Information */}
-          <Card className="border-2 border-purple-200 bg-purple-50">
+          {/* Contact */}
+          <Card className="border-2 border-emerald-200 bg-emerald-50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Phone className="h-6 w-6 text-purple-600" />
-                Questions About These Terms?
+                <Phone className="h-6 w-6 text-emerald-700" />
+                Questions or concerns
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 mb-4">
-                If you have questions about these Terms of Service, please contact us:
+                If you have questions about these Terms or need to report an issue, reach out to us.
               </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="text-center">
-                  <Mail className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                  <Mail className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
                   <p className="font-semibold text-gray-900">Email</p>
-                  <p className="text-sm text-gray-600">legal@vinesight.in</p>
+                  <p className="text-sm text-gray-600">support@farmai.app</p>
                 </div>
                 <div className="text-center">
-                  <Phone className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                  <p className="font-semibold text-gray-900">Phone</p>
-                  <p className="text-sm text-gray-600">+91-XXX-XXX-XXXX</p>
-                </div>
-                <div className="text-center">
-                  <Globe className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                  <p className="font-semibold text-gray-900">Website</p>
-                  <p className="text-sm text-gray-600">www.vinesight.in</p>
+                  <Shield className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
+                  <p className="font-semibold text-gray-900">Abuse/Security</p>
+                  <p className="text-sm text-gray-600">security@farmai.app</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-16 text-center">
-          <p className="text-gray-500 text-sm">
-            By using VineSight, you acknowledge that you have read, understood, and agree to these
-            Terms of Service.
-          </p>
         </div>
       </div>
     </div>
