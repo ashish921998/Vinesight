@@ -1,16 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { createServerSupabaseClient } from '@/lib/auth-utils'
-import type { Database } from '@/types/database'
-
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-
-if (!SERVICE_ROLE_KEY || !SUPABASE_URL) {
-  throw new Error('Supabase service role key and URL must be configured')
-}
-
-const adminClient = createClient<Database>(SUPABASE_URL, SERVICE_ROLE_KEY)
 
 export async function POST(request: NextRequest) {
   const serverSupabase = await createServerSupabaseClient()
@@ -26,11 +15,39 @@ export async function POST(request: NextRequest) {
     })
   }
 
-  const body = await request.json()
-  const { farm_id, fusarium_pct, sections } = body || {}
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Invalid JSON payload' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+  const { farm_id, fusarium_pct, sections, profile_date, profileDate } =
+    (body as Record<string, unknown>) || {}
+  const rawProfileDate = (profile_date ?? profileDate) as unknown
 
-  if (!farm_id || !Array.isArray(sections) || sections.length === 0) {
-    return new Response(JSON.stringify({ error: 'Farm ID and sections are required' }), {
+  if (typeof farm_id !== 'number' || !Array.isArray(sections) || sections.length === 0) {
+    return new Response(
+      JSON.stringify({ error: 'Farm ID (number) and at least one section are required' }),
+      {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    )
+  }
+
+  if (typeof rawProfileDate !== 'string') {
+    return new Response(JSON.stringify({ error: 'profile_date (string) is required' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+
+  const parsedProfileDate = new Date(rawProfileDate)
+  if (Number.isNaN(parsedProfileDate.getTime())) {
+    return new Response(JSON.stringify({ error: 'profile_date must be a valid date string' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' }
     })
@@ -53,10 +70,11 @@ export async function POST(request: NextRequest) {
   const profilePayload = {
     farm_id,
     fusarium_pct: fusarium_pct ?? null,
-    sections: sections || []
+    sections,
+    created_at: parsedProfileDate.toISOString()
   }
 
-  const { data: profileRow, error: profileError } = await adminClient
+  const { data: profileRow, error: profileError } = await serverSupabase
     .from('soil_profiles')
     .insert(profilePayload)
     .select('*')

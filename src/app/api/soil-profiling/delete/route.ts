@@ -5,6 +5,7 @@ import type { Database } from '@/types/database'
 
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const SOIL_BUCKET = 'soil-profiling-photos'
 
 if (!SERVICE_ROLE_KEY || !SUPABASE_URL) {
   throw new Error('Supabase service role key and URL must be configured')
@@ -26,51 +27,79 @@ export async function POST(request: NextRequest) {
     })
   }
 
-  const body = await request.json()
-  const { id } = body || {}
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Invalid JSON payload' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+  const { id } = (body as Record<string, unknown>) || {}
 
-  if (!id) {
-    return new Response(JSON.stringify({ error: 'Profile id is required' }), {
+  if (typeof id !== 'number') {
+    return new Response(JSON.stringify({ error: 'Profile id (number) is required' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' }
     })
   }
 
-  // verify ownership
   const { data: profile, error: profileError } = await serverSupabase
     .from('soil_profiles')
-    .select('id, farm_id')
+    .select('id, sections')
     .eq('id', id)
     .maybeSingle()
 
-  if (profileError || !profile) {
+  if (profileError) {
+    return new Response(JSON.stringify({ error: profileError.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+
+  if (!profile) {
     return new Response(JSON.stringify({ error: 'Profile not found' }), {
       status: 404,
       headers: { 'Content-Type': 'application/json' }
     })
   }
 
-  const { data: farm, error: farmError } = await serverSupabase
-    .from('farms')
-    .select('id')
-    .eq('id', profile.farm_id)
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const photoPaths =
+    Array.isArray(profile.sections) && profile.sections.length > 0
+      ? profile.sections
+          .map((section: any) => section?.photo_path)
+          .filter((path): path is string => typeof path === 'string' && path.length > 0)
+      : []
 
-  if (farmError || !farm) {
-    return new Response(JSON.stringify({ error: 'Access denied' }), {
-      status: 403,
+  const { data: deletedRows, error: deleteError } = await serverSupabase
+    .from('soil_profiles')
+    .delete()
+    .eq('id', id)
+    .select('id')
+
+  if (deleteError) {
+    const status = deleteError.code === '42501' ? 403 : 500
+    const errorMessage =
+      deleteError.code === '42501' ? 'Access denied' : deleteError.message || 'Delete failed'
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status,
       headers: { 'Content-Type': 'application/json' }
     })
   }
 
-  const { error: deleteError } = await adminClient.from('soil_profiles').delete().eq('id', id)
-
-  if (deleteError) {
-    return new Response(JSON.stringify({ error: deleteError.message }), {
-      status: 500,
+  if (!deletedRows || deletedRows.length === 0) {
+    return new Response(JSON.stringify({ error: 'Profile not found' }), {
+      status: 404,
       headers: { 'Content-Type': 'application/json' }
     })
+  }
+
+  if (photoPaths.length > 0) {
+    const { error: storageError } = await adminClient.storage.from(SOIL_BUCKET).remove(photoPaths)
+    if (storageError) {
+      console.error('Failed to remove soil profile photos', storageError)
+    }
   }
 
   return new Response(JSON.stringify({ success: true }), {

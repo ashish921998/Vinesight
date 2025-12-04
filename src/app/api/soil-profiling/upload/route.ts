@@ -39,6 +39,22 @@ export async function POST(request: NextRequest) {
     })
   }
 
+  const MAX_FILE_SIZE = 10 * 1024 * 1024
+  if (file.size > MAX_FILE_SIZE) {
+    return new Response(JSON.stringify({ error: 'File too large (max 10MB)' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+
+  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+  if (file.type && !allowedMimeTypes.includes(file.type)) {
+    return new Response(JSON.stringify({ error: 'Invalid file type (images only)' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+
   const farmIdNum = Number(farmId)
   if (Number.isNaN(farmIdNum)) {
     return new Response(JSON.stringify({ error: 'Invalid farm ID' }), {
@@ -61,9 +77,11 @@ export async function POST(request: NextRequest) {
     })
   }
 
-  const ext = file.name.split('.').pop() || 'jpg'
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
+  const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp']
+  const safeExt = allowedExtensions.includes(ext) ? ext : 'jpg'
   const timestamp = Date.now()
-  const path = `soil-profiles/${farmIdNum}/${section}-${timestamp}.${ext}`
+  const path = `soil-profiles/${farmIdNum}/${section}-${timestamp}.${safeExt}`
 
   const buffer = Buffer.from(await file.arrayBuffer())
 
@@ -84,10 +102,18 @@ export async function POST(request: NextRequest) {
     .from(SOIL_BUCKET)
     .createSignedUrl(data.path, 3600)
 
+  if (signedUrlError || !signedUrlData?.signedUrl) {
+    console.error('Failed to create signed URL for soil profile upload', signedUrlError)
+    return new Response(JSON.stringify({ error: 'Failed to generate signed URL' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+
   return new Response(
     JSON.stringify({
       path: data.path,
-      signedUrl: signedUrlData?.signedUrl || null
+      signedUrl: signedUrlData.signedUrl
     }),
     { headers: { 'Content-Type': 'application/json' } }
   )

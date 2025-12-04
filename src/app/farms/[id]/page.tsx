@@ -48,8 +48,6 @@ import {
   handleDailyNotesAndPhotosAfterLogs
 } from '@/lib/daily-note-utils'
 import { TasksOverviewCard } from '@/components/tasks/TasksOverviewCard'
-import { SoilProfileService } from '@/lib/soil-profile-service'
-import type { SoilProfile } from '@/lib/supabase'
 
 interface DashboardData {
   farm: Farm | null
@@ -148,9 +146,6 @@ export default function FarmDetailsPage() {
     id: number | null
     notes: string
   } | null>(null)
-  const [latestSoilProfile, setLatestSoilProfile] = useState<SoilProfile | null>(null)
-  const [loadingSoilProfile, setLoadingSoilProfile] = useState(false)
-
   // Farm edit modal states
   const [showFarmModal, setShowFarmModal] = useState(false)
   const [editingFarm, setEditingFarm] = useState<Farm | null>(null)
@@ -175,20 +170,6 @@ export default function FarmDetailsPage() {
     }
   }, [farmId])
 
-  const loadSoilProfile = useCallback(async () => {
-    try {
-      setLoadingSoilProfile(true)
-      const profile = await SoilProfileService.getLatestProfile(parseInt(farmId))
-      setLatestSoilProfile(profile)
-    } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error loading soil profile', error)
-      }
-    } finally {
-      setLoadingSoilProfile(false)
-    }
-  }, [farmId])
-
   // Load all farms for farm switcher
   useEffect(() => {
     let isMounted = true
@@ -205,12 +186,11 @@ export default function FarmDetailsPage() {
     }
 
     loadAllFarms()
-    loadSoilProfile()
 
     return () => {
       isMounted = false
     }
-  }, [loadSoilProfile])
+  }, [])
 
   useEffect(() => {
     if (isMobile) {

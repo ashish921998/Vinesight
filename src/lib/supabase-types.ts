@@ -140,7 +140,7 @@ const serializeSoilSections = (sections?: SoilSection[]): Json => {
     photo_path: section.photo_path ?? null,
     photo_preview: section.photo_preview ?? null,
     ec_ds_m: section.ec_ds_m ?? null,
-    moisture_pct_user: section.moisture_pct_user ?? null,
+    moisture_pct_user: section.moisture_pct_user,
     created_at: section.created_at ?? null
   }))
   return plainSections as Json

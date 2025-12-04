@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import {
   ArrowDownRight,
@@ -157,6 +157,15 @@ const formatDateLabel = (value?: string | null) => {
   return parsed.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+const getTodayInputDate = () => new Date().toISOString().split('T')[0]
+
+const formatDateInputValue = (value?: string | null) => {
+  if (!value) return getTodayInputDate()
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return getTodayInputDate()
+  return parsed.toISOString().split('T')[0]
+}
+
 export default function SoilProfilingPage() {
   const params = useParams()
   const router = useRouter()
@@ -171,11 +180,18 @@ export default function SoilProfilingPage() {
   const [soilProfiles, setSoilProfiles] = useState<SoilProfile[]>([])
   const [savingProfile, setSavingProfile] = useState(false)
   const [fusarium, setFusarium] = useState('')
+  const [profileDate, setProfileDate] = useState<string>(() => getTodayInputDate())
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const [activeTab, setActiveTab] = useState<'history' | 'trends'>('history')
   const [editingProfileId, setEditingProfileId] = useState<number | null>(null)
   const [focusedSection, setFocusedSection] = useState<SoilSectionName | null>(null)
+  const previewUrlsRef = useRef<Record<SoilSectionName, string | null>>({
+    top: null,
+    bottom: null,
+    left: null,
+    right: null
+  })
 
   const farmIdValid = Number.isFinite(farmId)
 
@@ -195,6 +211,28 @@ export default function SoilProfilingPage() {
   useEffect(() => {
     void loadSoilProfiles()
   }, [loadSoilProfiles])
+
+  const revokeObjectUrl = useCallback((url?: string | null) => {
+    if (url && url.startsWith('blob:')) {
+      URL.revokeObjectURL(url)
+    }
+  }, [])
+
+  const resetPreviewUrls = useCallback(() => {
+    Object.values(previewUrlsRef.current).forEach((url) => revokeObjectUrl(url))
+    previewUrlsRef.current = {
+      top: null,
+      bottom: null,
+      left: null,
+      right: null
+    }
+  }, [revokeObjectUrl])
+
+  useEffect(() => {
+    return () => {
+      resetPreviewUrls()
+    }
+  }, [resetPreviewUrls])
 
   const isSectionComplete = useCallback(
     (section: SoilSectionName) =>
@@ -216,21 +254,28 @@ export default function SoilProfilingPage() {
     }))
     try {
       const { path, signedUrl } = await SoilProfileService.uploadSectionPhoto(file, farmId, section)
-      const preview = URL.createObjectURL(file)
+      const previousPreview = previewUrlsRef.current[section]
+      if (previousPreview) {
+        revokeObjectUrl(previousPreview)
+      }
+      const previewSource = signedUrl ?? URL.createObjectURL(file)
+      previewUrlsRef.current[section] = signedUrl ? null : previewSource
+
       setSections((prev) => ({
         ...prev,
         [section]: {
           ...prev[section],
           photoPath: path,
-          photoPreview: signedUrl || preview,
+          photoPreview: previewSource,
           uploading: false,
           showPreview: true
         }
       }))
+
       toast.success('Photo uploaded')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error)
-      toast.error(error?.message || 'Failed to upload photo')
+      toast.error(error instanceof Error ? error.message : 'Failed to upload photo')
       setSections((prev) => ({
         ...prev,
         [section]: { ...prev[section], uploading: false }
@@ -243,6 +288,16 @@ export default function SoilProfilingPage() {
       toast.error('Fill depth/width and moisture for all sections before saving')
       return
     }
+    if (!profileDate) {
+      toast.error('Select a soil profile date')
+      return
+    }
+    const parsedProfileDate = new Date(profileDate)
+    if (Number.isNaN(parsedProfileDate.getTime())) {
+      toast.error('Invalid soil profile date')
+      return
+    }
+    const profileDateISO = parsedProfileDate.toISOString()
     setSavingProfile(true)
     try {
       const payloadSections = SECTION_ORDER.map((name) => {
@@ -276,29 +331,33 @@ export default function SoilProfilingPage() {
           id: editingProfileId,
           farm_id: farmId,
           fusarium_pct: fusarium ? Number.parseFloat(fusarium) : null,
-          sections: payloadSections
+          sections: payloadSections,
+          profileDate: profileDateISO
         })
         toast.success('Soil profile updated')
       } else {
         await SoilProfileService.createProfileWithSections({
           farm_id: farmId,
           fusarium_pct: fusarium ? Number.parseFloat(fusarium) : null,
-          sections: payloadSections
+          sections: payloadSections,
+          profileDate: profileDateISO
         })
         toast.success('Soil profile saved')
       }
       setShowProfileDialog(false)
       setEditingProfileId(null)
+      resetPreviewUrls()
       setSections({
         top: initialSectionState('top'),
         bottom: initialSectionState('bottom'),
         left: initialSectionState('left'),
         right: initialSectionState('right')
       })
+      setProfileDate(getTodayInputDate())
       await loadSoilProfiles()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Save profile error', error)
-      toast.error(error?.message || 'Failed to save soil profile')
+      toast.error(error instanceof Error ? error.message : 'Failed to save soil profile')
     } finally {
       setSavingProfile(false)
     }
@@ -772,6 +831,7 @@ export default function SoilProfilingPage() {
               onClick={() => {
                 setEditingProfileId(null)
                 setFusarium('')
+                setProfileDate(getTodayInputDate())
                 setSections({
                   top: initialSectionState('top'),
                   bottom: initialSectionState('bottom'),
@@ -788,18 +848,15 @@ export default function SoilProfilingPage() {
 
         <div className="mx-auto max-w-3xl space-y-4 px-4 py-4">
           <Card className="border-0 shadow-lg bg-white/90">
-            <CardHeader className="flex flex-col gap-3">
-              <div className="space-y-1">
-                <CardTitle className="text-lg sm:text-xl">Soil profile workspace</CardTitle>
-                <CardDescription className="text-xs text-muted-foreground">
-                  Review history or view moisture trends. Use the top-right button to add or edit
-                  profiles.
-                </CardDescription>
-              </div>
-              <Tabs
-                value={activeTab}
-                onValueChange={(v) => setActiveTab(v as 'history' | 'trends')}
-              >
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'history' | 'trends')}>
+              <CardHeader className="flex flex-col gap-3">
+                <div className="space-y-1">
+                  <CardTitle className="text-lg sm:text-xl">Soil profile workspace</CardTitle>
+                  <CardDescription className="text-xs text-muted-foreground">
+                    Review history or view moisture trends. Use the top-right button to add or edit
+                    profiles.
+                  </CardDescription>
+                </div>
                 <TabsList className="grid w-full grid-cols-2 rounded-full bg-muted/50 p-1">
                   <TabsTrigger value="history" className="rounded-full">
                     History
@@ -808,13 +865,8 @@ export default function SoilProfilingPage() {
                     Trends
                   </TabsTrigger>
                 </TabsList>
-              </Tabs>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Tabs
-                value={activeTab}
-                onValueChange={(v) => setActiveTab(v as 'history' | 'trends')}
-              >
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <TabsContent value="history" className="space-y-3">
                   {soilProfiles.length === 0 ? (
                     <div className="space-y-3 rounded-2xl border border-dashed border-amber-200 bg-amber-50/60 p-4 text-sm text-muted-foreground">
@@ -859,6 +911,8 @@ export default function SoilProfilingPage() {
                                       ? String(profile.fusarium_pct)
                                       : ''
                                   )
+                                  setProfileDate(formatDateInputValue(profile.created_at))
+                                  resetPreviewUrls()
                                   const nextSections: Record<SoilSectionName, SectionState> = {
                                     top: initialSectionState('top'),
                                     bottom: initialSectionState('bottom'),
@@ -893,11 +947,16 @@ export default function SoilProfilingPage() {
                                 onClick={async () => {
                                   try {
                                     if (!profile.id) return
+                                    if (!window.confirm('Delete this soil profile?')) return
                                     await SoilProfileService.deleteProfile(profile.id)
                                     await loadSoilProfiles()
                                     toast.success('Profile deleted')
-                                  } catch (error: any) {
-                                    toast.error(error?.message || 'Failed to delete profile')
+                                  } catch (error: unknown) {
+                                    toast.error(
+                                      error instanceof Error
+                                        ? error.message
+                                        : 'Failed to delete profile'
+                                    )
                                   }
                                 }}
                               >
@@ -1317,8 +1376,8 @@ export default function SoilProfilingPage() {
                     )}
                   </section>
                 </TabsContent>
-              </Tabs>
-            </CardContent>
+              </CardContent>
+            </Tabs>
           </Card>
 
           <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
@@ -1332,6 +1391,15 @@ export default function SoilProfilingPage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 overflow-y-auto pr-1" style={{ maxHeight: '70vh' }}>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Profile date</Label>
+                  <Input
+                    type="date"
+                    value={profileDate}
+                    max={getTodayInputDate()}
+                    onChange={(e) => setProfileDate(e.target.value)}
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Fusarium (%) (optional)</Label>
                   <Input

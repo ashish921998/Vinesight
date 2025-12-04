@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -58,6 +59,7 @@ interface ReportPreview {
 const RECORDS_PER_PAGE = 10
 
 export default function UnifiedReportsPage() {
+  const router = useRouter()
   const [farms, setFarms] = useState<Farm[]>([])
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null)
   const [loading, setLoading] = useState(false)
@@ -514,9 +516,7 @@ export default function UnifiedReportsPage() {
           size="sm"
           className="inline-flex items-center gap-2"
           onClick={() =>
-            (window.location.href = selectedFarm?.id
-              ? `/farms/${selectedFarm.id}/soil-profiling`
-              : '/farms')
+            router.push(selectedFarm?.id ? `/farms/${selectedFarm.id}/soil-profiling` : '/farms')
           }
         >
           <Droplets className="h-4 w-4" />

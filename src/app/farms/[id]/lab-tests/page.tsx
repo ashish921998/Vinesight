@@ -237,8 +237,27 @@ function LabTestsPage() {
         </TabsContent>
 
         <TabsContent value="trends" className="mt-0 space-y-3">
+          <section className="px-1">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="space-y-1.5">
+                <h1 className="text-xl sm:text-2xl font-semibold">Lab tests</h1>
+                <p className="text-sm text-muted-foreground">
+                  Compare soil and petiole results. Link photos and reports.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="inline-flex items-center gap-2"
+                onClick={() => router.push(`/farms/${farmId}/soil-profiling`)}
+              >
+                <Droplets className="h-4 w-4" />
+                Soil profiling
+              </Button>
+            </div>
+          </section>
           {/* View Mode Toggle */}
-          <div className="flex items-center justify-between gap-2 px-1">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-1">
             <p className="text-xs sm:text-sm text-muted-foreground">Choose your preferred view:</p>
             <div className="flex gap-1 sm:gap-2">
               <Button
@@ -267,23 +286,6 @@ function LabTestsPage() {
                 <span className="hidden sm:inline">Table</span>
                 <span className="sm:hidden">Table</span>
               </Button>
-              <div className="flex items-center justify-between">
-                <div className="space-y-1.5">
-                  <h1 className="text-xl sm:text-2xl font-semibold">Lab tests</h1>
-                  <p className="text-sm text-muted-foreground">
-                    Compare soil and petiole results. Link photos and reports.
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="inline-flex items-center gap-2"
-                  onClick={() => router.push(`/farms/${farmId}/soil-profiling`)}
-                >
-                  <Droplets className="h-4 w-4" />
-                  Soil profiling
-                </Button>
-              </div>
             </div>
           </div>
 

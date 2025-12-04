@@ -26,15 +26,55 @@ export async function POST(request: NextRequest) {
     })
   }
 
-  const body = await request.json()
-  const { id, farm_id, fusarium_pct, sections } = body || {}
-
-  if (!id || !farm_id || !sections) {
-    return new Response(JSON.stringify({ error: 'id, farm_id and sections are required' }), {
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Invalid JSON payload' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' }
     })
   }
+  const { id, farm_id, fusarium_pct, sections, profile_date, profileDate } =
+    (body as Record<string, unknown>) || {}
+  const rawProfileDate = (profile_date ?? profileDate) as unknown
+
+  if (typeof id !== 'number' || typeof farm_id !== 'number' || !Array.isArray(sections)) {
+    return new Response(
+      JSON.stringify({
+        error: 'id (number), farm_id (number) and sections (array) are required'
+      }),
+      {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    )
+  }
+
+  if (fusarium_pct !== undefined && fusarium_pct !== null && typeof fusarium_pct !== 'number') {
+    return new Response(JSON.stringify({ error: 'fusarium_pct must be a number' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+
+  if (typeof rawProfileDate !== 'string') {
+    return new Response(JSON.stringify({ error: 'profile_date (string) is required' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+
+  const parsedProfileDate = new Date(rawProfileDate)
+  if (Number.isNaN(parsedProfileDate.getTime())) {
+    return new Response(JSON.stringify({ error: 'profile_date must be a valid date string' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+
+  const normalizedFusarium = typeof fusarium_pct === 'number' ? fusarium_pct : null
+  const normalizedProfileDate = parsedProfileDate.toISOString()
 
   const { data: farm, error: farmError } = await serverSupabase
     .from('farms')
@@ -53,8 +93,9 @@ export async function POST(request: NextRequest) {
   const { data: profileRow, error: updateError } = await adminClient
     .from('soil_profiles')
     .update({
-      fusarium_pct: fusarium_pct ?? null,
-      sections
+      fusarium_pct: normalizedFusarium,
+      sections,
+      created_at: normalizedProfileDate
     })
     .eq('id', id)
     .eq('farm_id', farm_id)

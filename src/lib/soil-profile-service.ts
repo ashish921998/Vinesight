@@ -1,7 +1,5 @@
-import { getTypedSupabaseClient, type SoilSection, type SoilProfile } from './supabase'
-import { toApplicationSoilProfile } from './supabase-types'
-
-const SOIL_BUCKET = 'soil-profiling-photos'
+import { getTypedSupabaseClient, type SoilSection, type SoilProfile } from '@/lib/supabase'
+import { toApplicationSoilProfile } from '@/lib/supabase-types'
 
 export class SoilProfileService {
   static async uploadSectionPhoto(
@@ -65,6 +63,7 @@ export class SoilProfileService {
     farm_id: number
     fusarium_pct?: number | null
     sections: Array<Omit<SoilSection, 'id' | 'profile_id' | 'created_at'>>
+    profileDate: string
   }): Promise<SoilProfile> {
     if (!input.sections || input.sections.length === 0) {
       throw new Error('At least one soil section is required')
@@ -81,10 +80,17 @@ export class SoilProfileService {
       throw new Error('Moisture % must be between 0 and 100 for every section')
     }
 
+    const payload = {
+      farm_id: input.farm_id,
+      fusarium_pct: input.fusarium_pct ?? null,
+      sections: input.sections,
+      profile_date: input.profileDate
+    }
+
     const response = await fetch('/api/soil-profiling/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input)
+      body: JSON.stringify(payload)
     })
 
     if (!response.ok) {
@@ -102,11 +108,35 @@ export class SoilProfileService {
     farm_id: number
     fusarium_pct?: number | null
     sections: SoilSection[]
+    profileDate: string
   }): Promise<SoilProfile> {
+    if (!input.sections || input.sections.length === 0) {
+      throw new Error('At least one soil section is required')
+    }
+
+    const invalidSection = input.sections.find((section) => {
+      const value = section.moisture_pct_user
+      return (
+        value === undefined || value === null || !Number.isFinite(value) || value < 0 || value > 100
+      )
+    })
+
+    if (invalidSection) {
+      throw new Error('Moisture % must be between 0 and 100 for every section')
+    }
+
+    const payload = {
+      id: input.id,
+      farm_id: input.farm_id,
+      fusarium_pct: input.fusarium_pct ?? null,
+      sections: input.sections,
+      profile_date: input.profileDate
+    }
+
     const response = await fetch('/api/soil-profiling/update', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input)
+      body: JSON.stringify(payload)
     })
 
     if (!response.ok) {
