@@ -194,8 +194,8 @@ export function toDatabaseFarmInsert(
     area: appFarm.area,
     crop_variety: appFarm.cropVariety,
     planting_date: appFarm.plantingDate,
-    vine_spacing: appFarm.vineSpacing || 0,
-    row_spacing: appFarm.rowSpacing || 0,
+    vine_spacing: appFarm.vineSpacing ?? null,
+    row_spacing: appFarm.rowSpacing ?? null,
     total_tank_capacity: appFarm.totalTankCapacity || null,
     system_discharge: appFarm.systemDischarge || null,
     remaining_water: appFarm.remainingWater || null,
@@ -208,7 +208,7 @@ export function toDatabaseFarmInsert(
     location_source: appFarm.locationSource || null,
     location_updated_at: appFarm.locationUpdatedAt || null,
     user_id: appFarm.user_id || null,
-    date_of_pruning: dateToISOString(appFarm.dateOfPruning) as any,
+    date_of_pruning: dateToISOString(appFarm.dateOfPruning),
     bulk_density: appFarm.bulkDensity ?? null,
     cation_exchange_capacity: appFarm.cationExchangeCapacity ?? null,
     soil_water_retention: appFarm.soilWaterRetention ?? null,
@@ -258,9 +258,9 @@ export function toDatabaseFarmUpdate(appFarmUpdates: Partial<Farm>): DatabaseFar
             ? dateValue
             : null
 
-      update.date_of_pruning = dateString as any
+      update.date_of_pruning = dateString
     } else {
-      update.date_of_pruning = null as any
+      update.date_of_pruning = null
     }
   }
   if (appFarmUpdates.bulkDensity !== undefined)

@@ -447,6 +447,7 @@ export interface CommunityInsight {
     farmSize: 'small' | 'medium' | 'large'
     cropVariety: string
     soilType: string
+    waterRetention: string
     climaticConditions: string
   }
 

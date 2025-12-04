@@ -470,7 +470,8 @@ export function FarmModal({
                     id="bulkDensity"
                     type="number"
                     step="0.0001"
-                    min="0"
+                    min={0.5}
+                    max={3}
                     value={formData.bulkDensity}
                     onChange={(e) => handleInputChange('bulkDensity', e.target.value)}
                     placeholder="1.06"
@@ -488,7 +489,8 @@ export function FarmModal({
                     id="cationExchangeCapacity"
                     type="number"
                     step="0.1"
-                    min="0"
+                    min={0}
+                    max={200}
                     value={formData.cationExchangeCapacity}
                     onChange={(e) => handleInputChange('cationExchangeCapacity', e.target.value)}
                     placeholder="50"
@@ -503,7 +505,8 @@ export function FarmModal({
                     id="soilWaterRetention"
                     type="number"
                     step="1"
-                    min="0"
+                    min={0}
+                    max={500}
                     value={formData.soilWaterRetention}
                     onChange={(e) => handleInputChange('soilWaterRetention', e.target.value)}
                     placeholder="170"

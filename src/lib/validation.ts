@@ -48,96 +48,118 @@ export const encodeForHTML = (str: string): string => {
 }
 
 // Farm validation schema with enhanced security
-export const FarmSchema = z.object({
-  name: z
-    .string()
-    .min(1, 'Farm name is required')
-    .max(50, 'Farm name must be less than 50 characters') // Reduced limit
-    .regex(/^[a-zA-Z0-9\s\-._]+$/, 'Farm name contains invalid characters')
-    .transform(sanitizeString)
-    .refine((val) => val.trim().length > 0, 'Farm name cannot be empty'),
-  region: z
-    .string()
-    .min(1, 'Region is required')
-    .max(50, 'Region must be less than 50 characters')
-    .regex(/^[a-zA-Z0-9\s\-.,]+$/, 'Region contains invalid characters')
-    .transform(sanitizeString),
-  area: z
-    .number()
-    .min(0.01, 'Area must be greater than 0')
-    .max(25000, 'Area must be less than 25,000 acres')
-    .finite('Area must be a valid number'),
-  crop: z
-    .string()
-    .min(1, 'Crop is required')
-    .max(50, 'Crop must be less than 50 characters')
-    .regex(/^[a-zA-Z0-9\s\-]+$/, 'Crop contains invalid characters')
-    .transform(sanitizeString),
-  crop_variety: z
-    .string()
-    .min(1, 'Crop variety is required')
-    .max(50, 'Crop variety must be less than 50 characters')
-    .regex(/^[a-zA-Z0-9\s\-]+$/, 'Crop variety contains invalid characters')
-    .transform(sanitizeString),
-  planting_date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD required)')
-    .refine((val) => {
-      const date = new Date(val)
-      const now = new Date()
-      const hundredYearsAgo = new Date(now.getFullYear() - 100, now.getMonth(), now.getDate())
-      return date <= now && date >= hundredYearsAgo
-    }, 'Planting date must be within the last 100 years and not in the future'),
-  vine_spacing: z
-    .number()
-    .min(0.5, 'Vine spacing must be at least 0.5 meters')
-    .max(10, 'Vine spacing must be less than 10 meters')
-    .finite('Vine spacing must be a valid number')
-    .optional(),
-  row_spacing: z
-    .number()
-    .min(1, 'Row spacing must be at least 1 meter')
-    .max(20, 'Row spacing must be less than 20 meters')
-    .finite('Row spacing must be a valid number')
-    .optional(),
-  bulk_density: z
-    .number()
-    .min(0.5, 'Bulk density must be greater than 0.5 g/mL')
-    .max(3, 'Bulk density seems unrealistic')
-    .finite('Bulk density must be a valid number')
-    .optional(),
-  cation_exchange_capacity: z
-    .number()
-    .min(0, 'CEC must be zero or positive')
-    .max(200, 'CEC values above 200 are unusual')
-    .finite('CEC must be a valid number')
-    .optional(),
-  soil_water_retention: z
-    .number()
-    .min(0, 'Soil water retention must be non-negative')
-    .max(500, 'Soil water retention seems too high')
-    .finite('Soil water retention must be a valid number')
-    .optional(),
-  soil_texture_class: z.string().max(50, 'Soil texture descriptor is too long').optional(),
-  sand_percentage: z
-    .number()
-    .min(0, 'Sand percentage cannot be negative')
-    .max(100, 'Sand percentage cannot exceed 100')
-    .finite('Sand percentage must be a valid number')
-    .optional(),
-  silt_percentage: z
-    .number()
-    .min(0, 'Silt percentage cannot be negative')
-    .max(100, 'Silt percentage cannot exceed 100')
-    .finite('Silt percentage must be a valid number')
-    .optional(),
-  clay_percentage: z
-    .number()
-    .min(0, 'Clay percentage cannot be negative')
-    .max(100, 'Clay percentage cannot exceed 100')
-    .finite('Clay percentage must be a valid number')
-    .optional()
-})
+export const FarmSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, 'Farm name is required')
+      .max(50, 'Farm name must be less than 50 characters') // Reduced limit
+      .regex(/^[a-zA-Z0-9\s\-._]+$/, 'Farm name contains invalid characters')
+      .transform(sanitizeString)
+      .refine((val) => val.trim().length > 0, 'Farm name cannot be empty'),
+    region: z
+      .string()
+      .min(1, 'Region is required')
+      .max(50, 'Region must be less than 50 characters')
+      .regex(/^[a-zA-Z0-9\s\-.,]+$/, 'Region contains invalid characters')
+      .transform(sanitizeString),
+    area: z
+      .number()
+      .min(0.01, 'Area must be greater than 0')
+      .max(25000, 'Area must be less than 25,000 acres')
+      .finite('Area must be a valid number'),
+    crop: z
+      .string()
+      .min(1, 'Crop is required')
+      .max(50, 'Crop must be less than 50 characters')
+      .regex(/^[a-zA-Z0-9\s\-]+$/, 'Crop contains invalid characters')
+      .transform(sanitizeString),
+    crop_variety: z
+      .string()
+      .min(1, 'Crop variety is required')
+      .max(50, 'Crop variety must be less than 50 characters')
+      .regex(/^[a-zA-Z0-9\s\-]+$/, 'Crop variety contains invalid characters')
+      .transform(sanitizeString),
+    planting_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD required)')
+      .refine((val) => {
+        const date = new Date(val)
+        const now = new Date()
+        const hundredYearsAgo = new Date(now.getFullYear() - 100, now.getMonth(), now.getDate())
+        return date <= now && date >= hundredYearsAgo
+      }, 'Planting date must be within the last 100 years and not in the future'),
+    vine_spacing: z
+      .number()
+      .min(0.5, 'Vine spacing must be at least 0.5 meters')
+      .max(10, 'Vine spacing must be less than 10 meters')
+      .finite('Vine spacing must be a valid number')
+      .optional(),
+    row_spacing: z
+      .number()
+      .min(1, 'Row spacing must be at least 1 meter')
+      .max(20, 'Row spacing must be less than 20 meters')
+      .finite('Row spacing must be a valid number')
+      .optional(),
+    bulk_density: z
+      .number()
+      .min(0.5, 'Bulk density must be greater than 0.5 g/mL')
+      .max(3, 'Bulk density seems unrealistic')
+      .finite('Bulk density must be a valid number')
+      .optional(),
+    cation_exchange_capacity: z
+      .number()
+      .min(0, 'CEC must be zero or positive')
+      .max(200, 'CEC values above 200 are unusual')
+      .finite('CEC must be a valid number')
+      .optional(),
+    soil_water_retention: z
+      .number()
+      .min(0, 'Soil water retention must be non-negative')
+      .max(500, 'Soil water retention seems too high')
+      .finite('Soil water retention must be a valid number')
+      .optional(),
+    soil_texture_class: z
+      .string()
+      .max(50, 'Soil texture descriptor is too long')
+      .transform(sanitizeString)
+      .optional(),
+    sand_percentage: z
+      .number()
+      .min(0, 'Sand percentage cannot be negative')
+      .max(100, 'Sand percentage cannot exceed 100')
+      .finite('Sand percentage must be a valid number')
+      .optional(),
+    silt_percentage: z
+      .number()
+      .min(0, 'Silt percentage cannot be negative')
+      .max(100, 'Silt percentage cannot exceed 100')
+      .finite('Silt percentage must be a valid number')
+      .optional(),
+    clay_percentage: z
+      .number()
+      .min(0, 'Clay percentage cannot be negative')
+      .max(100, 'Clay percentage cannot exceed 100')
+      .finite('Clay percentage must be a valid number')
+      .optional()
+  })
+  .superRefine((data, ctx) => {
+    const { sand_percentage, silt_percentage, clay_percentage } = data
+    if (
+      sand_percentage !== undefined &&
+      silt_percentage !== undefined &&
+      clay_percentage !== undefined
+    ) {
+      const total = sand_percentage + silt_percentage + clay_percentage
+      if (total < 95 || total > 105) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['sand_percentage'],
+          message: 'Sand + silt + clay percentages should sum to approximately 100%'
+        })
+      }
+    }
+  })
 
 // Irrigation record validation
 export const IrrigationSchema = z.object({

@@ -14,8 +14,8 @@ CREATE TABLE farms (
   crop VARCHAR(255) NOT NULL,
   crop_variety VARCHAR(255) NOT NULL,
   planting_date DATE NOT NULL,
-  vine_spacing DECIMAL(5,2) NOT NULL, -- in meters
-  row_spacing DECIMAL(5,2) NOT NULL, -- in meters
+  vine_spacing DECIMAL(5,2), -- in meters
+  row_spacing DECIMAL(5,2), -- in meters
   total_tank_capacity DECIMAL(12,2),
   system_discharge DECIMAL(10,4),
   remaining_water DECIMAL(12,2),
