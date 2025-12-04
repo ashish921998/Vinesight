@@ -23,8 +23,8 @@ export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-lime-50 to-sky-50">
       <SEOSchema
-        title="Terms of Service - FarmAI"
-        description="Terms and conditions for using FarmAI. Understand your rights, responsibilities, and how we run the platform."
+        title="Terms of Service - Vinesight"
+        description="Terms and conditions for using Vinesight. Understand your rights, responsibilities, and how we run the platform."
         type="guide"
         url="/terms"
         guideCategory="Legal"
@@ -50,7 +50,7 @@ export default function TermsOfServicePage() {
               </div>
               <h1 className="text-4xl font-bold text-gray-900">Terms of Service</h1>
             </div>
-            <p className="text-xl text-gray-600 mb-4">The rules for using FarmAI</p>
+            <p className="text-xl text-gray-600 mb-4">The rules for using Vinesight</p>
             <p className="text-sm text-gray-500">Last updated: December 3, 2025</p>
           </div>
         </div>
@@ -66,7 +66,7 @@ export default function TermsOfServicePage() {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-3">Agreement overview</h2>
                   <p className="text-gray-700 mb-4">
-                    These Terms govern your access to FarmAI. By creating an account or using the
+                    These Terms govern your access to Vinesight. By creating an account or using the
                     platform you agree to follow them and our Privacy Policy.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -101,7 +101,7 @@ export default function TermsOfServicePage() {
             <CardContent className="space-y-4">
               <p className="text-gray-700">
                 You must accept these Terms and be legally capable of entering into agreements in
-                your region to use FarmAI. If you use FarmAI on behalf of an organization, you
+                your region to use Vinesight. If you use Vinesight on behalf of an organization, you
                 confirm you have authority to bind that organization.
               </p>
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -110,7 +110,7 @@ export default function TermsOfServicePage() {
                   <li>• Provide accurate registration and billing information</li>
                   <li>• Be at least 18, or use with appropriate guardian consent</li>
                   <li>• Comply with applicable laws and agricultural regulations</li>
-                  <li>• Not misuse FarmAI, its APIs, or underlying infrastructure</li>
+                  <li>• Not misuse Vinesight, its APIs, or underlying infrastructure</li>
                 </ul>
               </div>
             </CardContent>
@@ -121,13 +121,13 @@ export default function TermsOfServicePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-6 w-6 text-sky-700" />
-                What FarmAI provides
+                What Vinesight provides
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-700">
-                FarmAI delivers digital tools to manage farms, analyze data, and receive AI-powered
-                assistance.
+                Vinesight delivers digital tools to manage farms, analyze data, and receive
+                AI-powered assistance.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -198,7 +198,7 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3 text-gray-700">
-                <p>To keep FarmAI secure and reliable for everyone, you agree to:</p>
+                <p>To keep Vinesight secure and reliable for everyone, you agree to:</p>
                 <ul className="space-y-2 ml-4">
                   <li className="flex items-start gap-2">
                     <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
@@ -237,12 +237,12 @@ export default function TermsOfServicePage() {
                 <Link href="/privacy" className="text-emerald-700 underline">
                   Privacy Policy
                 </Link>
-                . By using FarmAI you consent to that policy, including how we work with service and
-                AI providers to deliver the product.
+                . By using Vinesight you consent to that policy, including how we work with service
+                and AI providers to deliver the product.
               </p>
               <p>
-                You grant FarmAI a limited license to host, process, and analyze content you submit
-                solely to provide the services. You retain ownership of your data.
+                You grant Vinesight a limited license to host, process, and analyze content you
+                submit solely to provide the services. You retain ownership of your data.
               </p>
             </CardContent>
           </Card>
@@ -326,19 +326,20 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="space-y-3 text-gray-700">
               <p className="text-sm">
-                For the FarmAI iOS app, these additional terms apply to satisfy App Store Review
+                For the Vinesight iOS app, these additional terms apply to satisfy App Store Review
                 Guidelines:
               </p>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
                   <span>
-                    The agreement is between you and FarmAI; Apple is not responsible for the app.
+                    The agreement is between you and Vinesight; Apple is not responsible for the
+                    app.
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
-                  <span>Support, maintenance, and privacy inquiries are handled by FarmAI.</span>
+                  <span>Support, maintenance, and privacy inquiries are handled by Vinesight.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
@@ -371,8 +372,8 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="space-y-4 text-gray-700">
               <p>
-                FarmAI provides recommendations and AI-generated outputs to support decisions, but
-                final choices remain yours. Always validate outputs before operational use,
+                Vinesight provides recommendations and AI-generated outputs to support decisions,
+                but final choices remain yours. Always validate outputs before operational use,
                 especially where safety, compliance, or financial outcomes are involved.
               </p>
               <ul className="space-y-2 ml-4">
@@ -386,7 +387,7 @@ export default function TermsOfServicePage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-2 h-2 bg-red-500 rounded-full mt-2"></span>
-                  <span>FarmAI is not liable for losses resulting from reliance on outputs</span>
+                  <span>Vinesight is not liable for losses resulting from reliance on outputs</span>
                 </li>
               </ul>
             </CardContent>
@@ -402,13 +403,14 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="space-y-3 text-gray-700">
               <p>
-                FarmAI and its logos, software, and content are owned by us or our licensors. We
+                Vinesight and its logos, software, and content are owned by us or our licensors. We
                 grant you a limited, non-exclusive, non-transferable license to use the platform in
                 line with these Terms.
               </p>
               <p>
-                You retain ownership of the data and content you submit. You give FarmAI permission
-                to host, process, and use that content solely to operate and improve the services.
+                You retain ownership of the data and content you submit. You give Vinesight
+                permission to host, process, and use that content solely to operate and improve the
+                services.
               </p>
             </CardContent>
           </Card>
@@ -423,7 +425,7 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="space-y-3 text-gray-700">
               <p>
-                You may stop using FarmAI at any time. We may suspend or terminate access if you
+                You may stop using Vinesight at any time. We may suspend or terminate access if you
                 breach these Terms, fail to pay fees, or misuse the platform.
               </p>
               <p>
@@ -443,9 +445,9 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent className="space-y-3 text-gray-700">
               <p>
-                These Terms are governed by the laws of the jurisdiction where FarmAI is organized,
-                without regard to conflict-of-law principles. Local mandatory consumer rights still
-                apply.
+                These Terms are governed by the laws of the jurisdiction where Vinesight is
+                organized, without regard to conflict-of-law principles. Local mandatory consumer
+                rights still apply.
               </p>
               <p>
                 We may update these Terms to reflect product or legal changes. If updates are
