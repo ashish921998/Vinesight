@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import type React from 'react'
+import { Button } from '@/components/ui/button'
 
 export default function TestimonialsSection() {
   const [activeTestimonial, setActiveTestimonial] = useState(0)
@@ -56,7 +57,7 @@ export default function TestimonialsSection() {
   }
 
   return (
-    <div className="w-full border-b border-[rgba(55,50,47,0.12)] flex flex-col justify-center items-center">
+    <div className="w-full border-b border-border flex flex-col justify-center items-center bg-background">
       {/* Header Section */}
 
       {/* Testimonial Content */}
@@ -75,7 +76,7 @@ export default function TestimonialsSection() {
             />
             <div className="flex-1 px-6 py-6 shadow-[0px_0px_0px_0.75px_rgba(50,45,43,0.12)] overflow-hidden flex flex-col justify-start items-start gap-6 shadow-none pb-0 pt-0">
               <div
-                className="self-stretch justify-start flex flex-col text-[#49423D] text-2xl md:text-[32px] font-medium leading-10 md:leading-[42px] font-sans h-[200px] md:h-[210px] overflow-hidden line-clamp-5 transition-all duration-700 ease-in-out tracking-tight"
+                className="self-stretch justify-start flex flex-col text-foreground text-2xl md:text-[32px] font-medium leading-10 md:leading-[42px] font-sans h-[200px] md:h-[210px] overflow-hidden line-clamp-5 transition-all duration-700 ease-in-out tracking-tight"
                 style={{
                   filter: isTransitioning ? 'blur(4px)' : 'blur(0px)',
                   transition: 'filter 0.7s ease-in-out'
@@ -90,10 +91,10 @@ export default function TestimonialsSection() {
                   transition: 'filter 0.7s ease-in-out'
                 }}
               >
-                <div className="self-stretch justify-center flex flex-col text-[rgba(73,66,61,0.90)] text-lg font-medium leading-[26px] font-sans">
+                <div className="self-stretch justify-center flex flex-col text-foreground text-lg font-medium leading-[26px] font-sans">
                   {testimonials[activeTestimonial].name}
                 </div>
-                <div className="self-stretch justify-center flex flex-col text-[rgba(73,66,61,0.70)] text-lg font-medium leading-[26px] font-sans">
+                <div className="self-stretch justify-center flex flex-col text-muted-foreground text-lg font-medium leading-[26px] font-sans">
                   {testimonials[activeTestimonial].company}
                 </div>
               </div>
@@ -102,54 +103,54 @@ export default function TestimonialsSection() {
 
           {/* Navigation Arrows */}
           <div className="pr-6 justify-start items-start gap-[14px] flex">
-            <button
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() =>
                 handleNavigationClick(
                   (activeTestimonial - 1 + testimonials.length) % testimonials.length
                 )
               }
-              className="w-9 h-9 shadow-[0px_1px_2px_rgba(0,0,0,0.08)] overflow-hidden rounded-full border border-[rgba(0,0,0,0.15)] justify-center items-center gap-2 flex hover:bg-gray-50 transition-colors"
+              className="w-9 h-9 rounded-full"
             >
-              <div className="w-6 h-6 relative overflow-hidden">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M15 18L9 12L15 6"
-                    stroke="#46413E"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-            </button>
-            <button
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M15 18L9 12L15 6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => handleNavigationClick((activeTestimonial + 1) % testimonials.length)}
-              className="w-9 h-9 shadow-[0px_1px_2px_rgba(0,0,0,0.08)] overflow-hidden rounded-full border border-[rgba(0,0,0,0.15)] justify-center items-center gap-2 flex hover:bg-gray-50 transition-colors"
+              className="w-9 h-9 rounded-full"
             >
-              <div className="w-6 h-6 relative overflow-hidden">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M9 18L15 12L9 6"
-                    stroke="#46413E"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-            </button>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M9 18L15 12L9 6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </Button>
           </div>
         </div>
       </div>
