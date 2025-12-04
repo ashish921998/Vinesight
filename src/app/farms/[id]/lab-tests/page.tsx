@@ -240,7 +240,7 @@ function LabTestsPage() {
           <section className="px-1">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="space-y-1.5">
-                <h1 className="text-xl sm:text-2xl font-semibold">Lab tests</h1>
+                <h1 className="text-xl sm:text-2xl font-semibold">Lab Tests</h1>
                 <p className="text-sm text-muted-foreground">
                   Compare soil and petiole results. Link photos and reports.
                 </p>
