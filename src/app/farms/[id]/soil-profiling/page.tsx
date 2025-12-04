@@ -245,6 +245,30 @@ export default function SoilProfilingPage() {
     [isSectionComplete]
   )
 
+  const getSignedUrlForExistingPhoto = useCallback(
+    async (photoPath: string): Promise<string | null> => {
+      try {
+        const response = await fetch('/api/soil-profiling/get-signed-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photoPath, farmId })
+        })
+
+        if (!response.ok) {
+          console.error('Failed to get signed URL')
+          return null
+        }
+
+        const data = await response.json()
+        return data.signedUrl || null
+      } catch (error) {
+        console.error('Error fetching signed URL:', error)
+        return null
+      }
+    },
+    [farmId]
+  )
+
   const handlePhotoSelect = async (fileList: FileList | null, section: SoilSectionName) => {
     if (!fileList?.length) return
     const file = fileList[0]
@@ -903,7 +927,7 @@ export default function SoilProfilingPage() {
                                 size="icon"
                                 variant="ghost"
                                 className="h-8 w-8"
-                                onClick={() => {
+                                onClick={async () => {
                                   setEditingProfileId(profile.id || null)
                                   setFusarium(
                                     profile.fusarium_pct !== null &&
@@ -919,9 +943,26 @@ export default function SoilProfilingPage() {
                                     left: initialSectionState('left'),
                                     right: initialSectionState('right')
                                   }
-                                  profile.sections?.forEach((section) => {
-                                    nextSections[section.name] = {
-                                      ...initialSectionState(section.name),
+
+                                  // Process sections and fetch signed URLs for existing photos
+                                  for (const section of profile.sections || []) {
+                                    const sectionName = section.name as SoilSectionName
+                                    let photoPreview: string | undefined = section.photo_preview
+                                      ? section.photo_preview
+                                      : undefined
+
+                                    // If there's a photo path but no preview, fetch a signed URL
+                                    if (section.photo_path && !photoPreview) {
+                                      const signedUrl = await getSignedUrlForExistingPhoto(
+                                        section.photo_path
+                                      )
+                                      if (signedUrl) {
+                                        photoPreview = signedUrl
+                                      }
+                                    }
+
+                                    nextSections[sectionName] = {
+                                      ...initialSectionState(sectionName),
                                       dimensionValue:
                                         section.depth_m?.toString() ||
                                         section.width_m?.toString() ||
@@ -929,11 +970,11 @@ export default function SoilProfilingPage() {
                                       ec: section.ec_ds_m?.toString() || '',
                                       moisture: section.moisture_pct_user?.toString() || '',
                                       photoPath: section.photo_path || undefined,
-                                      photoPreview: section.photo_preview || undefined,
+                                      photoPreview,
                                       showPreview: false,
                                       uploading: false
                                     }
-                                  })
+                                  }
                                   setSections(nextSections)
                                   setShowProfileDialog(true)
                                 }}

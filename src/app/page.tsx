@@ -511,7 +511,7 @@ export default function LandingPage() {
       </div>
       <footer className="w-full border-t border-[rgba(55,50,47,0.12)] bg-white/60 backdrop-blur py-6 mt-10">
         <div className="max-w-[1060px] mx-auto flex flex-col sm:flex-row items-center justify-between px-6 text-sm text-[#4A4A4A] gap-3">
-          <span>© {new Date().getFullYear()} FarmAI. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Vinesight. All rights reserved.</span>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="underline-offset-4 hover:underline">
               Privacy Policy
