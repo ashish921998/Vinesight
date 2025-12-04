@@ -25,8 +25,8 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-lime-50 to-sky-50">
       <SEOSchema
-        title="Privacy Policy - FarmAI"
-        description="How FarmAI collects, uses, and protects your farming data. Transparent privacy practices built for growers and agronomy teams."
+        title="Privacy Policy - Vinesight"
+        description="How Vinesight collects, uses, and protects your farming data. Transparent privacy practices built for growers and agronomy teams."
         type="guide"
         url="/privacy"
         guideCategory="Legal"
@@ -52,7 +52,9 @@ export default function PrivacyPolicyPage() {
               </div>
               <h1 className="text-4xl font-bold text-gray-900">Privacy Policy</h1>
             </div>
-            <p className="text-xl text-gray-600 mb-4">How FarmAI protects and handles your data</p>
+            <p className="text-xl text-gray-600 mb-4">
+              How Vinesight protects and handles your data
+            </p>
             <p className="text-sm text-gray-500">Last updated: December 3, 2025</p>
           </div>
         </div>
@@ -68,9 +70,9 @@ export default function PrivacyPolicyPage() {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-3">Our promise to you</h2>
                   <p className="text-gray-700 mb-4">
-                    Farm data is sensitive. We collect only what we need to run FarmAI, keep it
+                    Farm data is sensitive. We collect only what we need to run Vinesight, keep it
                     secured with industry standards, and give you clear controls over how it is
-                    used. This policy applies to the FarmAI iOS app and web experience.
+                    used. This policy applies to the Vinesight iOS app and web experience.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-center gap-2">
@@ -102,7 +104,7 @@ export default function PrivacyPolicyPage() {
           </CardHeader>
           <CardContent className="space-y-3 text-gray-700">
             <p className="text-sm">
-              To comply with App Store Review Guidelines, here is a summary of how FarmAI handles
+              To comply with App Store Review Guidelines, here is a summary of how Vinesight handles
               data on iOS:
             </p>
             <ul className="space-y-2 ml-4">
@@ -257,7 +259,7 @@ export default function PrivacyPolicyPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    Improve and support FarmAI
+                    Improve and support Vinesight
                   </h3>
                   <ul className="space-y-2 text-gray-700">
                     <li className="flex items-start gap-2">
@@ -306,8 +308,9 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent className="space-y-4 text-gray-700">
               <p>
-                When you use the FarmAI iOS app, we may request certain device permissions so core
-                features work as intended. You can change these anytime in your device settings.
+                When you use the Vinesight iOS app, we may request certain device permissions so
+                core features work as intended. You can change these anytime in your device
+                settings.
               </p>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
@@ -349,7 +352,7 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-700">
-                We secure FarmAI with layered controls across infrastructure, application, and
+                We secure Vinesight with layered controls across infrastructure, application, and
                 processes:
               </p>
 
@@ -422,8 +425,8 @@ export default function PrivacyPolicyPage() {
                   <div>
                     <h3 className="font-semibold text-orange-900 mb-1">We do not sell data</h3>
                     <p className="text-orange-800 text-sm">
-                      FarmAI never sells or rents your personal or farm data. Sharing only happens
-                      as described below.
+                      Vinesight never sells or rents your personal or farm data. Sharing only
+                      happens as described below.
                     </p>
                   </div>
                 </div>
@@ -499,7 +502,7 @@ export default function PrivacyPolicyPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-gray-700">You control your information across FarmAI:</p>
+              <p className="text-gray-700">You control your information across Vinesight:</p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -633,13 +636,13 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-gray-700">
-                FarmAI primarily stores data in the region closest to your operations. If data is
+                Vinesight primarily stores data in the region closest to your operations. If data is
                 transferred across regions, we apply equivalent protections and contractual
                 safeguards.
               </p>
               <p className="text-gray-700">
-                If you are a minor under applicable law, please use FarmAI only with permission from
-                a parent or guardian.
+                If you are a minor under applicable law, please use Vinesight only with permission
+                from a parent or guardian.
               </p>
               <p className="text-gray-700">
                 We do not knowingly collect personal data from children under 16. If you believe a
@@ -710,8 +713,8 @@ export default function PrivacyPolicyPage() {
         {/* Footer */}
         <div className="mt-16 text-center">
           <p className="text-gray-500 text-sm">
-            FarmAI is built for growers first. Protecting your data and trust is at the core of how
-            we operate.
+            Vinesight is built for growers first. Protecting your data and trust is at the core of
+            how we operate.
           </p>
         </div>
       </div>
