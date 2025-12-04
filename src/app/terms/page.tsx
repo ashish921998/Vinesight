@@ -26,6 +26,8 @@ export default function TermsOfServicePage() {
         title="Terms of Service - FarmAI"
         description="Terms and conditions for using FarmAI. Understand your rights, responsibilities, and how we run the platform."
         type="guide"
+        url="/terms"
+        guideCategory="Legal"
         image="/og-image.png"
       />
 
@@ -468,12 +470,12 @@ export default function TermsOfServicePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="text-center">
                   <Mail className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
-                  <p className="font-semibold text-gray-900">Email</p>
+                  <p className="font-semibold text-gray-900">Support & Legal</p>
                   <p className="text-sm text-gray-600">support@farmai.app</p>
                 </div>
                 <div className="text-center">
                   <Shield className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
-                  <p className="font-semibold text-gray-900">Abuse/Security</p>
+                  <p className="font-semibold text-gray-900">Security</p>
                   <p className="text-sm text-gray-600">security@farmai.app</p>
                 </div>
               </div>

@@ -28,6 +28,8 @@ export default function PrivacyPolicyPage() {
         title="Privacy Policy - FarmAI"
         description="How FarmAI collects, uses, and protects your farming data. Transparent privacy practices built for growers and agronomy teams."
         type="guide"
+        url="/privacy"
+        guideCategory="Legal"
         image="/og-image.png"
       />
 
@@ -660,16 +662,11 @@ export default function PrivacyPolicyPage() {
                 exercise your rights, or want to report a concern.
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="text-center">
                   <Mail className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
-                  <p className="font-semibold text-gray-900">Email</p>
+                  <p className="font-semibold text-gray-900">Privacy & Support</p>
                   <p className="text-sm text-gray-600">privacy@farmai.app</p>
-                </div>
-                <div className="text-center">
-                  <FileText className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
-                  <p className="font-semibold text-gray-900">Data requests</p>
-                  <p className="text-sm text-gray-600">Available in account settings</p>
                 </div>
                 <div className="text-center">
                   <Shield className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
