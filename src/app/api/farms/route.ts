@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseClient } from '@/lib/supabase'
-import {
-  FarmSchema,
-  validateAndSanitize,
-  globalRateLimiter,
-  generateCSRFToken
-} from '@/lib/validation'
+import { FarmSchema, validateAndSanitize, globalRateLimiter } from '@/lib/validation'
 
 export async function GET(request: NextRequest) {
   try {

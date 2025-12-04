@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -58,6 +59,7 @@ interface ReportPreview {
 const RECORDS_PER_PAGE = 10
 
 export default function UnifiedReportsPage() {
+  const router = useRouter()
   const [farms, setFarms] = useState<Farm[]>([])
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null)
   const [loading, setLoading] = useState(false)
@@ -495,18 +497,31 @@ export default function UnifiedReportsPage() {
 
   return (
     <div className="container mx-auto px-4 py-4 md:py-8">
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-xl md:text-3xl font-bold text-primary flex items-center gap-2">
-          <BarChart3 className="h-6 w-6 md:h-8 md:w-8" />
-          <span className="hidden sm:inline">Farm Reports & Analytics</span>
-          <span className="sm:hidden">Reports</span>
-        </h1>
-        <p className="text-muted-foreground mt-2 text-sm md:text-base">
-          <span className="hidden md:inline">
-            View detailed farm data, generate insights, and export comprehensive reports
-          </span>
-          <span className="md:hidden">Generate and export farm reports</span>
-        </p>
+      <div className="mb-6 md:mb-8 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-xl md:text-3xl font-bold text-primary flex items-center gap-2">
+            <BarChart3 className="h-6 w-6 md:h-8 md:w-8" />
+            <span className="hidden sm:inline">Farm Reports & Analytics</span>
+            <span className="sm:hidden">Reports</span>
+          </h1>
+          <p className="text-muted-foreground mt-2 text-sm md:text-base">
+            <span className="hidden md:inline">
+              View detailed farm data, generate insights, and export comprehensive reports
+            </span>
+            <span className="md:hidden">Generate and export farm reports</span>
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="inline-flex items-center gap-2"
+          onClick={() =>
+            router.push(selectedFarm?.id ? `/farms/${selectedFarm.id}/soil-profiling` : '/farms')
+          }
+        >
+          <Droplets className="h-4 w-4" />
+          Soil profiling
+        </Button>
       </div>
 
       {/* Farm and Date Selection */}

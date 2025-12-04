@@ -1489,6 +1489,38 @@ export type Database = {
           }
         ]
       }
+      soil_profiles: {
+        Row: {
+          created_at: string | null
+          farm_id: number
+          fusarium_pct: number | null
+          id: number
+          sections: Json
+        }
+        Insert: {
+          created_at?: string | null
+          farm_id: number
+          fusarium_pct?: number | null
+          id?: number
+          sections?: Json
+        }
+        Update: {
+          created_at?: string | null
+          farm_id?: number
+          fusarium_pct?: number | null
+          id?: number
+          sections?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'soil_profiles_farm_id_fkey'
+            columns: ['farm_id']
+            isOneToOne: false
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       petiole_test_records: {
         Row: {
           created_at: string | null

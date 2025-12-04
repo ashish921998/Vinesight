@@ -13,7 +13,9 @@ import type {
   CalculationHistory,
   SoilTestRecord,
   PetioleTestRecord,
-  DailyNoteRecord
+  DailyNoteRecord,
+  SoilProfile,
+  SoilSection
 } from './supabase'
 import { taskReminderFromDB } from '@/types/types'
 import type { TaskReminder, Farm } from '@/types/types'
@@ -30,7 +32,9 @@ export type {
   CalculationHistory,
   SoilTestRecord,
   PetioleTestRecord,
-  DailyNoteRecord
+  DailyNoteRecord,
+  SoilProfile,
+  SoilSection
 }
 
 // Extract database table types
@@ -105,6 +109,10 @@ export type DatabaseSoilTestRecordInsert =
 export type DatabaseSoilTestRecordUpdate =
   Database['public']['Tables']['soil_test_records']['Update']
 
+export type DatabaseSoilProfile = Database['public']['Tables']['soil_profiles']['Row']
+export type DatabaseSoilProfileInsert = Database['public']['Tables']['soil_profiles']['Insert']
+export type DatabaseSoilProfileUpdate = Database['public']['Tables']['soil_profiles']['Update']
+
 // Petiole Test Record database types
 export type DatabasePetioleTestRecord = Database['public']['Tables']['petiole_test_records']['Row']
 export type DatabasePetioleTestRecordInsert =
@@ -122,6 +130,20 @@ const dateToISOString = (dateValue: any): string | null => {
     return dateValue
   }
   return null
+}
+
+const serializeSoilSections = (sections?: SoilSection[]): Json => {
+  const plainSections = (sections ?? []).map((section) => ({
+    name: section.name,
+    depth_m: section.depth_m ?? null,
+    width_m: section.width_m ?? null,
+    photo_path: section.photo_path ?? null,
+    photo_preview: section.photo_preview ?? null,
+    ec_ds_m: section.ec_ds_m ?? null,
+    moisture_pct_user: section.moisture_pct_user,
+    created_at: section.created_at ?? null
+  }))
+  return plainSections as Json
 }
 
 // Type conversion utilities
@@ -760,6 +782,41 @@ export function toDatabaseSoilTestUpdate(
   if (appUpdates.parsed_parameters !== undefined)
     update.parsed_parameters = appUpdates.parsed_parameters || null
   if (appUpdates.raw_notes !== undefined) update.raw_notes = appUpdates.raw_notes || null
+  return update
+}
+
+export function toApplicationSoilProfile(
+  dbRecord: DatabaseSoilProfile
+): import('./supabase').SoilProfile {
+  const sections = (dbRecord.sections as import('./supabase').SoilSection[] | null) || []
+  return {
+    id: dbRecord.id,
+    farm_id: dbRecord.farm_id,
+    fusarium_pct: dbRecord.fusarium_pct ?? undefined,
+    created_at: dbRecord.created_at ?? undefined,
+    sections
+  }
+}
+
+export function toDatabaseSoilProfileInsert(
+  appRecord: Omit<import('./supabase').SoilProfile, 'id' | 'created_at'>
+): DatabaseSoilProfileInsert {
+  return {
+    farm_id: appRecord.farm_id,
+    fusarium_pct: appRecord.fusarium_pct ?? null,
+    sections: serializeSoilSections(appRecord.sections)
+  }
+}
+
+export function toDatabaseSoilProfileUpdate(
+  appUpdates: Partial<import('./supabase').SoilProfile>
+): DatabaseSoilProfileUpdate {
+  const update: DatabaseSoilProfileUpdate = {}
+  if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
+  if (appUpdates.fusarium_pct !== undefined) update.fusarium_pct = appUpdates.fusarium_pct ?? null
+  if (appUpdates.sections !== undefined) {
+    update.sections = serializeSoilSections(appUpdates.sections)
+  }
   return update
 }
 

@@ -253,6 +253,15 @@ CREATE TABLE petiole_test_records (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Soil profile tables
+CREATE TABLE soil_profiles (
+  id BIGSERIAL PRIMARY KEY,
+  farm_id BIGINT NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
+  fusarium_pct REAL,
+  sections JSONB NOT NULL DEFAULT '[]'::JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX idx_farms_user_id ON farms(user_id);
 CREATE INDEX idx_farms_date_of_pruning ON farms(date_of_pruning);
@@ -280,6 +289,7 @@ CREATE INDEX idx_soil_test_records_date_of_pruning ON soil_test_records(date_of_
 CREATE INDEX idx_petiole_test_records_farm_id ON petiole_test_records(farm_id);
 CREATE INDEX idx_petiole_test_records_date ON petiole_test_records(date);
 CREATE INDEX idx_petiole_test_records_date_of_pruning ON petiole_test_records(date_of_pruning);
+CREATE INDEX idx_soil_profiles_farm_id ON soil_profiles(farm_id);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE farms ENABLE ROW LEVEL SECURITY;
@@ -292,6 +302,7 @@ ALTER TABLE calculation_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE task_reminders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE soil_test_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE petiole_test_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE soil_profiles ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for farms table
 CREATE POLICY "Users can view their own farms" ON farms FOR SELECT USING (auth.uid() = user_id);
@@ -456,6 +467,20 @@ CREATE POLICY "Users can update petiole test records for their farms" ON petiole
 );
 CREATE POLICY "Users can delete petiole test records for their farms" ON petiole_test_records FOR DELETE USING (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = petiole_test_records.farm_id AND farms.user_id = auth.uid())
+);
+
+-- Soil profiles
+CREATE POLICY "Users can view their soil profiles" ON soil_profiles FOR SELECT USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_profiles.farm_id AND farms.user_id = auth.uid())
+);
+CREATE POLICY "Users can insert soil profiles" ON soil_profiles FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_profiles.farm_id AND farms.user_id = auth.uid())
+);
+CREATE POLICY "Users can update their soil profiles" ON soil_profiles FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_profiles.farm_id AND farms.user_id = auth.uid())
+);
+CREATE POLICY "Users can delete their soil profiles" ON soil_profiles FOR DELETE USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_profiles.farm_id AND farms.user_id = auth.uid())
 );
 
 -- Function to automatically update the updated_at column
