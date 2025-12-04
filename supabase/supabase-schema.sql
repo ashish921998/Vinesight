@@ -258,24 +258,7 @@ CREATE TABLE soil_profiles (
   id BIGSERIAL PRIMARY KEY,
   farm_id BIGINT NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
   fusarium_pct REAL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE soil_sections (
-  id BIGSERIAL PRIMARY KEY,
-  profile_id BIGINT NOT NULL REFERENCES soil_profiles(id) ON DELETE CASCADE,
-  name TEXT NOT NULL CHECK (name IN ('top', 'bottom', 'left', 'right')),
-  depth_m REAL,
-  width_m REAL,
-  photo_path TEXT,
-  ec_ds_m REAL,
-  moisture_pct_ai REAL,
-  moisture_pct_user REAL,
-  predicted_texture TEXT,
-  ai_confidence REAL,
-  awc_range TEXT,
-  smd_range TEXT,
-  analyzed_at TIMESTAMP WITH TIME ZONE,
+  sections JSONB NOT NULL DEFAULT '[]'::JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -307,8 +290,6 @@ CREATE INDEX idx_petiole_test_records_farm_id ON petiole_test_records(farm_id);
 CREATE INDEX idx_petiole_test_records_date ON petiole_test_records(date);
 CREATE INDEX idx_petiole_test_records_date_of_pruning ON petiole_test_records(date_of_pruning);
 CREATE INDEX idx_soil_profiles_farm_id ON soil_profiles(farm_id);
-CREATE INDEX idx_soil_sections_profile_id ON soil_sections(profile_id);
-CREATE INDEX idx_soil_sections_name ON soil_sections(name);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE farms ENABLE ROW LEVEL SECURITY;
@@ -322,7 +303,6 @@ ALTER TABLE task_reminders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE soil_test_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE petiole_test_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE soil_profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE soil_sections ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for farms table
 CREATE POLICY "Users can view their own farms" ON farms FOR SELECT USING (auth.uid() = user_id);
@@ -501,44 +481,6 @@ CREATE POLICY "Users can update their soil profiles" ON soil_profiles FOR UPDATE
 );
 CREATE POLICY "Users can delete their soil profiles" ON soil_profiles FOR DELETE USING (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_profiles.farm_id AND farms.user_id = auth.uid())
-);
-
--- Soil sections inherit farm ownership via profile
-CREATE POLICY "Users can view their soil sections" ON soil_sections FOR SELECT USING (
-  EXISTS (
-    SELECT 1
-    FROM soil_profiles
-    JOIN farms ON farms.id = soil_profiles.farm_id
-    WHERE soil_profiles.id = soil_sections.profile_id
-      AND farms.user_id = auth.uid()
-  )
-);
-CREATE POLICY "Users can insert soil sections" ON soil_sections FOR INSERT WITH CHECK (
-  EXISTS (
-    SELECT 1
-    FROM soil_profiles
-    JOIN farms ON farms.id = soil_profiles.farm_id
-    WHERE soil_profiles.id = soil_sections.profile_id
-      AND farms.user_id = auth.uid()
-  )
-);
-CREATE POLICY "Users can update their soil sections" ON soil_sections FOR UPDATE USING (
-  EXISTS (
-    SELECT 1
-    FROM soil_profiles
-    JOIN farms ON farms.id = soil_profiles.farm_id
-    WHERE soil_profiles.id = soil_sections.profile_id
-      AND farms.user_id = auth.uid()
-  )
-);
-CREATE POLICY "Users can delete their soil sections" ON soil_sections FOR DELETE USING (
-  EXISTS (
-    SELECT 1
-    FROM soil_profiles
-    JOIN farms ON farms.id = soil_profiles.farm_id
-    WHERE soil_profiles.id = soil_sections.profile_id
-      AND farms.user_id = auth.uid()
-  )
 );
 
 -- Function to automatically update the updated_at column

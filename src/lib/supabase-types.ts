@@ -113,10 +113,6 @@ export type DatabaseSoilProfile = Database['public']['Tables']['soil_profiles'][
 export type DatabaseSoilProfileInsert = Database['public']['Tables']['soil_profiles']['Insert']
 export type DatabaseSoilProfileUpdate = Database['public']['Tables']['soil_profiles']['Update']
 
-export type DatabaseSoilSection = Database['public']['Tables']['soil_sections']['Row']
-export type DatabaseSoilSectionInsert = Database['public']['Tables']['soil_sections']['Insert']
-export type DatabaseSoilSectionUpdate = Database['public']['Tables']['soil_sections']['Update']
-
 // Petiole Test Record database types
 export type DatabasePetioleTestRecord = Database['public']['Tables']['petiole_test_records']['Row']
 export type DatabasePetioleTestRecordInsert =
@@ -134,6 +130,20 @@ const dateToISOString = (dateValue: any): string | null => {
     return dateValue
   }
   return null
+}
+
+const serializeSoilSections = (sections?: SoilSection[]): Json => {
+  const plainSections = (sections ?? []).map((section) => ({
+    name: section.name,
+    depth_m: section.depth_m ?? null,
+    width_m: section.width_m ?? null,
+    photo_path: section.photo_path ?? null,
+    photo_preview: section.photo_preview ?? null,
+    ec_ds_m: section.ec_ds_m ?? null,
+    moisture_pct_user: section.moisture_pct_user ?? null,
+    created_at: section.created_at ?? null
+  }))
+  return plainSections as Json
 }
 
 // Type conversion utilities
@@ -775,47 +785,26 @@ export function toDatabaseSoilTestUpdate(
   return update
 }
 
-export function toApplicationSoilSection(
-  dbRecord: DatabaseSoilSection
-): import('./supabase').SoilSection {
-  return {
-    id: dbRecord.id,
-    profile_id: dbRecord.profile_id,
-    name: dbRecord.name as import('./supabase').SoilSectionName,
-    depth_m: dbRecord.depth_m ?? undefined,
-    width_m: dbRecord.width_m ?? undefined,
-    photo_path: dbRecord.photo_path ?? undefined,
-    ec_ds_m: dbRecord.ec_ds_m ?? undefined,
-    moisture_pct_ai: dbRecord.moisture_pct_ai ?? undefined,
-    moisture_pct_user: dbRecord.moisture_pct_user ?? 0,
-    predicted_texture: dbRecord.predicted_texture ?? undefined,
-    ai_confidence: dbRecord.ai_confidence ?? undefined,
-    awc_range: dbRecord.awc_range ?? undefined,
-    smd_range: dbRecord.smd_range ?? undefined,
-    analyzed_at: dbRecord.analyzed_at ?? undefined,
-    created_at: dbRecord.created_at ?? undefined
-  }
-}
-
 export function toApplicationSoilProfile(
-  dbRecord: DatabaseSoilProfile,
-  sections?: DatabaseSoilSection[]
+  dbRecord: DatabaseSoilProfile
 ): import('./supabase').SoilProfile {
+  const sections = (dbRecord.sections as import('./supabase').SoilSection[] | null) || []
   return {
     id: dbRecord.id,
     farm_id: dbRecord.farm_id,
     fusarium_pct: dbRecord.fusarium_pct ?? undefined,
     created_at: dbRecord.created_at ?? undefined,
-    sections: sections?.map(toApplicationSoilSection)
+    sections
   }
 }
 
 export function toDatabaseSoilProfileInsert(
-  appRecord: Omit<import('./supabase').SoilProfile, 'id' | 'created_at' | 'sections'>
+  appRecord: Omit<import('./supabase').SoilProfile, 'id' | 'created_at'>
 ): DatabaseSoilProfileInsert {
   return {
     farm_id: appRecord.farm_id,
-    fusarium_pct: appRecord.fusarium_pct ?? null
+    fusarium_pct: appRecord.fusarium_pct ?? null,
+    sections: serializeSoilSections(appRecord.sections)
   }
 }
 
@@ -825,50 +814,9 @@ export function toDatabaseSoilProfileUpdate(
   const update: DatabaseSoilProfileUpdate = {}
   if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
   if (appUpdates.fusarium_pct !== undefined) update.fusarium_pct = appUpdates.fusarium_pct ?? null
-  return update
-}
-
-export function toDatabaseSoilSectionInsert(
-  appRecord: Omit<import('./supabase').SoilSection, 'id' | 'created_at'>
-): DatabaseSoilSectionInsert {
-  return {
-    profile_id: appRecord.profile_id,
-    name: appRecord.name,
-    depth_m: appRecord.depth_m ?? null,
-    width_m: appRecord.width_m ?? null,
-    photo_path: appRecord.photo_path ?? null,
-    ec_ds_m: appRecord.ec_ds_m ?? null,
-    moisture_pct_ai: appRecord.moisture_pct_ai ?? null,
-    moisture_pct_user: appRecord.moisture_pct_user ?? null,
-    predicted_texture: appRecord.predicted_texture ?? null,
-    ai_confidence: appRecord.ai_confidence ?? null,
-    awc_range: appRecord.awc_range ?? null,
-    smd_range: appRecord.smd_range ?? null,
-    analyzed_at: appRecord.analyzed_at ?? null
+  if (appUpdates.sections !== undefined) {
+    update.sections = serializeSoilSections(appUpdates.sections)
   }
-}
-
-export function toDatabaseSoilSectionUpdate(
-  appUpdates: Partial<import('./supabase').SoilSection>
-): DatabaseSoilSectionUpdate {
-  const update: DatabaseSoilSectionUpdate = {}
-  if (appUpdates.profile_id !== undefined) update.profile_id = appUpdates.profile_id
-  if (appUpdates.name !== undefined) update.name = appUpdates.name
-  if (appUpdates.depth_m !== undefined) update.depth_m = appUpdates.depth_m ?? null
-  if (appUpdates.width_m !== undefined) update.width_m = appUpdates.width_m ?? null
-  if (appUpdates.photo_path !== undefined) update.photo_path = appUpdates.photo_path ?? null
-  if (appUpdates.ec_ds_m !== undefined) update.ec_ds_m = appUpdates.ec_ds_m ?? null
-  if (appUpdates.moisture_pct_ai !== undefined)
-    update.moisture_pct_ai = appUpdates.moisture_pct_ai ?? null
-  if (appUpdates.moisture_pct_user !== undefined)
-    update.moisture_pct_user = appUpdates.moisture_pct_user ?? null
-  if (appUpdates.predicted_texture !== undefined)
-    update.predicted_texture = appUpdates.predicted_texture ?? null
-  if (appUpdates.ai_confidence !== undefined)
-    update.ai_confidence = appUpdates.ai_confidence ?? null
-  if (appUpdates.awc_range !== undefined) update.awc_range = appUpdates.awc_range ?? null
-  if (appUpdates.smd_range !== undefined) update.smd_range = appUpdates.smd_range ?? null
-  if (appUpdates.analyzed_at !== undefined) update.analyzed_at = appUpdates.analyzed_at ?? null
   return update
 }
 

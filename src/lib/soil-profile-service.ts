@@ -1,46 +1,37 @@
-import {
-  getSupabaseClient,
-  getTypedSupabaseClient,
-  type SoilSection,
-  type SoilProfile
-} from './supabase'
-import {
-  toApplicationSoilProfile,
-  toDatabaseSoilProfileInsert,
-  toDatabaseSoilSectionInsert
-} from './supabase-types'
+import { getTypedSupabaseClient, type SoilSection, type SoilProfile } from './supabase'
+import { toApplicationSoilProfile } from './supabase-types'
 
-const SOIL_BUCKET = 'farm-photos'
+const SOIL_BUCKET = 'soil-profiling-photos'
 
 export class SoilProfileService {
   static async uploadSectionPhoto(
     file: File,
     farmId: number,
     section: SoilSection['name']
-  ): Promise<{ path: string; publicUrl: string }> {
-    const supabase = getSupabaseClient()
-    const ext = file.name.split('.').pop() || 'jpg'
-    const timestamp = Date.now()
-    const path = `soil-profiles/${farmId}/${section}-${timestamp}.${ext}`
+  ): Promise<{ path: string; signedUrl?: string | null }> {
+    const form = new FormData()
+    form.append('farmId', farmId.toString())
+    form.append('section', section)
+    form.append('file', file)
 
-    const { data, error } = await supabase.storage
-      .from(SOIL_BUCKET)
-      .upload(path, file, { cacheControl: '3600', upsert: true })
+    const response = await fetch('/api/soil-profiling/upload', {
+      method: 'POST',
+      body: form
+    })
 
-    if (error) {
-      throw new Error(`Failed to upload soil photo: ${error.message}`)
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(errorText || 'Failed to upload soil photo')
     }
 
-    const { data: urlData } = supabase.storage.from(SOIL_BUCKET).getPublicUrl(data.path)
-
-    return { path: data.path, publicUrl: urlData.publicUrl }
+    return response.json()
   }
 
   static async getLatestProfile(farmId: number): Promise<SoilProfile | null> {
     const supabase = getTypedSupabaseClient()
     const { data, error } = await supabase
       .from('soil_profiles')
-      .select('*, soil_sections(*)')
+      .select('*')
       .eq('farm_id', farmId)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -52,14 +43,14 @@ export class SoilProfileService {
 
     if (!data) return null
 
-    return toApplicationSoilProfile(data, data.soil_sections || undefined)
+    return toApplicationSoilProfile(data)
   }
 
   static async listProfiles(farmId: number): Promise<SoilProfile[]> {
     const supabase = getTypedSupabaseClient()
     const { data, error } = await supabase
       .from('soil_profiles')
-      .select('*, soil_sections(*)')
+      .select('*')
       .eq('farm_id', farmId)
       .order('created_at', { ascending: false })
 
@@ -67,7 +58,7 @@ export class SoilProfileService {
       throw error
     }
 
-    return (data || []).map((row) => toApplicationSoilProfile(row, row.soil_sections || undefined))
+    return (data || []).map((row) => toApplicationSoilProfile(row))
   }
 
   static async createProfileWithSections(input: {
@@ -90,35 +81,53 @@ export class SoilProfileService {
       throw new Error('Moisture % must be between 0 and 100 for every section')
     }
 
-    const supabase = getTypedSupabaseClient()
-    const { sections, ...profileInput } = input
+    const response = await fetch('/api/soil-profiling/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input)
+    })
 
-    const { data: profileRow, error: profileError } = await supabase
-      .from('soil_profiles')
-      .insert(toDatabaseSoilProfileInsert(profileInput) as any)
-      .select()
-      .single()
-
-    if (profileError) {
-      throw profileError
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(errorText || 'Failed to save soil profile')
     }
 
-    const sectionRows = sections.map((section) =>
-      toDatabaseSoilSectionInsert({
-        ...section,
-        profile_id: profileRow.id
-      })
-    )
+    const data = await response.json()
 
-    const { data: insertedSections, error: sectionError } = await supabase
-      .from('soil_sections')
-      .insert(sectionRows as any)
-      .select()
+    return toApplicationSoilProfile(data)
+  }
 
-    if (sectionError) {
-      throw sectionError
+  static async updateProfile(input: {
+    id: number
+    farm_id: number
+    fusarium_pct?: number | null
+    sections: SoilSection[]
+  }): Promise<SoilProfile> {
+    const response = await fetch('/api/soil-profiling/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input)
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(errorText || 'Failed to update soil profile')
     }
 
-    return toApplicationSoilProfile(profileRow, insertedSections || undefined)
+    const data = await response.json()
+    return toApplicationSoilProfile(data)
+  }
+
+  static async deleteProfile(id: number): Promise<void> {
+    const response = await fetch('/api/soil-profiling/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(errorText || 'Failed to delete soil profile')
+    }
   }
 }

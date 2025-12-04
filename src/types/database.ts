@@ -1495,18 +1495,21 @@ export type Database = {
           farm_id: number
           fusarium_pct: number | null
           id: number
+          sections: Json
         }
         Insert: {
           created_at?: string | null
           farm_id: number
           fusarium_pct?: number | null
           id?: number
+          sections?: Json
         }
         Update: {
           created_at?: string | null
           farm_id?: number
           fusarium_pct?: number | null
           id?: number
+          sections?: Json
         }
         Relationships: [
           {
@@ -1514,68 +1517,6 @@ export type Database = {
             columns: ['farm_id']
             isOneToOne: false
             referencedRelation: 'farms'
-            referencedColumns: ['id']
-          }
-        ]
-      }
-      soil_sections: {
-        Row: {
-          ai_confidence: number | null
-          analyzed_at: string | null
-          awc_range: string | null
-          created_at: string | null
-          depth_m: number | null
-          ec_ds_m: number | null
-          id: number
-          moisture_pct_ai: number | null
-          moisture_pct_user: number | null
-          name: string
-          photo_path: string | null
-          predicted_texture: string | null
-          profile_id: number
-          smd_range: string | null
-          width_m: number | null
-        }
-        Insert: {
-          ai_confidence?: number | null
-          analyzed_at?: string | null
-          awc_range?: string | null
-          created_at?: string | null
-          depth_m?: number | null
-          ec_ds_m?: number | null
-          id?: number
-          moisture_pct_ai?: number | null
-          moisture_pct_user?: number | null
-          name: string
-          photo_path?: string | null
-          predicted_texture?: string | null
-          profile_id: number
-          smd_range?: string | null
-          width_m?: number | null
-        }
-        Update: {
-          ai_confidence?: number | null
-          analyzed_at?: string | null
-          awc_range?: string | null
-          created_at?: string | null
-          depth_m?: number | null
-          ec_ds_m?: number | null
-          id?: number
-          moisture_pct_ai?: number | null
-          moisture_pct_user?: number | null
-          name?: string
-          photo_path?: string | null
-          predicted_texture?: string | null
-          profile_id?: number | null
-          smd_range?: string | null
-          width_m?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'soil_sections_profile_id_fkey'
-            columns: ['profile_id']
-            isOneToOne: false
-            referencedRelation: 'soil_profiles'
             referencedColumns: ['id']
           }
         ]
