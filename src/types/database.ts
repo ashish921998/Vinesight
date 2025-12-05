@@ -14,7 +14,7 @@ export type Database = {
           acknowledged_at: string | null
           action_required: string | null
           alert_type: string
-          created_at: string | null
+          created_at: string
           deadline: string | null
           farm_id: number | null
           id: number
@@ -160,7 +160,7 @@ export type Database = {
           summary: string | null
           title: string
           topic_category: string | null
-          updated_at: string | null
+          updated_at: string
           user_id: string | null
         }
         Insert: {

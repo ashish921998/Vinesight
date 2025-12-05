@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -111,6 +111,8 @@ export function FarmModal({
     locationName: editingFarm?.locationName || ''
   }))
 
+  const [soilCompositionWarning, setSoilCompositionWarning] = useState<string | null>(null)
+
   // Update form data when editingFarm prop changes
   useEffect(() => {
     if (editingFarm) {
@@ -172,6 +174,28 @@ export function FarmModal({
       })
     }
   }, [editingFarm])
+
+  const soilCompositionSum = useMemo(() => {
+    const sand = parseFloat(formData.sandPercentage)
+    const silt = parseFloat(formData.siltPercentage)
+    const clay = parseFloat(formData.clayPercentage)
+    if ([sand, silt, clay].some((value) => Number.isNaN(value))) {
+      return null
+    }
+    return sand + silt + clay
+  }, [formData.sandPercentage, formData.siltPercentage, formData.clayPercentage])
+
+  useEffect(() => {
+    if (soilCompositionSum === null) {
+      setSoilCompositionWarning(null)
+      return
+    }
+    if (soilCompositionSum < 95 || soilCompositionSum > 105) {
+      setSoilCompositionWarning('Sand + silt + clay should total roughly 100%')
+    } else {
+      setSoilCompositionWarning(null)
+    }
+  }, [soilCompositionSum])
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     if (field === 'dateOfPruning') {
@@ -580,6 +604,9 @@ export function FarmModal({
                     placeholder="45.5"
                     className="mt-1 h-11"
                   />
+                  {soilCompositionWarning && (
+                    <p className="text-xs text-amber-600 mt-1">{soilCompositionWarning}</p>
+                  )}
                 </div>
               </div>
             </div>

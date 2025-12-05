@@ -71,8 +71,8 @@ export interface DatabaseFarm {
   silt_percentage?: number | null
   clay_percentage?: number | null
   date_of_pruning?: string | null
-  created_at?: string | null
-  updated_at?: string | null
+  created_at: string
+  updated_at: string
 }
 ```
 
