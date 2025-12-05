@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { SEOSchema } from '@/components/SEOSchema'
+import { SUPPORT_EMAIL } from '@/lib/constants'
 
 export default function TermsOfServicePage() {
   return (
@@ -473,12 +474,12 @@ export default function TermsOfServicePage() {
                 <div className="text-center">
                   <Mail className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
                   <p className="font-semibold text-gray-900">Support & Legal</p>
-                  <p className="text-sm text-gray-600">ashish921998@zohomail.in</p>
+                  <p className="text-sm text-gray-600">{SUPPORT_EMAIL}</p>
                 </div>
                 <div className="text-center">
                   <Shield className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
                   <p className="font-semibold text-gray-900">Security</p>
-                  <p className="text-sm text-gray-600">ashish921998@zohomail.in</p>
+                  <p className="text-sm text-gray-600">{SUPPORT_EMAIL}</p>
                 </div>
               </div>
             </CardContent>

@@ -2,6 +2,8 @@
  * Application-wide constants
  */
 
+export const SUPPORT_EMAIL = 'ashish921998@zohomail.in'
+
 // Number system constants
 export const NUMBER_SYSTEM = {
   // Used for parseInt() to ensure base-10 parsing and avoid octal interpretation

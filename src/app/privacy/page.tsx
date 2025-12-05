@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { SEOSchema } from '@/components/SEOSchema'
+import { SUPPORT_EMAIL } from '@/lib/constants'
 
 export default function PrivacyPolicyPage() {
   return (
@@ -125,7 +126,7 @@ export default function PrivacyPolicyPage() {
                 <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5" />
                 <span className="text-sm">
                   Account deletion is available in-app: Settings → Account → Delete account. You can
-                  also email privacy@farmai.app.
+                  also email {SUPPORT_EMAIL}.
                 </span>
               </li>
               <li className="flex items-start gap-2">
@@ -537,8 +538,8 @@ export default function PrivacyPolicyPage() {
                     <li className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
                       <span className="text-sm">
-                        Request deletion from iOS in Settings → Account → Delete account, or email
-                        privacy@farmai.app
+                        Request deletion from iOS in Settings → Account → Delete account, or email{' '}
+                        {SUPPORT_EMAIL}
                       </span>
                     </li>
                   </ul>
@@ -669,12 +670,12 @@ export default function PrivacyPolicyPage() {
                 <div className="text-center">
                   <Mail className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
                   <p className="font-semibold text-gray-900">Privacy & Support</p>
-                  <p className="text-sm text-gray-600">privacy@farmai.app</p>
+                  <p className="text-sm text-gray-600">{SUPPORT_EMAIL}</p>
                 </div>
                 <div className="text-center">
                   <Shield className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
                   <p className="font-semibold text-gray-900">Security</p>
-                  <p className="text-sm text-gray-600">security@farmai.app</p>
+                  <p className="text-sm text-gray-600">{SUPPORT_EMAIL}</p>
                 </div>
               </div>
             </CardContent>

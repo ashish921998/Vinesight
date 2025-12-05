@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SEOSchema } from '@/components/SEOSchema'
 import Link from 'next/link'
 import { ArrowLeft, HelpCircle, Mail, MessageCircle, ShieldCheck } from 'lucide-react'
-
-const SUPPORT_EMAIL = 'ashish921998@zohomail.in'
+import { SUPPORT_EMAIL } from '@/lib/constants'
 
 const quickFaqs = [
   {
@@ -21,8 +20,7 @@ const quickFaqs = [
   },
   {
     question: 'Where can I report a bug?',
-    answer:
-      'Send screenshots or a short description to ashish921998@zohomail.in. Include the farm name and the time the issue occurred so we can investigate quickly.'
+    answer: `Send screenshots or a short description to ${SUPPORT_EMAIL}. Include the farm name and the time the issue occurred so we can investigate quickly.`
   }
 ]
 
@@ -79,10 +77,10 @@ export default function HelpCenter() {
                 </a>
               </Button>
               <Button asChild variant="outline">
-                <a href="https://vinesight.vercel.app/privacy" rel="noreferrer">
+                <Link href="/privacy">
                   <ShieldCheck className="mr-2 h-4 w-4" />
                   View privacy policy
-                </a>
+                </Link>
               </Button>
             </div>
             <div className="rounded-lg bg-emerald-50 p-4 text-sm text-emerald-900">
