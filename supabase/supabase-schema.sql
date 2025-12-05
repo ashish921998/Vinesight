@@ -35,8 +35,8 @@ CREATE TABLE farms (
   silt_percentage DECIMAL(7,2),
   clay_percentage DECIMAL(7,2),
   date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 -- Create irrigation_records table

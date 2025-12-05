@@ -473,12 +473,12 @@ export default function TermsOfServicePage() {
                 <div className="text-center">
                   <Mail className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
                   <p className="font-semibold text-gray-900">Support & Legal</p>
-                  <p className="text-sm text-gray-600">support@farmai.app</p>
+                  <p className="text-sm text-gray-600">ashish921998@zohomail.in</p>
                 </div>
                 <div className="text-center">
                   <Shield className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
                   <p className="font-semibold text-gray-900">Security</p>
-                  <p className="text-sm text-gray-600">security@farmai.app</p>
+                  <p className="text-sm text-gray-600">ashish921998@zohomail.in</p>
                 </div>
               </div>
             </CardContent>
