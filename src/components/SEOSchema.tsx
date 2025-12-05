@@ -3,12 +3,11 @@
 import { SEO_KEYWORDS } from '@/lib/seo-constants'
 
 interface SEOSchemaProps {
-  type?: 'homepage' | 'dashboard' | 'calculator' | 'guide' | 'product'
+  type?: 'homepage' | 'dashboard' | 'calculator' | 'guide' | 'product' | 'help'
   title?: string
   description?: string
   url?: string
   image?: string
-  calculatorType?: string
   guideCategory?: string
 }
 
@@ -171,7 +170,6 @@ export function SEOSchema({
   description,
   url,
   image,
-  calculatorType,
   guideCategory
 }: SEOSchemaProps) {
   const baseSchema: BaseSchema = {
