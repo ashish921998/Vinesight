@@ -121,7 +121,8 @@ CREATE TABLE profitability_analyses (
 CREATE TABLE market_intelligence (
   id SERIAL PRIMARY KEY,
   region TEXT NOT NULL,
-  grape_variety TEXT,
+  crop TEXT,
+  crop_variety TEXT,
   price_data JSONB, -- Historical and current prices
   quality_premiums JSONB, -- Grade-based price differences
   demand_forecast JSONB, -- Predicted market demand
@@ -327,7 +328,7 @@ interface ProfitabilityAnalysis {
 interface MarketIntelligence {
   id: string
   region: string
-  grapeVariety?: string
+  cropVariety?: string
 
   priceData: {
     current: number
@@ -371,8 +372,9 @@ interface CommunityInsight {
   farmCharacteristics: {
     region: string
     farmSize: 'small' | 'medium' | 'large'
-    grapeVariety: string
+    cropVariety: string
     soilType: string
+    waterRetention: string
     climaticConditions: string
   }
 

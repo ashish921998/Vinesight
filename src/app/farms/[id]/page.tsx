@@ -150,7 +150,6 @@ export default function FarmDetailsPage() {
     id: number | null
     notes: string
   } | null>(null)
-
   // Farm edit modal states
   const [showFarmModal, setShowFarmModal] = useState(false)
   const [editingFarm, setEditingFarm] = useState<Farm | null>(null)
@@ -1625,7 +1624,8 @@ export default function FarmDetailsPage() {
     { label: 'Logs', icon: NotebookText, href: `/farms/${farmId}/logs` },
     { label: 'AI', icon: Brain, href: '/ai-assistant' },
     { label: 'Lab tests', icon: FlaskConical, href: `/farms/${farmId}/lab-tests` },
-    { label: 'Reports', icon: BarChart3, href: '/reports' }
+    { label: 'Reports', icon: BarChart3, href: '/reports' },
+    { label: 'Soil profiling', icon: Droplets, href: `/farms/${farmId}/soil-profiling` }
   ]
 
   const renderWorkTabs = () => (
@@ -1640,7 +1640,7 @@ export default function FarmDetailsPage() {
               Switch between today’s plan and recent logs.
             </p>
           </div>
-          <div className="grid grid-cols-4 gap-1.5 rounded-2xl border border-border/60 bg-muted/20 p-1.5">
+          <div className="grid grid-cols-5 gap-1.5 rounded-2xl border border-border/60 bg-muted/20 p-1.5">
             {moduleShortcuts.map((link) => {
               const Icon = link.icon
               return (

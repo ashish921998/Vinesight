@@ -23,7 +23,8 @@ import {
   Eye,
   BarChart3,
   RefreshCw,
-  Activity
+  Activity,
+  Droplets
 } from 'lucide-react'
 import { AIInsightsService, type AIInsight } from '@/lib/ai-insights-service'
 import { SupabaseService } from '@/lib/supabase-service'
@@ -473,6 +474,15 @@ export default function AIInsightsPage() {
                   {criticalInsights} High Priority
                 </Badge>
               )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="inline-flex items-center gap-2"
+                onClick={() => router.push(`/farms/${farmId}/soil-profiling`)}
+              >
+                <Droplets className="h-4 w-4" />
+                Soil profiling
+              </Button>
               <Button variant="outline" size="sm" onClick={loadData}>
                 <RefreshCw className="h-4 w-4" />
               </Button>

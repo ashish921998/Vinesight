@@ -14,6 +14,7 @@ import TestimonialsSection from '../components/testimonials-section'
 import FAQSection from '../components/faq-section'
 import PricingSection from '../components/pricing-section'
 import CTASection from '../components/cta-section'
+import Link from 'next/link'
 
 // Reusable Badge Component
 function Badge({ icon, text }: { icon: React.ReactNode; text: string }) {
@@ -101,7 +102,7 @@ export default function LandingPage() {
 
   return (
     <div className="w-full min-h-screen relative bg-[#F7F5F3] overflow-x-hidden flex flex-col justify-start items-center">
-      <div className="relative flex flex-col justify-start items-center w-full">
+      <div className="relative flex flex-col justify-start items-center w-full flex-1">
         {/* Main container with proper margins */}
         <div className="w-full max-w-none px-4 sm:px-6 md:px-8 lg:px-0 lg:max-w-[1060px] lg:w-[1060px] relative flex flex-col justify-start items-start min-h-screen">
           {/* Left vertical line */}
@@ -508,6 +509,19 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
+      <footer className="w-full border-t border-[rgba(55,50,47,0.12)] bg-white/60 backdrop-blur py-6 mt-10">
+        <div className="max-w-[1060px] mx-auto flex flex-col sm:flex-row items-center justify-between px-6 text-sm text-[#4A4A4A] gap-3">
+          <span>© {new Date().getFullYear()} Vinesight. All rights reserved.</span>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="underline-offset-4 hover:underline">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="underline-offset-4 hover:underline">
+              Terms of Service
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

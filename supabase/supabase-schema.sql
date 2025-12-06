@@ -7,17 +7,36 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Create farms table
 CREATE TABLE farms (
   id BIGSERIAL PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   region VARCHAR(255) NOT NULL,
   area DECIMAL(10,2) NOT NULL, -- in hectares
-  grape_variety VARCHAR(255) NOT NULL,
+  crop VARCHAR(255) NOT NULL,
+  crop_variety VARCHAR(255) NOT NULL,
   planting_date DATE NOT NULL,
-  vine_spacing DECIMAL(5,2) NOT NULL, -- in meters
-  row_spacing DECIMAL(5,2) NOT NULL, -- in meters
+  vine_spacing DECIMAL(5,2), -- in meters
+  row_spacing DECIMAL(5,2), -- in meters
+  total_tank_capacity DECIMAL(12,2),
+  system_discharge DECIMAL(10,4),
+  remaining_water DECIMAL(12,2),
+  water_calculation_updated_at TIMESTAMP WITH TIME ZONE,
+  latitude DECIMAL(10,6),
+  longitude DECIMAL(10,6),
+  elevation DECIMAL(8,2),
+  timezone VARCHAR(50),
+  location_name VARCHAR(255),
+  location_source VARCHAR(50),
+  location_updated_at TIMESTAMP WITH TIME ZONE,
+  bulk_density DECIMAL(6,4),
+  cation_exchange_capacity DECIMAL(7,3),
+  soil_water_retention DECIMAL(7,2),
+  soil_texture_class VARCHAR(100),
+  sand_percentage DECIMAL(7,2),
+  silt_percentage DECIMAL(7,2),
+  clay_percentage DECIMAL(7,2),
   date_of_pruning DATE, -- Date when pruning was done (used as reference for log calculations)
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 -- Create irrigation_records table
@@ -253,6 +272,15 @@ CREATE TABLE petiole_test_records (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Soil profile tables
+CREATE TABLE soil_profiles (
+  id BIGSERIAL PRIMARY KEY,
+  farm_id BIGINT NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
+  fusarium_pct REAL,
+  sections JSONB NOT NULL DEFAULT '[]'::JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX idx_farms_user_id ON farms(user_id);
 CREATE INDEX idx_farms_date_of_pruning ON farms(date_of_pruning);
@@ -280,6 +308,7 @@ CREATE INDEX idx_soil_test_records_date_of_pruning ON soil_test_records(date_of_
 CREATE INDEX idx_petiole_test_records_farm_id ON petiole_test_records(farm_id);
 CREATE INDEX idx_petiole_test_records_date ON petiole_test_records(date);
 CREATE INDEX idx_petiole_test_records_date_of_pruning ON petiole_test_records(date_of_pruning);
+CREATE INDEX idx_soil_profiles_farm_id ON soil_profiles(farm_id);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE farms ENABLE ROW LEVEL SECURITY;
@@ -292,6 +321,7 @@ ALTER TABLE calculation_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE task_reminders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE soil_test_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE petiole_test_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE soil_profiles ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for farms table
 CREATE POLICY "Users can view their own farms" ON farms FOR SELECT USING (auth.uid() = user_id);
@@ -458,6 +488,20 @@ CREATE POLICY "Users can delete petiole test records for their farms" ON petiole
   EXISTS (SELECT 1 FROM farms WHERE farms.id = petiole_test_records.farm_id AND farms.user_id = auth.uid())
 );
 
+-- Soil profiles
+CREATE POLICY "Users can view their soil profiles" ON soil_profiles FOR SELECT USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_profiles.farm_id AND farms.user_id = auth.uid())
+);
+CREATE POLICY "Users can insert soil profiles" ON soil_profiles FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_profiles.farm_id AND farms.user_id = auth.uid())
+);
+CREATE POLICY "Users can update their soil profiles" ON soil_profiles FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_profiles.farm_id AND farms.user_id = auth.uid())
+);
+CREATE POLICY "Users can delete their soil profiles" ON soil_profiles FOR DELETE USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_profiles.farm_id AND farms.user_id = auth.uid())
+);
+
 -- Function to automatically update the updated_at column
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -587,8 +631,8 @@ GRANT EXECUTE ON FUNCTION confirm_settlement_atomic(INTEGER) TO authenticated;
 -- Insert some sample data (optional - you can remove this section)
 -- Note: This will only work after you set up authentication
 /*
-INSERT INTO farms (name, region, area, grape_variety, planting_date, vine_spacing, row_spacing, user_id) VALUES
-('Nashik Vineyard Main', 'Nashik, Maharashtra', 2.5, 'Thompson Seedless', '2020-03-15', 3.0, 9.0, auth.uid()),
-('Pune Valley Farm', 'Pune, Maharashtra', 1.8, 'Flame Seedless', '2019-11-20', 2.5, 8.0, auth.uid()),
-('Sangli Export Vineyard', 'Sangli, Maharashtra', 4.2, 'Red Globe', '2018-12-10', 3.5, 10.0, auth.uid());
+INSERT INTO farms (name, region, area, crop, crop_variety, planting_date, vine_spacing, row_spacing, user_id) VALUES
+('Nashik Vineyard Main', 'Nashik, Maharashtra', 2.5, 'Grapes', 'Thompson Seedless', '2020-03-15', 3.0, 9.0, auth.uid()),
+('Pune Valley Farm', 'Pune, Maharashtra', 1.8, 'Grapes', 'Flame Seedless', '2019-11-20', 2.5, 8.0, auth.uid()),
+('Sangli Export Vineyard', 'Sangli, Maharashtra', 4.2, 'Grapes', 'Red Globe', '2018-12-10', 3.5, 10.0, auth.uid());
 */

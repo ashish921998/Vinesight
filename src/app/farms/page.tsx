@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, Trash2, Edit, Sprout, MapPin, MoreVertical, ChevronRight } from 'lucide-react'
+import { toast } from 'sonner'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { SupabaseService } from '@/lib/supabase-service'
 import type { Farm } from '@/types/types'
@@ -55,6 +56,7 @@ export default function FarmsPage() {
       closeModal()
     } catch (error) {
       console.error('Error saving farm:', error)
+      toast.error(getFarmSaveErrorMessage(error))
       throw error // Re-throw to let modal handle the error
     } finally {
       setSubmitLoading(false)
@@ -89,6 +91,33 @@ export default function FarmsPage() {
   const closeModal = () => {
     setShowModal(false)
     setEditingFarm(null)
+  }
+
+  const getFarmSaveErrorMessage = (error: unknown): string => {
+    if (!error) {
+      return 'Failed to save farm. Please check the values and try again.'
+    }
+
+    if (typeof error === 'string') {
+      return error
+    }
+
+    if (error instanceof Error) {
+      return error.message
+    }
+
+    if (typeof error === 'object') {
+      const typedError = error as Record<string, unknown>
+      const message =
+        (typeof typedError.message === 'string' && typedError.message) ||
+        (typeof typedError.details === 'string' && typedError.details) ||
+        (typeof typedError.hint === 'string' && typedError.hint)
+      if (message) {
+        return message
+      }
+    }
+
+    return 'Failed to save farm. Please check the values and try again.'
   }
 
   return (

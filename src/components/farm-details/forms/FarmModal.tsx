@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,13 @@ import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 import { LocationForm } from '@/components/calculators/ETc/LocationForm'
 import { Combobox } from '@/components/ui/combobox'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { getAllCrops, getVarietiesForCrop, getDefaultVariety } from '@/lib/crop-data'
 import type { LocationResult } from '@/lib/open-meteo-geocoding'
 import type { Farm } from '@/types/types'
@@ -38,6 +45,13 @@ interface FormData {
   totalTankCapacity: string
   systemDischarge: string
   dateOfPruning?: Date
+  bulkDensity: string
+  cationExchangeCapacity: string
+  soilWaterRetention: string
+  soilTextureClass: string
+  sandPercentage: string
+  siltPercentage: string
+  clayPercentage: string
 }
 
 interface LocationData {
@@ -46,6 +60,21 @@ interface LocationData {
   elevation: string
   locationName: string
 }
+
+const SOIL_TEXTURE_OPTIONS = [
+  'Sand',
+  'Loamy sand',
+  'Sandy loam',
+  'Loam',
+  'Silt loam',
+  'Silt',
+  'Sandy clay loam',
+  'Clay loam',
+  'Silty clay loam',
+  'Sandy clay',
+  'Silty clay',
+  'Clay'
+] as const
 
 export function FarmModal({
   isOpen,
@@ -65,7 +94,14 @@ export function FarmModal({
     rowSpacing: editingFarm?.rowSpacing?.toString() || '',
     totalTankCapacity: editingFarm?.totalTankCapacity?.toString() || '',
     systemDischarge: editingFarm?.systemDischarge?.toString() || '',
-    dateOfPruning: editingFarm?.dateOfPruning || new Date()
+    dateOfPruning: editingFarm?.dateOfPruning || new Date(),
+    bulkDensity: editingFarm?.bulkDensity?.toString() || '',
+    cationExchangeCapacity: editingFarm?.cationExchangeCapacity?.toString() || '',
+    soilWaterRetention: editingFarm?.soilWaterRetention?.toString() || '',
+    soilTextureClass: editingFarm?.soilTextureClass || '',
+    sandPercentage: editingFarm?.sandPercentage?.toString() || '',
+    siltPercentage: editingFarm?.siltPercentage?.toString() || '',
+    clayPercentage: editingFarm?.clayPercentage?.toString() || ''
   }))
 
   const [locationData, setLocationData] = useState<LocationData>(() => ({
@@ -74,6 +110,8 @@ export function FarmModal({
     elevation: editingFarm?.elevation?.toString() || '',
     locationName: editingFarm?.locationName || ''
   }))
+
+  const [soilCompositionWarning, setSoilCompositionWarning] = useState<string | null>(null)
 
   // Update form data when editingFarm prop changes
   useEffect(() => {
@@ -89,7 +127,14 @@ export function FarmModal({
         rowSpacing: editingFarm.rowSpacing?.toString() || '',
         totalTankCapacity: editingFarm.totalTankCapacity?.toString() || '',
         systemDischarge: editingFarm.systemDischarge?.toString() || '',
-        dateOfPruning: editingFarm.dateOfPruning || new Date()
+        dateOfPruning: editingFarm.dateOfPruning || new Date(),
+        bulkDensity: editingFarm.bulkDensity?.toString() || '',
+        cationExchangeCapacity: editingFarm.cationExchangeCapacity?.toString() || '',
+        soilWaterRetention: editingFarm.soilWaterRetention?.toString() || '',
+        soilTextureClass: editingFarm.soilTextureClass || '',
+        sandPercentage: editingFarm.sandPercentage?.toString() || '',
+        siltPercentage: editingFarm.siltPercentage?.toString() || '',
+        clayPercentage: editingFarm.clayPercentage?.toString() || ''
       })
 
       setLocationData({
@@ -111,7 +156,14 @@ export function FarmModal({
         rowSpacing: '',
         totalTankCapacity: '',
         systemDischarge: '',
-        dateOfPruning: new Date()
+        dateOfPruning: new Date(),
+        bulkDensity: '',
+        cationExchangeCapacity: '',
+        soilWaterRetention: '',
+        soilTextureClass: '',
+        sandPercentage: '',
+        siltPercentage: '',
+        clayPercentage: ''
       })
 
       setLocationData({
@@ -122,6 +174,28 @@ export function FarmModal({
       })
     }
   }, [editingFarm])
+
+  const soilCompositionSum = useMemo(() => {
+    const sand = parseFloat(formData.sandPercentage)
+    const silt = parseFloat(formData.siltPercentage)
+    const clay = parseFloat(formData.clayPercentage)
+    if ([sand, silt, clay].some((value) => Number.isNaN(value))) {
+      return null
+    }
+    return sand + silt + clay
+  }, [formData.sandPercentage, formData.siltPercentage, formData.clayPercentage])
+
+  useEffect(() => {
+    if (soilCompositionSum === null) {
+      setSoilCompositionWarning(null)
+      return
+    }
+    if (soilCompositionSum < 95 || soilCompositionSum > 105) {
+      setSoilCompositionWarning('Sand + silt + clay should total roughly 100%')
+    } else {
+      setSoilCompositionWarning(null)
+    }
+  }, [soilCompositionSum])
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     if (field === 'dateOfPruning') {
@@ -176,6 +250,17 @@ export function FarmModal({
         : undefined,
       systemDischarge: formData.systemDischarge ? parseFloat(formData.systemDischarge) : undefined,
       dateOfPruning: formData.dateOfPruning || undefined,
+      bulkDensity: formData.bulkDensity ? parseFloat(formData.bulkDensity) : undefined,
+      cationExchangeCapacity: formData.cationExchangeCapacity
+        ? parseFloat(formData.cationExchangeCapacity)
+        : undefined,
+      soilWaterRetention: formData.soilWaterRetention
+        ? parseFloat(formData.soilWaterRetention)
+        : undefined,
+      soilTextureClass: formData.soilTextureClass || undefined,
+      sandPercentage: formData.sandPercentage ? parseFloat(formData.sandPercentage) : undefined,
+      siltPercentage: formData.siltPercentage ? parseFloat(formData.siltPercentage) : undefined,
+      clayPercentage: formData.clayPercentage ? parseFloat(formData.clayPercentage) : undefined,
       latitude: locationData.latitude ? parseFloat(locationData.latitude) : undefined,
       longitude: locationData.longitude ? parseFloat(locationData.longitude) : undefined,
       elevation: locationData.elevation ? parseInt(locationData.elevation) : undefined,
@@ -388,6 +473,142 @@ export function FarmModal({
               <p className="text-xs text-gray-500 mt-1">
                 Optional: Default irrigation system discharge rate
               </p>
+            </div>
+
+            {/* Soil Physical Properties */}
+            <div className="pt-4 border-t border-gray-200">
+              <div className="mb-3">
+                <h4 className="text-sm font-medium text-gray-700 mb-1">
+                  Soil Physical Properties (Optional)
+                </h4>
+                <p className="text-xs text-gray-500">
+                  Capture key lab parameters to pre-fill soil profiling dashboards
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="bulkDensity" className="text-sm font-medium text-gray-700">
+                    Bulk Density (g/mL)
+                  </Label>
+                  <Input
+                    id="bulkDensity"
+                    type="number"
+                    step="0.0001"
+                    min={0.5}
+                    max={3}
+                    value={formData.bulkDensity}
+                    onChange={(e) => handleInputChange('bulkDensity', e.target.value)}
+                    placeholder="1.06"
+                    className="mt-1 h-11"
+                  />
+                </div>
+                <div>
+                  <Label
+                    htmlFor="cationExchangeCapacity"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Cation Exchange Capacity (meq/100g)
+                  </Label>
+                  <Input
+                    id="cationExchangeCapacity"
+                    type="number"
+                    step="0.1"
+                    min={0}
+                    max={200}
+                    value={formData.cationExchangeCapacity}
+                    onChange={(e) => handleInputChange('cationExchangeCapacity', e.target.value)}
+                    placeholder="50"
+                    className="mt-1 h-11"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="soilWaterRetention" className="text-sm font-medium text-gray-700">
+                    Soil Water Retention (mm/m)
+                  </Label>
+                  <Input
+                    id="soilWaterRetention"
+                    type="number"
+                    step="1"
+                    min={0}
+                    max={500}
+                    value={formData.soilWaterRetention}
+                    onChange={(e) => handleInputChange('soilWaterRetention', e.target.value)}
+                    placeholder="170"
+                    className="mt-1 h-11"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="soilTextureClass" className="text-sm font-medium text-gray-700">
+                    Soil Texture Class
+                  </Label>
+                  <Select
+                    value={formData.soilTextureClass}
+                    onValueChange={(value) => handleInputChange('soilTextureClass', value)}
+                  >
+                    <SelectTrigger id="soilTextureClass" className="mt-1 h-11">
+                      <SelectValue placeholder="Select texture class" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SOIL_TEXTURE_OPTIONS.map((texture) => (
+                        <SelectItem key={texture} value={texture}>
+                          {texture}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="sandPercentage" className="text-sm font-medium text-gray-700">
+                    Sand (%)
+                  </Label>
+                  <Input
+                    id="sandPercentage"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={formData.sandPercentage}
+                    onChange={(e) => handleInputChange('sandPercentage', e.target.value)}
+                    placeholder="27.5"
+                    className="mt-1 h-11"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="siltPercentage" className="text-sm font-medium text-gray-700">
+                    Silt (%)
+                  </Label>
+                  <Input
+                    id="siltPercentage"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={formData.siltPercentage}
+                    onChange={(e) => handleInputChange('siltPercentage', e.target.value)}
+                    placeholder="27.0"
+                    className="mt-1 h-11"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="clayPercentage" className="text-sm font-medium text-gray-700">
+                    Clay (%)
+                  </Label>
+                  <Input
+                    id="clayPercentage"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={formData.clayPercentage}
+                    onChange={(e) => handleInputChange('clayPercentage', e.target.value)}
+                    placeholder="45.5"
+                    className="mt-1 h-11"
+                  />
+                  {soilCompositionWarning && (
+                    <p className="text-xs text-amber-600 mt-1">{soilCompositionWarning}</p>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Pruning Section */}

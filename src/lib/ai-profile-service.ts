@@ -355,7 +355,7 @@ export class AIProfileService {
           risk_tolerance,
           decision_patterns,
           success_metrics,
-          farms!inner(region, area, grape_variety)
+          farms!inner(region, area, crop_variety)
         `)
 
       if (region) {

@@ -146,6 +146,9 @@ export class SystemDischargeCalculator {
     vinesPerHa: number
     totalVines: number
   } {
+    if (vineSpacing <= 0 || rowSpacing <= 0) {
+      throw new Error('Vine spacing and row spacing must be greater than 0')
+    }
     const vinesPerHa = 10000 / (vineSpacing * rowSpacing)
     const totalVines = vinesPerHa * farmArea
     return { vinesPerHa, totalVines }

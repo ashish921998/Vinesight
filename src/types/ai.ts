@@ -212,8 +212,9 @@ export interface CommunityInsight {
   farmCharacteristics: {
     region: string
     farmSize: 'small' | 'medium' | 'large'
-    grapeVariety: string
+    cropVariety: string
     soilType: string
+    waterRetention: string
     climaticConditions: string
   }
 

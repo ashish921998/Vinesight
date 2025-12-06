@@ -13,7 +13,9 @@ import type {
   CalculationHistory,
   SoilTestRecord,
   PetioleTestRecord,
-  DailyNoteRecord
+  DailyNoteRecord,
+  SoilProfile,
+  SoilSection
 } from './supabase'
 import { taskReminderFromDB } from '@/types/types'
 import type { TaskReminder, Farm } from '@/types/types'
@@ -30,7 +32,9 @@ export type {
   CalculationHistory,
   SoilTestRecord,
   PetioleTestRecord,
-  DailyNoteRecord
+  DailyNoteRecord,
+  SoilProfile,
+  SoilSection
 }
 
 // Extract database table types
@@ -105,6 +109,10 @@ export type DatabaseSoilTestRecordInsert =
 export type DatabaseSoilTestRecordUpdate =
   Database['public']['Tables']['soil_test_records']['Update']
 
+export type DatabaseSoilProfile = Database['public']['Tables']['soil_profiles']['Row']
+export type DatabaseSoilProfileInsert = Database['public']['Tables']['soil_profiles']['Insert']
+export type DatabaseSoilProfileUpdate = Database['public']['Tables']['soil_profiles']['Update']
+
 // Petiole Test Record database types
 export type DatabasePetioleTestRecord = Database['public']['Tables']['petiole_test_records']['Row']
 export type DatabasePetioleTestRecordInsert =
@@ -122,6 +130,20 @@ const dateToISOString = (dateValue: any): string | null => {
     return dateValue
   }
   return null
+}
+
+const serializeSoilSections = (sections?: SoilSection[]): Json => {
+  const plainSections = (sections ?? []).map((section) => ({
+    name: section.name,
+    depth_m: section.depth_m ?? null,
+    width_m: section.width_m ?? null,
+    photo_path: section.photo_path ?? null,
+    photo_preview: section.photo_preview ?? null,
+    ec_ds_m: section.ec_ds_m ?? null,
+    moisture_pct_user: section.moisture_pct_user,
+    created_at: section.created_at ?? null
+  }))
+  return plainSections as Json
 }
 
 // Type conversion utilities
@@ -150,7 +172,14 @@ export function toApplicationFarm(dbFarm: DatabaseFarm): Farm {
     createdAt: dbFarm.created_at ?? undefined,
     updatedAt: dbFarm.updated_at ?? undefined,
     userId: dbFarm.user_id ?? undefined,
-    dateOfPruning: dbFarm.date_of_pruning ? new Date(dbFarm.date_of_pruning) : undefined
+    dateOfPruning: dbFarm.date_of_pruning ? new Date(dbFarm.date_of_pruning) : undefined,
+    bulkDensity: dbFarm.bulk_density ?? undefined,
+    cationExchangeCapacity: dbFarm.cation_exchange_capacity ?? undefined,
+    soilWaterRetention: dbFarm.soil_water_retention ?? undefined,
+    soilTextureClass: dbFarm.soil_texture_class ?? undefined,
+    sandPercentage: dbFarm.sand_percentage ?? undefined,
+    siltPercentage: dbFarm.silt_percentage ?? undefined,
+    clayPercentage: dbFarm.clay_percentage ?? undefined
   }
 }
 
@@ -165,8 +194,8 @@ export function toDatabaseFarmInsert(
     area: appFarm.area,
     crop_variety: appFarm.cropVariety,
     planting_date: appFarm.plantingDate,
-    vine_spacing: appFarm.vineSpacing || 0,
-    row_spacing: appFarm.rowSpacing || 0,
+    vine_spacing: appFarm.vineSpacing ?? null,
+    row_spacing: appFarm.rowSpacing ?? null,
     total_tank_capacity: appFarm.totalTankCapacity || null,
     system_discharge: appFarm.systemDischarge || null,
     remaining_water: appFarm.remainingWater || null,
@@ -179,7 +208,14 @@ export function toDatabaseFarmInsert(
     location_source: appFarm.locationSource || null,
     location_updated_at: appFarm.locationUpdatedAt || null,
     user_id: appFarm.user_id || null,
-    date_of_pruning: dateToISOString(appFarm.dateOfPruning) as any
+    date_of_pruning: dateToISOString(appFarm.dateOfPruning),
+    bulk_density: appFarm.bulkDensity ?? null,
+    cation_exchange_capacity: appFarm.cationExchangeCapacity ?? null,
+    soil_water_retention: appFarm.soilWaterRetention ?? null,
+    soil_texture_class: appFarm.soilTextureClass || null,
+    sand_percentage: appFarm.sandPercentage ?? null,
+    silt_percentage: appFarm.siltPercentage ?? null,
+    clay_percentage: appFarm.clayPercentage ?? null
   } as DatabaseFarmInsert
 }
 
@@ -222,11 +258,25 @@ export function toDatabaseFarmUpdate(appFarmUpdates: Partial<Farm>): DatabaseFar
             ? dateValue
             : null
 
-      update.date_of_pruning = dateString as any
+      update.date_of_pruning = dateString
     } else {
-      update.date_of_pruning = null as any
+      update.date_of_pruning = null
     }
   }
+  if (appFarmUpdates.bulkDensity !== undefined)
+    update.bulk_density = appFarmUpdates.bulkDensity ?? null
+  if (appFarmUpdates.cationExchangeCapacity !== undefined)
+    update.cation_exchange_capacity = appFarmUpdates.cationExchangeCapacity ?? null
+  if (appFarmUpdates.soilWaterRetention !== undefined)
+    update.soil_water_retention = appFarmUpdates.soilWaterRetention ?? null
+  if (appFarmUpdates.soilTextureClass !== undefined)
+    update.soil_texture_class = appFarmUpdates.soilTextureClass || null
+  if (appFarmUpdates.sandPercentage !== undefined)
+    update.sand_percentage = appFarmUpdates.sandPercentage ?? null
+  if (appFarmUpdates.siltPercentage !== undefined)
+    update.silt_percentage = appFarmUpdates.siltPercentage ?? null
+  if (appFarmUpdates.clayPercentage !== undefined)
+    update.clay_percentage = appFarmUpdates.clayPercentage ?? null
 
   return update as DatabaseFarmUpdate
 }
@@ -760,6 +810,41 @@ export function toDatabaseSoilTestUpdate(
   if (appUpdates.parsed_parameters !== undefined)
     update.parsed_parameters = appUpdates.parsed_parameters || null
   if (appUpdates.raw_notes !== undefined) update.raw_notes = appUpdates.raw_notes || null
+  return update
+}
+
+export function toApplicationSoilProfile(
+  dbRecord: DatabaseSoilProfile
+): import('./supabase').SoilProfile {
+  const sections = (dbRecord.sections as import('./supabase').SoilSection[] | null) || []
+  return {
+    id: dbRecord.id,
+    farm_id: dbRecord.farm_id,
+    fusarium_pct: dbRecord.fusarium_pct ?? undefined,
+    created_at: dbRecord.created_at ?? undefined,
+    sections
+  }
+}
+
+export function toDatabaseSoilProfileInsert(
+  appRecord: Omit<import('./supabase').SoilProfile, 'id' | 'created_at'>
+): DatabaseSoilProfileInsert {
+  return {
+    farm_id: appRecord.farm_id,
+    fusarium_pct: appRecord.fusarium_pct ?? null,
+    sections: serializeSoilSections(appRecord.sections)
+  }
+}
+
+export function toDatabaseSoilProfileUpdate(
+  appUpdates: Partial<import('./supabase').SoilProfile>
+): DatabaseSoilProfileUpdate {
+  const update: DatabaseSoilProfileUpdate = {}
+  if (appUpdates.farm_id !== undefined) update.farm_id = appUpdates.farm_id
+  if (appUpdates.fusarium_pct !== undefined) update.fusarium_pct = appUpdates.fusarium_pct ?? null
+  if (appUpdates.sections !== undefined) {
+    update.sections = serializeSoilSections(appUpdates.sections)
+  }
   return update
 }
 
