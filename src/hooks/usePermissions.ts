@@ -148,7 +148,8 @@ export function usePermissions(): PermissionHookReturn {
   }, [currentOrganization, userRole, userMembership])
 
   /**
-   * Get all permissions for a resource
+   * Get all permissions for a resource, normalized to ResourcePermissions shape
+   * Special permission types are mapped: invite→create, manage→update, remove→delete
    */
   const getResourcePermissions = useMemo(() => {
     return (resource: ResourceType): ResourcePermissions | null => {
@@ -171,8 +172,57 @@ export function usePermissions(): PermissionHookReturn {
         return null
       }
 
-      // Return as ResourcePermissions (may need conversion for special types)
-      return resourcePerms as ResourcePermissions
+      // Handle special permission types by transforming to ResourcePermissions shape
+      switch (resource) {
+        case 'users': {
+          // Map: invite→create, manage→update, remove→delete, read based on any permission
+          const userPerms = resourcePerms as { invite: boolean; manage: boolean; remove: boolean }
+          return {
+            create: userPerms.invite || false,
+            read: userPerms.invite || userPerms.manage || userPerms.remove || false,
+            update: userPerms.manage || false,
+            delete: userPerms.remove || false
+          }
+        }
+        case 'reports': {
+          // Map: generate→create, export→read (download), no update/delete
+          const reportPerms = resourcePerms as { generate: boolean; export: boolean }
+          return {
+            create: reportPerms.generate || false,
+            read: reportPerms.generate || reportPerms.export || false,
+            update: false,
+            delete: false
+          }
+        }
+        case 'ai_features': {
+          // Map: any AI feature → read access, chat→create (can initiate)
+          const aiPerms = resourcePerms as {
+            chat: boolean
+            disease_detection: boolean
+            analytics: boolean
+          }
+          const hasAnyAI = aiPerms.chat || aiPerms.disease_detection || aiPerms.analytics
+          return {
+            create: aiPerms.chat || false,
+            read: hasAnyAI || false,
+            update: false,
+            delete: false
+          }
+        }
+        case 'calculators': {
+          // Map: basic/advanced → read access
+          const calcPerms = resourcePerms as { basic: boolean; advanced: boolean }
+          return {
+            create: false,
+            read: calcPerms.basic || calcPerms.advanced || false,
+            update: false,
+            delete: false
+          }
+        }
+        default:
+          // Standard CRUD resources - already in ResourcePermissions shape
+          return resourcePerms as ResourcePermissions
+      }
     }
   }, [currentOrganization, userRole])
 
