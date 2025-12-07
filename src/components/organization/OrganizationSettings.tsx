@@ -350,6 +350,7 @@ export function OrganizationSettings() {
                     <AlertDialogDescription className="space-y-2">
                       <p>
                         This action cannot be undone. This will permanently delete the organization
+                        and all its data won&apos;t be accessible by anyone.
                         <strong> {currentOrganization.name}</strong> and remove all associated data
                         including:
                       </p>
@@ -367,7 +368,9 @@ export function OrganizationSettings() {
                   <Input
                     placeholder={currentOrganization.name}
                     onChange={(e) => {
-                      const button = document.getElementById('confirm-delete-btn') as HTMLButtonElement
+                      const button = document.getElementById(
+                        'confirm-delete-btn'
+                      ) as HTMLButtonElement
                       if (button) {
                         button.disabled = e.target.value !== currentOrganization.name
                       }

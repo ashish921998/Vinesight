@@ -311,7 +311,10 @@ export default function FarmsPage() {
                     Start by adding your first vineyard to begin tracking your farming operations
                   </p>
                   <CanCreate resource="farms">
-                    <Button onClick={handleAdd} className="h-12 px-6 bg-green-600 hover:bg-green-700">
+                    <Button
+                      onClick={handleAdd}
+                      className="h-12 px-6 bg-green-600 hover:bg-green-700"
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Your First Farm
                     </Button>

@@ -37,7 +37,27 @@ export type MemberStatus = (typeof MEMBER_STATUSES)[number]
 export const INVITATION_STATUSES = ['pending', 'accepted', 'declined', 'expired'] as const
 export type InvitationStatus = (typeof INVITATION_STATUSES)[number]
 
-export const PERMISSIONS = ['create', 'read', 'update', 'delete'] as const
+export const PERMISSIONS = [
+  // CRUD permissions
+  'create',
+  'read',
+  'update',
+  'delete',
+  // User management permissions
+  'invite',
+  'manage',
+  'remove',
+  // Report permissions
+  'generate',
+  'export',
+  // AI feature permissions
+  'chat',
+  'disease_detection',
+  'analytics',
+  // Calculator permissions
+  'basic',
+  'advanced'
+] as const
 export type Permission = (typeof PERMISSIONS)[number]
 
 export const RESOURCE_TYPES = [
@@ -264,45 +284,45 @@ export interface OrganizationInvitationUpdate {
 
 export interface AuditLog {
   id: string
-  organizationId?: string | null
-  farmId?: number | null
+  organization_id?: string | null
+  farm_id?: number | null
 
   // User & Action
-  userId?: string | null
-  userRole?: UserRole | null
+  user_id?: string | null
+  user_role?: UserRole | null
   action: AuditAction
 
   // Resource Details
-  resourceType: string
-  resourceId?: string | null
+  resource_type: string
+  resource_id?: string | null
 
   // Changes (for update actions)
-  oldValues?: Record<string, any> | null
-  newValues?: Record<string, any> | null
+  old_values?: Record<string, any> | null
+  new_values?: Record<string, any> | null
 
   // Context
-  ipAddress?: string | null
-  userAgent?: string | null
-  requestId?: string | null
+  ip_address?: string | null
+  user_agent?: string | null
+  request_id?: string | null
 
   // Metadata
   timestamp: Date | string
-  metadata: Record<string, any>
+  metadata?: Record<string, any>
 }
 
 export interface AuditLogInsert {
-  organizationId?: string | null
-  farmId?: number | null
-  userId?: string | null
-  userRole?: UserRole | null
+  organization_id?: string | null
+  farm_id?: number | null
+  user_id?: string | null
+  user_role?: UserRole | null
   action: AuditAction
-  resourceType: string
-  resourceId?: string | null
-  oldValues?: Record<string, any> | null
-  newValues?: Record<string, any> | null
-  ipAddress?: string | null
-  userAgent?: string | null
-  requestId?: string | null
+  resource_type: string
+  resource_id?: string | null
+  old_values?: Record<string, any> | null
+  new_values?: Record<string, any> | null
+  ip_address?: string | null
+  user_agent?: string | null
+  request_id?: string | null
   metadata?: Record<string, any>
 }
 
@@ -320,6 +340,7 @@ export interface PermissionMatrix {
   task_reminders: ResourcePermissions
   soil_test_records: ResourcePermissions
   petiole_test_records: ResourcePermissions
+  calculation_history: ResourcePermissions
   users: UserManagementPermissions
   reports: ReportPermissions
   ai_features: AIFeaturePermissions
@@ -453,6 +474,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionMatrix> = {
     task_reminders: { create: true, read: true, update: true, delete: true },
     soil_test_records: { create: true, read: true, update: true, delete: true },
     petiole_test_records: { create: true, read: true, update: true, delete: true },
+    calculation_history: { create: true, read: true, update: true, delete: true },
     users: { invite: true, manage: true, remove: true },
     reports: { generate: true, export: true },
     ai_features: { chat: true, disease_detection: true, analytics: true },
@@ -468,6 +490,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionMatrix> = {
     task_reminders: { create: true, read: true, update: true, delete: true },
     soil_test_records: { create: true, read: true, update: true, delete: true },
     petiole_test_records: { create: true, read: true, update: true, delete: true },
+    calculation_history: { create: true, read: true, update: true, delete: true },
     users: { invite: true, manage: true, remove: true },
     reports: { generate: true, export: true },
     ai_features: { chat: true, disease_detection: true, analytics: true },
@@ -483,6 +506,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionMatrix> = {
     task_reminders: { create: true, read: true, update: true, delete: true },
     soil_test_records: { create: true, read: true, update: true, delete: true },
     petiole_test_records: { create: true, read: true, update: true, delete: true },
+    calculation_history: { create: true, read: true, update: true, delete: true },
     users: { invite: false, manage: false, remove: false },
     reports: { generate: true, export: true },
     ai_features: { chat: true, disease_detection: true, analytics: true },
@@ -498,6 +522,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionMatrix> = {
     task_reminders: { create: true, read: true, update: true, delete: false },
     soil_test_records: { create: true, read: true, update: true, delete: false },
     petiole_test_records: { create: true, read: true, update: true, delete: false },
+    calculation_history: { create: true, read: true, update: true, delete: false },
     users: { invite: false, manage: false, remove: false },
     reports: { generate: true, export: false },
     ai_features: { chat: true, disease_detection: true, analytics: false },
@@ -513,6 +538,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionMatrix> = {
     task_reminders: { create: false, read: true, update: true, delete: false },
     soil_test_records: { create: false, read: true, update: false, delete: false },
     petiole_test_records: { create: false, read: true, update: false, delete: false },
+    calculation_history: { create: false, read: true, update: false, delete: false },
     users: { invite: false, manage: false, remove: false },
     reports: { generate: false, export: false },
     ai_features: { chat: false, disease_detection: false, analytics: false },
@@ -528,6 +554,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionMatrix> = {
     task_reminders: { create: false, read: true, update: false, delete: false },
     soil_test_records: { create: true, read: true, update: true, delete: false },
     petiole_test_records: { create: true, read: true, update: true, delete: false },
+    calculation_history: { create: false, read: true, update: false, delete: false },
     users: { invite: false, manage: false, remove: false },
     reports: { generate: true, export: true },
     ai_features: { chat: true, disease_detection: true, analytics: true },
@@ -543,6 +570,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionMatrix> = {
     task_reminders: { create: false, read: true, update: false, delete: false },
     soil_test_records: { create: false, read: true, update: false, delete: false },
     petiole_test_records: { create: false, read: true, update: false, delete: false },
+    calculation_history: { create: false, read: true, update: false, delete: false },
     users: { invite: false, manage: false, remove: false },
     reports: { generate: true, export: true },
     ai_features: { chat: false, disease_detection: false, analytics: false },
@@ -558,6 +586,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionMatrix> = {
     task_reminders: { create: false, read: true, update: false, delete: false },
     soil_test_records: { create: false, read: true, update: false, delete: false },
     petiole_test_records: { create: false, read: true, update: false, delete: false },
+    calculation_history: { create: false, read: true, update: false, delete: false },
     users: { invite: false, manage: false, remove: false },
     reports: { generate: false, export: false },
     ai_features: { chat: false, disease_detection: false, analytics: false },

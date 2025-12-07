@@ -38,16 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
-import {
-  Users,
-  MoreVertical,
-  Mail,
-  Shield,
-  UserMinus,
-  Crown,
-  Clock,
-  UserPlus
-} from 'lucide-react'
+import { Users, MoreVertical, Mail, Shield, UserMinus, Crown, Clock, UserPlus } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { ROLE_DESCRIPTIONS } from '@/types/rbac'
 import { InviteUserModal } from './InviteUserModal'
@@ -70,14 +61,23 @@ export function MemberManagement() {
   const loadMembers = async () => {
     if (!currentOrganization) return
 
+    // Capture the organization ID at the start of the request
+    const requestOrgId = currentOrganization.id
     setLoading(true)
     try {
       const membersList = await organizationService.getMembers(currentOrganization.id)
-      setMembers(membersList)
+
+      // Only update state if we're still on the same organization
+      if (currentOrganization?.id === requestOrgId) {
+        setMembers(membersList)
+      }
     } catch (error) {
       console.error('Error loading members:', error)
     } finally {
-      setLoading(false)
+      // Only update loading state if we're still on the same organization
+      if (currentOrganization?.id === requestOrgId) {
+        setLoading(false)
+      }
     }
   }
 
@@ -157,9 +157,7 @@ export function MemberManagement() {
                 <Users className="h-5 w-5" />
                 Team Members
               </CardTitle>
-              <CardDescription>
-                Manage your organization's members and their roles
-              </CardDescription>
+              <CardDescription>Manage your organization's members and their roles</CardDescription>
             </div>
 
             <RequireAdmin>
@@ -272,7 +270,8 @@ export function MemberManagement() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Member Actions</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive cursor-pointer"
+                                <DropdownMenuItem
+                                  className="text-destructive cursor-pointer"
                                   onClick={() => setMemberToRemove(member)}
                                 >
                                   <UserMinus className="h-4 w-4 mr-2" />

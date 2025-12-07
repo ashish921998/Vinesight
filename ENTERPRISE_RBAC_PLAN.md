@@ -3,6 +3,7 @@
 ## 🎯 Executive Summary
 
 This plan transforms VineSight from a single-user app into an **enterprise-ready platform** with:
+
 - ✅ **Multi-tenant architecture** for business & enterprise customers
 - ✅ **Role-based access control (RBAC)** with granular permissions
 - ✅ **Team collaboration** with hierarchical access levels
@@ -14,11 +15,13 @@ This plan transforms VineSight from a single-user app into an **enterprise-ready
 ## 📊 Target Customer Segments
 
 ### **Individual Farmers** (Current - No changes required)
+
 - Single user per farm
 - Full access to all features
 - Current pricing tier
 
 ### **Business Customers** (NEW)
+
 - Small to medium agricultural businesses (5-20 farms)
 - Multiple users with role-based access
 - Team collaboration features
@@ -29,6 +32,7 @@ This plan transforms VineSight from a single-user app into an **enterprise-ready
   - Farm management consultancies
 
 ### **Enterprise Customers** (NEW)
+
 - Large agricultural corporations (20+ farms)
 - Complex organizational hierarchies
 - Advanced compliance and audit requirements
@@ -45,6 +49,7 @@ This plan transforms VineSight from a single-user app into an **enterprise-ready
 ### Current vs Enterprise Model
 
 **CURRENT MODEL:**
+
 ```
 User (auth.users) → Farms → Records
      ↓ (direct ownership)
@@ -52,6 +57,7 @@ User (auth.users) → Farms → Records
 ```
 
 **ENTERPRISE MODEL:**
+
 ```
 User (auth.users) → Organization Membership → Organization → Farms → Records
      ↓                      ↓                      ↓
@@ -73,6 +79,7 @@ User (auth.users) → Organization Membership → Organization → Farms → Rec
 ### Standard User Roles
 
 #### **1. Organization Owner** (Super Admin)
+
 - **Access Level**: Full control over organization
 - **Permissions:**
   - ✅ Manage all farms and data
@@ -84,6 +91,7 @@ User (auth.users) → Organization Membership → Organization → Farms → Rec
   - ✅ Delete organization
 
 #### **2. Organization Admin** (Business Manager)
+
 - **Access Level**: Administrative control (cannot delete org)
 - **Permissions:**
   - ✅ Manage all farms and data
@@ -95,6 +103,7 @@ User (auth.users) → Organization Membership → Organization → Farms → Rec
   - ❌ Manage billing
 
 #### **3. Farm Manager** (Operations Lead)
+
 - **Access Level**: Full access to assigned farms
 - **Permissions:**
   - ✅ Manage assigned farms (CRUD operations)
@@ -107,6 +116,7 @@ User (auth.users) → Organization Membership → Organization → Farms → Rec
   - ❌ Access other farms
 
 #### **4. Farm Supervisor** (Field Manager)
+
 - **Access Level**: Operational control of assigned farms
 - **Permissions:**
   - ✅ View assigned farm details
@@ -119,6 +129,7 @@ User (auth.users) → Organization Membership → Organization → Farms → Rec
   - ❌ Manage users
 
 #### **5. Field Worker** (Operator)
+
 - **Access Level**: Task execution and data entry
 - **Permissions:**
   - ✅ View assigned farm details (read-only farm config)
@@ -131,6 +142,7 @@ User (auth.users) → Organization Membership → Organization → Farms → Rec
   - ❌ Generate reports
 
 #### **6. Consultant/Advisor** (External Expert)
+
 - **Access Level**: Advisory with limited write access
 - **Permissions:**
   - ✅ View all assigned farm data
@@ -143,6 +155,7 @@ User (auth.users) → Organization Membership → Organization → Farms → Rec
   - ❌ Access financial data
 
 #### **7. Accountant/Analyst** (Read-only + Finance)
+
 - **Access Level**: Financial analysis and reporting
 - **Permissions:**
   - ✅ View all farm data (read-only)
@@ -155,6 +168,7 @@ User (auth.users) → Organization Membership → Organization → Farms → Rec
   - ❌ Use AI features
 
 #### **8. Viewer** (Stakeholder/Investor)
+
 - **Access Level**: Read-only access
 - **Permissions:**
   - ✅ View farm dashboards
@@ -830,7 +844,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     userMembership,
     userRole: userMembership?.role || null,
     isOrgAdmin: ['owner', 'admin'].includes(userMembership?.role || ''),
-    canManageUsers: ['owner', 'admin', 'farm_manager'].includes(userMembership?.role || ''),
+    canManageUsers: ['owner', 'admin'].includes(userMembership?.role || ''),
     setCurrentOrganization,
     refreshMembership
   }
@@ -1251,6 +1265,7 @@ export function OrganizationSelector() {
 ### 1. SSO Integration (Optional)
 
 **For very large enterprises:**
+
 - SAML 2.0 integration
 - OAuth providers (Google Workspace, Microsoft Azure AD)
 - Implementation using Supabase Auth with custom OAuth flows
@@ -1258,6 +1273,7 @@ export function OrganizationSelector() {
 ### 2. Advanced Analytics Dashboard
 
 **Organization-level insights:**
+
 - Cross-farm performance comparison
 - Team productivity metrics
 - Resource utilization analytics
@@ -1266,6 +1282,7 @@ export function OrganizationSelector() {
 ### 3. Compliance & Certifications
 
 **For export-focused businesses:**
+
 - GAP (Good Agricultural Practices) tracking
 - Organic certification management
 - Traceability reports
@@ -1274,6 +1291,7 @@ export function OrganizationSelector() {
 ### 4. API Access
 
 **For enterprise integrations:**
+
 - REST API with organization-scoped authentication
 - Webhooks for real-time data sync
 - Integration with ERP systems (SAP, Oracle)
@@ -1284,12 +1302,14 @@ export function OrganizationSelector() {
 ## 🎯 Pricing Model Suggestions
 
 ### **Individual Tier** (Current - Free/Basic)
+
 - Single user
 - Unlimited farms
 - All core features
 - Basic AI features
 
 ### **Business Tier** (NEW - ₹2999/month or $39/month)
+
 - Up to 10 users
 - Up to 50 farms
 - Role-based access control (7 standard roles)
@@ -1299,6 +1319,7 @@ export function OrganizationSelector() {
 - Advanced AI features
 
 ### **Enterprise Tier** (NEW - ₹9999/month or $129/month)
+
 - Unlimited users
 - Unlimited farms
 - Custom role creation
@@ -1310,6 +1331,7 @@ export function OrganizationSelector() {
 - 99.9% SLA
 
 ### **Add-ons**
+
 - Extra users (Business): ₹300/user/month
 - Advanced analytics module: ₹1500/month
 - Compliance module: ₹2000/month
@@ -1320,23 +1342,27 @@ export function OrganizationSelector() {
 ## 🔐 Security Considerations
 
 ### 1. Data Isolation
+
 - **Multi-tenancy**: Complete organization isolation via RLS
 - **Namespace separation**: Organization ID in all queries
 - **No cross-org data leakage**: Validated through RLS functions
 
 ### 2. Authentication
+
 - **No specialized auth needed**: Supabase Auth is enterprise-ready
 - **Session management**: Handled by Supabase
 - **Token-based invitations**: Secure UUID tokens with expiration
 - **SSO optional**: For enterprises requiring it
 
 ### 3. Authorization
+
 - **RLS first**: All policies enforced at database level
 - **Defense in depth**: Backend + frontend permission checks
 - **Immutable audit logs**: Cannot be modified/deleted
 - **Principle of least privilege**: Users get minimum required access
 
 ### 4. Compliance
+
 - **GDPR ready**: Right to deletion, data export
 - **Audit trails**: Complete activity logging
 - **Data encryption**: At rest and in transit (Supabase default)
@@ -1349,12 +1375,14 @@ export function OrganizationSelector() {
 ### Seamless Transition Plan
 
 **For current individual users:**
+
 1. **No action required**: Continue using app as-is
 2. **Optional organization creation**: Can create organization anytime
 3. **Farm migration**: One-click "Convert to Organization" button
 4. **Data preservation**: All existing data remains intact
 
 **Migration script:**
+
 ```sql
 -- Function to migrate individual user to organization
 CREATE OR REPLACE FUNCTION migrate_user_to_organization(
@@ -1388,6 +1416,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ## 🎬 Getting Started (Post-Implementation)
 
 ### For Individual Users → Business
+
 1. Go to Settings > Organization
 2. Click "Create Organization"
 3. Enter organization details
@@ -1396,6 +1425,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 6. Start collaborating!
 
 ### For New Business/Enterprise Customers
+
 1. Sign up with business email
 2. Create organization during onboarding
 3. Invite team members (bulk CSV import supported)
@@ -1422,6 +1452,7 @@ This comprehensive plan provides:
 **Estimated Implementation Time**: 10-12 weeks with 2-3 developers
 
 **Next Steps:**
+
 1. Review and approve this plan
 2. Set up development environment
 3. Begin Phase 1 implementation
@@ -1430,4 +1461,4 @@ This comprehensive plan provides:
 
 ---
 
-*This plan positions VineSight as the most sophisticated multi-user grape farming platform in India, ready to serve everyone from individual farmers to large agricultural corporations.*
+_This plan positions VineSight as the most sophisticated multi-user grape farming platform in India, ready to serve everyone from individual farmers to large agricultural corporations._

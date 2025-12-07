@@ -20,6 +20,13 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
+import {
   Table,
   TableBody,
   TableCell,
@@ -52,8 +59,17 @@ export function AuditLogViewer() {
   const [filterAction, setFilterAction] = useState<AuditAction | 'all'>('all')
   const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
+  const [selectedLog, setSelectedLog] = useState<any | null>(null)
   const pageSize = 50
 
+  // Reset page to 1 when organization changes to prevent out-of-bounds requests
+  useEffect(() => {
+    if (currentOrganization) {
+      setPage(1)
+    }
+  }, [currentOrganization?.id])
+
+  // Load logs when organization, filter, or page changes
   useEffect(() => {
     if (currentOrganization) {
       loadLogs()
@@ -63,6 +79,8 @@ export function AuditLogViewer() {
   const loadLogs = async () => {
     if (!currentOrganization) return
 
+    // Capture the organization ID at the start of the request
+    const requestOrgId = currentOrganization.id
     setLoading(true)
     try {
       const { data, count } = await auditLogger.getOrganizationLogs(currentOrganization.id, {
@@ -71,12 +89,18 @@ export function AuditLogViewer() {
         action: filterAction === 'all' ? undefined : filterAction
       })
 
-      setLogs(data || [])
-      setTotalCount(count || 0)
+      // Only update state if we're still on the same organization
+      if (currentOrganization?.id === requestOrgId) {
+        setLogs(data || [])
+        setTotalCount(count || 0)
+      }
     } catch (error) {
       console.error('Error loading audit logs:', error)
     } finally {
-      setLoading(false)
+      // Only update loading state if we're still on the same organization
+      if (currentOrganization?.id === requestOrgId) {
+        setLoading(false)
+      }
     }
   }
 
@@ -142,7 +166,12 @@ export function AuditLogViewer() {
               </CardDescription>
             </div>
 
-            <Button onClick={handleExport} variant="outline" className="gap-2" disabled={loading || logs.length === 0}>
+            <Button
+              onClick={handleExport}
+              variant="outline"
+              className="gap-2"
+              disabled={loading || logs.length === 0}
+            >
               <Download className="h-4 w-4" />
               Export CSV
             </Button>
@@ -265,7 +294,12 @@ export function AuditLogViewer() {
                           {log.metadata?.note || log.metadata?.description || '-'}
                         </div>
                         {(log.old_values || log.new_values) && (
-                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs mt-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs mt-1"
+                            onClick={() => setSelectedLog(log)}
+                          >
                             View Changes
                           </Button>
                         )}
@@ -306,6 +340,39 @@ export function AuditLogViewer() {
           )}
         </CardContent>
       </Card>
+
+      {/* Changes Dialog */}
+      {selectedLog && (
+        <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Audit Log Changes</DialogTitle>
+              <DialogDescription>
+                {selectedLog.action} on {formatResourceType(selectedLog.resource_type)} at{' '}
+                {format(new Date(selectedLog.timestamp), 'PPpp')}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {selectedLog.old_values && (
+                <div>
+                  <h4 className="font-medium text-sm mb-2">Previous Values</h4>
+                  <pre className="text-xs bg-muted p-3 rounded overflow-x-auto">
+                    {JSON.stringify(selectedLog.old_values, null, 2)}
+                  </pre>
+                </div>
+              )}
+              {selectedLog.new_values && (
+                <div>
+                  <h4 className="font-medium text-sm mb-2">New Values</h4>
+                  <pre className="text-xs bg-muted p-3 rounded overflow-x-auto">
+                    {JSON.stringify(selectedLog.new_values, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </RequireAdmin>
   )
 }

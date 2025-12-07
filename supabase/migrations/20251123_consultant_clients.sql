@@ -182,67 +182,81 @@ ALTER TABLE client_lab_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fertilizer_recommendations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fertilizer_recommendation_items ENABLE ROW LEVEL SECURITY;
 
--- Consultant Clients: Consultants can only see/manage their own clients
-CREATE POLICY "Consultants can manage their own clients"
+-- Consultant Clients: Consultants can manage their clients, client users can view their own record
+CREATE POLICY "Consultants and clients can access consultant_clients"
   ON consultant_clients
   FOR ALL
-  USING (auth.uid() = consultant_id)
-  WITH CHECK (auth.uid() = consultant_id);
+  USING (
+    auth.uid() = consultant_id OR auth.uid() = client_user_id
+  )
+  WITH CHECK (
+    auth.uid() = consultant_id
+  );
 
--- Client Farms: Access through parent client
-CREATE POLICY "Access client farms through parent client"
+-- Client Farms: Access through parent client (consultant OR client user)
+CREATE POLICY "Consultants and clients can access client farms"
   ON client_farms
   FOR ALL
   USING (
     EXISTS (
       SELECT 1 FROM consultant_clients cc
       WHERE cc.id = client_farms.client_id
-      AND cc.consultant_id = auth.uid()
+      AND (cc.consultant_id = auth.uid() OR cc.client_user_id = auth.uid())
     )
   )
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM consultant_clients cc
       WHERE cc.id = client_farms.client_id
-      AND cc.consultant_id = auth.uid()
+      AND (cc.consultant_id = auth.uid() OR cc.client_user_id = auth.uid())
     )
   );
 
--- Client Lab Reports: Access through parent client
-CREATE POLICY "Access client lab reports through parent client"
+-- Client Lab Reports: Access through parent client (consultant OR client user)
+CREATE POLICY "Consultants and clients can access lab reports"
   ON client_lab_reports
   FOR ALL
   USING (
     EXISTS (
       SELECT 1 FROM consultant_clients cc
       WHERE cc.id = client_lab_reports.client_id
-      AND cc.consultant_id = auth.uid()
+      AND (cc.consultant_id = auth.uid() OR cc.client_user_id = auth.uid())
     )
   )
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM consultant_clients cc
       WHERE cc.id = client_lab_reports.client_id
-      AND cc.consultant_id = auth.uid()
+      AND (cc.consultant_id = auth.uid() OR cc.client_user_id = auth.uid())
     )
   );
 
--- Fertilizer Recommendations: Consultants manage their own
-CREATE POLICY "Consultants can manage their own recommendations"
+-- Fertilizer Recommendations: Consultants manage, clients can view their own
+CREATE POLICY "Consultants manage, clients view recommendations"
   ON fertilizer_recommendations
   FOR ALL
-  USING (auth.uid() = consultant_id)
-  WITH CHECK (auth.uid() = consultant_id);
+  USING (
+    auth.uid() = consultant_id
+    OR EXISTS (
+      SELECT 1 FROM consultant_clients cc
+      WHERE cc.id = fertilizer_recommendations.client_id
+      AND cc.client_user_id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    auth.uid() = consultant_id
+  );
 
--- Recommendation Items: Access through parent recommendation
-CREATE POLICY "Access recommendation items through parent"
+-- Recommendation Items: Access through parent recommendation (consultant OR client user)
+CREATE POLICY "Consultants and clients can access recommendation items"
   ON fertilizer_recommendation_items
   FOR ALL
   USING (
     EXISTS (
       SELECT 1 FROM fertilizer_recommendations fr
+      LEFT JOIN consultant_clients cc ON cc.id = fr.client_id
       WHERE fr.id = fertilizer_recommendation_items.recommendation_id
-      AND fr.consultant_id = auth.uid()
+      AND (fr.consultant_id = auth.uid() OR cc.client_user_id = auth.uid())
     )
   )
   WITH CHECK (

@@ -477,20 +477,24 @@ CREATE POLICY "Admins can delete invitations" ON organization_invitations
 
 -- ============================================
 -- RLS POLICIES - AUDIT LOGS
--- ============================================
-
-CREATE POLICY "Admins can view audit logs" ON audit_logs
+-- Audit Logs: Admin can read, system can insert
+CREATE POLICY "Admins/owners can read audit logs" ON audit_logs
   FOR SELECT USING (
-    organization_id IN (
-      SELECT organization_id FROM organization_members
-      WHERE user_id = auth.uid()
+    EXISTS (
+      SELECT 1 FROM organization_members
+      WHERE organization_id = audit_logs.organization_id
+      AND user_id = auth.uid()
       AND role IN ('owner', 'admin')
       AND status = 'active'
     )
   );
 
-CREATE POLICY "System can insert audit logs" ON audit_logs
-  FOR INSERT WITH CHECK (true);
+-- Only allow inserting audit logs where the user_id matches the authenticated user
+-- This prevents users from creating fake audit entries for other users
+CREATE POLICY "Users can insert their own audit logs" ON audit_logs
+  FOR INSERT WITH CHECK (
+    user_id = auth.uid()
+  );
 
 -- ============================================
 -- RLS POLICIES - ROLE PERMISSIONS
@@ -749,6 +753,18 @@ CREATE OR REPLACE FUNCTION migrate_user_to_organization(
 DECLARE
   new_org_id UUID;
 BEGIN
+  -- Authorization check: Only the user themselves can migrate their account
+  -- This prevents arbitrary users from being migrated by others
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated'
+      USING ERRCODE = '42501'; -- insufficient_privilege
+  END IF;
+
+  IF auth.uid() != p_user_id THEN
+    RAISE EXCEPTION 'Unauthorized: You can only migrate your own account'
+      USING ERRCODE = '42501'; -- insufficient_privilege
+  END IF;
+
   -- Create new organization
   INSERT INTO organizations (name, type, created_by, subscription_tier)
   VALUES (p_org_name, p_org_type, p_user_id, 'business')

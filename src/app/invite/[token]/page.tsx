@@ -14,15 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import {
-  Mail,
-  Building2,
-  Check,
-  X,
-  Clock,
-  AlertCircle,
-  Loader2
-} from 'lucide-react'
+import { Mail, Building2, Check, X, Clock, AlertCircle, Loader2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
 export default function InvitationPage() {
@@ -43,7 +35,9 @@ export default function InvitationPage() {
   }, [token])
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
     setUser(user)
   }
 
@@ -156,9 +150,7 @@ export default function InvitationPage() {
             </div>
           </div>
           <CardTitle className="text-2xl">You've Been Invited!</CardTitle>
-          <CardDescription>
-            You've received an invitation to join an organization
-          </CardDescription>
+          <CardDescription>You've received an invitation to join an organization</CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
@@ -168,7 +160,9 @@ export default function InvitationPage() {
               <Building2 className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="text-sm text-muted-foreground">Organization</p>
-                <p className="font-medium">Organization ID: {invitation.organizationId.slice(0, 8)}...</p>
+                <p className="font-medium">
+                  Organization ID: {invitation.organizationId.slice(0, 8)}...
+                </p>
               </div>
             </div>
 

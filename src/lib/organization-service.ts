@@ -102,10 +102,7 @@ class OrganizationService {
   /**
    * Update organization
    */
-  async updateOrganization(
-    id: string,
-    updates: OrganizationUpdate
-  ): Promise<Organization | null> {
+  async updateOrganization(id: string, updates: OrganizationUpdate): Promise<Organization | null> {
     try {
       // Get old values for audit
       const oldOrg = await this.getOrganization(id)
@@ -247,10 +244,7 @@ class OrganizationService {
   /**
    * Get specific member
    */
-  async getMember(
-    organizationId: string,
-    userId: string
-  ): Promise<OrganizationMember | null> {
+  async getMember(organizationId: string, userId: string): Promise<OrganizationMember | null> {
     try {
       const { data, error } = await this.supabase
         .from('organization_members')
@@ -285,6 +279,7 @@ class OrganizationService {
         .from('organization_members')
         .select('*')
         .eq('id', memberId)
+        .eq('organization_id', organizationId)
         .single()
 
       const { data, error } = await this.supabase
@@ -298,6 +293,7 @@ class OrganizationService {
           updated_at: new Date().toISOString()
         })
         .eq('id', memberId)
+        .eq('organization_id', organizationId)
         .select()
         .single()
 
@@ -330,12 +326,14 @@ class OrganizationService {
         .from('organization_members')
         .select('*')
         .eq('id', memberId)
+        .eq('organization_id', organizationId)
         .single()
 
       const { error } = await this.supabase
         .from('organization_members')
         .delete()
         .eq('id', memberId)
+        .eq('organization_id', organizationId)
 
       if (error) {
         console.error('Error removing member:', error)

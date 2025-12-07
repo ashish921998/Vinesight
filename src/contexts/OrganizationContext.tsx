@@ -58,7 +58,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
   /**
    * Load all organizations the current user is a member of
    */
-  const loadOrganizations = useCallback(async () => {
+  const loadOrganizations = useCallback(async (): Promise<Organization[]> => {
     try {
       const {
         data: { user }
@@ -66,7 +66,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
       if (!user) {
         setAvailableOrganizations([])
         setLoading(false)
-        return
+        return []
       }
 
       // Get all organizations user is member of
@@ -86,7 +86,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
       if (membershipsError) {
         console.error('Error loading organizations:', membershipsError)
         setError('Failed to load organizations')
-        return
+        return []
       }
 
       if (memberships && memberships.length > 0) {
@@ -115,10 +115,15 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
         if (!currentOrganization && orgs.length > 0) {
           setCurrentOrganizationState(orgs[0])
         }
+
+        return orgs
       }
+
+      return []
     } catch (err) {
       console.error('Error in loadOrganizations:', err)
       setError('Failed to load organizations')
+      return []
     } finally {
       setLoading(false)
     }
@@ -218,13 +223,13 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
    */
   useEffect(() => {
     const initializeOrganizations = async () => {
-      await loadOrganizations()
+      const loadedOrganizations = await loadOrganizations()
 
-      // Try to restore last selected organization
-      if (typeof window !== 'undefined') {
+      // Try to restore last selected organization using the returned organizations
+      if (typeof window !== 'undefined' && loadedOrganizations.length > 0) {
         const savedOrgId = localStorage.getItem('selectedOrganizationId')
         if (savedOrgId) {
-          const savedOrg = availableOrganizations.find((o) => o.id === savedOrgId)
+          const savedOrg = loadedOrganizations.find((o) => o.id === savedOrgId)
           if (savedOrg) {
             setCurrentOrganizationState(savedOrg)
           }
@@ -242,11 +247,10 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
     refreshMembership()
   }, [currentOrganization?.id]) // Refresh when org changes
 
-  // Compute derived values
   const userRole = userMembership?.role || null
   const isOrgOwner = userRole === 'owner'
   const isOrgAdmin = ['owner', 'admin'].includes(userRole || '')
-  const canManageUsers = ['owner', 'admin', 'farm_manager'].includes(userRole || '')
+  const canManageUsers = ['owner', 'admin'].includes(userRole || '')
   const canManageFarms = ['owner', 'admin', 'farm_manager'].includes(userRole || '')
 
   const value: OrganizationContextType = {

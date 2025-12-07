@@ -45,9 +45,9 @@ export default function OrganizationSettingsPage() {
             <p className="text-muted-foreground mb-6">
               You need to create or join an organization to access these settings.
             </p>
-            <Link href="/organization/new">
-              <Button>Create Organization</Button>
-            </Link>
+            <Button asChild>
+              <Link href="/organization/new">Create Organization</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

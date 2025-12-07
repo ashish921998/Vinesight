@@ -80,11 +80,13 @@ describe('Organization Service - Functional Tests', () => {
 
       expect(result).toEqual(mockOrg)
       expect(mockFrom).toHaveBeenCalledWith('organizations')
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        name: orgData.name,
-        description: orgData.description,
-        ownerId: 'test-user-id'
-      }))
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: orgData.name,
+          description: orgData.description,
+          ownerId: 'test-user-id'
+        })
+      )
     })
 
     test('should throw error when organization name is empty', async () => {
@@ -199,12 +201,14 @@ describe('Organization Service - Functional Tests', () => {
 
       expect(result).toEqual(mockInvitation)
       expect(mockFrom).toHaveBeenCalledWith('organization_invitations')
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        organizationId: invitationData.organizationId,
-        email: invitationData.email,
-        role: invitationData.role,
-        invitedBy: 'test-user-id'
-      }))
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          organizationId: invitationData.organizationId,
+          email: invitationData.email,
+          role: invitationData.role,
+          invitedBy: 'test-user-id'
+        })
+      )
     })
 
     test('should reject invalid email format', async () => {
@@ -301,9 +305,7 @@ describe('Organization Service - Functional Tests', () => {
       const memberId = 'member-123'
       const invalidRole = 'super_admin' as any
 
-      await expect(
-        orgService.updateMemberRole(memberId, invalidRole)
-      ).rejects.toThrow()
+      await expect(orgService.updateMemberRole(memberId, invalidRole)).rejects.toThrow()
     })
   })
 
@@ -346,9 +348,7 @@ describe('Organization Service - Functional Tests', () => {
       }
 
       // This should either throw or clear assigned farms
-      await expect(
-        orgService.addMember(memberData)
-      ).rejects.toThrow(/viewer.*assigned farms/i)
+      await expect(orgService.addMember(memberData)).rejects.toThrow(/viewer.*assigned farms/i)
     })
 
     test('owner role should have access to all farms', async () => {
@@ -389,9 +389,7 @@ describe('Organization Service - Functional Tests', () => {
 
       await orgService.createInvitation(invitationData)
 
-      await expect(
-        orgService.createInvitation(invitationData)
-      ).rejects.toThrow()
+      await expect(orgService.createInvitation(invitationData)).rejects.toThrow()
     })
   })
 })

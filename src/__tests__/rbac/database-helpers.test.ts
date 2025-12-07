@@ -18,9 +18,16 @@ describe('Database Helper Functions - Functional Tests', () => {
     })
 
     test('should return false for other roles', () => {
-      const roles = ['farm_manager', 'supervisor', 'field_worker', 'consultant', 'accountant', 'viewer']
+      const roles = [
+        'farm_manager',
+        'supervisor',
+        'field_worker',
+        'consultant',
+        'accountant',
+        'viewer'
+      ]
 
-      roles.forEach(role => {
+      roles.forEach((role) => {
         const isAdmin = role === 'owner' || role === 'admin'
         expect(isAdmin).toBe(false)
       })
@@ -49,7 +56,7 @@ describe('Database Helper Functions - Functional Tests', () => {
         { userRole: 'owner', allowed: ['owner'], expected: true },
         { userRole: 'admin', allowed: ['owner', 'admin'], expected: true },
         { userRole: 'supervisor', allowed: ['supervisor', 'farm_manager'], expected: true },
-        { userRole: 'field_worker', allowed: ['admin'], expected: false },
+        { userRole: 'field_worker', allowed: ['admin'], expected: false }
       ]
 
       testCases.forEach(({ userRole, allowed, expected }) => {
@@ -212,7 +219,7 @@ describe('Database Helper Functions - Functional Tests', () => {
     test('owner with farm access should have all permissions', () => {
       const permissions = ['create', 'read', 'update', 'delete'] as const
 
-      permissions.forEach(permission => {
+      permissions.forEach((permission) => {
         const context: PermissionContext = {
           userRole: 'owner',
           resource: 'farms',
@@ -353,7 +360,11 @@ describe('Database Helper Functions - Functional Tests', () => {
     })
 
     test('organization users need both org match AND role check', () => {
-      function hasOrgAccess(userOrgId: string, farmOrgId: string | null, hasRole: boolean): boolean {
+      function hasOrgAccess(
+        userOrgId: string,
+        farmOrgId: string | null,
+        hasRole: boolean
+      ): boolean {
         if (farmOrgId === null) return false // Individual farm
         if (userOrgId !== farmOrgId) return false // Different org
         return hasRole // Must have role
@@ -399,7 +410,11 @@ describe('Database Helper Functions - Functional Tests', () => {
     })
 
     test('empty assigned farms should deny access', () => {
-      const hasAssignedAccess = (assignedFarms: number[], farmId: number, isAdmin: boolean): boolean => {
+      const hasAssignedAccess = (
+        assignedFarms: number[],
+        farmId: number,
+        isAdmin: boolean
+      ): boolean => {
         if (isAdmin) return true
         return assignedFarms.length > 0 && assignedFarms.includes(farmId)
       }

@@ -18,8 +18,8 @@ describe('RBAC Permission System - Functional Tests', () => {
       const resources: ResourceType[] = ['farms', 'records', 'users', 'settings', 'reports']
       const permissions: Permission[] = ['create', 'read', 'update', 'delete']
 
-      resources.forEach(resource => {
-        permissions.forEach(permission => {
+      resources.forEach((resource) => {
+        permissions.forEach((permission) => {
           expect(ownerPerms[resource][permission]).toBe(true)
         })
       })
@@ -40,7 +40,7 @@ describe('RBAC Permission System - Functional Tests', () => {
       const viewerPerms = DEFAULT_ROLE_PERMISSIONS.viewer
       const resources: ResourceType[] = ['farms', 'records', 'reports']
 
-      resources.forEach(resource => {
+      resources.forEach((resource) => {
         expect(viewerPerms[resource].read).toBe(true)
         expect(viewerPerms[resource].create).toBe(false)
         expect(viewerPerms[resource].update).toBe(false)
@@ -125,13 +125,13 @@ describe('RBAC Permission System - Functional Tests', () => {
 
     test('all defined roles should exist in USER_ROLES constant', () => {
       const definedRoles = Object.keys(DEFAULT_ROLE_PERMISSIONS)
-      definedRoles.forEach(role => {
+      definedRoles.forEach((role) => {
         expect(USER_ROLES).toContain(role)
       })
     })
 
     test('all USER_ROLES should have permission definitions', () => {
-      USER_ROLES.forEach(role => {
+      USER_ROLES.forEach((role) => {
         expect(DEFAULT_ROLE_PERMISSIONS[role]).toBeDefined()
         expect(DEFAULT_ROLE_PERMISSIONS[role].farms).toBeDefined()
         expect(DEFAULT_ROLE_PERMISSIONS[role].records).toBeDefined()
@@ -146,8 +146,8 @@ describe('RBAC Permission System - Functional Tests', () => {
       const resources: ResourceType[] = ['farms', 'records', 'users', 'settings', 'reports']
       const permissions: Permission[] = ['create', 'read', 'update', 'delete']
 
-      resources.forEach(resource => {
-        permissions.forEach(permission => {
+      resources.forEach((resource) => {
+        permissions.forEach((permission) => {
           if (adminPerms[resource][permission]) {
             expect(ownerPerms[resource][permission]).toBe(true)
           }
@@ -208,7 +208,7 @@ describe('RBAC Permission System - Functional Tests', () => {
     test('only owner and admin can manage organization users', () => {
       const roles: UserRole[] = USER_ROLES as any
 
-      roles.forEach(role => {
+      roles.forEach((role) => {
         const perms = DEFAULT_ROLE_PERMISSIONS[role]
         if (role === 'owner' || role === 'admin') {
           expect(perms.users.create).toBe(true)
@@ -223,7 +223,7 @@ describe('RBAC Permission System - Functional Tests', () => {
     test('only owner can delete users', () => {
       const roles: UserRole[] = USER_ROLES as any
 
-      roles.forEach(role => {
+      roles.forEach((role) => {
         const perms = DEFAULT_ROLE_PERMISSIONS[role]
         if (role === 'owner') {
           expect(perms.users.delete).toBe(true)
@@ -236,7 +236,7 @@ describe('RBAC Permission System - Functional Tests', () => {
     test('only owner and admin can modify settings', () => {
       const roles: UserRole[] = USER_ROLES as any
 
-      roles.forEach(role => {
+      roles.forEach((role) => {
         const perms = DEFAULT_ROLE_PERMISSIONS[role]
         if (role === 'owner' || role === 'admin') {
           expect(perms.settings.update).toBe(true)
@@ -249,7 +249,7 @@ describe('RBAC Permission System - Functional Tests', () => {
     test('all roles except viewer can read reports', () => {
       const roles: UserRole[] = USER_ROLES as any
 
-      roles.forEach(role => {
+      roles.forEach((role) => {
         const perms = DEFAULT_ROLE_PERMISSIONS[role]
         if (role === 'viewer') {
           expect(perms.reports.read).toBe(true) // Actually viewers CAN read reports
@@ -262,7 +262,7 @@ describe('RBAC Permission System - Functional Tests', () => {
     test('nobody can delete reports', () => {
       const roles: UserRole[] = USER_ROLES as any
 
-      roles.forEach(role => {
+      roles.forEach((role) => {
         const perms = DEFAULT_ROLE_PERMISSIONS[role]
         expect(perms.reports.delete).toBe(false)
       })
@@ -273,7 +273,7 @@ describe('RBAC Permission System - Functional Tests', () => {
     test('all roles should have read access to farms', () => {
       const roles: UserRole[] = USER_ROLES as any
 
-      roles.forEach(role => {
+      roles.forEach((role) => {
         const perms = DEFAULT_ROLE_PERMISSIONS[role]
         expect(perms.farms.read).toBe(true)
       })
@@ -282,7 +282,7 @@ describe('RBAC Permission System - Functional Tests', () => {
     test('all roles should have read access to records', () => {
       const roles: UserRole[] = USER_ROLES as any
 
-      roles.forEach(role => {
+      roles.forEach((role) => {
         const perms = DEFAULT_ROLE_PERMISSIONS[role]
         expect(perms.records.read).toBe(true)
       })
@@ -293,11 +293,11 @@ describe('RBAC Permission System - Functional Tests', () => {
       const resources: ResourceType[] = ['farms', 'records', 'users', 'settings', 'reports']
       const permissions: Permission[] = ['create', 'read', 'update', 'delete']
 
-      roles.forEach(role => {
+      roles.forEach((role) => {
         const rolePerms = DEFAULT_ROLE_PERMISSIONS[role]
-        resources.forEach(resource => {
+        resources.forEach((resource) => {
           expect(rolePerms[resource]).toBeDefined()
-          permissions.forEach(permission => {
+          permissions.forEach((permission) => {
             expect(rolePerms[resource][permission]).not.toBeUndefined()
             expect(typeof rolePerms[resource][permission]).toBe('boolean')
           })
@@ -306,7 +306,7 @@ describe('RBAC Permission System - Functional Tests', () => {
     })
 
     test('role names should be lowercase with underscores', () => {
-      USER_ROLES.forEach(role => {
+      USER_ROLES.forEach((role) => {
         expect(role).toMatch(/^[a-z_]+$/)
         expect(role).not.toContain(' ')
         expect(role).not.toContain('-')
@@ -316,7 +316,7 @@ describe('RBAC Permission System - Functional Tests', () => {
     test('all roles should have exactly 5 resource types defined', () => {
       const roles: UserRole[] = USER_ROLES as any
 
-      roles.forEach(role => {
+      roles.forEach((role) => {
         const perms = DEFAULT_ROLE_PERMISSIONS[role]
         const resourceKeys = Object.keys(perms)
         expect(resourceKeys).toHaveLength(5)

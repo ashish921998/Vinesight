@@ -45,14 +45,16 @@ describe('Audit Logger - Functional Tests', () => {
       })
 
       expect(mockFrom).toHaveBeenCalledWith('audit_logs')
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        organizationId: 'org-123',
-        userId: 'test-user-id',
-        action: 'create',
-        resourceType: 'farms',
-        resourceId: 1,
-        metadata: { name: 'New Farm' }
-      }))
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          organizationId: 'org-123',
+          userId: 'test-user-id',
+          action: 'create',
+          resourceType: 'farms',
+          resourceId: 1,
+          metadata: { name: 'New Farm' }
+        })
+      )
     })
 
     test('should log update action with old and new values', async () => {
@@ -66,11 +68,13 @@ describe('Audit Logger - Functional Tests', () => {
         metadata: { reason: 'Correction' }
       })
 
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        action: 'update',
-        oldValues: { name: 'Old Name', area: 10 },
-        newValues: { name: 'New Name', area: 15 }
-      }))
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'update',
+          oldValues: { name: 'Old Name', area: 10 },
+          newValues: { name: 'New Name', area: 15 }
+        })
+      )
     })
 
     test('should log delete action', async () => {
@@ -82,11 +86,13 @@ describe('Audit Logger - Functional Tests', () => {
         oldValues: { type: 'irrigation', duration: 60 }
       })
 
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        action: 'delete',
-        resourceType: 'records',
-        resourceId: 5
-      }))
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'delete',
+          resourceType: 'records',
+          resourceId: 5
+        })
+      )
     })
 
     test('should include timestamp in log', async () => {
@@ -118,11 +124,13 @@ describe('Audit Logger - Functional Tests', () => {
         // No metadata, old/new values
       })
 
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        action: 'view',
-        resourceType: 'reports',
-        resourceId: 10
-      }))
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'view',
+          resourceType: 'reports',
+          resourceId: 10
+        })
+      )
     })
   })
 
@@ -130,12 +138,14 @@ describe('Audit Logger - Functional Tests', () => {
     test('logCreate() should log create action', async () => {
       await auditLogger.logCreate('org-123', 'farms', 1, { name: 'Test Farm' })
 
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        action: 'create',
-        resourceType: 'farms',
-        resourceId: 1,
-        newValues: { name: 'Test Farm' }
-      }))
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'create',
+          resourceType: 'farms',
+          resourceId: 1,
+          newValues: { name: 'Test Farm' }
+        })
+      )
     })
 
     test('logUpdate() should log update action with both old and new values', async () => {
@@ -144,11 +154,13 @@ describe('Audit Logger - Functional Tests', () => {
 
       await auditLogger.logUpdate('org-123', 'farms', 1, oldValues, newValues)
 
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        action: 'update',
-        oldValues,
-        newValues
-      }))
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'update',
+          oldValues,
+          newValues
+        })
+      )
     })
 
     test('logDelete() should log delete action with old values', async () => {
@@ -156,10 +168,12 @@ describe('Audit Logger - Functional Tests', () => {
 
       await auditLogger.logDelete('org-123', 'farms', 1, oldValues)
 
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        action: 'delete',
-        oldValues
-      }))
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'delete',
+          oldValues
+        })
+      )
     })
 
     test('logExport() should log export action', async () => {
@@ -168,14 +182,16 @@ describe('Audit Logger - Functional Tests', () => {
         recordCount: 100
       })
 
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        action: 'export',
-        resourceType: 'reports',
-        metadata: expect.objectContaining({
-          format: 'CSV',
-          recordCount: 100
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'export',
+          resourceType: 'reports',
+          metadata: expect.objectContaining({
+            format: 'CSV',
+            recordCount: 100
+          })
         })
-      }))
+      )
     })
 
     test('logInvite() should log invite action', async () => {
@@ -184,14 +200,16 @@ describe('Audit Logger - Functional Tests', () => {
         role: 'farm_manager'
       })
 
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        action: 'invite',
-        resourceType: 'users',
-        metadata: expect.objectContaining({
-          email: 'newuser@example.com',
-          role: 'farm_manager'
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'invite',
+          resourceType: 'users',
+          metadata: expect.objectContaining({
+            email: 'newuser@example.com',
+            role: 'farm_manager'
+          })
         })
-      }))
+      )
     })
 
     test('logRemove() should log remove action', async () => {
@@ -200,15 +218,17 @@ describe('Audit Logger - Functional Tests', () => {
         role: 'viewer'
       })
 
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        action: 'remove',
-        resourceType: 'users',
-        resourceId: 'user-456',
-        metadata: expect.objectContaining({
-          email: 'removed@example.com',
-          role: 'viewer'
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'remove',
+          resourceType: 'users',
+          resourceId: 'user-456',
+          metadata: expect.objectContaining({
+            email: 'removed@example.com',
+            role: 'viewer'
+          })
         })
-      }))
+      )
     })
   })
 
@@ -270,9 +290,11 @@ describe('Audit Logger - Functional Tests', () => {
         metadata
       })
 
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        metadata
-      }))
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metadata
+        })
+      )
     })
   })
 
@@ -356,7 +378,7 @@ describe('Audit Logger - Functional Tests', () => {
 
       const startTime = Date.now()
 
-      await Promise.all(logs.map(log => auditLogger.log(log)))
+      await Promise.all(logs.map((log) => auditLogger.log(log)))
 
       const endTime = Date.now()
       const duration = endTime - startTime
@@ -398,9 +420,11 @@ describe('Audit Logger - Functional Tests', () => {
         metadata: largeMetadata
       })
 
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        metadata: largeMetadata
-      }))
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metadata: largeMetadata
+        })
+      )
     })
   })
 
@@ -436,9 +460,11 @@ describe('Audit Logger - Functional Tests', () => {
         resourceId: 1
       })
 
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        userId: 'test-user-id'
-      }))
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 'test-user-id'
+        })
+      )
     })
 
     test('should log access attempts even if they fail', async () => {
@@ -456,12 +482,14 @@ describe('Audit Logger - Functional Tests', () => {
         }
       })
 
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        metadata: expect.objectContaining({
-          success: false,
-          reason: 'Permission denied'
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            success: false,
+            reason: 'Permission denied'
+          })
         })
-      }))
+      )
     })
   })
 })

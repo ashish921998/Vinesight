@@ -130,7 +130,11 @@ export function CreateOrganizationWizard() {
               <div
                 key={step.id}
                 className={`flex items-center gap-2 ${
-                  isActive ? 'text-primary' : isCompleted ? 'text-green-600' : 'text-muted-foreground'
+                  isActive
+                    ? 'text-primary'
+                    : isCompleted
+                      ? 'text-green-600'
+                      : 'text-muted-foreground'
                 }`}
               >
                 <div
@@ -188,7 +192,9 @@ export function CreateOrganizationWizard() {
                 <Label htmlFor="type">Organization Type *</Label>
                 <Select
                   value={formData.type}
-                  onValueChange={(value) => setFormData({ ...formData, type: value as OrganizationType })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, type: value as OrganizationType })
+                  }
                 >
                   <SelectTrigger id="type">
                     <SelectValue />
@@ -226,7 +232,9 @@ export function CreateOrganizationWizard() {
                     id="registrationNumber"
                     placeholder="REG123456"
                     value={formData.registrationNumber}
-                    onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, registrationNumber: e.target.value })
+                    }
                   />
                 </div>
 

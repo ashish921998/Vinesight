@@ -57,7 +57,7 @@ export async function getClients(): Promise<ConsultantClient[]> {
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(error.message)
-  return (data || []).map(row => toCamelCase(row) as ConsultantClient)
+  return (data || []).map((row) => toCamelCase(row) as ConsultantClient)
 }
 
 export async function getClientById(id: number): Promise<ConsultantClient | null> {
@@ -73,7 +73,7 @@ export async function getClientById(id: number): Promise<ConsultantClient | null
     if (error.code === 'PGRST116') return null
     throw new Error(error.message)
   }
-  return data ? toCamelCase(data) as ConsultantClient : null
+  return data ? (toCamelCase(data) as ConsultantClient) : null
 }
 
 export async function getClientWithDetails(id: number): Promise<ConsultantClient | null> {
@@ -94,35 +94,46 @@ export async function getClientWithDetails(id: number): Promise<ConsultantClient
   if (!client) return null
 
   // Get farms
-  const { data: farms } = await supabase
+  const { data: farms, error: farmsError } = await supabase
     .from('client_farms')
     .select('*')
     .eq('client_id', id)
     .order('created_at', { ascending: false })
 
+  if (farmsError) throw new Error(`Failed to load client farms: ${farmsError.message}`)
+
   // Get reports
-  const { data: reports } = await supabase
+  const { data: reports, error: reportsError } = await supabase
     .from('client_lab_reports')
     .select('*')
     .eq('client_id', id)
     .order('test_date', { ascending: false })
 
+  if (reportsError) throw new Error(`Failed to load lab reports: ${reportsError.message}`)
+
   // Get recommendations
-  const { data: recommendations } = await supabase
+  const { data: recommendations, error: recommendationsError } = await supabase
     .from('fertilizer_recommendations')
     .select('*')
     .eq('client_id', id)
     .order('created_at', { ascending: false })
 
+  if (recommendationsError)
+    throw new Error(`Failed to load recommendations: ${recommendationsError.message}`)
+
   return {
     ...toCamelCase(client),
-    farms: (farms || []).map(f => toCamelCase(f) as ClientFarm),
-    labReports: (reports || []).map(r => toCamelCase(r) as ClientLabReport),
-    recommendations: (recommendations || []).map(rec => toCamelCase(rec) as FertilizerRecommendation)
+    farms: (farms || []).map((f) => toCamelCase(f) as ClientFarm),
+    labReports: (reports || []).map((r) => toCamelCase(r) as ClientLabReport),
+    recommendations: (recommendations || []).map(
+      (rec) => toCamelCase(rec) as FertilizerRecommendation
+    )
   } as ConsultantClient
 }
 
-export async function createClient(data: ConsultantClientInsert): Promise<ConsultantClient> {
+export async function createConsultantClient(
+  data: ConsultantClientInsert
+): Promise<ConsultantClient> {
   const supabase = createClient()
 
   const { data: user } = await supabase.auth.getUser()
@@ -143,7 +154,10 @@ export async function createClient(data: ConsultantClientInsert): Promise<Consul
   return toCamelCase(result) as ConsultantClient
 }
 
-export async function updateClient(id: number, data: ConsultantClientUpdate): Promise<ConsultantClient> {
+export async function updateClient(
+  id: number,
+  data: ConsultantClientUpdate
+): Promise<ConsultantClient> {
   const supabase = createClient()
 
   const { data: result, error } = await supabase
@@ -160,10 +174,7 @@ export async function updateClient(id: number, data: ConsultantClientUpdate): Pr
 export async function deleteClient(id: number): Promise<void> {
   const supabase = createClient()
 
-  const { error } = await supabase
-    .from('consultant_clients')
-    .delete()
-    .eq('id', id)
+  const { error } = await supabase.from('consultant_clients').delete().eq('id', id)
 
   if (error) throw new Error(error.message)
 }
@@ -185,14 +196,34 @@ export async function getClientsSummary(): Promise<ClientSummary[]> {
   for (const client of clients) {
     // Get counts
     const [
-      { count: farmCount },
-      { count: reportCount },
-      { count: recommendationCount }
+      { count: farmCount, error: farmCountError },
+      { count: reportCount, error: reportCountError },
+      { count: recommendationCount, error: recommendationCountError }
     ] = await Promise.all([
-      supabase.from('client_farms').select('*', { count: 'exact', head: true }).eq('client_id', client.id),
-      supabase.from('client_lab_reports').select('*', { count: 'exact', head: true }).eq('client_id', client.id),
-      supabase.from('fertilizer_recommendations').select('*', { count: 'exact', head: true }).eq('client_id', client.id)
+      supabase
+        .from('client_farms')
+        .select('*', { count: 'exact', head: true })
+        .eq('client_id', client.id),
+      supabase
+        .from('client_lab_reports')
+        .select('*', { count: 'exact', head: true })
+        .eq('client_id', client.id),
+      supabase
+        .from('fertilizer_recommendations')
+        .select('*', { count: 'exact', head: true })
+        .eq('client_id', client.id)
     ])
+
+    if (farmCountError)
+      throw new Error(`Failed to count farms for client ${client.id}: ${farmCountError.message}`)
+    if (reportCountError)
+      throw new Error(
+        `Failed to count reports for client ${client.id}: ${reportCountError.message}`
+      )
+    if (recommendationCountError)
+      throw new Error(
+        `Failed to count recommendations for client ${client.id}: ${recommendationCountError.message}`
+      )
 
     summaries.push({
       id: client.id,
@@ -224,7 +255,7 @@ export async function getClientFarms(clientId: number): Promise<ClientFarm[]> {
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(error.message)
-  return (data || []).map(row => toCamelCase(row) as ClientFarm)
+  return (data || []).map((row) => toCamelCase(row) as ClientFarm)
 }
 
 export async function createClientFarm(data: ClientFarmInsert): Promise<ClientFarm> {
@@ -257,10 +288,7 @@ export async function updateClientFarm(id: number, data: ClientFarmUpdate): Prom
 export async function deleteClientFarm(id: number): Promise<void> {
   const supabase = createClient()
 
-  const { error } = await supabase
-    .from('client_farms')
-    .delete()
-    .eq('id', id)
+  const { error } = await supabase.from('client_farms').delete().eq('id', id)
 
   if (error) throw new Error(error.message)
 }
@@ -279,7 +307,7 @@ export async function getClientLabReports(clientId: number): Promise<ClientLabRe
     .order('test_date', { ascending: false })
 
   if (error) throw new Error(error.message)
-  return (data || []).map(row => toCamelCase(row) as ClientLabReport)
+  return (data || []).map((row) => toCamelCase(row) as ClientLabReport)
 }
 
 export async function getLabReportById(id: number): Promise<ClientLabReport | null> {
@@ -295,7 +323,7 @@ export async function getLabReportById(id: number): Promise<ClientLabReport | nu
     if (error.code === 'PGRST116') return null
     throw new Error(error.message)
   }
-  return data ? toCamelCase(data) as ClientLabReport : null
+  return data ? (toCamelCase(data) as ClientLabReport) : null
 }
 
 export async function createLabReport(data: ClientLabReportInsert): Promise<ClientLabReport> {
@@ -311,7 +339,10 @@ export async function createLabReport(data: ClientLabReportInsert): Promise<Clie
   return toCamelCase(result) as ClientLabReport
 }
 
-export async function updateLabReport(id: number, data: ClientLabReportUpdate): Promise<ClientLabReport> {
+export async function updateLabReport(
+  id: number,
+  data: ClientLabReportUpdate
+): Promise<ClientLabReport> {
   const supabase = createClient()
 
   const { data: result, error } = await supabase
@@ -328,10 +359,7 @@ export async function updateLabReport(id: number, data: ClientLabReportUpdate): 
 export async function deleteLabReport(id: number): Promise<void> {
   const supabase = createClient()
 
-  const { error } = await supabase
-    .from('client_lab_reports')
-    .delete()
-    .eq('id', id)
+  const { error } = await supabase.from('client_lab_reports').delete().eq('id', id)
 
   if (error) throw new Error(error.message)
 }
@@ -355,7 +383,7 @@ export async function getRecommendations(clientId?: number): Promise<FertilizerR
   const { data, error } = await query
 
   if (error) throw new Error(error.message)
-  return (data || []).map(row => toCamelCase(row) as FertilizerRecommendation)
+  return (data || []).map((row) => toCamelCase(row) as FertilizerRecommendation)
 }
 
 export async function getRecommendationById(id: number): Promise<FertilizerRecommendation | null> {
@@ -371,10 +399,12 @@ export async function getRecommendationById(id: number): Promise<FertilizerRecom
     if (error.code === 'PGRST116') return null
     throw new Error(error.message)
   }
-  return data ? toCamelCase(data) as FertilizerRecommendation : null
+  return data ? (toCamelCase(data) as FertilizerRecommendation) : null
 }
 
-export async function getRecommendationWithItems(id: number): Promise<FertilizerRecommendation | null> {
+export async function getRecommendationWithItems(
+  id: number
+): Promise<FertilizerRecommendation | null> {
   const supabase = createClient()
 
   // Get recommendation
@@ -392,38 +422,45 @@ export async function getRecommendationWithItems(id: number): Promise<Fertilizer
   if (!rec) return null
 
   // Get items
-  const { data: items } = await supabase
+  const { data: items, error: itemsError } = await supabase
     .from('fertilizer_recommendation_items')
     .select('*')
     .eq('recommendation_id', id)
     .order('sort_order', { ascending: true })
 
+  if (itemsError) throw new Error(`Failed to load recommendation items: ${itemsError.message}`)
+
   // Get client and farm
-  const { data: client } = await supabase
+  const { data: client, error: clientError } = await supabase
     .from('consultant_clients')
     .select('*')
     .eq('id', rec.client_id)
     .single()
 
+  if (clientError) throw new Error(`Failed to load client: ${clientError.message}`)
+
   let farm = null
   if (rec.client_farm_id) {
-    const { data: farmData } = await supabase
+    const { data: farmData, error: farmError } = await supabase
       .from('client_farms')
       .select('*')
       .eq('id', rec.client_farm_id)
       .single()
+    if (farmError) throw new Error(`Failed to load client farm: ${farmError.message}`)
     farm = farmData
   }
 
   return {
     ...toCamelCase(rec),
-    items: (items || []).map(i => toCamelCase(i) as FertilizerRecommendationItem),
-    client: client ? toCamelCase(client) as ConsultantClient : undefined,
-    farm: farm ? toCamelCase(farm) as ClientFarm : undefined
+    items: (items || []).map((i) => toCamelCase(i) as FertilizerRecommendationItem),
+    client: client ? (toCamelCase(client) as ConsultantClient) : undefined,
+    farm: farm ? (toCamelCase(farm) as ClientFarm) : undefined
   } as FertilizerRecommendation
 }
 
-export async function createRecommendation(data: FertilizerRecommendationInsert): Promise<FertilizerRecommendation> {
+export async function createRecommendation(
+  data: FertilizerRecommendationInsert
+): Promise<FertilizerRecommendation> {
   const supabase = createClient()
 
   const { data: user } = await supabase.auth.getUser()
@@ -444,7 +481,10 @@ export async function createRecommendation(data: FertilizerRecommendationInsert)
   return toCamelCase(result) as FertilizerRecommendation
 }
 
-export async function updateRecommendation(id: number, data: FertilizerRecommendationUpdate): Promise<FertilizerRecommendation> {
+export async function updateRecommendation(
+  id: number,
+  data: FertilizerRecommendationUpdate
+): Promise<FertilizerRecommendation> {
   const supabase = createClient()
 
   const { data: result, error } = await supabase
@@ -461,10 +501,7 @@ export async function updateRecommendation(id: number, data: FertilizerRecommend
 export async function deleteRecommendation(id: number): Promise<void> {
   const supabase = createClient()
 
-  const { error } = await supabase
-    .from('fertilizer_recommendations')
-    .delete()
-    .eq('id', id)
+  const { error } = await supabase.from('fertilizer_recommendations').delete().eq('id', id)
 
   if (error) throw new Error(error.message)
 }
@@ -480,7 +517,9 @@ export async function sendRecommendation(id: number): Promise<FertilizerRecommen
 // Recommendation Items Management
 // ============================================================================
 
-export async function getRecommendationItems(recommendationId: number): Promise<FertilizerRecommendationItem[]> {
+export async function getRecommendationItems(
+  recommendationId: number
+): Promise<FertilizerRecommendationItem[]> {
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -490,10 +529,12 @@ export async function getRecommendationItems(recommendationId: number): Promise<
     .order('sort_order', { ascending: true })
 
   if (error) throw new Error(error.message)
-  return (data || []).map(row => toCamelCase(row) as FertilizerRecommendationItem)
+  return (data || []).map((row) => toCamelCase(row) as FertilizerRecommendationItem)
 }
 
-export async function createRecommendationItem(data: FertilizerRecommendationItemInsert): Promise<FertilizerRecommendationItem> {
+export async function createRecommendationItem(
+  data: FertilizerRecommendationItemInsert
+): Promise<FertilizerRecommendationItem> {
   const supabase = createClient()
 
   const { data: result, error } = await supabase
@@ -506,7 +547,10 @@ export async function createRecommendationItem(data: FertilizerRecommendationIte
   return toCamelCase(result) as FertilizerRecommendationItem
 }
 
-export async function updateRecommendationItem(id: number, data: Partial<FertilizerRecommendationItemInsert>): Promise<FertilizerRecommendationItem> {
+export async function updateRecommendationItem(
+  id: number,
+  data: Partial<FertilizerRecommendationItemInsert>
+): Promise<FertilizerRecommendationItem> {
   const supabase = createClient()
 
   const { data: result, error } = await supabase
@@ -523,10 +567,7 @@ export async function updateRecommendationItem(id: number, data: Partial<Fertili
 export async function deleteRecommendationItem(id: number): Promise<void> {
   const supabase = createClient()
 
-  const { error } = await supabase
-    .from('fertilizer_recommendation_items')
-    .delete()
-    .eq('id', id)
+  const { error } = await supabase.from('fertilizer_recommendation_items').delete().eq('id', id)
 
   if (error) throw new Error(error.message)
 }
@@ -537,7 +578,7 @@ export async function bulkCreateRecommendationItems(
 ): Promise<FertilizerRecommendationItem[]> {
   const supabase = createClient()
 
-  const itemsWithRecommendationId = items.map(item => ({
+  const itemsWithRecommendationId = items.map((item) => ({
     ...toSnakeCase(item),
     recommendation_id: recommendationId
   }))
@@ -548,10 +589,12 @@ export async function bulkCreateRecommendationItems(
     .select()
 
   if (error) throw new Error(error.message)
-  return (results || []).map(row => toCamelCase(row) as FertilizerRecommendationItem)
+  return (results || []).map((row) => toCamelCase(row) as FertilizerRecommendationItem)
 }
 
-export async function reorderRecommendationItems(items: { id: number; sortOrder: number }[]): Promise<void> {
+export async function reorderRecommendationItems(
+  items: { id: number; sortOrder: number }[]
+): Promise<void> {
   const supabase = createClient()
 
   for (const item of items) {
@@ -573,7 +616,7 @@ export const ConsultantService = {
   getClients,
   getClientById,
   getClientWithDetails,
-  createClient,
+  createConsultantClient,
   updateClient,
   deleteClient,
   getClientsSummary,

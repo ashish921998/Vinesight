@@ -142,7 +142,8 @@ export function usePermissions(): PermissionHookReturn {
       }
 
       // Standard CRUD permissions
-      return (resourcePerms as ResourcePermissions)[permission] || false
+      const perms = resourcePerms as unknown as Record<string, boolean>
+      return perms[permission] || false
     }
   }, [currentOrganization, userRole, userMembership])
 
@@ -183,7 +184,8 @@ export function usePermissions(): PermissionHookReturn {
       const perms = getResourcePermissions(resource)
       if (!perms) return false
 
-      return perms.create || perms.read || perms.update || perms.delete
+      // Check if any permission is true, works for all permission types
+      return Object.values(perms).some((value) => value === true)
     }
   }, [getResourcePermissions])
 

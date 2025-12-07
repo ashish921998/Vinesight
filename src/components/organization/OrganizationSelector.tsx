@@ -21,12 +21,8 @@ import { Building2, ChevronDown, Plus, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export function OrganizationSelector() {
-  const {
-    currentOrganization,
-    availableOrganizations,
-    switchOrganization,
-    loading
-  } = useOrganization()
+  const { currentOrganization, availableOrganizations, switchOrganization, loading } =
+    useOrganization()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -65,10 +61,7 @@ export function OrganizationSelector() {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className="h-auto px-3 py-2 justify-between gap-2 min-w-[200px]"
-        >
+        <Button variant="outline" className="h-auto px-3 py-2 justify-between gap-2 min-w-[200px]">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <div className="flex flex-col items-start min-w-0 flex-1">
@@ -76,9 +69,7 @@ export function OrganizationSelector() {
                 {currentOrganization?.name || 'Select Organization'}
               </span>
               {currentOrganization && (
-                <span className="text-xs text-muted-foreground">
-                  {currentOrganization.type}
-                </span>
+                <span className="text-xs text-muted-foreground">{currentOrganization.type}</span>
               )}
             </div>
           </div>
@@ -108,9 +99,7 @@ export function OrganizationSelector() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground capitalize">
-                    {org.type}
-                  </span>
+                  <span className="text-xs text-muted-foreground capitalize">{org.type}</span>
                   <Badge
                     variant="outline"
                     className={`text-xs ${getSubscriptionBadgeColor(org.subscriptionTier)}`}
@@ -157,18 +146,74 @@ export function OrganizationSelector() {
  * Compact version for mobile/smaller screens
  */
 export function OrganizationSelectorCompact() {
-  const { currentOrganization, availableOrganizations } = useOrganization()
+  const { currentOrganization, availableOrganizations, switchOrganization, loading } =
+    useOrganization()
+  const router = useRouter()
+  const [isOpen, setIsOpen] = useState(false)
 
   if (availableOrganizations.length === 0) {
     return null
   }
 
+  const handleSwitchOrganization = async (orgId: string) => {
+    await switchOrganization(orgId)
+    setIsOpen(false)
+    router.refresh()
+  }
+
+  if (loading) {
+    return (
+      <Button variant="ghost" size="sm" className="gap-2" disabled>
+        <Building2 className="h-4 w-4 animate-pulse" />
+        <span className="truncate max-w-[100px]">...</span>
+      </Button>
+    )
+  }
+
   return (
-    <Button variant="ghost" size="sm" className="gap-2">
-      <Building2 className="h-4 w-4" />
-      <span className="truncate max-w-[100px]">
-        {currentOrganization?.name || 'Org'}
-      </span>
-    </Button>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="gap-2">
+          <Building2 className="h-4 w-4" />
+          <span className="truncate max-w-[100px]">{currentOrganization?.name || 'Org'}</span>
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="start" className="w-[280px]">
+        <DropdownMenuLabel className="text-xs text-muted-foreground">
+          Your Organizations
+        </DropdownMenuLabel>
+
+        {availableOrganizations.map((org) => (
+          <DropdownMenuItem
+            key={org.id}
+            onClick={() => handleSwitchOrganization(org.id)}
+            className="cursor-pointer"
+          >
+            <div className="flex items-center justify-between w-full">
+              <span className="font-medium truncate flex-1">{org.name}</span>
+              {org.id === currentOrganization?.id && (
+                <Badge variant="secondary" className="text-xs">
+                  Active
+                </Badge>
+              )}
+            </div>
+          </DropdownMenuItem>
+        ))}
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          onClick={() => {
+            setIsOpen(false)
+            router.push('/organization/new')
+          }}
+          className="cursor-pointer"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          <span>Create Organization</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

@@ -191,7 +191,8 @@ export interface FertilizerRecommendationInsert {
   notes?: string | null
 }
 
-export interface FertilizerRecommendationUpdate extends Partial<Omit<FertilizerRecommendationInsert, 'clientId'>> {}
+export interface FertilizerRecommendationUpdate
+  extends Partial<Omit<FertilizerRecommendationInsert, 'clientId'>> {}
 
 // ============================================================================
 // Fertilizer Recommendation Item Types
@@ -237,7 +238,8 @@ export interface FertilizerRecommendationItemInsert {
   notes?: string | null
 }
 
-export interface FertilizerRecommendationItemUpdate extends Partial<Omit<FertilizerRecommendationItemInsert, 'recommendationId'>> {}
+export interface FertilizerRecommendationItemUpdate
+  extends Partial<Omit<FertilizerRecommendationItemInsert, 'recommendationId'>> {}
 
 // ============================================================================
 // Summary Types (for dashboard/lists)

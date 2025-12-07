@@ -105,11 +105,16 @@ export function InviteUserModal({ open, onClose, onSuccess }: InviteUserModalPro
     }
   }
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     if (inviteLink) {
-      navigator.clipboard.writeText(inviteLink)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      try {
+        await navigator.clipboard.writeText(inviteLink)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      } catch (error) {
+        console.error('Failed to copy to clipboard:', error)
+        // Optionally show an error message to user
+      }
     }
   }
 

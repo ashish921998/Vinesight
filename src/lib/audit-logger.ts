@@ -51,38 +51,56 @@ class AuditLogger {
         }
       }
 
-      // Get request metadata
+      const requestId = crypto.randomUUID()
+
+      // Extract relevant fields from options
+      const {
+        organizationId,
+        farmId,
+        action,
+        resourceType,
+        resourceId,
+        oldValues,
+        newValues,
+        metadata: optionsMetadata
+      } = options
+
+      // Determine user agent and IP address (IP address would need server-side context)
+      const userAgent = typeof window !== 'undefined' ? window.navigator.userAgent : undefined
+      const ipAddress = null // Placeholder for server-side IP address
+
+      // Combine metadata, ensuring timestamp and userAgent are included
       const metadata = {
-        ...options.metadata,
-        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        ...optionsMetadata,
+        userAgent,
         timestamp: new Date().toISOString()
       }
 
-      // Create audit log entry
       const auditLog: AuditLogInsert = {
-        organizationId: options.organizationId || null,
-        farmId: options.farmId || null,
-        userId: user.id,
-        userRole: userRole,
-        action: options.action,
-        resourceType: options.resourceType,
-        resourceId: options.resourceId || null,
-        oldValues: options.oldValues || null,
-        newValues: options.newValues || null,
-        ipAddress: null, // Would need server-side implementation
-        userAgent: metadata.userAgent || null,
-        requestId: crypto.randomUUID(),
+        organization_id: organizationId || null,
+        farm_id: farmId || null,
+        user_id: user.id,
+        user_role: userRole,
+        action,
+        resource_type: resourceType,
+        resource_id: resourceId || null,
+        old_values: oldValues || null,
+        new_values: newValues || null,
+        ip_address: ipAddress,
+        user_agent: userAgent || null,
+        request_id: requestId,
         metadata
       }
 
       const { error } = await this.supabase.from('audit_logs').insert(auditLog)
 
       if (error) {
-        console.error('Failed to create audit log:', error)
+        console.error('Audit log error:', error)
+        throw new Error(error.message || error.toString())
       }
     } catch (error) {
       console.error('Error in audit logging:', error)
-      // Don't throw - audit logging should not break app functionality
+      throw error // Re-throw to allow calling code to handle
     }
   }
 

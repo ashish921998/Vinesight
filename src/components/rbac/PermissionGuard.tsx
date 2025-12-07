@@ -324,8 +324,20 @@ export function PermissionDisabledWrapper({
 
   const allowed = hasPermission(resource, permission, farmId)
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!allowed && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }
+
   return (
-    <div className={!allowed ? 'opacity-50 pointer-events-none' : ''} title={disabledMessage}>
+    <div
+      className={!allowed ? 'opacity-50 pointer-events-none' : ''}
+      title={disabledMessage}
+      onKeyDown={handleKeyDown}
+      role={!allowed ? 'none' : undefined}
+    >
       {children}
     </div>
   )
