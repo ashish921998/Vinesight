@@ -4,7 +4,7 @@
  */
 
 import { useOrganization } from '@/contexts/OrganizationContext'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import {
   Permission,
   ResourceType,
@@ -79,83 +79,12 @@ export function usePermissions(): PermissionHookReturn {
     useOrganization()
 
   /**
-   * Memoized permission checker
-   */
-  const hasPermission = useMemo(() => {
-    return (resource: ResourceType, permission: Permission, farmId?: number): boolean => {
-      // No organization = individual user = full access (backwards compatibility)
-      if (!currentOrganization) {
-        return true
-      }
-
-      // No membership or role = no access
-      if (!userRole || !userMembership) {
-        return false
-      }
-
-      // Check farm access if farmId provided
-      if (farmId !== undefined && !checkFarmAccess(farmId, userMembership)) {
-        return false
-      }
-
-      // Get role permissions
-      const rolePermissions = DEFAULT_ROLE_PERMISSIONS[userRole]
-      if (!rolePermissions) {
-        return false
-      }
-
-      // Check resource permissions
-      const resourcePerms = rolePermissions[resource]
-      if (!resourcePerms) {
-        return false
-      }
-
-      // Handle special permission types for non-CRUD resources
-      if (resource === 'users') {
-        const userPerms = resourcePerms as any
-        if (permission === 'create') return userPerms.invite || false
-        if (permission === 'update') return userPerms.manage || false
-        if (permission === 'delete') return userPerms.remove || false
-        // Read access if user has any user management permission
-        if (permission === 'read')
-          return userPerms.invite || userPerms.manage || userPerms.remove || false
-      }
-
-      if (resource === 'reports') {
-        const reportPerms = resourcePerms as any
-        if (permission === 'create') return reportPerms.generate || false
-        if (permission === 'read') return reportPerms.generate || reportPerms.export || false
-        // Reports don't support update/delete operations
-        if (permission === 'update') return false
-        if (permission === 'delete') return false
-      }
-
-      if (resource === 'ai_features') {
-        const aiPerms = resourcePerms as any
-        if (permission === 'read')
-          return aiPerms.chat || aiPerms.disease_detection || aiPerms.analytics || false
-        if (permission === 'create') return aiPerms.chat || false
-        return false
-      }
-
-      if (resource === 'calculators') {
-        const calcPerms = resourcePerms as any
-        if (permission === 'read') return calcPerms.basic || calcPerms.advanced || false
-        return false
-      }
-
-      // Standard CRUD permissions
-      const perms = resourcePerms as unknown as Record<string, boolean>
-      return perms[permission] || false
-    }
-  }, [currentOrganization, userRole, userMembership])
-
-  /**
    * Get all permissions for a resource, normalized to ResourcePermissions shape
    * Special permission types are mapped: invite→create, manage→update, remove→delete
+   * Defined first so hasPermission can delegate to it
    */
-  const getResourcePermissions = useMemo(() => {
-    return (resource: ResourceType): ResourcePermissions | null => {
+  const getResourcePermissions = useCallback(
+    (resource: ResourceType): ResourcePermissions | null => {
       if (!currentOrganization) {
         // Individual user has all permissions
         return { create: true, read: true, update: true, delete: true }
@@ -226,8 +155,42 @@ export function usePermissions(): PermissionHookReturn {
           // Standard CRUD resources - already in ResourcePermissions shape
           return resourcePerms as ResourcePermissions
       }
-    }
-  }, [currentOrganization, userRole])
+    },
+    [currentOrganization, userRole]
+  )
+
+  /**
+   * Memoized permission checker
+   * Delegates to getResourcePermissions for consistent permission resolution
+   */
+  const hasPermission = useCallback(
+    (resource: ResourceType, permission: Permission, farmId?: number): boolean => {
+      // No organization = individual user = full access (backwards compatibility)
+      if (!currentOrganization) {
+        return true
+      }
+
+      // No membership or role = no access
+      if (!userRole || !userMembership) {
+        return false
+      }
+
+      // Check farm access if farmId provided
+      if (farmId !== undefined && !checkFarmAccess(farmId, userMembership)) {
+        return false
+      }
+
+      // Delegate to getResourcePermissions for consistent permission resolution
+      const perms = getResourcePermissions(resource)
+      if (!perms) {
+        return false
+      }
+
+      // Check the normalized permission
+      return perms[permission as keyof ResourcePermissions] === true
+    },
+    [currentOrganization, userRole, userMembership, getResourcePermissions]
+  )
 
   /**
    * Check if user has any permission on a resource

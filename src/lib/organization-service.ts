@@ -454,26 +454,46 @@ class OrganizationService {
   }
 
   /**
-   * Accept invitation
+   * Accept invitation - atomically claim first to prevent race conditions
    */
   async acceptInvitation(token: string, userId: string): Promise<OrganizationMember | null> {
     try {
-      // Get invitation
-      const invitation = await this.getInvitationByToken(token)
-      if (!invitation || invitation.status !== 'pending') {
+      // Step 1: Atomically claim the invitation (prevents race condition)
+      const { data: claimedInvitation, error: claimError } = await this.supabase
+        .from('organization_invitations')
+        .update({
+          status: 'accepted',
+          accepted_by: userId,
+          accepted_at: new Date().toISOString()
+        })
+        .eq('token', token)
+        .eq('status', 'pending')
+        .gt('expires_at', new Date().toISOString())
+        .select()
+        .single()
+
+      if (claimError || !claimedInvitation) {
+        // Either already claimed, expired, or doesn't exist
+        console.warn('Invitation could not be claimed:', claimError?.message || 'not found/expired')
         return null
       }
 
-      // Check if expired
-      if (new Date(invitation.expiresAt) < new Date()) {
-        await this.supabase
-          .from('organization_invitations')
-          .update({ status: 'expired' })
-          .eq('token', token)
+      const invitation = this.normalizeInvitation(claimedInvitation)
+
+      // Step 2: Check for existing membership to avoid duplicates
+      const { data: existingMember } = await this.supabase
+        .from('organization_members')
+        .select('id')
+        .eq('organization_id', invitation.organizationId)
+        .eq('user_id', userId)
+        .single()
+
+      if (existingMember) {
+        console.warn('User is already a member of this organization')
         return null
       }
 
-      // Add member
+      // Step 3: Add member
       const member = await this.addMember({
         organizationId: invitation.organizationId,
         userId,
@@ -481,16 +501,18 @@ class OrganizationService {
         assignedFarmIds: invitation.assignedFarmIds
       })
 
-      if (member) {
-        // Mark invitation as accepted
+      // Step 4: If addMember failed, revert invitation status
+      if (!member) {
+        console.error('Failed to add member, reverting invitation status')
         await this.supabase
           .from('organization_invitations')
           .update({
-            status: 'accepted',
-            accepted_by: userId,
-            accepted_at: new Date().toISOString()
+            status: 'pending',
+            accepted_by: null,
+            accepted_at: null
           })
           .eq('token', token)
+        return null
       }
 
       return member
@@ -502,15 +524,30 @@ class OrganizationService {
 
   /**
    * Revoke/cancel invitation
+   * Only revokes if invitation belongs to the organization and is still pending
    */
-  async revokeInvitation(invitationId: string): Promise<boolean> {
+  async revokeInvitation(invitationId: string, organizationId: string): Promise<boolean> {
     try {
-      const { error } = await this.supabase
+      const { data, error } = await this.supabase
         .from('organization_invitations')
         .delete()
         .eq('id', invitationId)
+        .eq('organization_id', organizationId)
+        .eq('status', 'pending')
+        .select()
 
-      return !error
+      if (error) {
+        console.error('Error revoking invitation:', error)
+        return false
+      }
+
+      // Verify a row was actually deleted
+      if (!data || data.length === 0) {
+        console.warn('No invitation was revoked - not found, wrong org, or not pending')
+        return false
+      }
+
+      return true
     } catch (error) {
       console.error('Error in revokeInvitation:', error)
       return false

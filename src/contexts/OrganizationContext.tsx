@@ -157,6 +157,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
 
       if (membershipError) {
         console.error('Error loading membership:', membershipError)
+        setUserMembership(null) // Clear stale membership to prevent permission leaks
         setError('Failed to load membership details')
         return
       }
@@ -183,6 +184,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
       }
     } catch (err) {
       console.error('Error in refreshMembership:', err)
+      setUserMembership(null) // Clear stale membership on exception
       setError('Failed to refresh membership')
     }
   }, [currentOrganization, supabase])

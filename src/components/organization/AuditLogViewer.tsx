@@ -5,7 +5,7 @@
  * Admin/Owner only component showing all organization actions
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useOrganization } from '@/contexts/OrganizationContext'
 import { auditLogger } from '@/lib/audit-logger'
 import type { AuditAction } from '@/types/rbac'
@@ -69,14 +69,8 @@ export function AuditLogViewer() {
     }
   }, [currentOrganization?.id])
 
-  // Load logs when organization, filter, or page changes
-  useEffect(() => {
-    if (currentOrganization) {
-      loadLogs()
-    }
-  }, [currentOrganization, filterAction, page])
-
-  const loadLogs = async () => {
+  // Memoized loadLogs function to avoid stale closures
+  const loadLogs = useCallback(async () => {
     if (!currentOrganization) return
 
     // Capture the organization ID at the start of the request
@@ -102,7 +96,14 @@ export function AuditLogViewer() {
         setLoading(false)
       }
     }
-  }
+  }, [currentOrganization, filterAction, page])
+
+  // Load logs when organization, filter, or page changes
+  useEffect(() => {
+    if (currentOrganization) {
+      loadLogs()
+    }
+  }, [currentOrganization, loadLogs])
 
   const handleExport = async () => {
     if (!logs || logs.length === 0) return
