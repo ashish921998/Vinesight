@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Card, CardContent } from '@/components/ui/card'
@@ -21,7 +22,8 @@ import { useRecommendationForm } from '@/hooks/consultant/useRecommendationForm'
 export default function CreateRecommendationPage() {
   const params = useParams()
   const router = useRouter()
-  const clientId = parseInt(params.id as string)
+  const clientId = Number.parseInt(params.id as string, 10)
+  const hasValidClientId = Number.isFinite(clientId) && clientId > 0
 
   const {
     client,
@@ -30,6 +32,7 @@ export default function CreateRecommendationPage() {
     items,
     formData,
     setFormData,
+    loadClient,
     addItem,
     removeItem,
     updateItem,
@@ -37,6 +40,13 @@ export default function CreateRecommendationPage() {
     handleSave,
     calculateTotalCost
   } = useRecommendationForm(clientId)
+
+  // Load client data on mount
+  useEffect(() => {
+    if (hasValidClientId) {
+      loadClient()
+    }
+  }, [hasValidClientId, loadClient])
 
   if (loading) {
     return (

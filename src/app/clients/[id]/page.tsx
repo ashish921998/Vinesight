@@ -28,13 +28,20 @@ import { LabReportsTab } from '@/components/consultant/LabReportsTab'
 export default function ClientDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const clientId = parseInt(params.id as string)
+  const clientId = Number.parseInt(params.id as string, 10)
+  const hasValidClientId = Number.isFinite(clientId) && clientId > 0
 
   const [client, setClient] = useState<ConsultantClient | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('farms')
 
   const loadClient = useCallback(async () => {
+    if (!hasValidClientId) {
+      setClient(null)
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       const data = await ConsultantService.getClientWithDetails(clientId)
@@ -45,13 +52,11 @@ export default function ClientDetailPage() {
     } finally {
       setLoading(false)
     }
-  }, [clientId])
+  }, [clientId, hasValidClientId])
 
   useEffect(() => {
-    if (clientId) {
-      loadClient()
-    }
-  }, [clientId, loadClient])
+    loadClient()
+  }, [loadClient])
 
   if (loading) {
     return (

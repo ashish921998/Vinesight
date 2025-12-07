@@ -113,7 +113,10 @@ export function FarmDetailsTab({ clientId, farms, onRefresh }: FarmDetailsTabPro
               variant="outline"
               size="sm"
               className="mt-3"
-              onClick={() => setShowFarmModal(true)}
+              onClick={() => {
+                resetFarmForm()
+                setShowFarmModal(true)
+              }}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add First Farm

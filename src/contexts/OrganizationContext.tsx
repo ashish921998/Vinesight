@@ -245,7 +245,7 @@ export function OrganizationProvider({ children }: OrganizationProviderProps) {
    */
   useEffect(() => {
     refreshMembership()
-  }, [currentOrganization?.id]) // Refresh when org changes
+  }, [currentOrganization?.id, refreshMembership]) // Refresh when org changes
 
   const userRole = userMembership?.role || null
   const isOrgOwner = userRole === 'owner'

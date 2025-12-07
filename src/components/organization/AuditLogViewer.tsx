@@ -107,14 +107,25 @@ export function AuditLogViewer() {
   const handleExport = async () => {
     if (!logs || logs.length === 0) return
 
-    // Create CSV content
-    const headers = ['Timestamp', 'User', 'Action', 'Resource', 'Details']
+    // CSV escaping function for fields with commas, newlines, or quotes
+    const escapeCSV = (value: string): string => {
+      if (value.includes(',') || value.includes('\n') || value.includes('"')) {
+        return `"${value.replace(/"/g, '""')}"`
+      }
+      return value
+    }
+
+    // Create CSV content with aligned headers and data
+    const headers = ['Timestamp', 'User', 'Action', 'Resource', 'Resource ID', 'Details']
     const rows = logs.map((log) => [
-      format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss'),
-      log.user_id ? log.user_id.slice(0, 8) : 'System',
-      log.action,
-      log.resource_type,
-      log.resource_id || ''
+      escapeCSV(format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss')),
+      escapeCSV(log.user_id ? log.user_id.slice(0, 8) : 'System'),
+      escapeCSV(log.action),
+      escapeCSV(log.resource_type),
+      escapeCSV(log.resource_id || ''),
+      escapeCSV(
+        log.metadata?.note || log.metadata?.description || JSON.stringify(log.metadata || {})
+      )
     ])
 
     const csv = [headers, ...rows].map((row) => row.join(',')).join('\n')

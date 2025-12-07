@@ -58,11 +58,18 @@ class OrganizationService {
 
       if (org) {
         // Auto-add creator as owner
-        await this.addMember({
+        const member = await this.addMember({
           organizationId: org.id,
           userId: data.createdBy,
           role: 'owner'
         })
+
+        // Rollback if owner couldn't be added (prevents orphan organization)
+        if (!member) {
+          console.error('Failed to add owner to organization, rolling back')
+          await this.supabase.from('organizations').delete().eq('id', org.id)
+          return null
+        }
 
         // Audit log
         await auditLogger.logCreate('organizations', org.id, org, {
@@ -194,7 +201,7 @@ class OrganizationService {
           user_id: data.userId,
           role: data.role,
           custom_permissions: data.customPermissions || {},
-          assigned_farm_ids: data.assignedFarmIds || null,
+          assigned_farm_ids: data.assignedFarmIds ?? null,
           status: data.status || 'active',
           invited_by: data.invitedBy
         })
@@ -287,7 +294,7 @@ class OrganizationService {
         .update({
           role: updates.role,
           custom_permissions: updates.customPermissions,
-          assigned_farm_ids: updates.assignedFarmIds,
+          assigned_farm_ids: updates.assignedFarmIds ?? null,
           status: updates.status,
           last_active_at: updates.lastActiveAt,
           updated_at: new Date().toISOString()
@@ -369,7 +376,7 @@ class OrganizationService {
           organization_id: data.organizationId,
           email: data.email,
           role: data.role,
-          assigned_farm_ids: data.assignedFarmIds || null,
+          assigned_farm_ids: data.assignedFarmIds ?? null,
           token: data.token,
           expires_at: data.expiresAt,
           invited_by: data.invitedBy,
@@ -534,8 +541,12 @@ class OrganizationService {
         .eq('organization_id', organizationId)
         .eq('status', 'active')
 
+      if (error) {
+        console.error('Error getting member count:', error)
+      }
       return count || 0
     } catch (error) {
+      console.error('Error in getMemberCount:', error)
       return 0
     }
   }
@@ -550,8 +561,12 @@ class OrganizationService {
         .select('*', { count: 'exact', head: true })
         .eq('organization_id', organizationId)
 
+      if (error) {
+        console.error('Error getting farm count:', error)
+      }
       return count || 0
     } catch (error) {
+      console.error('Error in getFarmCount:', error)
       return 0
     }
   }
