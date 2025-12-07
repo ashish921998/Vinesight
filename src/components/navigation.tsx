@@ -13,11 +13,13 @@ import {
   BarChart3,
   TrendingUp,
   Brain,
-  Package
+  Package,
+  Handshake
 } from 'lucide-react'
 import { LoginButton } from './auth/LoginButton'
 import { UserMenu } from './auth/UserMenu'
 import { LanguageSwitcher } from './ui/language-switcher'
+import { OrganizationSelector } from './organization/OrganizationSelector'
 import { useTranslation } from 'react-i18next'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
@@ -30,6 +32,7 @@ export const getNavigation = (t: any) => [
   { name: t('navigation.analytics'), href: '/analytics', icon: Activity },
   { name: t('navigation.weather'), href: '/weather', icon: CloudSun },
   { name: t('navigation.reminders'), href: '/reminders', icon: Users },
+  { name: t('navigation.clients'), href: '/clients', icon: Handshake },
   { name: t('navigation.reports'), href: '/reports', icon: BarChart3 },
   { name: t('navigation.farmEfficiency'), href: '/performance', icon: TrendingUp },
   { name: t('navigation.settings'), href: '/settings', icon: Settings }
@@ -87,6 +90,11 @@ export default function Navigation() {
             </ul>
           </nav>
           <div className="border-t border-border pt-4 space-y-3">
+            {user && (
+              <div className="px-2">
+                <OrganizationSelector />
+              </div>
+            )}
             <div className="px-2">
               <LanguageSwitcher />
             </div>
