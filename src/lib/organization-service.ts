@@ -67,7 +67,13 @@ class OrganizationService {
         // Rollback if owner couldn't be added (prevents orphan organization)
         if (!member) {
           console.error('Failed to add owner to organization, rolling back')
-          await this.supabase.from('organizations').delete().eq('id', org.id)
+          const { error: deleteError } = await this.supabase
+            .from('organizations')
+            .delete()
+            .eq('id', org.id)
+          if (deleteError) {
+            console.error('Failed to rollback organization:', deleteError)
+          }
           return null
         }
 

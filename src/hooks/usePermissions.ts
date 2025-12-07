@@ -116,14 +116,17 @@ export function usePermissions(): PermissionHookReturn {
         if (permission === 'create') return userPerms.invite || false
         if (permission === 'update') return userPerms.manage || false
         if (permission === 'delete') return userPerms.remove || false
-        if (permission === 'read') return userPerms.invite || userPerms.manage || false
+        // Read access if user has any user management permission
+        if (permission === 'read')
+          return userPerms.invite || userPerms.manage || userPerms.remove || false
       }
 
       if (resource === 'reports') {
         const reportPerms = resourcePerms as any
         if (permission === 'create') return reportPerms.generate || false
         if (permission === 'read') return reportPerms.generate || reportPerms.export || false
-        if (permission === 'update') return reportPerms.export || false
+        // Reports don't support update/delete operations
+        if (permission === 'update') return false
         if (permission === 'delete') return false
       }
 
