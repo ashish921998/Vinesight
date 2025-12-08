@@ -1360,8 +1360,10 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          phone: string | null
           updated_at: string | null
           username: string | null
+          user_type: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -1369,8 +1371,10 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          phone?: string | null
           updated_at?: string | null
           username?: string | null
+          user_type?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -1378,8 +1382,10 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          phone?: string | null
           updated_at?: string | null
           username?: string | null
+          user_type?: string | null
         }
         Relationships: []
       }
@@ -1961,6 +1967,242 @@ export type Database = {
           station_type?: string | null
         }
         Relationships: []
+      }
+      organizations: {
+        Row: {
+          id: string
+          name: string
+          slug: string | null
+          description: string | null
+          metadata: Json | null
+          created_by: string | null
+          created_at: string | null
+          is_active: boolean | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug?: string | null
+          description?: string | null
+          metadata?: Json | null
+          created_by?: string | null
+          created_at?: string | null
+          is_active?: boolean | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string | null
+          description?: string | null
+          metadata?: Json | null
+          created_by?: string | null
+          created_at?: string | null
+          is_active?: boolean | null
+        }
+        Relationships: []
+      }
+      organization_members: {
+        Row: {
+          id: string
+          organization_id: string
+          user_id: string
+          role: string
+          is_owner: boolean | null
+          joined_at: string | null
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          user_id: string
+          role?: string
+          is_owner?: boolean | null
+          joined_at?: string | null
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          user_id?: string
+          role?: string
+          is_owner?: boolean | null
+          joined_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'organization_members_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      organization_clients: {
+        Row: {
+          id: string
+          organization_id: string
+          client_user_id: string
+          assigned_by: string | null
+          assigned_at: string | null
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          client_user_id: string
+          assigned_by?: string | null
+          assigned_at?: string | null
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          client_user_id?: string
+          assigned_by?: string | null
+          assigned_at?: string | null
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'organization_clients_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      farmer_invitations: {
+        Row: {
+          id: string
+          organization_id: string
+          token: string
+          status: string
+          expires_at: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          token: string
+          status?: string
+          expires_at?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          token?: string
+          status?: string
+          expires_at?: string | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'farmer_invitations_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      fertilizer_plans: {
+        Row: {
+          id: string
+          farm_id: number
+          created_by: string
+          organization_id: string
+          title: string
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          farm_id: number
+          created_by: string
+          organization_id: string
+          title: string
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          farm_id?: number
+          created_by?: string
+          organization_id?: string
+          title?: string
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'fertilizer_plans_farm_id_fkey'
+            columns: ['farm_id']
+            isOneToOne: false
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'fertilizer_plans_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      fertilizer_plan_items: {
+        Row: {
+          id: string
+          plan_id: string
+          application_date: string | null
+          fertilizer_name: string
+          quantity: number
+          unit: string
+          application_method: string | null
+          application_frequency: number
+          notes: string | null
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          plan_id: string
+          application_date?: string | null
+          fertilizer_name: string
+          quantity: number
+          unit?: string
+          application_method?: string | null
+          application_frequency?: number
+          notes?: string | null
+          sort_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          plan_id?: string
+          application_date?: string | null
+          fertilizer_name?: string
+          quantity?: number
+          unit?: string
+          application_method?: string | null
+          application_frequency?: number
+          notes?: string | null
+          sort_order?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'fertilizer_plan_items_plan_id_fkey'
+            columns: ['plan_id']
+            isOneToOne: false
+            referencedRelation: 'fertilizer_plans'
+            referencedColumns: ['id']
+          }
+        ]
       }
     }
     Views: {

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -20,8 +21,10 @@ import { UserMenu } from './auth/UserMenu'
 import { LanguageSwitcher } from './ui/language-switcher'
 import { useTranslation } from 'react-i18next'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { getTypedSupabaseClient } from '@/lib/supabase'
 
-export const getNavigation = (t: any) => [
+// Base navigation (shown to all users)
+export const getBaseNavigation = (t: (key: string) => string) => [
   { name: t('navigation.dashboard'), href: '/dashboard', icon: Home },
   { name: t('navigation.farmManagement'), href: '/farms', icon: Sprout },
   { name: t('navigation.warehouse'), href: '/warehouse', icon: Package },
@@ -35,12 +38,48 @@ export const getNavigation = (t: any) => [
   { name: t('navigation.settings'), href: '/settings', icon: Settings }
 ]
 
+// Org-only navigation items
+const orgNavigation = [
+  { name: 'Clients', href: '/clients', icon: Users },
+  { name: 'Users', href: '/users', icon: Users }
+]
+
 export default function Navigation() {
   const pathname = usePathname()
   const { t } = useTranslation()
   const { user, loading } = useSupabaseAuth()
+  const [isOrgMember, setIsOrgMember] = useState(false)
 
-  const navigation = getNavigation(t)
+  // Check if user is an org member
+  useEffect(() => {
+    async function checkOrgMembership() {
+      if (!user) {
+        setIsOrgMember(false)
+        return
+      }
+
+      try {
+        const supabase = await getTypedSupabaseClient()
+        const { data } = await supabase
+          .from('organization_members')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1)
+
+        setIsOrgMember(data && data.length > 0)
+      } catch {
+        setIsOrgMember(false)
+      }
+    }
+
+    checkOrgMembership()
+  }, [user])
+
+  // Build navigation based on user type
+  const baseNav = getBaseNavigation(t)
+  const navigation = isOrgMember
+    ? [...baseNav.slice(0, 2), ...orgNavigation, ...baseNav.slice(2)]
+    : baseNav
 
   return (
     <>

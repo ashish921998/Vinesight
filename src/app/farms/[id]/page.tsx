@@ -48,6 +48,8 @@ import {
   handleDailyNotesAndPhotosAfterLogs
 } from '@/lib/daily-note-utils'
 import { TasksOverviewCard } from '@/components/tasks/TasksOverviewCard'
+import { FertilizerPlanService, type FertilizerPlanWithItems } from '@/lib/fertilizer-plan-service'
+import { FertilizerPlanView } from '@/components/fertilizer/FertilizerPlanView'
 
 interface DashboardData {
   farm: Farm | null
@@ -87,6 +89,7 @@ export default function FarmDetailsPage() {
     message: string
     pill?: string
   } | null>(null)
+  const [fertilizerPlans, setFertilizerPlans] = useState<FertilizerPlanWithItems[]>([])
   const dismissalStorageKey = `field-signal-dismissals:${farmId}`
   const [dismissedSignals, setDismissedSignals] = useState<Record<string, number>>({})
   const updateDismissedSignals = useCallback(
@@ -163,6 +166,15 @@ export default function FarmDetailsPage() {
         ...data,
         farm: data.farm
       })
+
+      // Load fertilizer plans for this farm
+      try {
+        const plans = await FertilizerPlanService.getPlansByFarm(parseInt(farmId))
+        setFertilizerPlans(plans)
+      } catch (planError) {
+        // Silently fail - plans might not exist yet
+        console.debug('No fertilizer plans found:', planError)
+      }
     } catch (error) {
       logger.error('Error loading dashboard data:', error)
     } finally {
@@ -2031,11 +2043,19 @@ export default function FarmDetailsPage() {
               )}
 
               {renderWorkTabs()}
+
+              {/* Fertilizer Plans from Agronomist */}
+              {fertilizerPlans.length > 0 && <FertilizerPlanView plans={fertilizerPlans} />}
             </div>
           ) : (
             <div className="space-y-10">
               <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(260px,1.2fr)]">
-                <div className="space-y-6">{renderWorkTabs()}</div>
+                <div className="space-y-6">
+                  {renderWorkTabs()}
+
+                  {/* Fertilizer Plans from Agronomist */}
+                  {fertilizerPlans.length > 0 && <FertilizerPlanView plans={fertilizerPlans} />}
+                </div>
 
                 {readinessPanel && <aside className="space-y-6">{readinessPanel}</aside>}
               </div>
