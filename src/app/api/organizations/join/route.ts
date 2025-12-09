@@ -3,11 +3,14 @@ import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import type { Database } from '@/types/database'
 
-// Use service role to bypass RLS (for new user joining org)
-const supabaseAdmin = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// Lazy initialization to avoid build-time errors
+function getSupabaseAdmin() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceRoleKey) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is not set')
+  }
+  return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+}
 
 // P1: Validate role against allowed values
 const JoinSchema = z.object({
@@ -31,7 +34,7 @@ export async function POST(request: NextRequest) {
     const { userId, organizationId, role } = parseResult.data
 
     // P0: Verify user was just created (within 5 minutes) - for signup flow security
-    const { data: profile } = await supabaseAdmin
+    const { data: profile } = await getSupabaseAdmin()
       .from('profiles')
       .select('created_at')
       .eq('id', userId)
@@ -48,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already a member
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await getSupabaseAdmin()
       .from('organization_members')
       .select('id')
       .eq('organization_id', organizationId)
@@ -60,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Add user as org member
-    const { error: memberError } = await supabaseAdmin.from('organization_members').insert({
+    const { error: memberError } = await getSupabaseAdmin().from('organization_members').insert({
       organization_id: organizationId,
       user_id: userId,
       role,
@@ -73,7 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     // P1: Update user's profile with error handling and rollback
-    const { error: profileError } = await supabaseAdmin
+    const { error: profileError } = await getSupabaseAdmin()
       .from('profiles')
       .update({ user_type: 'org_member' })
       .eq('id', userId)
@@ -81,7 +84,7 @@ export async function POST(request: NextRequest) {
     if (profileError) {
       console.error('Error updating profile:', profileError)
       // Rollback member addition
-      await supabaseAdmin
+      await getSupabaseAdmin()
         .from('organization_members')
         .delete()
         .eq('user_id', userId)

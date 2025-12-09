@@ -192,50 +192,57 @@ function ClientsPage() {
               </div>
             ) : (
               <>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="farmerName">Farmer Name</Label>
-                    <Input
-                      id="farmerName"
-                      placeholder="John Doe"
-                      value={inviteName}
-                      onChange={(e) => setInviteName(e.target.value)}
-                    />
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    sendInvite()
+                  }}
+                >
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="farmerName">Farmer Name</Label>
+                      <Input
+                        id="farmerName"
+                        placeholder="John Doe"
+                        value={inviteName}
+                        onChange={(e) => setInviteName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="farmerEmail">Email Address</Label>
+                      <Input
+                        id="farmerEmail"
+                        type="email"
+                        placeholder="farmer@example.com"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="farmerEmail">Email Address</Label>
-                    <Input
-                      id="farmerEmail"
-                      type="email"
-                      placeholder="farmer@example.com"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                    />
-                  </div>
-                </div>
 
-                <DialogFooter>
-                  <Button variant="outline" onClick={resetInviteDialog}>
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={sendInvite}
-                    disabled={sending || !inviteName.trim() || !inviteEmail.trim()}
-                    className="gap-2"
-                  >
-                    {sending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        <Mail className="h-4 w-4" />
-                        Send Invitation
-                      </>
-                    )}
-                  </Button>
-                </DialogFooter>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={resetInviteDialog} type="button">
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={sending || !inviteName.trim() || !inviteEmail.trim()}
+                      className="gap-2"
+                    >
+                      {sending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="h-4 w-4" />
+                          Send Invitation
+                        </>
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
               </>
             )}
           </DialogContent>

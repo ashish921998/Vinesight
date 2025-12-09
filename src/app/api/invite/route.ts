@@ -4,6 +4,31 @@ import { cookies } from 'next/headers'
 import { Resend } from 'resend'
 import type { Database } from '@/types/database'
 
+// TypeScript interface for request body
+interface InviteRequest {
+  organizationId: string
+  organizationName: string
+  farmerName: string
+  farmerEmail: string
+  signupLink: string
+}
+
+// HTML escape utility to prevent XSS/HTML injection
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+// Email validation regex
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Invitation TTL in days
+const INVITATION_TTL_DAYS = 7
+
 // Lazy initialization to avoid build-time errors
 function getResendClient() {
   const apiKey = process.env.RESEND_API_KEY
@@ -13,15 +38,41 @@ function getResendClient() {
   return new Resend(apiKey)
 }
 
+// TODO: Consider implementing rate limiting per user/organization to prevent abuse
+// Options: @upstash/ratelimit with Redis, or application-level tracking
+
 export async function POST(request: NextRequest) {
   try {
-    const { organizationId, organizationName, farmerName, farmerEmail, signupLink } =
-      await request.json()
+    const body = (await request.json()) as InviteRequest
+    const { organizationId, organizationName, farmerName, farmerEmail, signupLink } = body
 
-    // P2: Validate required fields including organizationName
+    // Validate required fields
     if (!organizationId || !organizationName || !farmerName || !farmerEmail || !signupLink) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
+
+    // Validate email format
+    if (!EMAIL_REGEX.test(farmerEmail)) {
+      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
+    }
+
+    // Validate signup link is a valid URL
+    let validatedUrl: URL
+    try {
+      validatedUrl = new URL(signupLink)
+      // Verify it's our domain for security
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL
+      if (appUrl && validatedUrl.origin !== new URL(appUrl).origin) {
+        return NextResponse.json({ error: 'Invalid signup link domain' }, { status: 400 })
+      }
+    } catch {
+      return NextResponse.json({ error: 'Invalid signup link' }, { status: 400 })
+    }
+
+    // Escape HTML in user-provided values to prevent XSS
+    const safeFarmerName = escapeHtml(farmerName)
+    const safeOrgName = escapeHtml(organizationName)
+    const safeSignupLink = escapeHtml(validatedUrl.toString())
 
     // Create Supabase client
     const cookieStore = await cookies()
@@ -61,13 +112,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not authorized for this organization' }, { status: 403 })
     }
 
-    // Create invitation record
+    // Calculate expiration date (7 days from now)
+    const expiresAt = new Date()
+    expiresAt.setDate(expiresAt.getDate() + INVITATION_TTL_DAYS)
+
+    // Create invitation record with expiration
     const { data: invitation, error: invError } = await supabase
       .from('farmer_invitations')
       .insert({
         organization_id: organizationId,
         token: crypto.randomUUID(),
-        status: 'pending'
+        status: 'pending',
+        expires_at: expiresAt.toISOString()
       })
       .select()
       .single()
@@ -77,7 +133,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 })
     }
 
-    // Send email using Resend
     // Validate email configuration
     const fromEmail = process.env.RESEND_FROM_EMAIL
     if (!fromEmail) {
@@ -85,11 +140,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email service not configured' }, { status: 500 })
     }
 
+    // Send email using Resend with escaped values
     const resend = getResendClient()
     const { error: emailError } = await resend.emails.send({
       from: fromEmail,
       to: farmerEmail,
-      subject: `${organizationName} invites you to VineSight`,
+      subject: `${safeOrgName} invites you to VineSight`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -101,22 +157,25 @@ export async function POST(request: NextRequest) {
           <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
               <h1 style="color: #18181b; font-size: 24px; margin: 0 0 16px 0;">
-                Hello ${farmerName}! 👋
+                Hello ${safeFarmerName}! 👋
               </h1>
               <p style="color: #3f3f46; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-                <strong>${organizationName}</strong> has invited you to join VineSight, a platform to manage your farm operations and get expert consultation.
+                <strong>${safeOrgName}</strong> has invited you to join VineSight, a platform to manage your farm operations and get expert consultation.
               </p>
               <p style="color: #3f3f46; font-size: 16px; line-height: 1.6; margin: 0 0 32px 0;">
                 Click the button below to create your account and connect with your consultant:
               </p>
               <div style="text-align: center; margin: 0 0 32px 0;">
-                <a href="${signupLink}" style="display: inline-block; background-color: #16a34a; color: white; font-size: 16px; font-weight: 600; text-decoration: none; padding: 14px 32px; border-radius: 8px;">
+                <a href="${safeSignupLink}" style="display: inline-block; background-color: #16a34a; color: white; font-size: 16px; font-weight: 600; text-decoration: none; padding: 14px 32px; border-radius: 8px;">
                   Create Your Account
                 </a>
               </div>
               <p style="color: #71717a; font-size: 14px; line-height: 1.5; margin: 0;">
                 Or copy this link into your browser:<br>
-                <a href="${signupLink}" style="color: #16a34a; word-break: break-all;">${signupLink}</a>
+                <a href="${safeSignupLink}" style="color: #16a34a; word-break: break-all;">${safeSignupLink}</a>
+              </p>
+              <p style="color: #a1a1aa; font-size: 12px; margin: 24px 0 0 0;">
+                This invitation expires in ${INVITATION_TTL_DAYS} days.
               </p>
             </div>
             <p style="color: #a1a1aa; font-size: 12px; text-align: center; margin: 24px 0 0 0;">
@@ -130,7 +189,7 @@ export async function POST(request: NextRequest) {
 
     if (emailError) {
       console.error('Error sending email:', emailError)
-      // P2: Update invitation status to 'failed' (not 'expired' which is misleading)
+      // Update invitation status to 'failed'
       await supabase.from('farmer_invitations').update({ status: 'failed' }).eq('id', invitation.id)
       return NextResponse.json({ error: 'Failed to send email' }, { status: 500 })
     }
@@ -138,7 +197,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Invitation sent',
-      invitationId: invitation.id
+      invitationId: invitation.id,
+      expiresAt: expiresAt.toISOString()
     })
   } catch (error) {
     console.error('Error in invite API:', error)

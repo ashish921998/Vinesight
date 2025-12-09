@@ -5,11 +5,14 @@ import { cookies } from 'next/headers'
 import { z } from 'zod'
 import type { Database } from '@/types/database'
 
-// Use service role to bypass RLS (for new user becoming client)
-const supabaseAdmin = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// Lazy initialization to avoid build-time errors
+function getSupabaseAdmin() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceRoleKey) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is not set')
+  }
+  return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+}
 
 // P0: Validate input schema
 const AddClientSchema = z.object({
@@ -64,7 +67,7 @@ export async function POST(request: NextRequest) {
     if (!isSelfAdd) {
       // Scenario 2: Admin adding user (Service role flow, e.g. signup)
       // Enforce 5-minute creation window for security if not self-add
-      const { data: profile } = await supabaseAdmin
+      const { data: profile } = await getSupabaseAdmin()
         .from('profiles')
         .select('created_at')
         .eq('id', userId)
@@ -85,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user profile with consultant organization
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await getSupabaseAdmin()
       .from('profiles')
       .update({ consultant_organization_id: organizationId })
       .eq('id', userId)

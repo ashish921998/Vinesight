@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -17,7 +17,8 @@ import {
 import { getTypedSupabaseClient } from '@/lib/supabase'
 import { toast } from 'sonner'
 
-interface Organization {
+// Partial organization type for settings page - only uses id, name, slug
+type OrganizationInfo = {
   id: string
   name: string
   slug: string | null
@@ -30,27 +31,16 @@ export default function SettingsPage() {
   const [signOutLoading, setSignOutLoading] = useState(false)
 
   // Organization Consultant State
-  const [organizations, setOrganizations] = useState<Organization[]>([])
-  const [currentOrg, setCurrentOrg] = useState<Organization | null>(null)
+  const [organizations, setOrganizations] = useState<OrganizationInfo[]>([])
+  const [currentOrg, setCurrentOrg] = useState<OrganizationInfo | null>(null)
   const [selectedOrgId, setSelectedOrgId] = useState<string>('')
   const [orgLoading, setOrgLoading] = useState(false)
   const [connectionLoading, setConnectionLoading] = useState(false)
 
   const [isOrgMember, setIsOrgMember] = useState(false)
 
-  useEffect(() => {
-    // Load saved language preference
-    const savedLang = localStorage.getItem('vinesight-language') || 'en'
-    setLanguage(savedLang)
-
-    // Fetch organizations and current status if user is logged in
-    if (user) {
-      checkOrgMembership()
-    }
-  }, [user])
-
   // Check if user is an org member (same logic as navigation)
-  const checkOrgMembership = async () => {
+  const checkOrgMembership = useCallback(async () => {
     if (!user) return
     try {
       const supabase = getTypedSupabaseClient()
@@ -76,7 +66,18 @@ export default function SettingsPage() {
     } catch (error) {
       console.error('Error checking status:', error)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    // Load saved language preference
+    const savedLang = localStorage.getItem('vinesight-language') || 'en'
+    setLanguage(savedLang)
+
+    // Fetch organizations and current status if user is logged in
+    if (user) {
+      checkOrgMembership()
+    }
+  }, [user, checkOrgMembership])
 
   const fetchOrganizations = async () => {
     try {
@@ -84,6 +85,8 @@ export default function SettingsPage() {
       if (response.ok) {
         const data = await response.json()
         setOrganizations(data)
+      } else {
+        console.error('Failed to fetch organizations:', response.status)
       }
     } catch (error) {
       console.error('Failed to fetch organizations', error)

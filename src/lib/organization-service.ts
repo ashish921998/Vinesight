@@ -54,10 +54,14 @@ export class OrganizationService {
   ): Promise<Organization> {
     const supabase = await getTypedSupabaseClient()
     const {
-      data: { user }
+      data: { user },
+      error: authError
     } = await supabase.auth.getUser()
 
-    // P1: Verify user is authenticated
+    // Surface auth errors distinctly from unauthenticated state
+    if (authError) {
+      throw authError
+    }
     if (!user) {
       throw new Error('User must be authenticated to create an organization')
     }
@@ -88,7 +92,8 @@ export class OrganizationService {
       .eq('organization_id', organizationId)
 
     if (error) throw error
-    return (data || []) as OrganizationMember[]
+    // Cast needed because Supabase returns role as string, but our interface uses union type
+    return (data ?? []) as OrganizationMember[]
   }
 
   static async addOrganizationMember(
@@ -110,6 +115,7 @@ export class OrganizationService {
       .single()
 
     if (error) throw error
+    // Cast needed because Supabase returns role as string
     return data as OrganizationMember
   }
 
@@ -144,37 +150,45 @@ export class OrganizationService {
 
   static async getOrganizationClients(organizationId: string): Promise<OrganizationClient[]> {
     const supabase = await getTypedSupabaseClient()
-    // Fetch profiles that have this organization as their consultant
+    // Fetch only needed fields to avoid over-exposing PII
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, full_name, email, updated_at')
       .eq('consultant_organization_id', organizationId)
 
     if (error) throw error
 
-    // Map profiles to structure compatible with frontend (or updated structure)
-    // We map id to client_user_id to maintain compatibility where possible,
-    // but consumers should be aware this is now profile data.
-    return (data || []).map((profile) => ({
-      ...profile,
-      client_user_id: profile.id, // Alias for compatibility
+    // Map profiles to OrganizationClient structure
+    return (data ?? []).map((profile) => ({
+      id: profile.id,
+      client_user_id: profile.id,
       organization_id: organizationId,
-      assigned_at: profile.updated_at, // Approximate
-      assigned_by: null, // No longer tracked
-      notes: null // No notes support in profiles yet
+      full_name: profile.full_name,
+      email: profile.email,
+      assigned_at: profile.updated_at,
+      assigned_by: null,
+      notes: null
     }))
   }
 
   static async addOrganizationClient(organizationId: string, clientUserId: string): Promise<void> {
     const supabase = await getTypedSupabaseClient()
 
-    // P1: Verify user is authenticated
+    // Verify user is authenticated with distinct error handling
     const {
-      data: { user }
+      data: { user },
+      error: authError
     } = await supabase.auth.getUser()
+
+    if (authError) {
+      throw authError
+    }
     if (!user) {
       throw new Error('User must be authenticated to add organization clients')
     }
+
+    // TODO: Consider adding org-level authorization check here
+    // to verify user is a member of organizationId
 
     const { error } = await supabase
       .from('profiles')
@@ -194,7 +208,13 @@ export class OrganizationService {
       .eq('id', userId)
       .single()
 
-    if (error) throw error
+    if (error) {
+      // Handle profile not found gracefully - treat as not a client
+      if (error.code === 'PGRST116') {
+        return { isClient: false }
+      }
+      throw error
+    }
 
     if (data && data.consultant_organization_id) {
       return { isClient: true, organizationId: data.consultant_organization_id }

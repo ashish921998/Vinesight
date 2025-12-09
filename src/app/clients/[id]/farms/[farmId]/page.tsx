@@ -46,7 +46,7 @@ function ClientFarmPage() {
   const params = useParams()
   const router = useRouter()
   const clientId = params.id as string
-  const farmId = parseInt(params.farmId as string)
+  const farmId = parseInt(params.farmId as string, 10)
 
   const [loading, setLoading] = useState(true)
   const [farm, setFarm] = useState<FarmData | null>(null)
