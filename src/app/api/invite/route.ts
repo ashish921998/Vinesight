@@ -71,8 +71,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email using Resend
+    // Validate email configuration
+    const fromEmail = process.env.RESEND_FROM_EMAIL
+    if (!fromEmail) {
+      console.error('RESEND_FROM_EMAIL not configured')
+      return NextResponse.json({ error: 'Email service not configured' }, { status: 500 })
+    }
+
     const { error: emailError } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL ?? '',
+      from: fromEmail,
       to: farmerEmail,
       subject: `${organizationName} invites you to VineSight`,
       html: `

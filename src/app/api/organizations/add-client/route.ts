@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { z } from 'zod'
 import type { Database } from '@/types/database'
 
@@ -29,43 +31,67 @@ export async function POST(request: NextRequest) {
     }
     const { userId, organizationId } = parseResult.data
 
-    // P0: Verify user was just created (within 5 minutes) - for signup flow security
-    const { data: profile } = await supabaseAdmin
+    // Verify user is authenticated
+    const cookieStore = await cookies()
+    const supabase = createServerClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll() {
+            // Server-side, we don't set cookies
+          }
+        }
+      }
+    )
+
+    const {
+      data: { user: authUser },
+      error: authError
+    } = await supabase.auth.getUser()
+
+    if (authError || !authUser) {
+      return NextResponse.json({ error: 'Unauthorized: User not authenticated' }, { status: 401 })
+    }
+
+    // Security Check
+    // Scenario 1: User adding THEMSELVES (Self-service join from Settings)
+    const isSelfAdd = authUser.id === userId
+
+    if (!isSelfAdd) {
+      // Scenario 2: Admin adding user (Service role flow, e.g. signup)
+      // Enforce 5-minute creation window for security if not self-add
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('created_at')
+        .eq('id', userId)
+        .single()
+
+      if (!profile || !profile.created_at) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      }
+
+      const createdAt = new Date(profile.created_at)
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+      if (createdAt < fiveMinutesAgo) {
+        return NextResponse.json(
+          { error: 'Unauthorized - user session expired for signup flow' },
+          { status: 401 }
+        )
+      }
+    }
+
+    // Update user profile with consultant organization
+    const { error: updateError } = await supabaseAdmin
       .from('profiles')
-      .select('created_at')
+      .update({ consultant_organization_id: organizationId })
       .eq('id', userId)
-      .single()
 
-    if (!profile || !profile.created_at) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    const createdAt = new Date(profile.created_at)
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
-    if (createdAt < fiveMinutesAgo) {
-      return NextResponse.json({ error: 'Unauthorized - user session expired' }, { status: 401 })
-    }
-
-    // Check if already a client
-    const { data: existing } = await supabaseAdmin
-      .from('organization_clients')
-      .select('id')
-      .eq('organization_id', organizationId)
-      .eq('client_user_id', userId)
-      .single()
-
-    if (existing) {
-      return NextResponse.json({ error: 'Already a client' }, { status: 409 })
-    }
-
-    // Add user as org client
-    const { error: clientError } = await supabaseAdmin.from('organization_clients').insert({
-      organization_id: organizationId,
-      client_user_id: userId
-    })
-
-    if (clientError) {
-      console.error('Error adding client:', clientError)
+    if (updateError) {
+      console.error('Error updating profile:', updateError)
       return NextResponse.json({ error: 'Failed to add as client' }, { status: 500 })
     }
 

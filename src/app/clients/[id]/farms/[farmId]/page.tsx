@@ -109,7 +109,7 @@ function ClientFarmPage() {
           .select('organization_id')
           .eq('user_id', user.id)
           .limit(1)
-          .single()
+          .maybeSingle()
 
         if (membership) {
           setOrganizationId(membership.organization_id)

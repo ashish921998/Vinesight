@@ -1,5 +1,5 @@
 import { getTypedSupabaseClient } from './supabase'
-import type { Json } from '@/types/database'
+import type { Json, Database } from '@/types/database'
 
 // Types
 export interface Organization {
@@ -29,6 +29,8 @@ export interface OrganizationClient {
   assigned_by: string | null
   assigned_at: string | null
   notes: string | null
+  full_name?: string | null
+  email?: string | null
 }
 
 export class OrganizationService {
@@ -38,7 +40,11 @@ export class OrganizationService {
     const supabase = await getTypedSupabaseClient()
     const { data, error } = await supabase.from('organizations').select('*').eq('id', id).single()
 
-    if (error) throw error
+    if (error) {
+      // PGRST116 = Row not found
+      if (error.code === 'PGRST116') return null
+      throw error
+    }
     return data
   }
 
@@ -138,43 +144,44 @@ export class OrganizationService {
 
   static async getOrganizationClients(organizationId: string): Promise<OrganizationClient[]> {
     const supabase = await getTypedSupabaseClient()
+    // Fetch profiles that have this organization as their consultant
     const { data, error } = await supabase
-      .from('organization_clients')
+      .from('profiles')
       .select('*')
-      .eq('organization_id', organizationId)
+      .eq('consultant_organization_id', organizationId)
 
     if (error) throw error
-    return (data || []) as OrganizationClient[]
+
+    // Map profiles to structure compatible with frontend (or updated structure)
+    // We map id to client_user_id to maintain compatibility where possible,
+    // but consumers should be aware this is now profile data.
+    return (data || []).map((profile) => ({
+      ...profile,
+      client_user_id: profile.id, // Alias for compatibility
+      organization_id: organizationId,
+      assigned_at: profile.updated_at, // Approximate
+      assigned_by: null, // No longer tracked
+      notes: null // No notes support in profiles yet
+    }))
   }
 
-  static async addOrganizationClient(
-    organizationId: string,
-    clientUserId: string,
-    notes?: string
-  ): Promise<OrganizationClient> {
+  static async addOrganizationClient(organizationId: string, clientUserId: string): Promise<void> {
     const supabase = await getTypedSupabaseClient()
+
+    // P1: Verify user is authenticated
     const {
       data: { user }
     } = await supabase.auth.getUser()
-
-    // P1: Verify user is authenticated
     if (!user) {
       throw new Error('User must be authenticated to add organization clients')
     }
 
-    const { data, error } = await supabase
-      .from('organization_clients')
-      .insert({
-        organization_id: organizationId,
-        client_user_id: clientUserId,
-        assigned_by: user.id,
-        notes: notes || null
-      })
-      .select()
-      .single()
+    const { error } = await supabase
+      .from('profiles')
+      .update({ consultant_organization_id: organizationId })
+      .eq('id', clientUserId)
 
     if (error) throw error
-    return data as OrganizationClient
   }
 
   static async isUserOrgClient(
@@ -182,21 +189,24 @@ export class OrganizationService {
   ): Promise<{ isClient: boolean; organizationId?: string }> {
     const supabase = await getTypedSupabaseClient()
     const { data, error } = await supabase
-      .from('organization_clients')
-      .select('organization_id')
-      .eq('client_user_id', userId)
-      .limit(1)
+      .from('profiles')
+      .select('consultant_organization_id')
+      .eq('id', userId)
+      .single()
 
     if (error) throw error
-    if (data && data.length > 0) {
-      return { isClient: true, organizationId: data[0].organization_id }
+
+    if (data && data.consultant_organization_id) {
+      return { isClient: true, organizationId: data.consultant_organization_id }
     }
     return { isClient: false }
   }
 
   // ==================== CLIENT FARMS ====================
 
-  static async getClientFarms(clientUserId: string) {
+  static async getClientFarms(
+    clientUserId: string
+  ): Promise<Database['public']['Tables']['farms']['Row'][]> {
     const supabase = await getTypedSupabaseClient()
     const { data, error } = await supabase
       .from('farms')
@@ -205,6 +215,6 @@ export class OrganizationService {
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    return data || []
+    return data ?? []
   }
 }

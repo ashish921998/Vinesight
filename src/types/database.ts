@@ -1356,6 +1356,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          consultant_organization_id: string | null
           created_at: string | null
           email: string | null
           full_name: string | null
@@ -1367,6 +1368,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          consultant_organization_id?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
@@ -1378,6 +1380,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          consultant_organization_id?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
@@ -1387,7 +1390,15 @@ export type Database = {
           username?: string | null
           user_type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'profiles_consultant_organization_id_fkey'
+            columns: ['consultant_organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          }
+        ]
       }
       profitability_analyses: {
         Row: {

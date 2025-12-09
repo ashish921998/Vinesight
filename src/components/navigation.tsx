@@ -54,6 +54,7 @@ export default function Navigation() {
 
   // Check if user is an org member
   useEffect(() => {
+    let cancelled = false
     async function checkOrgMembership() {
       if (!user) {
         setIsOrgMember(false)
@@ -71,16 +72,19 @@ export default function Navigation() {
         // P2: Handle Supabase error field
         if (error) {
           console.error('Error checking org membership:', error)
-          setIsOrgMember(false)
+          if (!cancelled) setIsOrgMember(false)
           return
         }
-        setIsOrgMember(data && data.length > 0)
+        if (!cancelled) setIsOrgMember(data && data.length > 0)
       } catch {
-        setIsOrgMember(false)
+        if (!cancelled) setIsOrgMember(false)
       }
     }
 
     checkOrgMembership()
+    return () => {
+      cancelled = true
+    }
   }, [user])
 
   // Build navigation based on user type

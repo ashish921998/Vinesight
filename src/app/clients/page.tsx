@@ -89,7 +89,7 @@ function ClientsPage() {
     try {
       setSending(true)
 
-      const signupLink = `${window.location.origin}/signup/${organization.slug || organization.id}`
+      const signupLink = `${window.location.origin}/signup`
 
       const response = await fetch('/api/invite', {
         method: 'POST',
@@ -266,8 +266,10 @@ function ClientsPage() {
               onClick={() => router.push(`/clients/${client.client_user_id}`)}
             >
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Farmer</CardTitle>
-                <CardDescription>User ID: {client.client_user_id}</CardDescription>
+                <CardTitle className="text-lg">
+                  {client.full_name || client.email || 'Unknown Farmer'}
+                </CardTitle>
+                <CardDescription>{client.email || 'No email'}</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
