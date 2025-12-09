@@ -4,7 +4,14 @@ import { cookies } from 'next/headers'
 import { Resend } from 'resend'
 import type { Database } from '@/types/database'
 
-const resend = new Resend(process.env.RESEND_API_KEY ?? '')
+// Lazy initialization to avoid build-time errors
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY environment variable is not set')
+  }
+  return new Resend(apiKey)
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -78,6 +85,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email service not configured' }, { status: 500 })
     }
 
+    const resend = getResendClient()
     const { error: emailError } = await resend.emails.send({
       from: fromEmail,
       to: farmerEmail,
