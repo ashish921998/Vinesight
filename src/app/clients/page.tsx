@@ -74,8 +74,17 @@ function ClientsPage() {
     loadData()
   }, [loadData])
 
+  // P2: Email format validation
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+
   const sendInvite = async () => {
-    if (!organization || !inviteEmail.trim() || !inviteName.trim()) return
+    if (!organization || !inviteName.trim()) return
+
+    const email = inviteEmail.trim()
+    if (!email || !isValidEmail(email)) {
+      toast.error('Please enter a valid email address')
+      return
+    }
 
     try {
       setSending(true)

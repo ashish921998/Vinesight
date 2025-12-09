@@ -11,8 +11,8 @@ export async function POST(request: NextRequest) {
     const { organizationId, organizationName, farmerName, farmerEmail, signupLink } =
       await request.json()
 
-    // Validate required fields
-    if (!organizationId || !farmerName || !farmerEmail || !signupLink) {
+    // P2: Validate required fields including organizationName
+    if (!organizationId || !organizationName || !farmerName || !farmerEmail || !signupLink) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -115,11 +115,8 @@ export async function POST(request: NextRequest) {
 
     if (emailError) {
       console.error('Error sending email:', emailError)
-      // Update invitation status to failed
-      await supabase
-        .from('farmer_invitations')
-        .update({ status: 'expired' })
-        .eq('id', invitation.id)
+      // P2: Update invitation status to 'failed' (not 'expired' which is misleading)
+      await supabase.from('farmer_invitations').update({ status: 'failed' }).eq('id', invitation.id)
       return NextResponse.json({ error: 'Failed to send email' }, { status: 500 })
     }
 

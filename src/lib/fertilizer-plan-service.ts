@@ -90,7 +90,11 @@ export class FertilizerPlanService {
         .insert(itemsToInsert)
         .select()
 
-      if (itemsError) throw itemsError
+      if (itemsError) {
+        // P1: Rollback - delete the orphaned plan
+        await supabase.from('fertilizer_plans').delete().eq('id', plan.id)
+        throw itemsError
+      }
       items.push(...(insertedItems as FertilizerPlanItem[]))
     }
 
@@ -199,6 +203,9 @@ export class FertilizerPlanService {
   ): Promise<FertilizerPlanItem> {
     const supabase = await getTypedSupabaseClient()
 
+    // P2: NOTE - Race condition exists with concurrent calls to this method.
+    // Consider using a database sequence or COALESCE(MAX(sort_order), -1) + 1
+    // in a single INSERT...SELECT for production-critical scenarios.
     // Get current max sort_order
     const { data: existingItems } = await supabase
       .from('fertilizer_plan_items')

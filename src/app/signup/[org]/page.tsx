@@ -108,7 +108,7 @@ export default function OrgSignupPage() {
     if (result.success && result.user) {
       // Add user as organization client via API (uses service role)
       try {
-        await fetch('/api/organizations/add-client', {
+        const response = await fetch('/api/organizations/add-client', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -116,6 +116,10 @@ export default function OrgSignupPage() {
             organizationId: organization.id
           })
         })
+        // P2: Check response for HTTP errors
+        if (!response.ok) {
+          console.error('Failed to add client:', await response.text())
+        }
       } catch (err) {
         console.error('Error adding user as client:', err)
         // Don't block signup if this fails

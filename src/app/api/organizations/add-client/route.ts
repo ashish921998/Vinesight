@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { z } from 'zod'
 import type { Database } from '@/types/database'
 
 // Use service role to bypass RLS (for new user becoming client)
@@ -8,13 +9,41 @@ const supabaseAdmin = createClient<Database>(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// P0: Validate input schema
+const AddClientSchema = z.object({
+  userId: z.string().uuid(),
+  organizationId: z.string().uuid()
+})
+
 export async function POST(request: NextRequest) {
   try {
-    const { userId, organizationId } = await request.json()
+    const body = await request.json()
 
-    // Validate required fields
-    if (!userId || !organizationId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    // Validate input with Zod
+    const parseResult = AddClientSchema.safeParse(body)
+    if (!parseResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid input: ' + parseResult.error.message },
+        { status: 400 }
+      )
+    }
+    const { userId, organizationId } = parseResult.data
+
+    // P0: Verify user was just created (within 5 minutes) - for signup flow security
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('created_at')
+      .eq('id', userId)
+      .single()
+
+    if (!profile || !profile.created_at) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    const createdAt = new Date(profile.created_at)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+    if (createdAt < fiveMinutesAgo) {
+      return NextResponse.json({ error: 'Unauthorized - user session expired' }, { status: 401 })
     }
 
     // Check if already a client

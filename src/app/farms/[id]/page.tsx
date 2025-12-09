@@ -173,7 +173,7 @@ export default function FarmDetailsPage() {
         setFertilizerPlans(plans)
       } catch (planError) {
         // Silently fail - plans might not exist yet
-        console.debug('No fertilizer plans found:', planError)
+        logger.debug('No fertilizer plans found:', planError)
       }
     } catch (error) {
       logger.error('Error loading dashboard data:', error)

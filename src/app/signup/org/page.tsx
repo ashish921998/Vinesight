@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { VALIDATION } from '@/lib/constants'
 import { Loader2, Building2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 function generateSlug(name: string): string {
   return name
@@ -117,15 +118,20 @@ export default function OrganizationSignupPage() {
         if (!response.ok) {
           const data = await response.json()
           console.error('Error creating organization:', data.error)
+          toast.error(data.error || 'Failed to create organization')
+          setCreatingOrg(false)
+          return
         }
       } catch (err) {
         console.error('Error setting up organization:', err)
-      } finally {
+        toast.error('Failed to create organization')
         setCreatingOrg(false)
+        return
       }
+      setCreatingOrg(false)
 
       if (result.needsEmailConfirmation) {
-        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
+        router.push(`/auth/verify-email?email=${encodeURIComponent(trimmedEmail)}`)
       } else {
         router.push('/clients')
       }

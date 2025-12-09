@@ -121,14 +121,18 @@ function ClientDetailPage() {
                     {farm.name}
                   </CardTitle>
                   <CardDescription className="flex items-center gap-2">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {farm.region}
+                    {farm.region ? (
+                      <>
+                        <MapPin className="h-3.5 w-3.5" />
+                        {farm.region}
+                      </>
+                    ) : null}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                     <span>{farm.crop_variety}</span>
-                    <span>{farm.area} acres</span>
+                    {farm.area != null && <span>{farm.area} acres</span>}
                     {farm.date_of_pruning && (
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3.5 w-3.5" />

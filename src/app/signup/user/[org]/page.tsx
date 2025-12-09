@@ -11,6 +11,7 @@ import { PasswordInput } from '@/components/ui/password-input'
 import { VALIDATION } from '@/lib/constants'
 import { getTypedSupabaseClient } from '@/lib/supabase'
 import { Loader2, Building2, Users } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function OrgUserSignupPage() {
   const params = useParams()
@@ -104,7 +105,7 @@ export default function OrgUserSignupPage() {
     if (result.success && result.user) {
       // Add user as organization member via API (uses service role)
       try {
-        await fetch('/api/organizations/join', {
+        const response = await fetch('/api/organizations/join', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -113,8 +114,14 @@ export default function OrgUserSignupPage() {
             role: 'agronomist'
           })
         })
+        if (!response.ok) {
+          const data = await response.json()
+          console.error('Error joining organization:', data.error)
+          toast.error('Account created but failed to join organization. Please contact support.')
+        }
       } catch (err) {
         console.error('Error adding user as org member:', err)
+        toast.error('Account created but failed to join organization. Please contact support.')
       }
 
       if (result.needsEmailConfirmation) {

@@ -51,13 +51,18 @@ export class OrganizationService {
       data: { user }
     } = await supabase.auth.getUser()
 
+    // P1: Verify user is authenticated
+    if (!user) {
+      throw new Error('User must be authenticated to create an organization')
+    }
+
     const { data, error } = await supabase
       .from('organizations')
       .insert({
         name,
         slug: options?.slug || null,
         description: options?.description || null,
-        created_by: user?.id || null,
+        created_by: user.id,
         is_active: true
       })
       .select()
@@ -152,12 +157,17 @@ export class OrganizationService {
       data: { user }
     } = await supabase.auth.getUser()
 
+    // P1: Verify user is authenticated
+    if (!user) {
+      throw new Error('User must be authenticated to add organization clients')
+    }
+
     const { data, error } = await supabase
       .from('organization_clients')
       .insert({
         organization_id: organizationId,
         client_user_id: clientUserId,
-        assigned_by: user?.id || null,
+        assigned_by: user.id,
         notes: notes || null
       })
       .select()

@@ -14,7 +14,9 @@ import {
   BarChart3,
   TrendingUp,
   Brain,
-  Package
+  Package,
+  Contact,
+  Bell
 } from 'lucide-react'
 import { LoginButton } from './auth/LoginButton'
 import { UserMenu } from './auth/UserMenu'
@@ -32,16 +34,16 @@ export const getBaseNavigation = (t: (key: string) => string) => [
   { name: t('navigation.aiAssistant'), href: '/ai-assistant', icon: Brain },
   { name: t('navigation.analytics'), href: '/analytics', icon: Activity },
   { name: t('navigation.weather'), href: '/weather', icon: CloudSun },
-  { name: t('navigation.reminders'), href: '/reminders', icon: Users },
+  { name: t('navigation.reminders'), href: '/reminders', icon: Bell },
   { name: t('navigation.reports'), href: '/reports', icon: BarChart3 },
   { name: t('navigation.farmEfficiency'), href: '/performance', icon: TrendingUp },
   { name: t('navigation.settings'), href: '/settings', icon: Settings }
 ]
 
-// Org-only navigation items
-const orgNavigation = [
-  { name: 'Clients', href: '/clients', icon: Users },
-  { name: 'Users', href: '/users', icon: Users }
+// Org-only navigation items - P2: Use translation function
+const getOrgNavigation = (t: (key: string) => string) => [
+  { name: t('navigation.clients'), href: '/clients', icon: Contact },
+  { name: t('navigation.users'), href: '/users', icon: Users }
 ]
 
 export default function Navigation() {
@@ -60,12 +62,18 @@ export default function Navigation() {
 
       try {
         const supabase = await getTypedSupabaseClient()
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('organization_members')
           .select('id')
           .eq('user_id', user.id)
           .limit(1)
 
+        // P2: Handle Supabase error field
+        if (error) {
+          console.error('Error checking org membership:', error)
+          setIsOrgMember(false)
+          return
+        }
         setIsOrgMember(data && data.length > 0)
       } catch {
         setIsOrgMember(false)
@@ -77,8 +85,9 @@ export default function Navigation() {
 
   // Build navigation based on user type
   const baseNav = getBaseNavigation(t)
+  const orgNav = getOrgNavigation(t)
   const navigation = isOrgMember
-    ? [...baseNav.slice(0, 2), ...orgNavigation, ...baseNav.slice(2)]
+    ? [...baseNav.slice(0, 2), ...orgNav, ...baseNav.slice(2)]
     : baseNav
 
   return (

@@ -19,7 +19,9 @@ const resources = {
         reminders: 'Reminders',
         reports: 'Reports',
         farmEfficiency: 'Farm Efficiency',
-        settings: 'Settings'
+        settings: 'Settings',
+        clients: 'Clients',
+        users: 'Users'
       },
       // Common UI elements
       common: {
@@ -317,7 +319,9 @@ const resources = {
         reminders: 'रिमाइंडर',
         reports: 'रिपोर्ट',
         farmEfficiency: 'फार्म दक्षता',
-        settings: 'सेटिंग्स'
+        settings: 'सेटिंग्स',
+        clients: 'ग्राहक',
+        users: 'उपयोगकर्ता'
       },
       // Common UI elements - Hindi
       common: {
@@ -616,7 +620,9 @@ const resources = {
         reminders: 'स्मरणपत्र',
         reports: 'अहवाल',
         farmEfficiency: 'शेत कार्यक्षमता',
-        settings: 'सेटिंग्ज'
+        settings: 'सेटिंग्ज',
+        clients: 'ग्राहक',
+        users: 'वापरकर्ते'
       },
       // Common UI elements - Marathi
       common: {

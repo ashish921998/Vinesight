@@ -21,6 +21,7 @@ import {
   FileImage,
   ExternalLink
 } from 'lucide-react'
+import Image from 'next/image'
 import { toast } from 'sonner'
 import type { LabTestRecord } from '@/types/lab-tests'
 
@@ -486,12 +487,16 @@ function TestCard({ test, type }: { test: LabTestRecord; type: 'soil' | 'petiole
                     </a>
                   </div>
                 ) : (
-                  <img
-                    src={reportUrl}
-                    alt="Test Report"
-                    className="w-full h-full object-contain cursor-pointer"
-                    onClick={() => window.open(reportUrl, '_blank')}
-                  />
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={reportUrl}
+                      alt="Test Report"
+                      fill
+                      className="object-contain cursor-pointer"
+                      onClick={() => window.open(reportUrl, '_blank')}
+                      unoptimized
+                    />
+                  </div>
                 )}
               </div>
             ) : (

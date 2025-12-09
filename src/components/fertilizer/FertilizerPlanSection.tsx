@@ -137,9 +137,12 @@ export function FertilizerPlanSection({
       return
     }
 
-    const validItems = items.filter((item) => item.fertilizer_name.trim() && item.quantity)
+    const validItems = items.filter((item) => {
+      const qty = parseFloat(item.quantity)
+      return item.fertilizer_name.trim() && !isNaN(qty) && qty > 0
+    })
     if (validItems.length === 0) {
-      toast.error('Please add at least one fertilizer item')
+      toast.error('Please add at least one fertilizer item with a valid quantity')
       return
     }
 
@@ -152,10 +155,10 @@ export function FertilizerPlanSection({
           notes: notes.trim() || undefined
         })
 
-        // Delete removed items
-        for (const itemId of deletedItemIds) {
-          await FertilizerPlanService.deletePlanItem(itemId)
-        }
+        // Delete removed items in parallel
+        await Promise.all(
+          deletedItemIds.map((itemId) => FertilizerPlanService.deletePlanItem(itemId))
+        )
 
         // Update existing items and add new ones
         for (const item of validItems) {
