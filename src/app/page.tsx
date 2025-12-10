@@ -30,6 +30,24 @@ function Badge({ icon, text }: { icon: React.ReactNode; text: string }) {
   )
 }
 
+// Reusable App Store Badge Component
+function AppStoreBadge({ className = 'h-10 sm:h-11 md:h-12' }: { className?: string }) {
+  return (
+    <a
+      href="https://apps.apple.com/us/app/vinesight/id6756113329"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="transition-transform hover:scale-105"
+    >
+      <img
+        src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83"
+        alt="Download on the App Store"
+        className={className}
+      />
+    </a>
+  )
+}
+
 export default function LandingPage() {
   const router = useRouter()
   const { user, loading } = useSupabaseAuth()
@@ -185,18 +203,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* App Store Badge */}
-                <a
-                  href="https://apps.apple.com/us/app/vinesight/id6756113329"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="transition-transform hover:scale-105"
-                >
-                  <img
-                    src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83"
-                    alt="Download on the App Store"
-                    className="h-10 sm:h-11 md:h-12"
-                  />
-                </a>
+                <AppStoreBadge />
               </div>
 
               <div className="absolute top-[232px] sm:top-[248px] md:top-[264px] lg:top-[320px] left-1/2 transform -translate-x-1/2 z-0 pointer-events-none">
@@ -528,18 +535,7 @@ export default function LandingPage() {
           {/* App Store Badge */}
           <div className="flex flex-col items-center gap-2">
             <span className="text-[#605A57] text-xs">Get the mobile app</span>
-            <a
-              href="https://apps.apple.com/us/app/vinesight/id6756113329"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="transition-transform hover:scale-105"
-            >
-              <img
-                src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83"
-                alt="Download on the App Store"
-                className="h-10"
-              />
-            </a>
+            <AppStoreBadge className="h-10" />
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3">
