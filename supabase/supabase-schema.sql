@@ -43,23 +43,13 @@ CREATE INDEX idx_profiles_consultant_organization_id ON profiles(consultant_orga
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for profiles
--- Users can view their own profile, or profiles of users in the same organization (members and clients)
+-- Users can view their own profile, or profiles of users in the same organization
 CREATE POLICY "Users can view profiles" ON profiles FOR SELECT TO authenticated USING (
   auth.uid() = id
   OR EXISTS (
     SELECT 1 FROM organization_members om1
     JOIN organization_members om2 ON om1.organization_id = om2.organization_id
     WHERE om1.user_id = auth.uid() AND om2.user_id = profiles.id
-  )
-  OR EXISTS (
-    SELECT 1 FROM organization_members om
-    JOIN organization_clients oc ON om.organization_id = oc.organization_id
-    WHERE om.user_id = auth.uid() AND oc.client_user_id = profiles.id
-  )
-  OR EXISTS (
-    SELECT 1 FROM organization_clients oc
-    JOIN organization_members om ON oc.organization_id = om.organization_id
-    WHERE oc.client_user_id = auth.uid() AND om.user_id = profiles.id
   )
 );
 CREATE POLICY "Users can insert their own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
