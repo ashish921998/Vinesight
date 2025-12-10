@@ -775,6 +775,12 @@ CREATE INDEX idx_fertilizer_plans_farm_id ON fertilizer_plans(farm_id);
 CREATE INDEX idx_fertilizer_plans_organization_id ON fertilizer_plans(organization_id);
 CREATE INDEX idx_fertilizer_plan_items_plan_id ON fertilizer_plan_items(plan_id);
 
+-- Composite indexes for AI and analytics queries
+CREATE INDEX idx_organization_members_org_user ON organization_members(organization_id, user_id);
+CREATE INDEX idx_fertilizer_plans_org_farm ON fertilizer_plans(organization_id, farm_id);
+CREATE INDEX idx_fertilizer_plan_items_plan_date ON fertilizer_plan_items(plan_id, application_date);
+
+
 -- Enable Row Level Security for organization tables
 ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE organization_members ENABLE ROW LEVEL SECURITY;
