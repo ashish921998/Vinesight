@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -13,15 +14,19 @@ import {
   BarChart3,
   TrendingUp,
   Brain,
-  Package
+  Package,
+  Contact,
+  Bell
 } from 'lucide-react'
 import { LoginButton } from './auth/LoginButton'
 import { UserMenu } from './auth/UserMenu'
 import { LanguageSwitcher } from './ui/language-switcher'
 import { useTranslation } from 'react-i18next'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { getTypedSupabaseClient } from '@/lib/supabase'
 
-export const getNavigation = (t: any) => [
+// Base navigation (shown to all users)
+export const getBaseNavigation = (t: (key: string) => string) => [
   { name: t('navigation.dashboard'), href: '/dashboard', icon: Home },
   { name: t('navigation.farmManagement'), href: '/farms', icon: Sprout },
   { name: t('navigation.warehouse'), href: '/warehouse', icon: Package },
@@ -29,18 +34,65 @@ export const getNavigation = (t: any) => [
   { name: t('navigation.aiAssistant'), href: '/ai-assistant', icon: Brain },
   { name: t('navigation.analytics'), href: '/analytics', icon: Activity },
   { name: t('navigation.weather'), href: '/weather', icon: CloudSun },
-  { name: t('navigation.reminders'), href: '/reminders', icon: Users },
+  { name: t('navigation.reminders'), href: '/reminders', icon: Bell },
   { name: t('navigation.reports'), href: '/reports', icon: BarChart3 },
   { name: t('navigation.farmEfficiency'), href: '/performance', icon: TrendingUp },
   { name: t('navigation.settings'), href: '/settings', icon: Settings }
+]
+
+// Org-only navigation items - P2: Use translation function
+const getOrgNavigation = (t: (key: string) => string) => [
+  { name: t('navigation.clients'), href: '/clients', icon: Contact },
+  { name: t('navigation.users'), href: '/users', icon: Users }
 ]
 
 export default function Navigation() {
   const pathname = usePathname()
   const { t } = useTranslation()
   const { user, loading } = useSupabaseAuth()
+  const [isOrgMember, setIsOrgMember] = useState(false)
 
-  const navigation = getNavigation(t)
+  // Check if user is an org member
+  useEffect(() => {
+    let cancelled = false
+    async function checkOrgMembership() {
+      if (!user) {
+        setIsOrgMember(false)
+        return
+      }
+
+      try {
+        const supabase = await getTypedSupabaseClient()
+        const { data, error } = await supabase
+          .from('organization_members')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1)
+
+        // P2: Handle Supabase error field
+        if (error) {
+          console.error('Error checking org membership:', error)
+          if (!cancelled) setIsOrgMember(false)
+          return
+        }
+        if (!cancelled) setIsOrgMember(data && data.length > 0)
+      } catch {
+        if (!cancelled) setIsOrgMember(false)
+      }
+    }
+
+    checkOrgMembership()
+    return () => {
+      cancelled = true
+    }
+  }, [user])
+
+  // Build navigation based on user type
+  const baseNav = getBaseNavigation(t)
+  const orgNav = getOrgNavigation(t)
+  const navigation = isOrgMember
+    ? [...baseNav.slice(0, 2), ...orgNav, ...baseNav.slice(2)]
+    : baseNav
 
   return (
     <>

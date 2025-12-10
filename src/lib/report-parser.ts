@@ -25,8 +25,6 @@ interface StructuredReportPayload {
 
 type TestType = 'soil' | 'petiole'
 
-const DEFAULT_MODEL = 'gpt-4o'
-
 export class ReportParser {
   private static getClient() {
     const apiKey = process.env.OPENAI_API_KEY
@@ -43,7 +41,7 @@ export class ReportParser {
 
     try {
       const response = await client.responses.create({
-        model: DEFAULT_MODEL,
+        model: 'gpt-4o-mini',
         temperature: 0,
         input: [
           {
