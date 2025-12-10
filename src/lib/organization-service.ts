@@ -150,7 +150,8 @@ export class OrganizationService {
 
   static async getOrganizationClients(organizationId: string): Promise<OrganizationClient[]> {
     const supabase = await getTypedSupabaseClient()
-    // Fetch only needed fields to avoid over-exposing PII
+    // Fetch limited profile fields (id, full_name, email, updated_at) to minimize PII exposure.
+    // Sensitive fields like phone, address, etc. are intentionally excluded.
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, email, updated_at')
@@ -187,8 +188,21 @@ export class OrganizationService {
       throw new Error('User must be authenticated to add organization clients')
     }
 
-    // TODO: Consider adding org-level authorization check here
-    // to verify user is a member of organizationId
+    // Verify calling user is a member of the target organization
+    const { data: membership, error: membershipError } = await supabase
+      .from('organization_members')
+      .select('id, role')
+      .eq('organization_id', organizationId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (membershipError && membershipError.code !== 'PGRST116') {
+      throw membershipError
+    }
+
+    if (!membership) {
+      throw new Error('Permission denied: You are not authorized to modify this organization')
+    }
 
     const { error } = await supabase
       .from('profiles')

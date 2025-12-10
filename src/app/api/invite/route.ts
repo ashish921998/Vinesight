@@ -69,29 +69,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid signup link' }, { status: 400 })
     }
 
-    // Escape HTML in user-provided values to prevent XSS
+    // Escape HTML in user-provided values for HTML body (prevents XSS)
     const safeFarmerName = escapeHtml(farmerName)
     const safeOrgName = escapeHtml(organizationName)
     const safeSignupLink = escapeHtml(validatedUrl.toString())
 
+    // Validate Supabase environment variables
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing Supabase environment variables')
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+    }
+
     // Create Supabase client
     const cookieStore = await cookies()
-    const supabase = createServerClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll() {
-            // Server-side, we don't set cookies
-          }
+    const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll() {
+          // Server-side, we don't set cookies
         }
       }
-    )
+    })
 
-    // Verify user is authenticated and is an org member
+    // Verify user is authenticated
     const {
       data: { user }
     } = await supabase.auth.getUser()
@@ -100,16 +104,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is a member of the organization
-    const { data: membership } = await supabase
+    // Check if user is a member of the organization with appropriate role
+    const { data: membership, error: membershipError } = await supabase
       .from('organization_members')
-      .select('id')
+      .select('id, role, is_owner')
       .eq('organization_id', organizationId)
       .eq('user_id', user.id)
       .single()
 
+    if (membershipError && membershipError.code !== 'PGRST116') {
+      console.error('Error checking membership:', membershipError)
+      return NextResponse.json({ error: 'Failed to verify permissions' }, { status: 500 })
+    }
+
     if (!membership) {
       return NextResponse.json({ error: 'Not authorized for this organization' }, { status: 403 })
+    }
+
+    // Verify user has admin/owner role to send invitations
+    if (membership.role !== 'admin' && !membership.is_owner) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions: Only admins and owners can send invitations' },
+        { status: 403 }
+      )
     }
 
     // Calculate expiration date (7 days from now)
@@ -140,12 +157,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email service not configured' }, { status: 500 })
     }
 
-    // Send email using Resend with escaped values
+    // Send email using Resend
+    // Use raw organizationName for subject (plain text), escaped values for HTML body
     const resend = getResendClient()
     const { error: emailError } = await resend.emails.send({
       from: fromEmail,
       to: farmerEmail,
-      subject: `${safeOrgName} invites you to VineSight`,
+      subject: `${organizationName} invites you to VineSight`,
       html: `
         <!DOCTYPE html>
         <html>

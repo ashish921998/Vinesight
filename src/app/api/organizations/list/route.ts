@@ -4,16 +4,14 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 
-// Validate service role key at startup
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is not configured')
+// Lazy initialization to avoid build-time errors
+function getSupabaseAdmin() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceRoleKey) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is not configured')
+  }
+  return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
 }
-
-// Use service role to bypass RLS (since we need to list orgs for public selection)
-const supabaseAdmin = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
 
 export async function GET() {
   try {
@@ -44,7 +42,7 @@ export async function GET() {
     }
 
     // Fetch organizations
-    const { data: organizations, error } = await supabaseAdmin
+    const { data: organizations, error } = await getSupabaseAdmin()
       .from('organizations')
       .select('id, name, slug')
       .eq('is_active', true)

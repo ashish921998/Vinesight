@@ -39,6 +39,73 @@ export default function SettingsPage() {
 
   const [isOrgMember, setIsOrgMember] = useState(false)
 
+  // Fetch available organizations
+  const fetchOrganizations = useCallback(async () => {
+    try {
+      const response = await fetch('/api/organizations/list')
+      if (response.ok) {
+        const data = await response.json()
+        setOrganizations(data)
+      } else {
+        console.error('Failed to fetch organizations:', response.status)
+        toast.error('Failed to load organizations')
+        setOrganizations([])
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error('Failed to fetch organizations:', errorMessage)
+      toast.error('Failed to load organizations')
+      setOrganizations([])
+    }
+  }, [])
+
+  // Fetch current consultant status
+  const fetchCurrentStatus = useCallback(async () => {
+    if (!user) return
+    try {
+      setOrgLoading(true)
+      const supabase = getTypedSupabaseClient()
+
+      // Check if user has a consultant organization in their profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('consultant_organization_id')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError)
+        toast.error('Failed to fetch organization status')
+        return
+      }
+
+      if (profile?.consultant_organization_id) {
+        // Fetch the organization details
+        const { data: org, error: orgError } = await supabase
+          .from('organizations')
+          .select('id, name, slug')
+          .eq('id', profile.consultant_organization_id)
+          .single()
+
+        if (orgError) {
+          console.error('Error fetching organization:', orgError)
+          toast.error('Failed to fetch organization details')
+          return
+        }
+
+        if (org) {
+          setCurrentOrg(org)
+        }
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error('Error fetching status:', errorMessage)
+      toast.error('Failed to fetch organization status')
+    } finally {
+      setOrgLoading(false)
+    }
+  }, [user])
+
   // Check if user is an org member (same logic as navigation)
   const checkOrgMembership = useCallback(async () => {
     if (!user) return
@@ -64,9 +131,10 @@ export default function SettingsPage() {
         fetchCurrentStatus()
       }
     } catch (error) {
-      console.error('Error checking status:', error)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error('Error checking status:', errorMessage)
     }
-  }, [user])
+  }, [user, fetchOrganizations, fetchCurrentStatus])
 
   useEffect(() => {
     // Load saved language preference
@@ -78,53 +146,6 @@ export default function SettingsPage() {
       checkOrgMembership()
     }
   }, [user, checkOrgMembership])
-
-  const fetchOrganizations = async () => {
-    try {
-      const response = await fetch('/api/organizations/list')
-      if (response.ok) {
-        const data = await response.json()
-        setOrganizations(data)
-      } else {
-        console.error('Failed to fetch organizations:', response.status)
-      }
-    } catch (error) {
-      console.error('Failed to fetch organizations', error)
-    }
-  }
-
-  const fetchCurrentStatus = async () => {
-    if (!user) return
-    try {
-      setOrgLoading(true)
-      const supabase = getTypedSupabaseClient()
-
-      // Check if user has a consultant organization in their profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('consultant_organization_id')
-        .eq('id', user.id)
-        .single()
-
-      if (profile?.consultant_organization_id) {
-        // Fetch the organization details
-        // We could join, but simple fetch is safer given manual type updates
-        const { data: org } = await supabase
-          .from('organizations')
-          .select('id, name, slug')
-          .eq('id', profile.consultant_organization_id)
-          .single()
-
-        if (org) {
-          setCurrentOrg(org)
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching status', error)
-    } finally {
-      setOrgLoading(false)
-    }
-  }
 
   const handleConnectConsultant = async () => {
     if (!user || !selectedOrgId) return
@@ -154,6 +175,8 @@ export default function SettingsPage() {
       // Refresh to update any other context if needed
       router.refresh()
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error('Error connecting to organization:', errorMessage)
       toast.error('An unexpected error occurred')
     } finally {
       setConnectionLoading(false)

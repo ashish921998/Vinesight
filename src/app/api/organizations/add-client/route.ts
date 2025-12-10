@@ -34,22 +34,26 @@ export async function POST(request: NextRequest) {
     }
     const { userId, organizationId } = parseResult.data
 
+    // Validate environment variables
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing Supabase environment variables')
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+    }
+
     // Verify user is authenticated
     const cookieStore = await cookies()
-    const supabase = createServerClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll() {
-            // Server-side, we don't set cookies
-          }
+    const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll() {
+          // Server-side, we don't set cookies
         }
       }
-    )
+    })
 
     const {
       data: { user: authUser },
@@ -64,9 +68,47 @@ export async function POST(request: NextRequest) {
     // Scenario 1: User adding THEMSELVES (Self-service join from Settings)
     const isSelfAdd = authUser.id === userId
 
-    if (!isSelfAdd) {
-      // Scenario 2: Admin adding user (Service role flow, e.g. signup)
-      // Enforce 5-minute creation window for security if not self-add
+    if (isSelfAdd) {
+      // Self-add flow: User is connecting themselves to an organization
+      // This is allowed - users can choose their consultant organization
+      // The organization must exist and be active
+      const { data: org, error: orgError } = await getSupabaseAdmin()
+        .from('organizations')
+        .select('id, is_active')
+        .eq('id', organizationId)
+        .single()
+
+      if (orgError || !org) {
+        return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+      }
+
+      if (!org.is_active) {
+        return NextResponse.json({ error: 'Organization is not active' }, { status: 400 })
+      }
+    } else {
+      // Scenario 2: Admin/member adding another user
+      // CRITICAL: Verify requester is an admin/owner of the organization
+      const { data: membership, error: membershipError } = await getSupabaseAdmin()
+        .from('organization_members')
+        .select('role, is_owner')
+        .eq('organization_id', organizationId)
+        .eq('user_id', authUser.id)
+        .single()
+
+      if (membershipError && membershipError.code !== 'PGRST116') {
+        console.error('Error checking membership:', membershipError)
+        return NextResponse.json({ error: 'Failed to verify permissions' }, { status: 500 })
+      }
+
+      if (!membership || (membership.role !== 'admin' && !membership.is_owner)) {
+        return NextResponse.json(
+          { error: 'Unauthorized - must be organization admin or owner' },
+          { status: 403 }
+        )
+      }
+
+      // Additional check: Enforce 5-minute creation window for newly created users
+      // This prevents adding arbitrary existing users
       const { data: profile } = await getSupabaseAdmin()
         .from('profiles')
         .select('created_at')
@@ -81,7 +123,7 @@ export async function POST(request: NextRequest) {
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
       if (createdAt < fiveMinutesAgo) {
         return NextResponse.json(
-          { error: 'Unauthorized - user session expired for signup flow' },
+          { error: 'Unauthorized - can only add recently created users via this endpoint' },
           { status: 401 }
         )
       }
