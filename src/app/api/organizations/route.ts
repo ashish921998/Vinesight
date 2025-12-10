@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import type { Database } from '@/types/database'
-
-// Use service role to bypass RLS (for new user org creation)
-const supabaseAdmin = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 // P0/P2: Validate input with proper schema
 const CreateOrgSchema = z.object({
@@ -35,7 +29,7 @@ export async function POST(request: NextRequest) {
     const { userId, name, slug } = parseResult.data
 
     // P0: Verify user was just created (within 5 minutes) - for signup flow security
-    const { data: profile } = await supabaseAdmin
+    const { data: profile } = await getSupabaseAdmin()
       .from('profiles')
       .select('created_at')
       .eq('id', userId)
@@ -52,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if slug already exists
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await getSupabaseAdmin()
       .from('organizations')
       .select('id')
       .eq('slug', slug)
@@ -63,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the organization using admin client (bypasses RLS)
-    const { data: org, error: orgError } = await supabaseAdmin
+    const { data: org, error: orgError } = await getSupabaseAdmin()
       .from('organizations')
       .insert({
         name,
@@ -80,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Add user as org owner
-    const { error: memberError } = await supabaseAdmin.from('organization_members').insert({
+    const { error: memberError } = await getSupabaseAdmin().from('organization_members').insert({
       organization_id: org.id,
       user_id: userId,
       role: 'admin',
@@ -90,12 +84,12 @@ export async function POST(request: NextRequest) {
     if (memberError) {
       console.error('Error adding member:', memberError)
       // Rollback org creation
-      await supabaseAdmin.from('organizations').delete().eq('id', org.id)
+      await getSupabaseAdmin().from('organizations').delete().eq('id', org.id)
       return NextResponse.json({ error: 'Failed to set up organization' }, { status: 500 })
     }
 
     // P1: Update user's profile with error handling and full rollback
-    const { error: profileError } = await supabaseAdmin
+    const { error: profileError } = await getSupabaseAdmin()
       .from('profiles')
       .update({ user_type: 'org_member' })
       .eq('id', userId)
@@ -103,12 +97,12 @@ export async function POST(request: NextRequest) {
     if (profileError) {
       console.error('Error updating profile:', profileError)
       // Rollback member and org creation
-      await supabaseAdmin
+      await getSupabaseAdmin()
         .from('organization_members')
         .delete()
         .eq('user_id', userId)
         .eq('organization_id', org.id)
-      await supabaseAdmin.from('organizations').delete().eq('id', org.id)
+      await getSupabaseAdmin().from('organizations').delete().eq('id', org.id)
       return NextResponse.json({ error: 'Failed to set up organization' }, { status: 500 })
     }
 

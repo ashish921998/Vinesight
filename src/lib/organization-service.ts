@@ -115,7 +115,7 @@ export class OrganizationService {
     // Verify calling user is a member of the target organization with permission to add members
     const { data: membership, error: membershipError } = await supabase
       .from('organization_members')
-      .select('id, role')
+      .select('id, role, is_owner')
       .eq('organization_id', organizationId)
       .eq('user_id', user.id)
       .single()
@@ -125,6 +125,11 @@ export class OrganizationService {
     }
 
     if (!membership) {
+      throw new Error('Permission denied: You are not authorized to modify this organization')
+    }
+
+    // Require admin or owner role to add members
+    if (membership.role !== 'admin' && !membership.is_owner) {
       throw new Error('Permission denied: You are not authorized to modify this organization')
     }
 
@@ -214,7 +219,7 @@ export class OrganizationService {
     // Verify calling user is a member of the target organization
     const { data: membership, error: membershipError } = await supabase
       .from('organization_members')
-      .select('id, role')
+      .select('id, role, is_owner')
       .eq('organization_id', organizationId)
       .eq('user_id', user.id)
       .single()
@@ -224,6 +229,11 @@ export class OrganizationService {
     }
 
     if (!membership) {
+      throw new Error('Permission denied: You are not authorized to modify this organization')
+    }
+
+    // Require admin or owner role to add clients
+    if (membership.role !== 'admin' && !membership.is_owner) {
       throw new Error('Permission denied: You are not authorized to modify this organization')
     }
 
