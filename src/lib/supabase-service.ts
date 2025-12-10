@@ -410,12 +410,12 @@ export class SupabaseService {
         const unit = chemical.unit.trim()
 
         // Validate unit is one of the allowed values
-        if (!['gm/L', 'ml/L', 'ppm', 'kg/Acre', 'liter/Acre'].includes(unit)) {
-          throw new Error('Chemical unit must be one of: gm/L, ml/L, ppm, kg/Acre, or liter/Acre')
+        if (!['gm/L', 'ml/L', 'ppm', 'kg/acre', 'liter/acre'].includes(unit)) {
+          throw new Error('Chemical unit must be one of: gm/L, ml/L, ppm, kg/acre, or liter/acre')
         }
 
         // Assign/store sanitized trimmed value back to object with proper type assertion
-        chemical.unit = unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/Acre' | 'liter/Acre'
+        chemical.unit = unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/acre' | 'liter/acre'
       }
     }
 
@@ -457,20 +457,20 @@ export class SupabaseService {
         throw new Error('Quantity unit cannot be empty when quantity amount is provided')
       }
 
-      if (!['gm/L', 'ml/L', 'ppm', 'kg/Acre', 'liter/Acre'].includes(unit)) {
-        throw new Error('Quantity unit must be one of: gm/L, ml/L, ppm, kg/Acre, or liter/Acre')
+      if (!['gm/L', 'ml/L', 'ppm', 'kg/acre', 'liter/acre'].includes(unit)) {
+        throw new Error('Quantity unit must be one of: gm/L, ml/L, ppm, kg/acre, or liter/acre')
       }
 
       // Assign/store sanitized trimmed value back to record with proper type assertion
-      record.quantity_unit = unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/Acre' | 'liter/Acre'
+      record.quantity_unit = unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/acre' | 'liter/acre'
     } else if (record.quantity_unit) {
       // quantity_amount is not provided, but unit is - validate it anyway
       const unit = record.quantity_unit.trim()
-      if (unit && !['gm/L', 'ml/L', 'ppm', 'kg/Acre', 'liter/Acre'].includes(unit)) {
-        throw new Error('Quantity unit must be one of: gm/L, ml/L, ppm, kg/Acre, or liter/Acre')
+      if (unit && !['gm/L', 'ml/L', 'ppm', 'kg/acre', 'liter/acre'].includes(unit)) {
+        throw new Error('Quantity unit must be one of: gm/L, ml/L, ppm, kg/acre, or liter/acre')
       }
       // Assign/store sanitized trimmed value back to record with proper type assertion
-      record.quantity_unit = unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/Acre' | 'liter/Acre'
+      record.quantity_unit = unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/acre' | 'liter/acre'
     }
 
     // Validate area if provided
@@ -539,12 +539,12 @@ export class SupabaseService {
         const unit = chemical.unit.trim()
 
         // Validate unit is one of the allowed values
-        if (!['gm/L', 'ml/L', 'ppm', 'kg/Acre', 'liter/Acre'].includes(unit)) {
-          throw new Error('Chemical unit must be one of: gm/L, ml/L, ppm, kg/Acre, or liter/Acre')
+        if (!['gm/L', 'ml/L', 'ppm', 'kg/acre', 'liter/acre'].includes(unit)) {
+          throw new Error('Chemical unit must be one of: gm/L, ml/L, ppm, kg/acre, or liter/acre')
         }
 
         // Assign/store sanitized trimmed value back to object with proper type assertion
-        chemical.unit = unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/Acre' | 'liter/Acre'
+        chemical.unit = unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/acre' | 'liter/acre'
       }
     }
 
@@ -586,20 +586,20 @@ export class SupabaseService {
         throw new Error('Quantity unit cannot be empty when quantity amount is provided')
       }
 
-      if (!['gm/L', 'ml/L', 'ppm', 'kg/Acre', 'liter/Acre'].includes(unit)) {
-        throw new Error('Quantity unit must be one of: gm/L, ml/L, ppm, kg/Acre, or liter/Acre')
+      if (!['gm/L', 'ml/L', 'ppm', 'kg/acre', 'liter/acre'].includes(unit)) {
+        throw new Error('Quantity unit must be one of: gm/L, ml/L, ppm, kg/acre, or liter/acre')
       }
 
       // Assign/store sanitized trimmed value back to updates with proper type assertion
-      updates.quantity_unit = unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/Acre' | 'liter/Acre'
+      updates.quantity_unit = unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/acre' | 'liter/acre'
     } else if (updates.quantity_unit) {
       // quantity_amount is not provided, but unit is - validate it anyway
       const unit = updates.quantity_unit.trim()
-      if (unit && !['gm/L', 'ml/L', 'ppm', 'kg/Acre', 'liter/Acre'].includes(unit)) {
-        throw new Error('Quantity unit must be one of: gm/L, ml/L, ppm, kg/Acre, or liter/Acre')
+      if (unit && !['gm/L', 'ml/L', 'ppm', 'kg/acre', 'liter/acre'].includes(unit)) {
+        throw new Error('Quantity unit must be one of: gm/L, ml/L, ppm, kg/acre, or liter/acre')
       }
       // Assign/store sanitized trimmed value back to updates with proper type assertion
-      updates.quantity_unit = unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/Acre' | 'liter/Acre'
+      updates.quantity_unit = unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/acre' | 'liter/acre'
     }
 
     // Validate area if provided

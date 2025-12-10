@@ -4,6 +4,16 @@ ALTER DATABASE postgres SET "app.jwt_secret" TO 'your-jwt-secret';
 -- Create extension for UUID generation
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Function to automatically update the updated_at column
+-- Defined early so all triggers can reference it
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = CURRENT_TIMESTAMP;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- ============================================================================
 -- PROFILES TABLE (extends auth.users)
 -- ============================================================================
@@ -33,7 +43,25 @@ CREATE INDEX idx_profiles_consultant_organization_id ON profiles(consultant_orga
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for profiles
-CREATE POLICY "Users can view all profiles" ON profiles FOR SELECT USING (TRUE);
+-- Users can view their own profile, or profiles of users in the same organization (members and clients)
+CREATE POLICY "Users can view profiles" ON profiles FOR SELECT TO authenticated USING (
+  auth.uid() = id
+  OR EXISTS (
+    SELECT 1 FROM organization_members om1
+    JOIN organization_members om2 ON om1.organization_id = om2.organization_id
+    WHERE om1.user_id = auth.uid() AND om2.user_id = profiles.id
+  )
+  OR EXISTS (
+    SELECT 1 FROM organization_members om
+    JOIN organization_clients oc ON om.organization_id = oc.organization_id
+    WHERE om.user_id = auth.uid() AND oc.client_user_id = profiles.id
+  )
+  OR EXISTS (
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om ON oc.organization_id = om.organization_id
+    WHERE oc.client_user_id = auth.uid() AND om.user_id = profiles.id
+  )
+);
 CREATE POLICY "Users can insert their own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Users can update their own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 
@@ -566,14 +594,6 @@ CREATE POLICY "Users can delete their soil profiles" ON soil_profiles FOR DELETE
   EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_profiles.farm_id AND farms.user_id = auth.uid())
 );
 
--- Function to automatically update the updated_at column
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = CURRENT_TIMESTAMP;
-  RETURN NEW;
-END;
-$$ language 'plpgsql';
 
 -- Trigger to automatically update updated_at for farms
 CREATE TRIGGER update_farms_updated_at BEFORE UPDATE ON farms 
@@ -744,7 +764,7 @@ CREATE TABLE farmer_invitations (
 CREATE TABLE fertilizer_plans (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   farm_id BIGINT NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
-  created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
   notes TEXT,

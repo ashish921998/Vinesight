@@ -50,7 +50,11 @@ interface SprayDataUpdate {
   date: string
   notes?: string
   water_volume?: number
-  chemicals?: Array<{ name: string; quantity: number; unit: 'gm/L' | 'ml/L' | 'ppm' }>
+  chemicals?: Array<{
+    name: string
+    quantity: number
+    unit: 'gm/L' | 'ml/L' | 'ppm' | 'kg/acre' | 'liter/acre'
+  }>
   chemical?: string
   dose?: string
 }
@@ -653,11 +657,16 @@ export function EditRecordModal({
             .map((chem) => ({
               name: chem.name.trim(),
               quantity: chem.quantity,
-              unit: chem.unit as 'gm/L' | 'ml/L' | 'ppm'
+              unit: chem.unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/acre' | 'liter/acre'
             }))
             .filter(
-              (chem): chem is { name: string; quantity: number; unit: 'gm/L' | 'ml/L' | 'ppm' } =>
-                chem.quantity !== undefined && chem.quantity > 0
+              (
+                chem
+              ): chem is {
+                name: string
+                quantity: number
+                unit: 'gm/L' | 'ml/L' | 'ppm' | 'kg/acre' | 'liter/acre'
+              } => chem.quantity !== undefined && chem.quantity > 0
             )
 
           if (processedChemicals.length > 0) {
@@ -1099,8 +1108,8 @@ export function EditRecordModal({
                                 <SelectItem value="gm/L">gm/L</SelectItem>
                                 <SelectItem value="ml/L">ml/L</SelectItem>
                                 <SelectItem value="ppm">ppm</SelectItem>
-                                <SelectItem value="kg/Acre">kg/Acre</SelectItem>
-                                <SelectItem value="liter/Acre">liter/Acre</SelectItem>
+                                <SelectItem value="kg/acre">kg/acre</SelectItem>
+                                <SelectItem value="liter/acre">liter/acre</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
