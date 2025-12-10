@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import type { Database } from '@/types/database'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
-// P1: Validate role against allowed values
 const JoinSchema = z.object({
   userId: z.string().uuid(),
   organizationId: z.string().uuid(),

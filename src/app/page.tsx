@@ -30,6 +30,24 @@ function Badge({ icon, text }: { icon: React.ReactNode; text: string }) {
   )
 }
 
+// Reusable App Store Badge Component
+function AppStoreBadge({ className = 'h-10 sm:h-11 md:h-12' }: { className?: string }) {
+  return (
+    <a
+      href="https://apps.apple.com/us/app/vinesight/id6756113329"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="transition-transform hover:scale-105"
+    >
+      <img
+        src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83"
+        alt="Download on the App Store"
+        className={className}
+      />
+    </a>
+  )
+}
+
 export default function LandingPage() {
   const router = useRouter()
   const { user, loading } = useSupabaseAuth()
@@ -171,7 +189,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="w-full max-w-[497px] lg:w-[497px] flex flex-col justify-center items-center gap-6 sm:gap-8 md:gap-10 lg:gap-12 relative z-10 mt-6 sm:mt-8 md:mt-10 lg:mt-12">
+              <div className="w-full max-w-[497px] lg:w-[497px] flex flex-col justify-center items-center gap-4 sm:gap-5 md:gap-6 relative z-10 mt-6 sm:mt-8 md:mt-10 lg:mt-12">
                 <div className="backdrop-blur-[8.25px] flex justify-start items-center gap-4">
                   <div
                     className="h-10 sm:h-11 md:h-12 px-6 sm:px-8 md:px-10 lg:px-12 py-2 sm:py-[6px] relative bg-[#37322F] shadow-[0px_0px_0px_2.5px_rgba(255,255,255,0.08)_inset] overflow-hidden rounded-full flex justify-center items-center cursor-pointer"
@@ -183,6 +201,9 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* App Store Badge */}
+                <AppStoreBadge />
               </div>
 
               <div className="absolute top-[232px] sm:top-[248px] md:top-[264px] lg:top-[320px] left-1/2 transform -translate-x-1/2 z-0 pointer-events-none">
@@ -509,16 +530,24 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
-      <footer className="w-full border-t border-[rgba(55,50,47,0.12)] bg-white/60 backdrop-blur py-6 mt-10">
-        <div className="max-w-[1060px] mx-auto flex flex-col sm:flex-row items-center justify-between px-6 text-sm text-[#4A4A4A] gap-3">
-          <span>© {new Date().getFullYear()} Vinesight. All rights reserved.</span>
-          <div className="flex items-center gap-4">
-            <Link href="/privacy" className="underline-offset-4 hover:underline">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="underline-offset-4 hover:underline">
-              Terms of Service
-            </Link>
+      <footer className="w-full border-t border-[rgba(55,50,47,0.12)] bg-white/60 backdrop-blur py-8 mt-10">
+        <div className="max-w-[1060px] mx-auto flex flex-col items-center px-6 text-sm text-[#4A4A4A] gap-6">
+          {/* App Store Badge */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-[#605A57] text-xs">Get the mobile app</span>
+            <AppStoreBadge className="h-10" />
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3">
+            <span>© {new Date().getFullYear()} Vinesight. All rights reserved.</span>
+            <div className="flex items-center gap-4">
+              <Link href="/privacy" className="underline-offset-4 hover:underline">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="underline-offset-4 hover:underline">
+                Terms of Service
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
