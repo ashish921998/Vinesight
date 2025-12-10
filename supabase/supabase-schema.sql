@@ -4,6 +4,70 @@ ALTER DATABASE postgres SET "app.jwt_secret" TO 'your-jwt-secret';
 -- Create extension for UUID generation
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- ============================================================================
+-- PROFILES TABLE (extends auth.users)
+-- ============================================================================
+
+-- Profiles table - stores additional user information
+-- This table is typically auto-populated via a trigger on auth.users
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email VARCHAR(255),
+  full_name VARCHAR(255),
+  username VARCHAR(255) UNIQUE,
+  avatar_url TEXT,
+  phone VARCHAR(50),
+  user_type VARCHAR(50) CHECK (user_type IN ('farmer', 'consultant', 'admin')),
+  consultant_organization_id UUID, -- Will reference organizations table (added after organizations table is created)
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes for profiles
+CREATE INDEX idx_profiles_email ON profiles(email);
+CREATE INDEX idx_profiles_username ON profiles(username);
+CREATE INDEX idx_profiles_user_type ON profiles(user_type);
+CREATE INDEX idx_profiles_consultant_organization_id ON profiles(consultant_organization_id);
+
+-- Enable Row Level Security for profiles
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for profiles
+CREATE POLICY "Users can view all profiles" ON profiles FOR SELECT USING (TRUE);
+CREATE POLICY "Users can insert their own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users can update their own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Function to handle new user creation
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, avatar_url)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name'),
+    NEW.raw_user_meta_data->>'avatar_url'
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to auto-create profile when a new user signs up
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION handle_new_user();
+
+-- Trigger to auto-update profiles updated_at timestamp
+CREATE TRIGGER update_profiles_updated_at
+  BEFORE UPDATE ON profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================================
+-- END PROFILES TABLE
+-- ============================================================================
+
 -- Create farms table
 CREATE TABLE farms (
   id BIGSERIAL PRIMARY KEY,
@@ -627,6 +691,228 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION confirm_settlement_atomic(INTEGER) TO authenticated;
+
+-- ============================================================================
+-- ORGANIZATION / RBAC TABLES
+-- ============================================================================
+
+-- Organizations table
+CREATE TABLE organizations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(255) NOT NULL,
+  slug VARCHAR(255) UNIQUE,
+  description TEXT,
+  metadata JSONB,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  is_active BOOLEAN DEFAULT TRUE
+);
+
+-- Organization members table
+CREATE TABLE organization_members (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  role VARCHAR(50) DEFAULT 'member' CHECK (role IN ('owner', 'admin', 'member')),
+  is_owner BOOLEAN DEFAULT FALSE,
+  joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(organization_id, user_id)
+);
+
+-- Organization clients table (farmers linked to organizations)
+CREATE TABLE organization_clients (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  client_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  assigned_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  assigned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  notes TEXT,
+  UNIQUE(organization_id, client_user_id)
+);
+
+-- Farmer invitations table
+CREATE TABLE farmer_invitations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  token VARCHAR(255) NOT NULL UNIQUE,
+  status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'expired', 'revoked')),
+  expires_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Fertilizer plans table (organization recommendations for farms)
+CREATE TABLE fertilizer_plans (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  farm_id BIGINT NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
+  created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Fertilizer plan items table
+CREATE TABLE fertilizer_plan_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  plan_id UUID NOT NULL REFERENCES fertilizer_plans(id) ON DELETE CASCADE,
+  application_date DATE,
+  fertilizer_name VARCHAR(255) NOT NULL,
+  quantity DECIMAL(10,2) NOT NULL,
+  unit VARCHAR(50) DEFAULT 'kg',
+  application_method VARCHAR(100),
+  application_frequency INTEGER DEFAULT 1,
+  notes TEXT,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add organization_id to farms table (for farms managed by organizations)
+-- Note: This is an ALTER TABLE statement - run separately if table already exists
+-- ALTER TABLE farms ADD COLUMN organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL;
+
+-- Create indexes for organization tables
+CREATE INDEX idx_organizations_created_by ON organizations(created_by);
+CREATE INDEX idx_organizations_slug ON organizations(slug);
+CREATE INDEX idx_organization_members_organization_id ON organization_members(organization_id);
+CREATE INDEX idx_organization_members_user_id ON organization_members(user_id);
+CREATE INDEX idx_organization_clients_organization_id ON organization_clients(organization_id);
+CREATE INDEX idx_organization_clients_client_user_id ON organization_clients(client_user_id);
+CREATE INDEX idx_farmer_invitations_organization_id ON farmer_invitations(organization_id);
+CREATE INDEX idx_farmer_invitations_token ON farmer_invitations(token);
+CREATE INDEX idx_farmer_invitations_status ON farmer_invitations(status);
+CREATE INDEX idx_fertilizer_plans_farm_id ON fertilizer_plans(farm_id);
+CREATE INDEX idx_fertilizer_plans_organization_id ON fertilizer_plans(organization_id);
+CREATE INDEX idx_fertilizer_plan_items_plan_id ON fertilizer_plan_items(plan_id);
+
+-- Enable Row Level Security for organization tables
+ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE organization_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE organization_clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE farmer_invitations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fertilizer_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fertilizer_plan_items ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for organizations
+CREATE POLICY "Users can view organizations they belong to" ON organizations FOR SELECT USING (
+  EXISTS (SELECT 1 FROM organization_members WHERE organization_members.organization_id = organizations.id AND organization_members.user_id = auth.uid())
+  OR created_by = auth.uid()
+);
+CREATE POLICY "Users can insert organizations" ON organizations FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Owners can update their organizations" ON organizations FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM organization_members WHERE organization_members.organization_id = organizations.id AND organization_members.user_id = auth.uid() AND organization_members.is_owner = TRUE)
+);
+CREATE POLICY "Owners can delete their organizations" ON organizations FOR DELETE USING (
+  EXISTS (SELECT 1 FROM organization_members WHERE organization_members.organization_id = organizations.id AND organization_members.user_id = auth.uid() AND organization_members.is_owner = TRUE)
+);
+
+-- RLS Policies for organization_members
+CREATE POLICY "Members can view organization members" ON organization_members FOR SELECT USING (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_members.organization_id AND om.user_id = auth.uid())
+);
+CREATE POLICY "Admins can insert organization members" ON organization_members FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_members.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
+);
+CREATE POLICY "Admins can update organization members" ON organization_members FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_members.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
+);
+CREATE POLICY "Admins can delete organization members" ON organization_members FOR DELETE USING (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_members.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
+);
+
+-- RLS Policies for organization_clients
+CREATE POLICY "Members can view organization clients" ON organization_clients FOR SELECT USING (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_clients.organization_id AND om.user_id = auth.uid())
+  OR organization_clients.client_user_id = auth.uid()
+);
+CREATE POLICY "Admins can insert organization clients" ON organization_clients FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_clients.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
+);
+CREATE POLICY "Admins can update organization clients" ON organization_clients FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_clients.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
+);
+CREATE POLICY "Admins can delete organization clients" ON organization_clients FOR DELETE USING (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_clients.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
+);
+
+-- RLS Policies for farmer_invitations
+CREATE POLICY "Members can view invitations" ON farmer_invitations FOR SELECT USING (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = farmer_invitations.organization_id AND om.user_id = auth.uid())
+);
+CREATE POLICY "Admins can insert invitations" ON farmer_invitations FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = farmer_invitations.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
+);
+CREATE POLICY "Admins can update invitations" ON farmer_invitations FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = farmer_invitations.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
+);
+CREATE POLICY "Admins can delete invitations" ON farmer_invitations FOR DELETE USING (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = farmer_invitations.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
+);
+
+-- RLS Policies for fertilizer_plans
+CREATE POLICY "Users can view fertilizer plans for their farms" ON fertilizer_plans FOR SELECT USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = fertilizer_plans.farm_id AND farms.user_id = auth.uid())
+  OR EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = fertilizer_plans.organization_id AND om.user_id = auth.uid())
+);
+CREATE POLICY "Org members can insert fertilizer plans" ON fertilizer_plans FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = fertilizer_plans.organization_id AND om.user_id = auth.uid())
+);
+CREATE POLICY "Org members can update fertilizer plans" ON fertilizer_plans FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = fertilizer_plans.organization_id AND om.user_id = auth.uid())
+);
+CREATE POLICY "Org members can delete fertilizer plans" ON fertilizer_plans FOR DELETE USING (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = fertilizer_plans.organization_id AND om.user_id = auth.uid())
+);
+
+-- RLS Policies for fertilizer_plan_items
+CREATE POLICY "Users can view fertilizer plan items" ON fertilizer_plan_items FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM fertilizer_plans fp
+    WHERE fp.id = fertilizer_plan_items.plan_id
+    AND (
+      EXISTS (SELECT 1 FROM farms WHERE farms.id = fp.farm_id AND farms.user_id = auth.uid())
+      OR EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = fp.organization_id AND om.user_id = auth.uid())
+    )
+  )
+);
+CREATE POLICY "Org members can insert fertilizer plan items" ON fertilizer_plan_items FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM fertilizer_plans fp
+    JOIN organization_members om ON om.organization_id = fp.organization_id
+    WHERE fp.id = fertilizer_plan_items.plan_id AND om.user_id = auth.uid()
+  )
+);
+CREATE POLICY "Org members can update fertilizer plan items" ON fertilizer_plan_items FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM fertilizer_plans fp
+    JOIN organization_members om ON om.organization_id = fp.organization_id
+    WHERE fp.id = fertilizer_plan_items.plan_id AND om.user_id = auth.uid()
+  )
+);
+CREATE POLICY "Org members can delete fertilizer plan items" ON fertilizer_plan_items FOR DELETE USING (
+  EXISTS (
+    SELECT 1 FROM fertilizer_plans fp
+    JOIN organization_members om ON om.organization_id = fp.organization_id
+    WHERE fp.id = fertilizer_plan_items.plan_id AND om.user_id = auth.uid()
+  )
+);
+
+-- Trigger to update fertilizer_plans updated_at timestamp
+CREATE TRIGGER update_fertilizer_plans_updated_at
+  BEFORE UPDATE ON fertilizer_plans
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Add FK constraint from profiles to organizations (must be done after organizations table exists)
+ALTER TABLE profiles
+  ADD CONSTRAINT profiles_consultant_organization_id_fkey
+  FOREIGN KEY (consultant_organization_id)
+  REFERENCES organizations(id)
+  ON DELETE SET NULL;
+
+-- ============================================================================
+-- END ORGANIZATION / RBAC TABLES
+-- ============================================================================
 
 -- Insert some sample data (optional - you can remove this section)
 -- Note: This will only work after you set up authentication

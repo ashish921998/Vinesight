@@ -508,7 +508,7 @@ export function AttendanceSheet({
               <table className="w-full border-collapse min-w-[600px]">
                 <thead>
                   <tr>
-                    <th className="text-left py-2 px-3 bg-gray-50 border border-gray-200 font-medium text-sm sticky left-0 z-10 min-w-[140px] w-[140px]">
+                    <th className="text-left py-2 px-3 bg-gray-50 border border-gray-200 font-medium text-sm sticky left-0 z-20 min-w-[140px] w-[140px]">
                       Worker
                     </th>
                     {dateRange.map((date) => {
