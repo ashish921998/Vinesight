@@ -9,9 +9,9 @@ interface FAQItem {
 
 const faqData: FAQItem[] = [
   {
-    question: 'What is FarmSight and who is it designed for?',
+    question: 'What is Vinesight and who is it designed for?',
     answer:
-      "FarmSight is an AI-powered farm management platform designed for modern farmers, agricultural cooperatives, and agribusiness operations. It's perfect for crop producers looking to optimize yields, reduce costs, and make data-driven farming decisions."
+      "Vinesight is an AI-powered farm management platform designed for modern farmers, agricultural cooperatives, and agribusiness operations. It's perfect for crop producers looking to optimize yields, reduce costs, and make data-driven farming decisions."
   },
   {
     question: 'How does the AI crop monitoring work?',
@@ -19,9 +19,9 @@ const faqData: FAQItem[] = [
       'Our platform uses satellite imagery, drone data, and IoT sensors to continuously monitor crop health, soil conditions, and growth patterns. Machine learning algorithms analyze this data to detect issues early and provide actionable recommendations for optimal crop management.'
   },
   {
-    question: 'Can FarmSight integrate with my existing farm equipment?',
+    question: 'Can Vinesight integrate with my existing farm equipment?',
     answer:
-      'Yes! FarmSight connects with most modern tractors, irrigation systems, and agricultural sensors through standard APIs and protocols. We support John Deere, Case IH, New Holland, and many other major equipment manufacturers.'
+      'Yes! Vinesight connects with most modern tractors, irrigation systems, and agricultural sensors through standard APIs and protocols. We support John Deere, Case IH, New Holland, and many other major equipment manufacturers.'
   },
   {
     question: 'What kind of support and training do you provide?',
@@ -29,12 +29,12 @@ const faqData: FAQItem[] = [
       'We offer comprehensive onboarding, 24/7 technical support, and ongoing training programs. Our agricultural specialists work directly with farmers to ensure successful implementation and maximum ROI from day one.'
   },
   {
-    question: 'How secure is my farm data with FarmSight?',
+    question: 'How secure is my farm data with Vinesight?',
     answer:
       'Your farm data is completely secure with enterprise-grade encryption, secure cloud storage, and strict privacy controls. We never share your data with competitors or third parties, and you maintain full ownership of all your agricultural information.'
   },
   {
-    question: 'How quickly can I see results with FarmSight?',
+    question: 'How quickly can I see results with Vinesight?',
     answer:
       'Most farmers see immediate benefits in field monitoring and task management within the first week. Yield optimization and predictive insights typically show measurable results within one growing season, with many customers reporting 15-25% efficiency improvements.'
   }

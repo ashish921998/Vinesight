@@ -57,7 +57,10 @@ export default function DocumentationSection() {
   }
 
   return (
-    <div className="w-full border-b border-[rgba(55,50,47,0.12)] flex flex-col justify-center items-center">
+    <div
+      id="resources"
+      className="w-full border-b border-[rgba(55,50,47,0.12)] flex flex-col justify-center items-center"
+    >
       {/* Header Section */}
       <div className="self-stretch px-6 md:px-24 py-12 md:py-16 border-[rgba(55,50,47,0.12)] flex justify-center items-center gap-6">
         <div className="w-full max-w-[586px] px-6 py-5 shadow-[0px_2px_4px_rgba(50,45,43,0.06)] overflow-hidden rounded-lg flex flex-col justify-start items-center gap-4 shadow-none">

@@ -1805,6 +1805,8 @@ export function UnifiedDataLogsModal({
                                       <SelectItem value="gm/L">gm/L</SelectItem>
                                       <SelectItem value="ml/L">ml/L</SelectItem>
                                       <SelectItem value="ppm">ppm</SelectItem>
+                                      <SelectItem value="kg/acre">kg/acre</SelectItem>
+                                      <SelectItem value="liter/acre">liter/acre</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </div>

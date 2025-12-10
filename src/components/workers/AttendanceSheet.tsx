@@ -504,11 +504,11 @@ export function AttendanceSheet({
             </div>
 
             {/* Spreadsheet */}
-            <div className="overflow-x-auto">
+            <div className="overflow-auto max-h-[60vh] border rounded-lg">
               <table className="w-full border-collapse min-w-[600px]">
-                <thead>
+                <thead className="sticky top-0 z-20">
                   <tr>
-                    <th className="text-left py-2 px-3 bg-gray-50 border border-gray-200 font-medium text-sm sticky left-0 z-10 min-w-[140px] w-[140px]">
+                    <th className="text-left py-2 px-3 bg-gray-50 border border-gray-200 font-medium text-sm sticky left-0 z-30 min-w-[140px] w-[140px]">
                       Worker
                     </th>
                     {dateRange.map((date) => {
@@ -518,7 +518,7 @@ export function AttendanceSheet({
                           key={date.toISOString()}
                           className={cn(
                             'py-2 px-2 bg-gray-50 border border-gray-200 font-medium text-xs text-center min-w-[200px]',
-                            isSameDay(date, new Date()) && 'bg-primary/10'
+                            isSameDay(date, new Date()) && 'bg-primary/10 !bg-primary/20'
                           )}
                         >
                           <div>{format(date, 'EEE')}</div>

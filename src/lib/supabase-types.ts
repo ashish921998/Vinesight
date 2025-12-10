@@ -351,7 +351,11 @@ export function toApplicationSprayRecord(
         typeof c === 'object' &&
         typeof c.name === 'string' &&
         typeof c.quantity === 'number' &&
-        (c.unit === 'gm/L' || c.unit === 'ml/L' || c.unit === 'ppm')
+        (c.unit === 'gm/L' ||
+          c.unit === 'ml/L' ||
+          c.unit === 'ppm' ||
+          c.unit === 'kg/acre' ||
+          c.unit === 'liter/acre')
     )
     return isValid ? (chemicalsJson as unknown as import('./supabase').SprayChemical[]) : undefined
   }
@@ -363,7 +367,7 @@ export function toApplicationSprayRecord(
     chemical: dbRecord.chemical || undefined,
     dose: dbRecord.dose || undefined,
     quantity_amount: dbRecord.quantity_amount,
-    quantity_unit: dbRecord.quantity_unit as 'gm/L' | 'ml/L' | 'ppm',
+    quantity_unit: dbRecord.quantity_unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/acre' | 'liter/acre',
     water_volume: dbRecord.water_volume,
     chemicals: parseChemicals(dbRecord.chemicals),
     area: dbRecord.area,
