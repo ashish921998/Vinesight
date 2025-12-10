@@ -43,15 +43,8 @@ CREATE INDEX idx_profiles_consultant_organization_id ON profiles(consultant_orga
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for profiles
--- Users can view their own profile, or profiles of users in the same organization
-CREATE POLICY "Users can view profiles" ON profiles FOR SELECT TO authenticated USING (
-  auth.uid() = id
-  OR EXISTS (
-    SELECT 1 FROM organization_members om1
-    JOIN organization_members om2 ON om1.organization_id = om2.organization_id
-    WHERE om1.user_id = auth.uid() AND om2.user_id = profiles.id
-  )
-);
+-- Basic policies - org-based access is added after organization_members table is created
+CREATE POLICY "Users can view own profile" ON profiles FOR SELECT TO authenticated USING (auth.uid() = id);
 CREATE POLICY "Users can insert their own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Users can update their own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 
@@ -729,17 +722,6 @@ CREATE TABLE organization_members (
   UNIQUE(organization_id, user_id)
 );
 
--- Organization clients table (farmers linked to organizations)
-CREATE TABLE organization_clients (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  client_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  assigned_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  assigned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  notes TEXT,
-  UNIQUE(organization_id, client_user_id)
-);
-
 -- Farmer invitations table
 CREATE TABLE farmer_invitations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -786,8 +768,6 @@ CREATE INDEX idx_organizations_created_by ON organizations(created_by);
 CREATE INDEX idx_organizations_slug ON organizations(slug);
 CREATE INDEX idx_organization_members_organization_id ON organization_members(organization_id);
 CREATE INDEX idx_organization_members_user_id ON organization_members(user_id);
-CREATE INDEX idx_organization_clients_organization_id ON organization_clients(organization_id);
-CREATE INDEX idx_organization_clients_client_user_id ON organization_clients(client_user_id);
 CREATE INDEX idx_farmer_invitations_organization_id ON farmer_invitations(organization_id);
 CREATE INDEX idx_farmer_invitations_token ON farmer_invitations(token);
 CREATE INDEX idx_farmer_invitations_status ON farmer_invitations(status);
@@ -798,7 +778,6 @@ CREATE INDEX idx_fertilizer_plan_items_plan_id ON fertilizer_plan_items(plan_id)
 -- Enable Row Level Security for organization tables
 ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE organization_members ENABLE ROW LEVEL SECURITY;
-ALTER TABLE organization_clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE farmer_invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fertilizer_plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fertilizer_plan_items ENABLE ROW LEVEL SECURITY;
@@ -830,19 +809,13 @@ CREATE POLICY "Admins can delete organization members" ON organization_members F
   EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_members.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
 );
 
--- RLS Policies for organization_clients
-CREATE POLICY "Members can view organization clients" ON organization_clients FOR SELECT USING (
-  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_clients.organization_id AND om.user_id = auth.uid())
-  OR organization_clients.client_user_id = auth.uid()
-);
-CREATE POLICY "Admins can insert organization clients" ON organization_clients FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_clients.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
-);
-CREATE POLICY "Admins can update organization clients" ON organization_clients FOR UPDATE USING (
-  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_clients.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
-);
-CREATE POLICY "Admins can delete organization clients" ON organization_clients FOR DELETE USING (
-  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_clients.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
+-- Additional profiles RLS policy for org-based access (added here after organization_members exists)
+CREATE POLICY "Users can view org member profiles" ON profiles FOR SELECT TO authenticated USING (
+  EXISTS (
+    SELECT 1 FROM organization_members om1
+    JOIN organization_members om2 ON om1.organization_id = om2.organization_id
+    WHERE om1.user_id = auth.uid() AND om2.user_id = profiles.id
+  )
 );
 
 -- RLS Policies for farmer_invitations
