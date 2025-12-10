@@ -297,28 +297,34 @@ export default function SettingsPage() {
                     <p className="text-sm text-gray-500">
                       Select an organization to connect with as your consultant.
                     </p>
-                    <div className="space-y-2">
-                      <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select Organization" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {organizations.map((org) => (
-                            <SelectItem key={org.id} value={org.id}>
-                              {org.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    {organizations.length === 0 ? (
+                      <p className="text-sm text-gray-400 italic">
+                        No organizations available at this time.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Organization" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {organizations.map((org) => (
+                              <SelectItem key={org.id} value={org.id}>
+                                {org.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
 
-                      <Button
-                        className="w-full"
-                        onClick={handleConnectConsultant}
-                        disabled={!selectedOrgId || connectionLoading}
-                      >
-                        {connectionLoading ? 'Connecting...' : 'Connect'}
-                      </Button>
-                    </div>
+                        <Button
+                          className="w-full"
+                          onClick={handleConnectConsultant}
+                          disabled={!selectedOrgId || connectionLoading}
+                        >
+                          {connectionLoading ? 'Connecting...' : 'Connect'}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>

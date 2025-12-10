@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import type { Database } from '@/types/database'
-
-// Lazy initialization to avoid build-time errors
-function getSupabaseAdmin() {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!serviceRoleKey) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is not set')
-  }
-  return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
-}
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 // P1: Validate role against allowed values
 const JoinSchema = z.object({

@@ -56,13 +56,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
     }
 
-    // Validate signup link is a valid URL
+    // Validate signup link is a valid URL and matches our domain
     let validatedUrl: URL
     try {
       validatedUrl = new URL(signupLink)
-      // Verify it's our domain for security
+
+      // SECURITY: NEXT_PUBLIC_APP_URL must be configured to validate signup link domain.
+      // This prevents accepting invitations with arbitrary domains that could be used for phishing.
       const appUrl = process.env.NEXT_PUBLIC_APP_URL
-      if (appUrl && validatedUrl.origin !== new URL(appUrl).origin) {
+      if (!appUrl) {
+        console.error('NEXT_PUBLIC_APP_URL is not configured')
+        return NextResponse.json(
+          { error: 'Server misconfiguration: NEXT_PUBLIC_APP_URL not set' },
+          { status: 500 }
+        )
+      }
+
+      // Compare origins to validate the domain
+      if (validatedUrl.origin !== new URL(appUrl).origin) {
         return NextResponse.json({ error: 'Invalid signup link domain' }, { status: 400 })
       }
     } catch {

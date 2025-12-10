@@ -1,7 +1,6 @@
 import { getTypedSupabaseClient } from './supabase'
 import type { Json, Database } from '@/types/database'
 
-// Types
 export interface Organization {
   id: string
   name: string
@@ -34,8 +33,6 @@ export interface OrganizationClient {
 }
 
 export class OrganizationService {
-  // ==================== ORGANIZATION CRUD ====================
-
   static async getOrganization(id: string): Promise<Organization | null> {
     const supabase = await getTypedSupabaseClient()
     const { data, error } = await supabase.from('organizations').select('*').eq('id', id).single()
@@ -82,8 +79,6 @@ export class OrganizationService {
     return data
   }
 
-  // ==================== ORGANIZATION MEMBERS ====================
-
   static async getOrganizationMembers(organizationId: string): Promise<OrganizationMember[]> {
     const supabase = await getTypedSupabaseClient()
     const { data, error } = await supabase
@@ -103,6 +98,36 @@ export class OrganizationService {
     isOwner = false
   ): Promise<OrganizationMember> {
     const supabase = await getTypedSupabaseClient()
+
+    // Verify user is authenticated with distinct error handling
+    const {
+      data: { user },
+      error: authError
+    } = await supabase.auth.getUser()
+
+    if (authError) {
+      throw authError
+    }
+    if (!user) {
+      throw new Error('User must be authenticated to add organization members')
+    }
+
+    // Verify calling user is a member of the target organization with permission to add members
+    const { data: membership, error: membershipError } = await supabase
+      .from('organization_members')
+      .select('id, role')
+      .eq('organization_id', organizationId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (membershipError && membershipError.code !== 'PGRST116') {
+      throw membershipError
+    }
+
+    if (!membership) {
+      throw new Error('Permission denied: You are not authorized to modify this organization')
+    }
+
     const { data, error } = await supabase
       .from('organization_members')
       .insert({
@@ -145,8 +170,6 @@ export class OrganizationService {
     if (error) throw error
     return (data?.length || 0) > 0
   }
-
-  // ==================== ORGANIZATION CLIENTS (FARMERS) ====================
 
   static async getOrganizationClients(organizationId: string): Promise<OrganizationClient[]> {
     const supabase = await getTypedSupabaseClient()
@@ -235,8 +258,6 @@ export class OrganizationService {
     }
     return { isClient: false }
   }
-
-  // ==================== CLIENT FARMS ====================
 
   static async getClientFarms(
     clientUserId: string

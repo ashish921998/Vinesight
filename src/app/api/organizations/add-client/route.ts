@@ -1,18 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
 import type { Database } from '@/types/database'
-
-// Lazy initialization to avoid build-time errors
-function getSupabaseAdmin() {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!serviceRoleKey) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is not set')
-  }
-  return createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
-}
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 // P0: Validate input schema
 const AddClientSchema = z.object({
@@ -123,8 +114,8 @@ export async function POST(request: NextRequest) {
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
       if (createdAt < fiveMinutesAgo) {
         return NextResponse.json(
-          { error: 'Unauthorized - can only add recently created users via this endpoint' },
-          { status: 401 }
+          { error: 'Forbidden - can only add recently created users via this endpoint' },
+          { status: 403 }
         )
       }
     }
