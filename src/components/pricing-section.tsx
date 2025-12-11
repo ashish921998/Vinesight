@@ -182,7 +182,7 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
             >
               <div
                 className={`text-[13px] font-medium leading-5 font-sans transition-colors duration-300 ${
-                  billingPeriod === 'annually' ? 'text-[#37322F]' : 'text-[#6B7280]'
+                  billingPeriod === 'annually' ? 'text-foreground' : 'text-muted-foreground'
                 }`}
               >
                 Annually
@@ -195,7 +195,7 @@ function PricingSectionComponent({ regionFromServer = null }: PricingSectionProp
             >
               <div
                 className={`text-[13px] font-medium leading-5 font-sans transition-colors duration-300 ${
-                  billingPeriod === 'monthly' ? 'text-[#37322F]' : 'text-[#6B7280]'
+                  billingPeriod === 'monthly' ? 'text-foreground' : 'text-muted-foreground'
                 }`}
               >
                 Monthly
