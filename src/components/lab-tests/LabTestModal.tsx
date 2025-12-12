@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { SupabaseService } from '@/lib/supabase-service'
 import { Loader2, Upload, X, FileText, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
+import posthog from 'posthog-js'
 
 interface LabTestModalProps {
   isOpen: boolean
@@ -306,6 +307,16 @@ export function LabTestModal({
         }
 
         const warningCount = Object.keys(warnings).length
+        posthog.capture('lab_test_report_parsed', {
+          test_type: testType,
+          farm_id: farmId,
+          parse_status: 'success',
+          file_type: file.type,
+          file_size: file.size,
+          confidence: result.extraction.confidence || null,
+          parameters_extracted_count: Object.keys(extractedParams).length,
+          warning_count: warningCount
+        })
         if (warningCount > 0) {
           toast.success(
             `Report parsed! ${Object.keys(extractedParams).length} parameters extracted (${warningCount} unusual values detected).`,
@@ -318,11 +329,27 @@ export function LabTestModal({
         }
       } else {
         setParseStatus('failed')
+        posthog.capture('lab_test_report_parsed', {
+          test_type: testType,
+          farm_id: farmId,
+          parse_status: 'failed',
+          file_type: file.type,
+          file_size: file.size,
+          reason: 'extraction_failed'
+        })
         toast.warning('Report uploaded but extraction failed. Please fill in the values manually.')
       }
     } catch (error) {
       console.error('Error parsing report:', error)
       setParseStatus('failed')
+      posthog.capture('lab_test_report_parsed', {
+        test_type: testType,
+        farm_id: farmId,
+        parse_status: 'failed',
+        file_type: file.type,
+        file_size: file.size,
+        reason: 'api_error'
+      })
       toast.error('Failed to parse report. Please fill in the values manually.')
     } finally {
       setParsing(false)
@@ -355,6 +382,19 @@ export function LabTestModal({
       toast.error('Please fill in at least one test parameter or upload a report')
       return
     }
+
+    const filledParameterCount = Object.values(numericParams).filter((v) => v !== null).length
+
+    posthog.capture('lab_test_submitted', {
+      mode: mode,
+      test_type: testType,
+      farm_id: farmId,
+      has_report: !!reportPath || !!reportFile,
+      parameter_count: filledParameterCount,
+      has_notes: notes.trim().length > 0,
+      auto_filled_parameter_count: autoFilledFields.size,
+      warning_count: Object.keys(fieldWarnings).length
+    })
 
     setLoading(true)
     try {

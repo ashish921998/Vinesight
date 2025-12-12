@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import posthog from 'posthog-js'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -150,6 +151,11 @@ export function EnhancedQuickActions({
   ]
 
   const handleActionClick = (action: QuickAction) => {
+    posthog.capture('quick_action_clicked', {
+      action_id: action.id,
+      action_title: action.title,
+      one_tap: action.oneTap || false
+    })
     if (action.oneTap) {
       onAction(action.id, {
         timestamp: new Date(),
@@ -168,6 +174,9 @@ export function EnhancedQuickActions({
   }
 
   const startVoiceRecording = () => {
+    posthog.capture('quick_action_voice_recording_started', {
+      action_id: showVoiceDialog
+    })
     setIsRecording(true)
     // Voice recording implementation would go here
     onVoiceRecord?.(showVoiceDialog!)
@@ -180,6 +189,9 @@ export function EnhancedQuickActions({
   }
 
   const handleCameraAction = (actionId: string) => {
+    posthog.capture('quick_action_camera_clicked', {
+      action_id: actionId
+    })
     onCameraCapture?.(actionId)
   }
 

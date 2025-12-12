@@ -10,6 +10,7 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoginButton } from '@/components/auth/LoginButton'
 import { PasswordInput } from '@/components/ui/password-input'
+import posthog from 'posthog-js'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -46,6 +47,8 @@ export default function LoginPage() {
 
     const result = await signInWithEmail({ email, password })
 
+    posthog.capture('login_submitted', { method: 'email', success: result.success })
+
     if (result.success) {
       router.push('/dashboard')
     }
@@ -53,8 +56,11 @@ export default function LoginPage() {
 
   const handleForgotPassword = async () => {
     if (!email) {
+      posthog.capture('password_reset_requested', { email_provided: false })
       return
     }
+
+    posthog.capture('password_reset_requested', { email_provided: true })
 
     // This would typically open a modal or redirect to a forgot password page
     // For now, we'll just show an alert

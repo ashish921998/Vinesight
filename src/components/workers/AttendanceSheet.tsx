@@ -20,6 +20,21 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Input } from '@/components/ui/input'
+import { MobileAttendanceView } from './MobileAttendanceView'
+
+// Hook to detect mobile screen size
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = React.useState(false)
+
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < breakpoint)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [breakpoint])
+
+  return isMobile
+}
 
 interface Farm {
   id: number
@@ -66,6 +81,15 @@ export function AttendanceSheet({
   onAttendanceSaved,
   onSaveFunction
 }: AttendanceSheetProps) {
+  // Always use the new worker-centric attendance view
+  return (
+    <MobileAttendanceView farms={farms} workers={workers} onAttendanceSaved={onAttendanceSaved} />
+  )
+
+  // Legacy code below - keeping for reference but not used
+  // Hook for mobile detection - must be called unconditionally
+  const isMobile = useIsMobile()
+
   // Initialize with current week by default
   const defaultWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
   const [startDate, setStartDate] = React.useState(() => format(defaultWeekStart, 'yyyy-MM-dd'))
@@ -395,6 +419,13 @@ export function AttendanceSheet({
       onSaveFunction(handleSave, hasModifications, saving)
     }
   }, [handleSave, hasModifications, saving, onSaveFunction])
+
+  // Render mobile-optimized view on small screens
+  if (isMobile) {
+    return (
+      <MobileAttendanceView farms={farms} workers={workers} onAttendanceSaved={onAttendanceSaved} />
+    )
+  }
 
   return (
     <div className="space-y-4">

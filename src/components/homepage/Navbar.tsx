@@ -6,6 +6,7 @@ import { Sprout, Menu, X, Calculator, BookOpen, ArrowRight } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { LoginButton } from '@/components/auth/LoginButton'
 import { useRouter } from 'next/navigation'
+import posthog from 'posthog-js'
 
 export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -17,7 +18,8 @@ export function Navbar() {
     { name: 'About', href: '#about', icon: BookOpen }
   ]
 
-  const scrollToSection = (href: string) => {
+  const scrollToSection = (href: string, name: string) => {
+    posthog.capture('navbar_link_clicked', { href: href, section_name: name })
     if (href.startsWith('#')) {
       const element = document.querySelector(href)
       if (element) {
@@ -48,7 +50,7 @@ export function Navbar() {
             {navigation.map((item) => (
               <button
                 key={item.name}
-                onClick={() => scrollToSection(item.href)}
+                onClick={() => scrollToSection(item.href, item.name)}
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors flex items-center gap-2"
               >
                 {item.icon && <item.icon className="h-4 w-4" />}
@@ -69,7 +71,10 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={() => {
+                posthog.capture('mobile_menu_toggled', { open: !isMobileMenuOpen })
+                setIsMobileMenuOpen(!isMobileMenuOpen)
+              }}
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
@@ -84,7 +89,7 @@ export function Navbar() {
             {navigation.map((item) => (
               <button
                 key={item.name}
-                onClick={() => scrollToSection(item.href)}
+                onClick={() => scrollToSection(item.href, item.name)}
                 className="block w-full text-left px-4 py-3 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg font-medium transition-colors flex items-center gap-3"
               >
                 {item.icon && <item.icon className="h-5 w-5" />}
