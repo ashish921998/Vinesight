@@ -98,7 +98,17 @@ export function MobileAttendanceView({
   const [calendarLoading, setCalendarLoading] = React.useState(false)
 
   const activeWorkers = React.useMemo(() => workers.filter((w) => w.is_active), [workers])
-  const selectedWorker = activeWorkers[selectedWorkerIndex]
+
+  // Clamp selectedWorkerIndex when activeWorkers shrinks to prevent out-of-range access
+  React.useEffect(() => {
+    if (activeWorkers.length > 0 && selectedWorkerIndex >= activeWorkers.length) {
+      setSelectedWorkerIndex(Math.max(0, activeWorkers.length - 1))
+    }
+  }, [activeWorkers.length, selectedWorkerIndex])
+
+  // Safe access to selectedWorker with clamped index
+  const clampedIndex = Math.min(selectedWorkerIndex, Math.max(0, activeWorkers.length - 1))
+  const selectedWorker = activeWorkers[clampedIndex]
 
   // Generate 6 days (Mon-Sat)
   const dateRange = React.useMemo(() => {
@@ -332,7 +342,8 @@ export function MobileAttendanceView({
             await LaborService.updateAttendance(cell.existingRecordId, {
               work_status: cell.status as WorkStatus,
               work_type: cell.workType || 'other',
-              farm_ids: cell.farmIds
+              farm_ids: cell.farmIds,
+              daily_rate_override: cell.status === 'absent' ? 0 : undefined
             })
           }
         } else if (cell.status !== null && cell.farmIds.length > 0) {
@@ -341,7 +352,8 @@ export function MobileAttendanceView({
             farm_ids: cell.farmIds,
             date: cell.date,
             work_status: cell.status as WorkStatus,
-            work_type: cell.workType || 'other'
+            work_type: cell.workType || 'other',
+            daily_rate_override: cell.status === 'absent' ? 0 : undefined
           })
         }
       }

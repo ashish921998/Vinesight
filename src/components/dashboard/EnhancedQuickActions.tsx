@@ -174,12 +174,13 @@ export function EnhancedQuickActions({
   }
 
   const startVoiceRecording = () => {
+    if (!showVoiceDialog) return
     posthog.capture('quick_action_voice_recording_started', {
       action_id: showVoiceDialog
     })
     setIsRecording(true)
     // Voice recording implementation would go here
-    onVoiceRecord?.(showVoiceDialog!)
+    onVoiceRecord?.(showVoiceDialog)
 
     // Simulate recording for demo
     setTimeout(() => {

@@ -17,7 +17,9 @@ export function LoginButton({ className, children, variant }: LoginButtonProps) 
   const { signInWithGoogle, loading } = useSupabaseAuth()
 
   const handleGoogleSignIn = async () => {
-    posthog.capture('login_button_clicked', { provider: 'google' })
+    // Capture click event before sign-in starts with immediate send to ensure delivery before OAuth redirect
+    posthog.capture('login_button_clicked', { provider: 'google' }, { send_instantly: true })
+
     await signInWithGoogle()
   }
 

@@ -7,14 +7,20 @@ import { parseEnvFloat, parseEnvBoolean } from '@/lib/sentry-env-helpers'
 import { createClient } from '@/lib/supabase'
 import posthog from 'posthog-js'
 
-// Initialize PostHog for analytics
-posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-  api_host: '/ingest',
-  ui_host: 'https://us.posthog.com',
-  defaults: '2025-05-24',
-  capture_exceptions: true, // This enables capturing exceptions using Error Tracking
-  debug: process.env.NODE_ENV === 'development'
-})
+// Initialize PostHog for analytics (only if key is available)
+const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
+if (posthogKey) {
+  posthog.init(posthogKey, {
+    api_host: '/ingest',
+    ui_host: 'https://us.posthog.com',
+    defaults: '2025-05-24',
+    capture_exceptions: true, // This enables capturing exceptions using Error Tracking
+    debug: process.env.NODE_ENV === 'development'
+  })
+} else if (typeof window !== 'undefined') {
+  // Only warn on client-side, not during SSR/build
+  console.warn('[PostHog] NEXT_PUBLIC_POSTHOG_KEY is not set. Analytics will be disabled.')
+}
 
 // Lazy-load Supabase client for Sentry integration
 // This ensures the client is only created when Sentry initializes,

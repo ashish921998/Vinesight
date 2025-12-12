@@ -1214,7 +1214,6 @@ export default function WorkersPage() {
                 farms={farms}
                 workers={workers}
                 onAttendanceSaved={handleAttendanceSaved}
-                onSaveFunction={handleSaveFunctionUpdate}
               />
             </CardContent>
           </Card>
@@ -1258,7 +1257,6 @@ export default function WorkersPage() {
               farms={farms}
               workers={workers}
               onAttendanceSaved={handleAttendanceSaved}
-              onSaveFunction={handleModalSaveFunctionUpdate}
             />
           </div>
           <DialogFooter className="px-6 py-4 border-t bg-white">
