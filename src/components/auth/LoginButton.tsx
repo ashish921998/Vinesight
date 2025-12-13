@@ -2,9 +2,10 @@
 
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
-import { cva, type VariantProps } from 'class-variance-authority'
+import { type VariantProps } from 'class-variance-authority'
 import { buttonVariants } from '@/components/ui/button'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import posthog from 'posthog-js'
 
 interface LoginButtonProps {
   className?: string
@@ -16,6 +17,9 @@ export function LoginButton({ className, children, variant }: LoginButtonProps) 
   const { signInWithGoogle, loading } = useSupabaseAuth()
 
   const handleGoogleSignIn = async () => {
+    // Capture click event before sign-in starts with immediate send to ensure delivery before OAuth redirect
+    posthog.capture('login_button_clicked', { provider: 'google' }, { send_instantly: true })
+
     await signInWithGoogle()
   }
 

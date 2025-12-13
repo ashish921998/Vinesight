@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { format, startOfWeek, endOfWeek, subWeeks } from 'date-fns'
-
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -47,23 +46,19 @@ import {
 import {
   ArrowDownLeft,
   ArrowUpRight,
-  Check,
   ChevronLeft,
   IndianRupee,
   Loader2,
   Plus,
-  Trash2,
   User,
   Users,
   Wallet
 } from 'lucide-react'
-
 import { LaborService } from '@/lib/labor-service'
 import type {
   Worker,
   WorkerCreateInput,
   WorkerAttendance,
-  WorkerAttendanceCreateInput,
   WorkerTransaction,
   WorkStatus,
   WorkType,
@@ -73,24 +68,12 @@ import { cn } from '@/lib/utils'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { createClient } from '@/lib/supabase'
 import { WorkersListView } from '@/components/workers/WorkersListView'
-import { AttendanceView } from '@/components/workers/AttendanceView'
 import { AnalyticsView } from '@/components/workers/AnalyticsView'
-import { FarmsMultiSelect } from '@/components/farms/FarmsMultiSelect'
 import { AttendanceSheet } from '@/components/workers/AttendanceSheet'
 
 interface Farm {
   id: number
   name: string
-}
-
-interface AttendanceFormEntry {
-  id: string
-  isTemporary: boolean
-  workerId?: number
-  tempName: string
-  status: WorkStatus
-  salary: string
-  advanceDeduction: string
 }
 
 export default function WorkersPage() {
@@ -153,23 +136,7 @@ export default function WorkersPage() {
 
   // Attendance tab state
   const [attendanceFarmIds, setAttendanceFarmIds] = useState<number[]>([])
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false)
-  const [attendanceSaveFunction, setAttendanceSaveFunction] = useState<{
-    fn: () => Promise<void>
-    hasChanges: boolean
-    isSaving: boolean
-  } | null>(null)
-  const [modalAttendanceSaveFunction, setModalAttendanceSaveFunction] = useState<{
-    fn: () => Promise<void>
-    hasChanges: boolean
-    isSaving: boolean
-  } | null>(null)
-  const [attendanceFormEntries, setAttendanceFormEntries] = useState<AttendanceFormEntry[]>([])
-  const [isSavingAttendanceEntries, setIsSavingAttendanceEntries] = useState(false)
-  const [attendanceHistoryWorkerId, setAttendanceHistoryWorkerId] = useState<number | null>(null)
-  const [attendanceHistory, setAttendanceHistory] = useState<WorkerAttendance[]>([])
-  const [attendanceHistoryLoading, setAttendanceHistoryLoading] = useState(false)
   const [editingAttendanceRecord, setEditingAttendanceRecord] = useState<WorkerAttendance | null>(
     null
   )
@@ -410,44 +377,9 @@ export default function WorkersPage() {
     }
   }, [viewMode, analyticsStartDate, analyticsEndDate, analyticsFarmId, fetchAnalyticsData])
 
-  const loadAttendanceHistory = useCallback(async (workerId: number) => {
-    try {
-      setAttendanceHistoryLoading(true)
-      const history = await LaborService.getAttendanceByWorker(workerId)
-      setAttendanceHistory(history)
-    } catch (error) {
-      console.error('Error loading attendance history:', error)
-      toast.error('Failed to load attendance history')
-    } finally {
-      setAttendanceHistoryLoading(false)
-    }
-  }, [])
-
-  const handleOpenEditAttendance = (record: WorkerAttendance) => {
-    const worker = workers.find((w) => w.id === record.worker_id)
-    setEditingAttendanceRecord(record)
-    setEditAttendanceForm({
-      date: record.date,
-      status: record.work_status,
-      salary:
-        record.work_status === 'absent'
-          ? '0'
-          : (
-              (record.daily_rate_override ?? worker?.daily_rate ?? 0) *
-              statusToFraction(record.work_status)
-            ).toString(),
-      workType: record.work_type,
-      notes: record.notes || ''
-    })
-  }
-
   const handleCloseEditAttendance = () => {
     setEditingAttendanceRecord(null)
     setIsSavingAttendanceEdit(false)
-  }
-
-  const handleRequestDeleteAttendance = (record: WorkerAttendance) => {
-    setAttendanceRecordToDelete(record)
   }
 
   useEffect(() => {
@@ -455,27 +387,6 @@ export default function WorkersPage() {
       setAttendanceFarmIds([farms[0].id])
     }
   }, [viewMode, attendanceFarmIds, farms])
-
-  useEffect(() => {
-    if (viewMode !== 'attendance') return
-    const activeWorkerList = workers.filter((worker) => worker.is_active)
-    if (activeWorkerList.length === 0) {
-      setAttendanceHistoryWorkerId(null)
-      setAttendanceHistory([])
-      return
-    }
-    const isSelectedWorkerValid = activeWorkerList.some(
-      (worker) => worker.id === attendanceHistoryWorkerId
-    )
-    if (!attendanceHistoryWorkerId || !isSelectedWorkerValid) {
-      setAttendanceHistoryWorkerId(activeWorkerList[0].id)
-    }
-  }, [viewMode, workers, attendanceHistoryWorkerId])
-
-  useEffect(() => {
-    if (viewMode !== 'attendance' || !attendanceHistoryWorkerId) return
-    loadAttendanceHistory(attendanceHistoryWorkerId)
-  }, [viewMode, attendanceHistoryWorkerId, loadAttendanceHistory])
 
   const handleOpenAddModal = () => {
     setFormData({ name: '', daily_rate: 0, advance_balance: 0 })
@@ -695,118 +606,20 @@ export default function WorkersPage() {
     }
   }
 
-  // Attendance modal helpers
-  const createAttendanceEntry = (isTemporary = false, worker?: Worker): AttendanceFormEntry => {
-    const defaultWorker = worker ?? workers.find((w) => w.is_active)
-    return {
-      id:
-        typeof crypto !== 'undefined' && 'randomUUID' in crypto
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      isTemporary,
-      workerId: !isTemporary ? defaultWorker?.id : undefined,
-      tempName: '',
-      status: 'full_day',
-      salary: !isTemporary && defaultWorker ? defaultWorker.daily_rate.toString() : '',
-      advanceDeduction: ''
-    }
-  }
-
   const handleOpenAttendanceModal = () => {
     if (farms.length === 0) {
       toast.error('Add a farm before recording attendance')
       return
     }
-    setAttendanceFarmIds(attendanceFarmIds.length > 0 ? attendanceFarmIds : [farms[0].id])
-    setSelectedDate(format(new Date(), 'yyyy-MM-dd'))
-    setAttendanceFormEntries([createAttendanceEntry(false)])
+    if (attendanceFarmIds.length === 0) {
+      setAttendanceFarmIds([farms[0].id])
+    }
     setIsAttendanceModalOpen(true)
-  }
-
-  const handleAddAttendanceEntry = () => {
-    setAttendanceFormEntries((prev) => [...prev, createAttendanceEntry(false)])
-  }
-
-  const handleRemoveAttendanceEntry = (entryId: string) => {
-    setAttendanceFormEntries((prev) => prev.filter((entry) => entry.id !== entryId))
-  }
-
-  const updateAttendanceFormEntry = (
-    entryId: string,
-    field: keyof AttendanceFormEntry,
-    value: string | number | boolean | undefined
-  ) => {
-    setAttendanceFormEntries((prev) =>
-      prev.map((entry) =>
-        entry.id === entryId
-          ? {
-              ...entry,
-              [field]: value
-            }
-          : entry
-      )
-    )
-  }
-
-  const handleToggleTemporary = (entryId: string, isTemporary: boolean) => {
-    setAttendanceFormEntries((prev) =>
-      prev.map((entry) =>
-        entry.id === entryId ? { ...createAttendanceEntry(isTemporary), id: entryId } : entry
-      )
-    )
   }
 
   const statusToFraction = (status: WorkStatus) => {
     if (status === 'half_day') return 0.5
     return 1 // full_day is the default
-  }
-
-  const handleWorkerSelect = (entryId: string, workerId?: number) => {
-    const worker = workers.find((w) => w.id === workerId)
-    setAttendanceFormEntries((prev) =>
-      prev.map((entry) =>
-        entry.id === entryId
-          ? {
-              ...entry,
-              workerId,
-              salary:
-                worker && !entry.isTemporary
-                  ? (worker.daily_rate * statusToFraction(entry.status)).toString()
-                  : '',
-              advanceDeduction: ''
-            }
-          : entry
-      )
-    )
-  }
-
-  const handleAttendanceStatusChange = (entryId: string, status: WorkStatus) => {
-    setAttendanceFormEntries((prev) =>
-      prev.map((entry) => {
-        if (entry.id !== entryId) return entry
-        let updatedSalary = entry.salary
-        if (entry.isTemporary) {
-          const current = parseFloat(entry.salary)
-          if (!Number.isNaN(current) && current > 0) {
-            if (status === 'half_day' && entry.status !== 'half_day') {
-              updatedSalary = (current / 2).toString()
-            } else if (status === 'full_day' && entry.status === 'half_day') {
-              updatedSalary = (current * 2).toString()
-            }
-          }
-        } else if (entry.workerId) {
-          const worker = workers.find((w) => w.id === entry.workerId)
-          if (worker) {
-            updatedSalary = (worker.daily_rate * statusToFraction(status)).toString()
-          }
-        }
-        return {
-          ...entry,
-          status,
-          salary: updatedSalary
-        }
-      })
-    )
   }
 
   const handleEditFormChange = (
@@ -883,9 +696,6 @@ export default function WorkersPage() {
       })
       toast.success('Attendance updated')
       handleCloseEditAttendance()
-      if (attendanceHistoryWorkerId) {
-        loadAttendanceHistory(attendanceHistoryWorkerId)
-      }
       if (selectedWorker && selectedWorker.id === editingAttendanceRecord.worker_id) {
         handleOpenWorkerDetail(selectedWorker)
       }
@@ -904,9 +714,6 @@ export default function WorkersPage() {
       await LaborService.deleteAttendance(attendanceRecordToDelete.id)
       toast.success('Attendance deleted')
       setAttendanceRecordToDelete(null)
-      if (attendanceHistoryWorkerId) {
-        loadAttendanceHistory(attendanceHistoryWorkerId)
-      }
       if (selectedWorker && selectedWorker.id === attendanceRecordToDelete.worker_id) {
         handleOpenWorkerDetail(selectedWorker)
       }
@@ -915,141 +722,6 @@ export default function WorkersPage() {
       toast.error('Failed to delete attendance')
     } finally {
       setIsDeletingAttendance(false)
-    }
-  }
-
-  const handleSaveAttendanceEntries = async () => {
-    if (attendanceFarmIds.length === 0) {
-      toast.error('Please select at least one farm')
-      return
-    }
-    if (attendanceFormEntries.length === 0) {
-      toast.error('Add at least one worker')
-      return
-    }
-
-    const date = selectedDate
-    const deductionNote = `Attendance deduction for ${format(new Date(date), 'dd MMM yyyy')}`
-    const tempOperations: Promise<any>[] = []
-    const deductionOperations: Promise<any>[] = []
-
-    // Validate all entries first
-    for (const entry of attendanceFormEntries) {
-      const salaryValue = parseFloat(entry.salary)
-      if (Number.isNaN(salaryValue) || salaryValue <= 0) {
-        toast.error('Enter valid salary for each worker')
-        return
-      }
-
-      if (entry.isTemporary) {
-        if (!entry.tempName.trim()) {
-          toast.error('Temporary worker name is required')
-          return
-        }
-      } else {
-        if (!entry.workerId) {
-          toast.error('Select a worker for each entry')
-          return
-        }
-        const worker = workers.find((w) => w.id === entry.workerId)
-        const deductionValue = parseFloat(entry.advanceDeduction)
-        if (!Number.isNaN(deductionValue) && deductionValue < 0) {
-          toast.error('Advance deduction cannot be negative')
-          return
-        }
-        if (
-          !Number.isNaN(deductionValue) &&
-          worker &&
-          deductionValue > (worker.advance_balance || 0)
-        ) {
-          toast.error(`Deduction for ${worker.name} exceeds available advance balance`)
-          return
-        }
-      }
-    }
-
-    setIsSavingAttendanceEntries(true)
-    try {
-      const attendancePayload: Parameters<typeof LaborService.bulkCreateAttendance>[0] = []
-
-      // Process each entry once with all selected farms
-      for (const entry of attendanceFormEntries) {
-        const salaryValue = parseFloat(entry.salary)
-
-        if (entry.isTemporary) {
-          // Temporary workers still need separate entries per farm
-          const hoursWorked = entry.status === 'full_day' ? 8 : 4
-          for (const farmId of attendanceFarmIds) {
-            tempOperations.push(
-              LaborService.createTemporaryWorkerEntry({
-                farm_id: farmId,
-                date,
-                name: entry.tempName.trim(),
-                hours_worked: hoursWorked,
-                amount_paid: salaryValue,
-                notes: undefined
-              })
-            )
-          }
-          continue
-        }
-
-        const worker = workers.find((w) => w.id === entry.workerId)
-        const dayFraction = statusToFraction(entry.status)
-        const perDayRate = salaryValue / dayFraction
-        const defaultRate = worker?.daily_rate
-        const attendanceRecord: WorkerAttendanceCreateInput = {
-          worker_id: entry.workerId!,
-          farm_ids: attendanceFarmIds, // Array of all selected farm IDs
-          date,
-          work_status: entry.status as WorkStatus,
-          work_type: 'other',
-          daily_rate_override: perDayRate,
-          notes: undefined
-        }
-        if (defaultRate && Math.abs(perDayRate - defaultRate) <= 0.01) {
-          delete attendanceRecord.daily_rate_override
-        }
-        attendancePayload.push(attendanceRecord)
-
-        const deductionValue = parseFloat(entry.advanceDeduction)
-        if (!Number.isNaN(deductionValue) && deductionValue > 0) {
-          // Record full deduction as single worker-level transaction
-          // Use the first farm ID from selected farms for the transaction
-          deductionOperations.push(
-            LaborService.createTransaction({
-              worker_id: entry.workerId!,
-              farm_id: attendanceFarmIds[0] || null,
-              date,
-              type: 'advance_deducted',
-              amount: deductionValue,
-              notes: deductionNote
-            })
-          )
-        }
-      }
-
-      if (attendancePayload.length > 0) {
-        await LaborService.bulkCreateAttendance(attendancePayload)
-      }
-
-      if (tempOperations.length > 0) {
-        await Promise.all(tempOperations)
-      }
-      if (deductionOperations.length > 0) {
-        await Promise.all(deductionOperations)
-      }
-      toast.success('Attendance recorded successfully')
-      setIsAttendanceModalOpen(false)
-      fetchData()
-      if (attendanceHistoryWorkerId) {
-        loadAttendanceHistory(attendanceHistoryWorkerId)
-      }
-    } catch (error) {
-      console.error('Error recording attendance:', error)
-      toast.error('Failed to record attendance')
-    } finally {
-      setIsSavingAttendanceEntries(false)
     }
   }
 
@@ -1063,24 +735,7 @@ export default function WorkersPage() {
   const handleAttendanceSaved = useCallback(() => {
     setIsAttendanceModalOpen(false)
     fetchData()
-    if (attendanceHistoryWorkerId) {
-      loadAttendanceHistory(attendanceHistoryWorkerId)
-    }
-  }, [attendanceHistoryWorkerId, fetchData, loadAttendanceHistory])
-
-  const handleSaveFunctionUpdate = useCallback(
-    (saveFn: () => Promise<void>, hasChanges: boolean, isSaving: boolean) => {
-      setAttendanceSaveFunction({ fn: saveFn, hasChanges, isSaving })
-    },
-    []
-  )
-
-  const handleModalSaveFunctionUpdate = useCallback(
-    (saveFn: () => Promise<void>, hasChanges: boolean, isSaving: boolean) => {
-      setModalAttendanceSaveFunction({ fn: saveFn, hasChanges, isSaving })
-    },
-    []
-  )
+  }, [fetchData])
 
   if (authLoading) {
     return (
@@ -1159,21 +814,7 @@ export default function WorkersPage() {
               ))}
             </div>
             <div className="w-full max-w-sm sm:max-w-md mx-auto sm:mx-0">
-              {viewMode === 'attendance' ? (
-                <Button
-                  onClick={() => attendanceSaveFunction?.fn()}
-                  disabled={!attendanceSaveFunction?.hasChanges || attendanceSaveFunction?.isSaving}
-                  size="lg"
-                  className="w-full rounded-full bg-primary hover:bg-primary/90 text-white"
-                >
-                  {attendanceSaveFunction?.isSaving ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  ) : (
-                    <Check className="h-4 w-4 mr-1" />
-                  )}
-                  Save Changes
-                </Button>
-              ) : viewMode === 'workers' ? (
+              {viewMode === 'workers' ? (
                 <div className="flex gap-2">
                   <Button
                     onClick={handleOpenAddModal}
@@ -1214,7 +855,6 @@ export default function WorkersPage() {
                 farms={farms}
                 workers={workers}
                 onAttendanceSaved={handleAttendanceSaved}
-                onSaveFunction={handleSaveFunctionUpdate}
               />
             </CardContent>
           </Card>
@@ -1258,23 +898,11 @@ export default function WorkersPage() {
               farms={farms}
               workers={workers}
               onAttendanceSaved={handleAttendanceSaved}
-              onSaveFunction={handleModalSaveFunctionUpdate}
             />
           </div>
           <DialogFooter className="px-6 py-4 border-t bg-white">
             <Button variant="outline" onClick={() => setIsAttendanceModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => modalAttendanceSaveFunction?.fn()}
-              disabled={
-                !modalAttendanceSaveFunction?.hasChanges || modalAttendanceSaveFunction?.isSaving
-              }
-            >
-              {modalAttendanceSaveFunction?.isSaving && (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              )}
-              Save Changes
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,5 +1,6 @@
 'use client'
 
+import posthog from 'posthog-js'
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import {
   MessageCircle,
@@ -619,6 +620,15 @@ export function AIAssistant({
         return
       }
 
+      posthog.capture('ai-assistant-message-sent', {
+        has_text: !!messageText,
+        attachment_count: pendingAttachments.length,
+        attachment_types: pendingAttachments.map((a) => a.type),
+        query_type: analyzeQuery(messageText).queryType,
+        language: i18n.language,
+        source: text ? 'quick_question' : 'text_input'
+      })
+
       const queryAnalysis = analyzeQuery(messageText)
       const now = new Date()
 
@@ -811,6 +821,7 @@ export function AIAssistant({
   }
 
   const startNewConversation = () => {
+    posthog.capture('ai-assistant-conversation-action', { action: 'new' })
     setChatMessages([])
     setMessages([])
     setCurrentConversationId(null)
@@ -823,6 +834,10 @@ export function AIAssistant({
   const loadConversation = (conversationId: string) => {
     const conversation = conversations.find((c) => c.id === conversationId)
     if (conversation) {
+      posthog.capture('ai-assistant-conversation-action', {
+        action: 'load',
+        conversation_id: conversationId
+      })
       setChatMessages(conversation.messages.map(messageToUIMessage))
       setMessages(conversation.messages)
       setCurrentConversationId(conversationId)
@@ -833,6 +848,10 @@ export function AIAssistant({
   }
 
   const deleteConversation = async (conversationId: string) => {
+    posthog.capture('ai-assistant-conversation-action', {
+      action: 'delete',
+      conversation_id: conversationId
+    })
     await supabaseConversationStorage.deleteConversation(conversationId, user?.id)
 
     setConversations((prev) => prev.filter((c) => c.id !== conversationId))

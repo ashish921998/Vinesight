@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import posthog from 'posthog-js'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,8 +23,7 @@ import {
   Beaker,
   TestTube,
   MapPin,
-  Clock,
-  CheckCircle
+  Clock
 } from 'lucide-react'
 
 interface QuickAction {
@@ -150,6 +150,11 @@ export function EnhancedQuickActions({
   ]
 
   const handleActionClick = (action: QuickAction) => {
+    posthog.capture('quick_action_clicked', {
+      action_id: action.id,
+      action_title: action.title,
+      one_tap: action.oneTap || false
+    })
     if (action.oneTap) {
       onAction(action.id, {
         timestamp: new Date(),
@@ -168,9 +173,13 @@ export function EnhancedQuickActions({
   }
 
   const startVoiceRecording = () => {
+    if (!showVoiceDialog) return
+    posthog.capture('quick_action_voice_recording_started', {
+      action_id: showVoiceDialog
+    })
     setIsRecording(true)
     // Voice recording implementation would go here
-    onVoiceRecord?.(showVoiceDialog!)
+    onVoiceRecord?.(showVoiceDialog)
 
     // Simulate recording for demo
     setTimeout(() => {
@@ -180,6 +189,9 @@ export function EnhancedQuickActions({
   }
 
   const handleCameraAction = (actionId: string) => {
+    posthog.capture('quick_action_camera_clicked', {
+      action_id: actionId
+    })
     onCameraCapture?.(actionId)
   }
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { FarmerDashboard } from '@/components/dashboard/FarmerDashboard'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import posthog from 'posthog-js'
 
 export default function DashboardPage() {
   const { user, loading, error } = useSupabaseAuth()
@@ -40,7 +41,16 @@ export default function DashboardPage() {
           <p className="text-muted-foreground mb-4">
             Unable to verify authentication. Please check your internet connection and try again.
           </p>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
+          <Button
+            onClick={() => {
+              posthog.capture('dashboard_connection_retry_clicked', {
+                error_message: error instanceof Error ? error.message : String(error)
+              })
+              window.location.reload()
+            }}
+          >
+            Retry
+          </Button>
         </div>
       </div>
     )

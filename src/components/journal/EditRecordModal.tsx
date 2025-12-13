@@ -180,7 +180,7 @@ export interface IrrigationFormData extends BaseFormData {
 export interface SprayFormData extends BaseFormData {
   recordType: 'spray'
   water_volume: string
-  chemicals: Array<{ id: string; name: string; quantity: number; unit: string }>
+  chemicals: Array<{ id: string; name: string; quantity: string; unit: string }>
 }
 
 export interface HarvestFormData extends BaseFormData {
@@ -193,7 +193,7 @@ export interface HarvestFormData extends BaseFormData {
 
 export interface FertigationFormData extends BaseFormData {
   recordType: 'fertigation'
-  fertilizers: Array<{ id: string; name: string; quantity: number; unit: string }>
+  fertilizers: Array<{ id: string; name: string; quantity: string; unit: string }>
 }
 
 type ExpenseCategory = 'labor' | 'materials' | 'equipment' | 'fuel' | 'other'
@@ -308,7 +308,7 @@ export function EditRecordModal({
           return `chem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         }
 
-        let chemicals: Array<{ id: string; name: string; quantity: number; unit: string }> = []
+        let chemicals: Array<{ id: string; name: string; quantity: string; unit: string }> = []
 
         if (
           sprayRecord.chemicals &&
@@ -319,7 +319,7 @@ export function EditRecordModal({
           chemicals = sprayRecord.chemicals.map((chem) => ({
             id: chem.id || generateChemicalId(),
             name: chem.name || '',
-            quantity: chem.quantity,
+            quantity: chem.quantity?.toString() ?? '',
             unit: chem.unit || 'gm/L'
           }))
         } else {
@@ -328,7 +328,7 @@ export function EditRecordModal({
             {
               id: generateChemicalId(),
               name: sprayRecord.chemical || '',
-              quantity: +(sprayRecord.dose?.match(/(\d+)(?!gm\/L)/g)?.pop() ?? '') || 0,
+              quantity: sprayRecord.dose?.match(/(\d+\.?\d*)/g)?.pop() ?? '',
               unit: 'gm/L'
             }
           ]
@@ -339,7 +339,7 @@ export function EditRecordModal({
           chemicals.push({
             id: generateChemicalId(),
             name: '',
-            quantity: 0,
+            quantity: '',
             unit: 'gm/L'
           })
         }
@@ -375,7 +375,7 @@ export function EditRecordModal({
           return `fert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         }
 
-        let fertilizers: Array<{ id: string; name: string; quantity: number; unit: string }> = []
+        let fertilizers: Array<{ id: string; name: string; quantity: string; unit: string }> = []
 
         if (
           fertigationRecord.fertilizers &&
@@ -386,7 +386,7 @@ export function EditRecordModal({
           fertilizers = fertigationRecord.fertilizers.map((fert) => ({
             id: generateFertilizerId(),
             name: fert.name || '',
-            quantity: fert.quantity,
+            quantity: fert.quantity?.toString() ?? '',
             unit: fert.unit || 'kg/acre'
           }))
         }
@@ -396,7 +396,7 @@ export function EditRecordModal({
           fertilizers.push({
             id: generateFertilizerId(),
             name: '',
-            quantity: 0,
+            quantity: '',
             unit: 'kg/acre'
           })
         }
@@ -639,7 +639,7 @@ export function EditRecordModal({
 
         // Convert form data to the expected format
         const validChemicals = sprayForm.chemicals.filter(
-          (chem) => chem.name.trim() !== '' && chem.quantity > 0
+          (chem) => chem.name.trim() !== '' && parseFloat(chem.quantity) > 0
         )
         const sprayData: SprayDataUpdate = {
           date: sprayForm.date,
@@ -656,7 +656,7 @@ export function EditRecordModal({
           const processedChemicals = validChemicals
             .map((chem) => ({
               name: chem.name.trim(),
-              quantity: chem.quantity,
+              quantity: parseFloat(chem.quantity) || 0,
               unit: chem.unit as 'gm/L' | 'ml/L' | 'ppm' | 'kg/acre' | 'liter/acre'
             }))
             .filter(
@@ -677,7 +677,7 @@ export function EditRecordModal({
           const firstChemical = sprayForm.chemicals[0]
           if (firstChemical && firstChemical.name.trim()) {
             sprayData.chemical = firstChemical.name.trim()
-            sprayData.dose = firstChemical.quantity.toString()
+            sprayData.dose = `${firstChemical.quantity}${firstChemical.unit || 'gm/L'}`
           }
         }
 
@@ -697,7 +697,7 @@ export function EditRecordModal({
 
         // Convert form data to the expected format
         const validFertilizers = fertigationForm.fertilizers.filter(
-          (fert) => fert.name.trim() !== '' && fert.quantity > 0
+          (fert) => fert.name.trim() !== '' && parseFloat(fert.quantity) > 0
         )
 
         if (validFertilizers.length === 0) {
@@ -721,7 +721,7 @@ export function EditRecordModal({
             return normalizedUnit
               ? {
                   name: fert.name.trim(),
-                  quantity: fert.quantity,
+                  quantity: parseFloat(fert.quantity) || 0,
                   unit: normalizedUnit
                 }
               : null
@@ -1075,9 +1075,7 @@ export function EditRecordModal({
                                 updateFormData('spray', (current) => ({
                                   ...current,
                                   chemicals: current.chemicals.map((c) =>
-                                    c.id === chemical.id
-                                      ? { ...c, quantity: parseFloat(e.target.value) || 0 }
-                                      : c
+                                    c.id === chemical.id ? { ...c, quantity: e.target.value } : c
                                   )
                                 }))
                               }}
@@ -1131,7 +1129,7 @@ export function EditRecordModal({
                             {
                               id: `${Date.now()}_${current.chemicals.length}`,
                               name: '',
-                              quantity: 0,
+                              quantity: '',
                               unit: 'gm/L'
                             }
                           ]
@@ -1305,9 +1303,7 @@ export function EditRecordModal({
                                 updateFormData('fertigation', (current) => ({
                                   ...current,
                                   fertilizers: current.fertilizers.map((f) =>
-                                    f.id === fertilizer.id
-                                      ? { ...f, quantity: parseFloat(e.target.value) || 0 }
-                                      : f
+                                    f.id === fertilizer.id ? { ...f, quantity: e.target.value } : f
                                   )
                                 }))
                               }}
@@ -1358,7 +1354,7 @@ export function EditRecordModal({
                             {
                               id: `${Date.now()}_${current.fertilizers.length}`,
                               name: '',
-                              quantity: 0,
+                              quantity: '',
                               unit: 'kg/acre'
                             }
                           ]

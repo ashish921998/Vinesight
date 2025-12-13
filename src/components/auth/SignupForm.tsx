@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoginButton } from '@/components/auth/LoginButton'
 import { PasswordInput } from '@/components/ui/password-input'
 import { VALIDATION } from '@/lib/constants'
+import posthog from 'posthog-js'
 
 export default function SignupForm() {
   const [firstName, setFirstName] = useState('')
@@ -33,6 +34,9 @@ export default function SignupForm() {
   // Show error if authentication fails
   useEffect(() => {
     if (error) {
+      posthog.capture('signup_form_failed', {
+        error_message: error
+      })
       setShowError(true)
       const timer = setTimeout(() => {
         setShowError(false)
@@ -66,6 +70,10 @@ export default function SignupForm() {
     })
 
     if (result.success) {
+      posthog.capture('signup_form_success', {
+        method: 'email',
+        needs_email_confirmation: result.needsEmailConfirmation
+      })
       if (result.needsEmailConfirmation) {
         // Redirect to verification page with email parameter
         router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
