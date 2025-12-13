@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
-import { cva, type VariantProps } from 'class-variance-authority'
+import { type VariantProps } from 'class-variance-authority'
 import { buttonVariants } from '@/components/ui/button'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import posthog from 'posthog-js'

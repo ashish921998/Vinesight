@@ -23,8 +23,7 @@ import {
   Beaker,
   TestTube,
   MapPin,
-  Clock,
-  CheckCircle
+  Clock
 } from 'lucide-react'
 
 interface QuickAction {
