@@ -29,7 +29,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import { LaborService } from '@/lib/labor-service'
-import type { Worker, WorkStatus, WorkType, WorkerAttendance } from '@/lib/supabase'
+import type { Worker, WorkStatus, WorkerAttendance } from '@/lib/supabase'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
@@ -88,8 +88,8 @@ export function MobileAttendanceView({
   const [cellData, setCellData] = React.useState<Map<string, CellData>>(new Map())
   const [loading, setLoading] = React.useState(false)
   const [saving, setSaving] = React.useState(false)
-  const [workTypes, setWorkTypes] = React.useState<WorkType[]>([])
   const [selectedFarmIds, setSelectedFarmIds] = React.useState<number[]>([])
+  const prevWorkerIdRef = React.useRef<number | undefined>(undefined)
 
   // Calendar view state
   const [calendarMonth, setCalendarMonth] = React.useState(new Date())
@@ -116,19 +116,6 @@ export function MobileAttendanceView({
   }, [weekStart])
 
   const getCellKey = (workerId: number, date: string) => `${workerId}-${date}`
-
-  // Load work types on mount
-  React.useEffect(() => {
-    const loadWorkTypes = async () => {
-      try {
-        const types = await LaborService.getWorkTypes()
-        setWorkTypes(types)
-      } catch (error) {
-        console.error('Error loading work types:', error)
-      }
-    }
-    loadWorkTypes()
-  }, [])
 
   // Load existing attendance data
   React.useEffect(() => {
@@ -177,12 +164,17 @@ export function MobileAttendanceView({
         }
 
         // Set farm selection from first record with farms, or default to first farm
-        const recordWithFarms = records.find((r) => r.farm_ids && r.farm_ids.length > 0)
-        if (recordWithFarms && !isCancelled) {
-          setSelectedFarmIds(recordWithFarms.farm_ids || [])
-        } else if (farms.length > 0 && !isCancelled) {
-          // Default to first farm when current worker has no records with farms
-          setSelectedFarmIds([farms[0].id])
+        // Only reset farm selection when worker changes (not on week navigation)
+        const workerChanged = prevWorkerIdRef.current !== selectedWorker.id
+        if (workerChanged && !isCancelled) {
+          const recordWithFarms = records.find((r) => r.farm_ids && r.farm_ids.length > 0)
+          if (recordWithFarms) {
+            setSelectedFarmIds(recordWithFarms.farm_ids || [])
+          } else if (farms.length > 0) {
+            // Default to first farm when current worker has no records with farms
+            setSelectedFarmIds([farms[0].id])
+          }
+          prevWorkerIdRef.current = selectedWorker.id
         }
 
         if (!isCancelled) {
@@ -268,16 +260,16 @@ export function MobileAttendanceView({
     if (!selectedWorker) return
     const dateStr = format(date, 'yyyy-MM-dd')
     const key = getCellKey(selectedWorker.id, dateStr)
-    const current = cellData.get(key)
-
-    if (!current) return
-
-    // Cycle through statuses
-    const currentIndex = STATUS_CYCLE.indexOf(current.status)
-    const nextIndex = (currentIndex + 1) % STATUS_CYCLE.length
-    const nextStatus = STATUS_CYCLE[nextIndex]
 
     setCellData((prev) => {
+      const current = prev.get(key)
+      if (!current) return prev
+
+      // Cycle through statuses
+      const currentIndex = STATUS_CYCLE.indexOf(current.status)
+      const nextIndex = (currentIndex + 1) % STATUS_CYCLE.length
+      const nextStatus = STATUS_CYCLE[nextIndex]
+
       const newMap = new Map(prev)
       newMap.set(key, {
         ...current,
@@ -333,8 +325,10 @@ export function MobileAttendanceView({
     }
 
     setSaving(true)
-    try {
-      for (const cell of modifiedCells) {
+    const errors: Array<{ date: string; error: unknown }> = []
+
+    for (const cell of modifiedCells) {
+      try {
         if (cell.existingRecordId) {
           if (cell.status === null) {
             await LaborService.deleteAttendance(cell.existingRecordId)
@@ -356,30 +350,37 @@ export function MobileAttendanceView({
             daily_rate_override: cell.status === 'absent' ? 0 : undefined
           })
         }
+      } catch (error) {
+        errors.push({ date: cell.date, error })
       }
-
-      toast.success(`Saved attendance for ${selectedWorker?.name}`)
-      onAttendanceSaved()
-
-      // Clear modified flags
-      setCellData((prev) => {
-        const newMap = new Map(prev)
-        for (const [key, cell] of newMap) {
-          if (cell.isModified) {
-            newMap.set(key, { ...cell, isModified: false })
-          }
-        }
-        return newMap
-      })
-
-      // Go to next worker
-      goToNextWorker()
-    } catch (error) {
-      console.error('Error saving attendance:', error)
-      toast.error('Failed to save attendance')
-    } finally {
-      setSaving(false)
     }
+
+    if (errors.length > 0) {
+      console.error('Attendance save partial failures:', errors)
+      toast.error(`Saved with ${errors.length} error(s). Reloading...`)
+      // Reset the ref to force a reload when we re-enter the effect
+      prevWorkerIdRef.current = undefined
+      setSaving(false)
+      return
+    }
+
+    toast.success(`Saved attendance for ${selectedWorker?.name}`)
+    onAttendanceSaved()
+
+    // Clear modified flags
+    setCellData((prev) => {
+      const newMap = new Map(prev)
+      for (const [key, cell] of newMap) {
+        if (cell.isModified) {
+          newMap.set(key, { ...cell, isModified: false })
+        }
+      }
+      return newMap
+    })
+
+    // Go to next worker
+    goToNextWorker()
+    setSaving(false)
   }
 
   const goToNextWorker = () => {
@@ -504,9 +505,12 @@ export function MobileAttendanceView({
                     </button>
                   </PopoverTrigger>
                   <PopoverContent className="w-56 p-2" align="start">
-                    <div className="space-y-1">
+                    <div className="space-y-1" role="menu">
                       {/* Select All */}
-                      <div
+                      <button
+                        type="button"
+                        role="menuitemcheckbox"
+                        aria-checked={selectedFarmIds.length === farms.length && farms.length > 0}
                         onClick={() => {
                           if (selectedFarmIds.length === farms.length) {
                             setSelectedFarmIds([])
@@ -514,19 +518,31 @@ export function MobileAttendanceView({
                             setSelectedFarmIds(farms.map((f) => f.id))
                           }
                         }}
-                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted text-sm cursor-pointer"
+                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                       >
                         <Checkbox
                           checked={selectedFarmIds.length === farms.length && farms.length > 0}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedFarmIds(farms.map((f) => f.id))
+                            } else {
+                              setSelectedFarmIds([])
+                            }
+                          }}
+                          aria-hidden="true"
+                          tabIndex={-1}
                         />
                         <span className="font-medium">Select All</span>
-                      </div>
-                      <div className="border-b my-1" />
+                      </button>
+                      <div className="border-b my-1" role="separator" />
                       {farms.map((farm) => {
                         const isSelected = selectedFarmIds.includes(farm.id)
                         return (
-                          <div
+                          <button
+                            type="button"
                             key={farm.id}
+                            role="menuitemcheckbox"
+                            aria-checked={isSelected}
                             onClick={() => {
                               if (isSelected) {
                                 setSelectedFarmIds(selectedFarmIds.filter((id) => id !== farm.id))
@@ -534,11 +550,22 @@ export function MobileAttendanceView({
                                 setSelectedFarmIds([...selectedFarmIds, farm.id])
                               }
                             }}
-                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted text-sm cursor-pointer"
+                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                           >
-                            <Checkbox checked={isSelected} />
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedFarmIds([...selectedFarmIds, farm.id])
+                                } else {
+                                  setSelectedFarmIds(selectedFarmIds.filter((id) => id !== farm.id))
+                                }
+                              }}
+                              aria-hidden="true"
+                              tabIndex={-1}
+                            />
                             <span>{farm.name}</span>
-                          </div>
+                          </button>
                         )
                       })}
                     </div>

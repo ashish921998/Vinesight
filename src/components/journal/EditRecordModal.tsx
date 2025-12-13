@@ -677,7 +677,7 @@ export function EditRecordModal({
           const firstChemical = sprayForm.chemicals[0]
           if (firstChemical && firstChemical.name.trim()) {
             sprayData.chemical = firstChemical.name.trim()
-            sprayData.dose = firstChemical.quantity
+            sprayData.dose = `${firstChemical.quantity}${firstChemical.unit || 'gm/L'}`
           }
         }
 

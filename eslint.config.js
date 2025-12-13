@@ -7,13 +7,19 @@ const compat = new FlatCompat({
   baseDirectory: import.meta.dirname
 })
 
-// Convert recommended rules to warnings
+// Convert recommended rules to warnings (handles both string and numeric severities)
 const recommendedAsWarnings = Object.fromEntries(
   Object.entries(tseslint.configs.recommended.rules || {}).map(([key, value]) => {
     if (Array.isArray(value)) {
-      return [key, ['warn', ...value.slice(1)]]
+      const [severity, ...rest] = value
+      // Convert first element: 'error' -> 'warn' or 2 -> 1
+      const newSeverity = severity === 'error' ? 'warn' : severity === 2 ? 1 : severity
+      return [key, [newSeverity, ...rest]]
     }
-    return [key, value === 'error' ? 'warn' : value]
+    // Standalone value: 'error' -> 'warn' or 2 -> 1
+    if (value === 'error') return [key, 'warn']
+    if (value === 2) return [key, 1]
+    return [key, value]
   })
 )
 
