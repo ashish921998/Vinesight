@@ -176,12 +176,12 @@ export function MobileAttendanceView({
           })
         }
 
-        // Set farm selection from first record with farms
+        // Set farm selection from first record with farms, or default to first farm
         const recordWithFarms = records.find((r) => r.farm_ids && r.farm_ids.length > 0)
         if (recordWithFarms && !isCancelled) {
           setSelectedFarmIds(recordWithFarms.farm_ids || [])
-        } else if (farms.length > 0 && selectedFarmIds.length === 0) {
-          // Default to first farm if none selected
+        } else if (farms.length > 0 && !isCancelled) {
+          // Default to first farm when current worker has no records with farms
           setSelectedFarmIds([farms[0].id])
         }
 
