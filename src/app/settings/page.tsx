@@ -29,6 +29,8 @@ export default function SettingsPage() {
   const router = useRouter()
   const [language, setLanguage] = useState('en')
   const [signOutLoading, setSignOutLoading] = useState(false)
+  const [areaUnitPreference, setAreaUnitPreference] = useState<'hectares' | 'acres'>('hectares')
+  const [areaUnitLoading, setAreaUnitLoading] = useState(false)
 
   // Organization Consultant State
   const [organizations, setOrganizations] = useState<OrganizationInfo[]>([])
@@ -71,7 +73,7 @@ export default function SettingsPage() {
         .from('profiles')
         .select('consultant_organization_id')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
       if (profileError) {
         console.error('Error fetching profile:', profileError)
@@ -85,7 +87,7 @@ export default function SettingsPage() {
           .from('organizations')
           .select('id, name, slug')
           .eq('id', profile.consultant_organization_id)
-          .single()
+          .maybeSingle()
 
         if (orgError) {
           console.error('Error fetching organization:', orgError)
@@ -103,6 +105,31 @@ export default function SettingsPage() {
       toast.error('Failed to fetch organization status')
     } finally {
       setOrgLoading(false)
+    }
+  }, [user])
+
+  // Fetch area unit preference
+  const fetchAreaUnitPreference = useCallback(async () => {
+    if (!user) return
+    try {
+      const supabase = getTypedSupabaseClient()
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('area_unit_preference')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (error) {
+        console.error('Error fetching area unit preference:', error)
+        return
+      }
+
+      if (profile?.area_unit_preference) {
+        setAreaUnitPreference(profile.area_unit_preference as 'hectares' | 'acres')
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error('Error fetching area unit preference:', errorMessage)
     }
   }, [user])
 
@@ -144,8 +171,9 @@ export default function SettingsPage() {
     // Fetch organizations and current status if user is logged in
     if (user) {
       checkOrgMembership()
+      fetchAreaUnitPreference()
     }
-  }, [user, checkOrgMembership])
+  }, [user, checkOrgMembership, fetchAreaUnitPreference])
 
   const handleConnectConsultant = async () => {
     if (!user || !selectedOrgId) return
@@ -186,6 +214,54 @@ export default function SettingsPage() {
   const handleLanguageChange = (newLang: string) => {
     setLanguage(newLang)
     localStorage.setItem('vinesight-language', newLang)
+  }
+
+  const handleAreaUnitChange = async (newUnit: 'hectares' | 'acres') => {
+    if (!user) return
+    try {
+      setAreaUnitLoading(true)
+      const supabase = getTypedSupabaseClient()
+
+      // First check if profile exists - we only update, never create
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (checkError) {
+        console.error('Error checking profile:', checkError)
+        toast.error('Failed to verify profile')
+        return
+      }
+
+      if (!existingProfile) {
+        console.error('Profile does not exist for user:', user.id)
+        toast.error('Profile not found. Please contact support.')
+        return
+      }
+
+      // Profile exists, now update only the area_unit_preference field
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ area_unit_preference: newUnit })
+        .eq('id', user.id)
+
+      if (updateError) {
+        console.error('Error updating area unit preference:', updateError)
+        toast.error('Failed to update area unit preference')
+        return
+      }
+
+      setAreaUnitPreference(newUnit)
+      toast.success(`Area unit preference updated to ${newUnit}`)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error('Error updating area unit preference:', errorMessage)
+      toast.error('Failed to update area unit preference')
+    } finally {
+      setAreaUnitLoading(false)
+    }
   }
 
   const handleSignOut = async () => {
@@ -267,6 +343,43 @@ export default function SettingsPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Area Unit Preference */}
+          {user && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Building2 className="h-4 w-4" />
+                  Area Unit Preference
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-gray-500">
+                  Choose your preferred unit for farm area measurements
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant={areaUnitPreference === 'hectares' ? 'default' : 'outline'}
+                    onClick={() => handleAreaUnitChange('hectares')}
+                    disabled={areaUnitLoading}
+                    className="h-9"
+                    size="sm"
+                  >
+                    Hectares
+                  </Button>
+                  <Button
+                    variant={areaUnitPreference === 'acres' ? 'default' : 'outline'}
+                    onClick={() => handleAreaUnitChange('acres')}
+                    disabled={areaUnitLoading}
+                    className="h-9"
+                    size="sm"
+                  >
+                    Acres
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Organization Consultant Settings - Only for Farmers (non-members) */}
           {!isOrgMember && (

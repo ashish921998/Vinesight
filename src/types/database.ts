@@ -1355,6 +1355,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          area_unit_preference: string | null
           avatar_url: string | null
           consultant_organization_id: string | null
           created_at: string | null
@@ -1367,6 +1368,7 @@ export type Database = {
           user_type: string | null
         }
         Insert: {
+          area_unit_preference?: string | null
           avatar_url?: string | null
           consultant_organization_id?: string | null
           created_at?: string | null
@@ -1379,6 +1381,7 @@ export type Database = {
           user_type?: string | null
         }
         Update: {
+          area_unit_preference?: string | null
           avatar_url?: string | null
           consultant_organization_id?: string | null
           created_at?: string | null

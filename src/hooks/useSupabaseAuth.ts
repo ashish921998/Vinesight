@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
-import { User, AuthError } from '@supabase/supabase-js'
+import { User } from '@supabase/supabase-js'
 import { toast } from 'sonner'
 import { VALIDATION } from '@/lib/constants'
+import { clearLastRoute } from '@/lib/route-persistence'
 
 interface AuthState {
   user: User | null
@@ -417,6 +418,10 @@ export function useSupabaseAuth() {
     try {
       const supabase = createClient()
       await supabase.auth.signOut()
+
+      // Clear saved route to prevent restoring auth-protected pages
+      clearLastRoute()
+
       setAuthState((prev) => ({
         user: null,
         loading: false,

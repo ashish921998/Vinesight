@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useRouteTracking } from '@/hooks/useRouteTracking'
 import Navigation from '@/components/navigation'
 import { BottomNavigation } from '@/components/mobile/BottomNavigation'
 import { Toaster } from '@/components/ui/sonner'
@@ -13,6 +14,9 @@ interface LayoutContentProps {
 export function LayoutContent({ children }: LayoutContentProps) {
   const pathname = usePathname()
   const { user, loading } = useSupabaseAuth()
+
+  // Track routes for authenticated users (for PWA state restoration)
+  useRouteTracking(!!user)
 
   // Routes that should never show the sidebar (public pages)
   const publicRoutes = [

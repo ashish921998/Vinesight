@@ -5,6 +5,7 @@ import type React from 'react'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { getLastRoute } from '@/lib/route-persistence'
 import SmartSimpleBrilliant from '../components/smart-simple-brilliant'
 import YourWorkInSync from '../components/your-work-in-sync'
 import EffortlessIntegration from '../components/effortless-integration-updated'
@@ -55,10 +56,15 @@ export default function LandingPage() {
   const [progress, setProgress] = useState(0)
   const mountedRef = useRef(true)
 
-  // Redirect authenticated users to dashboard
+  // Redirect authenticated users to their last visited route or dashboard
   useEffect(() => {
     if (!loading && user) {
-      router.push('/dashboard')
+      // Check if there's a saved route to restore
+      const lastRoute = getLastRoute()
+      const targetRoute = lastRoute || '/dashboard'
+
+      // Use replace instead of push for cleaner navigation history
+      router.replace(targetRoute)
     }
   }, [user, loading, router])
 
