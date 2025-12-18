@@ -16,17 +16,12 @@ const faqData: FAQItem[] = [
   {
     question: 'How does the AI crop monitoring work?',
     answer:
-      'Our platform uses satellite imagery, drone data, and IoT sensors to continuously monitor crop health, soil conditions, and growth patterns. Machine learning algorithms analyze this data to detect issues early and provide actionable recommendations for optimal crop management.'
-  },
-  {
-    question: 'Can Vinesight integrate with my existing farm equipment?',
-    answer:
-      'Yes! Vinesight connects with most modern tractors, irrigation systems, and agricultural sensors through standard APIs and protocols. We support John Deere, Case IH, New Holland, and many other major equipment manufacturers.'
+      'Our platform ingests field data, sensor readings, and user observations to continuously monitor crop health, soil conditions, and growth patterns. Machine learning algorithms analyze these signals to detect emerging issues early and deliver actionable recommendations.'
   },
   {
     question: 'What kind of support and training do you provide?',
     answer:
-      'We offer comprehensive onboarding, 24/7 technical support, and ongoing training programs. Our agricultural specialists work directly with farmers to ensure successful implementation and maximum ROI from day one.'
+      'We offer comprehensive onboarding, technical support, and ongoing training programs. Our agricultural specialists work directly with farmers to ensure successful implementation and maximum ROI from day one.'
   },
   {
     question: 'How secure is my farm data with Vinesight?',
