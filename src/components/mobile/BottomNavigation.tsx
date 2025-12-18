@@ -2,44 +2,23 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Calculator, User, Users, Package } from 'lucide-react'
-
-const navigationItems = [
-  {
-    name: 'Dashboard',
-    href: '/dashboard',
-    icon: Home,
-    color: 'text-primary'
-  },
-  {
-    name: 'Warehouse',
-    href: '/warehouse',
-    icon: Package,
-    color: 'text-primary'
-  },
-  {
-    name: 'Workers',
-    href: '/workers',
-    icon: Users,
-    color: 'text-primary'
-  },
-  {
-    name: 'Calculator',
-    href: '/calculators',
-    icon: Calculator,
-    color: 'text-primary'
-  },
-  {
-    name: 'Profile',
-    href: '/settings',
-    icon: User,
-    color: 'text-gray-600'
-  }
-]
+import {
+  Home,
+  Calculator,
+  User,
+  Users,
+  Package,
+  Wine,
+  ClipboardList,
+  FileSpreadsheet,
+  FlaskConical
+} from 'lucide-react'
+import { useAppMode } from '@/hooks/useAppMode'
 
 export function BottomNavigation() {
   const pathname = usePathname()
   const router = useRouter()
+  const { mode } = useAppMode()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -56,7 +35,22 @@ export function BottomNavigation() {
       {/* Bottom Navigation */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 safe-area-bottom">
         <div className="flex justify-around items-center px-1 py-2">
-          {navigationItems.map((item) => {
+          {(mode === 'winery'
+            ? [
+                { name: 'Winery', href: '/winery/dashboard', icon: Wine },
+                { name: 'Lots', href: '/winery/lots', icon: FlaskConical },
+                { name: 'Work', href: '/winery/work-orders', icon: ClipboardList },
+                { name: 'Inventory', href: '/winery/inventory', icon: Package },
+                { name: 'Exports', href: '/winery/reports', icon: FileSpreadsheet }
+              ]
+            : [
+                { name: 'Dashboard', href: '/vineyard/dashboard', icon: Home },
+                { name: 'Warehouse', href: '/vineyard/warehouse', icon: Package },
+                { name: 'Workers', href: '/vineyard/workers', icon: Users },
+                { name: 'Calculator', href: '/vineyard/calculators', icon: Calculator },
+                { name: 'Profile', href: '/vineyard/settings', icon: User }
+              ]
+          ).map((item) => {
             const Icon = item.icon
             const isActive = mounted
               ? pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
