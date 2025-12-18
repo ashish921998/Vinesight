@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, memo } from 'react'
+import { useEffect, useState, memo } from 'react'
 
 type PricingSectionProps = {
   regionFromServer?: string | null

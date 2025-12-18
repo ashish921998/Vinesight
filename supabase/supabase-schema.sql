@@ -29,6 +29,7 @@ CREATE TABLE profiles (
   phone VARCHAR(50),
   user_type VARCHAR(50) CHECK (user_type IN ('farmer', 'consultant', 'admin')),
   consultant_organization_id UUID, -- Will reference organizations table (added after organizations table is created)
+  area_unit_preference VARCHAR(10) DEFAULT 'hectares' CHECK (area_unit_preference IN ('hectares', 'acres')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -85,7 +86,7 @@ CREATE TABLE farms (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   region VARCHAR(255) NOT NULL,
-  area DECIMAL(10,2) NOT NULL, -- in hectares
+  area DECIMAL(10,2) NOT NULL,
   crop VARCHAR(255) NOT NULL,
   crop_variety VARCHAR(255) NOT NULL,
   planting_date DATE NOT NULL,
@@ -582,14 +583,221 @@ CREATE POLICY "Users can delete their soil profiles" ON soil_profiles FOR DELETE
 CREATE TRIGGER update_farms_updated_at BEFORE UPDATE ON farms 
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Atomic settlement confirmation helper
-DROP FUNCTION IF EXISTS confirm_settlement_atomic(INTEGER);
+-- ============================================================================
+-- WORKER / LABOR MANAGEMENT TABLES
+-- ============================================================================
 
-CREATE OR REPLACE FUNCTION confirm_settlement_atomic(settlement_id_param INTEGER)
+-- Work types table (custom and system default work types)
+CREATE TABLE work_types (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- NULL for system defaults
+  name VARCHAR(100) NOT NULL,
+  is_default BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert default work types
+INSERT INTO work_types (user_id, name, is_default) VALUES
+  (NULL, 'Pruning', TRUE),
+  (NULL, 'Harvesting', TRUE),
+  (NULL, 'Spraying', TRUE),
+  (NULL, 'Weeding', TRUE),
+  (NULL, 'Fertigation', TRUE),
+  (NULL, 'General', TRUE);
+
+-- Workers table
+CREATE TABLE workers (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name VARCHAR(255) NOT NULL,
+  daily_rate DECIMAL(10,2) NOT NULL,
+  advance_balance DECIMAL(10,2) DEFAULT 0,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Worker attendance table
+CREATE TABLE worker_attendance (
+  id BIGSERIAL PRIMARY KEY,
+  worker_id BIGINT NOT NULL REFERENCES workers(id) ON DELETE CASCADE,
+  farm_ids BIGINT[] NOT NULL, -- Array of farm IDs where work was performed
+  date DATE NOT NULL,
+  work_status VARCHAR(20) NOT NULL CHECK (work_status IN ('full_day', 'half_day', 'absent')),
+  work_type VARCHAR(100) NOT NULL,
+  daily_rate_override DECIMAL(10,2), -- NULL means use worker's default rate
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  -- Prevent duplicate attendance entries for same worker on same date
+  UNIQUE(worker_id, date)
+);
+
+-- Worker settlements table
+CREATE TABLE worker_settlements (
+  id BIGSERIAL PRIMARY KEY,
+  worker_id BIGINT NOT NULL REFERENCES workers(id) ON DELETE CASCADE,
+  farm_id BIGINT REFERENCES farms(id) ON DELETE SET NULL, -- NULL if settlement spans multiple farms
+  period_start DATE NOT NULL,
+  period_end DATE NOT NULL,
+  days_worked DECIMAL(10,2) NOT NULL,
+  gross_amount DECIMAL(10,2) NOT NULL,
+  advance_deducted DECIMAL(10,2) NOT NULL DEFAULT 0,
+  net_payment DECIMAL(10,2) NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'confirmed')),
+  notes TEXT,
+  confirmed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  -- Ensure period_start <= period_end
+  CONSTRAINT valid_settlement_period CHECK (period_start <= period_end)
+);
+
+-- Worker transactions table
+CREATE TABLE worker_transactions (
+  id BIGSERIAL PRIMARY KEY,
+  worker_id BIGINT NOT NULL REFERENCES workers(id) ON DELETE CASCADE,
+  farm_id BIGINT REFERENCES farms(id) ON DELETE SET NULL,
+  date DATE NOT NULL,
+  type VARCHAR(30) NOT NULL CHECK (type IN ('advance_given', 'advance_deducted', 'payment')),
+  amount DECIMAL(10,2) NOT NULL,
+  settlement_id BIGINT REFERENCES worker_settlements(id) ON DELETE SET NULL,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Temporary worker entries table (for one-off/daily laborers)
+CREATE TABLE temporary_worker_entries (
+  id BIGSERIAL PRIMARY KEY,
+  farm_id BIGINT NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  hours_worked DECIMAL(6,2) NOT NULL,
+  amount_paid DECIMAL(10,2) NOT NULL,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for worker tables
+CREATE INDEX idx_work_types_user_id ON work_types(user_id);
+CREATE INDEX idx_workers_user_id ON workers(user_id);
+CREATE INDEX idx_workers_is_active ON workers(is_active);
+CREATE INDEX idx_worker_attendance_worker_id ON worker_attendance(worker_id);
+CREATE INDEX idx_worker_attendance_date ON worker_attendance(date);
+CREATE INDEX idx_worker_attendance_worker_date ON worker_attendance(worker_id, date);
+CREATE INDEX idx_worker_settlements_worker_id ON worker_settlements(worker_id);
+CREATE INDEX idx_worker_settlements_status ON worker_settlements(status);
+CREATE INDEX idx_worker_settlements_period ON worker_settlements(period_start, period_end);
+CREATE INDEX idx_worker_transactions_worker_id ON worker_transactions(worker_id);
+CREATE INDEX idx_worker_transactions_date ON worker_transactions(date);
+CREATE INDEX idx_worker_transactions_type ON worker_transactions(type);
+CREATE INDEX idx_temporary_worker_entries_farm_id ON temporary_worker_entries(farm_id);
+CREATE INDEX idx_temporary_worker_entries_user_id ON temporary_worker_entries(user_id);
+CREATE INDEX idx_temporary_worker_entries_date ON temporary_worker_entries(date);
+
+-- Enable RLS for worker tables
+ALTER TABLE work_types ENABLE ROW LEVEL SECURITY;
+ALTER TABLE workers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE worker_attendance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE worker_settlements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE worker_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE temporary_worker_entries ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for work_types
+CREATE POLICY "Users can view default and own work types" ON work_types FOR SELECT USING (
+  user_id IS NULL OR user_id = auth.uid()
+);
+CREATE POLICY "Users can insert own work types" ON work_types FOR INSERT WITH CHECK (
+  user_id = auth.uid()
+);
+CREATE POLICY "Users can update own work types" ON work_types FOR UPDATE USING (
+  user_id = auth.uid()
+);
+CREATE POLICY "Users can delete own work types" ON work_types FOR DELETE USING (
+  user_id = auth.uid()
+);
+
+-- RLS Policies for workers
+CREATE POLICY "Users can view their own workers" ON workers FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Users can insert their own workers" ON workers FOR INSERT WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Users can update their own workers" ON workers FOR UPDATE USING (user_id = auth.uid());
+CREATE POLICY "Users can delete their own workers" ON workers FOR DELETE USING (user_id = auth.uid());
+
+-- RLS Policies for worker_attendance
+CREATE POLICY "Users can view attendance for their workers" ON worker_attendance FOR SELECT USING (
+  EXISTS (SELECT 1 FROM workers WHERE workers.id = worker_attendance.worker_id AND workers.user_id = auth.uid())
+);
+CREATE POLICY "Users can insert attendance for their workers" ON worker_attendance FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM workers WHERE workers.id = worker_attendance.worker_id AND workers.user_id = auth.uid())
+);
+CREATE POLICY "Users can update attendance for their workers" ON worker_attendance FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM workers WHERE workers.id = worker_attendance.worker_id AND workers.user_id = auth.uid())
+);
+CREATE POLICY "Users can delete attendance for their workers" ON worker_attendance FOR DELETE USING (
+  EXISTS (SELECT 1 FROM workers WHERE workers.id = worker_attendance.worker_id AND workers.user_id = auth.uid())
+);
+
+-- RLS Policies for worker_settlements
+CREATE POLICY "Users can view settlements for their workers" ON worker_settlements FOR SELECT USING (
+  EXISTS (SELECT 1 FROM workers WHERE workers.id = worker_settlements.worker_id AND workers.user_id = auth.uid())
+);
+CREATE POLICY "Users can insert settlements for their workers" ON worker_settlements FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM workers WHERE workers.id = worker_settlements.worker_id AND workers.user_id = auth.uid())
+);
+CREATE POLICY "Users can update settlements for their workers" ON worker_settlements FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM workers WHERE workers.id = worker_settlements.worker_id AND workers.user_id = auth.uid())
+);
+CREATE POLICY "Users can delete settlements for their workers" ON worker_settlements FOR DELETE USING (
+  EXISTS (SELECT 1 FROM workers WHERE workers.id = worker_settlements.worker_id AND workers.user_id = auth.uid())
+);
+
+-- RLS Policies for worker_transactions
+CREATE POLICY "Users can view transactions for their workers" ON worker_transactions FOR SELECT USING (
+  EXISTS (SELECT 1 FROM workers WHERE workers.id = worker_transactions.worker_id AND workers.user_id = auth.uid())
+);
+CREATE POLICY "Users can insert transactions for their workers" ON worker_transactions FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM workers WHERE workers.id = worker_transactions.worker_id AND workers.user_id = auth.uid())
+);
+CREATE POLICY "Users can update transactions for their workers" ON worker_transactions FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM workers WHERE workers.id = worker_transactions.worker_id AND workers.user_id = auth.uid())
+);
+CREATE POLICY "Users can delete transactions for their workers" ON worker_transactions FOR DELETE USING (
+  EXISTS (SELECT 1 FROM workers WHERE workers.id = worker_transactions.worker_id AND workers.user_id = auth.uid())
+);
+
+-- RLS Policies for temporary_worker_entries
+CREATE POLICY "Users can view their temporary worker entries" ON temporary_worker_entries FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Users can insert their temporary worker entries" ON temporary_worker_entries FOR INSERT WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Users can update their temporary worker entries" ON temporary_worker_entries FOR UPDATE USING (user_id = auth.uid());
+CREATE POLICY "Users can delete their temporary worker entries" ON temporary_worker_entries FOR DELETE USING (user_id = auth.uid());
+
+-- Triggers to update updated_at timestamps
+CREATE TRIGGER update_workers_updated_at BEFORE UPDATE ON workers
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_worker_attendance_updated_at BEFORE UPDATE ON worker_attendance
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_worker_settlements_updated_at BEFORE UPDATE ON worker_settlements
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_temporary_worker_entries_updated_at BEFORE UPDATE ON temporary_worker_entries
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================================
+-- END WORKER / LABOR MANAGEMENT TABLES
+-- ============================================================================
+
+-- Atomic settlement confirmation helper
+DROP FUNCTION IF EXISTS confirm_settlement_atomic(BIGINT);
+
+CREATE OR REPLACE FUNCTION confirm_settlement_atomic(settlement_id_param BIGINT)
 RETURNS TABLE (
-  id INTEGER,
-  worker_id INTEGER,
-  farm_id INTEGER,
+  id BIGINT,
+  worker_id BIGINT,
+  farm_id BIGINT,
   period_start DATE,
   period_end DATE,
   days_worked DECIMAL(10,2),

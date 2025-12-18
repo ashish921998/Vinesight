@@ -65,7 +65,7 @@ export interface Farm {
   id?: number
   name: string
   region: string
-  area: number // in acres
+  area: number // numeric value only, unit determined by user's account preference
   crop: string // e.g., "Grapes", "Pomegranates", "Cotton"
   cropVariety: string // variety of the selected crop
   plantingDate: string

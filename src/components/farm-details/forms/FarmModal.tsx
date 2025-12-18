@@ -325,7 +325,7 @@ export function FarmModal({
             {/* Area */}
             <div>
               <Label htmlFor="area" className="text-sm font-medium text-gray-700">
-                Area (acres) *
+                Area *
               </Label>
               <Input
                 id="area"
@@ -338,6 +338,7 @@ export function FarmModal({
                 required
                 className="mt-1 h-11"
               />
+              <p className="text-xs text-gray-500 mt-1">Unit is set in your account preferences</p>
             </div>
 
             {/* Crop and Crop Variety */}

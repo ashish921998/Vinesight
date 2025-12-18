@@ -522,13 +522,6 @@ export function MobileAttendanceView({
                       >
                         <Checkbox
                           checked={selectedFarmIds.length === farms.length && farms.length > 0}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedFarmIds(farms.map((f) => f.id))
-                            } else {
-                              setSelectedFarmIds([])
-                            }
-                          }}
                           aria-hidden="true"
                           tabIndex={-1}
                         />
@@ -552,18 +545,7 @@ export function MobileAttendanceView({
                             }}
                             className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                           >
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setSelectedFarmIds([...selectedFarmIds, farm.id])
-                                } else {
-                                  setSelectedFarmIds(selectedFarmIds.filter((id) => id !== farm.id))
-                                }
-                              }}
-                              aria-hidden="true"
-                              tabIndex={-1}
-                            />
+                            <Checkbox checked={isSelected} aria-hidden="true" tabIndex={-1} />
                             <span>{farm.name}</span>
                           </button>
                         )
