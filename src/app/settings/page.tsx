@@ -218,6 +218,7 @@ export default function SettingsPage() {
 
   const handleAreaUnitChange = async (newUnit: 'hectares' | 'acres') => {
     if (!user) return
+    if (newUnit === areaUnitPreference) return // Already selected
     try {
       setAreaUnitLoading(true)
       const supabase = getTypedSupabaseClient()
@@ -272,7 +273,8 @@ export default function SettingsPage() {
         router.push('/')
       }
     } catch (error) {
-      alert('Failed to sign out. Please try again.')
+      console.error('Error signing out:', error)
+      toast.error('Failed to sign out. Please try again.')
     } finally {
       setSignOutLoading(false)
     }

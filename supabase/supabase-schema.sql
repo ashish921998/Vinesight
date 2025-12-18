@@ -621,7 +621,7 @@ CREATE TABLE workers (
 CREATE TABLE worker_attendance (
   id BIGSERIAL PRIMARY KEY,
   worker_id BIGINT NOT NULL REFERENCES workers(id) ON DELETE CASCADE,
-  farm_ids INTEGER[] NOT NULL, -- Array of farm IDs where work was performed
+  farm_ids BIGINT[] NOT NULL, -- Array of farm IDs where work was performed
   date DATE NOT NULL,
   work_status VARCHAR(20) NOT NULL CHECK (work_status IN ('full_day', 'half_day', 'absent')),
   work_type VARCHAR(100) NOT NULL,
@@ -791,13 +791,13 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 -- ============================================================================
 
 -- Atomic settlement confirmation helper
-DROP FUNCTION IF EXISTS confirm_settlement_atomic(INTEGER);
+DROP FUNCTION IF EXISTS confirm_settlement_atomic(BIGINT);
 
-CREATE OR REPLACE FUNCTION confirm_settlement_atomic(settlement_id_param INTEGER)
+CREATE OR REPLACE FUNCTION confirm_settlement_atomic(settlement_id_param BIGINT)
 RETURNS TABLE (
-  id INTEGER,
-  worker_id INTEGER,
-  farm_id INTEGER,
+  id BIGINT,
+  worker_id BIGINT,
+  farm_id BIGINT,
   period_start DATE,
   period_end DATE,
   days_worked DECIMAL(10,2),
