@@ -1,616 +1,547 @@
 'use client'
 
-import type React from 'react'
-
-import { useState, useEffect, useRef } from 'react'
+import { useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { getLastRoute } from '@/lib/route-persistence'
-import SmartSimpleBrilliant from '../components/smart-simple-brilliant'
-import YourWorkInSync from '../components/your-work-in-sync'
-import EffortlessIntegration from '../components/effortless-integration-updated'
-import NumbersThatSpeak from '../components/numbers-that-speak'
-import DocumentationSection from '../components/documentation-section'
-import TestimonialsSection from '../components/testimonials-section'
-import FAQSection from '../components/faq-section'
-import PricingSection from '../components/pricing-section'
-import CTASection from '../components/cta-section'
-import Link from 'next/link'
+import { Warehouse, ClipboardCheck, LineChart } from 'lucide-react'
 
-// Reusable Badge Component
-function Badge({ icon, text }: { icon: React.ReactNode; text: string }) {
-  return (
-    <div className="px-[14px] py-[6px] bg-white shadow-[0px_0px_0px_4px_rgba(55,50,47,0.05)] overflow-hidden rounded-[90px] flex justify-start items-center gap-[8px] border border-[rgba(2,6,23,0.08)] shadow-xs">
-      <div className="w-[14px] h-[14px] relative overflow-hidden flex items-center justify-center">
-        {icon}
-      </div>
-      <div className="text-center flex justify-center flex-col text-[#37322F] text-xs font-medium leading-3 font-sans">
-        {text}
-      </div>
-    </div>
-  )
+const activityLog = [
+  {
+    date: 'Oct 24, 2023',
+    block: 'B4-Merlot',
+    detail: 'Post-harvest irrigation cycle (12hrs)',
+    input: 'Water',
+    cost: '$42.00'
+  },
+  {
+    date: 'Oct 23, 2023',
+    block: 'C2-Chard',
+    detail: 'Equipment maintenance: Harvester 02',
+    input: 'Grease/Labor',
+    cost: '-'
+  },
+  {
+    date: 'Oct 22, 2023',
+    block: 'A1-Pinot',
+    detail: 'Soil Amendment Application (Compost)',
+    input: 'Org. Compost',
+    cost: '$185.50',
+    highlighted: true
+  },
+  {
+    date: 'Oct 22, 2023',
+    block: 'B5-Syrah',
+    detail: 'Fungicide Spray - Late Season Prev.',
+    input: 'Sulfur WG',
+    cost: '$38.25'
+  },
+  {
+    date: 'Oct 21, 2023',
+    block: 'B4-Merlot',
+    detail: 'Scouting Report: No mite pressure obs.',
+    input: 'Labor',
+    cost: '$15.00'
+  }
+]
+
+const manageCategories = [
+  {
+    title: 'Field Operations',
+    items: ['Weather & irrigation events', 'Block-by-block yield history', 'Daily scouting logs']
+  },
+  {
+    title: 'Inputs & Assets',
+    items: [
+      'Chemical inventory & usage',
+      'Equipment maintenance schedules',
+      'Pesticide lot tracking'
+    ]
+  },
+  {
+    title: 'Costs & Accountability',
+    items: ['Payroll & labor tracking', 'Cost analysis per acre', 'Regulatory reporting compliance']
+  }
+]
+
+const comparison = {
+  old: [
+    { title: 'Late Nights', body: 'Re-typing field notes into Excel after dark.' },
+    {
+      title: 'Lost History',
+      body: '“When did we last spray Block 4?” requires digging through paper files.'
+    },
+    { title: 'Communication Gaps', body: "Crew doesn't know the exact schedule until they arrive." }
+  ],
+  with: [
+    { title: 'Fast Entry', body: 'Log irrigation in under 10 seconds from the field.' },
+    {
+      title: 'Instant Recall',
+      body: 'Tap a block to see every spray, test, and harvest note instantly.'
+    },
+    {
+      title: 'Clear Orders',
+      body: 'Assign tasks digitally. Crew sees exactly what to do and where.'
+    }
+  ]
 }
 
-// Reusable App Store Badge Component
-function AppStoreBadge({ className = 'h-10 sm:h-11 md:h-12' }: { className?: string }) {
-  return (
-    <a
-      href="https://apps.apple.com/us/app/vinesight/id6756113329"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="transition-transform hover:scale-105"
-    >
-      <img
-        src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83"
-        alt="Download on the App Store"
-        className={className}
-      />
-    </a>
-  )
-}
+const coreModules = [
+  {
+    title: 'Block-wise Field Records',
+    description: 'Record activities right from the tractor or field.',
+    body: (
+      <div className="bg-white border border-slate-200 rounded shadow-sm overflow-hidden min-h-[280px] h-full flex flex-col">
+        <div className="p-6 bg-slate-50 flex-1 flex">
+          <div className="bg-white border border-slate-200 p-3 rounded text-sm w-full flex flex-col">
+            <div className="flex justify-between border-b border-slate-100 pb-2 mb-2">
+              <span className="font-bold text-slate-800">Log Activity</span>
+              <span className="text-xs text-slate-500">Draft</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              <div className="bg-slate-50 p-2 border border-slate-200 rounded">
+                <div className="text-[10px] text-slate-500 uppercase">Block</div>
+                <div className="font-medium text-slate-800">B4-Merlot</div>
+              </div>
+              <div className="bg-slate-50 p-2 border border-slate-200 rounded col-span-2">
+                <div className="text-[10px] text-slate-500 uppercase">Operation</div>
+                <div className="font-medium text-slate-800">Canopy Management</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div className="bg-slate-50 p-2 border border-slate-200 rounded">
+                <div className="text-[10px] text-slate-500 uppercase">Labor Hrs</div>
+                <div className="font-medium text-slate-800">4.5</div>
+              </div>
+              <div className="bg-slate-50 p-2 border border-slate-200 rounded">
+                <div className="text-[10px] text-slate-500 uppercase">Equipment</div>
+                <div className="font-medium text-slate-800">None</div>
+              </div>
+            </div>
+            <button className="w-full bg-[#4a5e4d] text-white text-xs font-bold py-2 rounded">
+              Submit Record
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    title: 'Soil & Petiole Test Tracking',
+    description: 'Import lab PDFs or enter data manually to visualize trends.',
+    body: (
+      <div className="bg-white border border-slate-200 rounded shadow-sm overflow-hidden min-h-[280px] h-full flex flex-col">
+        <div className="p-6 bg-slate-50 flex-1 flex">
+          <div className="bg-white border border-slate-200 rounded overflow-hidden w-full">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-slate-100 text-slate-600">
+                <tr>
+                  <th className="px-3 py-2">Nutrient</th>
+                  <th className="px-3 py-2">Result</th>
+                  <th className="px-3 py-2">Target</th>
+                  <th className="px-3 py-2 text-right">Trend</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                <tr>
+                  <td className="px-3 py-2 font-medium">Nitrogen (N)</td>
+                  <td className="px-3 py-2">2.1%</td>
+                  <td className="px-3 py-2 text-slate-500">2.0-2.4%</td>
+                  <td className="px-3 py-2 text-right text-green-600">→</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-2 font-medium">Phosphorus</td>
+                  <td className="px-3 py-2">0.18%</td>
+                  <td className="px-3 py-2 text-slate-500">0.15-0.3%</td>
+                  <td className="px-3 py-2 text-right text-green-600">↗</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-2 font-medium">Potassium</td>
+                  <td className="px-3 py-2 text-red-600 font-bold">0.85%</td>
+                  <td className="px-3 py-2 text-slate-500">1.0-1.5%</td>
+                  <td className="px-3 py-2 text-right text-red-600">↘</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-2 font-medium">Magnesium</td>
+                  <td className="px-3 py-2">0.45%</td>
+                  <td className="px-3 py-2 text-slate-500">0.4-0.6%</td>
+                  <td className="px-3 py-2 text-right text-green-600">↗</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-2 font-medium">Calcium</td>
+                  <td className="px-3 py-2">1.25%</td>
+                  <td className="px-3 py-2 text-slate-500">1.0-1.5%</td>
+                  <td className="px-3 py-2 text-right text-green-600">→</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    )
+  }
+]
+
+const irrigationPlan = [
+  {
+    day: 'Monday',
+    entries: [
+      { title: 'Sector North', subtitle: '4 Hours • Drip', tone: 'blue' },
+      { title: 'No other activity', subtitle: '', tone: 'muted' }
+    ]
+  },
+  {
+    day: 'Tuesday',
+    entries: [
+      { title: 'Fertigation: K+', subtitle: 'Sector South • 200L', tone: 'amber' },
+      { title: 'Sector South', subtitle: '2 Hours • Post-Fert', tone: 'blue' }
+    ]
+  },
+  {
+    day: 'Wednesday',
+    entries: [
+      { title: 'Harvest Prep', subtitle: 'All Sectors • Equipment Check', tone: 'purple' },
+      { title: 'No irrigation scheduled', subtitle: '', tone: 'muted' }
+    ]
+  }
+]
+
+const personas = [
+  {
+    title: 'Owners',
+    subtitle: 'Know costs and yield per block.',
+    body: 'Make investment decisions based on actual field data, not guesswork.',
+    icon: Warehouse
+  },
+  {
+    title: 'Managers',
+    subtitle: 'Assign and verify daily work.',
+    body: 'Eliminate morning confusion and track progress in real-time.',
+    icon: ClipboardCheck
+  },
+  {
+    title: 'Consultants',
+    subtitle: 'Review client data remotely.',
+    body: 'Access history and logs before you even arrive at the vineyard.',
+    icon: LineChart
+  }
+]
 
 export default function LandingPage() {
   const router = useRouter()
   const { user, loading } = useSupabaseAuth()
-  const [activeCard, setActiveCard] = useState(0)
-  const [progress, setProgress] = useState(0)
-  const mountedRef = useRef(true)
 
-  // Redirect authenticated users to their last visited route or dashboard
   useEffect(() => {
     if (!loading && user) {
-      // Check if there's a saved route to restore
       const lastRoute = getLastRoute()
       const targetRoute = lastRoute || '/dashboard'
-
-      // Use replace instead of push for cleaner navigation history
       router.replace(targetRoute)
     }
-  }, [user, loading, router])
-
-  useEffect(() => {
-    const progressInterval = setInterval(() => {
-      if (!mountedRef.current) return
-
-      setProgress((prev) => {
-        if (prev >= 100) {
-          if (mountedRef.current) {
-            setActiveCard((current) => (current + 1) % 3)
-          }
-          return 0
-        }
-        return prev + 2 // 2% every 100ms = 5 seconds total
-      })
-    }, 100)
-
-    return () => {
-      clearInterval(progressInterval)
-      mountedRef.current = false
-    }
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      mountedRef.current = false
-    }
-  }, [])
-
-  const handleCardClick = (index: number) => {
-    if (!mountedRef.current) return
-    setActiveCard(index)
-    setProgress(0)
-  }
-
-  const getDashboardContent = () => {
-    switch (activeCard) {
-      case 0:
-        return (
-          <div className="text-[#828387] text-sm">Crop Health Monitoring and Field Analytics</div>
-        )
-      case 1:
-        return (
-          <div className="text-[#828387] text-sm">AI-Powered Yield Predictions and Insights</div>
-        )
-      case 2:
-        return (
-          <div className="text-[#828387] text-sm">
-            Farm Operations Dashboard - Equipment and Tasks
-          </div>
-        )
-      default:
-        return (
-          <div className="text-[#828387] text-sm">Crop Health Monitoring and Field Analytics</div>
-        )
-    }
-  }
+  }, [loading, user, router])
 
   return (
-    <div className="w-full min-h-screen relative bg-[#F7F5F3] overflow-x-hidden flex flex-col justify-start items-center">
-      <div className="relative flex flex-col justify-start items-center w-full flex-1">
-        {/* Main container with proper margins */}
-        <div className="w-full max-w-none px-4 sm:px-6 md:px-8 lg:px-0 lg:max-w-[1060px] lg:w-[1060px] relative flex flex-col justify-start items-start min-h-screen">
-          {/* Left vertical line */}
-          <div className="w-[1px] h-full absolute left-4 sm:left-6 md:left-8 lg:left-0 top-0 bg-[rgba(55,50,47,0.12)] shadow-[1px_0px_0px_white] z-0"></div>
+    <div className="min-h-screen bg-[#f9f8f6] text-[#1a1f1b]">
+      <header className="w-full border-b border-[#e2e0dd] bg-white/90 backdrop-blur sticky top-0 z-50">
+        <div className="max-w-[1024px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-6 w-6 rounded bg-[#4a5e4d] text-white flex items-center justify-center text-xs font-bold">
+              VS
+            </div>
+            <h1 className="text-xl font-bold tracking-tight">VineSight</h1>
+          </div>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <Link
+              href="/login"
+              className="text-sm font-medium text-[#1a1f1b] hover:text-[#4a5e4d] transition-colors hidden sm:block"
+            >
+              Log in
+            </Link>
+            <button
+              className="hidden sm:inline-flex bg-[#4a5e4d] hover:bg-[#3b4b3d] text-white text-sm font-semibold px-5 py-2.5 rounded shadow-sm transition-colors"
+              onClick={() =>
+                document.getElementById('after-hero')?.scrollIntoView({ behavior: 'smooth' })
+              }
+            >
+              See how it fits your vineyard
+            </button>
+          </div>
+        </div>
+      </header>
 
-          {/* Right vertical line */}
-          <div className="w-[1px] h-full absolute right-4 sm:right-6 md:right-8 lg:right-0 top-0 bg-[rgba(55,50,47,0.12)] shadow-[1px_0px_0px_white] z-0"></div>
+      <main className="flex flex-col items-center">
+        <section className="w-full max-w-[1024px] px-4 sm:px-6 py-16 md:py-20 flex flex-col items-center text-center">
+          <h2 className="text-[36px] md:text-[42px] font-bold leading-[1.2] tracking-[-0.02em] mb-6 max-w-[800px]">
+            All your vineyard records, schedules, and lab reports in one place.
+          </h2>
+          <p className="text-[#444f46] text-[18px] md:text-[19px] leading-[1.6] font-normal mb-8 max-w-[640px]">
+            Track irrigation, sprays, lab tests, tasks, and expenses — without spreadsheets,
+            notebooks, or WhatsApp chaos.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-16">
+            <button
+              className="bg-[#4a5e4d] hover:bg-[#3b4b3d] text-white text-base font-semibold px-8 py-3 rounded shadow-sm w-full sm:w-auto text-center"
+              onClick={() =>
+                document.getElementById('after-hero')?.scrollIntoView({ behavior: 'smooth' })
+              }
+            >
+              See how it fits your vineyard
+            </button>
+          </div>
 
-          <div className="self-stretch pt-[9px] overflow-hidden border-b border-[rgba(55,50,47,0.06)] flex flex-col justify-center items-center gap-4 sm:gap-6 md:gap-8 lg:gap-[66px] relative z-10">
-            {/* Navigation */}
-            <div className="w-full h-12 sm:h-14 md:h-16 lg:h-[84px] absolute left-0 top-0 flex justify-center items-center z-20 px-6 sm:px-8 md:px-12 lg:px-0">
-              <div className="w-full h-0 absolute left-0 top-6 sm:top-7 md:top-8 lg:top-[42px] border-t border-[rgba(55,50,47,0.12)] shadow-[0px_1px_0px_white]"></div>
+          <div className="w-full bg-white rounded-md border border-slate-300 shadow-sm overflow-hidden text-left">
+            <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                  Recent Activity Log
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <div className="h-2 w-2 rounded-full bg-slate-300" />
+                <div className="h-2 w-2 rounded-full bg-slate-300" />
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left whitespace-nowrap">
+                <thead className="bg-slate-50 text-slate-600 font-medium text-xs uppercase border-b border-slate-200">
+                  <tr>
+                    <th className="px-4 py-3 w-[15%]">Date</th>
+                    <th className="px-4 py-3 w-[15%]">Block ID</th>
+                    <th className="px-4 py-3 w-[40%]">Activity Detail</th>
+                    <th className="px-4 py-3 w-[15%]">Input Used</th>
+                    <th className="px-4 py-3 w-[15%] text-right">Cost/Acre</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 text-slate-800">
+                  {activityLog.map((row) => (
+                    <tr
+                      key={`${row.date}-${row.block}-${row.detail}`}
+                      className={row.highlighted ? 'bg-slate-50/50' : ''}
+                    >
+                      <td className="px-4 py-2.5">{row.date}</td>
+                      <td className="px-4 py-2.5 font-medium">{row.block}</td>
+                      <td className="px-4 py-2.5">{row.detail}</td>
+                      <td className="px-4 py-2.5 text-slate-500">{row.input}</td>
+                      <td className="px-4 py-2.5 text-right font-mono">{row.cost}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="bg-slate-50 px-4 py-2 border-t border-slate-200 text-xs text-slate-500 flex justify-between">
+              <span>Displaying 5 of 1,248 records</span>
+              <span>Last synced: 2 mins ago</span>
+            </div>
+          </div>
+        </section>
 
-              <div className="w-full max-w-[calc(100%-32px)] sm:max-w-[calc(100%-48px)] md:max-w-[calc(100%-64px)] lg:max-w-[700px] lg:w-[700px] h-10 sm:h-11 md:h-12 py-1.5 sm:py-2 px-3 sm:px-4 md:px-4 pr-2 sm:pr-3 bg-[#F7F5F3] backdrop-blur-sm shadow-[0px_0px_0px_2px_white] overflow-hidden rounded-[50px] flex justify-between items-center relative z-30">
-                <div className="flex justify-center items-center">
-                  <div className="flex justify-start items-center">
-                    <div className="flex flex-col justify-center text-[#2F3037] text-sm sm:text-base md:text-lg lg:text-xl font-medium leading-5 font-sans">
-                      Vinesight
-                    </div>
+        <section
+          id="after-hero"
+          className="w-full max-w-[1024px] px-4 sm:px-6 py-12 border-t border-slate-200"
+        >
+          <h3 className="text-[26px] md:text-[30px] font-semibold tracking-[-0.01em] mb-10 text-center md:text-left">
+            What this helps you manage
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
+            {manageCategories.map((cat) => (
+              <div key={cat.title}>
+                <h4 className="text-lg font-bold mb-4 border-b border-slate-200 pb-2">
+                  {cat.title}
+                </h4>
+                <ul className="space-y-3">
+                  {cat.items.map((item) => (
+                    <li key={item} className="flex gap-3 items-start">
+                      <span className="text-slate-400 text-lg mt-0.5" aria-hidden="true">
+                        •
+                      </span>
+                      <p className="text-[16px] text-[#444f46]">{item}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="w-full bg-white py-16 border-y border-slate-200">
+          <div className="max-w-[1024px] mx-auto px-4 sm:px-6">
+            <h3 className="text-[26px] md:text-[30px] font-semibold tracking-[-0.01em] mb-8">
+              How it fits into daily work
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-red-50 p-6 rounded border border-red-100">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="h-9 w-9 rounded bg-white border border-red-100 text-red-700 flex items-center justify-center font-semibold">
+                    ←
                   </div>
-                  <div className="pl-3 sm:pl-4 md:pl-5 lg:pl-5 flex justify-start items-start hidden sm:flex flex-row gap-2 sm:gap-3 md:gap-4 lg:gap-4">
-                    <a
-                      href="#features"
-                      className="flex justify-start items-center cursor-pointer hover:opacity-70 transition-opacity"
-                    >
-                      <div className="flex flex-col justify-center text-[rgba(49,45,43,0.80)] text-xs md:text-[13px] font-medium leading-[14px] font-sans">
-                        Features
-                      </div>
-                    </a>
-                    <a
-                      href="#pricing"
-                      className="flex justify-start items-center cursor-pointer hover:opacity-70 transition-opacity"
-                    >
-                      <div className="flex flex-col justify-center text-[rgba(49,45,43,0.80)] text-xs md:text-[13px] font-medium leading-[14px] font-sans">
-                        Pricing
-                      </div>
-                    </a>
-                    <a
-                      href="#resources"
-                      className="flex justify-start items-center cursor-pointer hover:opacity-70 transition-opacity"
-                    >
-                      <div className="flex flex-col justify-center text-[rgba(49,45,43,0.80)] text-xs md:text-[13px] font-medium leading-[14px] font-sans">
-                        Resources
-                      </div>
-                    </a>
-                  </div>
+                  <h4 className="font-bold text-lg text-red-900">The Old Way</h4>
                 </div>
-                <div className="h-6 sm:h-7 md:h-8 flex justify-start items-start gap-2 sm:gap-3">
+                <ul className="space-y-4">
+                  {comparison.old.map((item) => (
+                    <li key={item.title} className="text-[16px] text-slate-700 leading-normal">
+                      <span className="font-semibold text-slate-900">{item.title}:</span>{' '}
+                      {item.body}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="bg-[#f9f8f6] p-6 rounded border border-[#4a5e4d]/20">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="h-9 w-9 rounded bg-[#4a5e4d] text-white flex items-center justify-center font-semibold">
+                    ✓
+                  </div>
+                  <h4 className="font-bold text-lg text-[#4a5e4d]">With VineSight</h4>
+                </div>
+                <ul className="space-y-4">
+                  {comparison.with.map((item) => (
+                    <li key={item.title} className="text-[16px] text-slate-700 leading-normal">
+                      <span className="font-semibold text-slate-900">{item.title}:</span>{' '}
+                      {item.body}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="w-full max-w-[1024px] px-4 sm:px-6 py-16">
+          <h3 className="text-[26px] md:text-[30px] font-semibold tracking-[-0.01em] mb-8">
+            Core Modules
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {coreModules.map((mod) => (
+              <div key={mod.title} className="flex flex-col gap-3 min-h-[360px]">
+                <h4 className="text-lg font-bold">{mod.title}</h4>
+                <p className="text-[#444f46] text-[16px] leading-snug">{mod.description}</p>
+                <div className="flex-1 flex">
+                  <div className="w-full h-full">{mod.body}</div>
+                </div>
+              </div>
+            ))}
+            <div className="flex flex-col gap-3 lg:col-span-2">
+              <h4 className="text-lg font-bold">Irrigation & Fertigation Planning</h4>
+              <p className="text-[#444f46] text-[16px] leading-snug">
+                Plan water usage based on soil moisture data and weather forecasts.
+              </p>
+              <div className="bg-white rounded border border-slate-200 shadow-sm overflow-hidden">
+                <div className="p-4 bg-slate-50 flex gap-4 overflow-x-auto">
+                  {irrigationPlan.map((day) => (
+                    <div
+                      key={day.day}
+                      className="flex-1 min-w-[200px] bg-white border border-slate-200 rounded p-3"
+                    >
+                      <div className="text-xs font-bold text-slate-400 uppercase mb-2">
+                        {day.day}
+                      </div>
+                      {day.entries.length === 0 ? (
+                        <div className="bg-slate-50 border border-slate-100 p-2 rounded h-full flex items-center justify-center">
+                          <div className="text-xs text-slate-400">Scheduled Maintenance</div>
+                        </div>
+                      ) : (
+                        day.entries.map((entry) =>
+                          entry.tone === 'muted' ? (
+                            <div
+                              key={entry.title}
+                              className="p-2 rounded mb-2 border bg-slate-50 border-slate-100 text-xs text-slate-400 flex items-center"
+                            >
+                              {entry.title}
+                            </div>
+                          ) : (
+                            <div
+                              key={entry.title}
+                              className={`p-2 rounded mb-2 border ${
+                                entry.tone === 'amber'
+                                  ? 'bg-amber-50 border-amber-100 text-amber-900'
+                                  : entry.tone === 'purple'
+                                    ? 'bg-purple-50 border-purple-100 text-purple-800'
+                                    : 'bg-blue-50 border-blue-100 text-blue-800'
+                              }`}
+                            >
+                              <div className="text-xs font-bold">{entry.title}</div>
+                              {entry.subtitle && (
+                                <div className="text-[10px] text-inherit opacity-80">
+                                  {entry.subtitle}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        )
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="w-full bg-slate-100 py-16">
+          <div className="max-w-[1024px] mx-auto px-4 sm:px-6">
+            <h3 className="text-[26px] md:text-[30px] font-semibold tracking-[-0.01em] mb-10 text-center">
+              Built for the rigorous demands of viticulture
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+              {personas.map((persona) => {
+                const Icon = persona.icon
+                return (
                   <div
-                    className="px-2 sm:px-3 md:px-[14px] py-1 sm:py-[6px] bg-white shadow-[0px_1px_2px_rgba(55,50,47,0.12)] overflow-hidden rounded-full flex justify-center items-center cursor-pointer"
-                    onClick={() => router.push('/login')}
+                    key={persona.title}
+                    className="bg-white p-6 rounded border border-slate-200 text-left shadow-sm"
                   >
-                    <div className="flex flex-col justify-center text-[#37322F] text-xs md:text-[13px] font-medium leading-5 font-sans">
-                      Log in
+                    <div className="h-10 w-10 rounded bg-slate-100 text-[#4a5e4d] flex items-center justify-center mb-3">
+                      <Icon className="h-5 w-5" aria-hidden="true" />
                     </div>
+                    <h4 className="font-bold text-base text-slate-900 mb-1">{persona.title}</h4>
+                    <p className="text-sm text-slate-600 font-medium">{persona.subtitle}</p>
+                    <p className="text-xs text-slate-500 mt-2">{persona.body}</p>
                   </div>
-                </div>
+                )
+              })}
+            </div>
+            <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-12 border-t border-slate-200 pt-10 text-slate-600 text-sm font-semibold">
+              <div className="flex items-center gap-2">
+                <span aria-hidden="true">↓</span>
+                <span>Export your data anytime (CSV/PDF)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span aria-hidden="true">🔒</span>
+                <span>Your data stays private</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span aria-hidden="true">🤝</span>
+                <span>Built with agronomists</span>
               </div>
             </div>
-
-            {/* Hero Section */}
-            <div className="pt-16 sm:pt-20 md:pt-24 lg:pt-[150px] pb-8 sm:pb-12 md:pb-16 flex flex-col justify-start items-center px-2 sm:px-4 md:px-8 lg:px-0 w-full sm:pl-0 sm:pr-0 pl-0 pr-0">
-              <div className="w-full max-w-[937px] lg:w-[937px] flex flex-col justify-center items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6">
-                <div className="self-stretch rounded-[3px] flex flex-col justify-center items-center gap-4 sm:gap-5 md:gap-6 lg:gap-8">
-                  <div className="w-full max-w-[748.71px] lg:w-[748.71px] text-center flex justify-center flex-col text-[#37322F] text-[24px] xs:text-[28px] sm:text-[36px] md:text-[52px] lg:text-[80px] font-normal leading-[1.1] sm:leading-[1.15] md:leading-[1.2] lg:leading-24 font-serif px-2 sm:px-4 md:px-0">
-                    AI-powered farm management
-                    <br />
-                    made simple by Vinesight
-                  </div>
-                  <div className="w-full max-w-[506.08px] lg:w-[506.08px] text-center flex justify-center flex-col text-[rgba(55,50,47,0.80)] sm:text-lg md:text-xl leading-[1.4] sm:leading-[1.45] md:leading-[1.5] lg:leading-7 font-sans px-2 sm:px-4 md:px-0 lg:text-lg font-medium text-sm">
-                    Transform your farming operations with intelligent crop monitoring,
-                    <br className="hidden sm:block" />
-                    predictive analytics, and automated field management.
-                  </div>
-                </div>
-              </div>
-
-              <div className="w-full max-w-[497px] lg:w-[497px] flex flex-col justify-center items-center gap-4 sm:gap-5 md:gap-6 relative z-10 mt-6 sm:mt-8 md:mt-10 lg:mt-12">
-                <div className="backdrop-blur-[8.25px] flex justify-start items-center gap-4">
-                  <div
-                    className="h-10 sm:h-11 md:h-12 px-6 sm:px-8 md:px-10 lg:px-12 py-2 sm:py-[6px] relative bg-[#37322F] shadow-[0px_0px_0px_2.5px_rgba(255,255,255,0.08)_inset] overflow-hidden rounded-full flex justify-center items-center cursor-pointer"
-                    onClick={() => router.push('/login')}
-                  >
-                    <div className="w-20 sm:w-24 md:w-28 lg:w-44 h-[41px] absolute left-0 top-[-0.5px] bg-gradient-to-b from-[rgba(255,255,255,0)] to-[rgba(0,0,0,0.10)] mix-blend-multiply"></div>
-                    <div className="flex flex-col justify-center text-white text-sm sm:text-base md:text-[15px] font-medium leading-5 font-sans">
-                      Start farming smarter
-                    </div>
-                  </div>
-                </div>
-
-                {/* App Store Badge */}
-                <AppStoreBadge />
-              </div>
-
-              <div className="absolute top-[232px] sm:top-[248px] md:top-[264px] lg:top-[320px] left-1/2 transform -translate-x-1/2 z-0 pointer-events-none">
-                <img
-                  src="/mask-group-pattern.svg"
-                  alt=""
-                  className="w-[936px] sm:w-[1404px] md:w-[2106px] lg:w-[2808px] h-auto opacity-30 sm:opacity-40 md:opacity-50 mix-blend-multiply"
-                  style={{
-                    filter: 'hue-rotate(15deg) saturate(0.7) brightness(1.2)'
-                  }}
-                />
-              </div>
-
-              <div className="w-full max-w-[960px] lg:w-[960px] pt-2 sm:pt-4 pb-6 sm:pb-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-11 flex flex-col justify-center items-center gap-2 relative z-5 my-8 sm:my-12 md:my-16 lg:my-16 mb-0 lg:pb-0">
-                <div className="w-full max-w-[960px] lg:w-[960px] h-[200px] sm:h-[280px] md:h-[450px] lg:h-[695.55px] bg-white shadow-[0px_0px_0px_0.9056603908538818px_rgba(0,0,0,0.08)] overflow-hidden rounded-[6px] sm:rounded-[8px] lg:rounded-[9.06px] flex flex-col justify-start items-start">
-                  {/* Dashboard Content */}
-                  <div className="self-stretch flex-1 flex justify-start items-start">
-                    {/* Main Content */}
-                    <div className="w-full h-full flex items-center justify-center">
-                      <div className="relative w-full h-full overflow-hidden">
-                        {/* Product Image 1 - Crop monitoring */}
-                        <div
-                          className={`absolute inset-0 transition-all duration-500 ease-in-out ${
-                            activeCard === 0
-                              ? 'opacity-100 scale-100 blur-0'
-                              : 'opacity-0 scale-95 blur-sm'
-                          }`}
-                        >
-                          <img
-                            src="/modernFarm.png"
-                            alt="Crop Health Monitoring Dashboard"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-
-                        {/* Product Image 2 - AI analytics */}
-                        <div
-                          className={`absolute inset-0 transition-all duration-500 ease-in-out ${
-                            activeCard === 1
-                              ? 'opacity-100 scale-100 blur-0'
-                              : 'opacity-0 scale-95 blur-sm'
-                          }`}
-                        >
-                          <img
-                            src="/aiPowered.png"
-                            alt="AI Analytics Dashboard"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-
-                        {/* Product Image 3 - Farm operations */}
-                        <div
-                          className={`absolute inset-0 transition-all duration-500 ease-in-out ${
-                            activeCard === 2
-                              ? 'opacity-100 scale-100 blur-0'
-                              : 'opacity-0 scale-95 blur-sm'
-                          }`}
-                        >
-                          <img
-                            src="/farmOperations.png"
-                            alt="Farm Operations Dashboard"
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Feature Cards Section - Hidden on mobile */}
-              <div className="hidden sm:block self-stretch border-t border-[#E0DEDB] border-b border-[#E0DEDB] flex justify-center items-start">
-                {/* Left decorative pattern */}
-                <div className="w-4 sm:w-6 md:w-8 lg:w-12 self-stretch relative overflow-hidden">
-                  <div className="w-[120px] sm:w-[140px] md:w-[162px] left-[-40px] sm:left-[-50px] md:left-[-58px] top-[-120px] absolute flex flex-col justify-start items-start">
-                    {Array.from({ length: 50 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="self-stretch h-3 sm:h-4 rotate-[-45deg] origin-top-left outline outline-[0.5px] outline-[rgba(3,7,18,0.08)] outline-offset-[-0.25px]"
-                      ></div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex-1 px-0 sm:px-2 md:px-0 flex flex-col md:flex-row justify-center items-stretch gap-0">
-                  {/* Feature Cards */}
-                  <FeatureCard
-                    title="Monitor crop health"
-                    description="Track plant health, soil conditions, and growth patterns with AI-powered satellite and drone imagery analysis."
-                    isActive={activeCard === 0}
-                    progress={activeCard === 0 ? progress : 0}
-                    onClick={() => handleCardClick(0)}
-                  />
-                  <FeatureCard
-                    title="Predict & optimize yields"
-                    description="Leverage machine learning to forecast harvests, optimize planting schedules, and maximize crop productivity."
-                    isActive={activeCard === 1}
-                    progress={activeCard === 1 ? progress : 0}
-                    onClick={() => handleCardClick(1)}
-                  />
-                  <FeatureCard
-                    title="Manage operations"
-                    description="Streamline farm tasks, equipment maintenance, and field activities with intelligent scheduling and automation."
-                    isActive={activeCard === 2}
-                    progress={activeCard === 2 ? progress : 0}
-                    onClick={() => handleCardClick(2)}
-                  />
-                </div>
-
-                {/* Right decorative pattern */}
-                <div className="w-4 sm:w-6 md:w-8 lg:w-12 self-stretch relative overflow-hidden">
-                  <div className="w-[120px] sm:w-[140px] md:w-[162px] left-[-40px] sm:left-[-50px] md:left-[-58px] top-[-120px] absolute flex flex-col justify-start items-start">
-                    {Array.from({ length: 50 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="self-stretch h-3 sm:h-4 rotate-[-45deg] origin-top-left outline outline-[0.5px] outline-[rgba(3,7,18,0.08)] outline-offset-[-0.25px]"
-                      ></div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Bento Grid Section */}
-              <div
-                id="features"
-                className="w-full border-b border-[rgba(55,50,47,0.12)] flex flex-col justify-center items-center"
-              >
-                <div className="self-stretch px-4 sm:px-6 md:px-8 lg:px-0 lg:max-w-[1060px] lg:w-[1060px] py-8 sm:py-12 md:py-16 border-b border-[rgba(55,50,47,0.12)] flex justify-center items-center gap-6">
-                  <div className="w-full max-w-[616px] lg:w-[616px] px-4 sm:px-6 py-4 sm:py-5 shadow-[0px_2px_4px_rgba(50,45,43,0.06)] overflow-hidden rounded-lg flex flex-col justify-start items-center gap-3 sm:gap-4 shadow-none">
-                    <Badge
-                      icon={
-                        <svg
-                          width="12"
-                          height="12"
-                          viewBox="0 0 12 12"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <rect
-                            x="1"
-                            y="1"
-                            width="4"
-                            height="4"
-                            stroke="#37322F"
-                            strokeWidth="1"
-                            fill="none"
-                          />
-                          <rect
-                            x="7"
-                            y="1"
-                            width="4"
-                            height="4"
-                            stroke="#37322F"
-                            strokeWidth="1"
-                            fill="none"
-                          />
-                          <rect
-                            x="1"
-                            y="7"
-                            width="4"
-                            height="4"
-                            stroke="#37322F"
-                            strokeWidth="1"
-                            fill="none"
-                          />
-                          <rect
-                            x="7"
-                            y="7"
-                            width="4"
-                            height="4"
-                            stroke="#37322F"
-                            strokeWidth="1"
-                            fill="none"
-                          />
-                        </svg>
-                      }
-                      text="Smart farming"
-                    />
-                    <div className="w-full max-w-[598.06px] lg:w-[598.06px] text-center flex justify-center flex-col text-[#49423D] text-xl sm:text-2xl md:text-3xl lg:text-5xl font-semibold leading-tight md:leading-[60px] font-sans tracking-tight">
-                      Built for precision agriculture and sustainable growth
-                    </div>
-                    <div className="self-stretch text-center text-[#605A57] text-sm sm:text-base font-normal leading-6 sm:leading-7 font-sans">
-                      Make data-driven decisions with tools that monitor, analyze,
-                      <br />
-                      and optimize every aspect of your farming operation.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="self-stretch flex justify-center items-start">
-                  <div className="w-4 sm:w-6 md:w-8 lg:w-12 self-stretch relative overflow-hidden">
-                    <div className="w-[120px] sm:w-[140px] md:w-[162px] left-[-40px] sm:left-[-50px] md:left-[-58px] top-[-120px] absolute flex flex-col justify-start items-start">
-                      {Array.from({ length: 200 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="self-stretch h-3 sm:h-4 rotate-[-45deg] origin-top-left outline outline-[0.5px] outline-[rgba(3,7,18,0.08)] outline-offset-[-0.25px]"
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-0 border-l border-r border-[rgba(55,50,47,0.12)]">
-                    <div className="border-b border-r-0 md:border-r border-[rgba(55,50,47,0.12)] p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col justify-start items-start gap-4 sm:gap-6">
-                      <div className="flex flex-col gap-2">
-                        <h3 className="text-[#37322F] text-lg sm:text-xl font-semibold leading-tight font-sans">
-                          Smart. Sustainable. Profitable.
-                        </h3>
-                        <p className="text-[#605A57] text-sm md:text-base font-normal leading-relaxed font-sans">
-                          Your farm data is intelligently organized so you can see field conditions,
-                          crop health, and opportunities clearly.
-                        </p>
-                      </div>
-                      <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] rounded-lg flex items-center justify-center overflow-hidden">
-                        <SmartSimpleBrilliant
-                          width="100%"
-                          height="100%"
-                          theme="light"
-                          className="scale-50 sm:scale-65 md:scale-75 lg:scale-90"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="border-b border-[rgba(55,50,47,0.12)] p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col justify-start items-start gap-4 sm:gap-6">
-                      <div className="flex flex-col gap-2">
-                        <h3 className="text-[#37322F] font-semibold leading-tight font-sans text-lg sm:text-xl">
-                          Your fields, connected
-                        </h3>
-                        <p className="text-[#605A57] text-sm md:text-base font-normal leading-relaxed font-sans">
-                          Real-time updates flow across all your operations, keeping your team and
-                          equipment synchronized for maximum efficiency.
-                        </p>
-                      </div>
-                      <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] rounded-lg flex overflow-hidden text-right items-center justify-center">
-                        <YourWorkInSync
-                          width="400"
-                          height="250"
-                          theme="light"
-                          className="scale-60 sm:scale-75 md:scale-90"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="border-r-0 md:border-r border-[rgba(55,50,47,0.12)] p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col justify-start items-start gap-4 sm:gap-6 bg-transparent">
-                      <div className="flex flex-col gap-2">
-                        <h3 className="text-[#37322F] text-lg sm:text-xl font-semibold leading-tight font-sans">
-                          Seamless equipment integration
-                        </h3>
-                        <p className="text-[#605A57] text-sm md:text-base font-normal leading-relaxed font-sans">
-                          Connect your tractors, sensors, and irrigation systems in one unified
-                          platform that works with your existing tools.
-                        </p>
-                      </div>
-                      <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] rounded-lg flex overflow-hidden justify-center items-center relative bg-transparent">
-                        <div className="w-full h-full flex items-center justify-center bg-transparent">
-                          <EffortlessIntegration
-                            width={400}
-                            height={250}
-                            className="max-w-full max-h-full"
-                          />
-                        </div>
-                        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#F7F5F3] to-transparent pointer-events-none"></div>
-                      </div>
-                    </div>
-
-                    {/* Bottom Right - Numbers that speak */}
-                    <div className="p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col justify-start items-start gap-4 sm:gap-6">
-                      <div className="flex flex-col gap-2">
-                        <h3 className="text-[#37322F] text-lg sm:text-xl font-semibold leading-tight font-sans">
-                          Yields that grow
-                        </h3>
-                        <p className="text-[#605A57] text-sm md:text-base font-normal leading-relaxed font-sans">
-                          Track productivity with precision and turn field data into confident
-                          farming decisions that increase profitability.
-                        </p>
-                      </div>
-                      <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] rounded-lg flex overflow-hidden items-center justify-center relative">
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <NumbersThatSpeak
-                            width="100%"
-                            height="100%"
-                            theme="light"
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                        {/* Gradient mask for soft bottom edge */}
-                        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#F7F5F3] to-transparent pointer-events-none"></div>
-                        {/* Fallback content if component doesn't render */}
-                        <div className="absolute inset-0 flex items-center justify-center opacity-20 hidden">
-                          <div className="flex flex-col items-center gap-2 p-4">
-                            <div className="w-3/4 h-full bg-green-500 rounded-full"></div>
-                          </div>
-                          <div className="text-sm text-green-600">Yield Growth</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="w-4 sm:w-6 md:w-8 lg:w-12 self-stretch relative overflow-hidden">
-                    {/* Right decorative pattern */}
-                    <div className="w-[120px] sm:w-[140px] md:w-[162px] left-[-40px] sm:left-[-50px] md:left-[-58px] top-[-120px] absolute flex flex-col justify-start items-start">
-                      {Array.from({ length: 200 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="self-stretch h-3 sm:h-4 rotate-[-45deg] origin-top-left outline outline-[0.5px] outline-[rgba(3,7,18,0.08)] outline-offset-[-0.25px]"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Documentation Section */}
-              <DocumentationSection />
-
-              {/* Testimonials Section */}
-              <TestimonialsSection />
-
-              {/* Pricing Section */}
-              <PricingSection />
-
-              {/* FAQ Section */}
-              <FAQSection />
-
-              {/* CTA Section */}
-              <CTASection />
-            </div>
           </div>
-        </div>
-      </div>
-      <footer className="w-full border-t border-[rgba(55,50,47,0.12)] bg-white/60 backdrop-blur py-8 mt-10">
-        <div className="max-w-[1060px] mx-auto flex flex-col items-center px-6 text-sm text-[#4A4A4A] gap-6">
-          {/* App Store Badge */}
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-[#605A57] text-xs">Get the mobile app</span>
-            <AppStoreBadge className="h-10" />
+        </section>
+
+        <section id="cta-section" className="w-full max-w-[600px] px-4 sm:px-6 py-20 text-center">
+          <h3 className="text-[30px] font-bold tracking-tight mb-4">
+            See how VineSight fits into your vineyard’s daily work.
+          </h3>
+          <button
+            className="bg-[#4a5e4d] hover:bg-[#3b4b3d] text-white text-lg font-bold px-8 py-4 rounded shadow-sm w-full sm:w-auto"
+            onClick={() => router.push('/login')}
+          >
+            Try it for your vineyard
+          </button>
+          <p className="text-[#444f46] text-sm mt-4">
+            No credit card required · Setup takes less than 15 minutes
+          </p>
+          <div className="mt-12 pt-8 border-t border-slate-200 text-xs text-slate-500">
+            © {new Date().getFullYear()} VineSight. All rights reserved.
+            <span className="mx-2">•</span>
+            <Link className="underline hover:text-slate-800" href="/privacy">
+              Privacy Policy
+            </Link>
+            <span className="mx-2">•</span>
+            <Link className="underline hover:text-slate-800" href="/terms">
+              Terms of Service
+            </Link>
           </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3">
-            <span>© {new Date().getFullYear()} Vinesight. All rights reserved.</span>
-            <div className="flex items-center gap-4">
-              <Link href="/privacy" className="underline-offset-4 hover:underline">
-                Privacy Policy
-              </Link>
-              <Link href="/terms" className="underline-offset-4 hover:underline">
-                Terms of Service
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
-  )
-}
-
-// FeatureCard component definition inline to fix import error
-function FeatureCard({
-  title,
-  description,
-  isActive,
-  progress,
-  onClick
-}: {
-  title: string
-  description: string
-  isActive: boolean
-  progress: number
-  onClick: () => void
-}) {
-  return (
-    <div
-      className={`w-full md:flex-1 self-stretch px-4 sm:px-6 py-4 sm:py-5 overflow-hidden flex flex-col justify-start items-start gap-2 cursor-pointer relative border-b md:border-b-0 last:border-b-0 ${
-        isActive
-          ? 'bg-white shadow-[0px_0px_0px_0.75px_#E0DEDB_inset]'
-          : 'border-l-0 border-r-0 md:border border-[#E0DEDB]/80'
-      }`}
-      onClick={onClick}
-    >
-      {isActive && (
-        <div className="absolute top-0 left-0 w-full h-0.5 bg-[rgba(50,45,43,0.08)]">
-          <div
-            className="h-full bg-[#322D2B] transition-all duration-100 ease-linear"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      )}
-
-      <div className="self-stretch flex justify-center flex-col text-[#49423D] text-sm sm:text-sm md:text-sm font-semibold leading-5 sm:leading-6 md:leading-6 font-sans">
-        {title}
-      </div>
-      <div className="self-stretch text-[#605A57] text-xs sm:text-[13px] md:text-[13px] font-normal leading-5 sm:leading-[22px] md:leading-[22px] font-sans">
-        {description}
-      </div>
+        </section>
+      </main>
     </div>
   )
 }
