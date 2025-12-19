@@ -1,5 +1,12 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono, Montserrat, Merriweather, Source_Code_Pro } from 'next/font/google'
+import {
+  Geist,
+  Geist_Mono,
+  Montserrat,
+  Merriweather,
+  Source_Code_Pro,
+  Inter
+} from 'next/font/google'
 import './globals.css'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { AsyncErrorBoundary } from '@/components/ErrorBoundary'
@@ -10,6 +17,8 @@ import { Analytics } from '@vercel/analytics/next'
 import { GoogleAnalytics, SearchConsoleVerification } from '@/components/GoogleAnalytics'
 import dynamic from 'next/dynamic'
 import { SEO_KEYWORDS } from '@/lib/seo-constants'
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
 const LayoutContent = dynamic(
   () => import('@/components/layout/LayoutContent').then((mod) => ({ default: mod.LayoutContent })),
@@ -110,7 +119,7 @@ export const metadata: Metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#37a765'
+  themeColor: '#6F8F5E'
 }
 
 export default function RootLayout({
@@ -119,10 +128,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#37a765" />
+        <meta name="theme-color" content="#6F8F5E" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -133,7 +142,7 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="VineSight" />
-        <meta name="msapplication-TileColor" content="#37a765" />
+        <meta name="msapplication-TileColor" content="#6F8F5E" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
 
         {/* Preconnect for performance */}
