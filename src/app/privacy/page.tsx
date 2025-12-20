@@ -78,7 +78,7 @@ export default function PrivacyPolicyPage() {
       <SEOSchema
         title="Privacy Policy - VineSight"
         description="How VineSight collects, protects, and uses your data across web and mobile."
-        type="article"
+        type="guide"
         url="/privacy"
         guideCategory="Legal"
         image="/og-image.png"

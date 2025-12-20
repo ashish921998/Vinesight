@@ -122,7 +122,7 @@ export default function TermsOfServicePage() {
       <SEOSchema
         title="Terms of Service - VineSight"
         description="The rules for using VineSight across web and mobile."
-        type="article"
+        type="guide"
         url="/terms"
         guideCategory="Legal"
         image="/og-image.png"
