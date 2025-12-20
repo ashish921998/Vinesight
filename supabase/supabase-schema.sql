@@ -1119,3 +1119,80 @@ INSERT INTO farms (name, region, area, crop, crop_variety, planting_date, vine_s
 ('Pune Valley Farm', 'Pune, Maharashtra', 1.8, 'Grapes', 'Flame Seedless', '2019-11-20', 2.5, 8.0, auth.uid()),
 ('Sangli Export Vineyard', 'Sangli, Maharashtra', 4.2, 'Grapes', 'Red Globe', '2018-12-10', 3.5, 10.0, auth.uid());
 */
+
+-- ============================================================================
+-- WINERY TABLES (GTM SCOPE)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS harvest_lots (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  vineyard_block_id BIGINT REFERENCES vineyard_blocks(id),
+  variety VARCHAR(255),
+  harvest_date DATE NOT NULL,
+  weight DECIMAL(12,2),
+  initial_brix DECIMAL(5,2),
+  initial_ph DECIMAL(4,2),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS wine_lots (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  harvest_lot_id UUID REFERENCES harvest_lots(id),
+  status VARCHAR(20) CHECK (status IN ('fermenting', 'aging', 'bottled')),
+  current_container_id UUID,
+  current_container_type VARCHAR(20) CHECK (current_container_type IN ('tank', 'barrel')),
+  volume DECIMAL(12,2),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS tanks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(255) NOT NULL,
+  capacity DECIMAL(12,2) NOT NULL,
+  current_volume DECIMAL(12,2) DEFAULT 0,
+  status VARCHAR(20) CHECK (status IN ('empty', 'in_use')) DEFAULT 'empty',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS barrels (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(255) NOT NULL,
+  size DECIMAL(12,2) NOT NULL,
+  status VARCHAR(20) CHECK (status IN ('empty', 'partial', 'full')) DEFAULT 'empty',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS fermentation_readings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  wine_lot_id UUID REFERENCES wine_lots(id),
+  brix DECIMAL(5,2),
+  temperature DECIMAL(5,2),
+  ph DECIMAL(4,2),
+  recorded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS work_orders (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  type VARCHAR(50) NOT NULL,
+  wine_lot_id UUID REFERENCES wine_lots(id),
+  container_id UUID,
+  assigned_user_id UUID REFERENCES auth.users(id),
+  due_date TIMESTAMP WITH TIME ZONE,
+  status VARCHAR(20) CHECK (status IN ('pending', 'completed')) DEFAULT 'pending',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS inventory_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(255) NOT NULL,
+  category VARCHAR(50),
+  quantity DECIMAL(12,2) DEFAULT 0,
+  low_stock_threshold DECIMAL(12,2),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

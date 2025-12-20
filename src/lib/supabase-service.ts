@@ -1589,4 +1589,47 @@ export class SupabaseService {
       )
       .subscribe()
   }
+
+  // Winery GTM helpers
+  static async createHarvestLot(params: {
+    harvestDate: string
+    weight?: number | null
+    variety?: string | null
+    vineyardBlockId?: number | null
+    initialBrix?: number | null
+    initialPh?: number | null
+  }) {
+    const supabase = getTypedSupabaseClient()
+    const payload = {
+      harvest_date: params.harvestDate,
+      weight: params.weight ?? null,
+      variety: params.variety ?? null,
+      vineyard_block_id: params.vineyardBlockId ?? null,
+      initial_brix: params.initialBrix ?? null,
+      initial_ph: params.initialPh ?? null
+    }
+    const { data, error } = await supabase.from('harvest_lots').insert(payload).select().single()
+    if (error) throw error
+    return data
+  }
+
+  static async createWineLot(params: {
+    harvestLotId: string
+    status?: 'fermenting' | 'aging' | 'bottled'
+    currentContainerId?: string | null
+    currentContainerType?: 'tank' | 'barrel' | null
+    volume?: number | null
+  }) {
+    const supabase = getTypedSupabaseClient()
+    const payload = {
+      harvest_lot_id: params.harvestLotId,
+      status: params.status ?? 'fermenting',
+      current_container_id: params.currentContainerId ?? null,
+      current_container_type: params.currentContainerType ?? null,
+      volume: params.volume ?? null
+    }
+    const { data, error } = await supabase.from('wine_lots').insert(payload).select().single()
+    if (error) throw error
+    return data
+  }
 }

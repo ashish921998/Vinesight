@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/dialog'
 import { UnifiedDataLogsModal } from '@/components/farm-details/UnifiedDataLogsModal'
 import { EditRecordModal } from '@/components/journal/EditRecordModal'
+import Link from 'next/link'
 
 import { SupabaseService } from '@/lib/supabase-service'
 import { getActivityDisplayData } from '@/lib/activity-display-utils'
@@ -41,6 +42,8 @@ import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-ty
 import { cn, capitalize } from '@/lib/utils'
 import { toast } from 'sonner'
 import { parseFarmId, handleDailyNotesAndPhotosAfterLogs } from '@/lib/daily-note-utils'
+import { WineryService } from '@/lib/winery-service'
+import { useAppMode } from '@/hooks/useAppMode'
 
 import { type Farm } from '@/types/types'
 
@@ -60,6 +63,31 @@ import {
   Droplets
 } from 'lucide-react'
 import { searchLogs } from '@/actions/search-logs'
+
+const CONVERSION_STORAGE_KEY = 'vinesight_harvest_wine_conversions'
+
+type HarvestToWineConversion = Record<
+  number,
+  {
+    harvestLotId: string
+    wineLotId: string
+  }
+>
+
+const loadConversionMap = (): HarvestToWineConversion => {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = window.localStorage.getItem(CONVERSION_STORAGE_KEY)
+    return raw ? (JSON.parse(raw) as HarvestToWineConversion) : {}
+  } catch {
+    return {}
+  }
+}
+
+const saveConversionMap = (map: HarvestToWineConversion) => {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(CONVERSION_STORAGE_KEY, JSON.stringify(map))
+}
 
 /* ---------- Helpers (moved out of component) ---------- */
 
@@ -152,12 +180,18 @@ const LogsList = React.memo(function LogsList({
   logs,
   onEdit,
   onDelete,
-  currentFarm
+  currentFarm,
+  onConvertHarvest,
+  conversionMap,
+  convertingId
 }: {
   logs: ActivityLog[]
   onEdit: (log: ActivityLog) => void
   onDelete: (log: ActivityLog) => void
   currentFarm: Farm | null
+  onConvertHarvest: (log: ActivityLog) => void
+  conversionMap: HarvestToWineConversion
+  convertingId: number | null
 }) {
   return (
     <div className="space-y-2">
@@ -214,7 +248,35 @@ const LogsList = React.memo(function LogsList({
                 )}
               </div>
 
-              <div className="flex items-center gap-1 flex-shrink-0">
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {log.type === 'harvest' &&
+                  Number(log.quantity || 0) > 0 &&
+                  (conversionMap[log.id] ? (
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="text-rose-700 border-rose-200 hover:bg-rose-50"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Link href={`/winery/lots/${conversionMap[log.id].wineLotId}`}>
+                        View Wine Lot
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onConvertHarvest(log)
+                      }}
+                      disabled={convertingId === log.id}
+                      className="text-rose-700 border-rose-200 hover:bg-rose-50"
+                    >
+                      {convertingId === log.id ? 'Converting…' : 'Convert to Wine Lot'}
+                    </Button>
+                  ))}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -252,6 +314,7 @@ const LogsList = React.memo(function LogsList({
 export default function FarmLogsPage() {
   const params = useParams()
   const router = useRouter()
+  const { setMode } = useAppMode()
   const farmId = params.id as string
 
   const [selectedFarm, setSelectedFarm] = useState<string>(farmId)
@@ -282,7 +345,8 @@ export default function FarmLogsPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [searchLoading, setSearchLoading] = useState(false)
-
+  const [conversionMap, setConversionMap] = useState<HarvestToWineConversion>({})
+  const [convertingId, setConvertingId] = useState<number | null>(null)
   const [editingRecord, setEditingRecord] = useState<ActivityLog | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
 
@@ -306,6 +370,10 @@ export default function FarmLogsPage() {
     return () => {
       isMountedRef.current = false
     }
+  }, [])
+
+  useEffect(() => {
+    setConversionMap(loadConversionMap())
   }, [])
 
   const [, startTransition] = useTransition()
@@ -431,7 +499,7 @@ export default function FarmLogsPage() {
     (farmId: string) => {
       setSelectedFarm(farmId)
       setCurrentPage(1)
-      router.push(`/farms/${farmId}/logs`)
+      router.push(`/vineyard/farms/${farmId}/logs`)
     },
     [router]
   )
@@ -451,6 +519,58 @@ export default function FarmLogsPage() {
     setCurrentPage(1)
     // performSearch will be triggered by the debounced watchers
   }, [])
+
+  const handleConvertToWineLot = useCallback(
+    async (log: ActivityLog) => {
+      if (conversionMap[log.id]) {
+        setMode('winery')
+        router.push(`/winery/lots/${conversionMap[log.id].wineLotId}`)
+        return
+      }
+
+      if (!currentFarm) {
+        toast.error('Farm details required to convert this harvest.')
+        return
+      }
+
+      try {
+        setConvertingId(log.id)
+        const harvestDate = log.date || new Date().toISOString().slice(0, 10)
+        const weightKg = Number(log.quantity || 0) || null
+        const harvestLot = await SupabaseService.createHarvestLot({
+          harvestDate,
+          weight: weightKg,
+          variety: currentFarm.cropVariety || currentFarm.crop || 'Grapes',
+          vineyardBlockId: null
+        })
+
+        const wineLot = await SupabaseService.createWineLot({
+          harvestLotId: harvestLot.id,
+          status: 'fermenting',
+          volume: weightKg ? weightKg * 0.75 : null,
+          currentContainerId: null,
+          currentContainerType: null
+        })
+
+        const nextMap = {
+          ...conversionMap,
+          [log.id]: { harvestLotId: harvestLot.id, wineLotId: wineLot.id }
+        }
+        setConversionMap(nextMap)
+        saveConversionMap(nextMap)
+
+        setMode('winery')
+        toast.success('Converted harvest log to wine lot and switched to Winery Mode')
+        router.push(`/winery/lots/${wineLot.id}`)
+      } catch (error) {
+        console.error('Error converting harvest to wine lot', error)
+        toast.error('Could not convert harvest. Please try again.')
+      } finally {
+        setConvertingId(null)
+      }
+    },
+    [conversionMap, currentFarm, router, setMode]
+  )
 
   /* ---------- saveLogEntry, handleSubmitLogs, edit/delete handlers kept same as your file ---------- */
   // (I kept these unchanged to avoid touching your domain logic)
@@ -968,6 +1088,9 @@ export default function FarmLogsPage() {
                 onEdit={handleEditRecord}
                 onDelete={handleDeleteRecord}
                 currentFarm={currentFarm}
+                onConvertHarvest={handleConvertToWineLot}
+                conversionMap={conversionMap}
+                convertingId={convertingId}
               />
             ) : (
               <div className="text-center py-6 text-gray-500">
