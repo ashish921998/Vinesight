@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -25,53 +24,55 @@ type Section = {
   items: string[]
 }
 
+const LAST_UPDATED = 'December 19, 2025'
+
+const COLLECTION: Section[] = [
+  {
+    title: 'Account & identity',
+    items: [
+      'Name, email, phone number, and auth identifiers',
+      'Language, notification, and consent preferences'
+    ]
+  },
+  {
+    title: 'Farm & operational data',
+    items: [
+      'Irrigation, spray, scouting, yield, and labour records',
+      'Soil, weather, satellite, or sensor data tied to your farms',
+      'Photos/files you upload for analysis or record keeping'
+    ]
+  },
+  {
+    title: 'Product analytics',
+    items: [
+      'Device + app metadata for performance and reliability',
+      'Feature usage to improve workflows (no ads, no selling)',
+      'Crash + diagnostics to keep sync reliable offline/online'
+    ]
+  }
+]
+
+const CONTROLS: Section[] = [
+  {
+    title: 'You control',
+    items: [
+      'Access, export, or delete your data by emailing support',
+      'In-app account deletion in Settings → Account',
+      'Consent and notification preferences anytime'
+    ]
+  },
+  {
+    title: 'We commit',
+    items: [
+      'Encryption in transit and at rest',
+      'Least-privilege access for support staff',
+      'No selling of personal data; no third-party ads'
+    ]
+  }
+]
+
 export default function PrivacyPolicyPage() {
-  const lastUpdated = useMemo(() => 'May 20, 2026', [])
-
-  const collection: Section[] = [
-    {
-      title: 'Account & identity',
-      items: [
-        'Name, email, phone number, and auth identifiers',
-        'Language, notification, and consent preferences'
-      ]
-    },
-    {
-      title: 'Farm & operational data',
-      items: [
-        'Irrigation, spray, scouting, yield, and labour records',
-        'Soil, weather, satellite, or sensor data tied to your farms',
-        'Photos/files you upload for analysis or record keeping'
-      ]
-    },
-    {
-      title: 'Product analytics',
-      items: [
-        'Device + app metadata for performance and reliability',
-        'Feature usage to improve workflows (no ads, no selling)',
-        'Crash + diagnostics to keep sync reliable offline/online'
-      ]
-    }
-  ]
-
-  const controls: Section[] = [
-    {
-      title: 'You control',
-      items: [
-        'Access, export, or delete your data by emailing support',
-        'In-app account deletion in Settings → Account',
-        'Consent and notification preferences anytime'
-      ]
-    },
-    {
-      title: 'We commit',
-      items: [
-        'Encryption in transit and at rest',
-        'Least-privilege access for support staff',
-        'No selling of personal data; no third-party ads'
-      ]
-    }
-  ]
+  const lastUpdated = LAST_UPDATED
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -168,7 +169,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {collection.map((section) => (
+          {COLLECTION.map((section) => (
             <Card key={section.title} className="border border-border bg-card h-full">
               <CardHeader>
                 <CardTitle className="text-base font-semibold">{section.title}</CardTitle>
@@ -228,7 +229,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {controls.map((section) => (
+          {CONTROLS.map((section) => (
             <Card key={section.title} className="border border-border bg-card h-full">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">

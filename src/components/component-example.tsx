@@ -410,7 +410,7 @@ function FormExample() {
           </CardAction>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={(event) => event.preventDefault()}>
             <FieldGroup>
               <div className="grid grid-cols-2 gap-4">
                 <Field>
@@ -445,11 +445,11 @@ function FormExample() {
                   <ComboboxContent>
                     <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
                     <ComboboxList>
-                      {(item) => (
+                      {frameworks.map((item) => (
                         <ComboboxItem key={item} value={item}>
                           {item}
                         </ComboboxItem>
-                      )}
+                      ))}
                     </ComboboxList>
                   </ComboboxContent>
                 </Combobox>

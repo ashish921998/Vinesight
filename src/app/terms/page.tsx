@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -26,8 +25,10 @@ type Section = {
   icon?: React.ElementType
 }
 
+const LAST_UPDATED = 'December 19, 2025'
+
 export default function TermsOfServicePage() {
-  const lastUpdated = useMemo(() => 'May 20, 2026', [])
+  const lastUpdated = LAST_UPDATED
 
   const commitments: Section[] = [
     {

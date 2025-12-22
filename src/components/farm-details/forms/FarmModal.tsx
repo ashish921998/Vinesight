@@ -120,6 +120,15 @@ export function FarmModal({
 
   const [soilCompositionWarning, setSoilCompositionWarning] = useState<string | null>(null)
   const [cropVarietyQuery, setCropVarietyQuery] = useState('')
+  const cropOptions = useMemo(() => getAllCrops(), [])
+  const varietyBaseOptions = useMemo(() => getVarietiesForCrop(formData.crop), [formData.crop])
+  const varietyOptions = useMemo(() => {
+    const query = cropVarietyQuery.trim()
+    if (query && !varietyBaseOptions.includes(query)) {
+      return [...varietyBaseOptions, query]
+    }
+    return varietyBaseOptions
+  }, [varietyBaseOptions, cropVarietyQuery])
 
   // Update form data when editingFarm prop changes
   useEffect(() => {
@@ -354,7 +363,7 @@ export function FarmModal({
               <div>
                 <Label className="text-sm font-medium text-gray-700 mb-2 block">Crop *</Label>
                 <Combobox
-                  items={getAllCrops()}
+                  items={cropOptions}
                   value={formData.crop || null}
                   onValueChange={(nextValue) => {
                     const crop = nextValue ?? ''
@@ -378,11 +387,11 @@ export function FarmModal({
                   <ComboboxContent>
                     <ComboboxEmpty>No crops found.</ComboboxEmpty>
                     <ComboboxList>
-                      {(crop) => (
+                      {cropOptions.map((crop) => (
                         <ComboboxItem key={crop} value={crop}>
                           {crop}
                         </ComboboxItem>
-                      )}
+                      ))}
                     </ComboboxList>
                   </ComboboxContent>
                 </Combobox>
@@ -392,17 +401,11 @@ export function FarmModal({
                   Crop Variety *
                 </Label>
                 <Combobox
-                  items={[
-                    ...getVarietiesForCrop(formData.crop),
-                    ...(cropVarietyQuery.trim() &&
-                    !getVarietiesForCrop(formData.crop).includes(cropVarietyQuery.trim())
-                      ? [cropVarietyQuery.trim()]
-                      : [])
-                  ]}
+                  items={varietyOptions}
                   value={formData.cropVariety || null}
                   onInputValueChange={(inputValue) => setCropVarietyQuery(inputValue)}
                   onValueChange={(nextValue) => {
-                    const variety = (nextValue ?? '').toString()
+                    const variety = nextValue ?? ''
                     handleInputChange('cropVariety', variety)
                     setCropVarietyQuery(variety)
                   }}
@@ -415,18 +418,18 @@ export function FarmModal({
                   <ComboboxContent>
                     <ComboboxEmpty>No varieties found.</ComboboxEmpty>
                     <ComboboxList>
-                      {(variety) => {
+                      {varietyOptions.map((variety) => {
                         const showAddCustom =
                           cropVarietyQuery.trim().length > 0 &&
                           variety === cropVarietyQuery.trim() &&
-                          !getVarietiesForCrop(formData.crop).includes(cropVarietyQuery.trim())
+                          !varietyBaseOptions.includes(cropVarietyQuery.trim())
 
                         return (
                           <ComboboxItem key={variety} value={variety}>
                             {showAddCustom ? `Add as custom variety: “${variety}”` : variety}
                           </ComboboxItem>
                         )
-                      }}
+                      })}
                     </ComboboxList>
                   </ComboboxContent>
                 </Combobox>
