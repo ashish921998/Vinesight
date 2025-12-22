@@ -42,7 +42,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuPortal,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -200,46 +199,42 @@ function FormExample() {
                       <FolderOpenIcon />
                       Open Recent
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                      <DropdownMenuSubContent>
-                        <DropdownMenuGroup>
-                          <DropdownMenuLabel>Recent Projects</DropdownMenuLabel>
-                          <DropdownMenuItem>
-                            <FileCodeIcon />
-                            Project Alpha
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <FileCodeIcon />
-                            Project Beta
-                          </DropdownMenuItem>
-                          <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                              <MoreHorizontalIcon />
-                              More Projects
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                              <DropdownMenuSubContent>
-                                <DropdownMenuItem>
-                                  <FileCodeIcon />
-                                  Project Gamma
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <FileCodeIcon />
-                                  Project Delta
-                                </DropdownMenuItem>
-                              </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                          </DropdownMenuSub>
-                        </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup>
-                          <DropdownMenuItem>
-                            <FolderSearchIcon />
-                            Browse...
-                          </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                      </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuGroup>
+                        <DropdownMenuLabel>Recent Projects</DropdownMenuLabel>
+                        <DropdownMenuItem>
+                          <FileCodeIcon />
+                          Project Alpha
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <FileCodeIcon />
+                          Project Beta
+                        </DropdownMenuItem>
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                            <MoreHorizontalIcon />
+                            More Projects
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent>
+                            <DropdownMenuItem>
+                              <FileCodeIcon />
+                              Project Gamma
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <FileCodeIcon />
+                              Project Delta
+                            </DropdownMenuItem>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      </DropdownMenuGroup>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem>
+                          <FolderSearchIcon />
+                          Browse...
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </DropdownMenuSubContent>
                   </DropdownMenuSub>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
@@ -285,27 +280,25 @@ function FormExample() {
                       <PaletteIcon />
                       Theme
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                      <DropdownMenuSubContent>
-                        <DropdownMenuGroup>
-                          <DropdownMenuLabel>Appearance</DropdownMenuLabel>
-                          <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-                            <DropdownMenuRadioItem value="light">
-                              <SunIcon />
-                              Light
-                            </DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="dark">
-                              <MoonIcon />
-                              Dark
-                            </DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="system">
-                              <MonitorIcon />
-                              System
-                            </DropdownMenuRadioItem>
-                          </DropdownMenuRadioGroup>
-                        </DropdownMenuGroup>
-                      </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuGroup>
+                        <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+                        <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
+                          <DropdownMenuRadioItem value="light">
+                            <SunIcon />
+                            Light
+                          </DropdownMenuRadioItem>
+                          <DropdownMenuRadioItem value="dark">
+                            <MoonIcon />
+                            Dark
+                          </DropdownMenuRadioItem>
+                          <DropdownMenuRadioItem value="system">
+                            <MonitorIcon />
+                            System
+                          </DropdownMenuRadioItem>
+                        </DropdownMenuRadioGroup>
+                      </DropdownMenuGroup>
+                    </DropdownMenuSubContent>
                   </DropdownMenuSub>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
@@ -325,65 +318,61 @@ function FormExample() {
                       <SettingsIcon />
                       Settings
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                      <DropdownMenuSubContent>
-                        <DropdownMenuGroup>
-                          <DropdownMenuLabel>Preferences</DropdownMenuLabel>
-                          <DropdownMenuItem>
-                            <KeyboardIcon />
-                            Keyboard Shortcuts
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <LanguagesIcon />
-                            Language
-                          </DropdownMenuItem>
-                          <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                              <BellIcon />
-                              Notifications
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                              <DropdownMenuSubContent>
-                                <DropdownMenuGroup>
-                                  <DropdownMenuLabel>Notification Types</DropdownMenuLabel>
-                                  <DropdownMenuCheckboxItem
-                                    checked={notifications.push}
-                                    onCheckedChange={(checked) =>
-                                      setNotifications({
-                                        ...notifications,
-                                        push: checked === true
-                                      })
-                                    }
-                                  >
-                                    <BellIcon />
-                                    Push Notifications
-                                  </DropdownMenuCheckboxItem>
-                                  <DropdownMenuCheckboxItem
-                                    checked={notifications.email}
-                                    onCheckedChange={(checked) =>
-                                      setNotifications({
-                                        ...notifications,
-                                        email: checked === true
-                                      })
-                                    }
-                                  >
-                                    <MailIcon />
-                                    Email Notifications
-                                  </DropdownMenuCheckboxItem>
-                                </DropdownMenuGroup>
-                              </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                          </DropdownMenuSub>
-                        </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup>
-                          <DropdownMenuItem>
-                            <ShieldIcon />
-                            Privacy & Security
-                          </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                      </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuGroup>
+                        <DropdownMenuLabel>Preferences</DropdownMenuLabel>
+                        <DropdownMenuItem>
+                          <KeyboardIcon />
+                          Keyboard Shortcuts
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <LanguagesIcon />
+                          Language
+                        </DropdownMenuItem>
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                            <BellIcon />
+                            Notifications
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent>
+                            <DropdownMenuGroup>
+                              <DropdownMenuLabel>Notification Types</DropdownMenuLabel>
+                              <DropdownMenuCheckboxItem
+                                checked={notifications.push}
+                                onCheckedChange={(checked) =>
+                                  setNotifications({
+                                    ...notifications,
+                                    push: checked === true
+                                  })
+                                }
+                              >
+                                <BellIcon />
+                                Push Notifications
+                              </DropdownMenuCheckboxItem>
+                              <DropdownMenuCheckboxItem
+                                checked={notifications.email}
+                                onCheckedChange={(checked) =>
+                                  setNotifications({
+                                    ...notifications,
+                                    email: checked === true
+                                  })
+                                }
+                              >
+                                <MailIcon />
+                                Email Notifications
+                              </DropdownMenuCheckboxItem>
+                            </DropdownMenuGroup>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      </DropdownMenuGroup>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem>
+                          <ShieldIcon />
+                          Privacy & Security
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </DropdownMenuSubContent>
                   </DropdownMenuSub>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
@@ -418,9 +407,11 @@ function FormExample() {
                   <Input id="small-form-name" placeholder="Enter your name" required />
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="small-form-role">Role</FieldLabel>
+                  <FieldLabel id="small-form-role-label" htmlFor="small-form-role">
+                    Role
+                  </FieldLabel>
                   <Select defaultValue="">
-                    <SelectTrigger id="small-form-role">
+                    <SelectTrigger id="small-form-role" aria-labelledby="small-form-role-label">
                       <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
                     <SelectContent>

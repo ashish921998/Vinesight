@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
@@ -180,12 +179,9 @@
 
 @layer base {
   * {
-    border-color: theme('colors.border');
     @apply border-border outline-ring/50;
   }
   body {
-    background-color: theme('colors.background');
-    color: theme('colors.foreground');
     font-family: var(--font-sans);
     @apply bg-background text-foreground;
   }

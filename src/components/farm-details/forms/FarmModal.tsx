@@ -118,6 +118,7 @@ export function FarmModal({
     locationName: editingFarm?.locationName || ''
   }))
 
+  const [cropError, setCropError] = useState<string | null>(null)
   const [soilCompositionWarning, setSoilCompositionWarning] = useState<string | null>(null)
   const [cropVarietyQuery, setCropVarietyQuery] = useState('')
   const cropOptions = useMemo(() => getAllCrops(), [])
@@ -160,6 +161,8 @@ export function FarmModal({
         elevation: editingFarm.elevation?.toString() || '',
         locationName: editingFarm.locationName || ''
       })
+
+      setCropError(null)
     } else {
       // Reset form when not editing (adding new farm)
       setFormData({
@@ -189,6 +192,8 @@ export function FarmModal({
         elevation: '',
         locationName: ''
       })
+
+      setCropError(null)
     }
   }, [editingFarm])
 
@@ -225,6 +230,9 @@ export function FarmModal({
         ...prev,
         [field]: value
       }))
+      if (field === 'crop') {
+        setCropError(value.trim() ? null : 'Crop is required')
+      }
     }
   }
 
@@ -252,6 +260,12 @@ export function FarmModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!formData.crop.trim()) {
+      setCropError('Crop is required')
+      return
+    }
+    setCropError(null)
 
     const farmData = {
       name: formData.name,
@@ -383,6 +397,7 @@ export function FarmModal({
                     className="mt-1 h-11 w-full"
                     placeholder="Select a crop"
                     required
+                    aria-invalid={!!cropError}
                   />
                   <ComboboxContent>
                     <ComboboxEmpty>No crops found.</ComboboxEmpty>
@@ -395,6 +410,7 @@ export function FarmModal({
                     </ComboboxList>
                   </ComboboxContent>
                 </Combobox>
+                {cropError && <p className="text-sm text-destructive mt-1">{cropError}</p>}
               </div>
               <div>
                 <Label className="text-sm font-medium text-gray-700 mb-2 block">

@@ -72,8 +72,6 @@ const CONTROLS: Section[] = [
 ]
 
 export default function PrivacyPolicyPage() {
-  const lastUpdated = LAST_UPDATED
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SEOSchema
@@ -97,7 +95,7 @@ export default function PrivacyPolicyPage() {
             <span className="text-sm text-muted-foreground">Privacy Policy</span>
           </div>
           <span className="text-xs font-medium text-muted-foreground">
-            Last updated: {lastUpdated}
+            Last updated: {LAST_UPDATED}
           </span>
         </div>
       </header>

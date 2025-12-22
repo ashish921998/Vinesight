@@ -27,97 +27,95 @@ type Section = {
 
 const LAST_UPDATED = 'December 19, 2025'
 
+const COMMITMENTS: Section[] = [
+  {
+    title: 'When these terms apply',
+    items: [
+      'They govern all VineSight products and APIs.',
+      'Using the service means you agree to these terms and the Privacy Policy.'
+    ],
+    icon: FileText
+  },
+  {
+    title: 'Eligibility & accounts',
+    items: [
+      'You must be legally able to contract.',
+      'If you use VineSight for an organization, you confirm you have authority to bind it.'
+    ],
+    icon: Users
+  },
+  {
+    title: 'Fair use',
+    items: [
+      'No misuse, scraping, or interfering with infrastructure.',
+      'Follow applicable laws and agricultural regulations.'
+    ],
+    icon: Shield
+  }
+]
+
+const SERVICE: Section[] = [
+  {
+    title: 'What we provide',
+    items: [
+      'Farm records, dashboards, collaboration, and storage for files you upload.',
+      'Weather overlays, calculators, alerts, and reporting exports.',
+      'AI-assisted insights built on your data and context.'
+    ],
+    icon: Layers
+  },
+  {
+    title: 'AI & recommendations',
+    items: [
+      'Outputs depend on input quality; verify before field action.',
+      'You are responsible for regulatory compliance of any decisions.',
+      'We may use de-identified data to improve models and reliability.'
+    ],
+    icon: Globe
+  }
+]
+
+const PAYMENT: Section[] = [
+  {
+    title: 'Subscriptions & billing',
+    items: [
+      'Paid plans auto-renew unless cancelled before the next term.',
+      'Fees are non-refundable except where required by law.',
+      'Taxes may apply based on your billing location.'
+    ],
+    icon: CreditCard
+  },
+  {
+    title: 'Changes to the service',
+    items: [
+      'We may update features or discontinue components with notice where reasonable.',
+      'We may suspend accounts for non-payment, security risk, or abuse.'
+    ],
+    icon: AlertTriangle
+  }
+]
+
+const LIABILITY: Section[] = [
+  {
+    title: 'Liability',
+    items: [
+      'To the extent permitted by law, VineSight is provided “as is”.',
+      'We are not liable for indirect, incidental, or consequential losses.',
+      'Our total liability is limited to the amount you paid in the last 6 months.'
+    ],
+    icon: Scale
+  },
+  {
+    title: 'Termination',
+    items: [
+      'You may stop using VineSight at any time; delete your account in-app or by contacting us.',
+      'We may terminate or suspend access for breach of these terms or to protect the service.'
+    ],
+    icon: Shield
+  }
+]
+
 export default function TermsOfServicePage() {
-  const lastUpdated = LAST_UPDATED
-
-  const commitments: Section[] = [
-    {
-      title: 'When these terms apply',
-      items: [
-        'They govern all VineSight products and APIs.',
-        'Using the service means you agree to these terms and the Privacy Policy.'
-      ],
-      icon: FileText
-    },
-    {
-      title: 'Eligibility & accounts',
-      items: [
-        'You must be legally able to contract.',
-        'If you use VineSight for an organization, you confirm you have authority to bind it.'
-      ],
-      icon: Users
-    },
-    {
-      title: 'Fair use',
-      items: [
-        'No misuse, scraping, or interfering with infrastructure.',
-        'Follow applicable laws and agricultural regulations.'
-      ],
-      icon: Shield
-    }
-  ]
-
-  const service: Section[] = [
-    {
-      title: 'What we provide',
-      items: [
-        'Farm records, dashboards, collaboration, and storage for files you upload.',
-        'Weather overlays, calculators, alerts, and reporting exports.',
-        'AI-assisted insights built on your data and context.'
-      ],
-      icon: Layers
-    },
-    {
-      title: 'AI & recommendations',
-      items: [
-        'Outputs depend on input quality; verify before field action.',
-        'You are responsible for regulatory compliance of any decisions.',
-        'We may use de-identified data to improve models and reliability.'
-      ],
-      icon: Globe
-    }
-  ]
-
-  const payment: Section[] = [
-    {
-      title: 'Subscriptions & billing',
-      items: [
-        'Paid plans auto-renew unless cancelled before the next term.',
-        'Fees are non-refundable except where required by law.',
-        'Taxes may apply based on your billing location.'
-      ],
-      icon: CreditCard
-    },
-    {
-      title: 'Changes to the service',
-      items: [
-        'We may update features or discontinue components with notice where reasonable.',
-        'We may suspend accounts for non-payment, security risk, or abuse.'
-      ],
-      icon: AlertTriangle
-    }
-  ]
-
-  const liability: Section[] = [
-    {
-      title: 'Liability',
-      items: [
-        'To the extent permitted by law, VineSight is provided “as is”.',
-        'We are not liable for indirect, incidental, or consequential losses.',
-        'Our total liability is limited to the amount you paid in the last 6 months.'
-      ],
-      icon: Scale
-    },
-    {
-      title: 'Termination',
-      items: [
-        'You may stop using VineSight at any time; delete your account in-app or by contacting us.',
-        'We may terminate or suspend access for breach of these terms or to protect the service.'
-      ],
-      icon: Shield
-    }
-  ]
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SEOSchema
@@ -141,7 +139,7 @@ export default function TermsOfServicePage() {
             <span className="text-sm text-muted-foreground">Terms of Service</span>
           </div>
           <span className="text-xs font-medium text-muted-foreground">
-            Last updated: {lastUpdated}
+            Last updated: {LAST_UPDATED}
           </span>
         </div>
       </header>
@@ -160,7 +158,7 @@ export default function TermsOfServicePage() {
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {commitments.map((section) => {
+          {COMMITMENTS.map((section) => {
             const Icon = section.icon ?? FileText
             return (
               <Card key={section.title} className="border border-border bg-card h-full">
@@ -184,7 +182,7 @@ export default function TermsOfServicePage() {
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {service.map((section) => {
+          {SERVICE.map((section) => {
             const Icon = section.icon ?? Layers
             return (
               <Card key={section.title} className="border border-border bg-card h-full">
@@ -208,7 +206,7 @@ export default function TermsOfServicePage() {
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {payment.map((section) => {
+          {PAYMENT.map((section) => {
             const Icon = section.icon ?? CreditCard
             return (
               <Card key={section.title} className="border border-border bg-card h-full">
@@ -232,7 +230,7 @@ export default function TermsOfServicePage() {
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {liability.map((section) => {
+          {LIABILITY.map((section) => {
             const Icon = section.icon ?? Scale
             return (
               <Card key={section.title} className="border border-border bg-card h-full">
