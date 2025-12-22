@@ -2,8 +2,8 @@
   "name": "VineSight - AI-Powered Farm Management System | Smart Agriculture App",
   "short_name": "VineSight",
   "description": "Transform farming operations with AI-powered smart farm management system. Precision agriculture tools, crop monitoring, yield prediction, and farm automation for modern agriculture. Perfect for grape farming and precision farming.",
-  "theme_color": "#6F8F5E",
-  "background_color": "#FAFAF8",
+  "theme_color": "#059669",
+  "background_color": "#ffffff",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
@@ -39,14 +39,20 @@
   ],
   "icons": [
     {
-      "src": "/logo.png",
-      "sizes": "1024x1024",
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-192x192.png",
-      "sizes": "192x192",
+      "src": "/icon-256x256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-384x384.png",
+      "sizes": "384x384",
       "type": "image/png",
       "purpose": "any"
     },
@@ -54,6 +60,12 @@
       "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
