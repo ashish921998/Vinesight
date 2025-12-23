@@ -63,7 +63,6 @@ export function UserMenu() {
           type="button"
           aria-label={`User menu for ${displayName}`}
           aria-haspopup="menu"
-          aria-expanded={false}
           className="group flex w-full items-center gap-3 rounded-md p-2 text-left text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
         >
           <Avatar className="h-9 w-9">

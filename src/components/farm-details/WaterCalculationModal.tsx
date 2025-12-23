@@ -19,11 +19,9 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { Droplets, Calculator, Loader2, Edit3, Clock } from 'lucide-react'
+import { Droplets, Calculator, Edit3, Clock } from 'lucide-react'
 import { SupabaseService } from '@/lib/supabase-service'
-import { NotificationService } from '@/lib/notification-service'
 import type { Farm } from '@/types/types'
-import { capitalize } from '@/lib/utils'
 
 interface WaterCalculationModalProps {
   isOpen: boolean
@@ -228,7 +226,7 @@ export function WaterCalculationModal({
             </div>
           )}
           {lastUpdatedAt && (
-            <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-2">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
               <Clock className="h-3 w-3 flex-shrink-0" />
               <span>Last updated {lastUpdatedAt}</span>
             </div>

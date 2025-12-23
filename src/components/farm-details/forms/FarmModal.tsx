@@ -318,7 +318,7 @@ export function FarmModal({
           <DialogTitle className="text-lg font-semibold">
             {editingFarm ? 'Edit Farm' : 'Add New Farm'}
           </DialogTitle>
-          <DialogDescription className="text-sm text-gray-600">
+          <DialogDescription className="text-sm text-muted-foreground">
             {editingFarm ? 'Update your vineyard details' : 'Enter your vineyard details'}
           </DialogDescription>
         </DialogHeader>

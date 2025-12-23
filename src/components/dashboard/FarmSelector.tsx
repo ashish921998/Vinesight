@@ -102,8 +102,10 @@ export function FarmSelector({
               {/* Portfolio Option */}
               {showPortfolio && (
                 <button
-                  className={`w-full p-3 text-left rounded-lg transition-all hover:bg-muted touch-manipulation ${
-                    !selectedFarmId ? 'bg-accent/10 border border-accent/20 text-primary' : ''
+                  className={`w-full p-3 text-left rounded-lg border-2 transition-all hover:bg-muted touch-manipulation ${
+                    !selectedFarmId
+                      ? 'border-accent/20 bg-accent/10 text-primary'
+                      : 'border-transparent'
                   }`}
                   onClick={() => {
                     onPortfolioSelect?.()
@@ -126,10 +128,10 @@ export function FarmSelector({
               {farms.map((farm) => (
                 <button
                   key={farm.id}
-                  className={`w-full p-3 text-left rounded-lg transition-all hover:bg-muted touch-manipulation ${
+                  className={`w-full p-3 text-left rounded-lg border-2 transition-all hover:bg-muted touch-manipulation ${
                     selectedFarmId === farm.id
-                      ? 'bg-accent/10 border border-accent/20 text-primary'
-                      : ''
+                      ? 'border-accent/20 bg-accent/10 text-primary'
+                      : 'border-transparent'
                   }`}
                   onClick={() => {
                     onFarmSelect(farm.id)

@@ -1,18 +1,20 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import i18n from '@/lib/i18n'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function capitalize(str: string) {
+export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 export function formatRemainingWater(value: number | null | undefined): string {
   if (value === null || value === undefined) return 'No water data'
   const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
-  const formatter = new Intl.NumberFormat('en-IN', {
+  const locale = i18n.language || 'en'
+  const formatter = new Intl.NumberFormat(locale, {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits
   })
@@ -22,7 +24,8 @@ export function formatRemainingWater(value: number | null | undefined): string {
 export function formatWaterUsage(value: number | null | undefined): string {
   if (value === null || value === undefined) return 'No irrigation logged yet'
   const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
-  const formatter = new Intl.NumberFormat('en-IN', {
+  const locale = i18n.language || 'en'
+  const formatter = new Intl.NumberFormat(locale, {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits
   })

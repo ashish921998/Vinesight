@@ -169,7 +169,7 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
       case 'healthy':
         return 'bg-accent/10 border-accent/20 text-accent'
       case 'attention':
-        return 'bg-accent/10 border-accent/20 text-primary'
+        return 'bg-warning/10 border-warning/20 text-warning'
       case 'critical':
         return 'bg-destructive/10 border-destructive/20 text-destructive'
       default:
@@ -179,7 +179,7 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
 
   const getHealthScoreColor = (score: number) => {
     if (score >= 80) return 'text-accent'
-    if (score >= 60) return 'text-primary'
+    if (score >= 60) return 'text-foreground'
     return 'text-destructive'
   }
 

@@ -154,7 +154,7 @@ function ModulePreview({ type }: { type: 'field' | 'lab' | 'planning' }) {
             </tr>
             <tr>
               <td className="px-3 py-2">Potassium</td>
-              <td className="px-3 py-2 text-right text-primary">↘</td>
+              <td className="px-3 py-2 text-right text-accent">↘</td>
             </tr>
             <tr>
               <td className="px-3 py-2">Magnesium</td>
@@ -175,8 +175,8 @@ function ModulePreview({ type }: { type: 'field' | 'lab' | 'planning' }) {
       <div className="flex-1 bg-card border border-border rounded-xl p-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)] min-w-[120px]">
         <div className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Today</div>
         <div className="bg-accent/10 border border-accent/20 p-2 rounded-lg mb-2">
-          <div className="text-[10px] font-bold text-primary">Sector N</div>
-          <div className="text-[9px] text-primary/80 mt-0.5">Irrigation</div>
+          <div className="text-[10px] font-bold text-accent">Sector N</div>
+          <div className="text-[9px] text-accent/80 mt-0.5">Irrigation</div>
         </div>
         <div className="bg-muted border border-border p-2 rounded-lg">
           <div className="text-[10px] font-bold text-muted-foreground">Crew A</div>
@@ -280,7 +280,7 @@ export default function LandingPage() {
                   key={category.title}
                   className="bg-card p-8 rounded-xl border border-border shadow-[0_2px_8px_-2px_rgba(47,58,68,0.08)]"
                 >
-                  <div className="size-12 bg-accent/5 rounded-lg flex items-center justify-center mb-6 text-primary">
+                  <div className="size-12 bg-accent/5 rounded-lg flex items-center justify-center mb-6 text-accent">
                     <Icon className="h-6 w-6" />
                   </div>
                   <h4 className="text-lg font-bold mb-4">{category.title}</h4>
@@ -386,7 +386,7 @@ export default function LandingPage() {
                     className="bg-card p-6 rounded-xl border border-border h-full shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
                   >
                     <div className="flex items-center gap-3 mb-3">
-                      <Icon className="h-6 w-6 text-primary" />
+                      <Icon className="h-6 w-6 text-accent" />
                       <h4 className="font-bold text-base">{persona.title}</h4>
                     </div>
                     <p className="text-sm text-muted-foreground leading-relaxed">
