@@ -149,6 +149,14 @@ export default {
           DEFAULT: 'var(--color-destructive)',
           foreground: 'var(--color-destructive-foreground)'
         },
+        success: {
+          DEFAULT: 'var(--color-success)',
+          foreground: 'var(--color-success-foreground)'
+        },
+        warning: {
+          DEFAULT: 'var(--color-warning)',
+          foreground: 'var(--color-warning-foreground)'
+        },
         muted: {
           DEFAULT: 'var(--color-muted)',
           foreground: 'var(--color-muted-foreground)'

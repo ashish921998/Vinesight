@@ -245,13 +245,13 @@ export default function LandingPage() {
             All your vineyard records, schedules, and lab reports{' '}
             <span className="text-accent">in one place.</span>
           </h2>
-          <p className="text-muted-foreground text-[18px] md:text-[20px] leading-[1.6] font-normal mb-10 max-w-[640px]">
+          <p className="text-muted-foreground text-lg md:text-[20px] leading-[1.6] font-normal mb-10 max-w-[640px]">
             Track sprays, irrigation, labour, and lab results — block by block. Designed for daily
             vineyard operations, not spreadsheets.
           </p>
           <div className="flex flex-col sm:flex-row w-full gap-3 max-w-[400px]">
             <button
-              className="bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-accent-foreground text-[17px] font-semibold px-6 py-3.5 rounded-xl shadow-md w-full text-center flex items-center justify-center gap-2"
+              className="bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-accent-foreground text-base font-semibold px-6 py-3.5 rounded-xl shadow-md w-full text-center flex items-center justify-center gap-2"
               onClick={() =>
                 document.getElementById('daily-work')?.scrollIntoView({ behavior: 'smooth' })
               }
@@ -360,7 +360,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h4 className="text-lg font-bold mb-2">{module.title}</h4>
-                  <p className="text-muted-foreground text-[15px] leading-relaxed">
+                  <p className="text-muted-foreground text-base leading-relaxed">
                     {module.description}
                   </p>
                 </div>
@@ -414,7 +414,7 @@ export default function LandingPage() {
           <h3 className="text-[28px] font-bold tracking-tight mb-4">
             Start organizing your vineyard today
           </h3>
-          <p className="text-muted-foreground text-[17px] mb-8 leading-relaxed">
+          <p className="text-muted-foreground text-base mb-8 leading-relaxed">
             Setup takes less than 15 minutes. No credit card required.
           </p>
           <button

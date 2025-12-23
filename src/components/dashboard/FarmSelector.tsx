@@ -41,7 +41,7 @@ export function FarmSelector({
       case 'healthy':
         return 'text-accent bg-accent/10'
       case 'attention':
-        return 'text-primary bg-primary/10'
+        return 'text-secondary bg-secondary/10'
       case 'critical':
         return 'text-destructive bg-destructive/10'
       default:
@@ -51,7 +51,7 @@ export function FarmSelector({
 
   const getHealthScoreColor = (score: number) => {
     if (score >= 80) return 'text-accent'
-    if (score >= 60) return 'text-primary'
+    if (score >= 60) return 'text-secondary'
     return 'text-destructive'
   }
 
@@ -103,7 +103,7 @@ export function FarmSelector({
               {showPortfolio && (
                 <button
                   className={`w-full p-3 text-left rounded-lg transition-all hover:bg-muted touch-manipulation ${
-                    !selectedFarmId ? 'bg-accent/10 border border-accent/20' : ''
+                    !selectedFarmId ? 'bg-accent/10 border border-accent/20 text-primary' : ''
                   }`}
                   onClick={() => {
                     onPortfolioSelect?.()
@@ -127,7 +127,9 @@ export function FarmSelector({
                 <button
                   key={farm.id}
                   className={`w-full p-3 text-left rounded-lg transition-all hover:bg-muted touch-manipulation ${
-                    selectedFarmId === farm.id ? 'bg-accent/10 border border-accent/20' : ''
+                    selectedFarmId === farm.id
+                      ? 'bg-accent/10 border border-accent/20 text-primary'
+                      : ''
                   }`}
                   onClick={() => {
                     onFarmSelect(farm.id)
@@ -204,7 +206,7 @@ export function FarmTabs({
       case 'healthy':
         return 'border-accent/30 bg-accent/10 text-accent'
       case 'attention':
-        return 'border-accent/20 bg-accent/10 text-primary'
+        return 'border-secondary/20 bg-secondary/10 text-secondary'
       case 'critical':
         return 'border-destructive/30 bg-destructive/10 text-destructive'
       default:
@@ -219,7 +221,7 @@ export function FarmTabs({
           key={farm.id}
           className={`flex-shrink-0 p-2 rounded-lg border-2 transition-all touch-manipulation ${
             selectedFarmId === farm.id
-              ? 'border-accent bg-accent/10 text-primary'
+              ? 'border-accent/20 bg-accent/10 text-primary'
               : `${getStatusColor(farm.status)} hover:shadow-md`
           }`}
           onClick={() => onFarmSelect(farm.id)}

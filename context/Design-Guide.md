@@ -100,7 +100,7 @@ The spacing system is **tokenized and closed**. Use only the tokens below.
 **Rules**
 
 - Use these tokens for margin, padding, gap, etc.
-- ❌ No intermediate values like `10px`, `14px`, `18px`, `20px`, `22px` unless they are explicitly added to this table.
+- ❌ No intermediate values like `10px`, `14px`, `18px`, `22px` unless they are explicitly added to this table.
 - If you need a new token, propose it in design review and then add it here.
 
 **Tailwind Mapping**

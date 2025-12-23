@@ -219,7 +219,7 @@ export function WaterCalculationModal({
             </div>
             <span className="text-wrap">Calculate Water</span>
           </DialogTitle>
-          <DialogDescription className="text-sm text-gray-600 break-words">
+          <DialogDescription className="text-sm text-muted-foreground break-words">
             Enter current values to calculate daily water reduction or manually set water level
           </DialogDescription>
           {(!farm.remainingWater || farm.remainingWater === 0) && (
@@ -228,7 +228,7 @@ export function WaterCalculationModal({
             </div>
           )}
           {lastUpdatedAt && (
-            <div className="flex items-center gap-1 text-[11px] text-gray-500 mt-2">
+            <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-2">
               <Clock className="h-3 w-3 flex-shrink-0" />
               <span>Last updated {lastUpdatedAt}</span>
             </div>
@@ -238,20 +238,20 @@ export function WaterCalculationModal({
         <div className="space-y-4">
           {/* Current Water Level Display */}
           {farm.remainingWater && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="p-3 bg-accent/10 border border-accent/20 rounded-lg">
               <div className="text-center">
-                <div className="text-sm font-medium text-blue-700 mb-1">Current Water Level</div>
-                <div className="text-2xl font-bold text-blue-800">
+                <div className="text-sm font-medium text-accent mb-1">Current Water Level</div>
+                <div className="text-2xl font-bold text-accent">
                   {farm.remainingWater.toFixed(1)} mm
                 </div>
-                <div className="text-xs text-blue-600">Available water in soil</div>
+                <div className="text-xs text-accent/80">Available water in soil</div>
               </div>
             </div>
           )}
 
           {/* Mode Selection - Always show */}
-          <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <Label className="text-sm font-medium text-gray-700 mb-2 block break-words">
+          <div className="p-3 bg-muted border border-border rounded-lg">
+            <Label className="text-sm font-medium text-foreground mb-2 block break-words">
               Water Level Entry Method
             </Label>
             <div className="flex items-center justify-center gap-2">
@@ -285,7 +285,7 @@ export function WaterCalculationModal({
           {/* Manual Water Level Entry - Always show when manual mode is selected */}
           {useManualMode && (
             <div>
-              <Label htmlFor="manualWaterLevel" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="manualWaterLevel" className="text-sm font-medium text-foreground">
                 Water Level (mm) *
               </Label>
               <Input
@@ -301,8 +301,8 @@ export function WaterCalculationModal({
                 inputMode="decimal"
                 autoComplete="off"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Enter the current water level in your soil
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter current water level in your soil
               </p>
             </div>
           )}
@@ -312,7 +312,7 @@ export function WaterCalculationModal({
             <>
               {/* Crop Coefficient */}
               <div>
-                <Label htmlFor="cropCoefficient" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="cropCoefficient" className="text-sm font-medium text-foreground">
                   Crop Coefficient (Kc) *
                 </Label>
                 <Select
@@ -329,7 +329,7 @@ export function WaterCalculationModal({
                       <SelectItem key={stage.id} value={stage.id}>
                         <div className="flex flex-col items-start">
                           <span>{stage.value}</span>
-                          <span className="text-xs text-gray-500">{stage.label}</span>
+                          <span className="text-xs text-muted-foreground">{stage.label}</span>
                         </div>
                       </SelectItem>
                     ))}
@@ -339,7 +339,7 @@ export function WaterCalculationModal({
 
               {/* Evapotranspiration */}
               <div>
-                <Label htmlFor="evapotranspiration" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="evapotranspiration" className="text-sm font-medium text-foreground">
                   Evapotranspiration (mm/day) *
                 </Label>
                 <Input
@@ -357,14 +357,14 @@ export function WaterCalculationModal({
                   autoComplete="off"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Daily water loss rate from your crop and soil
                 </p>
               </div>
 
               {/* Rainfall */}
               <div>
-                <Label htmlFor="rainfall" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="rainfall" className="text-sm font-medium text-foreground">
                   Rainfall (mm)
                 </Label>
                 <Input
@@ -381,7 +381,7 @@ export function WaterCalculationModal({
                   inputMode="decimal"
                   autoComplete="off"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Rain received in the last 24 hours (leave 0 if no rain)
                 </p>
               </div>

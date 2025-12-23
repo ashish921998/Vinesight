@@ -118,9 +118,12 @@ export default function Navigation() {
                 <ul role="list" className="-mx-2 space-y-1">
                   {navigation.map((item) => {
                     const Icon = item.icon
+                    const normalizedPathname = pathname === '/' ? '/' : pathname.replace(/\/$/, '')
+                    const normalizedHref = item.href === '/' ? '/' : item.href.replace(/\/$/, '')
                     const isActive =
-                      pathname === item.href ||
-                      (item.href !== '/' && pathname.startsWith(item.href))
+                      normalizedPathname === normalizedHref ||
+                      (normalizedHref !== '/' &&
+                        normalizedPathname.startsWith(normalizedHref + '/'))
                     return (
                       <li key={item.name}>
                         <Link

@@ -163,6 +163,7 @@ export function FarmModal({
       })
 
       setCropError(null)
+      setCropVarietyQuery('')
     } else {
       // Reset form when not editing (adding new farm)
       setFormData({
@@ -194,6 +195,7 @@ export function FarmModal({
       })
 
       setCropError(null)
+      setCropVarietyQuery('')
     }
   }, [editingFarm])
 

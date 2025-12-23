@@ -215,11 +215,11 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       case 'healthy':
         return 'bg-accent/10 border-accent/20 text-accent'
       case 'attention':
-        return 'bg-accent/10 border-accent/20 text-primary'
+        return 'bg-warning/10 border-warning/20 text-warning'
       case 'critical':
         return 'bg-destructive/10 border-destructive/20 text-destructive'
       default:
-        return 'bg-accent/10 border-accent/20 text-primary'
+        return 'bg-muted/10 border-muted/20 text-muted-foreground'
     }
   }
 
@@ -992,9 +992,9 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                                 className={cn(
                                   'h-2 w-2 rounded-full',
                                   status === 'healthy'
-                                    ? 'bg-accent'
+                                    ? 'bg-success'
                                     : status === 'attention'
-                                      ? 'bg-accent'
+                                      ? 'bg-warning'
                                       : 'bg-destructive'
                                 )}
                               />

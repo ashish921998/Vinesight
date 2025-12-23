@@ -10,7 +10,7 @@ export function capitalize(str: string) {
 }
 
 export function formatRemainingWater(value: number | null | undefined): string {
-  if (value === null || value === undefined || value === 0) return 'No water data'
+  if (value === null || value === undefined) return 'No water data'
   const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
   const formatter = new Intl.NumberFormat('en-IN', {
     minimumFractionDigits: digits,
@@ -20,7 +20,7 @@ export function formatRemainingWater(value: number | null | undefined): string {
 }
 
 export function formatWaterUsage(value: number | null | undefined): string {
-  if (value === null || value === undefined || value === 0) return 'No irrigation logged yet'
+  if (value === null || value === undefined) return 'No irrigation logged yet'
   const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
   const formatter = new Intl.NumberFormat('en-IN', {
     minimumFractionDigits: digits,

@@ -19,16 +19,26 @@ export function UserMenu() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
-  const displayName = user?.user_metadata?.full_name || user?.email || 'User'
-  const displayEmail = user?.email || ''
   const initialsSource = user?.user_metadata?.full_name || user?.email || 'User'
-  const initials = initialsSource
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part: string) => part[0]?.toUpperCase())
-    .join('')
-    .slice(0, 2)
+  const displayName = initialsSource
+  const displayEmail = user?.email || ''
+
+  let initials = 'US'
+  if (initialsSource.includes(' ')) {
+    initials = initialsSource
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part: string) => part[0]?.toUpperCase())
+      .join('')
+  } else {
+    const sourceForInitials = initialsSource.includes('@')
+      ? initialsSource.split('@')[0]
+      : initialsSource
+    const alphanumericChars = sourceForInitials.replace(/[^a-zA-Z0-9]/g, '')
+    initials = alphanumericChars.slice(0, 2).toUpperCase()
+    if (!initials) initials = 'US'
+  }
 
   const handleSignOut = async () => {
     try {
@@ -51,6 +61,9 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
+          aria-label={`User menu for ${displayName}`}
+          aria-haspopup="menu"
+          aria-expanded={false}
           className="group flex w-full items-center gap-3 rounded-md p-2 text-left text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
         >
           <Avatar className="h-9 w-9">
@@ -78,7 +91,7 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => (window.location.href = '/settings')}>
+        <DropdownMenuItem onClick={() => router.push('/settings')}>
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>
