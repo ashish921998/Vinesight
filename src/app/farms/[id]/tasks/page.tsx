@@ -297,7 +297,7 @@ export default function FarmTasksPage() {
       <main className="mx-auto max-w-6xl px-3 py-3 sm:py-6 sm:px-6 lg:px-8">
         <div className="space-y-3 sm:space-y-4">
           <div className="grid grid-cols-4 gap-2 sm:gap-3">
-            <Card className="border-primary/40 bg-primary/5">
+            <Card className="border-accent/40 bg-accent/5">
               <CardHeader className="p-3 space-y-0.5 sm:p-4">
                 <CardTitle className="text-[10px] font-medium text-primary sm:text-xs leading-tight">
                   Active
@@ -433,7 +433,7 @@ export default function FarmTasksPage() {
                   return (
                     <div
                       key={task.id}
-                      className="flex flex-col gap-2 rounded-lg border border-border/70 bg-white p-3 shadow-sm transition hover:border-primary/30 sm:gap-3 sm:rounded-xl sm:p-4 md:flex-row md:items-center md:justify-between"
+                      className="flex flex-col gap-2 rounded-lg border border-border/70 bg-white p-3 shadow-sm transition hover:border-accent/30 sm:gap-3 sm:rounded-xl sm:p-4 md:flex-row md:items-center md:justify-between"
                     >
                       <div className="flex flex-1 flex-col gap-1.5 sm:gap-2">
                         <div className="flex flex-wrap items-center gap-1.5">
@@ -452,7 +452,7 @@ export default function FarmTasksPage() {
                           {task.priority !== 'medium' && (
                             <Badge
                               variant="outline"
-                              className="border-primary/30 bg-primary/10 px-1.5 py-0 text-[10px] capitalize text-primary sm:px-2 sm:text-xs"
+                              className="border-accent/30 bg-accent/10 px-1.5 py-0 text-[10px] capitalize text-primary sm:px-2 sm:text-xs"
                             >
                               {task.priority}
                             </Badge>

@@ -35,7 +35,7 @@ interface AlertsSectionProps {
 export function AlertsSection({ alerts, onAlertAction, loading, className }: AlertsSectionProps) {
   const getAlertIcon = (category: string, type: string) => {
     const iconClass =
-      type === 'critical' ? 'text-red-600' : type === 'warning' ? 'text-amber-600' : 'text-primary'
+      type === 'critical' ? 'text-destructive' : type === 'warning' ? 'text-accent' : 'text-primary'
 
     switch (category) {
       case 'weather':
@@ -56,11 +56,11 @@ export function AlertsSection({ alerts, onAlertAction, loading, className }: Ale
   const getActionToneClasses = (type: string) => {
     switch (type) {
       case 'critical':
-        return 'border-red-200/80 bg-red-50/80 text-red-800'
+        return 'border-destructive/30 bg-destructive/10 text-destructive'
       case 'warning':
-        return 'border-amber-200/80 bg-amber-50/80 text-amber-800'
+        return 'border-accent/30 bg-accent/10 text-accent'
       default:
-        return 'border-primary/20 bg-primary/10 text-primary'
+        return 'border-accent/20 bg-accent/10 text-primary'
     }
   }
 
@@ -103,7 +103,7 @@ export function AlertsSection({ alerts, onAlertAction, loading, className }: Ale
     <div className={containerClass}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent/10 text-primary">
             <AlertTriangle className="h-5 w-5" />
           </span>
           <div>
@@ -138,7 +138,7 @@ export function AlertsSection({ alerts, onAlertAction, loading, className }: Ale
         {criticalAlerts.length > 0 && (
           <Badge
             variant="outline"
-            className="rounded-full border-red-300 bg-red-50 px-2.5 py-1 text-[11px] uppercase tracking-wide text-red-700"
+            className="rounded-full border-destructive/30 bg-destructive/10 px-2.5 py-1 text-[11px] uppercase tracking-wide text-destructive"
           >
             {criticalAlerts.length} critical
           </Badge>
@@ -146,7 +146,7 @@ export function AlertsSection({ alerts, onAlertAction, loading, className }: Ale
         {warningAlerts.length > 0 && (
           <Badge
             variant="outline"
-            className="rounded-full border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] uppercase tracking-wide text-amber-700"
+            className="rounded-full border-accent/30 bg-accent/10 px-2.5 py-1 text-[11px] uppercase tracking-wide text-accent"
           >
             {warningAlerts.length} warning
           </Badge>
@@ -156,7 +156,7 @@ export function AlertsSection({ alerts, onAlertAction, loading, className }: Ale
       {sortedAlerts.length === 0 ? (
         <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-dashed border-border/60 bg-background/70 px-4 py-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+            <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-accent/10 text-accent">
               <CheckCircle className="h-4 w-4" />
             </span>
             <div>
@@ -180,7 +180,7 @@ export function AlertsSection({ alerts, onAlertAction, loading, className }: Ale
                 )}
               >
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-white/50 bg-white/70">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-border/50 bg-card/70">
                     {getAlertIcon(alert.category, alert.type)}
                   </div>
                   <div className="flex-1 space-y-2">
@@ -188,7 +188,7 @@ export function AlertsSection({ alerts, onAlertAction, loading, className }: Ale
                       <h4 className="text-sm font-semibold text-foreground">{alert.title}</h4>
                       <Badge
                         variant="outline"
-                        className="rounded-full border-white/60 bg-white/60 px-2 py-0.5 text-[10px] uppercase tracking-wide text-foreground/80"
+                        className="rounded-full border-border/60 bg-card/60 px-2 py-0.5 text-[10px] uppercase tracking-wide text-foreground/80"
                       >
                         {alert.type}
                       </Badge>
@@ -204,7 +204,7 @@ export function AlertsSection({ alerts, onAlertAction, loading, className }: Ale
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-9 rounded-full border-foreground/20 bg-white/60 px-4 text-xs font-medium text-foreground"
+                        className="h-9 rounded-full border-foreground/20 bg-card/60 px-4 text-xs font-medium text-foreground"
                         onClick={() => onAlertAction?.(alert.id)}
                       >
                         {alert.actionText}

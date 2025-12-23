@@ -17,6 +17,7 @@
 
 /* Global Theme Variables - VineSight palette */
 :root {
+  /* Match PWA manifest background_color for splash screens */
   --background: #fafaf8;
   --foreground: #1c1c1c;
   --card: #ffffff;
@@ -95,8 +96,8 @@
   --sidebar-foreground: #e6e7e8;
   --sidebar-primary: #6f8f5e;
   --sidebar-primary-foreground: #0f1317;
-  --sidebar-accent: #2f3a44;
-  --sidebar-accent-foreground: #e6e7e8;
+  --sidebar-accent: #6f8f5e;
+  --sidebar-accent-foreground: #0f1317;
   --sidebar-border: #2a333d;
   --sidebar-ring: #6f8f5e;
   --font-sans: Montserrat, sans-serif;
@@ -153,10 +154,10 @@
   --font-mono: var(--font-mono);
   --font-serif: var(--font-serif);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: var(--radius-card);
 
   --shadow-2xs: var(--shadow-2xs);
   --shadow-xs: var(--shadow-xs);
@@ -166,9 +167,9 @@
   --shadow-lg: var(--shadow-lg);
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --radius-2xl: var(--radius-card);
+  --radius-3xl: var(--radius-card);
+  --radius-4xl: var(--radius-card);
 }
 
 @theme inline {
@@ -250,7 +251,7 @@
   @media (max-width: 360px) {
     /* Smaller padding for very narrow screens */
     .mobile-container {
-      padding: 12px;
+      padding: 8px;
     }
 
     /* Compact top bar */
@@ -268,24 +269,24 @@
       font-size: 1.25rem;
     }
     h3 {
-      font-size: 1.125rem;
+      font-size: 1rem;
     }
 
     /* Compact buttons */
     button {
-      min-height: 44px;
-      padding: 10px 16px;
-      font-size: 14px;
+      min-height: 48px;
+      padding: 12px 16px;
+      font-size: 16px;
     }
 
     /* More compact grid for cards */
     .mobile-grid {
-      gap: 12px;
+      gap: 8px;
     }
 
     /* Tighter card padding */
     .card-mobile {
-      padding: 12px;
+      padding: 8px;
       margin-bottom: 16px;
     }
   }
@@ -298,22 +299,22 @@
     input[type='tel'],
     select,
     textarea {
-      padding: 14px 18px;
-      border-radius: 10px;
+      padding: 12px 16px;
+      border-radius: 8px;
       font-size: 16px;
       line-height: 1.5;
     }
 
     /* Better spacing for mobile cards */
     .card-mobile {
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       padding: 16px;
     }
 
     /* Improved mobile navigation */
     .mobile-nav-item {
-      padding: 18px 24px;
-      min-height: 60px;
+      padding: 16px 24px;
+      min-height: 56px;
       display: flex;
       align-items: center;
     }
@@ -321,8 +322,8 @@
     /* Mobile-specific button improvements */
     button {
       min-height: 48px;
-      padding: 12px 20px;
-      border-radius: 10px;
+      padding: 12px 16px;
+      border-radius: 8px;
     }
 
     /* Better mobile grid layouts */
@@ -333,13 +334,13 @@
 
     /* Mobile-optimized text sizes */
     h1 {
-      font-size: 1.875rem;
-    }
-    h2 {
       font-size: 1.5rem;
     }
-    h3 {
+    h2 {
       font-size: 1.25rem;
+    }
+    h3 {
+      font-size: 1rem;
     }
 
     /* Improved mobile padding */
@@ -350,7 +351,7 @@
     /* Better mobile card layouts */
     .mobile-card {
       border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--shadow-md);
     }
   }
 
@@ -370,6 +371,6 @@
     height: 3rem;
   }
   .lg\:flex .text-xl {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
   }
 }

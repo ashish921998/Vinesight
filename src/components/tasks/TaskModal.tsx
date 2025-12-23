@@ -384,7 +384,7 @@ export function TaskModal({
                     className={cn(
                       'flex items-center justify-between rounded-lg border p-4 md:col-span-2',
                       {
-                        'border-primary/40 bg-primary/5': formState.assignment === 'me'
+                        'border-accent/40 bg-accent/5': formState.assignment === 'me'
                       }
                     )}
                   >

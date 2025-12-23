@@ -155,7 +155,6 @@ export default function FarmDetailsPage() {
   const [farmSubmitLoading, setFarmSubmitLoading] = useState(false)
 
   // AI Features state
-  const [aiPredictionsGenerated, setAiPredictionsGenerated] = useState(false)
   const isMobile = useIsMobile()
 
   const loadDashboardData = useCallback(async () => {
@@ -386,22 +385,6 @@ export default function FarmDetailsPage() {
     }
   }, [searchParams, farmId, router, dashboardData])
 
-  // Generate AI predictions when farm data is loaded
-  // useEffect(() => {
-  //   const generateAIPredictions = async () => {
-  //     if (dashboardData?.farm && user && !aiPredictionsGenerated) {
-  //       try {
-  //         await PestPredictionService.generatePredictions(parseInt(farmId), dashboardData.farm)
-  //         setAiPredictionsGenerated(true)
-  //       } catch (error) {
-  //         console.error('Error generating AI predictions:', error)
-  //       }
-  //     }
-  //   }
-
-  //   generateAIPredictions()
-  // }, [dashboardData, farmId, user, aiPredictionsGenerated])
-
   // Unified handler for all data logs
   const handleDataLogsSubmit = async (
     logs: any[],
@@ -422,8 +405,8 @@ export default function FarmDetailsPage() {
           const dateToUse = editMode === 'edit' ? logEntry.data?.date || date : date
           const record =
             editMode === 'edit'
-              ? await updateLogEntry(logEntry, dateToUse, dayNotes)
-              : await saveLogEntry(logEntry, dateToUse, dayNotes)
+              ? await updateLogEntry(logEntry, dateToUse)
+              : await saveLogEntry(logEntry, dateToUse)
 
           // Store first record ID for photo upload
           if (i === 0 && record?.id) {
@@ -461,7 +444,7 @@ export default function FarmDetailsPage() {
     }
   }
 
-  const saveLogEntry = async (logEntry: any, date: string, dayNotes: string) => {
+  const saveLogEntry = async (logEntry: any, date: string) => {
     const { type, data } = logEntry
     let record
 
@@ -855,7 +838,7 @@ export default function FarmDetailsPage() {
     return record
   }
 
-  const updateLogEntry = async (logEntry: any, date: string, dayNotes: string) => {
+  const updateLogEntry = async (logEntry: any, date: string) => {
     const { type, data, id } = logEntry
     let record
 
@@ -1648,7 +1631,7 @@ export default function FarmDetailsPage() {
                 <button
                   key={link.label}
                   type="button"
-                  className="group flex flex-col items-center gap-1 rounded-xl border border-border/40 bg-card px-1.5 py-2.5 shadow-sm transition active:scale-95 active:shadow-none hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                  className="group flex flex-col items-center gap-1 rounded-xl border border-border/40 bg-card px-1.5 py-2.5 shadow-sm transition active:scale-95 active:shadow-none hover:border-accent/50 hover:bg-accent/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                   onClick={() => router.push(link.href)}
                   aria-label={`Open ${link.label}`}
                 >
@@ -1783,9 +1766,7 @@ export default function FarmDetailsPage() {
                       <div className="flex items-start justify-between gap-2">
                         <span
                           className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
-                            isCallout
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-card text-primary'
+                            isCallout ? 'bg-accent text-accent-foreground' : 'bg-card text-primary'
                           }`}
                         >
                           <Icon className="h-5 w-5" />
@@ -1836,7 +1817,7 @@ export default function FarmDetailsPage() {
                         key={signal.label}
                         className={`flex items-start gap-3 rounded-2xl border ${
                           isCallout
-                            ? 'border-primary/50 bg-primary/10'
+                            ? 'border-accent/50 bg-accent/10'
                             : 'border-border/60 bg-muted/20'
                         } p-4 text-left`}
                       >
@@ -1851,10 +1832,8 @@ export default function FarmDetailsPage() {
                       onClick={handleClick}
                       key={signal.label}
                       className={`flex items-start gap-3 rounded-2xl border ${
-                        isCallout
-                          ? 'border-primary/50 bg-primary/10'
-                          : 'border-border/60 bg-muted/20'
-                      } p-4 text-left transition hover:border-primary/60`}
+                        isCallout ? 'border-accent/50 bg-accent/10' : 'border-border/60 bg-muted/20'
+                      } p-4 text-left transition hover:border-accent/60`}
                     >
                       {card}
                     </button>
@@ -1943,12 +1922,12 @@ export default function FarmDetailsPage() {
                         const baseCardClasses = cn(
                           'min-w-[190px] rounded-2xl border text-left',
                           isCallout
-                            ? 'border-primary/50 bg-primary/10 p-3.5'
+                            ? 'border-accent/50 bg-accent/10 p-3.5'
                             : 'border-border/60 bg-muted/30 p-3'
                         )
                         const iconWrapperClasses = cn(
                           'flex h-8 w-8 items-center justify-center rounded-xl',
-                          isCallout ? 'bg-primary text-primary-foreground' : 'bg-card text-primary'
+                          isCallout ? 'bg-accent text-accent-foreground' : 'bg-card text-primary'
                         )
                         const labelClass = cn(
                           'text-[10px]',
@@ -2019,7 +1998,7 @@ export default function FarmDetailsPage() {
                           return (
                             <div
                               key={signal.label}
-                              className={`${baseCardClasses} ${isCallout ? 'border-primary/50 bg-primary/10' : ''}`}
+                              className={`${baseCardClasses} ${isCallout ? 'border-accent/50 bg-accent/10' : ''}`}
                             >
                               {cardContent}
                             </div>
@@ -2030,7 +2009,7 @@ export default function FarmDetailsPage() {
                           <button
                             key={signal.label}
                             type="button"
-                            className={`${baseCardClasses} transition hover:border-primary/60`}
+                            className={`${baseCardClasses} transition hover:border-accent/60`}
                             onClick={handleClick}
                           >
                             {cardContent}

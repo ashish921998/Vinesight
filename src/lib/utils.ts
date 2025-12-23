@@ -4,3 +4,57 @@ import { twMerge } from 'tailwind-merge'
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+export function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+export function formatRemainingWater(value: number | null | undefined): string {
+  if (value === null || value === undefined || value === 0) return 'No water data'
+  const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
+  const formatter = new Intl.NumberFormat('en-IN', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits
+  })
+  return `${formatter.format(value)} mm`
+}
+
+export function formatWaterUsage(value: number | null | undefined): string {
+  if (value === null || value === undefined || value === 0) return 'No irrigation logged yet'
+  const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
+  const formatter = new Intl.NumberFormat('en-IN', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits
+  })
+  return `${formatter.format(value)} mm applied`
+}
+
+export function calculateDaysAfterPruning(
+  pruningDate?: Date | string | null,
+  referenceDate?: Date | string | null
+): number | null {
+  if (!pruningDate) return null
+
+  try {
+    const date = typeof pruningDate === 'string' ? new Date(pruningDate) : pruningDate
+    if (!date || isNaN(date.getTime())) return null
+
+    // Use referenceDate if provided (e.g., for log-specific calculations), otherwise use current date
+    const refDate = referenceDate
+      ? typeof referenceDate === 'string'
+        ? new Date(referenceDate)
+        : referenceDate
+      : new Date()
+
+    if (!refDate || isNaN(refDate.getTime())) return null
+
+    const diffMs = refDate.getTime() - date.getTime()
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    // For log-specific calculations, allow negative values (future dates)
+    // For current date calculations, only return non-negative
+    return referenceDate ? diffDays : diffDays >= 0 ? diffDays : null
+  } catch {
+    return null
+  }
+}

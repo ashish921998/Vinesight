@@ -190,7 +190,7 @@ export default function PrecisionAgriculture() {
                 <Card key={tech.title} className="relative">
                   <CardHeader>
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center">
                         <Icon className="h-6 w-6 text-primary" />
                       </div>
                       <div className="flex-1">
@@ -213,7 +213,7 @@ export default function PrecisionAgriculture() {
                     <ul className="space-y-2">
                       {tech.benefits.map((benefit, index) => (
                         <li key={index} className="flex items-center gap-2 text-sm">
-                          <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                          <div className="w-1.5 h-1.5 bg-accent rounded-full"></div>
                           {benefit}
                         </li>
                       ))}
@@ -274,7 +274,7 @@ export default function PrecisionAgriculture() {
                     <div className="absolute left-6 top-12 w-0.5 h-16 bg-border"></div>
                   )}
                   <div className="flex gap-6">
-                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center text-white font-bold text-lg">
                       {phase.step}
                     </div>
                     <div className="flex-1">
@@ -286,7 +286,7 @@ export default function PrecisionAgriculture() {
                       <div className="grid sm:grid-cols-2 gap-2">
                         {phase.actions.map((action, index) => (
                           <div key={index} className="flex items-center gap-2 text-sm">
-                            <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                            <div className="w-1.5 h-1.5 bg-accent rounded-full"></div>
                             {action}
                           </div>
                         ))}
@@ -328,7 +328,7 @@ export default function PrecisionAgriculture() {
         </Card>
 
         {/* CTA Section */}
-        <Card className="text-center bg-primary/5 border-primary/20">
+        <Card className="text-center bg-accent/5 border-accent/20">
           <CardContent className="pt-8 pb-8">
             <h2 className="text-2xl font-bold text-primary mb-4">
               Start Your Precision Agriculture Journey

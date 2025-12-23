@@ -17,15 +17,11 @@ import {
   Beaker,
   Target,
   TrendingUp,
-  AlertTriangle,
   CheckCircle,
   Info,
   Calendar,
-  IndianRupee,
   Leaf,
   FlaskConical,
-  Activity,
-  BarChart3,
   Calculator,
   DollarSign
 } from 'lucide-react'
@@ -196,8 +192,6 @@ export function NutrientCalculatorComponent() {
     if (deficit > 20) return { variant: 'secondary' as const, status: 'Moderate Need' }
     return { variant: 'default' as const, status: 'Low Need' }
   }
-
-  const deficiencySymptoms = NutrientCalculator.getDeficiencySymptoms()
 
   return (
     <div className="space-y-4">

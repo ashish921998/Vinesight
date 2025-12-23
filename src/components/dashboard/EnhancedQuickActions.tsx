@@ -61,7 +61,7 @@ export function EnhancedQuickActions({
       title: 'Log Irrigation',
       subtitle: 'Quick water log',
       icon: Droplets,
-      color: 'bg-primary/20 text-primary',
+      color: 'bg-accent/20 text-primary',
       bgGradient: 'from-primary/10 to-primary/20',
       oneTap: true,
       voiceEnabled: true,
@@ -73,7 +73,7 @@ export function EnhancedQuickActions({
       title: 'Spray Record',
       subtitle: 'Pest & disease',
       icon: SprayCan,
-      color: 'bg-primary/20 text-primary',
+      color: 'bg-accent/20 text-primary',
       bgGradient: 'from-primary/10 to-primary/20',
       oneTap: true,
       voiceEnabled: true,
@@ -85,7 +85,7 @@ export function EnhancedQuickActions({
       title: 'Record Harvest',
       subtitle: 'Log yield data',
       icon: Scissors,
-      color: 'bg-primary/20 text-primary',
+      color: 'bg-accent/20 text-primary',
       bgGradient: 'from-primary/10 to-primary/20',
       oneTap: true,
       voiceEnabled: true,
@@ -96,7 +96,7 @@ export function EnhancedQuickActions({
       title: 'Add Expense',
       subtitle: 'Track costs',
       icon: DollarSign,
-      color: 'bg-primary/20 text-primary',
+      color: 'bg-accent/20 text-primary',
       bgGradient: 'from-primary/10 to-primary/20',
       oneTap: false,
       voiceEnabled: true,
@@ -107,7 +107,7 @@ export function EnhancedQuickActions({
       title: 'Fertigation',
       subtitle: 'Nutrient log',
       icon: Beaker,
-      color: 'bg-primary/20 text-primary',
+      color: 'bg-accent/20 text-primary',
       bgGradient: 'from-primary/10 to-primary/20',
       oneTap: true,
       voiceEnabled: true,
@@ -118,7 +118,7 @@ export function EnhancedQuickActions({
       title: 'Soil Test',
       subtitle: 'Record analysis',
       icon: TestTube,
-      color: 'bg-primary/20 text-primary',
+      color: 'bg-accent/20 text-primary',
       bgGradient: 'from-primary/10 to-primary/20',
       oneTap: false,
       voiceEnabled: true,
@@ -203,9 +203,9 @@ export function EnhancedQuickActions({
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-4 text-center">
-                <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto mb-3" />
-                <div className="w-16 h-4 bg-gray-200 rounded mx-auto mb-1" />
-                <div className="w-12 h-3 bg-gray-200 rounded mx-auto" />
+                <div className="w-12 h-12 bg-muted/60 rounded-full mx-auto mb-3" />
+                <div className="w-16 h-4 bg-muted/60 rounded mx-auto mb-1" />
+                <div className="w-12 h-3 bg-muted/60 rounded mx-auto" />
               </CardContent>
             </Card>
           ))}
@@ -244,7 +244,7 @@ export function EnhancedQuickActions({
                     {/* One-tap indicator */}
                     {action.oneTap && (
                       <div className="absolute top-2 right-2">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                        <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
                       </div>
                     )}
 
@@ -271,7 +271,7 @@ export function EnhancedQuickActions({
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-6 w-6 p-0 hover:bg-primary/20 touch-manipulation"
+                          className="h-6 w-6 p-0 hover:bg-accent/20 touch-manipulation"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleVoiceAction(action.id)
@@ -285,7 +285,7 @@ export function EnhancedQuickActions({
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-6 w-6 p-0 hover:bg-primary/20 touch-manipulation"
+                          className="h-6 w-6 p-0 hover:bg-accent/20 touch-manipulation"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleCameraAction(action.id)
@@ -341,7 +341,7 @@ export function EnhancedQuickActions({
                 <Button
                   size="lg"
                   onClick={startVoiceRecording}
-                  className="h-16 w-16 rounded-full bg-primary hover:bg-primary/90"
+                  className="h-16 w-16 rounded-full bg-accent hover:bg-accent/90"
                 >
                   <Mic className="h-6 w-6" />
                 </Button>
@@ -365,7 +365,7 @@ export function EnhancedQuickActions({
                   {[...Array(3)].map((_, i) => (
                     <div
                       key={i}
-                      className="w-2 h-2 bg-red-500 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-destructive rounded-full animate-bounce"
                       style={{ animationDelay: `${i * 0.2}s` }}
                     />
                   ))}

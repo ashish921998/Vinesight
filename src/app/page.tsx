@@ -115,7 +115,7 @@ function ModulePreview({ type }: { type: 'field' | 'lab' | 'planning' }) {
       <div className="w-[200px] bg-card rounded-xl border border-border p-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
         <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
           <div className="text-[10px] font-bold text-muted-foreground uppercase">New Activity</div>
-          <div className="size-1.5 rounded-full bg-primary" />
+          <div className="size-1.5 rounded-full bg-accent" />
         </div>
         <div className="space-y-2">
           <div className="bg-muted p-2.5 rounded-lg border border-border">
@@ -130,7 +130,7 @@ function ModulePreview({ type }: { type: 'field' | 'lab' | 'planning' }) {
             </div>
             <div className="text-xs font-bold text-foreground">Canopy Mgmt</div>
           </div>
-          <div className="w-full bg-primary text-primary-foreground text-[10px] font-bold py-2 rounded-lg mt-1 text-center shadow-sm">
+          <div className="w-full bg-accent text-accent-foreground text-[10px] font-bold py-2 rounded-lg mt-1 text-center shadow-sm">
             Save Record
           </div>
         </div>
@@ -174,7 +174,7 @@ function ModulePreview({ type }: { type: 'field' | 'lab' | 'planning' }) {
     <div className="w-[200px] flex gap-2 overflow-hidden relative">
       <div className="flex-1 bg-card border border-border rounded-xl p-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)] min-w-[120px]">
         <div className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Today</div>
-        <div className="bg-primary/10 border border-primary/20 p-2 rounded-lg mb-2">
+        <div className="bg-accent/10 border border-accent/20 p-2 rounded-lg mb-2">
           <div className="text-[10px] font-bold text-primary">Sector N</div>
           <div className="text-[9px] text-primary/80 mt-0.5">Irrigation</div>
         </div>
@@ -280,7 +280,7 @@ export default function LandingPage() {
                   key={category.title}
                   className="bg-card p-8 rounded-xl border border-border shadow-[0_2px_8px_-2px_rgba(47,58,68,0.08)]"
                 >
-                  <div className="size-12 bg-primary/5 rounded-lg flex items-center justify-center mb-6 text-primary">
+                  <div className="size-12 bg-accent/5 rounded-lg flex items-center justify-center mb-6 text-primary">
                     <Icon className="h-6 w-6" />
                   </div>
                   <h4 className="text-lg font-bold mb-4">{category.title}</h4>
@@ -431,9 +431,6 @@ export default function LandingPage() {
               </Link>
               <Link className="hover:text-foreground transition-colors" href="/terms">
                 Terms of Service
-              </Link>
-              <Link className="hover:text-foreground transition-colors" href="/contact">
-                Contact
               </Link>
             </div>
           </div>

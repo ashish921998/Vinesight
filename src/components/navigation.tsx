@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -20,7 +21,6 @@ import {
 } from 'lucide-react'
 import { LoginButton } from './auth/LoginButton'
 import { UserMenu } from './auth/UserMenu'
-import { LanguageSwitcher } from './ui/language-switcher'
 import { useTranslation } from 'react-i18next'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { getTypedSupabaseClient } from '@/lib/supabase'
@@ -98,10 +98,17 @@ export default function Navigation() {
     <>
       {/* Desktop Sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-border bg-card px-6 pb-4">
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-sidebar-border bg-sidebar px-6 pb-4 text-sidebar-foreground">
           <div className="flex h-16 shrink-0 items-center">
             <Link href="/" className="flex items-center gap-2">
-              <Sprout className="h-8 w-8 text-primary" />
+              <Image
+                src="/logo.png"
+                alt="VineSight logo"
+                width={32}
+                height={32}
+                className="h-8 w-8 rounded-lg shadow-sm"
+                priority
+              />
               <span className="text-xl font-bold text-primary">VineSight</span>
             </Link>
           </div>
@@ -111,22 +118,25 @@ export default function Navigation() {
                 <ul role="list" className="-mx-2 space-y-1">
                   {navigation.map((item) => {
                     const Icon = item.icon
-                    const isActive = pathname === item.href
+                    const isActive =
+                      pathname === item.href ||
+                      (item.href !== '/' && pathname.startsWith(item.href))
                     return (
                       <li key={item.name}>
                         <Link
                           href={item.href}
-                          className={`
-                            group flex gap-x-3 rounded-md p-3 text-sm leading-6 font-semibold
-                            ${
-                              isActive
-                                ? 'bg-secondary text-primary'
-                                : 'text-foreground hover:text-primary hover:bg-secondary'
-                            }
-                          `}
+                          className={`group flex gap-x-3 rounded-md p-3 text-sm leading-6 font-medium transition-colors ${
+                            isActive
+                              ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
+                              : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                          }`}
                         >
                           <Icon
-                            className={`h-6 w-6 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'}`}
+                            className={`h-6 w-6 shrink-0 ${
+                              isActive
+                                ? 'text-sidebar-accent-foreground'
+                                : 'text-sidebar-foreground/70 group-hover:text-sidebar-accent-foreground'
+                            }`}
                             aria-hidden="true"
                           />
                           {item.name}
@@ -138,10 +148,7 @@ export default function Navigation() {
               </li>
             </ul>
           </nav>
-          <div className="border-t border-border pt-4 space-y-3">
-            <div className="px-2">
-              <LanguageSwitcher />
-            </div>
+          <div className="border-t border-sidebar-border pt-4 space-y-3">
             {loading ? (
               <div className="px-2 py-3">Loading...</div>
             ) : user ? (

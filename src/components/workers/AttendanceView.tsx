@@ -197,7 +197,7 @@ export function AttendanceView({
               className={cn(
                 'aspect-square p-1 border rounded text-center flex flex-col items-center justify-center',
                 !isCurrentMonth && 'opacity-30',
-                isToday && 'border-primary border-2',
+                isToday && 'border-accent border-2',
                 !attendance && isCurrentMonth && 'bg-gray-50',
                 attendance?.work_status === 'full_day' && 'bg-green-50 border-green-300',
                 attendance?.work_status === 'half_day' && 'bg-amber-50 border-amber-300',
@@ -461,7 +461,7 @@ export function AttendanceView({
                   {selectedHistoryWorker ? selectedHistoryWorker.name : 'Choose a worker'}
                 </h3>
               </div>
-              <div className="rounded-lg border border-primary/20 bg-white px-3 py-1.5 text-xs shadow-sm">
+              <div className="rounded-lg border border-accent/20 bg-white px-3 py-1.5 text-xs shadow-sm">
                 <p className="text-[10px] uppercase text-muted-foreground">Last</p>
                 <p className="font-semibold text-primary text-xs">{latestAttendanceLabel}</p>
               </div>
@@ -471,7 +471,7 @@ export function AttendanceView({
               value={attendanceHistoryWorkerId?.toString() || ''}
               onValueChange={(value) => onAttendanceHistoryWorkerChange(parseInt(value, 10))}
             >
-              <SelectTrigger className="h-10 md:h-12 rounded-lg border-primary/20 bg-white">
+              <SelectTrigger className="h-10 md:h-12 rounded-lg border-accent/20 bg-white">
                 <SelectValue placeholder="Select worker" />
               </SelectTrigger>
               <SelectContent>

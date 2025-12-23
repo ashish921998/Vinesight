@@ -213,8 +213,8 @@ export function WaterCalculationModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[350px] w-[90vw] mx-auto max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader className="pr-8">
-          <DialogTitle className="flex items-center gap-3 text-green-700 break-words">
-            <div className="p-2 bg-green-100 rounded-xl flex-shrink-0">
+          <DialogTitle className="flex items-center gap-3 text-accent break-words">
+            <div className="p-2 bg-accent/10 rounded-xl flex-shrink-0">
               <Calculator className="h-5 w-5" />
             </div>
             <span className="text-wrap">Calculate Water</span>
@@ -392,9 +392,8 @@ export function WaterCalculationModal({
                   type="button"
                   onClick={handleCalculate}
                   disabled={!isFormValid}
-                  className="w-full h-12 bg-green-600 hover:bg-green-700 text-base min-h-[44px] touch-manipulation text-wrap"
+                  className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 text-base min-h-[44px] touch-manipulation text-wrap"
                 >
-                  <Calculator className="h-4 w-4 mr-2 flex-shrink-0" />
                   <span className="text-wrap">Calculate Water Level</span>
                 </Button>
               </div>
@@ -403,27 +402,27 @@ export function WaterCalculationModal({
 
           {/* Water Level Result Section */}
           {(calculationResult !== null || manualWaterLevel) && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <Droplets className="h-5 w-5 text-green-600 flex-shrink-0" />
-                  <span className="text-sm font-medium text-green-700">Water Level Result</span>
+                  <Droplets className="h-5 w-5 text-accent flex-shrink-0" />
+                  <span className="text-sm font-medium text-accent">Water Level Result</span>
                 </div>
 
                 {/* Water Level Display */}
-                <div className="text-2xl font-bold text-green-800 mb-1">
+                <div className="text-2xl font-bold text-accent mb-1">
                   {useManualMode
                     ? (parseFloat(manualWaterLevel) || 0).toFixed(1)
                     : (calculationResult || 0).toFixed(1)}{' '}
                   mm
                 </div>
-                <div className="text-xs text-green-600 mb-3">
+                <div className="text-xs text-accent/80 mb-3">
                   {useManualMode ? 'Manually entered water level' : 'Available water in soil'}
                 </div>
 
                 {/* Formula breakdown - only show in calculated mode */}
                 {!useManualMode && calculationResult !== null && (
-                  <div className="text-xs text-green-700 bg-green-100 p-2 rounded border break-words overflow-hidden">
+                  <div className="text-xs text-accent/80 bg-accent/10 p-2 rounded border border-accent/20 break-words overflow-hidden">
                     <div className="font-medium mb-1">Calculation:</div>
                     <div className="flex flex-col space-y-1 text-center">
                       <div className="break-all">
@@ -455,19 +454,9 @@ export function WaterCalculationModal({
             type="button"
             onClick={handleSave}
             disabled={!canSave || isCalculating}
-            className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-sm min-h-[44px] touch-manipulation px-2"
+            className="flex-1 h-12 bg-accent text-accent-foreground hover:bg-accent/90 text-sm min-h-[44px] touch-manipulation px-2"
           >
-            {isCalculating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-1 animate-spin flex-shrink-0" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Droplets className="h-4 w-4 mr-1 flex-shrink-0" />
-                Save
-              </>
-            )}
+            {isCalculating ? <>Saving...</> : <>Save</>}
           </Button>
         </div>
       </DialogContent>

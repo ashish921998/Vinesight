@@ -107,7 +107,7 @@ function WarehousePageContent() {
             <Button
               onClick={() => setShowAddModal(true)}
               size="sm"
-              className="h-9 px-3 text-sm font-medium bg-green-600 hover:bg-green-700"
+              className="h-9 px-3 text-sm font-medium bg-accent text-accent-foreground hover:bg-accent/90"
             >
               <Plus className="h-4 w-4 mr-1" />
               Add Item
@@ -164,7 +164,7 @@ function WarehousePageContent() {
             size="sm"
             className={
               filter === 'all'
-                ? 'bg-green-600 hover:bg-green-700 rounded-xl flex-shrink-0'
+                ? 'bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl flex-shrink-0'
                 : 'rounded-xl flex-shrink-0'
             }
           >
@@ -176,7 +176,7 @@ function WarehousePageContent() {
             size="sm"
             className={
               filter === 'fertilizer'
-                ? 'bg-green-600 hover:bg-green-700 rounded-xl flex-shrink-0'
+                ? 'bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl flex-shrink-0'
                 : 'rounded-xl flex-shrink-0'
             }
           >
@@ -188,7 +188,7 @@ function WarehousePageContent() {
             size="sm"
             className={
               filter === 'spray'
-                ? 'bg-green-600 hover:bg-green-700 rounded-xl flex-shrink-0'
+                ? 'bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl flex-shrink-0'
                 : 'rounded-xl flex-shrink-0'
             }
           >
@@ -231,7 +231,7 @@ function WarehousePageContent() {
               </p>
               <Button
                 onClick={() => setShowAddModal(true)}
-                className="bg-green-600 hover:bg-green-700 rounded-lg"
+                className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add First Item

@@ -173,8 +173,8 @@ export default function PrivacyPolicyPage() {
                 <CardTitle className="text-base font-semibold">{section.title}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground">
-                {section.items.map((item) => (
-                  <div key={item} className="flex items-start gap-2">
+                {section.items.map((item, index) => (
+                  <div key={`${section.title}-${index}`} className="flex items-start gap-2">
                     <span className="mt-1 h-2 w-2 rounded-full bg-accent" />
                     <span>{item}</span>
                   </div>
@@ -240,8 +240,8 @@ export default function PrivacyPolicyPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground">
-                {section.items.map((item) => (
-                  <div key={item} className="flex items-start gap-2">
+                {section.items.map((item, index) => (
+                  <div key={`${section.title}-${index}`} className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-accent mt-0.5" />
                     <span>{item}</span>
                   </div>

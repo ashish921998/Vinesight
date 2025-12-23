@@ -104,15 +104,15 @@ export function ActivityFeed({
                 }
               }}
             >
-              <span className="absolute left-1.5 sm:left-2 top-4 hidden h-3 w-3 items-center justify-center rounded-full border-4 border-card bg-primary shadow-[0_0_0_3px_rgba(85,112,41,0.12)] sm:flex" />
-              <div className="group rounded-xl border border-border bg-muted/40 p-4 sm:p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-card">
+              <span className="absolute left-1.5 sm:left-2 top-4 hidden h-3 w-3 items-center justify-center rounded-full border-4 border-card bg-accent shadow-[0_0_0_3px_rgba(85,112,41,0.12)] sm:flex" />
+              <div className="group rounded-xl border border-border bg-muted/40 p-4 sm:p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-accent/30 hover:bg-card">
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-sm font-semibold text-foreground sm:text-base">
                         {formatGroupedDate(grouped.date)}
                       </h3>
-                      <Badge className="bg-primary/10 text-primary">
+                      <Badge className="bg-accent/10 text-primary">
                         {grouped.totalCount} log{grouped.totalCount !== 1 ? 's' : ''}
                       </Badge>
                     </div>
@@ -121,7 +121,7 @@ export function ActivityFeed({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="inline-flex h-9 w-9 items-center justify-center text-primary hover:bg-primary/10 hover:text-primary"
+                          className="inline-flex h-9 w-9 items-center justify-center text-primary hover:bg-accent/10 hover:text-primary"
                           onClick={(event) => {
                             event.stopPropagation()
                             if (formattedDate) {
@@ -165,7 +165,7 @@ export function ActivityFeed({
                       return (
                         <span
                           key={`${grouped.date}-${type}`}
-                          className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary"
+                          className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-1 text-[11px] font-medium text-primary"
                         >
                           <TypeIcon className="h-3.5 w-3.5" />
                           {formatLogTypeLabel(type)}

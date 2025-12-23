@@ -309,7 +309,7 @@ export default function RemindersPage() {
 
         {/* Seasonal Suggestions */}
         {farms.length > 0 && showSeasonalSuggestions && (
-          <Card className="mb-6 border-primary/20 bg-primary/5">
+          <Card className="mb-6 border-accent/20 bg-accent/5">
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle className="flex items-center gap-2">
@@ -329,7 +329,7 @@ export default function RemindersPage() {
                   .map((template) => (
                     <div
                       key={template.id}
-                      className="flex items-center gap-3 p-3 bg-white rounded-lg border border-primary/10"
+                      className="flex items-center gap-3 p-3 bg-white rounded-lg border border-accent/10"
                     >
                       <span className="text-2xl">
                         {template.type === 'irrigation'
@@ -659,7 +659,7 @@ export default function RemindersPage() {
           <Card className="text-center py-12">
             <CardContent>
               <div className="flex items-center justify-center gap-2">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
                 <span>Loading farms...</span>
               </div>
             </CardContent>

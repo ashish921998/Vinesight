@@ -768,7 +768,7 @@ export default function WorkersPage() {
           <CardContent className="p-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-primary/10 rounded-xl flex-shrink-0">
+                <div className="p-2 bg-accent/10 rounded-xl flex-shrink-0">
                   <Users className="h-5 w-5 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -777,7 +777,7 @@ export default function WorkersPage() {
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-primary/10 rounded-xl flex-shrink-0">
+                <div className="p-2 bg-accent/10 rounded-xl flex-shrink-0">
                   <Wallet className="h-5 w-5 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -819,7 +819,7 @@ export default function WorkersPage() {
                   <Button
                     onClick={handleOpenAddModal}
                     size="lg"
-                    className="flex-1 rounded-full bg-primary hover:bg-primary/90 text-white"
+                    className="flex-1 rounded-full bg-accent hover:bg-accent/90 text-white"
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Add Worker
@@ -827,7 +827,7 @@ export default function WorkersPage() {
                   <Button
                     onClick={() => setIsSettlementModalOpen(true)}
                     size="lg"
-                    className="flex-1 rounded-full bg-green-600 hover:bg-green-700 text-white"
+                    className="flex-1 rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
                   >
                     <IndianRupee className="h-4 w-4 mr-1" />
                     Settle
@@ -1160,7 +1160,7 @@ export default function WorkersPage() {
                       setSettlementWorker(selectedWorker)
                       setIsSettlementModalOpen(true)
                     }}
-                    className="h-auto py-3 bg-green-600 hover:bg-green-700"
+                    className="h-auto py-3 bg-accent text-accent-foreground hover:bg-accent/90"
                   >
                     <div className="flex flex-col items-center gap-1">
                       <IndianRupee className="h-5 w-5" />
@@ -1554,7 +1554,7 @@ export default function WorkersPage() {
               <Button
                 onClick={handleConfirmSettlement}
                 disabled={isConfirmingSettlement || netPayment < 0 || !totalSalaryInput}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-accent text-accent-foreground hover:bg-accent/90"
               >
                 {isConfirmingSettlement && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Confirm

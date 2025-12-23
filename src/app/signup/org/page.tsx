@@ -147,7 +147,7 @@ export default function OrganizationSignupPage() {
           <Link href="/" className="inline-block mb-6">
             <div className="text-foreground text-2xl font-medium font-sans">Vinesight</div>
           </Link>
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm mb-4">
+          <div className="inline-flex items-center gap-2 bg-accent/10 text-primary px-3 py-1 rounded-full text-sm mb-4">
             <Building2 className="h-4 w-4" />
             For Organizations
           </div>

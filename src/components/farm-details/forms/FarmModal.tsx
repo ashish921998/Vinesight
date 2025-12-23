@@ -737,7 +737,7 @@ export function FarmModal({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 h-11 order-1 sm:order-2 bg-green-600 hover:bg-green-700"
+              className="flex-1 h-11 order-1 sm:order-2 bg-accent text-accent-foreground hover:bg-accent/90"
             >
               {isSubmitting ? (
                 <>

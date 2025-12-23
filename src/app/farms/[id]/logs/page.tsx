@@ -38,7 +38,7 @@ import { EditRecordModal } from '@/components/journal/EditRecordModal'
 import { SupabaseService } from '@/lib/supabase-service'
 import { getActivityDisplayData } from '@/lib/activity-display-utils'
 import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
-import { cn, capitalize } from '@/lib/utils'
+import { cn, capitalize, calculateDaysAfterPruning } from '@/lib/utils'
 import { toast } from 'sonner'
 import { parseFarmId, handleDailyNotesAndPhotosAfterLogs } from '@/lib/daily-note-utils'
 
@@ -93,29 +93,7 @@ const formatLogDate = (dateString: string): string => {
   })
 }
 
-const getDaysAfterPruning = (
-  farmPruningDate?: Date | string | null,
-  logCreatedAt?: string
-): number | null => {
-  if (!farmPruningDate || !logCreatedAt) return null
-
-  try {
-    const pruningDate =
-      typeof farmPruningDate === 'string' ? new Date(farmPruningDate) : farmPruningDate
-    const createdDate = new Date(logCreatedAt)
-
-    if (!pruningDate || isNaN(pruningDate.getTime()) || isNaN(createdDate.getTime())) {
-      return null
-    }
-
-    const diffMs = createdDate.getTime() - pruningDate.getTime()
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-    return diffDays
-  } catch {
-    return null
-  }
-}
+// Using calculateDaysAfterPruning from utils with referenceDate parameter
 
 /* ---------- small debounce hook ---------- */
 function useDebounced<T>(value: T, delay = 300) {
@@ -163,7 +141,7 @@ const LogsList = React.memo(function LogsList({
     <div className="space-y-2">
       {logs.map((log) => {
         const Icon = getLogTypeIcon(log.type)
-        const daysAfterPruning = getDaysAfterPruning(currentFarm?.dateOfPruning, log.date)
+        const daysAfterPruning = calculateDaysAfterPruning(currentFarm?.dateOfPruning, log.date)
 
         return (
           <div
@@ -843,7 +821,7 @@ export default function FarmLogsPage() {
                                   className={cn(
                                     'mr-2 h-4 w-4 border border-gray-300 rounded flex items-center justify-center',
                                     selectedActivityTypes.includes(activityType.value)
-                                      ? 'bg-primary border-primary'
+                                      ? 'bg-accent border-accent'
                                       : 'bg-white'
                                   )}
                                 >
@@ -960,7 +938,7 @@ export default function FarmLogsPage() {
           <CardContent className="px-2 sm:px-3 pb-3 relative" aria-busy={searchLoading}>
             {searchLoading ? (
               <div className="flex flex-col items-center justify-center py-12" role="status">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-3"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mb-3"></div>
               </div>
             ) : logs.length > 0 ? (
               <LogsList

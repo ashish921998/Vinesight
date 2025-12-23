@@ -167,20 +167,20 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'healthy':
-        return 'bg-green-100 border-green-200 text-green-800'
+        return 'bg-accent/10 border-accent/20 text-accent'
       case 'attention':
-        return 'bg-amber-100 border-amber-200 text-amber-800'
+        return 'bg-accent/10 border-accent/20 text-primary'
       case 'critical':
-        return 'bg-red-100 border-red-200 text-red-800'
+        return 'bg-destructive/10 border-destructive/20 text-destructive'
       default:
-        return 'bg-gray-100 border-gray-200 text-gray-800'
+        return 'bg-muted/60 border-border text-muted-foreground'
     }
   }
 
   const getHealthScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600'
-    if (score >= 60) return 'text-amber-600'
-    return 'text-red-600'
+    if (score >= 80) return 'text-accent'
+    if (score >= 60) return 'text-primary'
+    return 'text-destructive'
   }
 
   const formatCurrency = (amount: number) => {
@@ -194,13 +194,13 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
     return (
       <div className="min-h-screen bg-background p-4">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-48" />
+          <div className="h-8 bg-muted/60 rounded w-48" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded" />
+              <div key={i} className="h-24 bg-muted/60 rounded" />
             ))}
           </div>
-          <div className="h-64 bg-gray-200 rounded" />
+          <div className="h-64 bg-muted/60 rounded" />
         </div>
       </div>
     )
@@ -218,15 +218,15 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
 
       {/* Critical Issues Alert - Mobile Optimized */}
       {portfolioData.metrics.criticalIssues > 0 && (
-        <Card className="mb-4 border-red-200 bg-red-50">
+        <Card className="mb-4 border-destructive/20 bg-destructive/10">
           <CardContent className="p-3">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+              <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
               <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-sm text-red-800 mb-1">
+                <h3 className="font-semibold text-sm text-destructive mb-1">
                   {portfolioData.metrics.criticalIssues} Critical Issues
                 </h3>
-                <p className="text-xs text-red-600 leading-relaxed">
+                <p className="text-xs text-destructive/80 leading-relaxed">
                   {criticalFarms.map((farm) => capitalize(farm.name)).join(', ')} need immediate
                   action
                 </p>
@@ -253,10 +253,10 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
         <Card className="touch-manipulation">
           <CardContent className="p-3">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-green-600" />
+              <TrendingUp className="h-4 w-4 text-accent" />
               <span className="text-xs text-muted-foreground">Profit</span>
             </div>
-            <div className="text-lg font-bold text-green-600">
+            <div className="text-lg font-bold text-accent">
               {formatCurrency(portfolioData.metrics.totalProfit)}
             </div>
           </CardContent>
@@ -265,7 +265,7 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
         <Card className="touch-manipulation">
           <CardContent className="p-3">
             <div className="flex items-center gap-2 mb-2">
-              <Activity className="h-4 w-4 text-blue-600" />
+              <Activity className="h-4 w-4 text-primary" />
               <span className="text-xs text-muted-foreground">Health</span>
             </div>
             <div
@@ -279,10 +279,10 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
         <Card className="touch-manipulation">
           <CardContent className="p-3">
             <div className="flex items-center gap-2 mb-2">
-              <Target className="h-4 w-4 text-purple-600" />
+              <Target className="h-4 w-4 text-accent" />
               <span className="text-xs text-muted-foreground">Yield</span>
             </div>
-            <div className="text-lg font-bold text-purple-600">
+            <div className="text-lg font-bold text-accent">
               {portfolioData.metrics.averageYield.toFixed(1)}T
             </div>
           </CardContent>
@@ -351,7 +351,7 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
                   <div className="space-y-2">
                     <div>
                       <div className="text-xs text-muted-foreground">Profit Margin</div>
-                      <div className="font-semibold text-sm text-green-600">
+                      <div className="font-semibold text-sm text-accent">
                         {farm.profitMargin.toFixed(1)}%
                       </div>
                     </div>
@@ -389,35 +389,35 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
         <CardContent>
           <div className="space-y-3">
             {portfolioData.metrics.criticalIssues > 0 && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
-                  <span className="font-medium text-red-800">Critical Action Required</span>
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
+                  <span className="font-medium text-destructive">Critical Action Required</span>
                 </div>
-                <p className="text-sm text-red-700">
+                <p className="text-sm text-destructive/80">
                   Green Acres needs immediate irrigation - soil moisture at 28%. Consider
                   reallocating water resources from Highland Farms.
                 </p>
               </div>
             )}
 
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="p-3 bg-accent/10 border border-accent/20 rounded-lg">
               <div className="flex items-center gap-2 mb-1">
-                <Tractor className="h-4 w-4 text-blue-600" />
-                <span className="font-medium text-blue-800">Equipment Optimization</span>
+                <Tractor className="h-4 w-4 text-primary" />
+                <span className="font-medium text-primary">Equipment Optimization</span>
               </div>
-              <p className="text-sm text-blue-700">
+              <p className="text-sm text-primary/80">
                 Highland Farms harvest starts in 28 days. Plan to move harvesting equipment from
                 Vineyard Valley after their completion.
               </p>
             </div>
 
-            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="p-3 bg-accent/10 border border-accent/20 rounded-lg">
               <div className="flex items-center gap-2 mb-1">
-                <BarChart3 className="h-4 w-4 text-green-600" />
-                <span className="font-medium text-green-800">Performance Insight</span>
+                <BarChart3 className="h-4 w-4 text-accent" />
+                <span className="font-medium text-accent">Performance Insight</span>
               </div>
-              <p className="text-sm text-green-700">
+              <p className="text-sm text-accent/80">
                 Vineyard Valley&apos;s irrigation efficiency is 15% better than portfolio average.
                 Consider applying their practices to other farms.
               </p>
