@@ -92,7 +92,7 @@ export function AnalyticsView({
         <CardContent className="space-y-5 p-5">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold">
+              <div className="h-10 w-10 rounded-full bg-accent/10 text-primary flex items-center justify-center font-semibold">
                 AI
               </div>
               <div>
@@ -114,7 +114,7 @@ export function AnalyticsView({
                 type="date"
                 value={analyticsStartDate}
                 onChange={(e) => onStartDateChange(e.target.value)}
-                className="h-12 rounded-2xl border-primary/20 bg-white"
+                className="h-12 rounded-2xl border-accent/20 bg-white"
               />
             </div>
             <div className="space-y-1.5">
@@ -123,7 +123,7 @@ export function AnalyticsView({
                 type="date"
                 value={analyticsEndDate}
                 onChange={(e) => onEndDateChange(e.target.value)}
-                className="h-12 rounded-2xl border-primary/20 bg-white"
+                className="h-12 rounded-2xl border-accent/20 bg-white"
               />
             </div>
           </div>
@@ -136,7 +136,7 @@ export function AnalyticsView({
                   onFarmIdChange(value === 'all' ? null : parseInt(value, 10))
                 }
               >
-                <SelectTrigger className="h-12 rounded-2xl border-primary/20 bg-white">
+                <SelectTrigger className="h-12 rounded-2xl border-accent/20 bg-white">
                   <SelectValue placeholder="All farms" />
                 </SelectTrigger>
                 <SelectContent>
@@ -149,7 +149,7 @@ export function AnalyticsView({
                 </SelectContent>
               </Select>
             </div>
-            <div className="rounded-2xl border border-dashed border-primary/30 bg-white/70 p-4 text-sm text-muted-foreground">
+            <div className="rounded-2xl border border-dashed border-accent/30 bg-white/70 p-4 text-sm text-muted-foreground">
               Filters are applied automatically. Adjust the range or farm and the analytics refresh
               instantly.
             </div>
@@ -175,7 +175,7 @@ export function AnalyticsView({
                     Advance recovered: ₹{fixedAnalytics.advanceRecovered.toLocaleString('en-IN')}
                   </p>
                 </div>
-                <div className="rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-semibold">
+                <div className="rounded-full bg-accent/10 text-primary px-3 py-1 text-xs font-semibold">
                   Fixed
                 </div>
               </CardContent>
@@ -210,7 +210,7 @@ export function AnalyticsView({
                   </p>
                   <h3 className="text-lg font-semibold">Salaries vs. recovered advances</h3>
                 </div>
-                <div className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                <div className="inline-flex rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-semibold text-primary">
                   {fixedAnalytics.byWorker.length} workers
                 </div>
               </div>
@@ -238,7 +238,7 @@ export function AnalyticsView({
                 </div>
               )}
 
-              <div className="rounded-2xl border border-dashed border-primary/30 p-4 space-y-3">
+              <div className="rounded-2xl border border-dashed border-accent/30 p-4 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="text-xs uppercase text-muted-foreground">Drill down</p>

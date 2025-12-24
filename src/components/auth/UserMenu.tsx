@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { User as UserIcon, LogOut, Settings } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ChevronsUpDown, LogOut, Settings } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +18,27 @@ export function UserMenu() {
   const { user, signOut } = useSupabaseAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+
+  const initialsSource = user?.user_metadata?.full_name || user?.email || 'User'
+  const displayName = initialsSource
+  const displayEmail = user?.email || ''
+
+  let initials = 'US'
+  if (initialsSource.includes(' ')) {
+    initials = initialsSource
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part: string) => part[0]?.toUpperCase())
+      .join('')
+  } else {
+    const sourceForInitials = initialsSource.includes('@')
+      ? initialsSource.split('@')[0]
+      : initialsSource
+    const alphanumericChars = sourceForInitials.replace(/[^a-zA-Z0-9]/g, '')
+    initials = alphanumericChars.slice(0, 2).toUpperCase()
+    if (!initials) initials = 'US'
+  }
 
   const handleSignOut = async () => {
     try {
@@ -39,28 +59,38 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user.user_metadata?.avatar_url} alt="Profile" />
-            <AvatarFallback>
-              {user.user_metadata?.full_name
-                ? user.user_metadata.full_name.substring(0, 2).toUpperCase()
-                : user.email?.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
+        <button
+          type="button"
+          aria-label={`User menu for ${displayName}`}
+          aria-haspopup="menu"
+          className="group flex w-full items-center gap-3 rounded-md p-2 text-left text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+        >
+          <Avatar className="h-9 w-9">
+            <AvatarImage src={user.user_metadata?.avatar_url} alt={displayName} />
+            <AvatarFallback>{initials || 'US'}</AvatarFallback>
           </Avatar>
-        </Button>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{displayName}</p>
+            {displayEmail ? (
+              <p className="truncate text-xs text-sidebar-foreground/70 group-hover:text-sidebar-accent-foreground group-data-[state=open]:text-sidebar-accent-foreground">
+                {displayEmail}
+              </p>
+            ) : null}
+          </div>
+          <ChevronsUpDown className="ml-auto h-4 w-4 text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground group-data-[state=open]:text-sidebar-accent-foreground" />
+        </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent className="w-56" align="start" side="top" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
-              {user.user_metadata?.full_name || 'User'}
-            </p>
-            <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+            <p className="text-sm font-medium leading-none">{displayName}</p>
+            {displayEmail ? (
+              <p className="text-xs leading-none text-muted-foreground">{displayEmail}</p>
+            ) : null}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => (window.location.href = '/settings')}>
+        <DropdownMenuItem onClick={() => router.push('/settings')}>
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>

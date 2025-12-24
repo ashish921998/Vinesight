@@ -118,10 +118,10 @@ export function TestReminderNotification({
   // Compact version for dashboard cards
   if (compact) {
     return (
-      <Card className="bg-primary/5 border-primary/20">
+      <Card className="bg-accent/5 border-accent/20">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
               <Bell className="h-4 w-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0 space-y-2">
@@ -129,7 +129,7 @@ export function TestReminderNotification({
                 <h3 className="font-semibold text-sm text-foreground">Lab Test Reminder</h3>
                 <Badge
                   variant="outline"
-                  className="text-xs bg-primary/10 border-primary/30 text-primary whitespace-nowrap"
+                  className="text-xs bg-accent/10 border-accent/30 text-primary whitespace-nowrap"
                 >
                   {showSoilReminder && showPetioleReminder
                     ? 'Both Due'
@@ -183,9 +183,9 @@ export function TestReminderNotification({
 
   // Full version for main pages
   return (
-    <Alert className="bg-primary/5 border-primary/20 shadow-sm">
+    <Alert className="bg-accent/5 border-accent/20 shadow-sm">
       <div className="flex items-start gap-3 mb-3">
-        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
           <FlaskConical className="h-5 w-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
@@ -193,17 +193,11 @@ export function TestReminderNotification({
             Lab Test Reminder
           </AlertTitle>
           {showSoilReminder && showPetioleReminder ? (
-            <Badge
-              variant="outline"
-              className="bg-primary/10 border-primary/30 text-primary text-xs"
-            >
+            <Badge variant="outline" className="bg-accent/10 border-accent/30 text-primary text-xs">
               Both Tests Due
             </Badge>
           ) : (
-            <Badge
-              variant="outline"
-              className="bg-primary/10 border-primary/30 text-primary text-xs"
-            >
+            <Badge variant="outline" className="bg-accent/10 border-accent/30 text-primary text-xs">
               {showSoilReminder ? 'Soil Test Due' : 'Petiole Test Due'}
             </Badge>
           )}

@@ -1336,7 +1336,7 @@ export function AIAssistant({
                               isAssistantProcessing ||
                               quotaStatus.isExceeded
                               ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
-                              : 'bg-primary hover:bg-teal-700 text-white'
+                              : 'bg-accent hover:bg-teal-700 text-white'
                           )}
                         >
                           {isAssistantProcessing ? (
@@ -1440,7 +1440,7 @@ export function AIAssistant({
                             isAssistantProcessing ||
                             quotaStatus.isExceeded
                             ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
-                            : 'bg-primary hover:bg-teal-700 text-white'
+                            : 'bg-accent hover:bg-teal-700 text-white'
                         )}
                       >
                         {isAssistantProcessing ? (

@@ -14,7 +14,7 @@ export function QuickActions() {
       description: 'Plan, assign, and close farm work faster.',
       icon: ClipboardList,
       onClick: () => router.push(`/farms/${farmId}/tasks`),
-      iconClass: 'bg-primary/10 text-primary'
+      iconClass: 'bg-accent/10 text-primary'
     },
     {
       title: 'AI intelligence',
@@ -56,7 +56,7 @@ export function QuickActions() {
               key={action.title}
               type="button"
               onClick={action.onClick}
-              className="group flex h-full w-full items-start gap-3 rounded-xl border border-border bg-muted/30 p-4 text-left transition hover:border-primary/30 hover:bg-primary/5"
+              className="group flex h-full w-full items-start gap-3 rounded-xl border border-border bg-muted/30 p-4 text-left transition hover:border-accent/30 hover:bg-accent/5"
             >
               <span
                 className={`flex h-10 w-10 items-center justify-center rounded-lg ${action.iconClass}`}

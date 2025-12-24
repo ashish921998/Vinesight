@@ -73,11 +73,11 @@ export function TodaysTasksSection({
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'bg-red-100/80 text-red-800 border-red-200'
+        return 'bg-destructive/10 text-destructive border-destructive/20'
       case 'medium':
-        return 'bg-amber-100/80 text-amber-800 border-amber-200'
+        return 'bg-accent/10 text-accent border-accent/20'
       default:
-        return 'bg-primary/10 text-primary border-primary/20'
+        return 'bg-accent/10 text-primary border-accent/20'
     }
   }
 
@@ -133,7 +133,7 @@ export function TodaysTasksSection({
       <div className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent/10 text-primary">
               <Calendar className="h-4 w-4" />
             </span>
             <div>
@@ -170,7 +170,7 @@ export function TodaysTasksSection({
           {overdueTasks.length > 0 && (
             <Badge
               variant="outline"
-              className="rounded-full border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] uppercase tracking-wide text-amber-700"
+              className="rounded-full border-destructive/30 bg-destructive/10 px-2.5 py-1 text-[11px] uppercase tracking-wide text-destructive"
             >
               {overdueTasks.length} overdue
             </Badge>
@@ -178,7 +178,7 @@ export function TodaysTasksSection({
           {completedTasks.length > 0 && (
             <Badge
               variant="outline"
-              className="rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] uppercase tracking-wide text-emerald-700"
+              className="rounded-full border-accent/30 bg-accent/10 px-2.5 py-1 text-[11px] uppercase tracking-wide text-accent"
             >
               {completedTasks.length} done
             </Badge>
@@ -190,7 +190,7 @@ export function TodaysTasksSection({
         <div className="mt-4 rounded-2xl border border-dashed border-border/60 bg-background/70 px-5 py-6">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-accent/10 text-accent">
                 <CheckCircle2 className="h-4 w-4" />
               </span>
               <div>
@@ -216,7 +216,7 @@ export function TodaysTasksSection({
                   className={cn(
                     'group relative overflow-hidden rounded-xl border bg-card transition-all hover:shadow-md',
                     isOverdue
-                      ? 'border-red-200 bg-red-50/50'
+                      ? 'border-destructive/30 bg-destructive/10'
                       : 'border-border/50 hover:border-border'
                   )}
                 >
@@ -231,21 +231,21 @@ export function TodaysTasksSection({
                           className={cn(
                             'group/complete relative h-9 w-9 flex-shrink-0 rounded-full border-2 transition-all hover:scale-110 active:scale-95 hover:bg-transparent',
                             isOverdue
-                              ? 'border-red-400 hover:border-red-500 hover:!bg-red-500 active:!bg-red-600'
-                              : 'border-primary/40 hover:border-emerald-500 hover:!bg-emerald-500 active:!bg-emerald-600'
+                              ? 'border-destructive/40 hover:border-destructive hover:!bg-destructive/10 active:!bg-destructive/20'
+                              : 'border-accent/40 hover:border-accent hover:!bg-accent/10 active:!bg-accent/20'
                           )}
                           aria-label="Mark task as complete"
                         >
                           <Circle
                             className={cn(
                               'h-5 w-5 transition-all md:group-hover/complete:opacity-0',
-                              isOverdue ? 'text-red-400' : 'text-primary/40'
+                              isOverdue ? 'text-destructive/70' : 'text-accent/70'
                             )}
                           />
                           <CheckCircle2
                             className={cn(
                               'absolute h-6 w-6 md:h-5 md:w-5 opacity-40 transition-all md:opacity-0 md:group-hover/complete:opacity-100',
-                              isOverdue ? 'text-red-400' : 'text-primary'
+                              isOverdue ? 'text-destructive' : 'text-accent'
                             )}
                           />
                         </Button>
@@ -256,7 +256,7 @@ export function TodaysTasksSection({
                     </Tooltip>
 
                     {/* Task Icon */}
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-accent/10">
                       {getTaskIcon(task.type)}
                     </div>
 
@@ -279,7 +279,7 @@ export function TodaysTasksSection({
                         {isOverdue && (
                           <Badge
                             variant="outline"
-                            className="rounded-md border-red-300 bg-red-100 px-2 py-0 text-[11px] font-medium uppercase text-red-700 flex-shrink-0"
+                            className="rounded-md border-destructive/30 bg-destructive/10 px-2 py-0 text-[11px] font-medium uppercase text-destructive flex-shrink-0"
                           >
                             overdue
                           </Badge>
@@ -298,7 +298,7 @@ export function TodaysTasksSection({
                         {task.scheduledTime && (
                           <span className="inline-flex items-center gap-1">
                             <Clock className="h-3.5 w-3.5" />
-                            <span className={cn(isOverdue && 'font-semibold text-red-600')}>
+                            <span className={cn(isOverdue && 'font-semibold text-destructive')}>
                               {task.scheduledTime}
                             </span>
                           </span>
@@ -346,14 +346,14 @@ export function TodaysTasksSection({
                   {completedTasks.slice(0, 2).map((task) => (
                     <div
                       key={task.id}
-                      className="flex items-center gap-3 rounded-xl border border-emerald-200/50 bg-emerald-50/30 px-3 py-2.5"
+                      className="flex items-center gap-3 rounded-xl border border-accent/20 bg-accent/5 px-3 py-2.5"
                     >
                       {/* Completed Check Icon */}
-                      <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500">
-                        <CheckCircle2 className="h-4 w-4 text-white" />
+                      <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-accent">
+                        <CheckCircle2 className="h-4 w-4 text-accent-foreground" />
                       </div>
 
-                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-100/50 text-emerald-600/70">
+                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent/80">
                         {getTaskIcon(task.type)}
                       </div>
                       <div className="flex-1 min-w-0">

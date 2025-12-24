@@ -452,11 +452,11 @@ export function MobileAttendanceView({
           </div>
 
           {/* Worker Card */}
-          <Card className="border-primary/20">
+          <Card className="border-accent/20">
             <CardContent className="p-4 space-y-4">
               {/* Worker Selector */}
               <div className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
                   <User className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">

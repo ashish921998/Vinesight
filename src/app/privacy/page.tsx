@@ -1,724 +1,327 @@
 'use client'
 
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   AlertTriangle,
   ArrowLeft,
-  Camera,
   CheckCircle,
-  Database,
-  Eye,
   FileText,
-  Globe,
   Lock,
   Mail,
   Server,
   Shield,
   Smartphone,
+  Upload,
   Users
 } from 'lucide-react'
-import Link from 'next/link'
 import { SEOSchema } from '@/components/SEOSchema'
 import { SUPPORT_EMAIL } from '@/lib/constants'
 
+type Section = {
+  title: string
+  items: string[]
+}
+
+const LAST_UPDATED = 'December 19, 2025'
+
+const COLLECTION: Section[] = [
+  {
+    title: 'Account & identity',
+    items: [
+      'Name, email, phone number, and auth identifiers',
+      'Language, notification, and consent preferences'
+    ]
+  },
+  {
+    title: 'Farm & operational data',
+    items: [
+      'Irrigation, spray, scouting, yield, and labour records',
+      'Soil, weather, satellite, or sensor data tied to your farms',
+      'Photos/files you upload for analysis or record keeping'
+    ]
+  },
+  {
+    title: 'Product analytics',
+    items: [
+      'Device + app metadata for performance and reliability',
+      'Feature usage to improve workflows (no ads, no selling)',
+      'Crash + diagnostics to keep sync reliable offline/online'
+    ]
+  }
+]
+
+const CONTROLS: Section[] = [
+  {
+    title: 'You control',
+    items: [
+      'Access, export, or delete your data by emailing support',
+      'In-app account deletion in Settings → Account',
+      'Consent and notification preferences anytime'
+    ]
+  },
+  {
+    title: 'We commit',
+    items: [
+      'Encryption in transit and at rest',
+      'Least-privilege access for support staff',
+      'No selling of personal data; no third-party ads'
+    ]
+  }
+]
+
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-lime-50 to-sky-50">
+    <div className="min-h-screen bg-background text-foreground">
       <SEOSchema
-        title="Privacy Policy - Vinesight"
-        description="How Vinesight collects, uses, and protects your farming data. Transparent privacy practices built for growers and agronomy teams."
+        title="Privacy Policy - VineSight"
+        description="How VineSight collects, protects, and uses your data across web and mobile."
         type="guide"
         url="/privacy"
         guideCategory="Legal"
         image="/og-image.png"
       />
 
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-4 mb-6">
+      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <Link href="/">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Home
+              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+                <ArrowLeft className="h-4 w-4" />
+                Home
               </Button>
             </Link>
+            <span className="text-sm text-muted-foreground">Privacy Policy</span>
           </div>
+          <span className="text-xs font-medium text-muted-foreground">
+            Last updated: {LAST_UPDATED}
+          </span>
+        </div>
+      </header>
 
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center">
-                <Shield className="h-7 w-7 text-white" />
-              </div>
-              <h1 className="text-4xl font-bold text-gray-900">Privacy Policy</h1>
-            </div>
-            <p className="text-xl text-gray-600 mb-4">
-              How Vinesight protects and handles your data
-            </p>
-            <p className="text-sm text-gray-500">Last updated: December 3, 2025</p>
+      <main className="max-w-5xl mx-auto px-4 py-12 space-y-10">
+        <section className="space-y-4 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-semibold text-foreground">
+            <Shield className="h-4 w-4 text-primary" />
+            Data you own, protected by design
           </div>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        {/* Overview */}
-        <div className="mb-12">
-          <Card className="border-2 border-emerald-200 bg-emerald-50">
-            <CardContent className="p-8">
-              <div className="flex items-start gap-4">
-                <CheckCircle className="h-8 w-8 text-emerald-600 mt-1" />
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-3">Our promise to you</h2>
-                  <p className="text-gray-700 mb-4">
-                    Farm data is sensitive. We collect only what we need to run Vinesight, keep it
-                    secured with industry standards, and give you clear controls over how it is
-                    used. This policy applies to the Vinesight iOS app and web experience.
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-center gap-2">
-                      <Lock className="h-5 w-5 text-emerald-600" />
-                      <span className="font-medium text-sm">Encryption everywhere</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-5 w-5 text-emerald-600" />
-                      <span className="font-medium text-sm">Least-privilege access</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Eye className="h-5 w-5 text-emerald-600" />
-                      <span className="font-medium text-sm">No selling of data</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Apple App Store Summary */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-6 w-6 text-emerald-700" />
-              Apple App Store data disclosure
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-gray-700">
-            <p className="text-sm">
-              To comply with App Store Review Guidelines, here is a summary of how Vinesight handles
-              data on iOS:
-            </p>
-            <ul className="space-y-2 ml-4">
-              <li className="flex items-start gap-2">
-                <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5" />
-                <span className="text-sm">
-                  Data linked to you: contact info (name, email, phone), identifiers, usage data,
-                  diagnostics, and user content (images, notes, farm records).
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5" />
-                <span className="text-sm">
-                  We do not use data for tracking or third-party advertising. No data is sold.
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5" />
-                <span className="text-sm">
-                  Account deletion is available in-app: Settings → Account → Delete account. You can
-                  also email {SUPPORT_EMAIL}.
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5" />
-                <span className="text-sm">
-                  Data is encrypted in transit and at rest and only shared with processors listed
-                  below to run the service.
-                </span>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-8">
-          {/* Information We Collect */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-6 w-6 text-sky-700" />
-                Information we collect
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Account and identity details
-                </h3>
-                <ul className="space-y-2 text-gray-700 ml-4">
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
-                    <span>
-                      Name, email, phone number, and authentication identifiers to create and secure
-                      your account
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
-                    <span>
-                      Farm locations, crop focus, and language preferences to tailor recommendations
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
-                    <span>Notification, consent, and communication preferences</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Farm and operational data
-                </h3>
-                <ul className="space-y-2 text-gray-700 ml-4">
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
-                    <span>
-                      Irrigation plans, spray logs, crop stage records, and yield estimates
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
-                    <span>Soil, weather, satellite, or sensor data connected to your farms</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
-                    <span>Files and photos you upload for AI analysis or record keeping</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
-                    <span>Expense entries, subscription status, and payment confirmations</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Device and usage data</h3>
-                <ul className="space-y-2 text-gray-700 ml-4">
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
-                    <span>Device type, browser, IP address, and security signals</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
-                    <span>Feature usage, performance events, and error reports</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></span>
-                    <span>Session cookies or similar technologies for authentication</span>
-                  </li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* How We Use Your Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-6 w-6 text-emerald-700" />
-                How we use information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Deliver the product</h3>
-                  <ul className="space-y-2 text-gray-700">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <span className="text-sm">
-                        Generate recommendations, schedules, and alerts
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <span className="text-sm">
-                        Provide AI assistance for agronomy and operations questions
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <span className="text-sm">Surface weather, soil, and imagery insights</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <span className="text-sm">
-                        Process billing, receipts, and subscription changes
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    Improve and support Vinesight
-                  </h3>
-                  <ul className="space-y-2 text-gray-700">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <span className="text-sm">
-                        Monitor performance, prevent abuse, and keep systems reliable
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <span className="text-sm">
-                        Improve AI models using aggregated or de-identified data
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <span className="text-sm">Provide support when you request help</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 mt-0.5" />
-                      <span className="text-sm">
-                        Send important notices about security, policy, or service changes
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-4 flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-emerald-700 mt-0.5" />
-                <p className="text-sm text-emerald-900">
-                  We do not train generative models on your identifiable farm data without your
-                  explicit consent. When AI providers process prompts you submit, we minimize the
-                  data shared to only what is needed to fulfil the request.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Mobile Permissions (iOS) */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Smartphone className="h-6 w-6 text-purple-700" />
-                Mobile app permissions (iOS)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-gray-700">
-              <p>
-                When you use the Vinesight iOS app, we may request certain device permissions so
-                core features work as intended. You can change these anytime in your device
-                settings.
-              </p>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <Camera className="h-5 w-5 text-purple-700 mt-0.5" />
-                  <span className="text-sm">
-                    Camera and Photos: Capture or upload field images for AI analysis and records.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Smartphone className="h-5 w-5 text-purple-700 mt-0.5" />
-                  <span className="text-sm">
-                    Location (approximate/precise): Improve weather accuracy and map farm locations.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <FileText className="h-5 w-5 text-purple-700 mt-0.5" />
-                  <span className="text-sm">
-                    Files and media: Let you attach PDFs or documents to farm records.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Mail className="h-5 w-5 text-purple-700 mt-0.5" />
-                  <span className="text-sm">
-                    Push notifications: Send alerts, weather updates, and account notices. You can
-                    opt out in iOS settings.
-                  </span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Data Protection & Security */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-6 w-6 text-sky-700" />
-                Data protection and security
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-gray-700">
-                We secure Vinesight with layered controls across infrastructure, application, and
-                processes:
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
-                      <Lock className="h-4 w-4 text-sky-700" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Encryption end to end</h4>
-                      <p className="text-sm text-gray-600">
-                        TLS in transit and encryption at rest for all storage locations
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
-                      <Server className="h-4 w-4 text-sky-700" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Secure infrastructure</h4>
-                      <p className="text-sm text-gray-600">
-                        Supabase with Row Level Security, signed URLs for files, and scoped keys
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
-                      <Shield className="h-4 w-4 text-sky-700" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Access control</h4>
-                      <p className="text-sm text-gray-600">
-                        Least-privilege roles, MFA for administrators, and audit trails for
-                        sensitive actions
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
-                      <Eye className="h-4 w-4 text-sky-700" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Operational safeguards</h4>
-                      <p className="text-sm text-gray-600">
-                        Backup rotation, monitoring, and incident response procedures
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Data Sharing & Third Parties */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-6 w-6 text-orange-600" />
-                Sharing with third parties
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="h-5 w-5 text-orange-700 mt-0.5" />
-                  <div>
-                    <h3 className="font-semibold text-orange-900 mb-1">We do not sell data</h3>
-                    <p className="text-orange-800 text-sm">
-                      Vinesight never sells or rents your personal or farm data. Sharing only
-                      happens as described below.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">When sharing happens</h3>
-                <p className="text-gray-700 mb-3">We may share limited data in these cases:</p>
-                <ul className="space-y-2 text-gray-700 ml-4">
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                    <span>
-                      Trusted processors (cloud hosting, analytics, and support) under contract
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                    <span>
-                      AI providers to fulfil prompts you initiate, using data minimization
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                    <span>
-                      Optional integrations you enable (e.g., sensors, weather, accounting)
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                    <span>Legal obligations, protection of rights, or investigating abuse</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Third-party services</h3>
-                <p className="text-gray-700 mb-3">
-                  These partners process data only to provide the app and comply with their own
-                  privacy terms:
-                </p>
-                <ul className="space-y-2 text-gray-700 ml-4">
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                    <span>
-                      Supabase for hosting, authentication, database, and file storage with RLS
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                    <span>AI providers (OpenAI, Google AI, Groq) for prompts you initiate</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                    <span>
-                      Analytics and crash reporting tools (e.g., Sentry) to improve stability
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full mt-2"></span>
-                    <span>Payment processors for subscriptions and invoices</span>
-                  </li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Your Rights */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-                Your rights and choices
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-gray-700">You control your information across Vinesight:</p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    Data access and control
-                  </h3>
-                  <ul className="space-y-2 text-gray-700">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                      <span className="text-sm">
-                        Export your records or request a copy of your data
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                      <span className="text-sm">
-                        Correct or update inaccurate details in your profile
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                      <span className="text-sm">
-                        Delete specific records or close your account entirely
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                      <span className="text-sm">
-                        Opt out of optional analytics or research uses
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                      <span className="text-sm">
-                        Request deletion from iOS in Settings → Account → Delete account, or email{' '}
-                        {SUPPORT_EMAIL}
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    Communication preferences
-                  </h3>
-                  <ul className="space-y-2 text-gray-700">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                      <span className="text-sm">Choose notification channels and frequency</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                      <span className="text-sm">Unsubscribe from marketing communications</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                      <span className="text-sm">Set language and region preferences</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                      <span className="text-sm">Adjust AI assistant context sharing</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Data Retention */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Server className="h-6 w-6 text-blue-600" />
-                Data retention
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-gray-700">
-                We retain your information only as long as necessary. Deleting the app from your
-                device does not delete your account data—please request deletion from settings or
-                contact us.
-              </p>
-
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <FileText className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Active accounts</h4>
-                    <p className="text-sm text-gray-600">
-                      Data is retained while your account is active and for a short period after
-                      closure to honour regulatory and billing requirements.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Database className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Backups</h4>
-                    <p className="text-sm text-gray-600">
-                      Encrypted backups are held for disaster recovery on a rolling schedule before
-                      being purged.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <AlertTriangle className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Aggregated insights</h4>
-                    <p className="text-sm text-gray-600">
-                      De-identified or aggregated data may be kept longer for research and product
-                      improvement.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Additional Notices */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-6 w-6 text-sky-700" />
-                Regional considerations
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-gray-700">
-                Vinesight primarily stores data in the region closest to your operations. If data is
-                transferred across regions, we apply equivalent protections and contractual
-                safeguards.
-              </p>
-              <p className="text-gray-700">
-                If you are a minor under applicable law, please use Vinesight only with permission
-                from a parent or guardian.
-              </p>
-              <p className="text-gray-700">
-                We do not knowingly collect personal data from children under 16. If you believe a
-                child has provided data, contact us and we will delete it.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Contact Information */}
-          <Card className="border-2 border-emerald-200 bg-emerald-50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-6 w-6 text-emerald-700" />
-                Questions or requests
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 mb-4">
-                We are committed to transparency. Reach out if you have privacy questions, need to
-                exercise your rights, or want to report a concern.
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="text-center">
-                  <Mail className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
-                  <p className="font-semibold text-gray-900">Privacy & Support</p>
-                  <p className="text-sm text-gray-600">{SUPPORT_EMAIL}</p>
-                </div>
-                <div className="text-center">
-                  <Shield className="h-8 w-8 text-emerald-700 mx-auto mb-2" />
-                  <p className="font-semibold text-gray-900">Security</p>
-                  <p className="text-sm text-gray-600">{SUPPORT_EMAIL}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Updates to Policy */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Updates to this policy</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 mb-4">
-                We may update this policy as our product or regulations change. Significant updates
-                will be communicated through the app or by email.
-              </p>
-              <ul className="space-y-2 text-gray-700 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="w-2 h-2 bg-gray-400 rounded-full mt-2"></span>
-                  <span>
-                    We will update the &quot;Last updated&quot; date at the top of this page.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-2 h-2 bg-gray-400 rounded-full mt-2"></span>
-                  <span>We will summarize material changes in your dashboard or by email.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-2 h-2 bg-gray-400 rounded-full mt-2"></span>
-                  <span>You can contact us anytime for the current version or with questions.</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-16 text-center">
-          <p className="text-gray-500 text-sm">
-            Vinesight is built for growers first. Protecting your data and trust is at the core of
-            how we operate.
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Privacy Policy</h1>
+          <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
+            We collect only what we need to operate VineSight. Your operational data is encrypted,
+            never sold, and always exportable.
           </p>
-        </div>
-      </div>
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="border border-border bg-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <CheckCircle className="h-5 w-5 text-accent" />
+                At a glance
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>We use encryption at rest and in transit and apply least-privilege access.</p>
+              <p>No selling of personal data. No third-party advertising.</p>
+              <p>Account deletion is available in-app or by contacting us.</p>
+              <p>We retain data only as long as necessary to run the service.</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-border bg-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <FileText className="h-5 w-5 text-primary" />
+                Apple App Store summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-accent mt-0.5" />
+                  <span>
+                    Data linked to you: contact info, identifiers, usage, diagnostics, user content.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-accent mt-0.5" />
+                  <span>Not used for tracking or ads; not sold.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-accent mt-0.5" />
+                  <span>
+                    Delete your account in-app (Settings → Account) or email {SUPPORT_EMAIL}.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-accent mt-0.5" />
+                  <span>
+                    Encrypted in transit and at rest; shared only with processors required to run
+                    VineSight.
+                  </span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {COLLECTION.map((section) => (
+            <Card key={section.title} className="border border-border bg-card h-full">
+              <CardHeader>
+                <CardTitle className="text-base font-semibold">{section.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-muted-foreground">
+                {section.items.map((item, index) => (
+                  <div key={`${section.title}-${index}`} className="flex items-start gap-2">
+                    <span className="mt-1 h-2 w-2 rounded-full bg-accent" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          ))}
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="border border-border bg-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Server className="h-5 w-5 text-primary" />
+                How we use and share data
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                We process data to deliver the product, support users, secure the platform, and
+                improve reliability.
+              </p>
+              <p>
+                Processors may include hosting, analytics, logging, payments, and email providers.
+                They are bound by confidentiality and data processing terms.
+              </p>
+              <p>
+                We may disclose data if required by law or to protect VineSight, users, or the
+                public.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-border bg-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Smartphone className="h-5 w-5 text-primary" />
+                Data retention & location
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p>Data is stored in secure cloud regions with encryption at rest and in transit.</p>
+              <p>
+                We retain data only while your account is active or as required for legal/compliance
+                purposes.
+              </p>
+              <p>Backups are purged on a rolling basis; exports are available on request.</p>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {CONTROLS.map((section) => (
+            <Card key={section.title} className="border border-border bg-card h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  {section.title === 'You control' ? (
+                    <Users className="h-5 w-5 text-primary" />
+                  ) : (
+                    <Lock className="h-5 w-5 text-accent" />
+                  )}
+                  {section.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-muted-foreground">
+                {section.items.map((item, index) => (
+                  <div key={`${section.title}-${index}`} className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-accent mt-0.5" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          ))}
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="border border-border bg-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Upload className="h-5 w-5 text-primary" />
+                Third-party services
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                We rely on cloud infrastructure, analytics, and support tools to operate VineSight.
+              </p>
+              <p>Vendors are vetted for security; data shared is limited to what is necessary.</p>
+              <p>
+                Current categories: hosting, analytics/telemetry, email/SMS, payments, support, and
+                backup.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-border bg-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <AlertTriangle className="h-5 w-5 text-primary" />
+                Children’s data
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                VineSight is not directed to children under 16. We do not knowingly collect their
+                data.
+              </p>
+              <p>If you believe a minor’s data is in our system, contact us to remove it.</p>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="border border-border bg-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Shield className="h-5 w-5 text-primary" />
+                Security practices
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>Encryption at rest and in transit; audit logging for privileged access.</p>
+              <p>Role-based access controls; periodic security reviews of critical systems.</p>
+              <p>Responsible disclosure: email security reports to {SUPPORT_EMAIL}.</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-border bg-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Mail className="h-5 w-5 text-primary" />
+                Contact
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p>Questions or requests (access, export, deletion):</p>
+              <div className="flex items-center gap-2 font-medium text-foreground">
+                <Mail className="h-4 w-4 text-accent" />
+                <a className="hover:text-primary" href={`mailto:${SUPPORT_EMAIL}`}>
+                  {SUPPORT_EMAIL}
+                </a>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      </main>
     </div>
   )
 }

@@ -213,13 +213,13 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   const getStatusColor = (status?: string) => {
     switch (status) {
       case 'healthy':
-        return 'bg-green-100 border-green-200 text-green-800'
+        return 'bg-accent/10 border-accent/20 text-accent'
       case 'attention':
-        return 'bg-amber-100 border-amber-200 text-amber-800'
+        return 'bg-warning/10 border-warning/20 text-warning'
       case 'critical':
-        return 'bg-red-100 border-red-200 text-red-800'
+        return 'bg-destructive/10 border-destructive/20 text-destructive'
       default:
-        return 'bg-primary/10 border-primary/20 text-primary'
+        return 'bg-muted/10 border-muted/20 text-muted-foreground'
     }
   }
 
@@ -228,7 +228,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
           <p className="text-muted-foreground mt-4">Loading your dashboard...</p>
         </div>
       </div>
@@ -240,7 +240,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center p-6">
-          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <h2 className="text-lg font-semibold mb-2">Dashboard Error</h2>
           <p className="text-muted-foreground mb-4">{error}</p>
           <Button onClick={() => window.location.reload()}>Try Again</Button>
@@ -278,12 +278,6 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   })
   const alerts = ((dashboardData as { alerts?: any[] } | null)?.alerts ?? []) as any[]
   const recentActivities = dashboardData?.recentActivities ?? []
-  const totalRecords = dashboardData?.recordCounts
-    ? (Object.values(dashboardData.recordCounts) as number[]).reduce(
-        (sum, count) => sum + (Number.isFinite(count) ? Number(count) : 0),
-        0
-      )
-    : 0
 
   const formatNumber = (value?: number, digits = 0) => {
     if (value === undefined || value === null || Number.isNaN(value)) return '0'
@@ -476,8 +470,11 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       label: 'Due soon',
       body: urgent > 0 ? `${urgent} need attention today` : `All scheduled within 48 hours`,
       icon: CalendarDays,
-      accent: 'from-amber-200/50 via-background to-transparent',
-      emphasis: urgent > 0 ? 'text-red-600' : 'text-primary'
+      accent:
+        urgent > 0
+          ? 'from-destructive/15 via-background to-transparent'
+          : 'from-accent/15 via-background to-transparent',
+      emphasis: urgent > 0 ? 'text-destructive' : 'text-accent'
     })
   }
 
@@ -488,8 +485,8 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       label: 'Immediate',
       body: highPriorityAlerts[0]?.title || 'Check alert centre',
       icon: ShieldAlert,
-      accent: 'from-red-200/60 via-background to-transparent',
-      emphasis: 'text-red-600'
+      accent: 'from-destructive/15 via-background to-transparent',
+      emphasis: 'text-destructive'
     })
   } else if (infoAlerts.length > 0) {
     highlightTiles.push({
@@ -517,8 +514,8 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       label: weatherData.current.condition || 'Weather',
       body: weatherParts.join(' • '),
       icon: Sun,
-      accent: 'from-sky-200/50 via-background to-transparent',
-      emphasis: 'text-sky-600'
+      accent: 'from-primary/10 via-background to-transparent',
+      emphasis: 'text-primary'
     })
   }
 
@@ -531,7 +528,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       label: 'Last 48h',
       body: activityMeta.detail,
       icon: activityMeta.icon,
-      accent: 'from-emerald-200/40 via-background to-transparent',
+      accent: 'from-accent/10 via-background to-transparent',
       emphasis: activityMeta.iconClass
     })
   }
@@ -577,8 +574,8 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       label: 'Harvest to date',
       body: 'Kg captured this season',
       icon: Sprout,
-      accent: 'from-emerald-100/40 via-background to-transparent',
-      emphasis: 'text-emerald-600'
+      accent: 'from-accent/15 via-background to-transparent',
+      emphasis: 'text-accent'
     },
     {
       id: 'metric-water',
@@ -589,8 +586,8 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
           ? `Across ${formatNumber(selectedFarm.area, selectedFarm.area >= 10 ? 0 : 1)} acre${selectedFarm.area > 1 ? 's' : ''}`
           : 'Cumulative irrigation depth',
       icon: Droplet,
-      accent: 'from-sky-100/50 via-background to-transparent',
-      emphasis: 'text-sky-600'
+      accent: 'from-primary/10 via-background to-transparent',
+      emphasis: 'text-primary'
     }
   ]
 
@@ -600,7 +597,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     <section className="rounded-3xl border border-border/60 bg-background/95 px-4 py-4 shadow-sm backdrop-blur sm:px-5 sm:py-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:h-10 sm:w-10">
+          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-accent/10 text-primary sm:h-10 sm:w-10">
             <History className="h-4 w-4 sm:h-5 sm:w-5" />
           </span>
           <div>
@@ -616,7 +613,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
           variant="outline"
           size="sm"
           onClick={handleAddLog}
-          className="h-9 rounded-2xl border-border/60 bg-background/80 px-3 text-xs font-semibold text-primary hover:bg-primary/10 sm:h-10"
+          className="h-9 rounded-2xl border-border/60 bg-background/80 px-3 text-xs font-semibold text-primary hover:bg-accent/10 sm:h-10"
         >
           <Plus className="mr-2 h-3.5 w-3.5" />
           Log
@@ -670,7 +667,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 rounded-full text-primary hover:bg-primary/10"
+                      className="h-8 w-8 rounded-full text-primary hover:bg-accent/10"
                       onClick={() => handleEditRecord(activity)}
                       title="Edit log"
                     >
@@ -680,7 +677,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 rounded-full text-red-600 hover:bg-red-100"
+                    className="h-8 w-8 rounded-full text-destructive hover:bg-destructive/10"
                     onClick={() => handleDeleteRecord(activity)}
                     title="Delete log"
                   >
@@ -778,7 +775,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
     switch (type) {
       case 'irrigation': {
         Icon = Droplets
-        iconClass = 'text-sky-600'
+        iconClass = 'text-primary'
         const duration = activity?.duration ?? 0
         const discharge = activity?.system_discharge ?? 0
         const totalLiters = duration * discharge
@@ -804,7 +801,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       }
       case 'spray': {
         Icon = SprayCan
-        iconClass = 'text-purple-600'
+        iconClass = 'text-primary'
         const chemical = activity?.chemical || activity?.chemicals?.[0]?.name || 'Spray application'
         const quantity = activity?.quantity_amount
         const unit = activity?.quantity_unit
@@ -825,7 +822,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       }
       case 'fertigation': {
         Icon = FlaskConical
-        iconClass = 'text-amber-600'
+        iconClass = 'text-accent'
 
         // Handle new fertilizers array format
         const fertilizers = activity?.fertilizers as Array<{
@@ -887,7 +884,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       }
       case 'harvest': {
         Icon = Wheat
-        iconClass = 'text-emerald-600'
+        iconClass = 'text-accent'
         const quantity = activity?.quantity
         if (quantity) {
           detailParts.push(`${formatNumber(quantity, quantity >= 100 ? 0 : 1)} kg`)
@@ -907,7 +904,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
       }
       case 'expense': {
         Icon = Wallet
-        iconClass = 'text-orange-600'
+        iconClass = 'text-primary'
         const cost = activity?.cost
         if (cost) {
           detailParts.push(`₹${formatNumber(cost, cost >= 1000 ? 0 : 1)}`)
@@ -995,10 +992,10 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                                 className={cn(
                                   'h-2 w-2 rounded-full',
                                   status === 'healthy'
-                                    ? 'bg-green-500'
+                                    ? 'bg-success'
                                     : status === 'attention'
-                                      ? 'bg-amber-500'
-                                      : 'bg-red-500'
+                                      ? 'bg-warning'
+                                      : 'bg-destructive'
                                 )}
                               />
                               <span>{capitalize(farm.name)}</span>
@@ -1029,7 +1026,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
                 <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground sm:text-sm">
                   {selectedFarm?.dateOfPruning &&
                     calculateDaysAfterPruning(selectedFarm.dateOfPruning) && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-primary px-2.5 py-0.5 font-semibold text-primary-foreground sm:px-3 sm:py-1">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-accent px-2.5 py-0.5 font-semibold text-accent-foreground sm:px-3 sm:py-1">
                         <Scissors className="h-3.5 w-3.5" />
                         {calculateDaysAfterPruning(selectedFarm.dateOfPruning)} days
                       </span>
@@ -1104,19 +1101,19 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
               <TabsList className="w-full gap-1 rounded-full border border-border/60 bg-background/80 p-1">
                 <TabsTrigger
                   value="activities"
-                  className="flex-1 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  className="flex-1 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
                 >
                   Activities
                 </TabsTrigger>
                 <TabsTrigger
                   value="tasks"
-                  className="flex-1 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  className="flex-1 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
                 >
                   Tasks
                 </TabsTrigger>
                 <TabsTrigger
                   value="alerts"
-                  className="flex-1 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  className="flex-1 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
                 >
                   Alerts
                 </TabsTrigger>

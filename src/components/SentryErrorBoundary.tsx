@@ -35,7 +35,7 @@ class SimpleErrorBoundary extends React.Component<{ children: ReactNode }, { has
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+              className="px-4 py-2 bg-accent text-accent-foreground rounded hover:bg-accent/90"
             >
               Refresh Page
             </button>

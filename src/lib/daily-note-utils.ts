@@ -1,8 +1,3 @@
-/**
- * Utility functions for daily note operations
- * Reduces code duplication across components
- */
-
 import { toast } from 'sonner'
 import { NUMBER_SYSTEM } from './constants'
 import { SupabaseService } from './supabase-service'

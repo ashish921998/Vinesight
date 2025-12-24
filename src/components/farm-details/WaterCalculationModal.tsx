@@ -19,11 +19,9 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { Droplets, Calculator, Loader2, Edit3, Clock } from 'lucide-react'
+import { Droplets, Calculator, Edit3, Clock } from 'lucide-react'
 import { SupabaseService } from '@/lib/supabase-service'
-import { NotificationService } from '@/lib/notification-service'
 import type { Farm } from '@/types/types'
-import { capitalize } from '@/lib/utils'
 
 interface WaterCalculationModalProps {
   isOpen: boolean
@@ -213,13 +211,13 @@ export function WaterCalculationModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[350px] w-[90vw] mx-auto max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader className="pr-8">
-          <DialogTitle className="flex items-center gap-3 text-green-700 break-words">
-            <div className="p-2 bg-green-100 rounded-xl flex-shrink-0">
+          <DialogTitle className="flex items-center gap-3 text-accent break-words">
+            <div className="p-2 bg-accent/10 rounded-xl flex-shrink-0">
               <Calculator className="h-5 w-5" />
             </div>
             <span className="text-wrap">Calculate Water</span>
           </DialogTitle>
-          <DialogDescription className="text-sm text-gray-600 break-words">
+          <DialogDescription className="text-sm text-muted-foreground break-words">
             Enter current values to calculate daily water reduction or manually set water level
           </DialogDescription>
           {(!farm.remainingWater || farm.remainingWater === 0) && (
@@ -228,7 +226,7 @@ export function WaterCalculationModal({
             </div>
           )}
           {lastUpdatedAt && (
-            <div className="flex items-center gap-1 text-[11px] text-gray-500 mt-2">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
               <Clock className="h-3 w-3 flex-shrink-0" />
               <span>Last updated {lastUpdatedAt}</span>
             </div>
@@ -238,20 +236,20 @@ export function WaterCalculationModal({
         <div className="space-y-4">
           {/* Current Water Level Display */}
           {farm.remainingWater && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="p-3 bg-accent/10 border border-accent/20 rounded-lg">
               <div className="text-center">
-                <div className="text-sm font-medium text-blue-700 mb-1">Current Water Level</div>
-                <div className="text-2xl font-bold text-blue-800">
+                <div className="text-sm font-medium text-accent mb-1">Current Water Level</div>
+                <div className="text-2xl font-bold text-accent">
                   {farm.remainingWater.toFixed(1)} mm
                 </div>
-                <div className="text-xs text-blue-600">Available water in soil</div>
+                <div className="text-xs text-accent/80">Available water in soil</div>
               </div>
             </div>
           )}
 
           {/* Mode Selection - Always show */}
-          <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <Label className="text-sm font-medium text-gray-700 mb-2 block break-words">
+          <div className="p-3 bg-muted border border-border rounded-lg">
+            <Label className="text-sm font-medium text-foreground mb-2 block break-words">
               Water Level Entry Method
             </Label>
             <div className="flex items-center justify-center gap-2">
@@ -285,7 +283,7 @@ export function WaterCalculationModal({
           {/* Manual Water Level Entry - Always show when manual mode is selected */}
           {useManualMode && (
             <div>
-              <Label htmlFor="manualWaterLevel" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="manualWaterLevel" className="text-sm font-medium text-foreground">
                 Water Level (mm) *
               </Label>
               <Input
@@ -301,8 +299,8 @@ export function WaterCalculationModal({
                 inputMode="decimal"
                 autoComplete="off"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Enter the current water level in your soil
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter current water level in your soil
               </p>
             </div>
           )}
@@ -312,7 +310,7 @@ export function WaterCalculationModal({
             <>
               {/* Crop Coefficient */}
               <div>
-                <Label htmlFor="cropCoefficient" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="cropCoefficient" className="text-sm font-medium text-foreground">
                   Crop Coefficient (Kc) *
                 </Label>
                 <Select
@@ -329,7 +327,7 @@ export function WaterCalculationModal({
                       <SelectItem key={stage.id} value={stage.id}>
                         <div className="flex flex-col items-start">
                           <span>{stage.value}</span>
-                          <span className="text-xs text-gray-500">{stage.label}</span>
+                          <span className="text-xs text-muted-foreground">{stage.label}</span>
                         </div>
                       </SelectItem>
                     ))}
@@ -339,7 +337,7 @@ export function WaterCalculationModal({
 
               {/* Evapotranspiration */}
               <div>
-                <Label htmlFor="evapotranspiration" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="evapotranspiration" className="text-sm font-medium text-foreground">
                   Evapotranspiration (mm/day) *
                 </Label>
                 <Input
@@ -357,14 +355,14 @@ export function WaterCalculationModal({
                   autoComplete="off"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Daily water loss rate from your crop and soil
                 </p>
               </div>
 
               {/* Rainfall */}
               <div>
-                <Label htmlFor="rainfall" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="rainfall" className="text-sm font-medium text-foreground">
                   Rainfall (mm)
                 </Label>
                 <Input
@@ -381,7 +379,7 @@ export function WaterCalculationModal({
                   inputMode="decimal"
                   autoComplete="off"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Rain received in the last 24 hours (leave 0 if no rain)
                 </p>
               </div>
@@ -392,9 +390,8 @@ export function WaterCalculationModal({
                   type="button"
                   onClick={handleCalculate}
                   disabled={!isFormValid}
-                  className="w-full h-12 bg-green-600 hover:bg-green-700 text-base min-h-[44px] touch-manipulation text-wrap"
+                  className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 text-base min-h-[44px] touch-manipulation text-wrap"
                 >
-                  <Calculator className="h-4 w-4 mr-2 flex-shrink-0" />
                   <span className="text-wrap">Calculate Water Level</span>
                 </Button>
               </div>
@@ -403,27 +400,27 @@ export function WaterCalculationModal({
 
           {/* Water Level Result Section */}
           {(calculationResult !== null || manualWaterLevel) && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <Droplets className="h-5 w-5 text-green-600 flex-shrink-0" />
-                  <span className="text-sm font-medium text-green-700">Water Level Result</span>
+                  <Droplets className="h-5 w-5 text-accent flex-shrink-0" />
+                  <span className="text-sm font-medium text-accent">Water Level Result</span>
                 </div>
 
                 {/* Water Level Display */}
-                <div className="text-2xl font-bold text-green-800 mb-1">
+                <div className="text-2xl font-bold text-accent mb-1">
                   {useManualMode
                     ? (parseFloat(manualWaterLevel) || 0).toFixed(1)
                     : (calculationResult || 0).toFixed(1)}{' '}
                   mm
                 </div>
-                <div className="text-xs text-green-600 mb-3">
+                <div className="text-xs text-accent/80 mb-3">
                   {useManualMode ? 'Manually entered water level' : 'Available water in soil'}
                 </div>
 
                 {/* Formula breakdown - only show in calculated mode */}
                 {!useManualMode && calculationResult !== null && (
-                  <div className="text-xs text-green-700 bg-green-100 p-2 rounded border break-words overflow-hidden">
+                  <div className="text-xs text-accent/80 bg-accent/10 p-2 rounded border border-accent/20 break-words overflow-hidden">
                     <div className="font-medium mb-1">Calculation:</div>
                     <div className="flex flex-col space-y-1 text-center">
                       <div className="break-all">
@@ -455,19 +452,9 @@ export function WaterCalculationModal({
             type="button"
             onClick={handleSave}
             disabled={!canSave || isCalculating}
-            className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-sm min-h-[44px] touch-manipulation px-2"
+            className="flex-1 h-12 bg-accent text-accent-foreground hover:bg-accent/90 text-sm min-h-[44px] touch-manipulation px-2"
           >
-            {isCalculating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-1 animate-spin flex-shrink-0" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Droplets className="h-4 w-4 mr-1 flex-shrink-0" />
-                Save
-              </>
-            )}
+            {isCalculating ? <>Saving...</> : <>Save</>}
           </Button>
         </div>
       </DialogContent>

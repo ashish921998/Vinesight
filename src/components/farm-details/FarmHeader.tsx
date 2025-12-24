@@ -27,7 +27,12 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { type Farm } from '@/types/types'
-import { capitalize, formatRemainingWater, calculateDaysAfterPruning } from '@/lib/utils'
+import {
+  capitalize,
+  formatRemainingWater,
+  formatWaterUsage,
+  calculateDaysAfterPruning
+} from '@/lib/utils'
 
 export type FarmWeatherSummary = {
   temperature: number | null
@@ -60,8 +65,6 @@ interface FarmHeaderProps {
 // Text max-width values (140px, 450px) are used directly in Tailwind classes for responsive behavior
 const FARM_SELECT_MIN_WIDTH = 200 // Minimum width for select trigger (inline style)
 const FARM_SELECT_MOBILE_OFFSET = 180 // Space reserved for Log + Edit buttons on mobile (inline style)
-const FARM_SELECT_TEXT_MAX_MOBILE = 140 // Max text width before truncation on mobile (Tailwind: max-w-[140px])
-const FARM_SELECT_TEXT_MAX_DESKTOP = 450 // Max text width before truncation on desktop (Tailwind: sm:max-w-[450px])
 const FARM_SELECT_DROPDOWN_MAX_WIDTH = 320 // Max width for dropdown menu (inline style)
 const FARM_SELECT_LIST_MAX_HEIGHT = 390 // Max height for farm list (shows ~6 farms at 65px each)
 
@@ -76,7 +79,6 @@ export function FarmHeader({
   onOpenWaterCalculator,
   onViewLogEntries,
   weatherSummary,
-  onOpenWeatherDetails,
   onEditFarm,
   onDeleteFarm,
   allFarms,
@@ -100,16 +102,6 @@ export function FarmHeader({
     if (value < 1000) return `${formatNumber(value)} kg harvested`
     const tonnes = value / 1000
     return `${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 }).format(tonnes)} t harvested`
-  }
-
-  const formatWaterUsage = (value: number | null | undefined) => {
-    if (value === null || value === undefined || value === 0) return 'No irrigation logged yet'
-    const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
-    const formatter = new Intl.NumberFormat('en-IN', {
-      minimumFractionDigits: digits,
-      maximumFractionDigits: digits
-    })
-    return `${formatter.format(value)} mm applied`
   }
 
   const daysAfterPruning = calculateDaysAfterPruning(farm.dateOfPruning)
@@ -346,7 +338,7 @@ export function FarmHeader({
                               size="sm"
                               onClick={onAddLogs}
                               disabled={loading}
-                              className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
+                              className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-accent px-3 text-xs font-semibold text-accent-foreground shadow-sm transition hover:bg-accent/90 disabled:opacity-50"
                             >
                               <Plus className="h-4 w-4" />
                               Log
@@ -359,7 +351,7 @@ export function FarmHeader({
                                   variant="outline"
                                   size="icon"
                                   disabled={loading}
-                                  className="h-8 w-8 shrink-0 rounded-full border border-border/60 bg-muted/70 text-muted-foreground transition hover:border-primary/60 hover:text-primary disabled:opacity-50"
+                                  className="h-8 w-8 shrink-0 rounded-full border border-border/60 bg-muted/70 text-muted-foreground transition hover:border-accent/60 hover:text-primary disabled:opacity-50"
                                   aria-label="Open farm actions"
                                 >
                                   <MoreVertical className="h-4 w-4" />
@@ -403,13 +395,13 @@ export function FarmHeader({
                             key={label}
                             className={`inline-flex max-w-[75vw] items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold sm:max-w-[220px] sm:text-xs ${
                               emphasis
-                                ? 'bg-primary text-primary-foreground'
+                                ? 'bg-accent text-accent-foreground'
                                 : 'bg-muted text-foreground/80'
                             }`}
                           >
                             <TagIcon
                               className={`h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4 ${
-                                emphasis ? 'text-primary-foreground' : 'text-primary'
+                                emphasis ? 'text-accent-foreground' : 'text-primary'
                               }`}
                             />
                             <span className="truncate">{label}</span>
@@ -427,7 +419,7 @@ export function FarmHeader({
                   <Button
                     onClick={onAddLogs}
                     disabled={loading}
-                    className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
+                    className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-accent px-6 text-sm font-semibold text-accent-foreground shadow-sm transition hover:bg-accent/90 disabled:opacity-50"
                   >
                     <Plus className="h-4 w-4" />
                     Log activity
@@ -440,7 +432,7 @@ export function FarmHeader({
                         variant="outline"
                         size="icon"
                         disabled={loading}
-                        className="mt-1 h-11 w-11 shrink-0 rounded-full border-border/70 bg-card text-muted-foreground hover:bg-primary/10 hover:text-primary disabled:opacity-50"
+                        className="mt-1 h-11 w-11 shrink-0 rounded-full border-border/70 bg-card text-muted-foreground hover:bg-accent/10 hover:text-primary disabled:opacity-50"
                         aria-label="Open farm actions"
                       >
                         <MoreVertical className="h-4 w-4" />
@@ -490,13 +482,13 @@ export function FarmHeader({
                 onClick={stat.onClick}
                 className={`flex h-full min-h-[120px] w-full flex-col justify-between rounded-2xl border border-border/60 bg-muted/20 p-3 text-left sm:min-h-[136px] sm:p-3.5 ${
                   stat.onClick
-                    ? 'cursor-pointer transition hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60'
+                    ? 'cursor-pointer transition hover:border-accent/50 hover:bg-accent/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60'
                     : ''
                 }`}
               >
                 <div className="flex items-center justify-between gap-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   <span className="max-w-[70%] truncate sm:max-w-[65%]">{stat.label}</span>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary sm:h-10 sm:w-10">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10 text-primary sm:h-10 sm:w-10">
                     <Icon className="h-4 w-4" />
                   </span>
                 </div>

@@ -39,20 +39,20 @@ export function FarmSelector({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'healthy':
-        return 'text-green-600 bg-green-100'
+        return 'text-accent bg-accent/10'
       case 'attention':
-        return 'text-amber-600 bg-amber-100'
+        return 'text-warning bg-warning/10'
       case 'critical':
-        return 'text-red-600 bg-red-100'
+        return 'text-destructive bg-destructive/10'
       default:
-        return 'text-gray-600 bg-gray-100'
+        return 'text-muted-foreground bg-muted'
     }
   }
 
   const getHealthScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600'
-    if (score >= 60) return 'text-amber-600'
-    return 'text-red-600'
+    if (score >= 80) return 'text-accent'
+    if (score >= 60) return 'text-secondary'
+    return 'text-destructive'
   }
 
   return (
@@ -80,7 +80,7 @@ export function FarmSelector({
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 {selectedFarm.criticalAlerts > 0 && (
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
                 )}
                 <div
                   className={`text-sm font-semibold ${getHealthScoreColor(selectedFarm.healthScore)}`}
@@ -102,8 +102,10 @@ export function FarmSelector({
               {/* Portfolio Option */}
               {showPortfolio && (
                 <button
-                  className={`w-full p-3 text-left rounded-lg transition-all hover:bg-muted touch-manipulation ${
-                    !selectedFarmId ? 'bg-primary/10 border border-primary/20' : ''
+                  className={`w-full p-3 text-left rounded-lg border-2 transition-all hover:bg-muted touch-manipulation ${
+                    !selectedFarmId
+                      ? 'border-accent/20 bg-accent/10 text-primary'
+                      : 'border-transparent'
                   }`}
                   onClick={() => {
                     onPortfolioSelect?.()
@@ -126,8 +128,10 @@ export function FarmSelector({
               {farms.map((farm) => (
                 <button
                   key={farm.id}
-                  className={`w-full p-3 text-left rounded-lg transition-all hover:bg-muted touch-manipulation ${
-                    selectedFarmId === farm.id ? 'bg-primary/10 border border-primary/20' : ''
+                  className={`w-full p-3 text-left rounded-lg border-2 transition-all hover:bg-muted touch-manipulation ${
+                    selectedFarmId === farm.id
+                      ? 'border-accent/20 bg-accent/10 text-primary'
+                      : 'border-transparent'
                   }`}
                   onClick={() => {
                     onFarmSelect(farm.id)
@@ -157,9 +161,7 @@ export function FarmSelector({
                         >
                           {farm.healthScore}
                         </div>
-                        <div className="text-xs text-green-600">
-                          +{farm.profitMargin.toFixed(0)}%
-                        </div>
+                        <div className="text-xs text-accent">+{farm.profitMargin.toFixed(0)}%</div>
                       </div>
                     </div>
                   </div>
@@ -204,13 +206,13 @@ export function FarmTabs({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'healthy':
-        return 'border-green-200 bg-green-50 text-green-800'
+        return 'border-accent/30 bg-accent/10 text-accent'
       case 'attention':
-        return 'border-amber-200 bg-amber-50 text-amber-800'
+        return 'border-secondary/20 bg-secondary/10 text-secondary'
       case 'critical':
-        return 'border-red-200 bg-red-50 text-red-800'
+        return 'border-destructive/30 bg-destructive/10 text-destructive'
       default:
-        return 'border-gray-200 bg-gray-50 text-gray-800'
+        return 'border-border/60 bg-background/80 text-muted-foreground'
     }
   }
 
@@ -221,7 +223,7 @@ export function FarmTabs({
           key={farm.id}
           className={`flex-shrink-0 p-2 rounded-lg border-2 transition-all touch-manipulation ${
             selectedFarmId === farm.id
-              ? 'border-primary bg-primary/10 text-primary'
+              ? 'border-accent/20 bg-accent/10 text-primary'
               : `${getStatusColor(farm.status)} hover:shadow-md`
           }`}
           onClick={() => onFarmSelect(farm.id)}
@@ -231,7 +233,7 @@ export function FarmTabs({
               {capitalize(farm.name.split(' ')[0])}
             </div>
             <div className="flex items-center justify-center gap-1 mt-1">
-              {farm.criticalAlerts > 0 && <AlertTriangle className="h-3 w-3 text-red-600" />}
+              {farm.criticalAlerts > 0 && <AlertTriangle className="h-3 w-3 text-destructive" />}
               <span className="text-xs font-bold">{farm.healthScore}</span>
             </div>
           </div>

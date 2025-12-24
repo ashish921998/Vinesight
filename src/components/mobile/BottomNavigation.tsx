@@ -81,13 +81,13 @@ export function BottomNavigation() {
                   transition-all duration-200
                   touch-manipulation
                   active:scale-95
-                  ${isActive ? 'text-primary' : 'text-gray-400 hover:text-gray-600'}
+                  ${isActive ? 'text-accent' : 'text-gray-400 hover:text-gray-600'}
                 `}
               >
                 <div
                   className={`
                   p-1.5 rounded-lg transition-all duration-200
-                  ${isActive ? 'bg-secondary text-primary' : 'text-gray-400'}
+                  ${isActive ? 'bg-accent/10 text-accent' : 'text-gray-400'}
                 `}
                 >
                   <Icon className="h-5 w-5" />
@@ -96,7 +96,7 @@ export function BottomNavigation() {
                   className={`
                   text-[10px] font-medium mt-0.5 w-full text-center
                   overflow-hidden text-ellipsis whitespace-nowrap px-0.5
-                  ${isActive ? 'text-primary' : 'text-gray-400'}
+                  ${isActive ? 'text-accent' : 'text-gray-400'}
                 `}
                 >
                   {item.name}

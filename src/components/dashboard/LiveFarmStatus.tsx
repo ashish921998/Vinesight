@@ -88,17 +88,17 @@ export function LiveFarmStatus({
   )
 
   const getStatusColor = (value: number, thresholds: { good: number; warning: number }) => {
-    if (value >= thresholds.good) return 'text-primary'
-    if (value >= thresholds.warning) return 'text-amber-600'
-    return 'text-red-600'
+    if (value >= thresholds.good) return 'text-accent'
+    if (value >= thresholds.warning) return 'text-primary'
+    return 'text-destructive'
   }
 
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
     switch (trend) {
       case 'up':
-        return <TrendingUp className="h-4 w-4 text-primary" />
+        return <TrendingUp className="h-4 w-4 text-accent" />
       case 'down':
-        return <TrendingDown className="h-4 w-4 text-red-600" />
+        return <TrendingDown className="h-4 w-4 text-destructive" />
       default:
         return <Minus className="h-4 w-4 text-muted-foreground" />
     }
@@ -191,7 +191,7 @@ export function LiveFarmStatus({
     <div className={containerClass}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-primary">
             <Activity className="h-5 w-5" />
           </span>
           <div className="space-y-1">
@@ -213,7 +213,7 @@ export function LiveFarmStatus({
               className="rounded-2xl border border-border/50 bg-background/70 px-4 py-3 shadow-sm"
             >
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10 text-primary">
                   {metric.icon}
                 </span>
                 <div>
@@ -239,7 +239,7 @@ export function LiveFarmStatus({
                 <h4 className="text-sm font-semibold text-foreground">Environment</h4>
                 <p className="text-xs text-muted-foreground">{weather.condition}</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-primary">
                 <Thermometer className="h-5 w-5" />
               </div>
             </div>
@@ -284,7 +284,7 @@ export function LiveFarmStatus({
                     : 'Monitoring tank capacity'}
                 </p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-primary">
                 <Droplets className="h-5 w-5" />
               </div>
             </div>
@@ -356,7 +356,7 @@ export function LiveFarmStatus({
                 <h4 className="text-sm font-semibold text-foreground">Crop development</h4>
                 <p className="text-xs text-muted-foreground">{growth.stage}</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-primary">
                 <Leaf className="h-5 w-5" />
               </div>
             </div>
@@ -402,23 +402,23 @@ export function LiveFarmStatus({
                 <h4 className="text-sm font-semibold text-foreground">Weekly economics</h4>
                 <p className="text-xs text-muted-foreground">Revenue versus operating spend</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-primary">
                 <DollarSign className="h-5 w-5" />
               </div>
             </div>
             <div className="mt-4 space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-3 text-center text-xs">
-                <div className="rounded-xl border border-green-200/70 bg-green-50/80 px-3 py-3">
-                  <p className="text-base font-semibold text-green-700">
+                <div className="rounded-xl border border-accent/30 bg-accent/10 px-3 py-3">
+                  <p className="text-base font-semibold text-accent">
                     ₹{(financial.weeklyRevenue / 1000).toFixed(1)}k
                   </p>
-                  <p className="text-green-700/80">Weekly revenue</p>
+                  <p className="text-accent/80">Weekly revenue</p>
                 </div>
-                <div className="rounded-xl border border-red-200/70 bg-red-50/80 px-3 py-3">
-                  <p className="text-base font-semibold text-red-700">
+                <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-3">
+                  <p className="text-base font-semibold text-destructive">
                     ₹{(financial.weeklyExpenses / 1000).toFixed(1)}k
                   </p>
-                  <p className="text-red-700/80">Weekly spend</p>
+                  <p className="text-destructive/80">Weekly spend</p>
                 </div>
               </div>
               <div className="rounded-xl border border-border/60 bg-background/60 px-3 py-3 text-xs">
@@ -427,14 +427,14 @@ export function LiveFarmStatus({
                   <span
                     className={cn(
                       'flex items-center gap-2 text-base font-semibold',
-                      financial.profitMargin >= 20 ? 'text-primary' : 'text-amber-600'
+                      financial.profitMargin >= 20 ? 'text-primary' : 'text-destructive'
                     )}
                   >
                     {financial.profitMargin.toFixed(1)}%{getTrendIcon(financial.trend)}
                   </span>
                 </div>
                 {financial.profitMargin < 20 && (
-                  <p className="mt-2 text-[11px] text-amber-700">
+                  <p className="mt-2 text-[11px] text-destructive">
                     Tight margin — review fertigation cost and labour deployment.
                   </p>
                 )}

@@ -149,10 +149,10 @@ export function EmptyStateDashboard({ onCreateFarm, userName }: EmptyStateDashbo
                   key={key}
                   type="button"
                   onClick={action}
-                  className="group flex items-center justify-between rounded-2xl border border-border bg-muted/60 px-4 py-3 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-secondary"
+                  className="group flex items-center justify-between rounded-2xl border border-border bg-muted/60 px-4 py-3 text-left transition hover:-translate-y-0.5 hover:border-accent/40 hover:bg-secondary"
                 >
                   <span className="flex items-center gap-3">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-card text-muted-foreground shadow-sm transition group-hover:bg-primary group-hover:text-primary-foreground">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-card text-muted-foreground shadow-sm transition group-hover:bg-accent group-hover:text-accent-foreground">
                       <Icon className="h-4 w-4" />
                     </span>
                     <span className="text-sm font-medium text-foreground">{label}</span>
@@ -203,7 +203,7 @@ export function EmptyStateDashboard({ onCreateFarm, userName }: EmptyStateDashbo
                 variant="outline"
                 size="sm"
                 onClick={action}
-                className="border-border text-foreground hover:border-primary/40 hover:bg-secondary"
+                className="border-border text-foreground hover:border-accent/40 hover:bg-secondary"
               >
                 <Icon className="mr-2 h-4 w-4" />
                 {label}

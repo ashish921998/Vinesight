@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, Trash2, Edit, Sprout, MapPin, MoreVertical, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'

@@ -43,7 +43,7 @@ export function WorkersListView({
           </p>
           <Button
             onClick={onOpenAddModal}
-            className="bg-primary hover:bg-primary/90 text-white rounded-full px-6"
+            className="bg-accent hover:bg-accent/90 text-white rounded-full px-6"
           >
             <Plus className="h-4 w-4 mr-1" />
             Add Worker
@@ -75,7 +75,7 @@ export function WorkersListView({
         >
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10 text-primary">
                 <User className="h-5 w-5" />
               </div>
               <div className="flex-1 space-y-2">

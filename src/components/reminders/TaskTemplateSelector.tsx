@@ -223,7 +223,7 @@ export function TaskTemplateSelector({
                 key={template.id}
                 className={`cursor-pointer transition-colors ${
                   selectedTemplate?.id === template.id
-                    ? 'ring-2 ring-primary bg-primary/5'
+                    ? 'ring-2 ring-primary bg-accent/5'
                     : 'hover:bg-gray-50'
                 }`}
                 onClick={() => handleTemplateSelect(template)}

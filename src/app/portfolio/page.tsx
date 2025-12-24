@@ -139,7 +139,7 @@ export default function PortfolioPage() {
           <div>
             {/* Farm Context Header */}
             {selectedFarm && (
-              <div className="bg-primary/5 border-b border-border px-3 py-2">
+              <div className="bg-accent/5 border-b border-border px-3 py-2">
                 <div className="flex items-center gap-2">
                   <div
                     className={`w-2 h-2 rounded-full ${
@@ -174,7 +174,7 @@ export default function PortfolioPage() {
               transition-all duration-200
               touch-manipulation
               active:scale-95
-              ${currentView === 'portfolio' ? 'text-primary border-t-2 border-primary' : 'text-gray-400 hover:text-gray-600'}
+              ${currentView === 'portfolio' ? 'text-primary border-t-2 border-accent' : 'text-gray-400 hover:text-gray-600'}
             `}
           >
             <svg className="w-5 h-5 mb-1" fill="currentColor" viewBox="0 0 20 20">

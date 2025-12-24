@@ -56,7 +56,11 @@ const resources = {
         no: 'No',
         buttons: {
           openModule: 'Open Module'
-        }
+        },
+        noWaterData: 'No water data',
+        noIrrigationLogged: 'No irrigation logged yet',
+        unit: 'mm',
+        applied: 'applied'
       },
       // Homepage
       home: {
@@ -356,7 +360,11 @@ const resources = {
         no: 'नहीं',
         buttons: {
           openModule: 'मॉड्यूल खोलें'
-        }
+        },
+        noWaterData: 'कोई पानी का डेटा नहीं',
+        noIrrigationLogged: 'कोई सिंचाई रिकॉर्ड नहीं',
+        unit: 'mm',
+        applied: 'लागू किया गया'
       },
       // Homepage - Hindi
       home: {
@@ -657,7 +665,11 @@ const resources = {
         no: 'नाही',
         buttons: {
           openModule: 'मॉड्यूल उघडा'
-        }
+        },
+        noWaterData: 'पाण्याचा डेटा नाही',
+        noIrrigationLogged: 'कोणतेही सिंचन रेकॉर्ड नाही',
+        unit: 'mm',
+        applied: 'लागू केले'
       },
       // Homepage - Marathi
       home: {

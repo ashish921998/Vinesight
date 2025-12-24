@@ -138,7 +138,7 @@ export default function GrapeFarmingGuide() {
               <Card key={section.title}>
                 <CardHeader>
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center">
                       <Icon className="h-6 w-6 text-primary" />
                     </div>
                     <div>
@@ -151,7 +151,7 @@ export default function GrapeFarmingGuide() {
                   <ul className="space-y-3">
                     {section.topics.map((topic, index) => (
                       <li key={index} className="flex items-start gap-3">
-                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <div className="w-2 h-2 bg-accent rounded-full mt-2 flex-shrink-0"></div>
                         <span className="text-foreground">{topic}</span>
                       </li>
                     ))}
@@ -215,7 +215,7 @@ export default function GrapeFarmingGuide() {
         </Card>
 
         {/* CTA Section */}
-        <Card className="text-center bg-primary/5 border-primary/20">
+        <Card className="text-center bg-accent/5 border-accent/20">
           <CardContent className="pt-8 pb-8">
             <h2 className="text-2xl font-bold text-primary mb-4">
               Ready to Transform Your Vineyard?
