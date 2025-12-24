@@ -41,7 +41,7 @@ export function FarmSelector({
       case 'healthy':
         return 'text-accent bg-accent/10'
       case 'attention':
-        return 'text-secondary bg-secondary/10'
+        return 'text-warning bg-warning/10'
       case 'critical':
         return 'text-destructive bg-destructive/10'
       default:

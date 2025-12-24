@@ -11,25 +11,25 @@ export function capitalize(str: string): string {
 }
 
 export function formatRemainingWater(value: number | null | undefined): string {
-  if (value === null || value === undefined) return 'No water data'
+  if (value === null || value === undefined) return i18n.t('common.noWaterData')
   const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
   const locale = i18n.language || 'en'
   const formatter = new Intl.NumberFormat(locale, {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits
   })
-  return `${formatter.format(value)} mm`
+  return `${formatter.format(value)} ${i18n.t('common.unit')}`
 }
 
 export function formatWaterUsage(value: number | null | undefined): string {
-  if (value === null || value === undefined) return 'No irrigation logged yet'
+  if (value === null || value === undefined) return i18n.t('common.noIrrigationLogged')
   const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2
   const locale = i18n.language || 'en'
   const formatter = new Intl.NumberFormat(locale, {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits
   })
-  return `${formatter.format(value)} mm applied`
+  return `${formatter.format(value)} ${i18n.t('common.unit')} ${i18n.t('common.applied')}`
 }
 
 export function calculateDaysAfterPruning(
