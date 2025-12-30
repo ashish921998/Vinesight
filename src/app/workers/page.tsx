@@ -273,6 +273,7 @@ export default function WorkersPage() {
         .gte('date', analyticsStartDate)
         .lte('date', analyticsEndDate)
         .neq('work_status', 'absent')
+        .limit(5000)
 
       if (analyticsFarmId) {
         attendanceQuery = attendanceQuery.contains('farm_ids', [analyticsFarmId])
@@ -287,6 +288,7 @@ export default function WorkersPage() {
         .eq('type', 'advance_deducted')
         .gte('date', analyticsStartDate)
         .lte('date', analyticsEndDate)
+        .limit(5000)
 
       if (analyticsFarmId) {
         advanceQuery = advanceQuery.eq('farm_id', analyticsFarmId)
@@ -300,6 +302,7 @@ export default function WorkersPage() {
         .select('*')
         .gte('date', analyticsStartDate)
         .lte('date', analyticsEndDate)
+        .limit(5000)
       if (analyticsFarmId) {
         tempQuery = tempQuery.eq('farm_id', analyticsFarmId)
       }
@@ -611,17 +614,6 @@ export default function WorkersPage() {
     } finally {
       setIsConfirmingSettlement(false)
     }
-  }
-
-  const handleOpenAttendanceModal = () => {
-    if (farms.length === 0) {
-      toast.error('Add a farm before recording attendance')
-      return
-    }
-    if (attendanceFarmIds.length === 0) {
-      setAttendanceFarmIds([farms[0].id])
-    }
-    setIsAttendanceModalOpen(true)
   }
 
   const statusToFraction = (status: WorkStatus) => {

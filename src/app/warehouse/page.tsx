@@ -58,7 +58,8 @@ function WarehousePageContent() {
   }, [loadItems])
 
   const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) return
+    const sanitizedName = name.replace(/[^a-zA-Z0-9\s]/g, '').trim()
+    if (!confirm(`Are you sure you want to delete "${sanitizedName}"?`)) return
 
     try {
       await warehouseService.deleteWarehouseItem(id)
@@ -86,9 +87,14 @@ function WarehousePageContent() {
   }
 
   // Compute badge counts from all items (not filtered)
-  const fertilizers = allItems.filter((item) => item.type === 'fertilizer')
-  const sprays = allItems.filter((item) => item.type === 'spray')
-  const lowStockItems = allItems.filter(isLowStock)
+  const fertilizers: WarehouseItem[] = []
+  const sprays: WarehouseItem[] = []
+  const lowStockItems: WarehouseItem[] = []
+  for (const item of allItems) {
+    if (item.type === 'fertilizer') fertilizers.push(item)
+    if (item.type === 'spray') sprays.push(item)
+    if (isLowStock(item)) lowStockItems.push(item)
+  }
 
   // Filter items for display based on active filter
   const displayedItems =

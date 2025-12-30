@@ -149,6 +149,19 @@ export function FarmModal({
   const [areaError, setAreaError] = useState<string | null>(null)
   const [soilCompositionWarning, setSoilCompositionWarning] = useState<string | null>(null)
   const [cropVarietyQuery, setCropVarietyQuery] = useState('')
+
+  const safeParseNumber = (value: string | undefined): number | undefined => {
+    if (!value || !value.trim()) return undefined
+    const parsed = parseFloat(value.trim())
+    return isNaN(parsed) || !isFinite(parsed) ? undefined : parsed
+  }
+
+  const safeParseInt = (value: string | undefined): number | undefined => {
+    if (!value || !value.trim()) return undefined
+    const parsed = parseInt(value.trim(), 10)
+    return isNaN(parsed) || !isFinite(parsed) ? undefined : parsed
+  }
+
   const cropOptions = useMemo(() => getAllCrops(), [])
   const varietyBaseOptions = useMemo(() => getVarietiesForCrop(formData.crop), [formData.crop])
   const varietyOptions = useMemo(() => {
@@ -299,52 +312,53 @@ export function FarmModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.crop.trim()) {
+    const trimmedCrop = formData.crop.trim()
+    if (!trimmedCrop) {
       setCropError('Crop is required')
       return
     }
     setCropError(null)
 
-    const areaValue = parseFloat(formData.area)
-    if (isNaN(areaValue) || areaValue <= 0) {
+    const areaValue = safeParseNumber(formData.area)
+    if (!areaValue || areaValue <= 0 || !isFinite(areaValue)) {
       setAreaError('Area must be a valid positive number')
       return
     }
     setAreaError(null)
 
     const farmData: FarmDataSubmit = {
-      name: formData.name,
-      region: formData.region,
+      name: formData.name.trim(),
+      region: formData.region.trim(),
       area: areaValue,
-      crop: formData.crop,
-      cropVariety: formData.cropVariety,
+      crop: trimmedCrop,
+      cropVariety: formData.cropVariety.trim(),
       plantingDate: formData.plantingDate,
-      vineSpacing: formData.vineSpacing ? parseFloat(formData.vineSpacing) : undefined,
-      rowSpacing: formData.rowSpacing ? parseFloat(formData.rowSpacing) : undefined,
-      totalTankCapacity: formData.totalTankCapacity
-        ? parseFloat(formData.totalTankCapacity)
-        : undefined,
-      systemDischarge: formData.systemDischarge ? parseFloat(formData.systemDischarge) : undefined,
+      vineSpacing: safeParseNumber(formData.vineSpacing),
+      rowSpacing: safeParseNumber(formData.rowSpacing),
+      totalTankCapacity: safeParseNumber(formData.totalTankCapacity),
+      systemDischarge: safeParseNumber(formData.systemDischarge),
       dateOfPruning: formData.dateOfPruning || undefined,
-      bulkDensity: formData.bulkDensity ? parseFloat(formData.bulkDensity) : undefined,
-      cationExchangeCapacity: formData.cationExchangeCapacity
-        ? parseFloat(formData.cationExchangeCapacity)
-        : undefined,
-      soilWaterRetention: formData.soilWaterRetention
-        ? parseFloat(formData.soilWaterRetention)
-        : undefined,
-      soilTextureClass: formData.soilTextureClass || undefined,
-      sandPercentage: formData.sandPercentage ? parseFloat(formData.sandPercentage) : undefined,
-      siltPercentage: formData.siltPercentage ? parseFloat(formData.siltPercentage) : undefined,
-      clayPercentage: formData.clayPercentage ? parseFloat(formData.clayPercentage) : undefined,
-      latitude: locationData.latitude ? parseFloat(locationData.latitude) : undefined,
-      longitude: locationData.longitude ? parseFloat(locationData.longitude) : undefined,
-      elevation: locationData.elevation ? parseInt(locationData.elevation) : undefined,
-      location_name: locationData.locationName || undefined,
+      bulkDensity: safeParseNumber(formData.bulkDensity),
+      cationExchangeCapacity: safeParseNumber(formData.cationExchangeCapacity),
+      soilWaterRetention: safeParseNumber(formData.soilWaterRetention),
+      soilTextureClass: formData.soilTextureClass.trim() || undefined,
+      sandPercentage: safeParseNumber(formData.sandPercentage),
+      siltPercentage: safeParseNumber(formData.siltPercentage),
+      clayPercentage: safeParseNumber(formData.clayPercentage),
+      latitude: safeParseNumber(locationData.latitude),
+      longitude: safeParseNumber(locationData.longitude),
+      elevation: safeParseInt(locationData.elevation),
+      location_name: locationData.locationName.trim() || undefined,
       location_source:
-        locationData.latitude && locationData.longitude ? ('search' as const) : undefined,
+        safeParseNumber(locationData.latitude) !== undefined &&
+        safeParseNumber(locationData.longitude) !== undefined
+          ? ('search' as const)
+          : undefined,
       location_updated_at:
-        locationData.latitude && locationData.longitude ? new Date().toISOString() : undefined
+        safeParseNumber(locationData.latitude) !== undefined &&
+        safeParseNumber(locationData.longitude) !== undefined
+          ? new Date().toISOString()
+          : undefined
     }
     await onSubmit(farmData)
   }
@@ -412,6 +426,7 @@ export function FarmModal({
                 onChange={(e) => handleInputChange('area', e.target.value)}
                 placeholder="6.2"
                 required
+                aria-invalid={!!areaError}
                 className="mt-1 h-11"
               />
               {areaError && <p className="mt-1 text-sm text-destructive">{areaError}</p>}

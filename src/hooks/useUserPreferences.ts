@@ -85,7 +85,7 @@ export function useUserPreferences(userId?: string) {
 
   useEffect(() => {
     fetchPreferences()
-  }, [fetchPreferences])
+  }, [fetchPreferences, userId])
 
   return { preferences, loading, refreshPreferences: fetchPreferences }
 }

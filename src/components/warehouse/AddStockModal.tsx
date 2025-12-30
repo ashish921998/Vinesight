@@ -111,21 +111,24 @@ export function AddStockModal({ item, onClose, onSave }: AddStockModalProps) {
           </div>
 
           {/* Preview */}
-          {quantityToAdd && !isNaN(parseFloat(quantityToAdd)) && parseFloat(quantityToAdd) > 0 && (
-            <div className="bg-accent/10 p-4 rounded-lg space-y-1">
-              <p className="text-sm font-medium">After adding stock:</p>
-              <p className="text-lg font-bold">
-                {(item.quantity + parseFloat(quantityToAdd)).toFixed(2)} {item.unit}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Value:{' '}
-                {formatCurrency(
-                  (item.quantity + parseFloat(quantityToAdd)) * item.unitPrice,
-                  preferences?.currencyPreference ?? 'INR'
-                )}
-              </p>
-            </div>
-          )}
+          {(() => {
+            const parsedQuantity = parseFloat(quantityToAdd)
+            return quantityToAdd && !isNaN(parsedQuantity) && parsedQuantity > 0 ? (
+              <div className="bg-accent/10 p-4 rounded-lg space-y-1">
+                <p className="text-sm font-medium">After adding stock:</p>
+                <p className="text-lg font-bold">
+                  {(item.quantity + parsedQuantity).toFixed(2)} {item.unit}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Value:{' '}
+                  {formatCurrency(
+                    (item.quantity + parsedQuantity) * item.unitPrice,
+                    preferences?.currencyPreference ?? 'INR'
+                  )}
+                </p>
+              </div>
+            ) : null
+          })()}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>

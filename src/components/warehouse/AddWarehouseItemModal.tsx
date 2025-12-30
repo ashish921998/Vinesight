@@ -112,7 +112,6 @@ export function AddWarehouseItemModal({ item, onClose, onSave }: AddWarehouseIte
 
       onSave()
     } catch (error) {
-      console.error('Error saving item:', error)
       toast.error('Failed to save item')
     } finally {
       setSaving(false)
