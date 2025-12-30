@@ -9,7 +9,7 @@ import { ActivityFeed } from '@/components/farm-details/ActivityFeed'
 import { UnifiedDataLogsModal } from '@/components/farm-details/UnifiedDataLogsModal'
 import type { ReportAttachmentMeta } from '@/types/reports'
 import { WaterCalculationModal } from '@/components/farm-details/WaterCalculationModal'
-import { FarmModal } from '@/components/farm-details/forms/FarmModal'
+import { FarmModal, FarmDataSubmit } from '@/components/farm-details/forms/FarmModal'
 import {
   Dialog,
   DialogContent,
@@ -1375,7 +1375,7 @@ export default function FarmDetailsPage() {
     setShowFarmModal(true)
   }
 
-  const handleFarmSubmit = async (farmData: any) => {
+  const handleFarmSubmit = async (farmData: FarmDataSubmit) => {
     try {
       setFarmSubmitLoading(true)
 

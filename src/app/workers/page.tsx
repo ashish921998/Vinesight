@@ -48,7 +48,6 @@ import {
   ArrowUpRight,
   Banknote,
   ChevronLeft,
-  IndianRupee,
   Loader2,
   Plus,
   User,

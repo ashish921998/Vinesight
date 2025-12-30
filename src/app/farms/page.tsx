@@ -7,7 +7,8 @@ import { Plus, Trash2, Edit, Sprout, MapPin, MoreVertical, ChevronRight } from '
 import { toast } from 'sonner'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { SupabaseService } from '@/lib/supabase-service'
-import type { Farm } from '@/types/types'
+import { Farm } from '@/types/types'
+import { FarmDataSubmit } from '@/components/farm-details/forms/FarmModal'
 import Link from 'next/link'
 import { FarmModal } from '@/components/farm-details/forms/FarmModal'
 import {
@@ -41,7 +42,7 @@ export default function FarmsPage() {
     }
   }
 
-  const handleSubmit = async (farmData: any) => {
+  const handleSubmit = async (farmData: FarmDataSubmit) => {
     try {
       setSubmitLoading(true)
 

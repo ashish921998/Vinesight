@@ -39,13 +39,13 @@ export function useUserPreferences(userId?: string) {
       if (profile) {
         setPreferences({
           areaUnitPreference:
-            (profile.area_unit_preference as 'hectares' | 'acres') ||
+            (profile.area_unit_preference as 'hectares' | 'acres') ??
             defaultPreferences.areaUnitPreference,
           currencyPreference:
-            (profile.currency_preference as 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD') ||
+            (profile.currency_preference as 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD') ??
             defaultPreferences.currencyPreference,
           spacingUnitPreference:
-            (profile.spacing_unit_preference as 'feet' | 'mm') ||
+            (profile.spacing_unit_preference as 'feet' | 'mm') ??
             defaultPreferences.spacingUnitPreference
         })
       }

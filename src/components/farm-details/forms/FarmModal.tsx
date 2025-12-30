@@ -32,7 +32,7 @@ import { getAllCrops, getVarietiesForCrop, getDefaultVariety } from '@/lib/crop-
 import type { LocationResult } from '@/lib/open-meteo-geocoding'
 import type { Farm } from '@/types/types'
 
-interface FarmDataSubmit {
+export interface FarmDataSubmit {
   name: string
   region: string
   area: number
@@ -299,7 +299,7 @@ export function FarmModal({
     const farmData: FarmDataSubmit = {
       name: formData.name,
       region: formData.region,
-      area: parseFloat(formData.area),
+      area: parseFloat(formData.area) || 0,
       crop: formData.crop,
       cropVariety: formData.cropVariety,
       plantingDate: formData.plantingDate,

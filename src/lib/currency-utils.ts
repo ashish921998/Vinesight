@@ -38,7 +38,7 @@ export function formatSpacing(
   unit: SpacingUnit = 'feet',
   precision: number = 2
 ): string {
-  const clampedPrecision = Math.max(0, Math.min(100, precision))
+  const clampedPrecision = Math.max(0, Math.min(10, precision))
   return `${value.toFixed(clampedPrecision)} ${unit}`
 }
 
@@ -49,5 +49,9 @@ export function convertSpacing(value: number, fromUnit: SpacingUnit, toUnit: Spa
     return value * 304.8
   }
 
-  return value / 304.8
+  if (fromUnit === 'mm' && toUnit === 'feet') {
+    return value / 304.8
+  }
+
+  return value
 }

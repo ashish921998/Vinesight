@@ -77,7 +77,7 @@ export default function FarmEfficiencyPage() {
       loadFarmEfficiencyMetrics()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedFarm, preferences.currencyPreference, preferencesLoading]) // loadFarmEfficiencyMetrics is not in deps to avoid infinite loop
+  }, [selectedFarm, preferences?.currencyPreference, preferencesLoading]) // loadFarmEfficiencyMetrics is not in deps to avoid infinite loop
 
   const loadFarmEfficiencyMetrics = async () => {
     if (!selectedFarm || preferencesLoading) return
