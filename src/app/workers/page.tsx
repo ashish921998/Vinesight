@@ -503,7 +503,7 @@ export default function WorkersPage() {
         advanceNotes || undefined
       )
       toast.success(
-        `Advance of ${formatCurrency(amount, preferences.currencyPreference)} given successfully`
+        `Advance of ${formatCurrency(amount, preferences?.currencyPreference ?? 'INR')} given successfully`
       )
       setIsAdvanceModalOpen(false)
       setAdvanceAmount('')
@@ -597,7 +597,7 @@ export default function WorkersPage() {
         true
       )
       toast.success(
-        `Settlement confirmed! Net payment: ${formatCurrency(netPayment, preferences.currencyPreference)}`
+        `Settlement confirmed! Net payment: ${formatCurrency(netPayment, preferences?.currencyPreference ?? 'INR')}`
       )
       setIsSettlementModalOpen(false)
       setSettlementCalculation(null)
@@ -789,7 +789,7 @@ export default function WorkersPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-lg sm:text-2xl font-bold break-words">
-                    {formatCurrency(totalAdvanceBalance, preferences.currencyPreference)}
+                    {formatCurrency(totalAdvanceBalance, preferences?.currencyPreference ?? 'INR')}
                   </p>
                   <p className="text-xs text-muted-foreground">Total Advance</p>
                 </div>
@@ -966,7 +966,9 @@ export default function WorkersPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Day Salary ({getCurrencySymbol(preferences.currencyPreference)})</Label>
+              <Label>
+                Day Salary ({getCurrencySymbol(preferences?.currencyPreference ?? 'INR')})
+              </Label>
               <Input
                 type="number"
                 min="0"
@@ -1050,7 +1052,7 @@ export default function WorkersPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="daily_rate">
-                Daily Rate ({getCurrencySymbol(preferences.currencyPreference)}) *
+                Daily Rate ({getCurrencySymbol(preferences?.currencyPreference ?? 'INR')}) *
               </Label>
               <Input
                 id="daily_rate"
@@ -1066,7 +1068,7 @@ export default function WorkersPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="advance_balance">
-                Advance Taken ({getCurrencySymbol(preferences.currencyPreference)})
+                Advance Taken ({getCurrencySymbol(preferences?.currencyPreference ?? 'INR')})
               </Label>
               <Input
                 id="advance_balance"
@@ -1143,7 +1145,7 @@ export default function WorkersPage() {
                             <strong>
                               {formatCurrency(
                                 selectedWorker.daily_rate,
-                                preferences.currencyPreference
+                                preferences?.currencyPreference ?? 'INR'
                               )}
                             </strong>
                             /day
@@ -1152,7 +1154,7 @@ export default function WorkersPage() {
                             <strong>
                               {formatCurrency(
                                 selectedWorker.advance_balance || 0,
-                                preferences.currencyPreference
+                                preferences?.currencyPreference ?? 'INR'
                               )}
                             </strong>{' '}
                             advance
@@ -1235,7 +1237,7 @@ export default function WorkersPage() {
                                     {formatCurrency(
                                       (record.daily_rate_override ?? selectedWorker.daily_rate) *
                                         (record.work_status === 'full_day' ? 1 : 0.5),
-                                      preferences.currencyPreference
+                                      preferences?.currencyPreference ?? 'INR'
                                     )}
                                   </p>
                                 </div>
@@ -1296,7 +1298,10 @@ export default function WorkersPage() {
                                     )}
                                   >
                                     {txn.type === 'advance_given' ? '+' : '-'}
-                                    {formatCurrency(txn.amount, preferences.currencyPreference)}
+                                    {formatCurrency(
+                                      txn.amount,
+                                      preferences?.currencyPreference ?? 'INR'
+                                    )}
                                   </p>
                                 </div>
                               </CardContent>
@@ -1320,12 +1325,17 @@ export default function WorkersPage() {
             <DialogTitle>Give Advance</DialogTitle>
             <DialogDescription>
               Current balance:{' '}
-              {formatCurrency(selectedWorker?.advance_balance || 0, preferences.currencyPreference)}
+              {formatCurrency(
+                selectedWorker?.advance_balance || 0,
+                preferences?.currencyPreference ?? 'INR'
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Amount ({getCurrencySymbol(preferences.currencyPreference)}) *</Label>
+              <Label>
+                Amount ({getCurrencySymbol(preferences?.currencyPreference ?? 'INR')}) *
+              </Label>
               <Input
                 type="number"
                 min="0"
@@ -1502,7 +1512,7 @@ export default function WorkersPage() {
                       <span className="font-medium">
                         {formatCurrency(
                           settlementCalculation.gross_amount,
-                          preferences.currencyPreference
+                          preferences?.currencyPreference ?? 'INR'
                         )}
                       </span>
                     </div>
@@ -1511,7 +1521,7 @@ export default function WorkersPage() {
                       <span className="font-medium">
                         {formatCurrency(
                           settlementWorker?.advance_balance || 0,
-                          preferences.currencyPreference
+                          preferences?.currencyPreference ?? 'INR'
                         )}
                       </span>
                     </div>
@@ -1521,7 +1531,7 @@ export default function WorkersPage() {
                 {/* Editable Total Salary */}
                 <div className="space-y-2">
                   <Label>
-                    Total Salary ({getCurrencySymbol(preferences.currencyPreference)}) *
+                    Total Salary ({getCurrencySymbol(preferences?.currencyPreference ?? 'INR')}) *
                   </Label>
                   <Input
                     type="number"
@@ -1538,7 +1548,7 @@ export default function WorkersPage() {
                 {/* Editable Cut from Advance */}
                 <div className="space-y-2">
                   <Label>
-                    Cut from Advance ({getCurrencySymbol(preferences.currencyPreference)})
+                    Cut from Advance ({getCurrencySymbol(preferences?.currencyPreference ?? 'INR')})
                   </Label>
                   <Input
                     type="number"
@@ -1552,7 +1562,7 @@ export default function WorkersPage() {
                     Max:{' '}
                     {formatCurrency(
                       settlementWorker?.advance_balance || 0,
-                      preferences.currencyPreference
+                      preferences?.currencyPreference ?? 'INR'
                     )}
                   </p>
                 </div>
@@ -1563,7 +1573,7 @@ export default function WorkersPage() {
                     <div className="flex justify-between items-center">
                       <span className="text-green-800 font-medium">Net Payment</span>
                       <span className="text-2xl font-bold text-green-700">
-                        {formatCurrency(netPayment, preferences.currencyPreference)}
+                        {formatCurrency(netPayment, preferences?.currencyPreference ?? 'INR')}
                       </span>
                     </div>
                     <p className="text-xs text-green-700 mt-1">Total Salary - Cut from Advance</p>

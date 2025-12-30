@@ -90,7 +90,7 @@ export function AddStockModal({ item, onClose, onSave }: AddStockModalProps) {
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Unit Price:</span>
               <span className="font-medium">
-                {formatCurrency(item.unitPrice, preferences.currencyPreference)}
+                {formatCurrency(item.unitPrice, preferences?.currencyPreference ?? 'INR')}
               </span>
             </div>
           </div>
@@ -121,7 +121,7 @@ export function AddStockModal({ item, onClose, onSave }: AddStockModalProps) {
                 Value:{' '}
                 {formatCurrency(
                   (item.quantity + parseFloat(quantityToAdd)) * item.unitPrice,
-                  preferences.currencyPreference
+                  preferences?.currencyPreference ?? 'INR'
                 )}
               </p>
             </div>

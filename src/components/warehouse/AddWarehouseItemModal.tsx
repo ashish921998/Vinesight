@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -211,7 +211,7 @@ export function AddWarehouseItemModal({ item, onClose, onSave }: AddWarehouseIte
           {/* Unit Price */}
           <div className="space-y-2">
             <Label htmlFor="unitPrice">
-              Unit Price ({getCurrencySymbol(preferences.currencyPreference)}) *
+              Unit Price ({getCurrencySymbol(preferences?.currencyPreference ?? 'INR')}) *
             </Label>
             <Input
               id="unitPrice"
@@ -223,8 +223,8 @@ export function AddWarehouseItemModal({ item, onClose, onSave }: AddWarehouseIte
               onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
             />
             <p className="text-xs text-muted-foreground">
-              Price per {formData.unit} (e.g., {getCurrencySymbol(preferences.currencyPreference)}50
-              per kg)
+              Price per {formData.unit} (e.g.,{' '}
+              {getCurrencySymbol(preferences?.currencyPreference ?? 'INR')}50 per kg)
             </p>
           </div>
 

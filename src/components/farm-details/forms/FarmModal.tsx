@@ -146,6 +146,7 @@ export function FarmModal({
   }))
 
   const [cropError, setCropError] = useState<string | null>(null)
+  const [areaError, setAreaError] = useState<string | null>(null)
   const [soilCompositionWarning, setSoilCompositionWarning] = useState<string | null>(null)
   const [cropVarietyQuery, setCropVarietyQuery] = useState('')
   const cropOptions = useMemo(() => getAllCrops(), [])
@@ -262,6 +263,12 @@ export function FarmModal({
       if (field === 'crop') {
         setCropError(value.trim() ? null : 'Crop is required')
       }
+      if (field === 'area') {
+        const areaValue = parseFloat(value)
+        setAreaError(
+          isNaN(areaValue) || areaValue <= 0 ? 'Area must be a valid positive number' : null
+        )
+      }
     }
   }
 
@@ -296,10 +303,17 @@ export function FarmModal({
     }
     setCropError(null)
 
+    const areaValue = parseFloat(formData.area)
+    if (isNaN(areaValue) || areaValue <= 0) {
+      setAreaError('Area must be a valid positive number')
+      return
+    }
+    setAreaError(null)
+
     const farmData: FarmDataSubmit = {
       name: formData.name,
       region: formData.region,
-      area: parseFloat(formData.area) || 0,
+      area: areaValue,
       crop: formData.crop,
       cropVariety: formData.cropVariety,
       plantingDate: formData.plantingDate,
@@ -398,6 +412,7 @@ export function FarmModal({
                 required
                 className="mt-1 h-11"
               />
+              {areaError && <p className="mt-1 text-sm text-red-500">{areaError}</p>}
               <p className="text-xs text-gray-500 mt-1">Unit is set in your account preferences</p>
             </div>
 

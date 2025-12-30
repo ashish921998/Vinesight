@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Package, Plus, AlertCircle, Edit, Trash2, PackagePlus, MoreVertical } from 'lucide-react'
@@ -328,7 +328,7 @@ function WarehousePageContent() {
                     <div className="flex justify-between">
                       <span className="text-gray-500">Unit Price:</span>
                       <span className="font-medium text-gray-900">
-                        {formatCurrency(item.unitPrice, preferences.currencyPreference)}
+                        {formatCurrency(item.unitPrice, preferences?.currencyPreference ?? 'INR')}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -336,7 +336,7 @@ function WarehousePageContent() {
                       <span className="font-semibold text-green-600">
                         {formatCurrency(
                           item.quantity * item.unitPrice,
-                          preferences.currencyPreference
+                          preferences?.currencyPreference ?? 'INR'
                         )}
                       </span>
                     </div>
@@ -387,7 +387,7 @@ function WarehousePageContent() {
                   <p className="text-2xl font-bold text-green-600">
                     {formatCurrency(
                       allItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0),
-                      preferences.currencyPreference
+                      preferences?.currencyPreference ?? 'INR'
                     )}
                   </p>
                 </div>

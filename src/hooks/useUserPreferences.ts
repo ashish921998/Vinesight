@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getTypedSupabaseClient } from '@/lib/supabase'
+import { logger } from '@/lib/logger'
 
 export interface UserPreferences {
   areaUnitPreference: 'hectares' | 'acres'
@@ -11,6 +12,31 @@ export const defaultPreferences: UserPreferences = {
   areaUnitPreference: 'hectares',
   currencyPreference: 'INR',
   spacingUnitPreference: 'feet'
+}
+
+const VALID_AREA_UNITS = ['hectares', 'acres'] as const
+const VALID_CURRENCIES = ['INR', 'USD', 'EUR', 'GBP', 'AUD', 'CAD'] as const
+const VALID_SPACING_UNITS = ['feet', 'mm'] as const
+
+function isValidAreaUnit(value: unknown): value is 'hectares' | 'acres' {
+  return (
+    typeof value === 'string' &&
+    VALID_AREA_UNITS.includes(value as (typeof VALID_AREA_UNITS)[number])
+  )
+}
+
+function isValidCurrency(value: unknown): value is 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD' {
+  return (
+    typeof value === 'string' &&
+    VALID_CURRENCIES.includes(value as (typeof VALID_CURRENCIES)[number])
+  )
+}
+
+function isValidSpacingUnit(value: unknown): value is 'feet' | 'mm' {
+  return (
+    typeof value === 'string' &&
+    VALID_SPACING_UNITS.includes(value as (typeof VALID_SPACING_UNITS)[number])
+  )
 }
 
 export function useUserPreferences(userId?: string) {
@@ -32,26 +58,26 @@ export function useUserPreferences(userId?: string) {
         .maybeSingle()
 
       if (error) {
-        console.error('Error fetching user preferences:', error)
+        logger.error('Error fetching user preferences:', error)
         return
       }
 
       if (profile) {
         setPreferences({
-          areaUnitPreference:
-            (profile.area_unit_preference as 'hectares' | 'acres') ??
-            defaultPreferences.areaUnitPreference,
-          currencyPreference:
-            (profile.currency_preference as 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD') ??
-            defaultPreferences.currencyPreference,
-          spacingUnitPreference:
-            (profile.spacing_unit_preference as 'feet' | 'mm') ??
-            defaultPreferences.spacingUnitPreference
+          areaUnitPreference: isValidAreaUnit(profile.area_unit_preference)
+            ? profile.area_unit_preference
+            : defaultPreferences.areaUnitPreference,
+          currencyPreference: isValidCurrency(profile.currency_preference)
+            ? profile.currency_preference
+            : defaultPreferences.currencyPreference,
+          spacingUnitPreference: isValidSpacingUnit(profile.spacing_unit_preference)
+            ? profile.spacing_unit_preference
+            : defaultPreferences.spacingUnitPreference
         })
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
-      console.error('Error fetching user preferences:', errorMessage)
+      logger.error('Error fetching user preferences:', errorMessage)
     } finally {
       setLoading(false)
     }
