@@ -47,7 +47,7 @@ interface FarmEfficiencyMetric {
 
 export default function FarmEfficiencyPage() {
   const { user } = useSupabaseAuth()
-  const { preferences } = useUserPreferences(user?.id)
+  const { preferences, loading: preferencesLoading } = useUserPreferences(user?.id)
   const [metrics, setMetrics] = useState<FarmEfficiencyMetric[]>([])
   const [farms, setFarms] = useState<Farm[]>([])
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null)
@@ -73,14 +73,14 @@ export default function FarmEfficiencyPage() {
   }, [loadFarms])
 
   useEffect(() => {
-    if (selectedFarm) {
+    if (selectedFarm && !preferencesLoading) {
       loadFarmEfficiencyMetrics()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedFarm]) // loadFarmEfficiencyMetrics is not in deps to avoid infinite loop
+  }, [selectedFarm, preferences.currencyPreference, preferencesLoading]) // loadFarmEfficiencyMetrics is not in deps to avoid infinite loop
 
   const loadFarmEfficiencyMetrics = async () => {
-    if (!selectedFarm) return
+    if (!selectedFarm || preferencesLoading) return
 
     setLoading(true)
 
@@ -141,7 +141,7 @@ export default function FarmEfficiencyPage() {
         {
           name: 'Average Grape Price',
           value: Math.round(avgPrice),
-          unit: `${getCurrencySymbol(preferences.currencyPreference)}/kg`,
+          unit: `${getCurrencySymbol(preferences?.currencyPreference ?? 'INR')}/kg`,
           status:
             avgPrice > 80
               ? 'excellent'
@@ -156,7 +156,7 @@ export default function FarmEfficiencyPage() {
         {
           name: 'Revenue per Hectare',
           value: Math.round(revenuePerHectare / 1000),
-          unit: `${getCurrencySymbol(preferences.currencyPreference)}000/ha`,
+          unit: `${getCurrencySymbol(preferences?.currencyPreference ?? 'INR')}000/ha`,
           status:
             revenuePerHectare > 200000
               ? 'excellent'
@@ -245,7 +245,7 @@ export default function FarmEfficiencyPage() {
         {
           name: 'Average Grape Price',
           value: 72,
-          unit: `${getCurrencySymbol(preferences.currencyPreference)}/kg`,
+          unit: `${getCurrencySymbol(preferences?.currencyPreference ?? 'INR')}/kg`,
           status: 'good',
           benchmark: 80,
           category: 'cost'
@@ -253,7 +253,7 @@ export default function FarmEfficiencyPage() {
         {
           name: 'Revenue per Hectare',
           value: 180,
-          unit: `${getCurrencySymbol(preferences.currencyPreference)}000/ha`,
+          unit: `${getCurrencySymbol(preferences?.currencyPreference ?? 'INR')}000/ha`,
           status: 'good',
           benchmark: 200,
           category: 'cost'

@@ -15,10 +15,13 @@ export const defaultPreferences: UserPreferences = {
 
 export function useUserPreferences(userId?: string) {
   const [preferences, setPreferences] = useState<UserPreferences>(defaultPreferences)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(!!userId)
 
   const fetchPreferences = useCallback(async () => {
-    if (!userId) return
+    if (!userId) {
+      setLoading(false)
+      return
+    }
     try {
       setLoading(true)
       const supabase = getTypedSupabaseClient()

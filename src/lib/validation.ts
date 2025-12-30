@@ -153,7 +153,7 @@ export const FarmSchema = z
       const total = sand_percentage + silt_percentage + clay_percentage
       if (total < 95 || total > 105) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['sand_percentage'],
           message: 'Sand + silt + clay percentages should sum to approximately 100%'
         })

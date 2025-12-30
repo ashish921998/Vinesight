@@ -32,10 +32,37 @@ import { getAllCrops, getVarietiesForCrop, getDefaultVariety } from '@/lib/crop-
 import type { LocationResult } from '@/lib/open-meteo-geocoding'
 import type { Farm } from '@/types/types'
 
+interface FarmDataSubmit {
+  name: string
+  region: string
+  area: number
+  crop: string
+  cropVariety: string
+  plantingDate: string
+  vineSpacing?: number
+  rowSpacing?: number
+  totalTankCapacity?: number
+  systemDischarge?: number
+  dateOfPruning?: Date
+  bulkDensity?: number
+  cationExchangeCapacity?: number
+  soilWaterRetention?: number
+  soilTextureClass?: string
+  sandPercentage?: number
+  siltPercentage?: number
+  clayPercentage?: number
+  latitude?: number
+  longitude?: number
+  elevation?: number
+  location_name?: string
+  location_source?: 'search'
+  location_updated_at?: string
+}
+
 interface FarmModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (farmData: any) => Promise<void>
+  onSubmit: (farmData: FarmDataSubmit) => Promise<void>
   editingFarm?: Farm | null
   isSubmitting?: boolean
 }
@@ -269,7 +296,7 @@ export function FarmModal({
     }
     setCropError(null)
 
-    const farmData = {
+    const farmData: FarmDataSubmit = {
       name: formData.name,
       region: formData.region,
       area: parseFloat(formData.area),

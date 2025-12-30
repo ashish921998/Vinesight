@@ -1636,7 +1636,7 @@ export default function FarmDetailsPage() {
                   aria-label={`Open ${link.label}`}
                 >
                   <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                  <span className="text-[10px] font-medium text-foreground truncate">
+                  <span className="text-[10px] font-medium text-foreground w-full text-center truncate">
                     {link.label}
                   </span>
                 </button>

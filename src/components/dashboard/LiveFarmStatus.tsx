@@ -415,7 +415,10 @@ export function LiveFarmStatus({
               <div className="grid grid-cols-2 gap-3 text-center text-xs">
                 <div className="rounded-xl border border-accent/30 bg-accent/10 px-3 py-3">
                   <p className="text-base font-semibold text-accent">
-                    {formatCompactCurrency(financial.weeklyRevenue, preferences.currencyPreference)}
+                    {formatCompactCurrency(
+                      financial.weeklyRevenue,
+                      preferences?.currencyPreference ?? 'INR'
+                    )}
                   </p>
                   <p className="text-accent/80">Weekly revenue</p>
                 </div>
@@ -423,7 +426,7 @@ export function LiveFarmStatus({
                   <p className="text-base font-semibold text-destructive">
                     {formatCompactCurrency(
                       financial.weeklyExpenses,
-                      preferences.currencyPreference
+                      preferences?.currencyPreference ?? 'INR'
                     )}
                   </p>
                   <p className="text-destructive/80">Weekly spend</p>

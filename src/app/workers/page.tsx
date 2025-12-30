@@ -46,6 +46,7 @@ import {
 import {
   ArrowDownLeft,
   ArrowUpRight,
+  Banknote,
   ChevronLeft,
   IndianRupee,
   Loader2,
@@ -836,7 +837,7 @@ export default function WorkersPage() {
                     size="lg"
                     className="flex-1 rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
                   >
-                    <IndianRupee className="h-4 w-4 mr-1" />
+                    <Banknote className="h-4 w-4 mr-1" />
                     Settle
                   </Button>
                 </div>
@@ -1183,7 +1184,7 @@ export default function WorkersPage() {
                     className="h-auto py-3 bg-accent text-accent-foreground hover:bg-accent/90"
                   >
                     <div className="flex flex-col items-center gap-1">
-                      <IndianRupee className="h-5 w-5" />
+                      <Banknote className="h-5 w-5" />
                       <span>Settle Payment</span>
                     </div>
                   </Button>
@@ -1271,7 +1272,7 @@ export default function WorkersPage() {
                                       ) : txn.type === 'advance_deducted' ? (
                                         <ArrowDownLeft className="h-4 w-4 text-green-600" />
                                       ) : (
-                                        <IndianRupee className="h-4 w-4 text-blue-600" />
+                                        <Banknote className="h-4 w-4 text-blue-600" />
                                       )}
                                     </div>
                                     <div>
