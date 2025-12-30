@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -23,6 +23,9 @@ import {
 import { warehouseService } from '@/lib/warehouse-service'
 import { WarehouseItem } from '@/types/types'
 import { toast } from 'sonner'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
+import { getCurrencySymbol } from '@/lib/currency-utils'
 
 interface AddWarehouseItemModalProps {
   item?: WarehouseItem // If provided, we're editing
@@ -31,6 +34,8 @@ interface AddWarehouseItemModalProps {
 }
 
 export function AddWarehouseItemModal({ item, onClose, onSave }: AddWarehouseItemModalProps) {
+  const { user } = useSupabaseAuth()
+  const { preferences } = useUserPreferences(user?.id)
   const [formData, setFormData] = useState({
     name: item?.name || '',
     type: item?.type || ('fertilizer' as 'fertilizer' | 'spray'),
@@ -107,7 +112,6 @@ export function AddWarehouseItemModal({ item, onClose, onSave }: AddWarehouseIte
 
       onSave()
     } catch (error) {
-      console.error('Error saving item:', error)
       toast.error('Failed to save item')
     } finally {
       setSaving(false)
@@ -205,7 +209,9 @@ export function AddWarehouseItemModal({ item, onClose, onSave }: AddWarehouseIte
 
           {/* Unit Price */}
           <div className="space-y-2">
-            <Label htmlFor="unitPrice">Unit Price (₹) *</Label>
+            <Label htmlFor="unitPrice">
+              Unit Price ({getCurrencySymbol(preferences?.currencyPreference ?? 'INR')}) *
+            </Label>
             <Input
               id="unitPrice"
               type="number"
@@ -216,7 +222,8 @@ export function AddWarehouseItemModal({ item, onClose, onSave }: AddWarehouseIte
               onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
             />
             <p className="text-xs text-muted-foreground">
-              Price per {formData.unit} (e.g., ₹50 per kg)
+              Price per {formData.unit} (e.g.,{' '}
+              {getCurrencySymbol(preferences?.currencyPreference ?? 'INR')}50 per kg)
             </p>
           </div>
 

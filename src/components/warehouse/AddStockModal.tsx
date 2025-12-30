@@ -15,6 +15,9 @@ import {
 import { warehouseService } from '@/lib/warehouse-service'
 import { WarehouseItem } from '@/types/types'
 import { toast } from 'sonner'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
+import { formatCurrency } from '@/lib/currency-utils'
 import { PackagePlus } from 'lucide-react'
 
 interface AddStockModalProps {
@@ -24,6 +27,8 @@ interface AddStockModalProps {
 }
 
 export function AddStockModal({ item, onClose, onSave }: AddStockModalProps) {
+  const { user } = useSupabaseAuth()
+  const { preferences } = useUserPreferences(user?.id)
   const [quantityToAdd, setQuantityToAdd] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -84,7 +89,9 @@ export function AddStockModal({ item, onClose, onSave }: AddStockModalProps) {
             )}
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Unit Price:</span>
-              <span className="font-medium">₹{item.unitPrice.toFixed(2)}</span>
+              <span className="font-medium">
+                {formatCurrency(item.unitPrice, preferences?.currencyPreference ?? 'INR')}
+              </span>
             </div>
           </div>
 
@@ -104,17 +111,24 @@ export function AddStockModal({ item, onClose, onSave }: AddStockModalProps) {
           </div>
 
           {/* Preview */}
-          {quantityToAdd && !isNaN(parseFloat(quantityToAdd)) && parseFloat(quantityToAdd) > 0 && (
-            <div className="bg-accent/10 p-4 rounded-lg space-y-1">
-              <p className="text-sm font-medium">After adding stock:</p>
-              <p className="text-lg font-bold">
-                {(item.quantity + parseFloat(quantityToAdd)).toFixed(2)} {item.unit}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Value: ₹{((item.quantity + parseFloat(quantityToAdd)) * item.unitPrice).toFixed(2)}
-              </p>
-            </div>
-          )}
+          {(() => {
+            const parsedQuantity = parseFloat(quantityToAdd)
+            return quantityToAdd && !isNaN(parsedQuantity) && parsedQuantity > 0 ? (
+              <div className="bg-accent/10 p-4 rounded-lg space-y-1">
+                <p className="text-sm font-medium">After adding stock:</p>
+                <p className="text-lg font-bold">
+                  {(item.quantity + parsedQuantity).toFixed(2)} {item.unit}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Value:{' '}
+                  {formatCurrency(
+                    (item.quantity + parsedQuantity) * item.unitPrice,
+                    preferences?.currencyPreference ?? 'INR'
+                  )}
+                </p>
+              </div>
+            ) : null
+          })()}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>

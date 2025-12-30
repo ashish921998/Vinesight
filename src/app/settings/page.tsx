@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Languages, LogOut, User, Building2, CheckCircle2 } from 'lucide-react'
+import { LogOut, User, Building2, CheckCircle2, Coins, Ruler } from 'lucide-react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import {
@@ -27,10 +27,15 @@ type OrganizationInfo = {
 export default function SettingsPage() {
   const { user, signOut } = useSupabaseAuth()
   const router = useRouter()
-  const [language, setLanguage] = useState('en')
   const [signOutLoading, setSignOutLoading] = useState(false)
   const [areaUnitPreference, setAreaUnitPreference] = useState<'hectares' | 'acres'>('hectares')
   const [areaUnitLoading, setAreaUnitLoading] = useState(false)
+  const [currencyPreference, setCurrencyPreference] = useState<
+    'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD'
+  >('INR')
+  const [currencyLoading, setCurrencyLoading] = useState(false)
+  const [spacingUnitPreference, setSpacingUnitPreference] = useState<'feet' | 'mm'>('feet')
+  const [spacingUnitLoading, setSpacingUnitLoading] = useState(false)
 
   // Organization Consultant State
   const [organizations, setOrganizations] = useState<OrganizationInfo[]>([])
@@ -108,28 +113,36 @@ export default function SettingsPage() {
     }
   }, [user])
 
-  // Fetch area unit preference
-  const fetchAreaUnitPreference = useCallback(async () => {
+  // Fetch user preferences
+  const fetchPreferences = useCallback(async () => {
     if (!user) return
     try {
       const supabase = getTypedSupabaseClient()
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('area_unit_preference')
+        .select('area_unit_preference, currency_preference, spacing_unit_preference')
         .eq('id', user.id)
         .maybeSingle()
 
       if (error) {
-        console.error('Error fetching area unit preference:', error)
+        console.error('Error fetching preferences:', error)
         return
       }
 
       if (profile?.area_unit_preference) {
         setAreaUnitPreference(profile.area_unit_preference as 'hectares' | 'acres')
       }
+      if (profile?.currency_preference) {
+        setCurrencyPreference(
+          profile.currency_preference as 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD'
+        )
+      }
+      if (profile?.spacing_unit_preference) {
+        setSpacingUnitPreference(profile.spacing_unit_preference as 'feet' | 'mm')
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
-      console.error('Error fetching area unit preference:', errorMessage)
+      console.error('Error fetching preferences:', errorMessage)
     }
   }, [user])
 
@@ -164,16 +177,11 @@ export default function SettingsPage() {
   }, [user, fetchOrganizations, fetchCurrentStatus])
 
   useEffect(() => {
-    // Load saved language preference
-    const savedLang = localStorage.getItem('vinesight-language') || 'en'
-    setLanguage(savedLang)
-
-    // Fetch organizations and current status if user is logged in
     if (user) {
       checkOrgMembership()
-      fetchAreaUnitPreference()
+      fetchPreferences()
     }
-  }, [user, checkOrgMembership, fetchAreaUnitPreference])
+  }, [user, checkOrgMembership, fetchPreferences])
 
   const handleConnectConsultant = async () => {
     if (!user || !selectedOrgId) return
@@ -211,38 +219,13 @@ export default function SettingsPage() {
     }
   }
 
-  const handleLanguageChange = (newLang: string) => {
-    setLanguage(newLang)
-    localStorage.setItem('vinesight-language', newLang)
-  }
-
   const handleAreaUnitChange = async (newUnit: 'hectares' | 'acres') => {
     if (!user) return
-    if (newUnit === areaUnitPreference) return // Already selected
+    if (newUnit === areaUnitPreference) return
     try {
       setAreaUnitLoading(true)
       const supabase = getTypedSupabaseClient()
 
-      // First check if profile exists - we only update, never create
-      const { data: existingProfile, error: checkError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      if (checkError) {
-        console.error('Error checking profile:', checkError)
-        toast.error('Failed to verify profile')
-        return
-      }
-
-      if (!existingProfile) {
-        console.error('Profile does not exist for user:', user.id)
-        toast.error('Profile not found. Please contact support.')
-        return
-      }
-
-      // Profile exists, now update only the area_unit_preference field
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ area_unit_preference: newUnit })
@@ -265,6 +248,66 @@ export default function SettingsPage() {
     }
   }
 
+  const handleCurrencyChange = async (
+    newCurrency: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD'
+  ) => {
+    if (!user) return
+    if (newCurrency === currencyPreference) return
+    try {
+      setCurrencyLoading(true)
+      const supabase = getTypedSupabaseClient()
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ currency_preference: newCurrency })
+        .eq('id', user.id)
+
+      if (updateError) {
+        console.error('Error updating currency preference:', updateError)
+        toast.error('Failed to update currency preference')
+        return
+      }
+
+      setCurrencyPreference(newCurrency)
+      toast.success(`Currency preference updated to ${newCurrency}`)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error('Error updating currency preference:', errorMessage)
+      toast.error('Failed to update currency preference')
+    } finally {
+      setCurrencyLoading(false)
+    }
+  }
+
+  const handleSpacingUnitChange = async (newUnit: 'feet' | 'mm') => {
+    if (!user) return
+    if (newUnit === spacingUnitPreference) return
+    try {
+      setSpacingUnitLoading(true)
+      const supabase = getTypedSupabaseClient()
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ spacing_unit_preference: newUnit })
+        .eq('id', user.id)
+
+      if (updateError) {
+        console.error('Error updating spacing unit preference:', updateError)
+        toast.error('Failed to update spacing unit preference')
+        return
+      }
+
+      setSpacingUnitPreference(newUnit)
+      toast.success(`Spacing unit preference updated to ${newUnit}`)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error('Error updating spacing unit preference:', errorMessage)
+      toast.error('Failed to update spacing unit preference')
+    } finally {
+      setSpacingUnitLoading(false)
+    }
+  }
+
   const handleSignOut = async () => {
     try {
       setSignOutLoading(true)
@@ -279,12 +322,6 @@ export default function SettingsPage() {
       setSignOutLoading(false)
     }
   }
-
-  const languages = [
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
-    { code: 'mr', name: 'मराठी', flag: '🇮🇳' }
-  ]
 
   return (
     <ProtectedRoute>
@@ -383,6 +420,116 @@ export default function SettingsPage() {
             </Card>
           )}
 
+          {/* Currency Preference */}
+          {user && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Coins className="h-4 w-4" />
+                  Currency Preference
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-gray-500">
+                  Choose your preferred currency for costs and expenses
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    variant={currencyPreference === 'INR' ? 'default' : 'outline'}
+                    onClick={() => handleCurrencyChange('INR')}
+                    disabled={currencyLoading}
+                    className="h-9"
+                    size="sm"
+                  >
+                    ₹ INR
+                  </Button>
+                  <Button
+                    variant={currencyPreference === 'USD' ? 'default' : 'outline'}
+                    onClick={() => handleCurrencyChange('USD')}
+                    disabled={currencyLoading}
+                    className="h-9"
+                    size="sm"
+                  >
+                    $ USD
+                  </Button>
+                  <Button
+                    variant={currencyPreference === 'EUR' ? 'default' : 'outline'}
+                    onClick={() => handleCurrencyChange('EUR')}
+                    disabled={currencyLoading}
+                    className="h-9"
+                    size="sm"
+                  >
+                    € EUR
+                  </Button>
+                  <Button
+                    variant={currencyPreference === 'GBP' ? 'default' : 'outline'}
+                    onClick={() => handleCurrencyChange('GBP')}
+                    disabled={currencyLoading}
+                    className="h-9"
+                    size="sm"
+                  >
+                    £ GBP
+                  </Button>
+                  <Button
+                    variant={currencyPreference === 'AUD' ? 'default' : 'outline'}
+                    onClick={() => handleCurrencyChange('AUD')}
+                    disabled={currencyLoading}
+                    className="h-9"
+                    size="sm"
+                  >
+                    A$ AUD
+                  </Button>
+                  <Button
+                    variant={currencyPreference === 'CAD' ? 'default' : 'outline'}
+                    onClick={() => handleCurrencyChange('CAD')}
+                    disabled={currencyLoading}
+                    className="h-9"
+                    size="sm"
+                  >
+                    C$ CAD
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Spacing Unit Preference */}
+          {user && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Ruler className="h-4 w-4" />
+                  Spacing Unit Preference
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-gray-500">
+                  Choose your preferred unit for vine/row spacing measurements
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant={spacingUnitPreference === 'feet' ? 'default' : 'outline'}
+                    onClick={() => handleSpacingUnitChange('feet')}
+                    disabled={spacingUnitLoading}
+                    className="h-9"
+                    size="sm"
+                  >
+                    Feet
+                  </Button>
+                  <Button
+                    variant={spacingUnitPreference === 'mm' ? 'default' : 'outline'}
+                    onClick={() => handleSpacingUnitChange('mm')}
+                    disabled={spacingUnitLoading}
+                    className="h-9"
+                    size="sm"
+                  >
+                    Millimeters
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Organization Consultant Settings - Only for Farmers (non-members) */}
           {!isOrgMember && (
             <Card>
@@ -445,30 +592,6 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
           )}
-
-          {/* Language Settings */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Languages className="h-4 w-4" />
-                Language
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {languages.map((lang) => (
-                <Button
-                  key={lang.code}
-                  variant={language === lang.code ? 'default' : 'outline'}
-                  onClick={() => handleLanguageChange(lang.code)}
-                  className="w-full justify-start h-9"
-                  size="sm"
-                >
-                  <span className="mr-2">{lang.flag}</span>
-                  {lang.name}
-                </Button>
-              ))}
-            </CardContent>
-          </Card>
         </div>
       </div>
     </ProtectedRoute>

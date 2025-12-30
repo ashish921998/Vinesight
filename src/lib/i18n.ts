@@ -19,6 +19,7 @@ const resources = {
         reminders: 'Reminders',
         reports: 'Reports',
         farmEfficiency: 'Farm Efficiency',
+        workers: 'Workers',
         settings: 'Settings',
         clients: 'Clients',
         users: 'Users'
@@ -323,6 +324,7 @@ const resources = {
         reminders: 'रिमाइंडर',
         reports: 'रिपोर्ट',
         farmEfficiency: 'फार्म दक्षता',
+        workers: 'कर्मचारी',
         settings: 'सेटिंग्स',
         clients: 'ग्राहक',
         users: 'उपयोगकर्ता'
@@ -628,6 +630,7 @@ const resources = {
         reminders: 'स्मरणपत्र',
         reports: 'अहवाल',
         farmEfficiency: 'शेत कार्यक्षमता',
+        workers: 'कामगार',
         settings: 'सेटिंग्ज',
         clients: 'ग्राहक',
         users: 'वापरकर्ते'
