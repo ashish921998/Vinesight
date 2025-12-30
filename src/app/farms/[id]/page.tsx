@@ -32,11 +32,11 @@ import { toast } from 'sonner'
 import type { LucideIcon } from 'lucide-react'
 import {
   BarChart3,
-  Brain,
   ChevronDown,
   Droplets,
   FlaskConical,
   NotebookText,
+  Package,
   X
 } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -1606,10 +1606,10 @@ export default function FarmDetailsPage() {
   const showFieldSignalSections = loading || hasActiveFieldSignals
   const moduleShortcuts = [
     { label: 'Logs', icon: NotebookText, href: `/farms/${farmId}/logs` },
-    { label: 'AI', icon: Brain, href: '/ai-assistant' },
-    { label: 'Lab tests', icon: FlaskConical, href: `/farms/${farmId}/lab-tests` },
+    { label: 'Inventory', icon: Package, href: '/warehouse' },
+    { label: 'Lab', icon: FlaskConical, href: `/farms/${farmId}/lab-tests` },
     { label: 'Reports', icon: BarChart3, href: '/reports' },
-    { label: 'Soil profiling', icon: Droplets, href: `/farms/${farmId}/soil-profiling` }
+    { label: 'Profiling', icon: Droplets, href: `/farms/${farmId}/soil-profiling` }
   ]
 
   const renderWorkTabs = () => (
@@ -1636,7 +1636,9 @@ export default function FarmDetailsPage() {
                   aria-label={`Open ${link.label}`}
                 >
                   <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                  <span className="text-[11px] font-medium text-foreground">{link.label}</span>
+                  <span className="text-[10px] font-medium text-foreground truncate">
+                    {link.label}
+                  </span>
                 </button>
               )
             })}

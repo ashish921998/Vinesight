@@ -16,6 +16,9 @@ import {
   Leaf,
   Sparkles
 } from 'lucide-react'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
+import { formatCompactCurrency } from '@/lib/currency-utils'
 
 interface WeatherData {
   temperature: number
@@ -77,6 +80,8 @@ export function LiveFarmStatus({
   farmName,
   className
 }: LiveFarmStatusProps) {
+  const { user } = useSupabaseAuth()
+  const { preferences } = useUserPreferences(user?.id)
   const formatNumeric = (value: number) =>
     new Intl.NumberFormat('en-IN', {
       maximumFractionDigits: value >= 100 ? 0 : value >= 10 ? 1 : 2
@@ -410,13 +415,16 @@ export function LiveFarmStatus({
               <div className="grid grid-cols-2 gap-3 text-center text-xs">
                 <div className="rounded-xl border border-accent/30 bg-accent/10 px-3 py-3">
                   <p className="text-base font-semibold text-accent">
-                    ₹{(financial.weeklyRevenue / 1000).toFixed(1)}k
+                    {formatCompactCurrency(financial.weeklyRevenue, preferences.currencyPreference)}
                   </p>
                   <p className="text-accent/80">Weekly revenue</p>
                 </div>
                 <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-3">
                   <p className="text-base font-semibold text-destructive">
-                    ₹{(financial.weeklyExpenses / 1000).toFixed(1)}k
+                    {formatCompactCurrency(
+                      financial.weeklyExpenses,
+                      preferences.currencyPreference
+                    )}
                   </p>
                   <p className="text-destructive/80">Weekly spend</p>
                 </div>

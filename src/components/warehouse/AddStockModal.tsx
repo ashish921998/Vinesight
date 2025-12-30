@@ -15,6 +15,9 @@ import {
 import { warehouseService } from '@/lib/warehouse-service'
 import { WarehouseItem } from '@/types/types'
 import { toast } from 'sonner'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
+import { formatCurrency } from '@/lib/currency-utils'
 import { PackagePlus } from 'lucide-react'
 
 interface AddStockModalProps {
@@ -24,6 +27,8 @@ interface AddStockModalProps {
 }
 
 export function AddStockModal({ item, onClose, onSave }: AddStockModalProps) {
+  const { user } = useSupabaseAuth()
+  const { preferences } = useUserPreferences(user?.id)
   const [quantityToAdd, setQuantityToAdd] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -84,7 +89,9 @@ export function AddStockModal({ item, onClose, onSave }: AddStockModalProps) {
             )}
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Unit Price:</span>
-              <span className="font-medium">₹{item.unitPrice.toFixed(2)}</span>
+              <span className="font-medium">
+                {formatCurrency(item.unitPrice, preferences.currencyPreference)}
+              </span>
             </div>
           </div>
 
@@ -111,7 +118,11 @@ export function AddStockModal({ item, onClose, onSave }: AddStockModalProps) {
                 {(item.quantity + parseFloat(quantityToAdd)).toFixed(2)} {item.unit}
               </p>
               <p className="text-sm text-muted-foreground">
-                Value: ₹{((item.quantity + parseFloat(quantityToAdd)) * item.unitPrice).toFixed(2)}
+                Value:{' '}
+                {formatCurrency(
+                  (item.quantity + parseFloat(quantityToAdd)) * item.unitPrice,
+                  preferences.currencyPreference
+                )}
               </p>
             </div>
           )}

@@ -17,7 +17,8 @@ import {
   Brain,
   Package,
   Contact,
-  Bell
+  Bell,
+  UserCog
 } from 'lucide-react'
 import { LoginButton } from './auth/LoginButton'
 import { UserMenu } from './auth/UserMenu'
@@ -30,6 +31,7 @@ export const getBaseNavigation = (t: (key: string) => string) => [
   { name: t('navigation.dashboard'), href: '/dashboard', icon: Home },
   { name: t('navigation.farmManagement'), href: '/farms', icon: Sprout },
   { name: t('navigation.warehouse'), href: '/warehouse', icon: Package },
+  { name: t('navigation.workers'), href: '/workers', icon: UserCog },
   { name: t('navigation.calculators'), href: '/calculators', icon: Calculator },
   { name: t('navigation.aiAssistant'), href: '/ai-assistant', icon: Brain },
   { name: t('navigation.analytics'), href: '/analytics', icon: Activity },

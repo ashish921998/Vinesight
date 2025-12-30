@@ -28,6 +28,9 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
+import { formatCurrency } from '@/lib/currency-utils'
 import { LaborService } from '@/lib/labor-service'
 import type { Worker, WorkStatus, WorkerAttendance } from '@/lib/supabase'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -78,6 +81,8 @@ export function MobileAttendanceView({
   workers,
   onAttendanceSaved
 }: MobileAttendanceViewProps) {
+  const { user } = useSupabaseAuth()
+  const { preferences } = useUserPreferences(user?.id)
   // Tab state
   const [activeTab, setActiveTab] = React.useState<'mark' | 'calendar'>('mark')
 
@@ -473,7 +478,8 @@ export function MobileAttendanceView({
                     <SelectContent>
                       {activeWorkers.map((worker) => (
                         <SelectItem key={worker.id} value={worker.id.toString()}>
-                          {worker.name} - ₹{worker.daily_rate.toLocaleString('en-IN')}/day
+                          {worker.name} -{' '}
+                          {formatCurrency(worker.daily_rate, preferences.currencyPreference)}/day
                         </SelectItem>
                       ))}
                     </SelectContent>

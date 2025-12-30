@@ -28,8 +28,11 @@ CREATE TABLE profiles (
   avatar_url TEXT,
   phone VARCHAR(50),
   user_type VARCHAR(50) CHECK (user_type IN ('farmer', 'consultant', 'admin')),
-  consultant_organization_id UUID, -- Will reference organizations table (added after organizations table is created)
+  consultant_organization_id UUID,
   area_unit_preference VARCHAR(10) DEFAULT 'hectares' CHECK (area_unit_preference IN ('hectares', 'acres')),
+  -- Note: For existing databases, run migration 002_add_currency_and_spacing_preferences.sql to add these columns
+  currency_preference VARCHAR(3) DEFAULT 'INR' CHECK (currency_preference IN ('INR', 'USD', 'EUR', 'GBP', 'AUD', 'CAD')),
+  spacing_unit_preference VARCHAR(10) DEFAULT 'feet' CHECK (spacing_unit_preference IN ('feet', 'mm')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

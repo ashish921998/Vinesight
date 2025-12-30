@@ -1359,10 +1359,12 @@ export type Database = {
           avatar_url: string | null
           consultant_organization_id: string | null
           created_at: string | null
+          currency_preference: string | null
           email: string | null
           full_name: string | null
           id: string
           phone: string | null
+          spacing_unit_preference: string | null
           updated_at: string | null
           username: string | null
           user_type: string | null
@@ -1372,10 +1374,12 @@ export type Database = {
           avatar_url?: string | null
           consultant_organization_id?: string | null
           created_at?: string | null
+          currency_preference?: string | null
           email?: string | null
           full_name?: string | null
           id: string
           phone?: string | null
+          spacing_unit_preference?: string | null
           updated_at?: string | null
           username?: string | null
           user_type?: string | null
@@ -1385,10 +1389,12 @@ export type Database = {
           avatar_url?: string | null
           consultant_organization_id?: string | null
           created_at?: string | null
+          currency_preference?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
+          spacing_unit_preference?: string | null
           updated_at?: string | null
           username?: string | null
           user_type?: string | null

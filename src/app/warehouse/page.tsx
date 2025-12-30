@@ -11,6 +11,9 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { AddWarehouseItemModal } from '@/components/warehouse/AddWarehouseItemModal'
 import { AddStockModal } from '@/components/warehouse/AddStockModal'
 import { toast } from 'sonner'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
+import { formatCurrency } from '@/lib/currency-utils'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +31,8 @@ export default function WarehousePage() {
 
 function WarehousePageContent() {
   const [allItems, setAllItems] = useState<WarehouseItem[]>([])
+  const { user } = useSupabaseAuth()
+  const { preferences } = useUserPreferences(user?.id)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'fertilizer' | 'spray'>('all')
   const [showAddModal, setShowAddModal] = useState(false)
@@ -323,13 +328,16 @@ function WarehousePageContent() {
                     <div className="flex justify-between">
                       <span className="text-gray-500">Unit Price:</span>
                       <span className="font-medium text-gray-900">
-                        ₹{item.unitPrice.toFixed(2)}
+                        {formatCurrency(item.unitPrice, preferences.currencyPreference)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Total Value:</span>
                       <span className="font-semibold text-green-600">
-                        ₹{(item.quantity * item.unitPrice).toFixed(2)}
+                        {formatCurrency(
+                          item.quantity * item.unitPrice,
+                          preferences.currencyPreference
+                        )}
                       </span>
                     </div>
                     {item.reorderQuantity && (
@@ -377,10 +385,10 @@ function WarehousePageContent() {
                 <div className="text-center lg:text-left">
                   <p className="text-sm text-gray-500">Total Value</p>
                   <p className="text-2xl font-bold text-green-600">
-                    ₹
-                    {allItems
-                      .reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
-                      .toFixed(2)}
+                    {formatCurrency(
+                      allItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0),
+                      preferences.currencyPreference
+                    )}
                   </p>
                 </div>
               </div>

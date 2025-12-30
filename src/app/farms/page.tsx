@@ -138,7 +138,7 @@ export default function FarmsPage() {
               <Button
                 onClick={handleAdd}
                 size="sm"
-                className="h-9 px-3 text-sm font-medium bg-green-600 hover:bg-green-700"
+                className="h-9 px-3 text-sm font-medium bg-accent hover:bg-accent/90"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Farm
@@ -192,7 +192,7 @@ export default function FarmsPage() {
                   >
                     <CardContent className="p-0">
                       <Link href={`/farms/${farm.id}`} className="block">
-                        <div className="p-4">
+                        <div className="px-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3 min-w-0 flex-1 pr-2">
                               <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">

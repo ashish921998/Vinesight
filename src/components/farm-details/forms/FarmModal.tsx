@@ -313,7 +313,7 @@ export function FarmModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={resetAndClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] w-[95vw] mx-auto overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] w-[95vw] mx-auto overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">
             {editingFarm ? 'Edit Farm' : 'Add New Farm'}

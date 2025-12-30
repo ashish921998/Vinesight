@@ -220,15 +220,15 @@ export default function LandingPage() {
             />
             <h1 className="text-primary text-lg font-bold tracking-tight">VineSight</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link
-              className="hidden sm:block text-muted-foreground text-sm font-medium hover:text-primary transition-colors"
+              className="text-muted-foreground text-sm font-medium hover:text-primary transition-colors px-3 py-2 rounded-lg hover:bg-muted"
               href="/login"
             >
               Log In
             </Link>
             <button
-              className="bg-accent hover:bg-accent/90 active:scale-95 transition-all text-accent-foreground text-sm font-semibold px-4 py-2 rounded-lg shadow-sm"
+              className="hidden sm:block bg-accent hover:bg-accent/90 active:scale-95 transition-all text-accent-foreground text-sm font-semibold px-4 py-2 rounded-lg shadow-sm"
               onClick={() =>
                 document.getElementById('daily-work')?.scrollIntoView({ behavior: 'smooth' })
               }

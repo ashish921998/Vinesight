@@ -31,6 +31,9 @@ import {
 import { CloudDataService } from '@/lib/cloud-data-service'
 import { Farm } from '@/types/types'
 import { capitalize } from '@/lib/utils'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
+import { getCurrencySymbol } from '@/lib/currency-utils'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 
 interface FarmEfficiencyMetric {
@@ -43,6 +46,8 @@ interface FarmEfficiencyMetric {
 }
 
 export default function FarmEfficiencyPage() {
+  const { user } = useSupabaseAuth()
+  const { preferences } = useUserPreferences(user?.id)
   const [metrics, setMetrics] = useState<FarmEfficiencyMetric[]>([])
   const [farms, setFarms] = useState<Farm[]>([])
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null)
@@ -136,7 +141,7 @@ export default function FarmEfficiencyPage() {
         {
           name: 'Average Grape Price',
           value: Math.round(avgPrice),
-          unit: '₹/kg',
+          unit: `${getCurrencySymbol(preferences.currencyPreference)}/kg`,
           status:
             avgPrice > 80
               ? 'excellent'
@@ -151,7 +156,7 @@ export default function FarmEfficiencyPage() {
         {
           name: 'Revenue per Hectare',
           value: Math.round(revenuePerHectare / 1000),
-          unit: '₹000/ha',
+          unit: `${getCurrencySymbol(preferences.currencyPreference)}000/ha`,
           status:
             revenuePerHectare > 200000
               ? 'excellent'
@@ -240,7 +245,7 @@ export default function FarmEfficiencyPage() {
         {
           name: 'Average Grape Price',
           value: 72,
-          unit: '₹/kg',
+          unit: `${getCurrencySymbol(preferences.currencyPreference)}/kg`,
           status: 'good',
           benchmark: 80,
           category: 'cost'
@@ -248,7 +253,7 @@ export default function FarmEfficiencyPage() {
         {
           name: 'Revenue per Hectare',
           value: 180,
-          unit: '₹000/ha',
+          unit: `${getCurrencySymbol(preferences.currencyPreference)}000/ha`,
           status: 'good',
           benchmark: 200,
           category: 'cost'

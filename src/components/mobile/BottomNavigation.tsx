@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Calculator, User, Users, Package } from 'lucide-react'
+import { Home, Calculator, User, Users, Tractor } from 'lucide-react'
 
 const navigationItems = [
   {
@@ -12,9 +12,9 @@ const navigationItems = [
     color: 'text-primary'
   },
   {
-    name: 'Warehouse',
-    href: '/warehouse',
-    icon: Package,
+    name: 'Farms',
+    href: '/farms',
+    icon: Tractor,
     color: 'text-primary'
   },
   {
@@ -44,11 +44,6 @@ export function BottomNavigation() {
 
   useEffect(() => {
     setMounted(true)
-
-    // Cleanup function
-    return () => {
-      // Any cleanup code can go here if needed in the future
-    }
   }, [])
 
   return (

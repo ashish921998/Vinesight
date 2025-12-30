@@ -34,6 +34,9 @@ import { CloudDataService } from '@/lib/cloud-data-service'
 import { ExportService, type ExportOptions } from '@/lib/export-service'
 import type { Farm } from '@/types/types'
 import { capitalize } from '@/lib/utils'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
+import { formatCurrency } from '@/lib/currency-utils'
 
 interface RecordData {
   irrigation: any[]
@@ -60,6 +63,8 @@ const RECORDS_PER_PAGE = 10
 
 export default function UnifiedReportsPage() {
   const router = useRouter()
+  const { user } = useSupabaseAuth()
+  const { preferences } = useUserPreferences(user?.id)
   const [farms, setFarms] = useState<Farm[]>([])
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null)
   const [loading, setLoading] = useState(false)
@@ -317,7 +322,11 @@ export default function UnifiedReportsPage() {
       pdf.text(`• Total Records: ${data.summary.totalRecords}`, 25, 60)
       pdf.text(`• Total Water Usage: ${data.summary.totalWaterUsage} L`, 25, 67)
       pdf.text(`• Total Harvest: ${data.summary.totalHarvest} kg`, 25, 74)
-      pdf.text(`• Net Profit: ₹${data.summary.netProfit}`, 25, 81)
+      pdf.text(
+        `• Net Profit: ${formatCurrency(data.summary.netProfit, preferences.currencyPreference)}`,
+        25,
+        81
+      )
 
       let yPosition = 95
 
@@ -352,13 +361,13 @@ export default function UnifiedReportsPage() {
               )
             } else if (type === 'harvest') {
               pdf.text(
-                `${index + 1}. ${record.date} - Quantity: ${record.quantity}kg, Value: ₹${((record.quantity || 0) * (record.price || 0)).toLocaleString()}`,
+                `${index + 1}. ${record.date} - Quantity: ${record.quantity}kg, Value: ${formatCurrency((record.quantity || 0) * (record.price || 0), preferences.currencyPreference)}`,
                 25,
                 yPosition
               )
             } else if (type === 'expense') {
               pdf.text(
-                `${index + 1}. ${record.date} - ${record.description}: ₹${record.cost}`,
+                `${index + 1}. ${record.date} - ${record.description}: ${formatCurrency(record.cost, preferences.currencyPreference)}`,
                 25,
                 yPosition
               )
@@ -664,7 +673,10 @@ export default function UnifiedReportsPage() {
                 <div
                   className={`text-xl md:text-2xl font-bold ${reportData.summary.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}
                 >
-                  ₹{(reportData.summary.netProfit || 0).toLocaleString()}
+                  {formatCurrency(
+                    reportData.summary.netProfit || 0,
+                    preferences.currencyPreference
+                  )}
                 </div>
                 <div className="text-xs md:text-sm text-muted-foreground">Net Profit</div>
               </div>
@@ -850,7 +862,12 @@ export default function UnifiedReportsPage() {
                                     <span className="text-muted-foreground block text-xs">
                                       Price
                                     </span>
-                                    <span className="font-medium">₹{record.price || 'N/A'}</span>
+                                    <span className="font-medium">
+                                      {formatCurrency(
+                                        record.price || 0,
+                                        preferences.currencyPreference
+                                      )}
+                                    </span>
                                   </div>
                                   <div className="bg-gray-50 p-2 rounded">
                                     <span className="text-muted-foreground block text-xs">
@@ -863,12 +880,12 @@ export default function UnifiedReportsPage() {
                                       Value
                                     </span>
                                     <span className="font-medium">
-                                      ₹
-                                      {record.price
-                                        ? (
-                                            (record.quantity || 0) * (record.price || 0)
-                                          ).toLocaleString()
-                                        : 'N/A'}
+                                      {formatCurrency(
+                                        record.price
+                                          ? (record.quantity || 0) * (record.price || 0)
+                                          : 0,
+                                        preferences.currencyPreference
+                                      )}
                                     </span>
                                   </div>
                                 </>
@@ -886,7 +903,10 @@ export default function UnifiedReportsPage() {
                                       Amount
                                     </span>
                                     <span className="font-medium">
-                                      ₹{(record.cost || 0).toLocaleString()}
+                                      {formatCurrency(
+                                        record.cost || 0,
+                                        preferences.currencyPreference
+                                      )}
                                     </span>
                                   </div>
                                   <div className="bg-gray-50 p-2 rounded col-span-1 sm:col-span-2">
