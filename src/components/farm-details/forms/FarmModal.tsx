@@ -191,6 +191,7 @@ export function FarmModal({
       })
 
       setCropError(null)
+      setAreaError(null)
       setCropVarietyQuery('')
     } else {
       // Reset form when not editing (adding new farm)
@@ -223,6 +224,7 @@ export function FarmModal({
       })
 
       setCropError(null)
+      setAreaError(null)
       setCropVarietyQuery('')
     }
   }, [editingFarm])
@@ -412,7 +414,7 @@ export function FarmModal({
                 required
                 className="mt-1 h-11"
               />
-              {areaError && <p className="mt-1 text-sm text-red-500">{areaError}</p>}
+              {areaError && <p className="mt-1 text-sm text-destructive">{areaError}</p>}
               <p className="text-xs text-gray-500 mt-1">Unit is set in your account preferences</p>
             </div>
 
