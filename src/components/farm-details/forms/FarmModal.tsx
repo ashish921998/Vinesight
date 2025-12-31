@@ -14,14 +14,6 @@ import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 import { LocationForm } from '@/components/calculators/ETc/LocationForm'
 import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList
-} from '@/components/ui/combobox'
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -148,7 +140,7 @@ export function FarmModal({
   const [cropError, setCropError] = useState<string | null>(null)
   const [areaError, setAreaError] = useState<string | null>(null)
   const [soilCompositionWarning, setSoilCompositionWarning] = useState<string | null>(null)
-  const [cropVarietyQuery, setCropVarietyQuery] = useState('')
+  const [isCustomVariety, setIsCustomVariety] = useState(false)
 
   const safeParseNumber = (value: string | undefined): number | undefined => {
     if (!value || !value.trim()) return undefined
@@ -163,14 +155,16 @@ export function FarmModal({
   }
 
   const cropOptions = useMemo(() => getAllCrops(), [])
-  const varietyBaseOptions = useMemo(() => getVarietiesForCrop(formData.crop), [formData.crop])
-  const varietyOptions = useMemo(() => {
-    const query = cropVarietyQuery.trim()
-    if (query && !varietyBaseOptions.includes(query)) {
-      return [...varietyBaseOptions, query]
+  const varietyOptions = useMemo(() => getVarietiesForCrop(formData.crop), [formData.crop])
+
+  // Detect custom varieties on edit
+  useEffect(() => {
+    if (editingFarm && editingFarm.cropVariety) {
+      const predefinedVarieties = getVarietiesForCrop(editingFarm.crop || 'Grapes')
+      const hasCustomVariety = !predefinedVarieties.includes(editingFarm.cropVariety)
+      setIsCustomVariety(hasCustomVariety)
     }
-    return varietyBaseOptions
-  }, [varietyBaseOptions, cropVarietyQuery])
+  }, [editingFarm])
 
   // Update form data when editingFarm prop changes
   useEffect(() => {
@@ -205,7 +199,6 @@ export function FarmModal({
 
       setCropError(null)
       setAreaError(null)
-      setCropVarietyQuery('')
     } else {
       // Reset form when not editing (adding new farm)
       setFormData({
@@ -238,7 +231,7 @@ export function FarmModal({
 
       setCropError(null)
       setAreaError(null)
-      setCropVarietyQuery('')
+      setIsCustomVariety(false)
     }
   }, [editingFarm])
 
@@ -370,7 +363,7 @@ export function FarmModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={resetAndClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] w-[95vw] mx-auto overflow-y-auto">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] w-[95vw] mx-auto overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">
             {editingFarm ? 'Edit Farm' : 'Add New Farm'}
@@ -437,16 +430,14 @@ export function FarmModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium text-gray-700 mb-2 block">Crop *</Label>
-                <Combobox
-                  items={cropOptions}
-                  value={formData.crop || null}
-                  onValueChange={(nextValue) => {
-                    const crop = nextValue ?? ''
-                    handleInputChange('crop', crop)
-                    setCropVarietyQuery('')
+                <Select
+                  value={formData.crop}
+                  onValueChange={(value) => {
+                    handleInputChange('crop', value)
+                    setIsCustomVariety(false)
 
                     // Auto-set a sensible variety for the selected crop
-                    const varieties = getVarietiesForCrop(crop)
+                    const varieties = getVarietiesForCrop(value)
                     if (varieties.length > 0) {
                       handleInputChange('cropVariety', varieties[0])
                     } else {
@@ -454,66 +445,76 @@ export function FarmModal({
                     }
                   }}
                 >
-                  <ComboboxInput
-                    className="mt-1 h-11 w-full"
-                    placeholder="Select a crop"
-                    required
-                    aria-invalid={!!cropError}
-                  />
-                  <ComboboxContent>
-                    <ComboboxEmpty>No crops found.</ComboboxEmpty>
-                    <ComboboxList>
-                      {cropOptions.map((crop) => (
-                        <ComboboxItem key={crop} value={crop}>
-                          {crop}
-                        </ComboboxItem>
-                      ))}
-                    </ComboboxList>
-                  </ComboboxContent>
-                </Combobox>
+                  <SelectTrigger className="mt-1 !h-11 w-full" aria-invalid={!!cropError}>
+                    <SelectValue placeholder="Select a crop" />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="max-h-[300px]">
+                    {cropOptions.map((crop) => (
+                      <SelectItem key={crop} value={crop}>
+                        {crop}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {cropError && <p className="text-sm text-destructive mt-1">{cropError}</p>}
               </div>
               <div>
                 <Label className="text-sm font-medium text-gray-700 mb-2 block">
                   Crop Variety *
                 </Label>
-                <Combobox
-                  items={varietyOptions}
-                  value={formData.cropVariety || null}
-                  onInputValueChange={(inputValue) => setCropVarietyQuery(inputValue)}
-                  onValueChange={(nextValue) => {
-                    const variety = nextValue ?? ''
-                    handleInputChange('cropVariety', variety)
-                    setCropVarietyQuery(variety)
-                  }}
-                >
-                  <ComboboxInput
-                    className="mt-1 h-11 w-full"
-                    placeholder="Select a variety"
-                    required
-                  />
-                  <ComboboxContent>
-                    <ComboboxEmpty>No varieties found.</ComboboxEmpty>
-                    <ComboboxList>
-                      {varietyOptions.map((variety) => {
-                        const showAddCustom =
-                          cropVarietyQuery.trim().length > 0 &&
-                          variety === cropVarietyQuery.trim() &&
-                          !varietyBaseOptions.includes(cropVarietyQuery.trim())
-
-                        return (
-                          <ComboboxItem key={variety} value={variety}>
-                            {showAddCustom ? `Add as custom variety: “${variety}”` : variety}
-                          </ComboboxItem>
-                        )
-                      })}
-                    </ComboboxList>
-                  </ComboboxContent>
-                </Combobox>
-                <p className="text-xs text-gray-500 mt-1">
-                  Don&apos;t see your variety? Type it in and select &quot;Add as custom
-                  variety&quot;
-                </p>
+                {!isCustomVariety ? (
+                  <>
+                    <Select
+                      value={formData.cropVariety}
+                      onValueChange={(value) => {
+                        if (value === '__custom__') {
+                          setIsCustomVariety(true)
+                          handleInputChange('cropVariety', '')
+                        } else {
+                          handleInputChange('cropVariety', value)
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="mt-1 !h-11 w-full">
+                        <SelectValue placeholder="Select a variety" />
+                      </SelectTrigger>
+                      <SelectContent position="popper" className="max-h-[300px]">
+                        {varietyOptions.map((variety) => (
+                          <SelectItem key={variety} value={variety}>
+                            {variety}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="__custom__">Other (custom variety)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Don&apos;t see your variety? Select &quot;Other (custom variety)&quot;
+                    </p>
+                  </>
+                ) : (
+                  <div className="space-y-2">
+                    <Input
+                      value={formData.cropVariety}
+                      onChange={(e) => handleInputChange('cropVariety', e.target.value)}
+                      placeholder="Enter custom variety name"
+                      className="mt-1 h-11 w-full"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustomVariety(false)
+                        const varieties = getVarietiesForCrop(formData.crop)
+                        if (varieties.length > 0) {
+                          handleInputChange('cropVariety', varieties[0])
+                        }
+                      }}
+                      className="text-xs text-muted-foreground hover:text-foreground underline"
+                    >
+                      ← Use predefined variety instead
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -677,7 +678,7 @@ export function FarmModal({
                     value={formData.soilTextureClass}
                     onValueChange={(value) => handleInputChange('soilTextureClass', value)}
                   >
-                    <SelectTrigger id="soilTextureClass" className="mt-1 h-11">
+                    <SelectTrigger id="soilTextureClass" className="mt-1 !h-11 w-full">
                       <SelectValue placeholder="Select texture class" />
                     </SelectTrigger>
                     <SelectContent>

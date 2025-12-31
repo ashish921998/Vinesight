@@ -59,6 +59,7 @@ export function useUserPreferences(userId?: string) {
 
       if (error) {
         logger.error('Error fetching user preferences:', error)
+        setLoading(false)
         return
       }
 
