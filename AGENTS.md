@@ -2,11 +2,11 @@
 
 ## Build & Development Commands
 
-- `npm run dev` or `npm run dev --turbopack` - Start development server
-- `npm run build` - Production build
-- `npm run typecheck` - Run TypeScript type checking
-- `npm run lint` - Run ESLint
-- `npm run start` - Start production server
+- `bun run dev` or `bun run dev --turbopack` - Start development server
+- `bun run build` - Production build
+- `bun run typecheck` - Run TypeScript type checking
+- `bun run lint` - Run ESLint
+- `bun run start` - Start production server
 - No test framework configured - check with user before assuming test setup
 
 ## Architecture & Structure

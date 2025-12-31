@@ -282,6 +282,12 @@ export default function WorkersPage() {
       const { data: attendanceData, error: attendanceError } = await attendanceQuery
       if (attendanceError) throw attendanceError
 
+      if (attendanceData && attendanceData.length === 5000) {
+        toast.warning(
+          'Attendance records exceed 5000. Analytics may be incomplete. Consider narrowing the date range.'
+        )
+      }
+
       let advanceQuery = supabase
         .from('worker_transactions')
         .select('*')
@@ -297,6 +303,12 @@ export default function WorkersPage() {
       const { data: advanceData, error: advanceError } = await advanceQuery
       if (advanceError) throw advanceError
 
+      if (advanceData && advanceData.length === 5000) {
+        toast.warning(
+          'Advance transactions exceed 5000. Analytics may be incomplete. Consider narrowing the date range.'
+        )
+      }
+
       let tempQuery = supabase
         .from('temporary_worker_entries')
         .select('*')
@@ -308,6 +320,12 @@ export default function WorkersPage() {
       }
       const { data: tempData, error: tempError } = await tempQuery
       if (tempError) throw tempError
+
+      if (tempData && tempData.length === 5000) {
+        toast.warning(
+          'Temporary worker entries exceed 5000. Analytics may be incomplete. Consider narrowing the date range.'
+        )
+      }
 
       // Compute fixed analytics
       let salaryTotal = 0
