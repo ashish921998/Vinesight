@@ -492,13 +492,28 @@ export function FarmModal({
                     </p>
                   </>
                 ) : (
-                  <Input
-                    value={formData.cropVariety}
-                    onChange={(e) => handleInputChange('cropVariety', e.target.value)}
-                    placeholder="Enter custom variety name"
-                    className="h-9 w-full"
-                    required
-                  />
+                  <div className="space-y-2">
+                    <Input
+                      value={formData.cropVariety}
+                      onChange={(e) => handleInputChange('cropVariety', e.target.value)}
+                      placeholder="Enter custom variety name"
+                      className="mt-1 h-11 w-full"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustomVariety(false)
+                        const varieties = getVarietiesForCrop(formData.crop)
+                        if (varieties.length > 0) {
+                          handleInputChange('cropVariety', varieties[0])
+                        }
+                      }}
+                      className="text-xs text-muted-foreground hover:text-foreground underline"
+                    >
+                      ← Use predefined variety instead
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
