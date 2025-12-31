@@ -140,9 +140,7 @@ export function FarmModal({
   const [cropError, setCropError] = useState<string | null>(null)
   const [areaError, setAreaError] = useState<string | null>(null)
   const [soilCompositionWarning, setSoilCompositionWarning] = useState<string | null>(null)
-  const [showCustomVariety, setShowCustomVariety] = useState(false)
-  const [customVarietyInput, setCustomVarietyInput] = useState('')
-  const [previousVariety, setPreviousVariety] = useState('')
+  const [isCustomVariety, setIsCustomVariety] = useState(false)
 
   const safeParseNumber = (value: string | undefined): number | undefined => {
     if (!value || !value.trim()) return undefined
@@ -163,12 +161,8 @@ export function FarmModal({
   useEffect(() => {
     if (editingFarm && editingFarm.cropVariety) {
       const predefinedVarieties = getVarietiesForCrop(editingFarm.crop || 'Grapes')
-      const isCustomVariety = !predefinedVarieties.includes(editingFarm.cropVariety)
-
-      if (isCustomVariety) {
-        setShowCustomVariety(true)
-        setCustomVarietyInput(editingFarm.cropVariety)
-      }
+      const hasCustomVariety = !predefinedVarieties.includes(editingFarm.cropVariety)
+      setIsCustomVariety(hasCustomVariety)
     }
   }, [editingFarm])
 
@@ -205,15 +199,6 @@ export function FarmModal({
 
       setCropError(null)
       setAreaError(null)
-
-      // Reset custom variety state (will be set by the detection useEffect if needed)
-      const predefinedVarieties = getVarietiesForCrop(editingFarm.crop || 'Grapes')
-      const isCustomVariety =
-        editingFarm.cropVariety && !predefinedVarieties.includes(editingFarm.cropVariety)
-      if (!isCustomVariety) {
-        setShowCustomVariety(false)
-        setCustomVarietyInput('')
-      }
     } else {
       // Reset form when not editing (adding new farm)
       setFormData({
@@ -246,8 +231,7 @@ export function FarmModal({
 
       setCropError(null)
       setAreaError(null)
-      setShowCustomVariety(false)
-      setCustomVarietyInput('')
+      setIsCustomVariety(false)
     }
   }, [editingFarm])
 
@@ -379,7 +363,7 @@ export function FarmModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={resetAndClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] w-[95vw] mx-auto overflow-y-auto">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] w-[95vw] mx-auto overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">
             {editingFarm ? 'Edit Farm' : 'Add New Farm'}
@@ -450,8 +434,7 @@ export function FarmModal({
                   value={formData.crop}
                   onValueChange={(value) => {
                     handleInputChange('crop', value)
-                    setShowCustomVariety(false)
-                    setCustomVarietyInput('')
+                    setIsCustomVariety(false)
 
                     // Auto-set a sensible variety for the selected crop
                     const varieties = getVarietiesForCrop(value)
@@ -462,7 +445,7 @@ export function FarmModal({
                     }
                   }}
                 >
-                  <SelectTrigger className="mt-1 h-11 w-full" aria-invalid={!!cropError}>
+                  <SelectTrigger className="mt-1 !h-11 w-full" aria-invalid={!!cropError}>
                     <SelectValue placeholder="Select a crop" />
                   </SelectTrigger>
                   <SelectContent position="popper" className="max-h-[300px]">
@@ -479,21 +462,20 @@ export function FarmModal({
                 <Label className="text-sm font-medium text-gray-700 mb-2 block">
                   Crop Variety *
                 </Label>
-                {!showCustomVariety ? (
+                {!isCustomVariety ? (
                   <>
                     <Select
                       value={formData.cropVariety}
                       onValueChange={(value) => {
                         if (value === '__custom__') {
-                          setPreviousVariety(formData.cropVariety)
-                          setShowCustomVariety(true)
-                          setCustomVarietyInput('')
+                          setIsCustomVariety(true)
+                          handleInputChange('cropVariety', '')
                         } else {
                           handleInputChange('cropVariety', value)
                         }
                       }}
                     >
-                      <SelectTrigger className="mt-1 h-11 w-full">
+                      <SelectTrigger className="mt-1 !h-11 w-full">
                         <SelectValue placeholder="Select a variety" />
                       </SelectTrigger>
                       <SelectContent position="popper" className="max-h-[300px]">
@@ -510,45 +492,13 @@ export function FarmModal({
                     </p>
                   </>
                 ) : (
-                  <>
-                    <div className="space-y-2 mt-1">
-                      <Input
-                        value={customVarietyInput}
-                        onChange={(e) => setCustomVarietyInput(e.target.value)}
-                        placeholder="Enter custom variety"
-                        className="h-11 w-full"
-                        required
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            if (customVarietyInput.trim()) {
-                              handleInputChange('cropVariety', customVarietyInput.trim())
-                            }
-                          }}
-                          className="h-11 flex-1"
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setShowCustomVariety(false)
-                            setCustomVarietyInput('')
-                            handleInputChange('cropVariety', previousVariety)
-                          }}
-                          className="h-11 flex-1"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Enter your custom variety name and click Save
-                    </p>
-                  </>
+                  <Input
+                    value={formData.cropVariety}
+                    onChange={(e) => handleInputChange('cropVariety', e.target.value)}
+                    placeholder="Enter custom variety name"
+                    className="h-9 w-full"
+                    required
+                  />
                 )}
               </div>
             </div>
@@ -713,7 +663,7 @@ export function FarmModal({
                     value={formData.soilTextureClass}
                     onValueChange={(value) => handleInputChange('soilTextureClass', value)}
                   >
-                    <SelectTrigger id="soilTextureClass" className="mt-1 h-11">
+                    <SelectTrigger id="soilTextureClass" className="mt-1 !h-11 w-full">
                       <SelectValue placeholder="Select texture class" />
                     </SelectTrigger>
                     <SelectContent>
