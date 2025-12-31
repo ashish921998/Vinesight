@@ -142,6 +142,7 @@ export function FarmModal({
   const [soilCompositionWarning, setSoilCompositionWarning] = useState<string | null>(null)
   const [showCustomVariety, setShowCustomVariety] = useState(false)
   const [customVarietyInput, setCustomVarietyInput] = useState('')
+  const [previousVariety, setPreviousVariety] = useState('')
 
   const safeParseNumber = (value: string | undefined): number | undefined => {
     if (!value || !value.trim()) return undefined
@@ -157,6 +158,19 @@ export function FarmModal({
 
   const cropOptions = useMemo(() => getAllCrops(), [])
   const varietyOptions = useMemo(() => getVarietiesForCrop(formData.crop), [formData.crop])
+
+  // Detect custom varieties on edit
+  useEffect(() => {
+    if (editingFarm && editingFarm.cropVariety) {
+      const predefinedVarieties = getVarietiesForCrop(editingFarm.crop || 'Grapes')
+      const isCustomVariety = !predefinedVarieties.includes(editingFarm.cropVariety)
+
+      if (isCustomVariety) {
+        setShowCustomVariety(true)
+        setCustomVarietyInput(editingFarm.cropVariety)
+      }
+    }
+  }, [editingFarm])
 
   // Update form data when editingFarm prop changes
   useEffect(() => {
@@ -191,8 +205,15 @@ export function FarmModal({
 
       setCropError(null)
       setAreaError(null)
-      setShowCustomVariety(false)
-      setCustomVarietyInput('')
+
+      // Reset custom variety state (will be set by the detection useEffect if needed)
+      const predefinedVarieties = getVarietiesForCrop(editingFarm.crop || 'Grapes')
+      const isCustomVariety =
+        editingFarm.cropVariety && !predefinedVarieties.includes(editingFarm.cropVariety)
+      if (!isCustomVariety) {
+        setShowCustomVariety(false)
+        setCustomVarietyInput('')
+      }
     } else {
       // Reset form when not editing (adding new farm)
       setFormData({
@@ -464,8 +485,9 @@ export function FarmModal({
                       value={formData.cropVariety}
                       onValueChange={(value) => {
                         if (value === '__custom__') {
+                          setPreviousVariety(formData.cropVariety)
                           setShowCustomVariety(true)
-                          setCustomVarietyInput(formData.cropVariety)
+                          setCustomVarietyInput('')
                         } else {
                           handleInputChange('cropVariety', value)
                         }
@@ -503,7 +525,6 @@ export function FarmModal({
                           onClick={() => {
                             if (customVarietyInput.trim()) {
                               handleInputChange('cropVariety', customVarietyInput.trim())
-                              setShowCustomVariety(false)
                             }
                           }}
                           className="h-11 flex-1"
@@ -516,6 +537,7 @@ export function FarmModal({
                           onClick={() => {
                             setShowCustomVariety(false)
                             setCustomVarietyInput('')
+                            handleInputChange('cropVariety', previousVariety)
                           }}
                           className="h-11 flex-1"
                         >
