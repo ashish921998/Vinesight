@@ -461,31 +461,26 @@ export class SupabaseService {
     }
 
     // Validate quantity_unit - if quantity_amount is provided, unit is required
-    if (record.quantity_amount !== undefined && record.quantity_amount !== null) {
-      // quantity_amount is provided, so unit is required
-      if (!record.quantity_unit || typeof record.quantity_unit !== 'string') {
-        throw new Error('Quantity unit is required when quantity amount is provided')
-      }
+    const hasQuantityAmount =
+      record.quantity_amount !== undefined && record.quantity_amount !== null
+    const hasQuantityUnit = record.quantity_unit !== undefined && record.quantity_unit !== null
 
+    if (hasQuantityUnit) {
       const unit = record.quantity_unit.trim()
-      if (!unit) {
+
+      if (hasQuantityAmount && !unit) {
         throw new Error('Quantity unit cannot be empty when quantity amount is provided')
       }
 
-      if (!isValidSprayUnit(unit)) {
-        throw new Error(`Quantity unit must be one of: ${ALLOWED_SPRAY_UNITS.join(', ')}`)
-      }
-
-      // Assign/store sanitized trimmed value back to record with proper type assertion
-      record.quantity_unit = unit
-    } else if (record.quantity_unit) {
-      // quantity_amount is not provided, but unit is - validate it anyway
-      const unit = record.quantity_unit.trim()
       if (unit && !isValidSprayUnit(unit)) {
         throw new Error(`Quantity unit must be one of: ${ALLOWED_SPRAY_UNITS.join(', ')}`)
       }
-      // Assign/store sanitized trimmed value back to record with proper type assertion
-      record.quantity_unit = unit as SprayUnit
+
+      if (unit) {
+        record.quantity_unit = unit as SprayUnit
+      }
+    } else if (hasQuantityAmount) {
+      throw new Error('Quantity unit is required when quantity amount is provided')
     }
 
     // Validate area if provided
@@ -590,31 +585,26 @@ export class SupabaseService {
     }
 
     // Validate quantity_unit - if quantity_amount is provided, unit is required
-    if (updates.quantity_amount !== undefined && updates.quantity_amount !== null) {
-      // quantity_amount is provided, so unit is required
-      if (!updates.quantity_unit || typeof updates.quantity_unit !== 'string') {
-        throw new Error('Quantity unit is required when quantity amount is provided')
-      }
+    const hasQuantityAmount =
+      updates.quantity_amount !== undefined && updates.quantity_amount !== null
+    const hasQuantityUnit = updates.quantity_unit !== undefined && updates.quantity_unit !== null
 
-      const unit = updates.quantity_unit.trim()
-      if (!unit) {
+    if (hasQuantityUnit) {
+      const unit = updates.quantity_unit!.trim()
+
+      if (hasQuantityAmount && !unit) {
         throw new Error('Quantity unit cannot be empty when quantity amount is provided')
       }
 
-      if (!isValidSprayUnit(unit)) {
-        throw new Error(`Quantity unit must be one of: ${ALLOWED_SPRAY_UNITS.join(', ')}`)
-      }
-
-      // Assign/store sanitized trimmed value back to updates with proper type assertion
-      updates.quantity_unit = unit
-    } else if (updates.quantity_unit) {
-      // quantity_amount is not provided, but unit is - validate it anyway
-      const unit = updates.quantity_unit.trim()
       if (unit && !isValidSprayUnit(unit)) {
         throw new Error(`Quantity unit must be one of: ${ALLOWED_SPRAY_UNITS.join(', ')}`)
       }
-      // Assign/store sanitized trimmed value back to updates with proper type assertion
-      updates.quantity_unit = unit as SprayUnit
+
+      if (unit) {
+        updates.quantity_unit = unit as SprayUnit
+      }
+    } else if (hasQuantityAmount) {
+      throw new Error('Quantity unit is required when quantity amount is provided')
     }
 
     // Validate area if provided
