@@ -468,17 +468,15 @@ export class SupabaseService {
     if (hasQuantityUnit) {
       const unit = record.quantity_unit.trim()
 
-      if (hasQuantityAmount && !unit) {
-        throw new Error('Quantity unit cannot be empty when quantity amount is provided')
+      if (!unit) {
+        throw new Error('Quantity unit cannot be empty or contain only whitespace')
       }
 
-      if (unit && !isValidSprayUnit(unit)) {
+      if (!isValidSprayUnit(unit)) {
         throw new Error(`Quantity unit must be one of: ${ALLOWED_SPRAY_UNITS.join(', ')}`)
       }
 
-      if (unit) {
-        record.quantity_unit = unit as SprayUnit
-      }
+      record.quantity_unit = unit as SprayUnit
     } else if (hasQuantityAmount) {
       throw new Error('Quantity unit is required when quantity amount is provided')
     }
@@ -592,17 +590,15 @@ export class SupabaseService {
     if (hasQuantityUnit) {
       const unit = updates.quantity_unit!.trim()
 
-      if (hasQuantityAmount && !unit) {
-        throw new Error('Quantity unit cannot be empty when quantity amount is provided')
+      if (!unit) {
+        throw new Error('Quantity unit cannot be empty or contain only whitespace')
       }
 
-      if (unit && !isValidSprayUnit(unit)) {
+      if (!isValidSprayUnit(unit)) {
         throw new Error(`Quantity unit must be one of: ${ALLOWED_SPRAY_UNITS.join(', ')}`)
       }
 
-      if (unit) {
-        updates.quantity_unit = unit as SprayUnit
-      }
+      updates.quantity_unit = unit as SprayUnit
     } else if (hasQuantityAmount) {
       throw new Error('Quantity unit is required when quantity amount is provided')
     }
