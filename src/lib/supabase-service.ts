@@ -466,6 +466,9 @@ export class SupabaseService {
     const hasQuantityUnit = record.quantity_unit !== undefined && record.quantity_unit !== null
 
     if (hasQuantityUnit) {
+      if (typeof record.quantity_unit !== 'string') {
+        throw new Error('Quantity unit must be a string')
+      }
       const unit = record.quantity_unit.trim()
 
       if (!unit) {
@@ -588,6 +591,9 @@ export class SupabaseService {
     const hasQuantityUnit = updates.quantity_unit !== undefined && updates.quantity_unit !== null
 
     if (hasQuantityUnit) {
+      if (typeof updates.quantity_unit !== 'string') {
+        throw new Error('Quantity unit must be a string')
+      }
       const unit = updates.quantity_unit!.trim()
 
       if (!unit) {
