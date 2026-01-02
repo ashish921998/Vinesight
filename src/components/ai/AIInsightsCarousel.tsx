@@ -38,13 +38,19 @@ import {
 import { useRouter } from 'next/navigation'
 import { type AIInsight } from '@/types/ai'
 import { motion } from 'framer-motion'
+import { formatCurrency } from '@/lib/currency-utils'
 
 interface AIInsightsCarouselProps {
   farmId: number
   className?: string
+  currencyPreference?: string
 }
 
-export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProps) {
+export function AIInsightsCarousel({
+  farmId,
+  className,
+  currencyPreference
+}: AIInsightsCarouselProps) {
   const [insights, setInsights] = useState<AIInsight[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
@@ -412,7 +418,10 @@ export function AIInsightsCarousel({ farmId, className }: AIInsightsCarouselProp
                       <div className="flex justify-between">
                         <span>Potential Savings:</span>
                         <span className="font-medium text-green-700">
-                          ₹{insight.profitabilityDetails.potentialSavings.toLocaleString()}
+                          {formatCurrency(
+                            insight.profitabilityDetails.potentialSavings,
+                            currencyPreference as any
+                          )}
                         </span>
                       </div>
                       <div className="flex justify-between">

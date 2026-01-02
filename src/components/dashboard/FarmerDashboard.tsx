@@ -40,7 +40,9 @@ import {
   Scissors
 } from 'lucide-react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
 import { SupabaseService } from '@/lib/supabase-service'
+import { formatCurrency } from '@/lib/currency-utils'
 import { WeatherService, type WeatherData } from '@/lib/weather-service'
 import { type Farm } from '@/types/types'
 import { capitalize, cn, formatRemainingWater, calculateDaysAfterPruning } from '@/lib/utils'
@@ -75,6 +77,7 @@ interface FarmerDashboardProps {
 
 export function FarmerDashboard({ className }: FarmerDashboardProps) {
   const { user, loading: authLoading } = useSupabaseAuth()
+  const { preferences } = useUserPreferences()
   const [loading, setLoading] = useState(true)
   const [farms, setFarms] = useState<Farm[]>([])
   const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null)
@@ -907,7 +910,7 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
         iconClass = 'text-primary'
         const cost = activity?.cost
         if (cost) {
-          detailParts.push(`₹${formatNumber(cost, cost >= 1000 ? 0 : 1)}`)
+          detailParts.push(formatCurrency(cost, preferences?.currencyPreference))
         }
         if (activity?.type) {
           detailParts.push(activity.type)

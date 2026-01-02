@@ -6,6 +6,7 @@
 import jsPDF from 'jspdf'
 import { SupabaseService } from './supabase-service'
 import type { Farm } from '@/types/types'
+import { formatCurrency, type CurrencyCode } from './currency-utils'
 
 // Extend jsPDF type to include autoTable
 declare module 'jspdf' {
@@ -23,6 +24,7 @@ export interface ExportOptions {
   includeTypes: string[]
   format: 'csv' | 'pdf'
   reportType: 'operations' | 'financial' | 'compliance' | 'comprehensive'
+  currency?: CurrencyCode
 }
 
 export interface ExportData {
@@ -248,7 +250,7 @@ export class ExportService {
    * Export data to PDF format
    */
   private static async exportToPDF(data: ExportData, options: ExportOptions): Promise<void> {
-    const { reportType } = options
+    const { reportType, currency = 'INR' } = options
     const pdf = new jsPDF()
     let yPosition = 20
 
@@ -303,11 +305,11 @@ export class ExportService {
 
     // Add data sections based on report type
     if (reportType === 'operations' || reportType === 'comprehensive') {
-      yPosition = await this.addOperationalDataToPDF(pdf, data, yPosition)
+      yPosition = await this.addOperationalDataToPDF(pdf, data, yPosition, currency!)
     }
 
     if (reportType === 'financial' || reportType === 'comprehensive') {
-      yPosition = await this.addFinancialDataToPDF(pdf, data, yPosition)
+      yPosition = await this.addFinancialDataToPDF(pdf, data, yPosition, currency!)
     }
 
     if (reportType === 'compliance' || reportType === 'comprehensive') {
@@ -315,7 +317,7 @@ export class ExportService {
     }
 
     // Add summary statistics
-    yPosition = await this.addSummaryStatistics(pdf, data, yPosition)
+    yPosition = await this.addSummaryStatistics(pdf, data, yPosition, currency!)
 
     // Download PDF
     const filename = `${data.farm.name.replace(/\s+/g, '_')}_${reportType}_report_${new Date().toISOString().split('T')[0]}.pdf`
@@ -328,7 +330,8 @@ export class ExportService {
   private static async addOperationalDataToPDF(
     pdf: jsPDF,
     data: ExportData,
-    startY: number
+    startY: number,
+    currency: CurrencyCode = 'INR'
   ): Promise<number> {
     let yPosition = startY
 
@@ -409,8 +412,10 @@ export class ExportService {
         record.date,
         `${record.quantity}kg`,
         record.grade,
-        record.price_per_kg ? `₹${record.price_per_kg}` : 'N/A',
-        record.price_per_kg ? `₹${(record.quantity * record.price_per_kg).toLocaleString()}` : 'N/A'
+        record.price_per_kg ? formatCurrency(record.price_per_kg, currency) : 'N/A',
+        record.price_per_kg
+          ? formatCurrency(record.quantity * record.price_per_kg, currency)
+          : 'N/A'
       ])
 
       await this.ensureAutoTable(pdf)
@@ -436,7 +441,8 @@ export class ExportService {
   private static async addFinancialDataToPDF(
     pdf: jsPDF,
     data: ExportData,
-    startY: number
+    startY: number,
+    currency: CurrencyCode = 'INR'
   ): Promise<number> {
     let yPosition = startY
 
@@ -452,7 +458,7 @@ export class ExportService {
         record.date,
         record.category,
         record.description,
-        `₹${record.amount.toLocaleString()}`,
+        formatCurrency(record.amount, currency),
         record.vendor || 'N/A'
       ])
 
@@ -483,7 +489,7 @@ export class ExportService {
 
       pdf.setFontSize(10)
       pdf.setFont('helvetica', 'bold')
-      pdf.text(`Total Expenses: ₹${totalExpenses.toLocaleString()}`, 20, yPosition)
+      pdf.text(`Total Expenses: ${formatCurrency(totalExpenses, currency)}`, 20, yPosition)
       yPosition += 8
 
       pdf.setFont('helvetica', 'normal')
@@ -494,7 +500,7 @@ export class ExportService {
         .sort(([, a], [, b]) => (b as number) - (a as number))
         .slice(0, 5)
         .forEach(([category, amount]) => {
-          pdf.text(`• ${category}: ₹${(amount as number).toLocaleString()}`, 25, yPosition)
+          pdf.text(`• ${category}: ${formatCurrency(amount as number, currency)}`, 25, yPosition)
           yPosition += 5
         })
 
@@ -555,7 +561,8 @@ export class ExportService {
   private static async addSummaryStatistics(
     pdf: jsPDF,
     data: ExportData,
-    startY: number
+    startY: number,
+    currency: CurrencyCode = 'INR'
   ): Promise<number> {
     let yPosition = startY
 
@@ -586,13 +593,13 @@ export class ExportService {
       stats.push(['Total Harvest Quantity', `${totalHarvest.toLocaleString()} kg`])
     }
     if (totalRevenue > 0) {
-      stats.push(['Total Revenue', `₹${totalRevenue.toLocaleString()}`])
+      stats.push(['Total Revenue', formatCurrency(totalRevenue, currency)])
     }
     if (totalExpenses > 0) {
-      stats.push(['Total Expenses', `₹${totalExpenses.toLocaleString()}`])
+      stats.push(['Total Expenses', formatCurrency(totalExpenses, currency)])
     }
     if (totalRevenue > 0 && totalExpenses > 0) {
-      stats.push(['Net Profit/Loss', `₹${(totalRevenue - totalExpenses).toLocaleString()}`])
+      stats.push(['Net Profit/Loss', formatCurrency(totalRevenue - totalExpenses, currency)])
     }
 
     await this.ensureAutoTable(pdf)

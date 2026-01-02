@@ -41,8 +41,11 @@ import {
   type SoilHealthResults,
   type SoilTestData
 } from '@/lib/soil-health'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
+import { formatCurrency } from '@/lib/currency-utils'
 
 export function SoilHealthMonitoringComponent() {
+  const { preferences } = useUserPreferences()
   const [inputs, setInputs] = useState<SoilHealthInputs>({
     testData: {
       testDate: new Date(),
@@ -1207,8 +1210,12 @@ export function SoilHealthMonitoringComponent() {
                           </Badge>
                         </div>
                         <div className="text-sm text-muted-foreground mb-2">
-                          <strong>Timeline:</strong> {action.timeframe} |<strong> Cost:</strong> ₹
-                          {action.expectedCost.toLocaleString()}/ha
+                          <strong>Timeline:</strong> {action.timeframe} |<strong> Cost:</strong>{' '}
+                          {formatCurrency(
+                            action.expectedCost,
+                            preferences?.currencyPreference as any
+                          )}
+                          /ha
                         </div>
                         <div className="text-sm">
                           <strong>Expected Benefit:</strong> {action.expectedBenefit}
@@ -1263,10 +1270,17 @@ export function SoilHealthMonitoringComponent() {
 
                       <div className="mt-3 p-3 bg-gray-50 rounded">
                         <div className="text-sm">
-                          <strong>Investment:</strong> ₹
-                          {fert.costBenefit.investment.toLocaleString()} |
-                          <strong> Expected Return:</strong> ₹
-                          {fert.costBenefit.expectedReturn.toLocaleString()} |<strong> ROI:</strong>{' '}
+                          <strong>Investment:</strong>{' '}
+                          {formatCurrency(
+                            fert.costBenefit.investment,
+                            preferences?.currencyPreference as any
+                          )}
+                          |<strong> Expected Return:</strong>{' '}
+                          {formatCurrency(
+                            fert.costBenefit.expectedReturn,
+                            preferences?.currencyPreference as any
+                          )}
+                          |<strong> ROI:</strong>{' '}
                           {(
                             ((fert.costBenefit.expectedReturn - fert.costBenefit.investment) /
                               fert.costBenefit.investment) *
@@ -1317,7 +1331,10 @@ export function SoilHealthMonitoringComponent() {
                                   {material.name} ({material.quantity})
                                 </span>
                                 <span className="font-medium">
-                                  ₹{material.cost.toLocaleString()}
+                                  {formatCurrency(
+                                    material.cost,
+                                    preferences?.currencyPreference as any
+                                  )}
                                 </span>
                               </div>
                             ))}

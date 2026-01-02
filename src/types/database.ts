@@ -1355,7 +1355,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          area_unit_preference: string | null
           avatar_url: string | null
           consultant_organization_id: string | null
           created_at: string | null
@@ -1364,28 +1363,11 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
-          spacing_unit_preference: string | null
           updated_at: string | null
           username: string | null
           user_type: string | null
         }
         Insert: {
-          area_unit_preference?: string | null
-          avatar_url?: string | null
-          consultant_organization_id?: string | null
-          created_at?: string | null
-          currency_preference?: string | null
-          email?: string | null
-          full_name?: string | null
-          id: string
-          phone?: string | null
-          spacing_unit_preference?: string | null
-          updated_at?: string | null
-          username?: string | null
-          user_type?: string | null
-        }
-        Update: {
-          area_unit_preference?: string | null
           avatar_url?: string | null
           consultant_organization_id?: string | null
           created_at?: string | null
@@ -1394,7 +1376,19 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
-          spacing_unit_preference?: string | null
+          updated_at?: string | null
+          username?: string | null
+          user_type?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          consultant_organization_id?: string | null
+          created_at?: string | null
+          currency_preference?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
           updated_at?: string | null
           username?: string | null
           user_type?: string | null

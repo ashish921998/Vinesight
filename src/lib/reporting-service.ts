@@ -15,6 +15,7 @@ import {
 } from './reporting-types'
 import { CloudDataService } from './cloud-data-service'
 import type { Farm } from '@/types/types'
+import { formatCurrency, type CurrencyCode } from './currency-utils'
 // Temporarily disabled for deployment
 // import { CalculatorService } from './calculator-service';
 import jsPDF from 'jspdf'
@@ -297,7 +298,10 @@ export class ReportingService {
     return standards[reportType] || 'General Agricultural Standards'
   }
 
-  static async exportReportToPDF(report: ComplianceReport | FinancialReport): Promise<Blob> {
+  static async exportReportToPDF(
+    report: ComplianceReport | FinancialReport,
+    currency: CurrencyCode = 'INR'
+  ): Promise<Blob> {
     const doc = new jsPDF()
     const pageWidth = doc.internal.pageSize.width
     const margin = 20
@@ -330,9 +334,9 @@ export class ReportingService {
 
         doc.setFontSize(12)
         const summaryData = [
-          ['Total Revenue', `₹${finReport.data.totalRevenue.toLocaleString()}`],
-          ['Total Costs', `₹${finReport.data.totalCosts.toLocaleString()}`],
-          ['Net Profit', `₹${finReport.data.netProfit.toLocaleString()}`],
+          ['Total Revenue', formatCurrency(finReport.data.totalRevenue, currency)],
+          ['Total Costs', formatCurrency(finReport.data.totalCosts, currency)],
+          ['Net Profit', formatCurrency(finReport.data.netProfit, currency)],
           ['Profit Margin', `${finReport.data.profitMargin.toFixed(2)}%`]
         ]
 
@@ -357,7 +361,7 @@ export class ReportingService {
           const costData = finReport.data.costBreakdown.map((cost) => [
             cost.category,
             cost.subcategory,
-            `₹${cost.amount.toLocaleString()}`,
+            formatCurrency(cost.amount, currency),
             `${cost.percentage.toFixed(1)}%`
           ])
 

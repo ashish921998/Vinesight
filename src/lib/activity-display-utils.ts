@@ -5,6 +5,7 @@
 import { formatChemicalData, formatChemicalsForDisplay, Chemical } from '@/lib/chemical-formatter'
 import { logger } from '@/lib/logger'
 import { TEXT_LIMITS } from './constants'
+import { formatCurrency, type CurrencyCode } from '@/lib/currency-utils'
 
 interface ActivityLog {
   id: number
@@ -41,9 +42,10 @@ export interface GroupedActivities {
 /**
  * Get the most meaningful display text for an activity
  * @param activity - The activity log object
+ * @param currency - Optional currency code for formatting
  * @returns String to display as the main activity text
  */
-export function getActivityDisplayData(activity: ActivityLog): string {
+export function getActivityDisplayData(activity: ActivityLog, currency?: CurrencyCode): string {
   // Add null/undefined guard for activity
   if (!activity) {
     return 'Unknown Activity'
@@ -65,7 +67,7 @@ export function getActivityDisplayData(activity: ActivityLog): string {
       return getHarvestDisplayText(activity)
 
     case 'expense':
-      return getExpenseDisplayText(activity)
+      return getExpenseDisplayText(activity, currency)
 
     case 'fertigation':
       return getFertigationDisplayText(activity)
@@ -186,7 +188,7 @@ function getHarvestDisplayText(activity: ActivityLog): string {
 /**
  * Format expense cost display
  */
-function getExpenseDisplayText(activity: ActivityLog): string {
+function getExpenseDisplayText(activity: ActivityLog, currency: CurrencyCode = 'INR'): string {
   // Add null/undefined guard and validation
   if (
     activity.cost !== undefined &&
@@ -198,10 +200,10 @@ function getExpenseDisplayText(activity: ActivityLog): string {
     const cost = Number(activity.cost)
     if (isFinite(cost)) {
       try {
-        return `₹${cost.toLocaleString('en-IN')}`
+        return formatCurrency(cost, currency)
       } catch (error) {
-        // Fallback if toLocaleString fails
-        return `₹${cost.toFixed(2)}`
+        // Fallback if formatCurrency fails
+        return formatCurrency(cost, currency)
       }
     }
   }
@@ -454,9 +456,13 @@ export function transformActivitiesToLogEntries(activities: ActivityLog[]): Arra
 /**
  * Get summary items for an array of activities
  * @param activities - Array of activity logs
+ * @param currency - Optional currency code for formatting
  * @returns Array of summary objects with type, summary, and count
  */
-export function getActivitiesSummary(activities: ActivityLog[]): Array<{
+export function getActivitiesSummary(
+  activities: ActivityLog[],
+  currency?: CurrencyCode
+): Array<{
   type: string
   summary: string
   count: number
@@ -515,7 +521,8 @@ export function getActivitiesSummary(activities: ActivityLog[]): Array<{
 
       case 'expense': {
         const totalCost = typeActivities.reduce((sum, act) => sum + (act.cost || 0), 0)
-        summary = totalCost > 0 ? `₹${totalCost.toLocaleString('en-IN')} expenses` : 'Expense'
+        summary =
+          totalCost > 0 ? `${formatCurrency(totalCost, currency || 'INR')} expenses` : 'Expense'
         break
       }
 

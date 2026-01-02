@@ -31,6 +31,7 @@ import { generateSaveButtonLabel } from '@/lib/daily-note-utils'
 import { formatNumberString } from '@/lib/number-utils'
 import { WarehouseItemSelect } from '@/components/warehouse/WarehouseItemSelect'
 import { warehouseService } from '@/lib/warehouse-service'
+import { formatCurrency } from '@/lib/currency-utils'
 
 interface LogEntry {
   id: string // temporary ID for session
@@ -56,6 +57,7 @@ interface UnifiedDataLogsModalProps {
   selectedDate?: string
   existingDayNote?: string
   existingDayNoteId?: number | null
+  currencyPreference?: string
 }
 
 // Use centralized logTypeConfigs from @/lib/log-type-config
@@ -75,7 +77,8 @@ export function UnifiedDataLogsModal({
   existingLogs = [],
   selectedDate,
   existingDayNote,
-  existingDayNoteId = null
+  existingDayNoteId = null,
+  currencyPreference
 }: UnifiedDataLogsModalProps) {
   const [internalSelectedDate, setInternalSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
@@ -1336,7 +1339,8 @@ export function UnifiedDataLogsModal({
                                   if (key === 'fertilizer') return `Fertilizer: ${value}`
                                   if (key === 'duration') return `Duration: ${value} hrs`
                                   if (key === 'quantity') return `Quantity: ${value} kg`
-                                  if (key === 'cost') return `Cost: ₹${value}`
+                                  if (key === 'cost')
+                                    return `Cost: ${formatCurrency(value, currencyPreference as any)}`
                                   return `${key.replace(/_/g, ' ')}: ${value}`
                                 })
                                 .filter(Boolean)

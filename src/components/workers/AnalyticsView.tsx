@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
+import { formatCurrency } from '@/lib/currency-utils'
 import type {
   Worker,
   WorkerAttendance,
@@ -51,6 +52,7 @@ interface AnalyticsViewProps {
   analyticsStartDate: string
   analyticsEndDate: string
   analyticsFarmId: number | null
+  currencyPreference?: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD'
   fixedAnalytics: FixedAnalytics
   tempAnalytics: TempAnalytics
   showFixedDetails: boolean
@@ -72,6 +74,7 @@ export function AnalyticsView({
   analyticsStartDate,
   analyticsEndDate,
   analyticsFarmId,
+  currencyPreference = 'INR',
   fixedAnalytics,
   tempAnalytics,
   showFixedDetails,
@@ -169,10 +172,11 @@ export function AnalyticsView({
                 <div>
                   <p className="text-xs font-semibold uppercase text-primary">Fixed workers</p>
                   <p className="text-3xl font-bold mt-1">
-                    ₹{fixedAnalytics.salaryTotal.toLocaleString('en-IN')}
+                    {formatCurrency(fixedAnalytics.salaryTotal, currencyPreference)}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Advance recovered: ₹{fixedAnalytics.advanceRecovered.toLocaleString('en-IN')}
+                    Advance recovered:{' '}
+                    {formatCurrency(fixedAnalytics.advanceRecovered, currencyPreference)}
                   </p>
                 </div>
                 <div className="rounded-full bg-accent/10 text-primary px-3 py-1 text-xs font-semibold">
@@ -187,7 +191,7 @@ export function AnalyticsView({
                     Temporary workers
                   </p>
                   <p className="text-3xl font-bold mt-1">
-                    ₹{tempAnalytics.totalPaid.toLocaleString('en-IN')}
+                    {formatCurrency(tempAnalytics.totalPaid, currencyPreference)}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Total hours:{' '}
@@ -225,12 +229,12 @@ export function AnalyticsView({
                         <div>
                           <p className="font-semibold">{entry.worker_name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {entry.days.toFixed(1)} days · ₹{entry.advance.toLocaleString('en-IN')}{' '}
-                            recovered
+                            {entry.days.toFixed(1)} days ·{' '}
+                            {formatCurrency(entry.advance, currencyPreference)} recovered
                           </p>
                         </div>
                         <p className="text-base font-semibold">
-                          ₹{entry.salary.toLocaleString('en-IN')}
+                          {formatCurrency(entry.salary, currencyPreference)}
                         </p>
                       </div>
                     </div>
@@ -298,7 +302,7 @@ export function AnalyticsView({
                                     <span>
                                       {format(new Date(record.date), 'MMM d')} – {record.work_type}
                                     </span>
-                                    <span>₹{amount.toLocaleString('en-IN')}</span>
+                                    <span>{formatCurrency(amount, currencyPreference)}</span>
                                   </div>
                                 )
                               })}
@@ -330,7 +334,7 @@ export function AnalyticsView({
                                   className="flex items-center justify-between text-xs border-b py-1"
                                 >
                                   <span>{format(new Date(tx.date), 'MMM d')}</span>
-                                  <span>₹{tx.amount.toLocaleString('en-IN')}</span>
+                                  <span>{formatCurrency(tx.amount, currencyPreference)}</span>
                                 </div>
                               ))}
                             {fixedAnalytics.advanceTransactions.filter((tx) =>
@@ -378,7 +382,7 @@ export function AnalyticsView({
                           </p>
                         </div>
                         <p className="text-base font-semibold">
-                          ₹{entry.totalPaid.toLocaleString('en-IN')}
+                          {formatCurrency(entry.totalPaid, currencyPreference)}
                         </p>
                       </div>
                     </div>
@@ -431,7 +435,7 @@ export function AnalyticsView({
                                 {format(new Date(entry.date), 'MMM d')} · {entry.hours_worked}h
                               </p>
                             </div>
-                            <span>₹{entry.amount_paid.toLocaleString('en-IN')}</span>
+                            <span>{formatCurrency(entry.amount_paid, currencyPreference)}</span>
                           </div>
                         ))}
                       {tempAnalytics.entries.filter((entry) =>

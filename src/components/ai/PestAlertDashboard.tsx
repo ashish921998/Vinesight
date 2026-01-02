@@ -18,14 +18,20 @@ import {
   XCircle
 } from 'lucide-react'
 import { PestPredictionService } from '@/lib/pest-prediction-service'
+import { formatCurrency } from '@/lib/currency-utils'
 import type { PestDiseasePrediction } from '@/types/ai'
 
 interface PestAlertDashboardProps {
   farmId: number
   className?: string
+  currencyPreference?: string
 }
 
-export function PestAlertDashboard({ farmId, className }: PestAlertDashboardProps) {
+export function PestAlertDashboard({
+  farmId,
+  className,
+  currencyPreference
+}: PestAlertDashboardProps) {
   const [predictions, setPredictions] = useState<PestDiseasePrediction[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPrediction, setSelectedPrediction] = useState<PestDiseasePrediction | null>(null)
@@ -335,7 +341,9 @@ export function PestAlertDashboard({ farmId, className }: PestAlertDashboardProp
                                     <div className="text-xs text-gray-500">{treatment.dosage}</div>
                                   </div>
                                   <div className="text-right flex-shrink-0">
-                                    <div className="text-xs text-gray-500">₹{treatment.cost}</div>
+                                    <div className="text-xs text-gray-500">
+                                      {formatCurrency(treatment.cost, currencyPreference as any)}
+                                    </div>
                                     <div className="text-xs text-green-600">
                                       {Math.round(treatment.effectiveness * 100)}%
                                     </div>
