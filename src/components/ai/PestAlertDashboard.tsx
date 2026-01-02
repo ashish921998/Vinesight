@@ -33,7 +33,6 @@ export function PestAlertDashboard({
 }: PestAlertDashboardProps) {
   const [predictions, setPredictions] = useState<PestDiseasePrediction[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedPrediction, setSelectedPrediction] = useState<PestDiseasePrediction | null>(null)
 
   const loadPredictions = useCallback(async () => {
     try {
