@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +16,6 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
 import {
   Leaf,
   Beaker,
@@ -29,7 +28,6 @@ import {
   BarChart3,
   Lightbulb,
   Calendar,
-  DollarSign,
   ArrowUp,
   ArrowDown,
   Minus,
@@ -38,11 +36,10 @@ import {
 import {
   SoilHealthAnalyzer,
   type SoilHealthInputs,
-  type SoilHealthResults,
-  type SoilTestData
+  type SoilHealthResults
 } from '@/lib/soil-health'
 import { useUserPreferences } from '@/hooks/useUserPreferences'
-import { formatCurrency } from '@/lib/currency-utils'
+import { formatCurrency, type CurrencyCode } from '@/lib/currency-utils'
 
 export function SoilHealthMonitoringComponent() {
   const { preferences } = useUserPreferences()
@@ -146,13 +143,6 @@ export function SoilHealthMonitoringComponent() {
     if (score >= 65) return 'text-blue-600 bg-blue-50'
     if (score >= 45) return 'text-orange-600 bg-orange-50'
     return 'text-red-600 bg-red-50'
-  }
-
-  const getScoreColorBar = (score: number) => {
-    if (score >= 80) return 'bg-green-500'
-    if (score >= 65) return 'bg-blue-500'
-    if (score >= 45) return 'bg-orange-500'
-    return 'bg-red-500'
   }
 
   const getCategoryBadge = (category: string) => {
@@ -1213,7 +1203,7 @@ export function SoilHealthMonitoringComponent() {
                           <strong>Timeline:</strong> {action.timeframe} |<strong> Cost:</strong>{' '}
                           {formatCurrency(
                             action.expectedCost,
-                            preferences?.currencyPreference as any
+                            (preferences?.currencyPreference ?? 'INR') as CurrencyCode
                           )}
                           /ha
                         </div>
@@ -1273,12 +1263,12 @@ export function SoilHealthMonitoringComponent() {
                           <strong>Investment:</strong>{' '}
                           {formatCurrency(
                             fert.costBenefit.investment,
-                            preferences?.currencyPreference as any
+                            (preferences?.currencyPreference ?? 'INR') as CurrencyCode
                           )}
                           |<strong> Expected Return:</strong>{' '}
                           {formatCurrency(
                             fert.costBenefit.expectedReturn,
-                            preferences?.currencyPreference as any
+                            (preferences?.currencyPreference ?? 'INR') as CurrencyCode
                           )}
                           |<strong> ROI:</strong>{' '}
                           {(
@@ -1333,7 +1323,7 @@ export function SoilHealthMonitoringComponent() {
                                 <span className="font-medium">
                                   {formatCurrency(
                                     material.cost,
-                                    preferences?.currencyPreference as any
+                                    (preferences?.currencyPreference ?? 'INR') as CurrencyCode
                                   )}
                                 </span>
                               </div>

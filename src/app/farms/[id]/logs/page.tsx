@@ -60,6 +60,7 @@ import {
   Droplets
 } from 'lucide-react'
 import { searchLogs } from '@/actions/search-logs'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
 
 /* ---------- Helpers (moved out of component) ---------- */
 
@@ -263,6 +264,8 @@ export default function FarmLogsPage() {
 
   const [editingRecord, setEditingRecord] = useState<ActivityLog | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
+
+  const { preferences: userPreferences } = useUserPreferences(currentFarm?.userId)
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(totalLogs / itemsPerPage)),
@@ -1061,6 +1064,7 @@ export default function FarmLogsPage() {
           selectedDate={selectedDate}
           existingDayNote={existingDayNoteForEdit?.notes}
           existingDayNoteId={existingDayNoteForEdit?.id ?? null}
+          currencyPreference={userPreferences?.currencyPreference}
         />
 
         {editingRecord && editingRecord.type !== 'petiole_test' && (

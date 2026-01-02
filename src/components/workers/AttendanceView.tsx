@@ -34,7 +34,7 @@ import {
   endOfWeek
 } from 'date-fns'
 import { cn } from '@/lib/utils'
-import { formatCurrency, formatCompactCurrency } from '@/lib/currency-utils'
+import { formatCurrency, formatCompactCurrency, type CurrencyCode } from '@/lib/currency-utils'
 import type { Worker, WorkerAttendance } from '@/lib/supabase'
 
 interface Farm {
@@ -306,7 +306,7 @@ export function AttendanceView({
                 </Badge>
                 <div className="text-right">
                   <p className="text-base md:text-lg font-bold text-primary">
-                    {formatCurrency(computedAmount, currencyPreference as any)}
+                    {formatCurrency(computedAmount, (currencyPreference ?? 'INR') as CurrencyCode)}
                   </p>
                 </div>
               </div>
@@ -347,7 +347,10 @@ export function AttendanceView({
         <Card>
           <CardContent className="p-3">
             <div className="text-xl md:text-2xl font-bold text-primary">
-              {formatCompactCurrency(stats.totalAmount, currencyPreference as any)}
+              {formatCompactCurrency(
+                stats.totalAmount,
+                (currencyPreference ?? 'INR') as CurrencyCode
+              )}
             </div>
             <div className="text-[10px] md:text-xs text-muted-foreground">Total</div>
           </CardContent>
@@ -380,9 +383,9 @@ export function AttendanceView({
                 {stats.fullDays + stats.halfDays * 0.5 > 0
                   ? formatCurrency(
                       stats.totalAmount / (stats.fullDays + stats.halfDays * 0.5),
-                      currencyPreference as any
+                      (currencyPreference ?? 'INR') as CurrencyCode
                     )
-                  : formatCurrency(0, currencyPreference as any)}
+                  : formatCurrency(0, (currencyPreference ?? 'INR') as CurrencyCode)}
               </span>
             </div>
           </div>

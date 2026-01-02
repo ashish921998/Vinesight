@@ -199,12 +199,7 @@ function getExpenseDisplayText(activity: ActivityLog, currency: CurrencyCode = '
     // Ensure cost is a reasonable number
     const cost = Number(activity.cost)
     if (isFinite(cost)) {
-      try {
-        return formatCurrency(cost, currency)
-      } catch (error) {
-        // Fallback if formatCurrency fails
-        return formatCurrency(cost, currency)
-      }
+      return formatCurrency(cost, currency)
     }
   }
   return 'Expense'

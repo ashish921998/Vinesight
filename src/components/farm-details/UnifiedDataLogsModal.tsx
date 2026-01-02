@@ -31,7 +31,7 @@ import { generateSaveButtonLabel } from '@/lib/daily-note-utils'
 import { formatNumberString } from '@/lib/number-utils'
 import { WarehouseItemSelect } from '@/components/warehouse/WarehouseItemSelect'
 import { warehouseService } from '@/lib/warehouse-service'
-import { formatCurrency } from '@/lib/currency-utils'
+import { formatCurrency, type CurrencyCode } from '@/lib/currency-utils'
 
 interface LogEntry {
   id: string // temporary ID for session
@@ -57,7 +57,7 @@ interface UnifiedDataLogsModalProps {
   selectedDate?: string
   existingDayNote?: string
   existingDayNoteId?: number | null
-  currencyPreference?: string
+  currencyPreference?: CurrencyCode
 }
 
 // Use centralized logTypeConfigs from @/lib/log-type-config
@@ -1340,7 +1340,7 @@ export function UnifiedDataLogsModal({
                                   if (key === 'duration') return `Duration: ${value} hrs`
                                   if (key === 'quantity') return `Quantity: ${value} kg`
                                   if (key === 'cost')
-                                    return `Cost: ${formatCurrency(value, currencyPreference as any)}`
+                                    return `Cost: ${formatCurrency(value, currencyPreference ?? 'INR')}`
                                   return `${key.replace(/_/g, ' ')}: ${value}`
                                 })
                                 .filter(Boolean)

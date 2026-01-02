@@ -6,12 +6,12 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, Users, User, Wallet, Plus, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Worker } from '@/lib/supabase'
-import { formatCurrency } from '@/lib/currency-utils'
+import { formatCurrency, type CurrencyCode } from '@/lib/currency-utils'
 
 interface WorkersListViewProps {
   workers: Worker[]
   loading: boolean
-  currencyPreference?: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD'
+  currencyPreference?: CurrencyCode
   onOpenAddModal: () => void
   onOpenWorkerDetail: (worker: Worker) => void
   onOpenEditModal: (worker: Worker) => void

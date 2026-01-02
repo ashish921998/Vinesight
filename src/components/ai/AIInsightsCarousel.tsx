@@ -38,7 +38,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { type AIInsight } from '@/types/ai'
 import { motion } from 'framer-motion'
-import { formatCurrency } from '@/lib/currency-utils'
+import { formatCurrency, type CurrencyCode } from '@/lib/currency-utils'
 
 interface AIInsightsCarouselProps {
   farmId: number
@@ -55,44 +55,6 @@ export function AIInsightsCarousel({
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
-  // const loadInsights = useCallback(async () => {
-  //   try {
-  //     setLoading(true)
-
-  //     // Call the API route instead of direct service
-  //     const response = await fetch('/api/ai/insights', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json'
-  //       },
-  //       body: JSON.stringify({
-  //         farmId,
-  //         limit: 8
-  //       })
-  //     })
-
-  //     if (!response.ok) {
-  //       throw new Error('Failed to fetch AI insights')
-  //     }
-
-  //     const data = await response.json()
-  //     setInsights(data.insights || [])
-  //   } catch (error) {
-  //     // Log error for debugging in development only
-  //     if (process.env.NODE_ENV === 'development') {
-  //       console.error('Error loading AI insights:', error)
-  //     }
-  //     // Set empty insights array on error
-  //     setInsights([])
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }, [farmId])
-
-  // useEffect(() => {
-  //   loadInsights()
-  // }, [loadInsights])
-
   const handleInsightAction = async (insight: AIInsight) => {
     try {
       if (insight.actionType === 'navigate' && insight.actionData?.route) {
@@ -100,11 +62,6 @@ export function AIInsightsCarousel({
       } else if (insight.actionType === 'execute') {
         const result = await AIInsightsService.executeInsightAction(insight)
         if (result.success) {
-          // Show success feedback - can be removed in production as it's debug logging
-          if (process.env.NODE_ENV === 'development') {
-            if (process.env.NODE_ENV === 'development') {
-            }
-          }
           // Refresh insights after execution
           // await loadInsights()
         }
@@ -112,9 +69,7 @@ export function AIInsightsCarousel({
     } catch (error) {
       // Log error for debugging in development only
       if (process.env.NODE_ENV === 'development') {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Error handling insight action:', error)
-        }
+        console.error('Error handling insight action:', error)
       }
     }
   }
@@ -420,7 +375,7 @@ export function AIInsightsCarousel({
                         <span className="font-medium text-green-700">
                           {formatCurrency(
                             insight.profitabilityDetails.potentialSavings,
-                            currencyPreference as any
+                            (currencyPreference ?? 'INR') as CurrencyCode
                           )}
                         </span>
                       </div>
@@ -489,10 +444,6 @@ export function AIInsightsCarousel({
                         className="h-8 w-8 p-0 rounded-full"
                         onClick={() => {
                           // Mark as acknowledged - TODO: implement actual acknowledgment logic
-                          if (process.env.NODE_ENV === 'development') {
-                            if (process.env.NODE_ENV === 'development') {
-                            }
-                          }
                         }}
                       >
                         <CheckCircle className="h-4 w-4" />

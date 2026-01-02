@@ -77,7 +77,7 @@ interface FarmerDashboardProps {
 
 export function FarmerDashboard({ className }: FarmerDashboardProps) {
   const { user, loading: authLoading } = useSupabaseAuth()
-  const { preferences } = useUserPreferences()
+  const { preferences } = useUserPreferences(user?.id)
   const [loading, setLoading] = useState(true)
   const [farms, setFarms] = useState<Farm[]>([])
   const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null)
