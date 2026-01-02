@@ -14,21 +14,25 @@ import {
   Clock,
   MapPin,
   Zap,
-  CheckCircle,
-  XCircle
+  CheckCircle
 } from 'lucide-react'
 import { PestPredictionService } from '@/lib/pest-prediction-service'
+import { formatCurrency, type CurrencyCode } from '@/lib/currency-utils'
 import type { PestDiseasePrediction } from '@/types/ai'
 
 interface PestAlertDashboardProps {
   farmId: number
   className?: string
+  currencyPreference?: string
 }
 
-export function PestAlertDashboard({ farmId, className }: PestAlertDashboardProps) {
+export function PestAlertDashboard({
+  farmId,
+  className,
+  currencyPreference
+}: PestAlertDashboardProps) {
   const [predictions, setPredictions] = useState<PestDiseasePrediction[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedPrediction, setSelectedPrediction] = useState<PestDiseasePrediction | null>(null)
 
   const loadPredictions = useCallback(async () => {
     try {
@@ -254,20 +258,7 @@ export function PestAlertDashboard({ farmId, className }: PestAlertDashboardProp
                           </div>
                         </div>
                       </div>
-                      <Progress
-                        value={prediction.probabilityScore * 100}
-                        className="h-2"
-                        // @ts-ignore
-                        indicatorClassName={
-                          prediction.riskLevel === 'critical'
-                            ? 'bg-red-500'
-                            : prediction.riskLevel === 'high'
-                              ? 'bg-orange-500'
-                              : prediction.riskLevel === 'medium'
-                                ? 'bg-yellow-500'
-                                : 'bg-green-500'
-                        }
-                      />
+                      <Progress value={prediction.probabilityScore * 100} className="h-2" />
                       <div className="flex justify-between items-center text-xs text-gray-500">
                         <span>Until onset</span>
                         <span className="font-medium">
@@ -335,7 +326,12 @@ export function PestAlertDashboard({ farmId, className }: PestAlertDashboardProp
                                     <div className="text-xs text-gray-500">{treatment.dosage}</div>
                                   </div>
                                   <div className="text-right flex-shrink-0">
-                                    <div className="text-xs text-gray-500">₹{treatment.cost}</div>
+                                    <div className="text-xs text-gray-500">
+                                      {formatCurrency(
+                                        treatment.cost,
+                                        (currencyPreference ?? 'INR') as CurrencyCode
+                                      )}
+                                    </div>
                                     <div className="text-xs text-green-600">
                                       {Math.round(treatment.effectiveness * 100)}%
                                     </div>

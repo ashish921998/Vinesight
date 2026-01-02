@@ -40,6 +40,7 @@ import {
   X
 } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
 import { checkTestReminders } from '@/lib/lab-test-integration'
 import {
   parseFarmId,
@@ -156,6 +157,8 @@ export default function FarmDetailsPage() {
 
   // AI Features state
   const isMobile = useIsMobile()
+
+  const { preferences: userPreferences } = useUserPreferences(dashboardData?.farm?.userId)
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -2062,6 +2065,7 @@ export default function FarmDetailsPage() {
           selectedDate={editModeDate}
           existingDayNote={editModeDayNote?.notes}
           existingDayNoteId={editModeDayNote?.id ?? null}
+          currencyPreference={userPreferences?.currencyPreference}
         />
 
         {/* Water Calculation Modal */}

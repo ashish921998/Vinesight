@@ -859,6 +859,7 @@ export default function WorkersPage() {
           <WorkersListView
             workers={workers}
             loading={loading}
+            currencyPreference={preferences?.currencyPreference}
             onOpenAddModal={handleOpenAddModal}
             onOpenWorkerDetail={handleOpenWorkerDetail}
             onOpenEditModal={handleOpenEditModal}
@@ -883,6 +884,7 @@ export default function WorkersPage() {
             analyticsStartDate={analyticsStartDate}
             analyticsEndDate={analyticsEndDate}
             analyticsFarmId={analyticsFarmId}
+            currencyPreference={preferences?.currencyPreference}
             fixedAnalytics={fixedAnalytics}
             tempAnalytics={tempAnalytics}
             showFixedDetails={showFixedDetails}

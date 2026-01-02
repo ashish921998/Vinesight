@@ -34,6 +34,7 @@ import {
   endOfWeek
 } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { formatCurrency, formatCompactCurrency, type CurrencyCode } from '@/lib/currency-utils'
 import type { Worker, WorkerAttendance } from '@/lib/supabase'
 
 interface Farm {
@@ -47,6 +48,7 @@ interface AttendanceViewProps {
   attendanceHistoryWorkerId: number | null
   attendanceHistory: WorkerAttendance[]
   attendanceHistoryLoading: boolean
+  currencyPreference?: string
   onFarmNavigation: () => void
   onAttendanceHistoryWorkerChange: (workerId: number) => void
   onOpenAttendanceModal: () => void
@@ -60,6 +62,7 @@ export function AttendanceView({
   attendanceHistoryWorkerId,
   attendanceHistory,
   attendanceHistoryLoading,
+  currencyPreference,
   onFarmNavigation,
   onAttendanceHistoryWorkerChange,
   onOpenAttendanceModal,
@@ -303,7 +306,7 @@ export function AttendanceView({
                 </Badge>
                 <div className="text-right">
                   <p className="text-base md:text-lg font-bold text-primary">
-                    ₹{computedAmount.toLocaleString('en-IN')}
+                    {formatCurrency(computedAmount, (currencyPreference ?? 'INR') as CurrencyCode)}
                   </p>
                 </div>
               </div>
@@ -344,7 +347,10 @@ export function AttendanceView({
         <Card>
           <CardContent className="p-3">
             <div className="text-xl md:text-2xl font-bold text-primary">
-              ₹{Math.round(stats.totalAmount / 1000)}k
+              {formatCompactCurrency(
+                stats.totalAmount,
+                (currencyPreference ?? 'INR') as CurrencyCode
+              )}
             </div>
             <div className="text-[10px] md:text-xs text-muted-foreground">Total</div>
           </CardContent>
@@ -374,10 +380,12 @@ export function AttendanceView({
             <div className="flex justify-between items-center">
               <span className="text-xs md:text-sm text-muted-foreground">Avg. Daily Rate</span>
               <span className="text-sm md:text-base font-semibold">
-                ₹
                 {stats.fullDays + stats.halfDays * 0.5 > 0
-                  ? (stats.totalAmount / (stats.fullDays + stats.halfDays * 0.5)).toFixed(0)
-                  : 0}
+                  ? formatCurrency(
+                      stats.totalAmount / (stats.fullDays + stats.halfDays * 0.5),
+                      (currencyPreference ?? 'INR') as CurrencyCode
+                    )
+                  : formatCurrency(0, (currencyPreference ?? 'INR') as CurrencyCode)}
               </span>
             </div>
           </div>

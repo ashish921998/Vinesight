@@ -7,12 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  TASK_TEMPLATES,
-  TaskTemplate,
-  getTemplatesByType,
-  getCurrentSeasonTemplates
-} from '@/lib/task-templates'
+import { TASK_TEMPLATES, TaskTemplate, getCurrentSeasonTemplates } from '@/lib/task-templates'
 import {
   Search,
   Filter,
@@ -20,7 +15,6 @@ import {
   Calendar,
   Droplets,
   SprayCan,
-  Scissors,
   Grape,
   TestTube,
   AlertCircle,

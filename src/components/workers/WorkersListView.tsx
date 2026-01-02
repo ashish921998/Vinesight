@@ -3,13 +3,15 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Users, User, IndianRupee, Wallet, Plus, Pencil, Trash2 } from 'lucide-react'
+import { Loader2, Users, User, Wallet, Plus, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Worker } from '@/lib/supabase'
+import { formatCurrency, type CurrencyCode } from '@/lib/currency-utils'
 
 interface WorkersListViewProps {
   workers: Worker[]
   loading: boolean
+  currencyPreference?: CurrencyCode
   onOpenAddModal: () => void
   onOpenWorkerDetail: (worker: Worker) => void
   onOpenEditModal: (worker: Worker) => void
@@ -19,6 +21,7 @@ interface WorkersListViewProps {
 export function WorkersListView({
   workers,
   loading,
+  currencyPreference = 'INR',
   onOpenAddModal,
   onOpenWorkerDetail,
   onOpenEditModal,
@@ -87,16 +90,15 @@ export function WorkersListView({
                 </div>
                 <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
                   <div className="flex items-center gap-1">
-                    <IndianRupee className="h-4 w-4" />
                     <span className="font-medium text-foreground">
-                      ₹{worker.daily_rate.toLocaleString('en-IN')}
+                      {formatCurrency(worker.daily_rate, currencyPreference)}
                     </span>
                     <span>/day</span>
                   </div>
                   <div className="flex items-center gap-1 text-amber-600">
                     <Wallet className="h-4 w-4" />
                     <span className="font-semibold">
-                      ₹{(worker.advance_balance || 0).toLocaleString('en-IN')}
+                      {formatCurrency(worker.advance_balance || 0, currencyPreference)}
                     </span>
                     <span className="text-xs uppercase tracking-wide">advance</span>
                   </div>

@@ -17,6 +17,7 @@ import {
   Target
 } from 'lucide-react'
 import { capitalize } from '@/lib/utils'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
 
 interface Farm {
   id: string
@@ -154,6 +155,7 @@ interface PortfolioDashboardProps {
 }
 
 export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
+  const { preferences } = useUserPreferences()
   const [portfolioData, setPortfolioData] = useState(generatePortfolioData())
   const [loading, setLoading] = useState(true)
 
@@ -183,8 +185,21 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
     return 'text-destructive'
   }
 
-  const formatCurrency = (amount: number) => {
-    return `₹${(amount / 1000).toFixed(0)}K`
+  const formatCurrencyAmount = (amount: number) => {
+    const currencyPreference = preferences?.currencyPreference
+    const symbol =
+      currencyPreference === 'USD'
+        ? '$'
+        : currencyPreference === 'EUR'
+          ? '€'
+          : currencyPreference === 'GBP'
+            ? '£'
+            : currencyPreference === 'AUD'
+              ? 'A$'
+              : currencyPreference === 'CAD'
+                ? 'C$'
+                : '₹'
+    return `${symbol}${(amount / 1000).toFixed(0)}K`
   }
 
   const criticalFarms = portfolioData.farms.filter((farm) => farm.status === 'critical')
@@ -245,7 +260,7 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
               <span className="text-xs text-muted-foreground">Revenue</span>
             </div>
             <div className="text-lg font-bold text-primary">
-              {formatCurrency(portfolioData.metrics.totalRevenue)}
+              {formatCurrencyAmount(portfolioData.metrics.totalRevenue)}
             </div>
           </CardContent>
         </Card>
@@ -257,7 +272,7 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
               <span className="text-xs text-muted-foreground">Profit</span>
             </div>
             <div className="text-lg font-bold text-accent">
-              {formatCurrency(portfolioData.metrics.totalProfit)}
+              {formatCurrencyAmount(portfolioData.metrics.totalProfit)}
             </div>
           </CardContent>
         </Card>

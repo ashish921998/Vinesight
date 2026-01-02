@@ -29,9 +29,7 @@ CREATE TABLE profiles (
   phone VARCHAR(50),
   user_type VARCHAR(50) CHECK (user_type IN ('farmer', 'consultant', 'admin')),
   consultant_organization_id UUID,
-  area_unit_preference VARCHAR(10) DEFAULT 'hectares' CHECK (area_unit_preference IN ('hectares', 'acres')),
   currency_preference VARCHAR(3) DEFAULT 'INR' CHECK (currency_preference IN ('INR', 'USD', 'EUR', 'GBP', 'AUD', 'CAD')),
-  spacing_unit_preference VARCHAR(10) DEFAULT 'feet' CHECK (spacing_unit_preference IN ('feet', 'mm')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -1112,6 +1110,11 @@ ALTER TABLE profiles
 -- ============================================================================
 -- END ORGANIZATION / RBAC TABLES
 -- ============================================================================
+
+-- Migration: Drop unused preference columns from profiles table
+-- These columns are no longer used in the application
+ALTER TABLE profiles DROP COLUMN IF EXISTS area_unit_preference;
+ALTER TABLE profiles DROP COLUMN IF EXISTS spacing_unit_preference;
 
 -- Insert some sample data (optional - you can remove this section)
 -- Note: This will only work after you set up authentication

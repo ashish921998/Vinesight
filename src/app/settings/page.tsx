@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { LogOut, User, Building2, CheckCircle2, Coins, Ruler } from 'lucide-react'
+import { LogOut, User, Building2, CheckCircle2, Coins } from 'lucide-react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import {
@@ -28,14 +28,10 @@ export default function SettingsPage() {
   const { user, signOut } = useSupabaseAuth()
   const router = useRouter()
   const [signOutLoading, setSignOutLoading] = useState(false)
-  const [areaUnitPreference, setAreaUnitPreference] = useState<'hectares' | 'acres'>('hectares')
-  const [areaUnitLoading, setAreaUnitLoading] = useState(false)
   const [currencyPreference, setCurrencyPreference] = useState<
     'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD'
   >('INR')
   const [currencyLoading, setCurrencyLoading] = useState(false)
-  const [spacingUnitPreference, setSpacingUnitPreference] = useState<'feet' | 'mm'>('feet')
-  const [spacingUnitLoading, setSpacingUnitLoading] = useState(false)
 
   // Organization Consultant State
   const [organizations, setOrganizations] = useState<OrganizationInfo[]>([])
@@ -120,7 +116,7 @@ export default function SettingsPage() {
       const supabase = getTypedSupabaseClient()
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('area_unit_preference, currency_preference, spacing_unit_preference')
+        .select('currency_preference')
         .eq('id', user.id)
         .maybeSingle()
 
@@ -129,16 +125,10 @@ export default function SettingsPage() {
         return
       }
 
-      if (profile?.area_unit_preference) {
-        setAreaUnitPreference(profile.area_unit_preference as 'hectares' | 'acres')
-      }
       if (profile?.currency_preference) {
         setCurrencyPreference(
           profile.currency_preference as 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD'
         )
-      }
-      if (profile?.spacing_unit_preference) {
-        setSpacingUnitPreference(profile.spacing_unit_preference as 'feet' | 'mm')
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
@@ -219,35 +209,6 @@ export default function SettingsPage() {
     }
   }
 
-  const handleAreaUnitChange = async (newUnit: 'hectares' | 'acres') => {
-    if (!user) return
-    if (newUnit === areaUnitPreference) return
-    try {
-      setAreaUnitLoading(true)
-      const supabase = getTypedSupabaseClient()
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ area_unit_preference: newUnit })
-        .eq('id', user.id)
-
-      if (updateError) {
-        console.error('Error updating area unit preference:', updateError)
-        toast.error('Failed to update area unit preference')
-        return
-      }
-
-      setAreaUnitPreference(newUnit)
-      toast.success(`Area unit preference updated to ${newUnit}`)
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      console.error('Error updating area unit preference:', errorMessage)
-      toast.error('Failed to update area unit preference')
-    } finally {
-      setAreaUnitLoading(false)
-    }
-  }
-
   const handleCurrencyChange = async (
     newCurrency: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD'
   ) => {
@@ -276,35 +237,6 @@ export default function SettingsPage() {
       toast.error('Failed to update currency preference')
     } finally {
       setCurrencyLoading(false)
-    }
-  }
-
-  const handleSpacingUnitChange = async (newUnit: 'feet' | 'mm') => {
-    if (!user) return
-    if (newUnit === spacingUnitPreference) return
-    try {
-      setSpacingUnitLoading(true)
-      const supabase = getTypedSupabaseClient()
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ spacing_unit_preference: newUnit })
-        .eq('id', user.id)
-
-      if (updateError) {
-        console.error('Error updating spacing unit preference:', updateError)
-        toast.error('Failed to update spacing unit preference')
-        return
-      }
-
-      setSpacingUnitPreference(newUnit)
-      toast.success(`Spacing unit preference updated to ${newUnit}`)
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      console.error('Error updating spacing unit preference:', errorMessage)
-      toast.error('Failed to update spacing unit preference')
-    } finally {
-      setSpacingUnitLoading(false)
     }
   }
 
@@ -383,43 +315,6 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Area Unit Preference */}
-          {user && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Building2 className="h-4 w-4" />
-                  Area Unit Preference
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-gray-500">
-                  Choose your preferred unit for farm area measurements
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant={areaUnitPreference === 'hectares' ? 'default' : 'outline'}
-                    onClick={() => handleAreaUnitChange('hectares')}
-                    disabled={areaUnitLoading}
-                    className="h-9"
-                    size="sm"
-                  >
-                    Hectares
-                  </Button>
-                  <Button
-                    variant={areaUnitPreference === 'acres' ? 'default' : 'outline'}
-                    onClick={() => handleAreaUnitChange('acres')}
-                    disabled={areaUnitLoading}
-                    className="h-9"
-                    size="sm"
-                  >
-                    Acres
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Currency Preference */}
           {user && (
             <Card>
@@ -487,43 +382,6 @@ export default function SettingsPage() {
                     size="sm"
                   >
                     C$ CAD
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Spacing Unit Preference */}
-          {user && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Ruler className="h-4 w-4" />
-                  Spacing Unit Preference
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-gray-500">
-                  Choose your preferred unit for vine/row spacing measurements
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant={spacingUnitPreference === 'feet' ? 'default' : 'outline'}
-                    onClick={() => handleSpacingUnitChange('feet')}
-                    disabled={spacingUnitLoading}
-                    className="h-9"
-                    size="sm"
-                  >
-                    Feet
-                  </Button>
-                  <Button
-                    variant={spacingUnitPreference === 'mm' ? 'default' : 'outline'}
-                    onClick={() => handleSpacingUnitChange('mm')}
-                    disabled={spacingUnitLoading}
-                    className="h-9"
-                    size="sm"
-                  >
-                    Millimeters
                   </Button>
                 </div>
               </CardContent>

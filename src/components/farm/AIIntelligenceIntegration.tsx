@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { CriticalAlertsBanner } from './CriticalAlertsBanner'
 import { AIInsightsCarousel } from '@/components/ai/AIInsightsCarousel'
 import { PestPredictionService } from '@/lib/pest-prediction-service'
-import type { CriticalAlert, AIInsight } from '@/types/ai'
+import type { CriticalAlert } from '@/types/ai'
 
 interface AIIntelligenceIntegrationProps {
   farmId: number
