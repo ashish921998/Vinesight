@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect, Suspense } from 'react'
 import { pageview } from '@/lib/analytics'
 
-const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-XXXXXXXXXX'
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 
 function GoogleAnalyticsContent() {
   const pathname = usePathname()

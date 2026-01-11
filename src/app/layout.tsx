@@ -1,12 +1,5 @@
 import type { Metadata } from 'next'
-import {
-  Geist,
-  Geist_Mono,
-  Montserrat,
-  Merriweather,
-  Source_Code_Pro,
-  Inter
-} from 'next/font/google'
+import { Manrope, DM_Serif_Display, Playfair_Display, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { AsyncErrorBoundary } from '@/components/ErrorBoundary'
@@ -18,8 +11,6 @@ import { GoogleAnalytics, SearchConsoleVerification } from '@/components/GoogleA
 import dynamic from 'next/dynamic'
 import { SEO_KEYWORDS } from '@/lib/seo-constants'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
-
 const LayoutContent = dynamic(
   () => import('@/components/layout/LayoutContent').then((mod) => ({ default: mod.LayoutContent })),
   {
@@ -27,29 +18,26 @@ const LayoutContent = dynamic(
   }
 )
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin']
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin']
-})
-
-const montserrat = Montserrat({
-  variable: '--font-montserrat',
-  subsets: ['latin']
-})
-
-const merriweather = Merriweather({
-  variable: '--font-merriweather',
+const manrope = Manrope({
+  variable: '--font-sans',
   subsets: ['latin'],
-  weight: ['300', '400', '700', '900']
+  weight: ['300', '400', '500', '600', '700', '800']
 })
 
-const sourceCodePro = Source_Code_Pro({
-  variable: '--font-source-code-pro',
+const dmSerifDisplay = DM_Serif_Display({
+  variable: '--font-heading',
+  subsets: ['latin'],
+  weight: '400'
+})
+
+const playfairDisplay = Playfair_Display({
+  variable: '--font-serif',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700']
+})
+
+const jetBrainsMono = JetBrains_Mono({
+  variable: '--font-mono',
   subsets: ['latin']
 })
 
@@ -119,7 +107,7 @@ export const metadata: Metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#6F8F5E'
+  themeColor: '#5D3A58'
 }
 
 export default function RootLayout({
@@ -128,10 +116,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={manrope.variable}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#6F8F5E" />
+        <meta name="theme-color" content="#5D3A58" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -142,7 +130,7 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="VineSight" />
-        <meta name="msapplication-TileColor" content="#6F8F5E" />
+        <meta name="msapplication-TileColor" content="#5D3A58" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
 
         {/* Preconnect for performance */}
@@ -164,7 +152,7 @@ export default function RootLayout({
         <SearchConsoleVerification />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${merriweather.variable} ${sourceCodePro.variable} antialiased`}
+        className={`${manrope.variable} ${dmSerifDisplay.variable} ${playfairDisplay.variable} ${jetBrainsMono.variable} antialiased`}
       >
         <SentryErrorBoundary>
           <AsyncErrorBoundary>

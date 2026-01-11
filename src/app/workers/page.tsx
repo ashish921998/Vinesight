@@ -810,8 +810,8 @@ export default function WorkersPage() {
 
         {/* Controls */}
         <div className="bg-white border rounded-2xl p-4 mb-5 space-y-4">
-          <div className="flex flex-wrap items-center gap-3 justify-between">
-            <div className="flex rounded-full bg-muted p-1 mx-auto md:mx-0 w-full max-w-sm sm:max-w-md">
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex rounded-full bg-muted p-1 w-full max-w-sm sm:max-w-md">
               {(['workers', 'attendance', 'analytics'] as const).map((mode) => (
                 <button
                   key={mode}
@@ -830,7 +830,7 @@ export default function WorkersPage() {
                 </button>
               ))}
             </div>
-            <div className="w-full max-w-sm sm:max-w-md mx-auto sm:mx-0">
+            <div className="w-full max-w-sm sm:max-w-md">
               {viewMode === 'workers' ? (
                 <div className="flex gap-2">
                   <Button
