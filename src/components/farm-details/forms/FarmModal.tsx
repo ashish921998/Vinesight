@@ -21,6 +21,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { getAllCrops, getVarietiesForCrop, getDefaultVariety } from '@/lib/crop-data'
+import { getSoilTextureClass } from '@/lib/soil-texture'
 import type { LocationResult } from '@/lib/open-meteo-geocoding'
 import type { Farm } from '@/types/types'
 
@@ -243,6 +244,14 @@ export function FarmModal({
       return null
     }
     return sand + silt + clay
+  }, [formData.sandPercentage, formData.siltPercentage, formData.clayPercentage])
+
+  const calculatedSoilTexture = useMemo(() => {
+    return getSoilTextureClass(
+      formData.sandPercentage,
+      formData.siltPercentage,
+      formData.clayPercentage
+    )
   }, [formData.sandPercentage, formData.siltPercentage, formData.clayPercentage])
 
   useEffect(() => {
@@ -726,17 +735,27 @@ export function FarmModal({
                   <Label htmlFor="clayPercentage" className="text-sm font-medium text-gray-700">
                     Clay (%)
                   </Label>
-                  <Input
-                    id="clayPercentage"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    value={formData.clayPercentage}
-                    onChange={(e) => handleInputChange('clayPercentage', e.target.value)}
-                    placeholder="45.5"
-                    className="mt-1 h-11"
-                  />
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input
+                      id="clayPercentage"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={formData.clayPercentage}
+                      onChange={(e) => handleInputChange('clayPercentage', e.target.value)}
+                      placeholder="45.5"
+                      className="h-11 flex-1"
+                    />
+                    {calculatedSoilTexture && (
+                      <div className="px-3 py-2 bg-accent/10 border border-accent/30 rounded-md min-w-[140px]">
+                        <span className="text-xs text-gray-500 block">Soil Type</span>
+                        <span className="text-sm font-medium text-accent-foreground">
+                          {calculatedSoilTexture}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   {soilCompositionWarning && (
                     <p className="text-xs text-amber-600 mt-1">{soilCompositionWarning}</p>
                   )}
