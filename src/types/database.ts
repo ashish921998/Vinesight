@@ -980,33 +980,45 @@ export type Database = {
       fertigation_records: {
         Row: {
           area: number
+          conversation_id: number | null
           created_at: string | null
+          created_via: string | null
           date: string
           date_of_pruning: string | null
           farm_id: number | null
           fertilizers: Json | null
           id: number
           notes: string | null
+          processing_confidence: number | null
+          voice_command_transcript: string | null
         }
         Insert: {
           area: number
+          conversation_id?: number | null
           created_at?: string | null
+          created_via?: string | null
           date: string
           date_of_pruning?: string | null
           farm_id?: number | null
           fertilizers?: Json[] | null
           id?: number
           notes?: string | null
+          processing_confidence?: number | null
+          voice_command_transcript?: string | null
         }
         Update: {
           area?: number
+          conversation_id?: number | null
           created_at?: string | null
+          created_via?: string | null
           date?: string
           date_of_pruning?: string | null
           farm_id?: number | null
           fertilizers?: Json[] | null
           id?: number
           notes?: string | null
+          processing_confidence?: number | null
+          voice_command_transcript?: string | null
         }
         Relationships: [
           {
@@ -1021,7 +1033,9 @@ export type Database = {
       harvest_records: {
         Row: {
           buyer: string | null
+          conversation_id: number | null
           created_at: string | null
+          created_via: string | null
           date: string
           date_of_pruning: string | null
           farm_id: number | null
@@ -1029,11 +1043,15 @@ export type Database = {
           id: number
           notes: string | null
           price: number | null
+          processing_confidence: number | null
           quantity: number
+          voice_command_transcript: string | null
         }
         Insert: {
           buyer?: string | null
+          conversation_id?: number | null
           created_at?: string | null
+          created_via?: string | null
           date: string
           date_of_pruning?: string | null
           farm_id?: number | null
@@ -1041,11 +1059,15 @@ export type Database = {
           id?: number
           notes?: string | null
           price?: number | null
+          processing_confidence?: number | null
           quantity: number
+          voice_command_transcript?: string | null
         }
         Update: {
           buyer?: string | null
+          conversation_id?: number | null
           created_at?: string | null
+          created_via?: string | null
           date?: string
           date_of_pruning?: string | null
           farm_id?: number | null
@@ -1053,7 +1075,9 @@ export type Database = {
           id?: number
           notes?: string | null
           price?: number | null
+          processing_confidence?: number | null
           quantity?: number
+          voice_command_transcript?: string | null
         }
         Relationships: [
           {
@@ -1124,7 +1148,9 @@ export type Database = {
       irrigation_records: {
         Row: {
           area: number
+          conversation_id: number | null
           created_at: string | null
+          created_via: string | null
           date: string
           date_of_pruning: string | null
           duration: number
@@ -1133,11 +1159,15 @@ export type Database = {
           id: number
           moisture_status: string
           notes: string | null
+          processing_confidence: number | null
           system_discharge: number
+          voice_command_transcript: string | null
         }
         Insert: {
           area: number
+          conversation_id?: number | null
           created_at?: string | null
+          created_via?: string | null
           date: string
           date_of_pruning?: string | null
           duration: number
@@ -1146,11 +1176,15 @@ export type Database = {
           id?: number
           moisture_status: string
           notes?: string | null
+          processing_confidence?: number | null
           system_discharge: number
+          voice_command_transcript?: string | null
         }
         Update: {
           area?: number
+          conversation_id?: number | null
           created_at?: string | null
+          created_via?: string | null
           date?: string
           date_of_pruning?: string | null
           duration?: number
@@ -1159,7 +1193,9 @@ export type Database = {
           id?: number
           moisture_status?: string
           notes?: string | null
+          processing_confidence?: number | null
           system_discharge?: number
+          voice_command_transcript?: string | null
         }
         Relationships: [
           {
@@ -1632,7 +1668,9 @@ export type Database = {
           area: number
           chemical: string | null // Made optional for backward compatibility
           chemicals: Json
+          conversation_id: number | null
           created_at: string | null
+          created_via: string | null
           date: string
           date_of_pruning: string | null
           dose: string | null // Made optional for backward compatibility
@@ -1640,6 +1678,8 @@ export type Database = {
           id: number
           notes: string | null
           operator: string
+          processing_confidence: number | null
+          voice_command_transcript: string | null
           weather: string
           water_volume: number | null
           quantity_amount: number
@@ -1649,7 +1689,9 @@ export type Database = {
           area: number
           chemical?: string | null // Made optional for backward compatibility
           chemicals?: Json
+          conversation_id?: number | null
           created_at?: string | null
+          created_via?: string | null
           date: string
           date_of_pruning?: string | null
           dose?: string | null // Made optional for backward compatibility
@@ -1657,6 +1699,8 @@ export type Database = {
           id?: number
           notes?: string | null
           operator: string
+          processing_confidence?: number | null
+          voice_command_transcript?: string | null
           weather: string
           water_volume?: number | null
           quantity_amount?: number
@@ -1666,7 +1710,9 @@ export type Database = {
           area?: number
           chemical?: string | null // Made optional for backward compatibility
           chemicals?: Json
+          conversation_id?: number | null
           created_at?: string | null
+          created_via?: string | null
           date?: string
           date_of_pruning?: string | null
           dose?: string | null // Made optional for backward compatibility
