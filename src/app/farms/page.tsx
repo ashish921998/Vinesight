@@ -3,7 +3,17 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, Trash2, Edit, Sprout, MapPin, MoreVertical, ChevronRight } from 'lucide-react'
+import {
+  Plus,
+  Trash2,
+  Edit,
+  Sprout,
+  MapPin,
+  MoreVertical,
+  ChevronRight,
+  Grape,
+  Tractor
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { SupabaseService } from '@/lib/supabase-service'
@@ -196,8 +206,8 @@ export default function FarmsPage() {
                         <div className="px-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3 min-w-0 flex-1 pr-2">
-                              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <Sprout className="h-6 w-6 text-green-600" />
+                              <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <Grape className="h-6 w-6 text-green-600" />
                               </div>
                               <div className="min-w-0 flex-1">
                                 <h3 className="font-semibold text-gray-900 truncate">
@@ -297,14 +307,14 @@ export default function FarmsPage() {
             {!loading && farms.length === 0 && (
               <Card className="border-0 shadow-sm text-center py-12">
                 <CardContent>
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Sprout className="h-8 w-8 text-green-600" />
+                  <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Tractor className="h-8 w-8 text-accent" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">No farms added yet</h3>
                   <p className="text-gray-500 mb-6 text-sm max-w-sm mx-auto">
                     Start by adding your first vineyard to begin tracking your farming operations
                   </p>
-                  <Button onClick={handleAdd} className="h-12 px-6 bg-green-600 hover:bg-green-700">
+                  <Button onClick={handleAdd} className="h-12 px-6 bg-accent hover:bg-accent/90">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Your First Farm
                   </Button>

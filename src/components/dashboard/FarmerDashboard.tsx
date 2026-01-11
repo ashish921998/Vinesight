@@ -227,15 +227,12 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   }
 
   // Show loading state
-  if (loading || authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
-          <p className="text-muted-foreground mt-4">Loading your dashboard...</p>
-        </div>
-      </div>
-    )
+  if (authLoading) {
+    return null
+  }
+
+  if (loading && farms.length === 0) {
+    return null
   }
 
   // Show error state

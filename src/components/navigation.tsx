@@ -25,6 +25,7 @@ import { UserMenu } from './auth/UserMenu'
 import { useTranslation } from 'react-i18next'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { getTypedSupabaseClient } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
 
 // Base navigation (shown to all users)
 export const getBaseNavigation = (t: (key: string) => string) => [
@@ -53,6 +54,7 @@ export default function Navigation() {
   const { t } = useTranslation()
   const { user, loading } = useSupabaseAuth()
   const [isOrgMember, setIsOrgMember] = useState(false)
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null)
 
   // Check if user is an org member
   useEffect(() => {
@@ -117,7 +119,12 @@ export default function Navigation() {
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>
-                <ul role="list" className="-mx-2 space-y-1">
+                <ul
+                  role="list"
+                  className="-mx-2 space-y-1"
+                  onMouseEnter={() => setHoveredItem('')}
+                  onMouseLeave={() => setHoveredItem(null)}
+                >
                   {navigation.map((item) => {
                     const Icon = item.icon
                     const normalizedPathname = pathname === '/' ? '/' : pathname.replace(/\/$/, '')
@@ -126,22 +133,29 @@ export default function Navigation() {
                       normalizedPathname === normalizedHref ||
                       (normalizedHref !== '/' &&
                         normalizedPathname.startsWith(normalizedHref + '/'))
+                    const isHighlighted =
+                      (hoveredItem !== null && hoveredItem === item.href) ||
+                      (hoveredItem === null && isActive)
+
                     return (
                       <li key={item.name}>
                         <Link
                           href={item.href}
-                          className={`group flex gap-x-3 rounded-md p-3 text-sm leading-6 font-medium transition-colors ${
-                            isActive
+                          className={cn(
+                            'group flex gap-x-3 rounded-md p-3 text-sm leading-6 font-medium transition-colors',
+                            isHighlighted
                               ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
-                              : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-                          }`}
+                              : 'text-sidebar-foreground/80'
+                          )}
+                          onMouseEnter={() => setHoveredItem(item.href)}
                         >
                           <Icon
-                            className={`h-6 w-6 shrink-0 ${
-                              isActive
+                            className={cn(
+                              'h-6 w-6 shrink-0',
+                              isHighlighted
                                 ? 'text-sidebar-accent-foreground'
                                 : 'text-sidebar-foreground/70 group-hover:text-sidebar-accent-foreground'
-                            }`}
+                            )}
                             aria-hidden="true"
                           />
                           {item.name}
