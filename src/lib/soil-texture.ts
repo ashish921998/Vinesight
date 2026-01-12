@@ -158,7 +158,7 @@ function findClosestSoilTexture(sand: number, silt: number, clay: number): SoilT
     { name: 'Loam', sand: 40, silt: 40, clay: 20 },
     { name: 'Silt loam', sand: 20, silt: 60, clay: 20 },
     { name: 'Silt', sand: 10, silt: 80, clay: 10 },
-    { name: 'Sandy clay loam', sand: 60, silt: 15, clay: 25 },
+    { name: 'Sandy clay loam', sand: 55, silt: 18, clay: 27 },
     { name: 'Clay loam', sand: 32, silt: 38, clay: 30 },
     { name: 'Silty clay loam', sand: 10, silt: 55, clay: 35 },
     { name: 'Sandy clay', sand: 50, silt: 10, clay: 40 },
@@ -166,16 +166,13 @@ function findClosestSoilTexture(sand: number, silt: number, clay: number): SoilT
     { name: 'Clay', sand: 20, silt: 20, clay: 60 }
   ]
 
-  // Find the closest match using Euclidean distance
+  // Find the closest match using 2D Euclidean distance in sand-clay space
+  // Since silt = 100 - sand - clay, using 2 dimensions is geometrically correct
   let closestTexture: SoilTextureClass | null = null
   let minDistance = Infinity
 
   for (const texture of textureClasses) {
-    const distance = Math.sqrt(
-      Math.pow(sand - texture.sand, 2) +
-        Math.pow(silt - texture.silt, 2) +
-        Math.pow(clay - texture.clay, 2)
-    )
+    const distance = Math.sqrt(Math.pow(sand - texture.sand, 2) + Math.pow(clay - texture.clay, 2))
     if (distance < minDistance) {
       minDistance = distance
       closestTexture = texture.name
