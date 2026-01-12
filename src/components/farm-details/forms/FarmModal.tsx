@@ -694,16 +694,17 @@ export function FarmModal({
                 <div>
                   <Label htmlFor="soilTextureClass" className="text-sm font-medium text-gray-700">
                     Soil Texture Class{' '}
-                    {calculatedSoilTexture ? '(auto-calculated)' : '(from sand/silt/clay %)'}
+                    {calculatedSoilTexture
+                      ? '(auto-calculated)'
+                      : formData.soilTextureClass
+                        ? '(saved)'
+                        : ''}
                   </Label>
                   <Input
                     id="soilTextureClass"
                     type="text"
-                    value={
-                      calculatedSoilTexture ||
-                      formData.soilTextureClass ||
-                      'Enter sand/silt/clay percentages'
-                    }
+                    value={calculatedSoilTexture || formData.soilTextureClass || ''}
+                    placeholder="Enter sand/silt/clay percentages"
                     readOnly
                     className="mt-1 h-11 w-full bg-muted"
                   />

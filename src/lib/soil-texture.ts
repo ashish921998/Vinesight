@@ -8,7 +8,7 @@
  * 2. Loamy sand: sand 70-85%, clay <= 15%, silt + 2*clay <= 30%
  * 3. Sandy loam: sand 43-85%, clay <= 20%
  * 4. Loam: clay 7-27%, sand 25-52%, silt 28-50%
- * 5. Silt loam: silt >= 50%, clay 12-27%, sand < 50%
+ * 5. Silt loam: silt >= 50%, clay 0-27%, sand < 50%
  * 6. Silt: silt >= 80%
  * 7. Sandy clay loam: clay 20-35%, sand >= 45%
  * 8. Clay loam: clay 27-40%, sand 20-45%
@@ -101,7 +101,7 @@ export function getSoilTextureClass(
   }
 
   // 5. Silt loam
-  if (si >= 50 && c >= 12 && c <= 27 && s < 50) {
+  if (si >= 50 && c <= 27 && s < 50) {
     return 'Silt loam'
   }
 
@@ -325,5 +325,5 @@ export function getSoilTextureDescription(texture: SoilTextureClass): SoilTextur
     }
   }
 
-  return descriptions[texture] || descriptions.Loam
+  return descriptions[texture]
 }
