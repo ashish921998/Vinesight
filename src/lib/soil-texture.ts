@@ -91,17 +91,17 @@ export function getSoilTextureClass(
   }
 
   // 3. Sandy loam
-  if (s >= 43 && s < 85 && c < 20) {
+  if (s >= 43 && s < 85 && c <= 20) {
     return 'Sandy loam'
   }
 
   // 4. Loam
-  if (s >= 25 && s <= 50 && si >= 28 && si <= 50 && c >= 7 && c <= 27) {
+  if (s >= 25 && s < 52 && si >= 28 && si <= 50 && c >= 7 && c <= 27) {
     return 'Loam'
   }
 
   // 5. Silt loam
-  if (si >= 50 && c >= 12 && c < 27 && s < 50) {
+  if (si >= 50 && c >= 12 && c <= 27 && s < 50) {
     return 'Silt loam'
   }
 
