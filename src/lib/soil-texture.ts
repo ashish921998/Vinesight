@@ -85,7 +85,8 @@ export function getSoilTextureClass(
   }
 
   // 2. Loamy sand
-  if (s >= 70 && s < 85 && c <= 15) {
+  // USDA boundary: silt + 2*clay <= 30 (diagonal boundary with Sandy loam)
+  if (s >= 70 && s < 85 && c <= 15 && si + 2 * c <= 30) {
     return 'Loamy sand'
   }
 
