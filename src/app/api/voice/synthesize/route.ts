@@ -77,11 +77,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Authenticate user (optional for TTS, but good for rate limiting)
+    // Authenticate user (required for TTS)
     const supabase = await createServerSupabaseClient()
     const {
-      data: { user }
+      data: { user },
+      error: userError
     } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Authentication required',
+          errorType: 'api-error'
+        } as const,
+        { status: 401 }
+      )
+    }
 
     // Parse request body
     const body = await request.json()
@@ -197,13 +209,45 @@ export async function GET() {
 // OPTIONS Handler for CORS
 // ============================================================================
 
-export async function OPTIONS() {
+// Get allowed origins from environment variable
+const getAllowedOrigins = (): string[] => {
+  const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || ''
+  return allowedOriginsEnv.split(',').map(origin => origin.trim()).filter(Boolean)
+}
+
+const isOriginAllowed = (origin: string | null): boolean => {
+  if (!origin) return false
+  const allowedOrigins = getAllowedOrigins()
+  if (allowedOrigins.length === 0) {
+    return false
+  }
+  return allowedOrigins.some(allowed => {
+    if (allowed === '*') return true
+    if (allowed.startsWith('*.')) {
+      const domain = allowed.slice(2)
+      return origin.endsWith(`.${domain}`) || origin === domain
+    }
+    return origin === allowed
+  })
+}
+
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('Origin')
+
+  if (!isOriginAllowed(origin)) {
+    return new NextResponse(null, {
+      status: 403
+    })
+  }
+
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': origin || '',
       'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Credentials': 'true',
+      'Vary': 'Origin'
     }
   })
 }

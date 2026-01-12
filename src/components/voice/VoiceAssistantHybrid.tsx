@@ -173,19 +173,20 @@ export function VoiceAssistantHybrid({
     } catch (err) {
       console.error('Error starting recording:', err)
 
+      // Determine error type locally to avoid reading stale state
+      let newErrorType: VoiceErrorType = 'no-speech'
       if (err instanceof Error) {
         if (err.name === 'NotAllowedError') {
-          setErrorType('mic-permission')
-        } else {
-          setErrorType('no-speech')
+          newErrorType = 'mic-permission'
         }
       }
 
-      setError(VOICE_ERROR_MESSAGES[errorType || 'no-speech'][language])
+      setErrorType(newErrorType)
+      setError(VOICE_ERROR_MESSAGES[newErrorType][language])
       setState('error')
       toast({
         title: 'Microphone Error',
-        description: VOICE_ERROR_MESSAGES[errorType || 'mic-permission'][language],
+        description: VOICE_ERROR_MESSAGES[newErrorType][language],
         variant: 'destructive'
       })
     }
@@ -429,7 +430,8 @@ export function VoiceAssistantHybrid({
   const speakWithBrowser = (text: string, voice?: string) => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = voice || language === 'mr' ? 'mr-IN' : language === 'hi' ? 'hi-IN' : 'en-IN'
+      // Fix operator precedence: parentheses ensure ternary is evaluated before ||
+      utterance.lang = voice || (language === 'mr' ? 'mr-IN' : language === 'hi' ? 'hi-IN' : 'en-IN')
       utterance.onstart = () => setIsPlaying(true)
       utterance.onend = () => setIsPlaying(false)
       utterance.onerror = () => setIsPlaying(false)

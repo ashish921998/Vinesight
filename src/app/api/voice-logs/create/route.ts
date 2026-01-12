@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     let error: string | undefined
 
     switch (intent) {
-      case 'irrigation':
+      case 'irrigation': {
         const irrigationResult = await saveIrrigationLog(
           supabase,
           farmId,
@@ -121,8 +121,9 @@ export async function POST(request: NextRequest) {
         recordId = irrigationResult.recordId
         error = irrigationResult.error
         break
+      }
 
-      case 'spray':
+      case 'spray': {
         const sprayResult = await saveSprayLog(
           supabase,
           farmId,
@@ -134,8 +135,9 @@ export async function POST(request: NextRequest) {
         recordId = sprayResult.recordId
         error = sprayResult.error
         break
+      }
 
-      case 'fertigation':
+      case 'fertigation': {
         const fertigationResult = await saveFertigationLog(
           supabase,
           farmId,
@@ -147,8 +149,9 @@ export async function POST(request: NextRequest) {
         recordId = fertigationResult.recordId
         error = fertigationResult.error
         break
+      }
 
-      case 'harvest':
+      case 'harvest': {
         const harvestResult = await saveHarvestLog(
           supabase,
           farmId,
@@ -160,6 +163,7 @@ export async function POST(request: NextRequest) {
         recordId = harvestResult.recordId
         error = harvestResult.error
         break
+      }
 
       default:
         return NextResponse.json(
@@ -430,18 +434,21 @@ async function updateConversation(
   intent: VoiceIntent
 ): Promise<void> {
   try {
-    await supabase
-      .from('ai_conversations')
-      .update({
-        updated_at: new Date().toISOString(),
-        message_count: (await supabase
-          .from('ai_conversations')
-          .select('message_count')
-          .eq('id', conversationId)
-          .single()
-        ).data?.message_count || 1) + 1
-      })
-      .eq('id', conversationId)
+    // Use RPC for atomic increment to avoid race conditions
+    const { error } = await supabase.rpc('increment_conversation_message_count', {
+      conversation_id: conversationId
+    })
+
+    if (error) {
+      // Fallback to direct update if RPC doesn't exist
+      await supabase
+        .from('ai_conversations')
+        .update({
+          updated_at: new Date().toISOString(),
+          last_message_at: new Date().toISOString()
+        })
+        .eq('id', conversationId)
+    }
   } catch (e) {
     console.error('Failed to update conversation:', e)
   }
@@ -451,13 +458,45 @@ async function updateConversation(
 // OPTIONS Handler for CORS
 // ============================================================================
 
-export async function OPTIONS() {
+// Get allowed origins from environment variable
+const getAllowedOrigins = (): string[] => {
+  const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || ''
+  return allowedOriginsEnv.split(',').map(origin => origin.trim()).filter(Boolean)
+}
+
+const isOriginAllowed = (origin: string | null): boolean => {
+  if (!origin) return false
+  const allowedOrigins = getAllowedOrigins()
+  if (allowedOrigins.length === 0) {
+    return false
+  }
+  return allowedOrigins.some(allowed => {
+    if (allowed === '*') return true
+    if (allowed.startsWith('*.')) {
+      const domain = allowed.slice(2)
+      return origin.endsWith(`.${domain}`) || origin === domain
+    }
+    return origin === allowed
+  })
+}
+
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('Origin')
+
+  if (!isOriginAllowed(origin)) {
+    return new NextResponse(null, {
+      status: 403
+    })
+  }
+
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': origin || '',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Credentials': 'true',
+      'Vary': 'Origin'
     }
   })
 }

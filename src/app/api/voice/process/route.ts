@@ -471,13 +471,47 @@ function generateConversationTitle(intent: VoiceIntent, transcript: string): str
 // OPTIONS Handler for CORS
 // ============================================================================
 
-export async function OPTIONS() {
+// Get allowed origins from environment variable
+const getAllowedOrigins = (): string[] => {
+  const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || ''
+  return allowedOriginsEnv.split(',').map(origin => origin.trim()).filter(Boolean)
+}
+
+const isOriginAllowed = (origin: string | null): boolean => {
+  if (!origin) return false
+  const allowedOrigins = getAllowedOrigins()
+  if (allowedOrigins.length === 0) {
+    // If no origins configured, deny all
+    return false
+  }
+  return allowedOrigins.some(allowed => {
+    // Support exact match and wildcard subdomains
+    if (allowed === '*') return true
+    if (allowed.startsWith('*.')) {
+      const domain = allowed.slice(2)
+      return origin.endsWith(`.${domain}`) || origin === domain
+    }
+    return origin === allowed
+  })
+}
+
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('Origin')
+
+  if (!isOriginAllowed(origin)) {
+    return new NextResponse(null, {
+      status: 403
+    })
+  }
+
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': origin || '',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Credentials': 'true',
+      'Vary': 'Origin'
     }
   })
 }

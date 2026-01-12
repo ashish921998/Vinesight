@@ -549,7 +549,6 @@ export const FARMING_VOCABULARY = {
     'किलो',
     'लीटर',
     'आज',
-    'कल',
     'कल'
   ],
   en: [

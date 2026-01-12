@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate file type
+    // Validate file type - strict check to ensure it's an audio MIME type
     const validTypes = [
       'audio/webm',
       'audio/wav',
@@ -111,14 +111,17 @@ export async function POST(request: NextRequest) {
       'audio/mpeg3',
       'audio/x-mpeg-3',
       'audio/wave',
-      'audio/x-wav'
+      'audio/x-wav',
+      'audio/ogg'
     ]
     const fileType = audioFile.type || 'audio/webm' // Default to webm for blob recordings
-    if (!validTypes.some(t => fileType.includes(t.replace('audio/', '')))) {
+
+    // Ensure the file type starts with 'audio/' and is in our whitelist
+    if (!fileType.startsWith('audio/') || !validTypes.includes(fileType)) {
       return NextResponse.json(
         {
           success: false,
-          error: `Unsupported audio type: ${fileType}`,
+          error: `Unsupported audio type: ${fileType}. Please use webm, wav, mp3, or ogg format.`,
           errorType: 'transcription-failed'
         } as const,
         { status: 400 }
@@ -272,13 +275,45 @@ function cleanTranscription(text: string, language: SupportedLanguage): string {
 // OPTIONS Handler for CORS
 // ============================================================================
 
-export async function OPTIONS() {
+// Get allowed origins from environment variable
+const getAllowedOrigins = (): string[] => {
+  const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || ''
+  return allowedOriginsEnv.split(',').map(origin => origin.trim()).filter(Boolean)
+}
+
+const isOriginAllowed = (origin: string | null): boolean => {
+  if (!origin) return false
+  const allowedOrigins = getAllowedOrigins()
+  if (allowedOrigins.length === 0) {
+    return false
+  }
+  return allowedOrigins.some(allowed => {
+    if (allowed === '*') return true
+    if (allowed.startsWith('*.')) {
+      const domain = allowed.slice(2)
+      return origin.endsWith(`.${domain}`) || origin === domain
+    }
+    return origin === allowed
+  })
+}
+
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('Origin')
+
+  if (!isOriginAllowed(origin)) {
+    return new NextResponse(null, {
+      status: 403
+    })
+  }
+
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': origin || '',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Credentials': 'true',
+      'Vary': 'Origin'
     }
   })
 }

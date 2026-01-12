@@ -188,24 +188,53 @@ export function parseNumber(text: string): number | null {
     return parseFloat(match[1])
   }
 
-  // Parse Indian number words
-  const numberWords: Record<string, number> = {
-    // English
+  // Parse Indian number words - language-specific maps to avoid duplicate keys
+  const numberWordsEnglish: Record<string, number> = {
     'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4,
     'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9,
-    'ten': 10, 'half': 0.5, 'quarter': 0.25,
-    // Hindi
+    'ten': 10, 'half': 0.5, 'quarter': 0.25
+  }
+
+  const numberWordsHindi: Record<string, number> = {
     'शून्य': 0, 'एक': 1, 'दो': 2, 'तीन': 3, 'चार': 4,
     'पांच': 5, 'छह': 6, 'सात': 7, 'आठ': 8, 'नौ': 9,
-    'दस': 10, 'आधा': 0.5, 'चौथाई': 0.25,
-    // Marathi
+    'दस': 10, 'आधा': 0.5, 'चौथाई': 0.25
+  }
+
+  const numberWordsMarathi: Record<string, number> = {
     'शून्य': 0, 'एक': 1, 'दोन': 2, 'तीन': 3, 'चार': 4,
     'पाच': 5, 'सहा': 6, 'सात': 7, 'आठ': 8, 'नऊ': 9,
     'दहा': 10, 'अर्धा': 0.5, 'चतुर्थांश': 0.25
   }
 
+  // Combine maps with priority for language-specific lookups
+  const numberWordsByLanguage: Record<string, Record<string, number>> = {
+    en: numberWordsEnglish,
+    hi: { ...numberWordsEnglish, ...numberWordsHindi }, // Hindi can use English numbers too
+    mr: { ...numberWordsEnglish, ...numberWordsMarathi } // Marathi can use English numbers too
+  }
+
   const lowerText = text.toLowerCase()
-  for (const [word, value] of Object.entries(numberWords)) {
+
+  // Try to detect which language's number words to use
+  // Check Marathi-specific words first (they have unique characters)
+  for (const [word, value] of Object.entries(numberWordsMarathi)) {
+    if (lowerText.includes(word)) {
+      return value
+    }
+  }
+
+  // Then check Hindi-specific words (but avoid Marathi overlaps)
+  for (const [word, value] of Object.entries(numberWordsHindi)) {
+    // Skip words that are also in Marathi (already checked)
+    if (word in numberWordsMarathi) continue
+    if (lowerText.includes(word)) {
+      return value
+    }
+  }
+
+  // Finally check English words
+  for (const [word, value] of Object.entries(numberWordsEnglish)) {
     if (lowerText.includes(word)) {
       return value
     }
