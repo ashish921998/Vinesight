@@ -5,7 +5,7 @@
  * Classification rules based on USDA textural triangle:
  *
  * 1. Sand: sand >= 85%
- * 2. Loamy sand: sand 70-85%
+ * 2. Loamy sand: sand 70-85%, clay <= 15%, silt + 2*clay <= 30%
  * 3. Sandy loam: sand 43-85%, clay <= 20%
  * 4. Loam: clay 7-27%, sand 25-52%, silt 28-50%
  * 5. Silt loam: silt >= 50%, clay 12-27%, sand < 50%
@@ -182,15 +182,17 @@ function findClosestSoilTexture(sand: number, silt: number, clay: number): SoilT
   return closestTexture
 }
 
-/**
- * Get a description of the soil texture class properties
- */
-export function getSoilTextureDescription(texture: SoilTextureClass): {
+interface SoilTextureInfo {
   description: string
   characteristics: string[]
   suitability: string
-} {
-  const descriptions: Record<SoilTextureClass, any> = {
+}
+
+/**
+ * Get a description of the soil texture class properties
+ */
+export function getSoilTextureDescription(texture: SoilTextureClass): SoilTextureInfo {
+  const descriptions: Record<SoilTextureClass, SoilTextureInfo> = {
     Sand: {
       description: 'Coarse-textured soil with large particles',
       characteristics: [
