@@ -254,6 +254,15 @@ export function FarmModal({
     )
   }, [formData.sandPercentage, formData.siltPercentage, formData.clayPercentage])
 
+  // Determine if the original farm had percentage data (to handle edit scenario correctly)
+  const hadOriginalPercentages =
+    editingFarm?.sandPercentage !== undefined &&
+    editingFarm?.sandPercentage !== null &&
+    editingFarm?.siltPercentage !== undefined &&
+    editingFarm?.siltPercentage !== null &&
+    editingFarm?.clayPercentage !== undefined &&
+    editingFarm?.clayPercentage !== null
+
   useEffect(() => {
     if (soilCompositionSum === null) {
       setSoilCompositionWarning(null)
@@ -343,7 +352,10 @@ export function FarmModal({
       bulkDensity: safeParseNumber(formData.bulkDensity),
       cationExchangeCapacity: safeParseNumber(formData.cationExchangeCapacity),
       soilWaterRetention: safeParseNumber(formData.soilWaterRetention),
-      soilTextureClass: calculatedSoilTexture || formData.soilTextureClass.trim() || undefined,
+      soilTextureClass:
+        calculatedSoilTexture ||
+        // Preserve existing manual classification only if farm never had percentage data
+        (!hadOriginalPercentages ? formData.soilTextureClass.trim() || undefined : undefined),
       sandPercentage: safeParseNumber(formData.sandPercentage),
       siltPercentage: safeParseNumber(formData.siltPercentage),
       clayPercentage: safeParseNumber(formData.clayPercentage),
