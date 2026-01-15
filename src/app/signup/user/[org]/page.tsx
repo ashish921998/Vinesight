@@ -124,8 +124,8 @@ export default function OrgUserSignupPage() {
         toast.error('Account created but failed to join organization. Please contact support.')
       }
 
-      if (result.needsEmailConfirmation) {
-        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}&org=${orgSlug}`)
+      if (result.needsOtpVerification) {
+        router.push(`/auth/verify-otp?email=${encodeURIComponent(trimmedEmail)}&org=${orgSlug}`)
       } else {
         router.push('/clients')
       }

@@ -20,7 +20,7 @@ export default function SignupForm() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showError, setShowError] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
-  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false)
+  const [needsOtpVerification, setNeedsOtpVerification] = useState(false)
   const router = useRouter()
   const { signUpWithEmail, loading, error, user, clearError } = useSupabaseAuth()
 
@@ -72,14 +72,18 @@ export default function SignupForm() {
     if (result.success) {
       posthog.capture('signup_form_success', {
         method: 'email',
-        needs_email_confirmation: result.needsEmailConfirmation
+        needs_otp_verification: result.needsOtpVerification
       })
-      if (result.needsEmailConfirmation) {
-        // Redirect to verification page with email parameter
-        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
-      } else {
-        router.push('/dashboard')
-      }
+      setNeedsOtpVerification(!!result.needsOtpVerification)
+      setShowSuccess(true)
+
+      setTimeout(() => {
+        if (result.needsOtpVerification) {
+          router.push(`/auth/verify-otp?email=${encodeURIComponent(trimmedEmail)}`)
+        } else {
+          router.push('/dashboard')
+        }
+      }, 2000)
     }
   }
 
@@ -103,8 +107,8 @@ export default function SignupForm() {
           {showSuccess && (
             <Alert className="mb-4 border-green-200 bg-green-50">
               <AlertDescription className="text-green-800">
-                {needsEmailConfirmation
-                  ? 'Account created successfully! Please check your email to confirm your account.'
+                {needsOtpVerification
+                  ? 'Account created successfully! Please check your email for the verification code.'
                   : 'Account created successfully! Redirecting to dashboard...'}
               </AlertDescription>
             </Alert>

@@ -30,6 +30,12 @@ interface ResetPasswordParams {
   email: string
 }
 
+interface VerifyOtpParams {
+  email: string
+  token: string
+  otpType?: 'email' | 'recovery' | 'invite' | 'email_change'
+}
+
 interface SignInWithGoogleParams {
   redirectTo?: string
 }
@@ -256,8 +262,8 @@ export function useSupabaseAuth() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          ...(Object.keys(userMetadata).length > 0 && { data: userMetadata })
+          data: userMetadata,
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       })
 
@@ -273,9 +279,9 @@ export function useSupabaseAuth() {
         loading: false
       }))
 
-      const needsEmailConfirmation = !data.user?.email_confirmed_at
-      if (needsEmailConfirmation) {
-        toast.success('Account created! Please check your email to confirm your account.')
+      const needsOtpVerification = !data.user?.email_confirmed_at
+      if (needsOtpVerification) {
+        toast.success('Account created! Please check your email for the verification code.')
       } else {
         toast.success('Account created successfully!')
       }
@@ -283,12 +289,46 @@ export function useSupabaseAuth() {
       return {
         success: true,
         user: data.user,
-        needsEmailConfirmation
+        needsOtpVerification
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
       setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
       toast.error(`Sign up failed: ${errorMessage}`)
+      return { success: false, error: errorMessage }
+    }
+  }
+
+  const verifyOtp = async ({ email, token, otpType = 'email' }: VerifyOtpParams) => {
+    setAuthState((prev) => ({ ...prev, loading: true, error: null }))
+
+    try {
+      const supabase = createClient()
+
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: otpType
+      })
+
+      if (error) {
+        setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
+        toast.error(`Verification failed: ${error.message}`)
+        return { success: false, error: error.message }
+      }
+
+      setAuthState((prev) => ({
+        ...prev,
+        user: data.user ?? null,
+        loading: false
+      }))
+
+      toast.success('Email verified successfully!')
+      return { success: true, user: data.user }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
+      toast.error(`Verification failed: ${errorMessage}`)
       return { success: false, error: errorMessage }
     }
   }
@@ -299,50 +339,18 @@ export function useSupabaseAuth() {
     try {
       const supabase = createClient()
 
-      // Check if user exists first
-      const {
-        data: { user },
-        error: userError
-      } = await supabase.auth.getUser()
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email
+      })
 
-      if (userError) {
-        setAuthState((prev) => ({ ...prev, error: userError.message, loading: false }))
-        return { success: false, error: userError.message }
-      }
-
-      // If user exists but not confirmed, resend verification email
-      if (user && !user.email_confirmed_at) {
-        const { error } = await supabase.auth.resend({
-          type: 'signup',
-          email,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`
-          }
-        })
-
-        if (error) {
-          setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
-          return { success: false, error: error.message }
-        }
-      } else {
-        // If user doesn't exist or is already confirmed, try to sign up again
-        // This will trigger a new verification email
-        const { error } = await supabase.auth.signUp({
-          email,
-          password: 'temp-password-for-resend',
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`
-          }
-        })
-
-        if (error) {
-          setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
-          return { success: false, error: error.message }
-        }
+      if (error) {
+        setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
+        return { success: false, error: error.message }
       }
 
       setAuthState((prev) => ({ ...prev, loading: false }))
-      return { success: true, message: 'Verification email resent successfully' }
+      return { success: true, message: 'Verification code resent successfully' }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
       setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
@@ -447,6 +455,7 @@ export function useSupabaseAuth() {
     error: authState.error,
     signInWithEmail,
     signUpWithEmail,
+    verifyOtp,
     signInWithGoogle,
     resendVerificationEmail,
     resetPassword,

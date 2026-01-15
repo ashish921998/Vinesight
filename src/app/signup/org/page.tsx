@@ -130,8 +130,10 @@ export default function OrganizationSignupPage() {
       }
       setCreatingOrg(false)
 
-      if (result.needsEmailConfirmation) {
-        router.push(`/auth/verify-email?email=${encodeURIComponent(trimmedEmail)}`)
+      if (result.needsOtpVerification) {
+        router.push(
+          `/auth/verify-otp?email=${encodeURIComponent(trimmedEmail)}&org=${encodeURIComponent(trimmedOrgSlug)}`
+        )
       } else {
         router.push('/clients')
       }
