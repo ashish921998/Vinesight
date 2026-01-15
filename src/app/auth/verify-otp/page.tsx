@@ -44,9 +44,10 @@ function VerifyOtpContent() {
 
   useEffect(() => {
     if (user && user.email_confirmed_at && !authLoading) {
-      router.push(orgSlug ? '/clients' : '/dashboard')
+      const targetOrg = orgSlug || searchParams.get('org')
+      router.push(targetOrg ? '/clients' : '/dashboard')
     }
-  }, [user, authLoading, router, orgSlug])
+  }, [user, authLoading, router, orgSlug, searchParams])
 
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) {
