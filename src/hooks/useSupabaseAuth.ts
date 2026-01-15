@@ -33,7 +33,7 @@ interface ResetPasswordParams {
 interface VerifyOtpParams {
   email: string
   token: string
-  otpType?: 'email' | 'signup' | 'recovery' | 'invite' | 'email_change'
+  otpType?: 'email' | 'recovery' | 'invite' | 'email_change'
 }
 
 interface SignInWithGoogleParams {
@@ -299,7 +299,7 @@ export function useSupabaseAuth() {
     }
   }
 
-  const verifyOtp = async ({ email, token, otpType = 'signup' }: VerifyOtpParams) => {
+  const verifyOtp = async ({ email, token, otpType = 'email' }: VerifyOtpParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
 
     try {
