@@ -50,13 +50,11 @@ function VerifyOtpContent() {
   }, [user, authLoading, router, orgSlug, searchParams])
 
   const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) {
-      value = value[0]
-    }
-
     if (!/^\d*$/.test(value)) {
       return
     }
+
+    const digit = value.slice(0, 1)
 
     const newOtp = [...otp]
     newOtp[index] = value
@@ -74,7 +72,10 @@ function VerifyOtpContent() {
   }
 
   const handleVerifyOtp = async () => {
-    if (!email) return
+    if (!email) {
+      setError('Email address is required')
+      return
+    }
 
     const otpCode = otp.join('')
     if (otpCode.length !== 6) {
@@ -86,7 +87,7 @@ function VerifyOtpContent() {
     setError(null)
 
     try {
-      const result = await verifyOtp({ email, token: otpCode })
+      const result = await verifyOtp({ email: email.toLowerCase(), token: otpCode })
 
       if (result.success) {
         router.push(orgSlug ? '/clients' : '/dashboard')
@@ -107,7 +108,7 @@ function VerifyOtpContent() {
     setError(null)
 
     try {
-      const result = await resendVerificationEmail({ email })
+      const result = await resendVerificationEmail({ email: email.toLowerCase() })
 
       if (result.success) {
         setResent(true)

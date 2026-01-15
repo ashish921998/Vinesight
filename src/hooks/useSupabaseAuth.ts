@@ -259,7 +259,7 @@ export function useSupabaseAuth() {
       const supabase = createClient()
 
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.toLowerCase(),
         password,
         options: {
           data: userMetadata,
@@ -341,7 +341,10 @@ export function useSupabaseAuth() {
 
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email
+        email: email.toLowerCase(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
       })
 
       if (error) {
