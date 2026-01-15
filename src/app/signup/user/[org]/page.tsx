@@ -125,7 +125,9 @@ export default function OrgUserSignupPage() {
       }
 
       if (result.needsOtpVerification) {
-        router.push(`/auth/verify-otp?email=${encodeURIComponent(trimmedEmail)}&org=${orgSlug}`)
+        router.push(
+          `/auth/verify-otp?email=${encodeURIComponent(trimmedEmail)}&org=${encodeURIComponent(orgSlug)}`
+        )
       } else {
         router.push('/clients')
       }

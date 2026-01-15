@@ -1,7 +1,7 @@
 'use client'
 
 import type React from 'react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -23,6 +23,16 @@ export default function SignupForm() {
   const [needsOtpVerification, setNeedsOtpVerification] = useState(false)
   const router = useRouter()
   const { signUpWithEmail, loading, error, user, clearError } = useSupabaseAuth()
+
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Redirect if user is already logged in and email is confirmed
   useEffect(() => {
@@ -77,7 +87,7 @@ export default function SignupForm() {
       setNeedsOtpVerification(!!result.needsOtpVerification)
       setShowSuccess(true)
 
-      setTimeout(() => {
+      redirectTimeoutRef.current = setTimeout(() => {
         if (result.needsOtpVerification) {
           router.push(`/auth/verify-otp?email=${encodeURIComponent(trimmedEmail)}`)
         } else {
