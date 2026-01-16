@@ -54,8 +54,6 @@ function VerifyOtpContent() {
       return
     }
 
-    const digit = value.slice(0, 1)
-
     const newOtp = [...otp]
     newOtp[index] = value
     setOtp(newOtp)
