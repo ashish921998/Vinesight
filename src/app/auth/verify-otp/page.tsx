@@ -17,6 +17,7 @@ function VerifyOtpContent() {
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [email, setEmail] = useState<string | null>(null)
   const [orgSlug, setOrgSlug] = useState<string | null>(null)
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -48,6 +49,14 @@ function VerifyOtpContent() {
       router.push(targetOrg ? '/clients' : '/dashboard')
     }
   }, [user, authLoading, router, orgSlug, searchParams])
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) {
@@ -110,7 +119,8 @@ function VerifyOtpContent() {
 
       if (result.success) {
         setResent(true)
-        setTimeout(() => setResent(false), 5000)
+        if (timeoutRef.current) clearTimeout(timeoutRef.current)
+        timeoutRef.current = setTimeout(() => setResent(false), 5000)
       } else {
         setError(result.error || 'Failed to resend verification code')
       }
