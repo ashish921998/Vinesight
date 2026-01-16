@@ -55,7 +55,7 @@ function VerifyOtpContent() {
     }
 
     const newOtp = [...otp]
-    newOtp[index] = value
+    newOtp[index] = value.slice(0, 1)
     setOtp(newOtp)
 
     if (value && index < 5) {

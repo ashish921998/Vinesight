@@ -262,8 +262,8 @@ export function useSupabaseAuth() {
         email: email.toLowerCase(),
         password,
         options: {
-          data: userMetadata,
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: userMetadata
         }
       })
 
