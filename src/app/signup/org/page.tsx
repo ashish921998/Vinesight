@@ -117,13 +117,11 @@ export default function OrganizationSignupPage() {
 
         if (!response.ok) {
           const data = await response.json()
-          console.error('Error creating organization:', data.error)
           toast.error(data.error || 'Failed to create organization')
           setCreatingOrg(false)
           return
         }
       } catch (err) {
-        console.error('Error setting up organization:', err)
         toast.error('Failed to create organization')
         setCreatingOrg(false)
         return
@@ -214,7 +212,7 @@ export default function OrganizationSignupPage() {
                   <Input
                     id="firstName"
                     value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    onChange={(e) => setFirstName(e.target.value.trimStart())}
                     required
                     maxLength={VALIDATION.MAX_NAME_LENGTH}
                     placeholder="John"
@@ -225,7 +223,7 @@ export default function OrganizationSignupPage() {
                   <Input
                     id="lastName"
                     value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    onChange={(e) => setLastName(e.target.value.trimStart())}
                     required
                     maxLength={VALIDATION.MAX_NAME_LENGTH}
                     placeholder="Doe"
@@ -239,7 +237,7 @@ export default function OrganizationSignupPage() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value.trim())}
                   required
                   placeholder="john@acme-agri.com"
                 />

@@ -35,20 +35,31 @@ function VerifyOtpContent() {
   useEffect(() => {
     const emailParam = searchParams.get('email')
     const orgParam = searchParams.get('org')
+
     if (emailParam) {
-      setEmail(emailParam)
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (emailRegex.test(emailParam)) {
+        setEmail(emailParam)
+      } else {
+        setEmail(null)
+      }
     }
+
     if (orgParam) {
-      setOrgSlug(orgParam)
+      const orgSlugRegex = /^[a-zA-Z0-9_-]+$/
+      if (orgSlugRegex.test(orgParam)) {
+        setOrgSlug(orgParam)
+      } else {
+        setOrgSlug(null)
+      }
     }
   }, [searchParams])
 
   useEffect(() => {
     if (user && user.email_confirmed_at && !authLoading) {
-      const targetOrg = orgSlug || searchParams.get('org')
-      router.push(targetOrg ? '/clients' : '/dashboard')
+      router.push(orgSlug ? '/clients' : '/dashboard')
     }
-  }, [user, authLoading, router, orgSlug, searchParams])
+  }, [user, authLoading, router, orgSlug])
 
   useEffect(() => {
     return () => {
