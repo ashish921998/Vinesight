@@ -117,11 +117,13 @@ export default function OrganizationSignupPage() {
 
         if (!response.ok) {
           const data = await response.json()
+          console.error('Error creating organization:', data.error)
           toast.error(data.error || 'Failed to create organization')
           setCreatingOrg(false)
           return
         }
       } catch (err) {
+        console.error('Error setting up organization:', err)
         toast.error('Failed to create organization')
         setCreatingOrg(false)
         return

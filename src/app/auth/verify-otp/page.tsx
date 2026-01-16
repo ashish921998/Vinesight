@@ -18,6 +18,7 @@ function VerifyOtpContent() {
   const [email, setEmail] = useState<string | null>(null)
   const [orgSlug, setOrgSlug] = useState<string | null>(null)
   const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+  const initialOrgRef = useRef<string | null>(null)
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -49,15 +50,18 @@ function VerifyOtpContent() {
       const orgSlugRegex = /^[a-zA-Z0-9_-]+$/
       if (orgSlugRegex.test(orgParam)) {
         setOrgSlug(orgParam)
+        initialOrgRef.current = orgParam
       } else {
         setOrgSlug(null)
+        initialOrgRef.current = null
       }
     }
   }, [searchParams])
 
   useEffect(() => {
     if (user && user.email_confirmed_at && !authLoading) {
-      router.push(orgSlug ? '/clients' : '/dashboard')
+      const targetOrg = orgSlug || initialOrgRef.current
+      router.push(targetOrg ? '/clients' : '/dashboard')
     }
   }, [user, authLoading, router, orgSlug])
 

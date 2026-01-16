@@ -116,11 +116,9 @@ export default function OrgUserSignupPage() {
         })
         if (!response.ok) {
           const data = await response.json()
-          console.error('Error joining organization:', data.error)
           toast.error('Account created but failed to join organization. Please contact support.')
         }
       } catch (err) {
-        console.error('Error adding user as org member:', err)
         toast.error('Account created but failed to join organization. Please contact support.')
       }
 
@@ -196,7 +194,7 @@ export default function OrgUserSignupPage() {
                   id="firstName"
                   type="text"
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  onChange={(e) => setFirstName(e.target.value.trimStart())}
                   required
                   maxLength={VALIDATION.MAX_NAME_LENGTH}
                   className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
@@ -214,7 +212,7 @@ export default function OrgUserSignupPage() {
                   id="lastName"
                   type="text"
                   value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  onChange={(e) => setLastName(e.target.value.trimStart())}
                   required
                   maxLength={VALIDATION.MAX_NAME_LENGTH}
                   className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
@@ -234,7 +232,7 @@ export default function OrgUserSignupPage() {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value.trim())}
                 required
                 className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                 placeholder="Enter your email"
