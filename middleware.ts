@@ -41,7 +41,8 @@ export async function middleware(req: NextRequest) {
   if (
     user &&
     req.nextUrl.pathname.startsWith('/auth') &&
-    !req.nextUrl.pathname.startsWith('/auth/verify-email')
+    !req.nextUrl.pathname.startsWith('/auth/verify-email') &&
+    !req.nextUrl.pathname.startsWith('/auth/verify-otp')
   ) {
     return NextResponse.redirect(new URL('/dashboard', req.url))
   }

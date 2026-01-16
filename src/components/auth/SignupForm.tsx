@@ -1,7 +1,7 @@
 'use client'
 
 import type React from 'react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -20,9 +20,19 @@ export default function SignupForm() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showError, setShowError] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
-  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false)
+  const [needsOtpVerification, setNeedsOtpVerification] = useState(false)
   const router = useRouter()
   const { signUpWithEmail, loading, error, user, clearError } = useSupabaseAuth()
+
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Redirect if user is already logged in and email is confirmed
   useEffect(() => {
@@ -72,14 +82,18 @@ export default function SignupForm() {
     if (result.success) {
       posthog.capture('signup_form_success', {
         method: 'email',
-        needs_email_confirmation: result.needsEmailConfirmation
+        needs_otp_verification: result.needsOtpVerification
       })
-      if (result.needsEmailConfirmation) {
-        // Redirect to verification page with email parameter
-        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
-      } else {
-        router.push('/dashboard')
-      }
+      setNeedsOtpVerification(!!result.needsOtpVerification)
+      setShowSuccess(true)
+
+      redirectTimeoutRef.current = setTimeout(() => {
+        if (result.needsOtpVerification) {
+          router.push(`/auth/verify-otp?email=${encodeURIComponent(trimmedEmail)}`)
+        } else {
+          router.push('/dashboard')
+        }
+      }, 2000)
     }
   }
 
@@ -103,8 +117,8 @@ export default function SignupForm() {
           {showSuccess && (
             <Alert className="mb-4 border-green-200 bg-green-50">
               <AlertDescription className="text-green-800">
-                {needsEmailConfirmation
-                  ? 'Account created successfully! Please check your email to confirm your account.'
+                {needsOtpVerification
+                  ? 'Account created successfully! Please check your email for the verification code.'
                   : 'Account created successfully! Redirecting to dashboard...'}
               </AlertDescription>
             </Alert>
@@ -130,7 +144,7 @@ export default function SignupForm() {
                   id="firstName"
                   type="text"
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  onChange={(e) => setFirstName(e.target.value.trimStart())}
                   required
                   maxLength={VALIDATION.MAX_NAME_LENGTH}
                   className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
@@ -148,7 +162,7 @@ export default function SignupForm() {
                   id="lastName"
                   type="text"
                   value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  onChange={(e) => setLastName(e.target.value.trimStart())}
                   required
                   maxLength={VALIDATION.MAX_NAME_LENGTH}
                   className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
@@ -168,7 +182,7 @@ export default function SignupForm() {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value.trim())}
                 required
                 className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                 placeholder="Enter your email"

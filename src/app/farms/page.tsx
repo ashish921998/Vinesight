@@ -297,14 +297,14 @@ export default function FarmsPage() {
             {!loading && farms.length === 0 && (
               <Card className="border-0 shadow-sm text-center py-12">
                 <CardContent>
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
                     <Sprout className="h-8 w-8 text-green-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">No farms added yet</h3>
                   <p className="text-gray-500 mb-6 text-sm max-w-sm mx-auto">
                     Start by adding your first vineyard to begin tracking your farming operations
                   </p>
-                  <Button onClick={handleAdd} className="h-12 px-6 bg-green-600 hover:bg-green-700">
+                  <Button onClick={handleAdd} className="h-12 px-6 bg-accent hover:bg-accent/90">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Your First Farm
                   </Button>

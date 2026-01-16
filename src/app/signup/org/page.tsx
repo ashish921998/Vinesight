@@ -130,8 +130,10 @@ export default function OrganizationSignupPage() {
       }
       setCreatingOrg(false)
 
-      if (result.needsEmailConfirmation) {
-        router.push(`/auth/verify-email?email=${encodeURIComponent(trimmedEmail)}`)
+      if (result.needsOtpVerification) {
+        router.push(
+          `/auth/verify-otp?email=${encodeURIComponent(trimmedEmail)}&org=${encodeURIComponent(trimmedOrgSlug)}`
+        )
       } else {
         router.push('/clients')
       }
@@ -212,7 +214,7 @@ export default function OrganizationSignupPage() {
                   <Input
                     id="firstName"
                     value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    onChange={(e) => setFirstName(e.target.value.trimStart())}
                     required
                     maxLength={VALIDATION.MAX_NAME_LENGTH}
                     placeholder="John"
@@ -223,7 +225,7 @@ export default function OrganizationSignupPage() {
                   <Input
                     id="lastName"
                     value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    onChange={(e) => setLastName(e.target.value.trimStart())}
                     required
                     maxLength={VALIDATION.MAX_NAME_LENGTH}
                     placeholder="Doe"
@@ -237,7 +239,7 @@ export default function OrganizationSignupPage() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value.trim())}
                   required
                   placeholder="john@acme-agri.com"
                 />
