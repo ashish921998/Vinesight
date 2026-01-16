@@ -116,9 +116,11 @@ export default function OrgUserSignupPage() {
         })
         if (!response.ok) {
           const data = await response.json()
+          console.error('Error joining organization:', data.error)
           toast.error('Account created but failed to join organization. Please contact support.')
         }
       } catch (err) {
+        console.error('Error adding user as org member:', err)
         toast.error('Account created but failed to join organization. Please contact support.')
       }
 
