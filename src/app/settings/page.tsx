@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { LogOut, User, Building2, CheckCircle2, Coins } from 'lucide-react'
+import { LogOut, User, Building2, CheckCircle2, Coins, Trash2 } from 'lucide-react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import {
@@ -447,6 +447,30 @@ export default function SettingsPage() {
                     )}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Danger Zone */}
+          {user && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base text-red-600">
+                  <Trash2 className="h-4 w-4" />
+                  Danger Zone
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-gray-500">Irreversible and destructive actions</p>
+                <Button
+                  variant="destructive"
+                  onClick={() => router.push('/delete-account')}
+                  className="w-full"
+                  size="sm"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Account
+                </Button>
               </CardContent>
             </Card>
           )}
