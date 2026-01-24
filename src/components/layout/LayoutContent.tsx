@@ -6,6 +6,16 @@ import { useRouteTracking } from '@/hooks/useRouteTracking'
 import Navigation from '@/components/navigation'
 import { BottomNavigation } from '@/components/mobile/BottomNavigation'
 import { Toaster } from '@/components/ui/sonner'
+import dynamic from 'next/dynamic'
+
+// Dynamically import VoiceAssistantHybrid to avoid SSR issues with Web Audio API
+const VoiceAssistantHybrid = dynamic(
+  () => import('@/components/voice/VoiceAssistantHybrid').then(mod => ({ default: mod.VoiceAssistantHybrid })),
+  {
+    ssr: false,
+    loading: () => null // Don't show anything while loading
+  }
+)
 
 interface LayoutContentProps {
   children: React.ReactNode
@@ -75,6 +85,8 @@ export function LayoutContent({ children }: LayoutContentProps) {
         <div>{children}</div>
       </main>
       {showSidebar && <BottomNavigation />}
+      {/* Only show VoiceAssistant for authenticated users */}
+      {user && <VoiceAssistantHybrid />}
       <Toaster />
     </div>
   )
