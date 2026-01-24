@@ -21,6 +21,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { getAllCrops, getVarietiesForCrop, getDefaultVariety } from '@/lib/crop-data'
+import { getSoilTextureClass } from '@/lib/soil-texture'
 import type { LocationResult } from '@/lib/open-meteo-geocoding'
 import type { Farm } from '@/types/types'
 
@@ -245,6 +246,23 @@ export function FarmModal({
     return sand + silt + clay
   }, [formData.sandPercentage, formData.siltPercentage, formData.clayPercentage])
 
+  const calculatedSoilTexture = useMemo(() => {
+    return getSoilTextureClass(
+      formData.sandPercentage,
+      formData.siltPercentage,
+      formData.clayPercentage
+    )
+  }, [formData.sandPercentage, formData.siltPercentage, formData.clayPercentage])
+
+  // Determine if the original farm had percentage data (to handle edit scenario correctly)
+  const hadOriginalPercentages =
+    editingFarm?.sandPercentage !== undefined &&
+    editingFarm?.sandPercentage !== null &&
+    editingFarm?.siltPercentage !== undefined &&
+    editingFarm?.siltPercentage !== null &&
+    editingFarm?.clayPercentage !== undefined &&
+    editingFarm?.clayPercentage !== null
+
   useEffect(() => {
     if (soilCompositionSum === null) {
       setSoilCompositionWarning(null)
@@ -334,7 +352,10 @@ export function FarmModal({
       bulkDensity: safeParseNumber(formData.bulkDensity),
       cationExchangeCapacity: safeParseNumber(formData.cationExchangeCapacity),
       soilWaterRetention: safeParseNumber(formData.soilWaterRetention),
-      soilTextureClass: formData.soilTextureClass.trim() || undefined,
+      soilTextureClass:
+        calculatedSoilTexture ||
+        // Preserve existing manual classification only if farm never had percentage data
+        (!hadOriginalPercentages ? formData.soilTextureClass.trim() || undefined : undefined),
       sandPercentage: safeParseNumber(formData.sandPercentage),
       siltPercentage: safeParseNumber(formData.siltPercentage),
       clayPercentage: safeParseNumber(formData.clayPercentage),
@@ -672,23 +693,21 @@ export function FarmModal({
                 </div>
                 <div>
                   <Label htmlFor="soilTextureClass" className="text-sm font-medium text-gray-700">
-                    Soil Texture Class
+                    Soil Texture Class{' '}
+                    {calculatedSoilTexture
+                      ? '(auto-calculated)'
+                      : formData.soilTextureClass
+                        ? '(saved)'
+                        : ''}
                   </Label>
-                  <Select
-                    value={formData.soilTextureClass}
-                    onValueChange={(value) => handleInputChange('soilTextureClass', value)}
-                  >
-                    <SelectTrigger id="soilTextureClass" className="mt-1 !h-11 w-full">
-                      <SelectValue placeholder="Select texture class" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SOIL_TEXTURE_OPTIONS.map((texture) => (
-                        <SelectItem key={texture} value={texture}>
-                          {texture}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="soilTextureClass"
+                    type="text"
+                    value={calculatedSoilTexture || formData.soilTextureClass || ''}
+                    placeholder="Enter sand/silt/clay percentages"
+                    readOnly
+                    className="mt-1 h-11 w-full bg-muted"
+                  />
                 </div>
                 <div>
                   <Label htmlFor="sandPercentage" className="text-sm font-medium text-gray-700">
