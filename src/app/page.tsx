@@ -227,14 +227,14 @@ export default function LandingPage() {
             >
               Log In
             </Link>
-            <button
+            <a
               className="hidden sm:block bg-accent hover:bg-accent/90 active:scale-95 transition-all text-accent-foreground text-sm font-semibold px-4 py-2 rounded-lg shadow-sm"
-              onClick={() =>
-                document.getElementById('daily-work')?.scrollIntoView({ behavior: 'smooth' })
-              }
+              href="https://calendar.app.google/vq1JzfjiT59v9dAS7"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               See how it fits your vineyard
-            </button>
+            </a>
           </div>
         </div>
       </header>
@@ -250,15 +250,15 @@ export default function LandingPage() {
             vineyard operations, not spreadsheets.
           </p>
           <div className="flex flex-col sm:flex-row w-full gap-3 max-w-[400px]">
-            <button
+            <a
               className="bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-accent-foreground text-base font-semibold px-6 py-3.5 rounded-xl shadow-md w-full text-center flex items-center justify-center gap-2"
-              onClick={() =>
-                document.getElementById('daily-work')?.scrollIntoView({ behavior: 'smooth' })
-              }
+              href="https://calendar.app.google/vq1JzfjiT59v9dAS7"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               See how it fits your vineyard
-              <span aria-hidden="true">↓</span>
-            </button>
+              <span aria-hidden="true">→</span>
+            </a>
           </div>
         </section>
 
