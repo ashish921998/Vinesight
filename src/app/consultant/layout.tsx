@@ -29,29 +29,29 @@ interface DashboardLayoutProps {
 const navItems = [
   {
     label: 'Mission Control',
-    href: '/dashboard',
+    href: '/consultant',
     icon: LayoutDashboard,
     badge: 'urgent'
   },
   {
     label: 'Triage Queue',
-    href: '/dashboard/triage',
+    href: '/consultant/triage',
     icon: ListTodo,
     badge: 'pending'
   },
   {
     label: 'Templates',
-    href: '/dashboard/templates',
+    href: '/consultant/templates',
     icon: FileText
   },
   {
     label: 'Clusters',
-    href: '/dashboard/clusters',
+    href: '/consultant/clusters',
     icon: Users
   },
   {
     label: 'Settings',
-    href: '/dashboard/settings',
+    href: '/consultant/settings',
     icon: Settings
   }
 ]
@@ -139,7 +139,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Header */}
           <div className="flex h-16 items-center justify-between border-b px-4">
             {!collapsed && (
-              <Link href="/dashboard" className="flex items-center gap-2">
+              <Link href="/consultant" className="flex items-center gap-2">
                 <Sprout className="h-6 w-6 text-accent" />
                 <span className="text-lg font-semibold">Consultant</span>
               </Link>
