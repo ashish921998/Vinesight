@@ -391,6 +391,25 @@ export class TriageService {
     return stats
   }
 
+  static async getTriageByPlanId(
+    planId: string
+  ): Promise<{ triageId: string; acknowledgment: AcknowledgmentType | null } | null> {
+    const supabase = await getTypedSupabaseClient()
+
+    const { data, error } = await supabase
+      .from('petiole_triage')
+      .select('id, farmer_acknowledgment')
+      .eq('ai_draft_plan_id', planId)
+      .single()
+
+    if (error || !data) return null
+
+    return {
+      triageId: data.id,
+      acknowledgment: (data.farmer_acknowledgment as AcknowledgmentType) || null
+    }
+  }
+
   // Private helper to apply plan edits
   private static async applyPlanEdits(
     supabase: any,
