@@ -2101,6 +2101,7 @@ export type Database = {
           assigned_by: string | null
           status: 'active' | 'inactive' | 'pending'
           assigned_at: string | null
+          assigned_to: string | null
           notes: string | null
           created_at: string | null
           updated_at: string | null
@@ -2113,6 +2114,7 @@ export type Database = {
           assigned_by?: string | null
           status?: 'active' | 'inactive' | 'pending'
           assigned_at?: string | null
+          assigned_to?: string | null
           notes?: string | null
           created_at?: string | null
           updated_at?: string | null
@@ -2125,6 +2127,7 @@ export type Database = {
           assigned_by?: string | null
           status?: 'active' | 'inactive' | 'pending'
           assigned_at?: string | null
+          assigned_to?: string | null
           notes?: string | null
           created_at?: string | null
           updated_at?: string | null
@@ -2182,6 +2185,7 @@ export type Database = {
           organization_id: string
           title: string
           notes: string | null
+          status: string
           created_at: string
           updated_at: string
         }
@@ -2192,6 +2196,7 @@ export type Database = {
           organization_id: string
           title: string
           notes?: string | null
+          status?: string
           created_at?: string
           updated_at?: string
         }
@@ -2202,6 +2207,7 @@ export type Database = {
           organization_id?: string
           title?: string
           notes?: string | null
+          status?: string
           created_at?: string
           updated_at?: string
         }
@@ -2272,6 +2278,203 @@ export type Database = {
           }
         ]
       }
+      petiole_triage: {
+        Row: {
+          id: string
+          petiole_test_id: number
+          farm_id: number
+          organization_id: string
+          classification: string
+          classification_reason: string | null
+          confidence_score: number | null
+          ai_draft_plan_id: string | null
+          reviewed_by: string | null
+          reviewed_at: string | null
+          farmer_acknowledgment: string | null
+          farmer_acknowledged_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          petiole_test_id: number
+          farm_id: number
+          organization_id: string
+          classification: string
+          classification_reason?: string | null
+          confidence_score?: number | null
+          ai_draft_plan_id?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          farmer_acknowledgment?: string | null
+          farmer_acknowledged_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          petiole_test_id?: number
+          farm_id?: number
+          organization_id?: string
+          classification?: string
+          classification_reason?: string | null
+          confidence_score?: number | null
+          ai_draft_plan_id?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          farmer_acknowledgment?: string | null
+          farmer_acknowledged_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'petiole_triage_farm_id_fkey'
+            columns: ['farm_id']
+            isOneToOne: false
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'petiole_triage_ai_draft_plan_id_fkey'
+            columns: ['ai_draft_plan_id']
+            isOneToOne: false
+            referencedRelation: 'fertilizer_plans'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'petiole_triage_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      plan_templates: {
+        Row: {
+          id: string
+          organization_id: string
+          name: string
+          season_stage: string
+          soil_type: string | null
+          trigger_conditions: Json
+          template_items: Json
+          is_active: boolean
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          name: string
+          season_stage: string
+          soil_type?: string | null
+          trigger_conditions: Json
+          template_items: Json
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          name?: string
+          season_stage?: string
+          soil_type?: string | null
+          trigger_conditions?: Json
+          template_items?: Json
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'plan_templates_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      plan_acknowledgments: {
+        Row: {
+          id: string
+          plan_id: string
+          farmer_user_id: string
+          reaction: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          plan_id: string
+          farmer_user_id: string
+          reaction: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          plan_id?: string
+          farmer_user_id?: string
+          reaction?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'plan_acknowledgments_plan_id_fkey'
+            columns: ['plan_id']
+            isOneToOne: false
+            referencedRelation: 'fertilizer_plans'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      warehouse_items: {
+        Row: {
+          id: number
+          user_id: string
+          name: string
+          type: string
+          quantity: number
+          unit: string
+          unit_price: number
+          reorder_quantity: number | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          name: string
+          type: string
+          quantity: number
+          unit: string
+          unit_price: number
+          reorder_quantity?: number | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          name?: string
+          type?: string
+          quantity?: number
+          unit?: string
+          unit_price?: number
+          reorder_quantity?: number | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -2284,6 +2487,47 @@ export type Database = {
       expire_old_task_recommendations: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      get_farm_clusters: {
+        Args: {
+          p_org_id: string
+          p_days_ago?: number
+        }
+        Returns: {
+          region: string
+          soil_type: string
+          classification: string
+          farm_count: number
+          affected_farm_ids: number[]
+          primary_deficiency: string
+        }[]
+      }
+      get_triage_queue: {
+        Args: {
+          p_org_id: string
+          p_classification?: string
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          triage_id: string
+          petiole_test_id: number
+          farm_id: number
+          farm_name: string
+          farm_region: string
+          classification: string
+          classification_reason: string
+          confidence_score: number
+          ai_draft_plan_id: string
+          reviewed_by: string
+          reviewed_at: string
+          created_at: string
+          farmer_name: string
+          latest_petiole_date: string
+          nutrient_n: number
+          nutrient_p: number
+          nutrient_k: number
+        }[]
       }
     }
     Enums: {

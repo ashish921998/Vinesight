@@ -1,0 +1,455 @@
+-- ============================================================================
+-- CONSULTANT DASHBOARD MIGRATION
+-- Phase 3: AI-Powered Consultant Dashboard for Petiole Test Management
+-- ============================================================================
+
+-- ============================================================================
+-- 1. NEW TABLES FOR TRIAGE, TEMPLATES, AND ACKNOWLEDGMENTS
+-- ============================================================================
+
+-- Petiole test triage results table
+-- Stores AI classification results and review status
+CREATE TABLE petiole_triage (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  petiole_test_id BIGINT NOT NULL REFERENCES petiole_test_records(id) ON DELETE CASCADE,
+  farm_id BIGINT NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  classification VARCHAR(20) NOT NULL CHECK (classification IN ('green', 'yellow', 'red')),
+  classification_reason TEXT, -- AI explanation for the classification
+  confidence_score DECIMAL(3,2) CHECK (confidence_score >= 0 AND confidence_score <= 1),
+  ai_draft_plan_id UUID REFERENCES fertilizer_plans(id) ON DELETE SET NULL,
+  reviewed_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  reviewed_at TIMESTAMP WITH TIME ZONE,
+  farmer_acknowledgment VARCHAR(20) CHECK (farmer_acknowledgment IN ('understood', 'questions', 'thanks')),
+  farmer_acknowledged_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Plan templates for auto-drafting fertilizer plans
+CREATE TABLE plan_templates (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  name VARCHAR(255) NOT NULL, -- e.g., "Sandy soil - pruning stage - normal NPK"
+  season_stage VARCHAR(50) NOT NULL, -- dormancy, pruning, flowering, fruiting, harvest, post_harvest
+  soil_type VARCHAR(50), -- sandy, clay, loam, sandy_loam, etc.
+  trigger_conditions JSONB NOT NULL, -- Nutrient thresholds for matching
+  template_items JSONB NOT NULL, -- Fertilizer items as array
+  is_active BOOLEAN DEFAULT TRUE,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Plan acknowledgments (emoji reactions from farmers)
+CREATE TABLE plan_acknowledgments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  plan_id UUID NOT NULL REFERENCES fertilizer_plans(id) ON DELETE CASCADE,
+  farmer_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  reaction VARCHAR(20) NOT NULL CHECK (reaction IN ('understood', 'questions', 'thanks')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(plan_id, farmer_user_id)
+);
+
+-- ============================================================================
+-- 2. ALTER EXISTING TABLES
+-- ============================================================================
+
+-- Add status column to fertilizer_plans for plan lifecycle
+ALTER TABLE fertilizer_plans ADD COLUMN IF NOT EXISTS status VARCHAR(20) 
+  DEFAULT 'draft' 
+  CHECK (status IN ('draft', 'auto_drafted', 'pending_approval', 'approved', 'rejected'));
+
+-- Update existing fertilizer_plans to 'approved' status (backward compatible)
+UPDATE fertilizer_plans SET status = 'approved' WHERE status = 'draft';
+
+-- Add assigned_to column to organization_clients for agronomist scoping
+ALTER TABLE organization_clients ADD COLUMN IF NOT EXISTS assigned_to UUID 
+  REFERENCES auth.users(id) ON DELETE SET NULL;
+
+-- Update organization_members role constraint to include 'agronomist'
+-- First, handle existing 'member' roles that should become 'agronomist' (none expected)
+-- Then alter the check constraint
+ALTER TABLE organization_members 
+  DROP CONSTRAINT IF EXISTS organization_members_role_check;
+
+ALTER TABLE organization_members 
+  ADD CONSTRAINT organization_members_role_check 
+  CHECK (role IN ('owner', 'admin', 'agronomist'));
+
+-- ============================================================================
+-- 3. INDEXES FOR PERFORMANCE
+-- ============================================================================
+
+-- Petiole triage indexes
+CREATE INDEX idx_petiole_triage_classification ON petiole_triage(classification);
+CREATE INDEX idx_petiole_triage_reviewed_by ON petiole_triage(reviewed_by) WHERE reviewed_by IS NULL;
+CREATE INDEX idx_petiole_triage_farm_id ON petiole_triage(farm_id);
+CREATE INDEX idx_petiole_triage_org_id ON petiole_triage(organization_id);
+CREATE INDEX idx_petiole_triage_pending ON petiole_triage(organization_id, classification, reviewed_by) 
+  WHERE reviewed_by IS NULL;
+CREATE INDEX idx_petiole_triage_created_at ON petiole_triage(created_at);
+
+-- Plan templates indexes
+CREATE INDEX idx_plan_templates_org_id ON plan_templates(organization_id);
+CREATE INDEX idx_plan_templates_match ON plan_templates(organization_id, season_stage, soil_type, is_active);
+
+-- Plan acknowledgments indexes
+CREATE INDEX idx_plan_acknowledgments_plan_id ON plan_acknowledgments(plan_id);
+
+-- Fertilizer plans status indexes
+CREATE INDEX idx_fertilizer_plans_status ON fertilizer_plans(status);
+CREATE INDEX idx_fertilizer_plans_org_status ON fertilizer_plans(organization_id, status);
+
+-- Organization clients assignment index
+CREATE INDEX idx_organization_clients_assigned_to ON organization_clients(assigned_to);
+
+-- ============================================================================
+-- 4. RLS POLICIES FOR NEW TABLES
+-- ============================================================================
+
+-- Petiole triage RLS
+ALTER TABLE petiole_triage ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Org members can view triage" ON petiole_triage FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM organization_members om 
+    WHERE om.organization_id = petiole_triage.organization_id 
+    AND om.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Org members can insert triage" ON petiole_triage FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM organization_members om 
+    WHERE om.organization_id = petiole_triage.organization_id 
+    AND om.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Org members can update triage" ON petiole_triage FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM organization_members om 
+    WHERE om.organization_id = petiole_triage.organization_id 
+    AND om.user_id = auth.uid()
+  )
+);
+
+-- Plan templates RLS
+ALTER TABLE plan_templates ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Org members can view templates" ON plan_templates FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM organization_members om 
+    WHERE om.organization_id = plan_templates.organization_id 
+    AND om.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Org members can insert templates" ON plan_templates FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM organization_members om 
+    WHERE om.organization_id = plan_templates.organization_id 
+    AND om.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Org members can update templates" ON plan_templates FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM organization_members om 
+    WHERE om.organization_id = plan_templates.organization_id 
+    AND om.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Org members can delete templates" ON plan_templates FOR DELETE USING (
+  EXISTS (
+    SELECT 1 FROM organization_members om 
+    WHERE om.organization_id = plan_templates.organization_id 
+    AND om.user_id = auth.uid()
+  )
+);
+
+-- Plan acknowledgments RLS
+ALTER TABLE plan_acknowledgments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Farmers can view their own acknowledgments" ON plan_acknowledgments FOR SELECT USING (
+  farmer_user_id = auth.uid()
+);
+
+CREATE POLICY "Org members can view acknowledgments for their plans" ON plan_acknowledgments FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM fertilizer_plans fp
+    JOIN organization_members om ON om.organization_id = fp.organization_id
+    WHERE fp.id = plan_acknowledgments.plan_id AND om.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Farmers can insert their own acknowledgment" ON plan_acknowledgments FOR INSERT WITH CHECK (
+  farmer_user_id = auth.uid()
+);
+
+-- ============================================================================
+-- 5. ORG-BASED RLS FOR FARM DATA (Consultant access to client farms)
+-- ============================================================================
+
+-- Org-based SELECT for farms (consultants can see their client farms)
+CREATE POLICY "Org members can view client farms" ON farms FOR SELECT USING (
+  user_id = auth.uid() -- Farmer owns the farm
+  OR EXISTS (
+    -- Consultant/org member with this farmer as a client
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om ON om.organization_id = oc.organization_id
+    WHERE oc.client_user_id = farms.user_id
+    AND om.user_id = auth.uid()
+  )
+);
+
+-- Org-based SELECT for petiole_test_records
+CREATE POLICY "Org members can view client petiole tests" ON petiole_test_records FOR SELECT USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = petiole_test_records.farm_id AND farms.user_id = auth.uid())
+  OR EXISTS (
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om ON om.organization_id = oc.organization_id
+    JOIN farms f ON f.user_id = oc.client_user_id
+    WHERE f.id = petiole_test_records.farm_id
+    AND om.user_id = auth.uid()
+  )
+);
+
+-- Org-based SELECT for soil_test_records
+CREATE POLICY "Org members can view client soil tests" ON soil_test_records FOR SELECT USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_test_records.farm_id AND farms.user_id = auth.uid())
+  OR EXISTS (
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om ON om.organization_id = oc.organization_id
+    JOIN farms f ON f.user_id = oc.client_user_id
+    WHERE f.id = soil_test_records.farm_id
+    AND om.user_id = auth.uid()
+  )
+);
+
+-- Org-based SELECT for spray_records
+CREATE POLICY "Org members can view client spray records" ON spray_records FOR SELECT USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = spray_records.farm_id AND farms.user_id = auth.uid())
+  OR EXISTS (
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om ON om.organization_id = oc.organization_id
+    JOIN farms f ON f.user_id = oc.client_user_id
+    WHERE f.id = spray_records.farm_id
+    AND om.user_id = auth.uid()
+  )
+);
+
+-- Org-based SELECT for fertigation_records
+CREATE POLICY "Org members can view client fertigation records" ON fertigation_records FOR SELECT USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = fertigation_records.farm_id AND farms.user_id = auth.uid())
+  OR EXISTS (
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om ON om.organization_id = oc.organization_id
+    JOIN farms f ON f.user_id = oc.client_user_id
+    WHERE f.id = fertigation_records.farm_id
+    AND om.user_id = auth.uid()
+  )
+);
+
+-- Org-based SELECT for irrigation_records
+CREATE POLICY "Org members can view client irrigation records" ON irrigation_records FOR SELECT USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = irrigation_records.farm_id AND farms.user_id = auth.uid())
+  OR EXISTS (
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om ON om.organization_id = oc.organization_id
+    JOIN farms f ON f.user_id = oc.client_user_id
+    WHERE f.id = irrigation_records.farm_id
+    AND om.user_id = auth.uid()
+  )
+);
+
+-- Org-based SELECT for harvest_records
+CREATE POLICY "Org members can view client harvest records" ON harvest_records FOR SELECT USING (
+  EXISTS (SELECT 1 FROM farms WHERE farms.id = harvest_records.farm_id AND farms.user_id = auth.uid())
+  OR EXISTS (
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om ON om.organization_id = oc.organization_id
+    JOIN farms f ON f.user_id = oc.client_user_id
+    WHERE f.id = harvest_records.farm_id
+    AND om.user_id = auth.uid()
+  )
+);
+
+-- ============================================================================
+-- 6. AGRONOMIST-SPECIFIC RLS (Scoped to assigned farmers only)
+-- ============================================================================
+
+-- Agronomists can only see farms assigned to them via organization_clients.assigned_to
+-- This policy overrides the general org member policy for users with 'agronomist' role
+
+-- Drop existing org member policies first if they conflict, then recreate with agronomist check
+-- Note: The policies above still allow all org members. Agronomist scoping is applied at the 
+-- application layer OR by adding a more specific policy. For simplicity, we'll rely on 
+-- the application to filter agronomist views by assigned_to.
+
+-- ============================================================================
+-- 7. FARMER-ONLY PLAN VISIBILITY (Farmers see only approved plans)
+-- ============================================================================
+
+-- Split the fertilizer_plans SELECT policy: farmers only see approved plans
+-- This is implemented by modifying the existing policy to check status for farmers
+
+DROP POLICY IF EXISTS "Users can view fertilizer plans for their farms" ON fertilizer_plans;
+
+CREATE POLICY "Farmers view approved plans only" ON fertilizer_plans FOR SELECT USING (
+  -- Farmers: only see approved plans for their farms
+  EXISTS (
+    SELECT 1 FROM farms 
+    WHERE farms.id = fertilizer_plans.farm_id 
+    AND farms.user_id = auth.uid()
+  )
+  AND status = 'approved'
+);
+
+CREATE POLICY "Org members view all plan statuses" ON fertilizer_plans FOR SELECT USING (
+  -- Org members (consultants, agronomists): see all statuses
+  EXISTS (
+    SELECT 1 FROM organization_members om 
+    WHERE om.organization_id = fertilizer_plans.organization_id 
+    AND om.user_id = auth.uid()
+  )
+);
+
+-- ============================================================================
+-- 8. TRIGGERS FOR UPDATED_AT
+-- ============================================================================
+
+CREATE TRIGGER update_petiole_triage_updated_at
+  BEFORE UPDATE ON petiole_triage
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_plan_templates_updated_at
+  BEFORE UPDATE ON plan_templates
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================================
+-- 9. FUNCTION FOR CLUSTER INTELLIGENCE
+-- ============================================================================
+
+-- Function to get farm clusters with similar nutrient deficiencies
+CREATE OR REPLACE FUNCTION get_farm_clusters(p_org_id UUID, p_days_ago INTEGER DEFAULT 30)
+RETURNS TABLE (
+  region TEXT,
+  soil_type TEXT,
+  classification VARCHAR(20),
+  farm_count BIGINT,
+  affected_farm_ids BIGINT[],
+  primary_deficiency TEXT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    f.region,
+    f.soil_texture_class as soil_type,
+    t.classification,
+    COUNT(*) as farm_count,
+    array_agg(t.farm_id) as affected_farm_ids,
+    -- Extract primary deficiency from classification_reason
+    CASE 
+      WHEN t.classification_reason ILIKE '%nitrogen%' OR t.classification_reason ILIKE '%N%' THEN 'Nitrogen'
+      WHEN t.classification_reason ILIKE '%phosphorus%' OR t.classification_reason ILIKE '%P%' THEN 'Phosphorus'
+      WHEN t.classification_reason ILIKE '%potassium%' OR t.classification_reason ILIKE '%K%' THEN 'Potassium'
+      ELSE 'Multiple/Other'
+    END as primary_deficiency
+  FROM petiole_triage t
+  JOIN farms f ON f.id = t.farm_id
+  WHERE t.organization_id = p_org_id
+    AND t.classification IN ('yellow', 'red')
+    AND t.created_at > NOW() - INTERVAL '1 day' * p_days_ago
+    AND f.region IS NOT NULL
+  GROUP BY f.region, f.soil_texture_class, t.classification, 
+    CASE 
+      WHEN t.classification_reason ILIKE '%nitrogen%' OR t.classification_reason ILIKE '%N%' THEN 'Nitrogen'
+      WHEN t.classification_reason ILIKE '%phosphorus%' OR t.classification_reason ILIKE '%P%' THEN 'Phosphorus'
+      WHEN t.classification_reason ILIKE '%potassium%' OR t.classification_reason ILIKE '%K%' THEN 'Potassium'
+      ELSE 'Multiple/Other'
+    END
+  HAVING COUNT(*) >= 3
+  ORDER BY farm_count DESC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant execute to authenticated users
+GRANT EXECUTE ON FUNCTION get_farm_clusters(UUID, INTEGER) TO authenticated;
+
+-- ============================================================================
+-- 10. FUNCTION TO GET TRIAGE QUEUE WITH FARM DETAILS
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION get_triage_queue(
+  p_org_id UUID,
+  p_classification VARCHAR(20) DEFAULT NULL,
+  p_limit INTEGER DEFAULT 50,
+  p_offset INTEGER DEFAULT 0
+)
+RETURNS TABLE (
+  triage_id UUID,
+  petiole_test_id BIGINT,
+  farm_id BIGINT,
+  farm_name TEXT,
+  farm_region TEXT,
+  classification VARCHAR(20),
+  classification_reason TEXT,
+  confidence_score DECIMAL(3,2),
+  ai_draft_plan_id UUID,
+  reviewed_by UUID,
+  reviewed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE,
+  farmer_name TEXT,
+  latest_petiole_date DATE,
+  nutrient_n DECIMAL(10,2),
+  nutrient_p DECIMAL(10,2),
+  nutrient_k DECIMAL(10,2)
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    t.id as triage_id,
+    t.petiole_test_id,
+    t.farm_id,
+    f.name as farm_name,
+    f.region as farm_region,
+    t.classification,
+    t.classification_reason,
+    t.confidence_score,
+    t.ai_draft_plan_id,
+    t.reviewed_by,
+    t.reviewed_at,
+    t.created_at,
+    p.full_name as farmer_name,
+    ptr.date as latest_petiole_date,
+    (ptr.parameters->>'N')::DECIMAL as nutrient_n,
+    (ptr.parameters->>'P')::DECIMAL as nutrient_p,
+    (ptr.parameters->>'K')::DECIMAL as nutrient_k
+  FROM petiole_triage t
+  JOIN farms f ON f.id = t.farm_id
+  JOIN profiles p ON p.id = f.user_id
+  JOIN petiole_test_records ptr ON ptr.id = t.petiole_test_id
+  WHERE t.organization_id = p_org_id
+    AND t.reviewed_by IS NULL
+    AND (p_classification IS NULL OR t.classification = p_classification)
+  ORDER BY 
+    CASE t.classification 
+      WHEN 'red' THEN 1 
+      WHEN 'yellow' THEN 2 
+      WHEN 'green' THEN 3 
+    END,
+    t.created_at DESC
+  LIMIT p_limit OFFSET p_offset;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION get_triage_queue(UUID, VARCHAR, INTEGER, INTEGER) TO authenticated;
+
+-- ============================================================================
+-- END MIGRATION
+-- ============================================================================
