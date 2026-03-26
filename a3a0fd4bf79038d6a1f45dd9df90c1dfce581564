@@ -1,0 +1,121 @@
+src/app/(dashboard)/dashboard/layout.tsx
+  74196d0af514ba12 1-219
+package.json
+  b5f9c83ca837a8b8 21-24,104-106,114-115,122,127
+supabase/functions/classify-petiole/deno.json
+  74196d0af514ba12 1-5
+src/lib/__tests__/classification-utils.test.ts
+  72b985a4724e5309 24,26,55,66,68,72,74,291
+  b5f9c83ca837a8b8 1-23,25,27-54,56-65,67,69-71,73,75-290,292-406
+src/lib/__tests__/triage-service.test.ts
+  b5f9c83ca837a8b8 1-9,11-13,46-58,60,66,72,74,77,80-81,84,86-88,91,96-97,104,106,114-118,120,126-127,134-147,156,158,160-162
+  72b985a4724e5309 10,14-45,59,61-65,67-71,73,75-76,78-79,82-83,85,89-90,92-95,98-103,105,107-113,119,121-125,128-133,148-155,157,159
+src/app/(dashboard)/dashboard/clusters/page.tsx
+  74196d0af514ba12 1-372
+supabase/functions/classify-petiole/index.ts
+  74196d0af514ba12 1-609
+src/lib/cluster-service.ts
+  72b985a4724e5309 39-40,68,73,88-89,91-92
+  6d2dcbf3e153f0db 87,192-193
+  74196d0af514ba12 1-38,41-67,69-72,74-86,90,93-191,194-197
+src/app/(dashboard)/dashboard/settings/page.tsx
+  b5f9c83ca837a8b8 1-819
+src/app/(dashboard)/dashboard/templates/page.tsx
+  74196d0af514ba12 1-4,13-183,185-186,188,191-381,383-578
+  72b985a4724e5309 5-12,184,187,189-190,382
+src/app/(dashboard)/dashboard/page.tsx
+  74196d0af514ba12 1-38,43-237,239-242,244-289
+  72b985a4724e5309 39-42,238,243
+src/test/setup.ts
+  b5f9c83ca837a8b8 1-30
+src/lib/classification-utils.ts
+  b5f9c83ca837a8b8 1-348
+src/lib/triage-service.ts
+  b5f9c83ca837a8b8 303-327,334,348-349
+  6d2dcbf3e153f0db 70,77
+  74196d0af514ba12 1-19,22-24,26-69,71-75,80-82,107-137,142-157,159-168,176-177,180-193,195-245,247-302,350-382,384-435
+  72b985a4724e5309 20-21,25,76,78-79,83-106,138-141,158,169-175,178-179,194,246,328-333,335-347,383
+tsconfig.json
+  72b985a4724e5309 27
+src/lib/__tests__/cluster-service.test.ts
+  72b985a4724e5309 10,14-21,25-26,28-29,32-33,37-38,42-58,64-66,70-73,78-81,85,87-94,98-102,117-148,151-153,155-165
+  b5f9c83ca837a8b8 1-9,11-13,22-24,27,30-31,34-36,39-41,59-63,67-69,74-77,82-84,86,95-97,103-116,149-150,154,166-168
+vitest.config.ts
+  b5f9c83ca837a8b8 1-24
+supabase/migrations/20250326_consultant_dashboard.sql
+  74196d0af514ba12 1-455
+src/app/(dashboard)/dashboard/triage/page.tsx
+  74196d0af514ba12 1-72,74-505
+  72b985a4724e5309 73
+src/components/fertilizer/PlanAcknowledgment.tsx
+  b5f9c83ca837a8b8 1-213
+src/lib/__tests__/template-service.test.ts
+  b5f9c83ca837a8b8 1-9,11-13,23-25,27,29-30,37,39-40,42-43,45,62-65,72,74,76,81-83,85-86,88,94,96-99,101,105-106,113-116,122-124,131-134,136-139,141-142,153-154,160,173-175,183-184,187-189
+  72b985a4724e5309 10,14-22,26,28,31-36,38,41,44,46-61,66-71,73,75,77-80,84,87,89-93,95,100,102-104,107-112,117-121,125-130,135,140,143-152,155-159,161-172,176-182,185-186
+src/types/database.ts
+  72b985a4724e5309 2230,2232,2234-2236,2239-2240,2246,2248,2250-2252,2255-2256,2262,2264,2266-2268,2271-2272,2285-2286,2289-2295,2306-2308,2310,2319-2321,2323,2332-2334,2336,2354,2361,2368,2384-2385,2387-2394,2397-2398,2400-2407,2410-2411,2413-2420,2422,2439-2440,2444-2448,2453,2455-2456,2459-2460,2462-2463,2465-2469,2471-2475
+  6d2dcbf3e153f0db 2060,2069,2078,2134,2145,2156,2227-2229,2231,2233,2237-2238,2241-2245,2247,2249,2253-2254,2257-2261,2263,2265,2269-2270,2273-2284,2287-2288,2296-2305,2309,2311-2318,2322,2324-2331,2335,2337-2353,2355-2360,2362-2367,2369-2383,2386,2395-2396,2399,2408-2409,2412,2421,2423,2437-2438,2441-2443,2449-2452,2454,2457-2458,2461,2464,2470,2476-2477
+src/lib/template-service.ts
+  74196d0af514ba12 1-7,9-15,17,20,22-27,29,32-33,40-100,103-105,107-119,122-137,139-144,147-247
+  6d2dcbf3e153f0db 8,16,28,34-37
+  72b985a4724e5309 18-19,21,30-31,38-39,101-102,106,120-121,138,145-146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "a3a0fd4bf79038d6a1f45dd9df90c1dfce581564",
+  "prompts": {
+    "6d2dcbf3e153f0db": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "3eee3395-5048-4605-89eb-439303fd5735",
+        "model": "minimax-m2.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>",
+      "messages": [],
+      "total_additions": 268,
+      "total_deletions": 39,
+      "accepted_lines": 156,
+      "overriden_lines": 0
+    },
+    "72b985a4724e5309": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "451ed694-a967-4846-a08b-b0b1cb60512d",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>",
+      "messages": [],
+      "total_additions": 546,
+      "total_deletions": 500,
+      "accepted_lines": 533,
+      "overriden_lines": 0
+    },
+    "74196d0af514ba12": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "2a60cc25-1d30-4a01-9711-59d99e8891c6",
+        "model": "kimi-k2.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>",
+      "messages": [],
+      "total_additions": 4105,
+      "total_deletions": 269,
+      "accepted_lines": 3769,
+      "overriden_lines": 0
+    },
+    "b5f9c83ca837a8b8": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "07ee2472-27a2-4a5c-9ffe-90ef366d82d1",
+        "model": "kimi-k2.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>",
+      "messages": [],
+      "total_additions": 2453,
+      "total_deletions": 1,
+      "accepted_lines": 2104,
+      "overriden_lines": 3
+    }
+  }
+}
