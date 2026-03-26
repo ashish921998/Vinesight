@@ -169,7 +169,7 @@ export default function MissionControlPage() {
             <Activity className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Link href="/dashboard/triage">
+          <Link href="/consultant/triage">
             <Button>
               View Triage Queue
               <ArrowRight className="h-4 w-4 ml-2" />
@@ -215,7 +215,7 @@ export default function MissionControlPage() {
                   </p>
                 </div>
               </div>
-              <Link href="/dashboard/triage">
+              <Link href="/consultant/triage">
                 <Button variant="secondary">Review Now</Button>
               </Link>
             </CardContent>
@@ -239,7 +239,7 @@ export default function MissionControlPage() {
               Templates enable auto-drafting for{' '}
               {stats.templates.active > 0 ? 'routine cases' : 'no cases yet'}
             </p>
-            <Link href="/dashboard/templates">
+            <Link href="/consultant/templates">
               <Button variant="outline" className="w-full">
                 Manage Templates
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -261,7 +261,7 @@ export default function MissionControlPage() {
             <p className="text-sm text-muted-foreground mb-4">
               {stats.clusters.totalAffectedFarms} farms showing similar nutrient patterns
             </p>
-            <Link href="/dashboard/clusters">
+            <Link href="/consultant/clusters">
               <Button variant="outline" className="w-full">
                 View Clusters
                 <ArrowRight className="h-4 w-4 ml-2" />
