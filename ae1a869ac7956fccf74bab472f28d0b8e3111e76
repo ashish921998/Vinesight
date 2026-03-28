@@ -1,0 +1,27 @@
+src/app/consultant/layout.tsx
+  cdcdd4773df8bab6 81,97,108-109,111,114,156-187
+src/components/layout/LayoutContent.tsx
+  cdcdd4773df8bab6 27-29,33-34,36-37
+src/app/consultant/page.tsx
+  cdcdd4773df8bab6 106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "ae1a869ac7956fccf74bab472f28d0b8e3111e76",
+  "prompts": {
+    "cdcdd4773df8bab6": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "4b977d6f-ce06-43da-bc86-b5116ffe13a5",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>",
+      "messages": [],
+      "total_additions": 64,
+      "total_deletions": 12,
+      "accepted_lines": 62,
+      "overriden_lines": 0
+    }
+  }
+}
