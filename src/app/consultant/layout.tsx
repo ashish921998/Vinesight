@@ -16,7 +16,10 @@ import {
   AlertTriangle,
   CheckCircle,
   Eye,
-  Sprout
+  Sprout,
+  Contact,
+  FlaskConical,
+  PlusCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getTypedSupabaseClient } from '@/lib/supabase'
@@ -38,6 +41,16 @@ const navItems = [
     href: '/consultant/triage',
     icon: ListTodo,
     badge: 'pending'
+  },
+  {
+    label: 'Farmers',
+    href: '/consultant/farmers',
+    icon: Contact
+  },
+  {
+    label: 'Create Plan',
+    href: '/consultant/plans/new',
+    icon: PlusCircle
   },
   {
     label: 'Templates',
@@ -65,32 +78,43 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     total: 0
   })
   const [organizationId, setOrganizationId] = useState<string | null>(null)
+  const [roleCheckState, setRoleCheckState] = useState<'loading' | 'authorized' | 'denied'>(
+    'loading'
+  )
 
   useEffect(() => {
-    loadStats()
+    checkRoleAndLoadStats()
   }, [])
 
-  const loadStats = async () => {
+  const checkRoleAndLoadStats = async () => {
     try {
       const supabase = await getTypedSupabaseClient()
       const {
         data: { user }
       } = await supabase.auth.getUser()
 
-      if (!user) return
+      if (!user) {
+        setRoleCheckState('denied')
+        return
+      }
 
-      // Get organization
       const { data: membership } = await supabase
         .from('organization_members')
-        .select('organization_id')
+        .select('organization_id, role')
         .eq('user_id', user.id)
         .limit(1)
         .maybeSingle()
 
-      if (membership?.organization_id) {
-        setOrganizationId(membership.organization_id)
+      if (!membership || membership.role !== 'agronomist') {
+        setRoleCheckState('denied')
+        return
+      }
 
-        // Get triage stats
+      setRoleCheckState('authorized')
+      setOrganizationId(membership.organization_id)
+
+      // Load triage stats
+      try {
         const { data: triageData } = await supabase
           .from('petiole_triage')
           .select('classification, reviewed_by')
@@ -102,9 +126,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         const pending = triageData?.length || 0
 
         setStats({ urgent, pending, total: triageData?.length || 0 })
+      } catch {
+        // Tables may not exist yet (pre-migration)
       }
     } catch (error) {
-      console.error('Failed to load stats:', error)
+      console.error('Failed to check role:', error)
+      setRoleCheckState('denied')
     }
   }
 
@@ -124,6 +151,41 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       )
     }
     return null
+  }
+
+  if (roleCheckState === 'loading') {
+    return (
+      <ProtectedRoute>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center space-y-3">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent mx-auto" />
+            <p className="text-muted-foreground text-sm">Checking access...</p>
+          </div>
+        </div>
+      </ProtectedRoute>
+    )
+  }
+
+  if (roleCheckState === 'denied') {
+    return (
+      <ProtectedRoute>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center space-y-4 max-w-md px-4">
+            <div className="flex justify-center">
+              <AlertTriangle className="h-12 w-12 text-destructive" />
+            </div>
+            <h1 className="text-xl font-semibold">Access Denied</h1>
+            <p className="text-muted-foreground">
+              This area is restricted to agronomist consultants. If you believe you should have
+              access, contact your organization administrator.
+            </p>
+            <Link href="/dashboard">
+              <Button variant="outline">Back to Dashboard</Button>
+            </Link>
+          </div>
+        </div>
+      </ProtectedRoute>
+    )
   }
 
   return (
@@ -162,7 +224,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <nav className="flex flex-col gap-1 p-2">
             {navItems.map((item) => {
               const Icon = item.icon
-              const isActive = pathname === item.href
+              const isActive =
+                item.href === '/consultant'
+                  ? pathname === '/consultant'
+                  : pathname.startsWith(item.href) ||
+                    (item.href === '/consultant/farmers' &&
+                      pathname.startsWith('/consultant/petiole'))
 
               return (
                 <Link

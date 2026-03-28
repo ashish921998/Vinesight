@@ -103,7 +103,7 @@ export default function MissionControlPage() {
       })
     } catch (error) {
       console.error('Failed to load stats:', error)
-      toast.error('Failed to load dashboard data')
+      // Gracefully handle missing tables (pre-migration)
     } finally {
       setLoading(false)
     }

@@ -24,11 +24,17 @@ export function LayoutContent({ children }: LayoutContentProps) {
     '/auth'
   ]
 
+  // Routes with their own layout (no main sidebar)
+  const customLayoutRoutes = ['/consultant']
+
   // Check if current route is public
   const isPublicRoute = publicRoutes.includes(pathname)
 
-  // Show sidebar only for authenticated users on private routes
-  const showSidebar = !isPublicRoute && !!user
+  // Check if current route has its own layout
+  const hasCustomLayout = customLayoutRoutes.some((route) => pathname.startsWith(route))
+
+  // Show sidebar only for authenticated users on private routes without custom layouts
+  const showSidebar = !isPublicRoute && !hasCustomLayout && !!user
 
   // For loading state on public routes, don't show sidebar
   if (loading && isPublicRoute) {
