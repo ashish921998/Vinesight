@@ -24,9 +24,11 @@ export function getTypedSupabaseClient() {
 // For backward compatibility - lazy proxy to avoid build-time env var evaluation.
 // Top-level instantiation caused `next build` page-data collection to fail when
 // NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY are not set in the build env.
+let _supabaseSingleton: ReturnType<typeof getSupabaseClient> | null = null
 export const supabase = new Proxy({} as ReturnType<typeof getSupabaseClient>, {
   get(_target, prop) {
-    const client = getSupabaseClient() as unknown as Record<string | symbol, unknown>
+    if (!_supabaseSingleton) _supabaseSingleton = getSupabaseClient()
+    const client = _supabaseSingleton as unknown as Record<string | symbol, unknown>
     const value = client[prop as string]
     return typeof value === 'function'
       ? (value as (...args: unknown[]) => unknown).bind(client)
