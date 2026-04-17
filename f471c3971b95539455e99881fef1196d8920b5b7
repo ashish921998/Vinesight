@@ -1,0 +1,23 @@
+src/lib/supabase.ts
+  a72dcd67bdfad01b 27,30-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "f471c3971b95539455e99881fef1196d8920b5b7",
+  "prompts": {
+    "a72dcd67bdfad01b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "752867f6-cfd1-4301-b128-9859f9c35aae",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Ashish Huddar",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 1,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
