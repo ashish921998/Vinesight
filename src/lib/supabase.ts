@@ -21,8 +21,18 @@ export function getTypedSupabaseClient() {
   )
 }
 
-// For backward compatibility
-export const supabase = getSupabaseClient()
+// For backward compatibility - lazy proxy to avoid build-time env var evaluation.
+// Top-level instantiation caused `next build` page-data collection to fail when
+// NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY are not set in the build env.
+export const supabase = new Proxy({} as ReturnType<typeof getSupabaseClient>, {
+  get(_target, prop) {
+    const client = getSupabaseClient() as unknown as Record<string | symbol, unknown>
+    const value = client[prop as string]
+    return typeof value === 'function'
+      ? (value as (...args: unknown[]) => unknown).bind(client)
+      : value
+  }
+})
 
 // Database types based on your existing schema
 
