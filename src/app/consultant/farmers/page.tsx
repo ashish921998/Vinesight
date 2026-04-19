@@ -334,7 +334,9 @@ export default function FarmerDirectoryPage() {
                   <div>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <User className="h-5 w-5 text-accent" />
-                      {farmer.full_name || 'Unknown Farmer'}
+                      <Link href={`/consultant/farmers/${farmer.id}`} className="hover:underline">
+                        {farmer.full_name || 'Unknown Farmer'}
+                      </Link>
                     </CardTitle>
                     <div className="flex flex-wrap items-center gap-4 mt-1 text-sm text-muted-foreground">
                       {farmer.email && (
@@ -364,7 +366,7 @@ export default function FarmerDirectoryPage() {
                     {farmer.farms.map((farm) => (
                       <Link
                         key={farm.id}
-                        href={`/clients/${farmer.id}/farms/${farm.id}`}
+                        href={`/consultant/farmers/${farmer.id}/farms/${farm.id}`}
                         className="block"
                       >
                         <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/50 hover:bg-muted transition-colors cursor-pointer">
