@@ -174,20 +174,45 @@ export function matchTemplate(
 
     // Match soil type (or if template has no soil_type, it's a wildcard)
     const matchesSoil = !t.soil_type || t.soil_type === soilType
+    // Match nutrient trigger conditions (if provided)
+    const nutrientConditions = t.trigger_conditions.nutrients || {}
+    const matchesNutrientConditions = Object.entries(nutrientConditions).every(
+      ([nutrient, range]) => {
+        const nutrientValue =
+          params[nutrient] ?? params[nutrient.toUpperCase()] ?? params[nutrient.toLowerCase()]
 
-    return matchesClassification && matchesSeason && matchesSoil
+        if (nutrientValue === undefined || nutrientValue === null) {
+          return false
+        }
+
+        if (range.min !== undefined && nutrientValue < range.min) {
+          return false
+        }
+
+        if (range.max !== undefined && nutrientValue > range.max) {
+          return false
+        }
+
+        return true
+      }
+    )
+
+    return matchesClassification && matchesSeason && matchesSoil && matchesNutrientConditions
   })
 
   if (candidates.length === 0) return null
   if (candidates.length === 1) return candidates[0]
 
-  // Multiple matches - pick the one with most specific trigger_conditions
-  // (more nutrients specified = more specific)
+  // Multiple matches - pick the one with most specific trigger conditions
+  // (nutrient + soil + classification specificity).
   let bestMatch = candidates[0]
   let bestSpecificity = 0
 
   for (const template of candidates) {
-    const specificity = Object.keys(template.trigger_conditions.nutrients || {}).length
+    const nutrientSpecificity = Object.keys(template.trigger_conditions.nutrients || {}).length
+    const soilSpecificity = template.soil_type ? 1 : 0
+    const classificationSpecificity = template.trigger_conditions.classification?.length ? 1 : 0
+    const specificity = nutrientSpecificity * 2 + soilSpecificity + classificationSpecificity
     if (specificity > bestSpecificity) {
       bestSpecificity = specificity
       bestMatch = template
@@ -327,10 +352,13 @@ Deno.serve(async (req) => {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
+        'Access-Control-Allow-Headers':
+          'authorization, x-client-info, apikey, content-type, x-webhook-secret'
       }
     })
   }
+  let supabase: ReturnType<typeof createClient> | null = null
+  let claimedTriageId: string | null = null
 
   try {
     // Get Supabase client
@@ -340,8 +368,31 @@ Deno.serve(async (req) => {
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error('Missing Supabase environment variables')
     }
+    // Authenticate webhook caller before processing payload
+    const webhookSecret =
+      Deno.env.get('CLASSIFY_PETIOLE_WEBHOOK_SECRET') || Deno.env.get('SUPABASE_WEBHOOK_SECRET')
+    const authorizationHeader = req.headers.get('authorization')
+    const bearerToken =
+      authorizationHeader && authorizationHeader.startsWith('Bearer ')
+        ? authorizationHeader.slice('Bearer '.length)
+        : null
+    const providedWebhookSecret = req.headers.get('x-webhook-secret')
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    const isAuthorized =
+      (webhookSecret && providedWebhookSecret === webhookSecret) ||
+      (bearerToken !== null && bearerToken === supabaseServiceKey)
+
+    if (!isAuthorized) {
+      return new Response(JSON.stringify({ error: 'Unauthorized webhook request' }), {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      })
+    }
+
+    supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     })
 
@@ -364,20 +415,16 @@ Deno.serve(async (req) => {
       })
     }
 
-    const petioleTestId = record.id
-    const farmId = record.farm_id
+    const petioleTestId = Number(record.id)
+    const farmId = Number(record.farm_id)
 
-    // Check if already classified (deduplication)
-    const { data: existingTriage } = await supabase
-      .from('petiole_triage')
-      .select('id')
-      .eq('petiole_test_id', petioleTestId)
-      .maybeSingle()
-
-    if (existingTriage) {
+    if (Number.isNaN(petioleTestId) || Number.isNaN(farmId)) {
       return new Response(
-        JSON.stringify({ message: 'Already classified', triageId: existingTriage.id }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Invalid payload: record ids must be numeric' }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
       )
     }
 
@@ -390,24 +437,18 @@ Deno.serve(async (req) => {
 
     if (farmError || !farm) {
       console.error('Farm not found:', farmError)
-      // Fail-safe: classify as red
-      await insertTriageResult(supabase, {
-        petioleTestId,
-        farmId,
-        organizationId: null,
-        classification: 'red',
-        reason: 'Classification failed: Farm data not found',
-        confidence: 0,
-        aiDraftPlanId: null
-      })
 
       return new Response(
         JSON.stringify({
-          classification: 'red',
-          reason: 'Farm not found - classified as urgent',
-          triageId: null
+          error: 'Farm not found'
         }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
+        {
+          status: 404,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        }
       )
     }
 
@@ -419,6 +460,43 @@ Deno.serve(async (req) => {
       .maybeSingle()
 
     const organizationId = orgClient?.organization_id
+
+    if (!organizationId) {
+      return new Response(
+        JSON.stringify({
+          error: 'Farm is not linked to an organization'
+        }),
+        {
+          status: 422,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        }
+      )
+    }
+
+    // Atomically claim this petiole test for processing to avoid duplicate triage and plan work
+    const claimResult = await claimTriageForProcessing(supabase, {
+      petioleTestId,
+      farmId,
+      organizationId
+    })
+
+    if (!claimResult.claimed) {
+      return new Response(
+        JSON.stringify({ message: 'Already classified', triageId: claimResult.triageId }),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        }
+      )
+    }
+
+    claimedTriageId = claimResult.triageId
 
     // Fetch previous petiole tests for this farm (last 3)
     const { data: previousTests } = await supabase
@@ -442,6 +520,8 @@ Deno.serve(async (req) => {
     )
 
     let aiDraftPlanId: string | null = null
+    let templateMatched = false
+    let gptGenerated = false
     let planItems: Array<{
       fertilizer_name: string
       quantity: number
@@ -474,6 +554,7 @@ Deno.serve(async (req) => {
       )
 
       if (matchedTemplate) {
+        templateMatched = true
         // Create plan items from template with farm-specific adjustments
         planItems = matchedTemplate.template_items.map((item) => ({
           fertilizer_name: item.fertilizer_name,
@@ -499,6 +580,7 @@ Deno.serve(async (req) => {
       )
 
       if (gptResult) {
+        gptGenerated = true
         planItems = gptResult.items
       }
     }
@@ -547,11 +629,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Insert triage result
-    const triageId = await insertTriageResult(supabase, {
-      petioleTestId,
-      farmId,
-      organizationId,
+    if (!claimedTriageId) {
+      throw new Error('Failed to claim triage row for finalization')
+    }
+
+    // Finalize triage result for the claimed row
+    await finalizeTriageResult(supabase, claimedTriageId, {
       classification: classificationResult.classification,
       reason: classificationResult.reason,
       confidence: classificationResult.useAI ? 0.75 : 0.9,
@@ -562,11 +645,11 @@ Deno.serve(async (req) => {
       JSON.stringify({
         classification: classificationResult.classification,
         reason: classificationResult.reason,
-        triageId,
+        triageId: claimedTriageId,
         aiDraftPlanId,
         seasonStage,
-        templateMatched: !!planItems && !classificationResult.useAI,
-        gptGenerated: !!planItems && classificationResult.useAI
+        templateMatched,
+        gptGenerated
       }),
       {
         status: 200,
@@ -578,6 +661,20 @@ Deno.serve(async (req) => {
     )
   } catch (error) {
     console.error('Unexpected error:', error)
+
+    // Mark claimed triage row as failed so it does not remain in "processing" state
+    if (supabase && claimedTriageId) {
+      try {
+        await finalizeTriageResult(supabase, claimedTriageId, {
+          classification: 'red',
+          reason: `Classification failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          confidence: 0,
+          aiDraftPlanId: null
+        })
+      } catch (finalizeError) {
+        console.error('Failed to finalize failed triage state:', finalizeError)
+      }
+    }
 
     return new Response(
       JSON.stringify({
@@ -596,37 +693,79 @@ Deno.serve(async (req) => {
   }
 })
 
-// Helper function to insert triage result
-async function insertTriageResult(
+async function claimTriageForProcessing(
   supabase: any,
   params: {
     petioleTestId: number
     farmId: number
-    organizationId: string | null
+    organizationId: string
+  }
+): Promise<{ claimed: boolean; triageId: string | null }> {
+  const { data: claim, error: claimError } = await supabase
+    .from('petiole_triage')
+    .insert(
+      {
+        petiole_test_id: params.petioleTestId,
+        farm_id: params.farmId,
+        organization_id: params.organizationId,
+        classification: 'yellow',
+        classification_reason: 'Processing classification request',
+        confidence_score: 0,
+        ai_draft_plan_id: null
+      },
+      {
+        onConflict: 'petiole_test_id',
+        ignoreDuplicates: true
+      }
+    )
+    .select('id')
+    .maybeSingle()
+
+  if (claimError) {
+    throw claimError
+  }
+
+  if (claim?.id) {
+    return { claimed: true, triageId: claim.id }
+  }
+
+  const { data: existing, error: existingError } = await supabase
+    .from('petiole_triage')
+    .select('id')
+    .eq('petiole_test_id', params.petioleTestId)
+    .maybeSingle()
+
+  if (existingError) {
+    throw existingError
+  }
+
+  return { claimed: false, triageId: existing?.id ?? null }
+}
+
+async function finalizeTriageResult(
+  supabase: any,
+  triageId: string,
+  params: {
     classification: Classification
     reason: string
     confidence: number
     aiDraftPlanId: string | null
   }
 ): Promise<string | null> {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('petiole_triage')
-    .insert({
-      petiole_test_id: params.petioleTestId,
-      farm_id: params.farmId,
-      organization_id: params.organizationId,
+    .update({
       classification: params.classification,
       classification_reason: params.reason,
       confidence_score: params.confidence,
-      ai_draft_plan_id: params.aiDraftPlanId
+      ai_draft_plan_id: params.aiDraftPlanId,
+      updated_at: new Date().toISOString()
     })
-    .select()
-    .single()
+    .eq('id', triageId)
 
   if (error) {
-    console.error('Failed to insert triage:', error)
-    return null
+    throw error
   }
 
-  return data.id
+  return triageId
 }

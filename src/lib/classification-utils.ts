@@ -86,8 +86,8 @@ export function calculatePercentDrop(
     return ((range.min - value) / range.min) * 100
   }
 
-  // Value above range - could be excess (treat as deficiency for simplicity)
-  return ((value - range.max) / range.max) * 100
+  // Value above range is not considered a deficiency in this classifier.
+  return 0
 }
 
 /**
@@ -270,18 +270,24 @@ export function matchTemplate(
   // Base specificity for season match
   let specificity = 1
 
-  // Soil type matching
-  if (template.applicable_soil_types && context.soilType) {
-    const soilMatch = template.applicable_soil_types.includes(context.soilType)
-    if (soilMatch) {
-      specificity += 2 // Higher weight for soil match
-    } else if (template.applicable_soil_types.length === 0) {
-      // Template applies to all soil types
-      specificity += 1
-    }
-  } else if (!template.applicable_soil_types || template.applicable_soil_types.length === 0) {
-    // No soil restrictions = universal template
+  // Handle null vs empty array differently:
+  // - null = no soil restriction specified (universal, 0.5 bonus)
+  // - [] = explicitly applies to all soil types (1.0 bonus)
+  // - [...] = specific soil types required (2.0 bonus if matched)
+  const applicableSoilTypes = template.applicable_soil_types
+
+  if (applicableSoilTypes === null) {
+    // No soil restriction specified - universal template
     specificity += 0.5
+  } else if (applicableSoilTypes.length === 0) {
+    // Empty array = explicitly applies to all soil types
+    specificity += 1
+  } else {
+    // Template specifies soil types - must match
+    if (context.soilType && applicableSoilTypes.includes(context.soilType)) {
+      specificity += 2 // Higher weight for soil match
+    }
+    // If soilType is null or doesn't match, still match but with lower specificity
   }
 
   return { matches: true, specificity }

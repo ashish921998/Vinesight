@@ -18,24 +18,23 @@
       "Bash(grep:*)",
       "Bash(curl:*)",
       "Bash(gh pr view:*)",
-      "Bash(bash:*)",
       "Bash(echo:*)",
-      "Bash(/Users/ashishhuddar/FarmAI/.env.local)",
       "Bash(npm uninstall:*)",
       "Bash(tee:*)",
       "Bash(ESLINT_NO_DEV_ERRORS=true npm run build:*)",
       "Bash(npm cache clean:*)",
-      "Bash(rm:*)",
-      "Bash(ls:*)",
       "Bash(npm test:*)",
-      "Bash(npm run)",
-      "Bash(npx jest src/lib/__tests__/lab-test-recommendations.test.ts)",
       "Bash(npm run dev:*)",
       "Bash(npx jest:*)",
-      "Bash(node -e:*)",
+      "Bash(node -e:*)"
+    ],
+    "deny": [
+      "Bash(bash:*)",
+      "Bash(rm:*)",
+      "Bash(ls:*)",
+      "Bash(/Users/ashishhuddar/FarmAI/.env.local)",
       "Read(//var/folders/l7/r6mn2b0s1jx809k6lsqqx0pw0000gn/T/**)"
     ],
-    "deny": [],
     "ask": []
   }
 }

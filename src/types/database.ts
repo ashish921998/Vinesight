@@ -2348,6 +2348,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'organizations'
             referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'petiole_triage_petiole_test_id_fkey'
+            columns: ['petiole_test_id']
+            isOneToOne: true
+            referencedRelation: 'petiole_test_records'
+            referencedColumns: ['id']
           }
         ]
       }
@@ -2513,20 +2520,20 @@ export type Database = {
           triage_id: string
           petiole_test_id: number
           farm_id: number
-          farm_name: string
-          farm_region: string
+          farm_name: string | null
+          farm_region: string | null
           classification: string
-          classification_reason: string
-          confidence_score: number
-          ai_draft_plan_id: string
-          reviewed_by: string
-          reviewed_at: string
-          created_at: string
-          farmer_name: string
-          latest_petiole_date: string
-          nutrient_n: number
-          nutrient_p: number
-          nutrient_k: number
+          classification_reason: string | null
+          confidence_score: number | null
+          ai_draft_plan_id: string | null
+          reviewed_by: string | null
+          reviewed_at: string | null
+          created_at: string | null
+          farmer_name: string | null
+          latest_petiole_date: string | null
+          nutrient_n: number | null
+          nutrient_p: number | null
+          nutrient_k: number | null
         }[]
       }
     }

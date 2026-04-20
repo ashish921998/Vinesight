@@ -46,6 +46,40 @@ export interface UpdateTemplateInput {
   is_active?: boolean
 }
 
+interface TemplateItemInput {
+  fertilizer_name: string
+  base_quantity: number
+  unit?: string
+  method?: string
+  frequency?: number
+}
+
+function validateTemplateItems(templateItems: Json): TemplateItemInput[] {
+  const items = templateItems as unknown as TemplateItemInput[]
+
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error('Template must have at least one fertilizer item')
+  }
+
+  const normalizedItems = items.map((item) => ({
+    ...item,
+    fertilizer_name: typeof item.fertilizer_name === 'string' ? item.fertilizer_name.trim() : '',
+    base_quantity: Number(item.base_quantity)
+  }))
+
+  for (const item of normalizedItems) {
+    if (!item.fertilizer_name) {
+      throw new Error('Each template item must have a fertilizer name')
+    }
+
+    if (!Number.isFinite(item.base_quantity) || item.base_quantity <= 0) {
+      throw new Error('Each template item must have a positive numeric quantity')
+    }
+  }
+
+  return normalizedItems
+}
+
 export class TemplateService {
   // Get all templates for an organization
   static async getTemplates(organizationId: string): Promise<PlanTemplate[]> {
@@ -102,21 +136,7 @@ export class TemplateService {
     input: CreateTemplateInput
   ): Promise<PlanTemplate> {
     const supabase = await getTypedSupabaseClient()
-
-    // Validate items
-    const items = input.template_items as unknown as Array<{
-      fertilizer_name: string
-      base_quantity: number
-    }>
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      throw new Error('Template must have at least one fertilizer item')
-    }
-
-    for (const item of items) {
-      if (!item.fertilizer_name || item.base_quantity <= 0) {
-        throw new Error('Each template item must have a fertilizer name and positive quantity')
-      }
-    }
+    const validatedItems = validateTemplateItems(input.template_items)
 
     const { data, error } = await supabase
       .from('plan_templates')
@@ -127,7 +147,7 @@ export class TemplateService {
         season_stage: input.season_stage,
         soil_type: input.soil_type || null,
         trigger_conditions: input.trigger_conditions,
-        template_items: input.template_items,
+        template_items: validatedItems,
         is_active: true
       })
       .select()
@@ -152,7 +172,9 @@ export class TemplateService {
     if (input.season_stage) updates.season_stage = input.season_stage
     if (input.soil_type !== undefined) updates.soil_type = input.soil_type
     if (input.trigger_conditions) updates.trigger_conditions = input.trigger_conditions
-    if (input.template_items) updates.template_items = input.template_items
+    if (input.template_items !== undefined) {
+      updates.template_items = validateTemplateItems(input.template_items)
+    }
     if (input.is_active !== undefined) updates.is_active = input.is_active
 
     const { data, error } = await supabase

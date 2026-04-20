@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { getTypedSupabaseClient } from '@/lib/supabase'
@@ -40,11 +40,7 @@ export default function FarmerProfilePage() {
   const [farms, setFarms] = useState<Farm[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadFarmerProfile()
-  }, [farmerId])
-
-  const loadFarmerProfile = async () => {
+  const loadFarmerProfile = useCallback(async () => {
     try {
       setLoading(true)
       const supabase = await getTypedSupabaseClient()
@@ -139,7 +135,11 @@ export default function FarmerProfilePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [farmerId])
+
+  useEffect(() => {
+    loadFarmerProfile()
+  }, [loadFarmerProfile])
 
   const getClassificationBadge = (classification: string | null) => {
     const variants: Record<string, { class: string; label: string; emoji: string }> = {

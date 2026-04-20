@@ -61,14 +61,22 @@ ALTER TABLE fertilizer_plans ADD COLUMN IF NOT EXISTS status VARCHAR(20)
   CHECK (status IN ('draft', 'auto_drafted', 'pending_approval', 'approved', 'rejected'));
 
 -- Update existing fertilizer_plans to 'approved' status (backward compatible)
-UPDATE fertilizer_plans SET status = 'approved' WHERE status = 'draft';
+-- Only promote plans that have items (considered "complete" drafts)
+UPDATE fertilizer_plans SET status = 'approved' 
+WHERE status = 'draft' 
+AND EXISTS (
+  SELECT 1 FROM fertilizer_plan_items 
+  WHERE fertilizer_plan_items.plan_id = fertilizer_plans.id
+);
 
 -- Add assigned_to column to organization_clients for agronomist scoping
 ALTER TABLE organization_clients ADD COLUMN IF NOT EXISTS assigned_to UUID 
   REFERENCES auth.users(id) ON DELETE SET NULL;
 
 -- Update organization_members role constraint to include 'agronomist'
--- First, handle existing 'member' roles that should become 'agronomist' (none expected)
+-- First, migrate existing 'member' roles to 'agronomist' to avoid constraint violation
+UPDATE organization_members SET role = 'agronomist' WHERE role = 'member';
+
 -- Then alter the check constraint
 ALTER TABLE organization_members 
   DROP CONSTRAINT IF EXISTS organization_members_role_check;
@@ -89,6 +97,7 @@ CREATE INDEX idx_petiole_triage_org_id ON petiole_triage(organization_id);
 CREATE INDEX idx_petiole_triage_pending ON petiole_triage(organization_id, classification, reviewed_by) 
   WHERE reviewed_by IS NULL;
 CREATE INDEX idx_petiole_triage_created_at ON petiole_triage(created_at);
+CREATE UNIQUE INDEX idx_petiole_triage_petiole_test_id_unique ON petiole_triage(petiole_test_id);
 
 -- Plan templates indexes
 CREATE INDEX idx_plan_templates_org_id ON plan_templates(organization_id);
@@ -113,9 +122,25 @@ ALTER TABLE petiole_triage ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Org members can view triage" ON petiole_triage FOR SELECT USING (
   EXISTS (
-    SELECT 1 FROM organization_members om 
-    WHERE om.organization_id = petiole_triage.organization_id 
+    SELECT 1
+    FROM organization_members om
+    WHERE om.organization_id = petiole_triage.organization_id
     AND om.user_id = auth.uid()
+    AND (
+      om.role IN ('owner', 'admin')
+      OR (
+        om.role = 'agronomist'
+        AND EXISTS (
+          SELECT 1
+          FROM farms f
+          JOIN organization_clients oc
+            ON oc.client_user_id = f.user_id
+           AND oc.organization_id = petiole_triage.organization_id
+          WHERE f.id = petiole_triage.farm_id
+            AND oc.assigned_to = auth.uid()
+        )
+      )
+    )
   )
 );
 
@@ -127,11 +152,73 @@ CREATE POLICY "Org members can insert triage" ON petiole_triage FOR INSERT WITH 
   )
 );
 
-CREATE POLICY "Org members can update triage" ON petiole_triage FOR UPDATE USING (
+DROP POLICY IF EXISTS "Org members can update triage" ON petiole_triage;
+
+CREATE POLICY "Org members can update triage" ON petiole_triage FOR UPDATE
+USING (
   EXISTS (
-    SELECT 1 FROM organization_members om 
-    WHERE om.organization_id = petiole_triage.organization_id 
-    AND om.user_id = auth.uid()
+    SELECT 1
+    FROM organization_members om
+    WHERE om.organization_id = petiole_triage.organization_id
+      AND om.user_id = auth.uid()
+      AND (
+        om.role IN ('owner', 'admin')
+        OR (
+          om.role = 'agronomist'
+          AND EXISTS (
+            SELECT 1
+            FROM farms f
+            JOIN organization_clients oc
+              ON oc.client_user_id = f.user_id
+             AND oc.organization_id = petiole_triage.organization_id
+            WHERE f.id = petiole_triage.farm_id
+              AND oc.assigned_to = auth.uid()
+          )
+        )
+      )
+  )
+)
+WITH CHECK (
+  EXISTS (
+    SELECT 1
+    FROM organization_members om
+    WHERE om.organization_id = petiole_triage.organization_id
+      AND om.user_id = auth.uid()
+      AND (
+        om.role IN ('owner', 'admin')
+        OR (
+          om.role = 'agronomist'
+          AND EXISTS (
+            SELECT 1
+            FROM farms f
+            JOIN organization_clients oc
+              ON oc.client_user_id = f.user_id
+             AND oc.organization_id = petiole_triage.organization_id
+            WHERE f.id = petiole_triage.farm_id
+              AND oc.assigned_to = auth.uid()
+          )
+        )
+      )
+  )
+);
+
+CREATE POLICY "Farm owners can acknowledge triage" ON petiole_triage FOR UPDATE
+USING (
+  EXISTS (
+    SELECT 1
+    FROM farms f
+    JOIN petiole_triage pt ON pt.farm_id = f.id
+    WHERE pt.id = petiole_triage.id
+      AND f.user_id = auth.uid()
+  )
+)
+|WITH CHECK (
+  EXISTS (
+    SELECT 1
+    FROM farms f
+    JOIN petiole_triage pt ON pt.farm_id = f.id
+    WHERE pt.id = petiole_triage.id
+      AND f.user_id = auth.uid()
   )
 );
 
@@ -185,8 +272,17 @@ CREATE POLICY "Org members can view acknowledgments for their plans" ON plan_ack
   )
 );
 
+DROP POLICY IF EXISTS "Farmers can insert their own acknowledgment" ON plan_acknowledgments;
+
 CREATE POLICY "Farmers can insert their own acknowledgment" ON plan_acknowledgments FOR INSERT WITH CHECK (
   farmer_user_id = auth.uid()
+  AND EXISTS (
+    SELECT 1
+    FROM fertilizer_plans fp
+    JOIN farms f ON f.id = fp.farm_id
+    WHERE fp.id = plan_acknowledgments.plan_id
+      AND f.user_id = auth.uid()
+  )
 );
 
 -- ============================================================================
@@ -198,10 +294,16 @@ CREATE POLICY "Org members can view client farms" ON farms FOR SELECT USING (
   user_id = auth.uid() -- Farmer owns the farm
   OR EXISTS (
     -- Consultant/org member with this farmer as a client
-    SELECT 1 FROM organization_clients oc
-    JOIN organization_members om ON om.organization_id = oc.organization_id
+    SELECT 1
+    FROM organization_clients oc
+    JOIN organization_members om
+      ON om.organization_id = oc.organization_id
+     AND om.user_id = auth.uid()
     WHERE oc.client_user_id = farms.user_id
-    AND om.user_id = auth.uid()
+      AND (
+        om.role IN ('owner', 'admin')
+        OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
+      )
   )
 );
 
@@ -210,10 +312,15 @@ CREATE POLICY "Org members can view client petiole tests" ON petiole_test_record
   EXISTS (SELECT 1 FROM farms WHERE farms.id = petiole_test_records.farm_id AND farms.user_id = auth.uid())
   OR EXISTS (
     SELECT 1 FROM organization_clients oc
-    JOIN organization_members om ON om.organization_id = oc.organization_id
+    JOIN organization_members om
+      ON om.organization_id = oc.organization_id
+     AND om.user_id = auth.uid()
     JOIN farms f ON f.user_id = oc.client_user_id
     WHERE f.id = petiole_test_records.farm_id
-    AND om.user_id = auth.uid()
+      AND (
+        om.role IN ('owner', 'admin')
+        OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
+      )
   )
 );
 
@@ -222,10 +329,15 @@ CREATE POLICY "Org members can view client soil tests" ON soil_test_records FOR 
   EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_test_records.farm_id AND farms.user_id = auth.uid())
   OR EXISTS (
     SELECT 1 FROM organization_clients oc
-    JOIN organization_members om ON om.organization_id = oc.organization_id
+    JOIN organization_members om
+      ON om.organization_id = oc.organization_id
+     AND om.user_id = auth.uid()
     JOIN farms f ON f.user_id = oc.client_user_id
     WHERE f.id = soil_test_records.farm_id
-    AND om.user_id = auth.uid()
+      AND (
+        om.role IN ('owner', 'admin')
+        OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
+      )
   )
 );
 
@@ -234,10 +346,15 @@ CREATE POLICY "Org members can view client spray records" ON spray_records FOR S
   EXISTS (SELECT 1 FROM farms WHERE farms.id = spray_records.farm_id AND farms.user_id = auth.uid())
   OR EXISTS (
     SELECT 1 FROM organization_clients oc
-    JOIN organization_members om ON om.organization_id = oc.organization_id
+    JOIN organization_members om
+      ON om.organization_id = oc.organization_id
+     AND om.user_id = auth.uid()
     JOIN farms f ON f.user_id = oc.client_user_id
     WHERE f.id = spray_records.farm_id
-    AND om.user_id = auth.uid()
+      AND (
+        om.role IN ('owner', 'admin')
+        OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
+      )
   )
 );
 
@@ -246,10 +363,15 @@ CREATE POLICY "Org members can view client fertigation records" ON fertigation_r
   EXISTS (SELECT 1 FROM farms WHERE farms.id = fertigation_records.farm_id AND farms.user_id = auth.uid())
   OR EXISTS (
     SELECT 1 FROM organization_clients oc
-    JOIN organization_members om ON om.organization_id = oc.organization_id
+    JOIN organization_members om
+      ON om.organization_id = oc.organization_id
+     AND om.user_id = auth.uid()
     JOIN farms f ON f.user_id = oc.client_user_id
     WHERE f.id = fertigation_records.farm_id
-    AND om.user_id = auth.uid()
+      AND (
+        om.role IN ('owner', 'admin')
+        OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
+      )
   )
 );
 
@@ -258,10 +380,15 @@ CREATE POLICY "Org members can view client irrigation records" ON irrigation_rec
   EXISTS (SELECT 1 FROM farms WHERE farms.id = irrigation_records.farm_id AND farms.user_id = auth.uid())
   OR EXISTS (
     SELECT 1 FROM organization_clients oc
-    JOIN organization_members om ON om.organization_id = oc.organization_id
+    JOIN organization_members om
+      ON om.organization_id = oc.organization_id
+     AND om.user_id = auth.uid()
     JOIN farms f ON f.user_id = oc.client_user_id
     WHERE f.id = irrigation_records.farm_id
-    AND om.user_id = auth.uid()
+      AND (
+        om.role IN ('owner', 'admin')
+        OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
+      )
   )
 );
 
@@ -270,10 +397,15 @@ CREATE POLICY "Org members can view client harvest records" ON harvest_records F
   EXISTS (SELECT 1 FROM farms WHERE farms.id = harvest_records.farm_id AND farms.user_id = auth.uid())
   OR EXISTS (
     SELECT 1 FROM organization_clients oc
-    JOIN organization_members om ON om.organization_id = oc.organization_id
+    JOIN organization_members om
+      ON om.organization_id = oc.organization_id
+     AND om.user_id = auth.uid()
     JOIN farms f ON f.user_id = oc.client_user_id
     WHERE f.id = harvest_records.farm_id
-    AND om.user_id = auth.uid()
+      AND (
+        om.role IN ('owner', 'admin')
+        OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
+      )
   )
 );
 
@@ -281,13 +413,8 @@ CREATE POLICY "Org members can view client harvest records" ON harvest_records F
 -- 6. AGRONOMIST-SPECIFIC RLS (Scoped to assigned farmers only)
 -- ============================================================================
 
--- Agronomists can only see farms assigned to them via organization_clients.assigned_to
--- This policy overrides the general org member policy for users with 'agronomist' role
-
--- Drop existing org member policies first if they conflict, then recreate with agronomist check
--- Note: The policies above still allow all org members. Agronomist scoping is applied at the 
--- application layer OR by adding a more specific policy. For simplicity, we'll rely on 
--- the application to filter agronomist views by assigned_to.
+-- Assignment scope is enforced directly in the policies above:
+-- admins/owners can view all organization clients; agronomists can view only assigned clients.
 
 -- ============================================================================
 -- 7. FARMER-ONLY PLAN VISIBILITY (Farmers see only approved plans)
@@ -346,6 +473,15 @@ RETURNS TABLE (
   primary_deficiency TEXT
 ) AS $$
 BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM organization_members om
+    WHERE om.organization_id = p_org_id
+      AND om.user_id = auth.uid()
+  ) THEN
+    RAISE EXCEPTION 'Not authorized for organization %', p_org_id
+      USING ERRCODE = '42501';
+  END IF;
   RETURN QUERY
   SELECT 
     f.region,
@@ -355,9 +491,9 @@ BEGIN
     array_agg(t.farm_id) as affected_farm_ids,
     -- Extract primary deficiency from classification_reason
     CASE 
-      WHEN t.classification_reason ILIKE '%nitrogen%' OR t.classification_reason ILIKE '%N%' THEN 'Nitrogen'
-      WHEN t.classification_reason ILIKE '%phosphorus%' OR t.classification_reason ILIKE '%P%' THEN 'Phosphorus'
-      WHEN t.classification_reason ILIKE '%potassium%' OR t.classification_reason ILIKE '%K%' THEN 'Potassium'
+      WHEN COALESCE(t.classification_reason, '') ~* '\m(nitrogen|n)\M' THEN 'Nitrogen'
+      WHEN COALESCE(t.classification_reason, '') ~* '\m(phosphorus|p)\M' THEN 'Phosphorus'
+      WHEN COALESCE(t.classification_reason, '') ~* '\m(potassium|k)\M' THEN 'Potassium'
       ELSE 'Multiple/Other'
     END as primary_deficiency
   FROM petiole_triage t
@@ -368,15 +504,15 @@ BEGIN
     AND f.region IS NOT NULL
   GROUP BY f.region, f.soil_texture_class, t.classification, 
     CASE 
-      WHEN t.classification_reason ILIKE '%nitrogen%' OR t.classification_reason ILIKE '%N%' THEN 'Nitrogen'
-      WHEN t.classification_reason ILIKE '%phosphorus%' OR t.classification_reason ILIKE '%P%' THEN 'Phosphorus'
-      WHEN t.classification_reason ILIKE '%potassium%' OR t.classification_reason ILIKE '%K%' THEN 'Potassium'
+      WHEN COALESCE(t.classification_reason, '') ~* '\m(nitrogen|n)\M' THEN 'Nitrogen'
+      WHEN COALESCE(t.classification_reason, '') ~* '\m(phosphorus|p)\M' THEN 'Phosphorus'
+      WHEN COALESCE(t.classification_reason, '') ~* '\m(potassium|k)\M' THEN 'Potassium'
       ELSE 'Multiple/Other'
     END
   HAVING COUNT(*) >= 3
   ORDER BY farm_count DESC;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY INVOKER;
 
 -- Grant execute to authenticated users
 GRANT EXECUTE ON FUNCTION get_farm_clusters(UUID, INTEGER) TO authenticated;
@@ -395,6 +531,7 @@ RETURNS TABLE (
   triage_id UUID,
   petiole_test_id BIGINT,
   farm_id BIGINT,
+  farmer_id UUID,
   farm_name TEXT,
   farm_region TEXT,
   classification VARCHAR(20),
@@ -411,11 +548,21 @@ RETURNS TABLE (
   nutrient_k DECIMAL(10,2)
 ) AS $$
 BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM organization_members om
+    WHERE om.organization_id = p_org_id
+      AND om.user_id = auth.uid()
+  ) THEN
+    RAISE EXCEPTION 'Not authorized for organization %', p_org_id
+      USING ERRCODE = '42501';
+  END IF;
   RETURN QUERY
   SELECT 
     t.id as triage_id,
     t.petiole_test_id,
     t.farm_id,
+    f.user_id as farmer_id,
     f.name as farm_name,
     f.region as farm_region,
     t.classification,
@@ -446,7 +593,7 @@ BEGIN
     t.created_at DESC
   LIMIT p_limit OFFSET p_offset;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY INVOKER;
 
 GRANT EXECUTE ON FUNCTION get_triage_queue(UUID, VARCHAR, INTEGER, INTEGER) TO authenticated;
 

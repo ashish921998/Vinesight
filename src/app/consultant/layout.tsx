@@ -53,6 +53,11 @@ const navItems = [
     icon: PlusCircle
   },
   {
+    label: 'AI Plan Builder',
+    href: '/consultant/plans/ai',
+    icon: FlaskConical
+  },
+  {
     label: 'Templates',
     href: '/consultant/templates',
     icon: FileText

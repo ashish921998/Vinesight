@@ -30,6 +30,7 @@ export interface PetioleTriage {
   // Joined data
   farm_name?: string
   farm_region?: string
+  farmer_id?: string | null
   farmer_name?: string
   latest_petiole_date?: string
   nutrient_n?: number
@@ -98,6 +99,7 @@ export class TriageService {
       updated_at: item.created_at,
       farm_name: item.farm_name,
       farm_region: item.farm_region,
+      farmer_id: item.farmer_id,
       farmer_name: item.farmer_name,
       latest_petiole_date: item.latest_petiole_date,
       nutrient_n: item.nutrient_n,
@@ -200,6 +202,10 @@ export class TriageService {
 
     // If approving with a plan
     if (input.approve && triage.ai_draft_plan_id) {
+      // Apply edits first so we do not publish stale plan data as approved.
+      if (input.planEdits) {
+        await this.applyPlanEdits(supabase, triage.ai_draft_plan_id, input.planEdits)
+      }
       // Update the plan status to approved
       const { error: planError } = await supabase
         .from('fertilizer_plans')
@@ -210,22 +216,19 @@ export class TriageService {
         .eq('id', triage.ai_draft_plan_id)
 
       if (planError) throw planError
-
-      // Apply any plan edits
-      if (input.planEdits) {
-        await this.applyPlanEdits(supabase, triage.ai_draft_plan_id, input.planEdits)
-      }
     }
 
     // If rejecting, mark plan as rejected
     if (input.reject && triage.ai_draft_plan_id) {
-      await supabase
+      const { error: rejectPlanError } = await supabase
         .from('fertilizer_plans')
         .update({
           status: 'rejected',
           updated_at: new Date().toISOString()
         })
         .eq('id', triage.ai_draft_plan_id)
+
+      if (rejectPlanError) throw rejectPlanError
     }
 
     // Update triage
@@ -275,20 +278,24 @@ export class TriageService {
       try {
         // Update plan status
         if (item.ai_draft_plan_id) {
-          await supabase
+          const { error: planUpdateError } = await supabase
             .from('fertilizer_plans')
             .update({ status: 'approved' })
             .eq('id', item.ai_draft_plan_id)
+
+          if (planUpdateError) throw planUpdateError
         }
 
         // Update triage
-        await supabase
+        const { error: triageUpdateError } = await supabase
           .from('petiole_triage')
           .update({
             reviewed_by: userId,
             reviewed_at: new Date().toISOString()
           })
           .eq('id', item.id)
+
+        if (triageUpdateError) throw triageUpdateError
 
         approved++
       } catch (err) {
@@ -314,7 +321,8 @@ export class TriageService {
     if (!user) throw new Error('User not authenticated')
 
     // Update triage record with farmer acknowledgment
-    const { error: triageError } = await supabase
+    // Farmers can only update their own farm's triage (enforced by RLS)
+    const { data: triageUpdate, error: triageError } = await supabase
       .from('petiole_triage')
       .update({
         farmer_acknowledgment: input.acknowledgment,
@@ -322,8 +330,13 @@ export class TriageService {
         updated_at: new Date().toISOString()
       })
       .eq('id', input.triageId)
+      .select()
+      .maybeSingle()
 
     if (triageError) throw triageError
+    if (!triageUpdate) {
+      throw new Error('Failed to update triage: not found or permission denied')
+    }
 
     // Get the plan_id from the triage record to insert acknowledgment
     const { data: triageData } = await supabase
