@@ -55,20 +55,6 @@ CREATE TABLE plan_acknowledgments (
 -- 2. ALTER EXISTING TABLES
 -- ============================================================================
 
--- Add status column to fertilizer_plans for plan lifecycle
-ALTER TABLE fertilizer_plans ADD COLUMN IF NOT EXISTS status VARCHAR(20) 
-  DEFAULT 'draft' 
-  CHECK (status IN ('draft', 'auto_drafted', 'pending_approval', 'approved', 'rejected'));
-
--- Update existing fertilizer_plans to 'approved' status (backward compatible)
--- Only promote plans that have items (considered "complete" drafts)
-UPDATE fertilizer_plans SET status = 'approved' 
-WHERE status = 'draft' 
-AND EXISTS (
-  SELECT 1 FROM fertilizer_plan_items 
-  WHERE fertilizer_plan_items.plan_id = fertilizer_plans.id
-);
-
 -- Add assigned_to column to organization_clients for agronomist scoping
 ALTER TABLE organization_clients ADD COLUMN IF NOT EXISTS assigned_to UUID 
   REFERENCES auth.users(id) ON DELETE SET NULL;
@@ -105,10 +91,6 @@ CREATE INDEX idx_plan_templates_match ON plan_templates(organization_id, season_
 
 -- Plan acknowledgments indexes
 CREATE INDEX idx_plan_acknowledgments_plan_id ON plan_acknowledgments(plan_id);
-
--- Fertilizer plans status indexes
-CREATE INDEX idx_fertilizer_plans_status ON fertilizer_plans(status);
-CREATE INDEX idx_fertilizer_plans_org_status ON fertilizer_plans(organization_id, status);
 
 -- Organization clients assignment index
 CREATE INDEX idx_organization_clients_assigned_to ON organization_clients(assigned_to);
@@ -439,35 +421,9 @@ CREATE POLICY "Org members can view client harvest records" ON harvest_records F
 -- admins/owners can view all organization clients; agronomists can view only assigned clients.
 
 -- ============================================================================
--- 7. FARMER-ONLY PLAN VISIBILITY (Farmers see only approved plans)
+-- 7. TRIGGERS FOR UPDATED_AT
 -- ============================================================================
-
--- Split the fertilizer_plans SELECT policy: farmers only see approved plans
--- This is implemented by modifying the existing policy to check status for farmers
-
-DROP POLICY IF EXISTS "Users can view fertilizer plans for their farms" ON fertilizer_plans;
-
-CREATE POLICY "Farmers view approved plans only" ON fertilizer_plans FOR SELECT USING (
-  -- Farmers: only see approved plans for their farms
-  EXISTS (
-    SELECT 1 FROM farms 
-    WHERE farms.id = fertilizer_plans.farm_id 
-    AND farms.user_id = auth.uid()
-  )
-  AND status = 'approved'
-);
-
-CREATE POLICY "Org members view all plan statuses" ON fertilizer_plans FOR SELECT USING (
-  -- Org members (consultants, agronomists): see all statuses
-  EXISTS (
-    SELECT 1 FROM organization_members om 
-    WHERE om.organization_id = fertilizer_plans.organization_id 
-    AND om.user_id = auth.uid()
-  )
-);
-
--- ============================================================================
--- 8. TRIGGERS FOR UPDATED_AT
+-- 7. TRIGGERS FOR UPDATED_AT
 -- ============================================================================
 
 CREATE TRIGGER update_petiole_triage_updated_at
@@ -481,7 +437,7 @@ CREATE TRIGGER update_plan_templates_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================================
--- 9. FUNCTION FOR CLUSTER INTELLIGENCE
+-- 8. FUNCTION FOR CLUSTER INTELLIGENCE
 -- ============================================================================
 
 -- Function to get farm clusters with similar nutrient deficiencies
@@ -540,7 +496,7 @@ $$ LANGUAGE plpgsql SECURITY INVOKER;
 GRANT EXECUTE ON FUNCTION get_farm_clusters(UUID, INTEGER) TO authenticated;
 
 -- ============================================================================
--- 10. FUNCTION TO GET TRIAGE QUEUE WITH FARM DETAILS
+-- 9. FUNCTION TO GET TRIAGE QUEUE WITH FARM DETAILS
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION get_triage_queue(

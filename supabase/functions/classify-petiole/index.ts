@@ -597,7 +597,7 @@ Deno.serve(async (req) => {
           created_by: null, // System generated
           title: planTitle,
           notes: `Classification: ${classificationResult.classification}. Reason: ${classificationResult.reason}`,
-          status: 'auto_drafted'
+        notes: `Classification: ${classificationResult.classification}. Reason: ${classificationResult.reason}`
         })
         .select()
         .single()

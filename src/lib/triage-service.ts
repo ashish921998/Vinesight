@@ -8,7 +8,6 @@ import { getTypedSupabaseClient } from './supabase'
 import type { Database } from '@/types/database'
 
 export type Classification = 'green' | 'yellow' | 'red'
-export type PlanStatus = 'draft' | 'auto_drafted' | 'pending_approval' | 'approved' | 'rejected'
 export type AcknowledgmentType = 'understood' | 'questions' | 'thanks'
 
 export interface PetioleTriage {
@@ -200,35 +199,9 @@ export class TriageService {
     if (triageError) throw triageError
     if (!triage) throw new Error('Triage item not found')
 
-    // If approving with a plan
-    if (input.approve && triage.ai_draft_plan_id) {
-      // Apply edits first so we do not publish stale plan data as approved.
-      if (input.planEdits) {
-        await this.applyPlanEdits(supabase, triage.ai_draft_plan_id, input.planEdits)
-      }
-      // Update the plan status to approved
-      const { error: planError } = await supabase
-        .from('fertilizer_plans')
-        .update({
-          status: 'approved',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', triage.ai_draft_plan_id)
-
-      if (planError) throw planError
-    }
-
-    // If rejecting, mark plan as rejected
-    if (input.reject && triage.ai_draft_plan_id) {
-      const { error: rejectPlanError } = await supabase
-        .from('fertilizer_plans')
-        .update({
-          status: 'rejected',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', triage.ai_draft_plan_id)
-
-      if (rejectPlanError) throw rejectPlanError
+    // If approving with a plan - apply any edits
+    if (input.approve && triage.ai_draft_plan_id && input.planEdits) {
+      await this.applyPlanEdits(supabase, triage.ai_draft_plan_id, input.planEdits)
     }
 
     // Update triage
@@ -276,15 +249,7 @@ export class TriageService {
 
     for (const item of greenItems) {
       try {
-        // Update plan status
-        if (item.ai_draft_plan_id) {
-          const { error: planUpdateError } = await supabase
-            .from('fertilizer_plans')
-            .update({ status: 'approved' })
-            .eq('id', item.ai_draft_plan_id)
-
-          if (planUpdateError) throw planUpdateError
-        }
+        // Process the approval (no status field - plans are directly visible)
 
         // Update triage
         const { error: triageUpdateError } = await supabase
@@ -380,7 +345,6 @@ export class TriageService {
       .from('fertilizer_plans')
       .select('id, plan_acknowledgments(reaction)')
       .eq('organization_id', organizationId)
-      .eq('status', 'approved')
       .gt('created_at', cutoff)
 
     if (error) throw error
