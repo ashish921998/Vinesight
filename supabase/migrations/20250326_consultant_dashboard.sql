@@ -212,7 +212,7 @@ USING (
       AND f.user_id = auth.uid()
   )
 )
-|WITH CHECK (
+WITH CHECK (
   EXISTS (
     SELECT 1
     FROM farms f
@@ -275,6 +275,28 @@ CREATE POLICY "Org members can view acknowledgments for their plans" ON plan_ack
 DROP POLICY IF EXISTS "Farmers can insert their own acknowledgment" ON plan_acknowledgments;
 
 CREATE POLICY "Farmers can insert their own acknowledgment" ON plan_acknowledgments FOR INSERT WITH CHECK (
+  farmer_user_id = auth.uid()
+  AND EXISTS (
+    SELECT 1
+    FROM fertilizer_plans fp
+    JOIN farms f ON f.id = fp.farm_id
+    WHERE fp.id = plan_acknowledgments.plan_id
+      AND f.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Farmers can update their own acknowledgment" ON plan_acknowledgments FOR UPDATE
+USING (
+  farmer_user_id = auth.uid()
+  AND EXISTS (
+    SELECT 1
+    FROM fertilizer_plans fp
+    JOIN farms f ON f.id = fp.farm_id
+    WHERE fp.id = plan_acknowledgments.plan_id
+      AND f.user_id = auth.uid()
+  )
+)
+WITH CHECK (
   farmer_user_id = auth.uid()
   AND EXISTS (
     SELECT 1
