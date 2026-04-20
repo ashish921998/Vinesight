@@ -16,7 +16,7 @@ export async function middleware(req: NextRequest) {
           return req.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => req.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request: req
           })

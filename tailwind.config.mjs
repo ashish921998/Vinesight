@@ -55,7 +55,7 @@ const radiusScale = {
 }
 
 /** @type {import('tailwindcss').Config} */
-export default {
+const config = {
   darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -207,3 +207,5 @@ export default {
   },
   plugins: [plugin]
 }
+
+export default config
