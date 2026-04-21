@@ -57,28 +57,43 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch latest 3 petiole tests
-    const { data: petioleTests } = await supabase
+    const { data: petioleTests, error: petioleError } = await supabase
       .from('petiole_test_records')
       .select('date, parameters')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
       .limit(3)
 
+    if (petioleError) {
+      console.error('Failed to fetch petiole tests:', petioleError)
+      return Response.json({ error: 'Failed to fetch farm data' }, { status: 500 })
+    }
+
     // Fetch latest soil test
-    const { data: soilTests } = await supabase
+    const { data: soilTests, error: soilError } = await supabase
       .from('soil_test_records')
       .select('date, parameters')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
       .limit(1)
 
+    if (soilError) {
+      console.error('Failed to fetch soil tests:', soilError)
+      return Response.json({ error: 'Failed to fetch farm data' }, { status: 500 })
+    }
+
     // Fetch latest 5 spray records
-    const { data: sprayRecords } = await supabase
+    const { data: sprayRecords, error: sprayError } = await supabase
       .from('spray_records')
       .select('date, chemicals')
       .eq('farm_id', farmId)
       .order('date', { ascending: false })
       .limit(5)
+
+    if (sprayError) {
+      console.error('Failed to fetch spray records:', sprayError)
+      return Response.json({ error: 'Failed to fetch farm data' }, { status: 500 })
+    }
 
     const seasonStage = getSeasonStage(farm.date_of_pruning)
 

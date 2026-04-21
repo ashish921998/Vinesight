@@ -41,13 +41,6 @@ interface MissionControlStats {
     byDeficiency: Record<string, number>
     byRegion: Record<string, number>
   }
-  acknowledgments: {
-    total: number
-    understood: number
-    questions: number
-    thanks: number
-    pending: number
-  }
 }
 
 export default function MissionControlPage() {
@@ -88,18 +81,16 @@ export default function MissionControlPage() {
       setOrganizationId(membership.organization_id)
 
       // Load all stats in parallel
-      const [triageStats, templateStats, clusterStats, ackStats] = await Promise.all([
+      const [triageStats, templateStats, clusterStats] = await Promise.all([
         TriageService.getTriageStats(membership.organization_id),
         TemplateService.getTemplateCoverageStats(membership.organization_id),
-        ClusterService.getClusterStats(membership.organization_id),
-        TriageService.getAcknowledgmentStats(membership.organization_id)
+        ClusterService.getClusterStats(membership.organization_id)
       ])
 
       setStats({
         triage: triageStats,
         templates: templateStats,
-        clusters: clusterStats,
-        acknowledgments: ackStats
+        clusters: clusterStats
       })
     } catch (error) {
       console.error('Failed to load stats:', error)
@@ -264,38 +255,6 @@ export default function MissionControlPage() {
             <Link href="/consultant/clusters">
               <Button variant="outline" className="w-full">
                 View Clusters
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        {/* Acknowledgments Card */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-primary" />
-              Farmer Responses
-            </CardTitle>
-            <CardDescription>
-              {stats.acknowledgments.understood +
-                stats.acknowledgments.questions +
-                stats.acknowledgments.thanks}{' '}
-              acknowledged
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2 mb-4">
-              {stats.acknowledgments.questions > 0 && (
-                <Badge variant="secondary">{stats.acknowledgments.questions} questions</Badge>
-              )}
-              {stats.acknowledgments.pending > 0 && (
-                <Badge variant="outline">{stats.acknowledgments.pending} pending</Badge>
-              )}
-            </div>
-            <Link href="/clients">
-              <Button variant="outline" className="w-full">
-                View Clients
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </Link>

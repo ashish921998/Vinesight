@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { TriageService, type AcknowledgmentType } from '../triage-service'
+import { TriageService } from '../triage-service'
 import { getTypedSupabaseClient } from '../supabase'
 
 vi.mock('../supabase', () => ({
@@ -43,19 +43,6 @@ describe('TriageService', () => {
 
     mockSupabase.from.mockImplementation(() => chainable())
     vi.mocked(getTypedSupabaseClient).mockResolvedValue(mockSupabase)
-  })
-
-  describe('submitAcknowledgment', () => {
-    it('throws error when user not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } })
-
-      await expect(
-        TriageService.submitAcknowledgment({
-          triageId: 'triage-123',
-          acknowledgment: 'understood' as AcknowledgmentType
-        })
-      ).rejects.toThrow('User not authenticated')
-    })
   })
 
   describe('getTriageQueue', () => {
@@ -111,35 +98,6 @@ describe('TriageService', () => {
         red: 1,
         reviewed: 1,
         pending: 3
-      })
-    })
-  })
-
-  describe('getAcknowledgmentStats', () => {
-    it('returns correct acknowledgment breakdown', async () => {
-      const mockPlans = [
-        { id: '1', plan_acknowledgments: [{ reaction: 'understood' }] },
-        { id: '2', plan_acknowledgments: [{ reaction: 'questions' }] },
-        { id: '3', plan_acknowledgments: [{ reaction: 'thanks' }] },
-        { id: '4', plan_acknowledgments: [] },
-        { id: '5', plan_acknowledgments: [] }
-      ]
-
-      const chain: any = {
-        select: vi.fn(() => chain),
-        eq: vi.fn(() => chain),
-        gt: vi.fn().mockResolvedValue({ data: mockPlans, error: null })
-      }
-      mockSupabase.from.mockReturnValue(chain)
-
-      const stats = await TriageService.getAcknowledgmentStats('org-123', 30)
-
-      expect(stats).toEqual({
-        total: 5,
-        understood: 1,
-        questions: 1,
-        thanks: 1,
-        pending: 2
       })
     })
   })
