@@ -104,11 +104,11 @@ export default function Navigation() {
           <div className="flex h-16 shrink-0 items-center">
             <Link href="/" className="flex items-center gap-2">
               <Image
-                src="/logo.png"
+                src="/logo-mark.png"
                 alt="VineSight logo"
                 width={32}
-                height={32}
-                className="h-8 w-8 rounded-lg shadow-sm"
+                height={40}
+                className="h-10 w-8 object-contain"
                 priority
               />
               <span className="text-xl font-bold text-primary">VineSight</span>

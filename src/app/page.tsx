@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { AppDownloadBadge, type AppDownloadLink } from '@/components/AppDownloadBadge'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { getLastRoute } from '@/lib/route-persistence'
 import {
@@ -109,6 +110,19 @@ const trustBadges = [
   { label: 'Built with agronomists', icon: Users }
 ]
 
+const appDownloadLinks: AppDownloadLink[] = [
+  {
+    label: 'Download for iOS',
+    href: 'https://apps.apple.com/us/app/vinesight/id6756113329',
+    badgeSrc: '/app-store-badge.svg'
+  },
+  {
+    label: 'Download for Android',
+    href: 'https://play.google.com/store/apps/details?id=com.vinesight.app',
+    badgeSrc: '/google-play-badge.svg'
+  }
+]
+
 function ModulePreview({ type }: { type: 'field' | 'lab' | 'planning' }) {
   if (type === 'field') {
     return (
@@ -211,11 +225,11 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Image
-              src="/logo.png"
+              src="/logo-mark.png"
               alt="VineSight logo"
               width={32}
-              height={32}
-              className="h-8 w-8 rounded-lg shadow-sm"
+              height={40}
+              className="h-10 w-8 object-contain"
               priority
             />
             <h1 className="text-primary text-lg font-bold tracking-tight">VineSight</h1>
@@ -259,6 +273,11 @@ export default function LandingPage() {
               See how it fits your vineyard
               <span aria-hidden="true">→</span>
             </a>
+          </div>
+          <div className="mt-4 flex w-full max-w-[360px] flex-col items-stretch justify-center gap-3 md:max-w-none md:flex-row">
+            {appDownloadLinks.map((link) => (
+              <AppDownloadBadge key={link.label} link={link} />
+            ))}
           </div>
         </section>
 
@@ -423,6 +442,11 @@ export default function LandingPage() {
           >
             Try it for your vineyard
           </button>
+          <div className="mx-auto mt-5 flex w-full max-w-[360px] flex-col items-stretch justify-center gap-3 md:max-w-none md:flex-row">
+            {appDownloadLinks.map((link) => (
+              <AppDownloadBadge key={link.label} link={link} compact />
+            ))}
+          </div>
           <div className="mt-16 pt-8 border-t border-border text-[11px] text-muted-foreground">
             <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
               <p className="sm:mr-auto">© {new Date().getFullYear()} VineSight.</p>
