@@ -1,0 +1,56 @@
+public/google-play-badge.svg
+  s_fd70b91e3941fe::t_fe1c276d64e8b3 1-39
+public/app-store-badge.svg
+  s_fd70b91e3941fe::t_fe1c276d64e8b3 1-10
+src/app/page.tsx
+  s_fd70b91e3941fe::t_6082209165eac1 112-115,117-120,122-124,257,476
+  s_fd70b91e3941fe::t_dda593ab0bb059 304,472
+  s_fd70b91e3941fe::t_f1bc7fe85c919e 125-134,137-141,149-152,305-307,473-475
+  s_fd70b91e3941fe::t_9184ccbc56a74d 116,121,136,142-146,148
+  s_fd70b91e3941fe::t_5ba1badaaa637a 135,147
+  s_fd70b91e3941fe::t_1e0eb304a0990c 255,258-259
+src/components/navigation.tsx
+  s_fd70b91e3941fe::t_4db3ec7a6dd6bc 107,110-111
+  s_fd70b91e3941fe::t_31dac06aa09947 109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "9501bf7120d6890da1be48a407a17f944f314f74",
+  "prompts": {
+    "0f15e099d66fc43b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dde15-cf66-7e00-8c7b-7c8d49943af7",
+        "model": "unknown"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>",
+      "total_additions": 84,
+      "total_deletions": 0,
+      "accepted_lines": 39,
+      "overriden_lines": 0
+    },
+    "2335fb9422ec178f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dde15-be47-74c3-84a4-3a24d89c9976",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>",
+      "total_additions": 610,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_fd70b91e3941fe": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e73d0-c74c-7e03-b851-6dbef10170e1",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
