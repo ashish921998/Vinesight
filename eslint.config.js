@@ -25,7 +25,7 @@ const recommendedAsWarnings = Object.fromEntries(
 
 const config = [
   {
-    ignores: ['.next/**', 'node_modules/**', 'next-env.d.ts']
+    ignores: ['.next/**', 'node_modules/**', 'next-env.d.ts', 'public/annotator.js']
   },
   ...compat.config({
     extends: ['next', 'next/core-web-vitals']

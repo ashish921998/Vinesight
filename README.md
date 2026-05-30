@@ -10,6 +10,15 @@ bun run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Local UI annotations
+
+In local development, every page loads the embeddable UI annotator from `public/annotator.js`.
+Use the floating **Annotate** button to select an element, add a comment, and save a numbered marker.
+Annotations are kept in `sessionStorage` under `ui-review-session`, so they survive reloads in the same browser session.
+Use **Export JSON** from the annotator toolbar to copy or download the captured anchors and comments.
+
+To remove the annotator later, delete `public/annotator.js`, remove `UiAnnotatorLoader` from `src/app/layout.tsx`, and delete `src/components/dev/UiAnnotatorLoader.tsx`.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
