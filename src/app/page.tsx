@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { AppDownloadBadge, type AppDownloadLink } from '@/components/AppDownloadBadge'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { getLastRoute } from '@/lib/route-persistence'
 import {
@@ -109,7 +110,7 @@ const trustBadges = [
   { label: 'Built with agronomists', icon: Users }
 ]
 
-const appDownloadLinks = [
+const appDownloadLinks: AppDownloadLink[] = [
   {
     label: 'Download for iOS',
     href: 'https://apps.apple.com/us/app/vinesight/id6756113329',
@@ -121,34 +122,6 @@ const appDownloadLinks = [
     badgeSrc: '/google-play-badge.svg'
   }
 ]
-
-function AppDownloadBadge({
-  link,
-  compact = false
-}: {
-  link: (typeof appDownloadLinks)[number]
-  compact?: boolean
-}) {
-  return (
-    <a
-      aria-label={link.label}
-      className={`group mx-auto inline-flex w-[220px] max-w-full items-center justify-center rounded-[14px] transition-all hover:-translate-y-0.5 hover:drop-shadow-[0_14px_24px_rgba(15,23,42,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 md:mx-0 ${
-        compact ? 'md:w-[176px]' : 'md:w-[202px]'
-      }`}
-      href={link.href}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <Image
-        src={link.badgeSrc}
-        alt=""
-        width={240}
-        height={72}
-        className="h-auto w-full select-none"
-      />
-    </a>
-  )
-}
 
 function ModulePreview({ type }: { type: 'field' | 'lab' | 'planning' }) {
   if (type === 'field') {
@@ -254,8 +227,8 @@ export default function LandingPage() {
             <Image
               src="/logo-mark.png"
               alt="VineSight logo"
-              width={40}
-              height={48}
+              width={32}
+              height={40}
               className="h-10 w-8 object-contain"
               priority
             />
@@ -469,7 +442,7 @@ export default function LandingPage() {
           >
             Try it for your vineyard
           </button>
-          <div className="mx-auto mt-5 flex w-full max-w-[360px] flex-col justify-center gap-3 md:max-w-none md:flex-row">
+          <div className="mx-auto mt-5 flex w-full max-w-[360px] flex-col items-stretch justify-center gap-3 md:max-w-none md:flex-row">
             {appDownloadLinks.map((link) => (
               <AppDownloadBadge key={link.label} link={link} compact />
             ))}

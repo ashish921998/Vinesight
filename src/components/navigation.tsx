@@ -106,8 +106,8 @@ export default function Navigation() {
               <Image
                 src="/logo-mark.png"
                 alt="VineSight logo"
-                width={40}
-                height={48}
+                width={32}
+                height={40}
                 className="h-10 w-8 object-contain"
                 priority
               />
