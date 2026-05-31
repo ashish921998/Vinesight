@@ -1,0 +1,21 @@
+src/lib/organization-service.ts
+  s_475021dcaec5c9::t_42cdfdc78a69ec 268-284,304-310,322,328-329
+src/app/settings/page.tsx
+  s_475021dcaec5c9::t_c76b8ae96deae4 73,78,86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "06af1582444f7c3c057ef6abd2281ef27c4047c6",
+  "prompts": {},
+  "sessions": {
+    "s_475021dcaec5c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e7894-d4d0-75e0-aed1-e539ecda6482",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
