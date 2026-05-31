@@ -42,6 +42,11 @@ function canAdminOrganization(
   return Boolean(member && (member.is_owner || member.role === 'owner' || member.role === 'admin'))
 }
 
+function isUniqueConstraintError(error: { code?: string; message?: string; details?: string }) {
+  const text = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase()
+  return error.code === '23505' || text.includes('duplicate') || text.includes('unique')
+}
+
 export class OrganizationService {
   static async getOrganization(id: string): Promise<Organization | null> {
     const supabase = await getTypedSupabaseClient()
@@ -308,7 +313,12 @@ export class OrganizationService {
       { onConflict: 'organization_id,client_user_id' }
     )
 
-    if (error) throw error
+    if (error) {
+      if (isUniqueConstraintError(error)) {
+        throw new Error('Client is already active in another organization')
+      }
+      throw error
+    }
 
     // Backward-compatible mirror for existing screens that still read profile state.
     const { error: profileError } = await supabase

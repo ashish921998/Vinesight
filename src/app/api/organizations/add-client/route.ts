@@ -12,6 +12,11 @@ const AddClientSchema = z.object({
   assignedTo: z.string().uuid().nullable().optional()
 })
 
+function isUniqueConstraintError(error: { code?: string; message?: string; details?: string }) {
+  const text = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase()
+  return error.code === '23505' || text.includes('duplicate') || text.includes('unique')
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -61,6 +66,13 @@ export async function POST(request: NextRequest) {
     const isSelfAdd = authUser.id === userId
 
     if (isSelfAdd) {
+      if (assignedTo) {
+        return NextResponse.json(
+          { error: 'Self-service clients cannot assign themselves to an agronomist' },
+          { status: 400 }
+        )
+      }
+
       // Self-add flow: User is connecting themselves to an organization
       // This is allowed - users can choose their consultant organization
       // The organization must exist and be active
@@ -181,6 +193,13 @@ export async function POST(request: NextRequest) {
       )
 
     if (clientError) {
+      if (isUniqueConstraintError(clientError)) {
+        return NextResponse.json(
+          { error: 'Client is already active in another organization' },
+          { status: 409 }
+        )
+      }
+
       console.error('Error adding organization client:', clientError)
       return NextResponse.json({ error: 'Failed to add as client' }, { status: 500 })
     }

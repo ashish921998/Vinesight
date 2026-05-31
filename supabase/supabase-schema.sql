@@ -1100,7 +1100,7 @@ CREATE POLICY "Users can view org member profiles" ON profiles FOR SELECT TO aut
   OR EXISTS (
     SELECT 1 FROM organization_members om
     JOIN organization_clients oc ON oc.organization_id = om.organization_id
-    WHERE om.user_id = auth.uid() AND oc.client_user_id = profiles.id
+    WHERE om.user_id = auth.uid() AND oc.client_user_id = profiles.id AND oc.status = 'active'
   )
 );
 
