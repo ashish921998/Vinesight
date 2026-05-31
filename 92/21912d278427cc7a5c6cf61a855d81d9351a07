@@ -1,0 +1,19 @@
+src/lib/organization-service.ts
+  s_475021dcaec5c9::t_cab2650b771d4c 201
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "9221912d278427cc7a5c6cf61a855d81d9351a07",
+  "prompts": {},
+  "sessions": {
+    "s_475021dcaec5c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e7894-d4d0-75e0-aed1-e539ecda6482",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
