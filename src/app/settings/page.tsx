@@ -67,6 +67,7 @@ export default function SettingsPage() {
     if (!user) return
     try {
       setOrgLoading(true)
+      setCurrentOrg(null)
       const supabase = getTypedSupabaseClient()
 
       const { data: clientLinks, error: clientError } = await supabase

@@ -321,8 +321,27 @@ CREATE TRIGGER validate_task_linked_record_trigger
   FOR EACH ROW
   EXECUTE FUNCTION validate_task_linked_record();
 
+-- Create warehouse_items table
+CREATE TABLE warehouse_items (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name VARCHAR(255) NOT NULL,
+  type VARCHAR(50) NOT NULL CHECK (type IN ('fertilizer', 'spray')),
+  quantity DECIMAL(12,2) NOT NULL DEFAULT 0 CHECK (quantity >= 0),
+  unit VARCHAR(50) NOT NULL CHECK (unit IN ('kg', 'liter', 'gram', 'ml')),
+  unit_price DECIMAL(12,2) NOT NULL DEFAULT 0 CHECK (unit_price >= 0),
+  reorder_quantity DECIMAL(12,2) CHECK (reorder_quantity IS NULL OR reorder_quantity >= 0),
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_warehouse_items_user_id ON warehouse_items(user_id);
+CREATE INDEX idx_warehouse_items_user_type ON warehouse_items(user_id, type);
+
 -- Enable Row Level Security
 ALTER TABLE task_reminders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE warehouse_items ENABLE ROW LEVEL SECURITY;
 
 -- Create soil_test_records table
 CREATE TABLE soil_test_records (
@@ -535,6 +554,12 @@ CREATE POLICY "Users can delete farm tasks" ON task_reminders FOR DELETE USING (
     AND farms.user_id = auth.uid()
   )
 );
+
+-- Warehouse items
+CREATE POLICY "Users can view their warehouse items" ON warehouse_items FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Users can insert their warehouse items" ON warehouse_items FOR INSERT WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Users can update their warehouse items" ON warehouse_items FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Users can delete their warehouse items" ON warehouse_items FOR DELETE USING (user_id = auth.uid());
 
 -- Soil test records
 CREATE POLICY "Users can view their farm soil test records" ON soil_test_records FOR SELECT USING (
@@ -786,6 +811,9 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_temporary_worker_entries_updated_at BEFORE UPDATE ON temporary_worker_entries
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_warehouse_items_updated_at BEFORE UPDATE ON warehouse_items
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- ============================================================================
 -- END WORKER / LABOR MANAGEMENT TABLES
 -- ============================================================================
@@ -924,7 +952,7 @@ CREATE TABLE organization_members (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  role VARCHAR(50) DEFAULT 'agronomist' CHECK (role IN ('owner', 'admin', 'agronomist')),
+  role VARCHAR(50) DEFAULT 'agronomist' NOT NULL CHECK (role IN ('owner', 'admin', 'agronomist')),
   is_owner BOOLEAN DEFAULT FALSE,
   joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(organization_id, user_id)
@@ -938,7 +966,7 @@ CREATE TABLE organization_clients (
   client_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   assigned_to UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   assigned_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'pending')),
+  status VARCHAR(50) DEFAULT 'active' NOT NULL CHECK (status IN ('active', 'inactive', 'pending')),
   notes TEXT,
   assigned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -995,6 +1023,7 @@ CREATE INDEX idx_organization_members_user_id ON organization_members(user_id);
 CREATE INDEX idx_organization_clients_organization_id ON organization_clients(organization_id);
 CREATE INDEX idx_organization_clients_client_user_id ON organization_clients(client_user_id);
 CREATE INDEX idx_organization_clients_assigned_to ON organization_clients(assigned_to);
+CREATE UNIQUE INDEX idx_organization_clients_one_active_per_client ON organization_clients(client_user_id) WHERE status = 'active';
 CREATE INDEX idx_farmer_invitations_organization_id ON farmer_invitations(organization_id);
 CREATE INDEX idx_farmer_invitations_token ON farmer_invitations(token);
 CREATE INDEX idx_farmer_invitations_status ON farmer_invitations(status);
@@ -1053,6 +1082,8 @@ CREATE POLICY "Admins can insert organization clients" ON organization_clients F
   EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_clients.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
 );
 CREATE POLICY "Admins can update organization clients" ON organization_clients FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_clients.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
+) WITH CHECK (
   EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_clients.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
 );
 CREATE POLICY "Admins can delete organization clients" ON organization_clients FOR DELETE USING (

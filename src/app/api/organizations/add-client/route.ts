@@ -124,6 +124,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (assignedTo) {
+      const { data: assigneeMembership, error: assigneeMembershipError } = await getSupabaseAdmin()
+        .from('organization_members')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .eq('user_id', assignedTo)
+        .maybeSingle()
+
+      if (assigneeMembershipError) {
+        console.error('Error checking assigned agronomist membership:', assigneeMembershipError)
+        return NextResponse.json({ error: 'Failed to verify assigned agronomist' }, { status: 500 })
+      }
+
+      if (!assigneeMembership) {
+        return NextResponse.json(
+          { error: 'Assigned agronomist must belong to the organization' },
+          { status: 400 }
+        )
+      }
+    }
+
     const { error: clientError } = await getSupabaseAdmin()
       .from('organization_clients')
       .upsert(
@@ -149,8 +170,11 @@ export async function POST(request: NextRequest) {
       .eq('id', userId)
 
     if (updateError) {
-      console.error('Error updating profile:', updateError)
-      return NextResponse.json({ error: 'Failed to add as client' }, { status: 500 })
+      console.error('Error updating legacy profile organization mirror:', {
+        updateError,
+        userId,
+        organizationId
+      })
     }
 
     return NextResponse.json({
