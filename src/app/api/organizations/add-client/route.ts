@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
       )
     }
     const { userId, organizationId, assignedTo } = parseResult.data
+    const hasAssignedToField = Object.prototype.hasOwnProperty.call(body, 'assignedTo')
 
     // Validate environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
     const isSelfAdd = authUser.id === userId
 
     if (isSelfAdd) {
-      if (assignedTo) {
+      if (hasAssignedToField) {
         return NextResponse.json(
           { error: 'Self-service clients cannot assign themselves to an agronomist' },
           { status: 400 }
@@ -180,7 +181,7 @@ export async function POST(request: NextRequest) {
     }
 
     const shouldWriteClientLink = !(
-      isSelfAdd && activeClientLink?.organization_id === organizationId
+      activeClientLink?.organization_id === organizationId && !hasAssignedToField
     )
 
     if (shouldWriteClientLink) {
