@@ -265,6 +265,23 @@ export class OrganizationService {
       throw new Error('Permission denied: You are not authorized to modify this organization')
     }
 
+    if (assignedTo) {
+      const { data: assigneeMembership, error: assigneeMembershipError } = await supabase
+        .from('organization_members')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .eq('user_id', assignedTo)
+        .maybeSingle()
+
+      if (assigneeMembershipError) {
+        throw assigneeMembershipError
+      }
+
+      if (!assigneeMembership) {
+        throw new Error('Assigned agronomist must belong to the organization')
+      }
+    }
+
     const { error } = await supabase.from('organization_clients').upsert(
       {
         organization_id: organizationId,
@@ -284,7 +301,13 @@ export class OrganizationService {
       .update({ consultant_organization_id: organizationId })
       .eq('id', clientUserId)
 
-    if (profileError) throw profileError
+    if (profileError) {
+      console.error('Error updating legacy profile organization mirror:', {
+        profileError,
+        clientUserId,
+        organizationId
+      })
+    }
   }
 
   static async isUserOrgClient(
@@ -296,15 +319,14 @@ export class OrganizationService {
       .select('organization_id')
       .eq('client_user_id', userId)
       .eq('status', 'active')
-      .limit(1)
+      .maybeSingle()
 
     if (error) {
       throw error
     }
 
-    const client = data?.[0]
-    if (client?.organization_id) {
-      return { isClient: true, organizationId: client.organization_id }
+    if (data?.organization_id) {
+      return { isClient: true, organizationId: data.organization_id }
     }
     return { isClient: false }
   }

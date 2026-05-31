@@ -70,12 +70,12 @@ export default function SettingsPage() {
       setCurrentOrg(null)
       const supabase = getTypedSupabaseClient()
 
-      const { data: clientLinks, error: clientError } = await supabase
+      const { data: clientLink, error: clientError } = await supabase
         .from('organization_clients')
         .select('organization_id')
         .eq('client_user_id', user.id)
         .eq('status', 'active')
-        .limit(1)
+        .maybeSingle()
 
       if (clientError) {
         console.error('Error fetching organization client link:', clientError)
@@ -83,7 +83,7 @@ export default function SettingsPage() {
         return
       }
 
-      const organizationId = clientLinks?.[0]?.organization_id
+      const organizationId = clientLink?.organization_id
       if (organizationId) {
         // Fetch the organization details
         const { data: org, error: orgError } = await supabase
