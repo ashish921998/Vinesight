@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const isSelfAdd = authUser.id === userId
 
     if (isSelfAdd) {
-      if (hasAssignedToField) {
+      if (assignedTo) {
         return NextResponse.json(
           { error: 'Self-service clients cannot assign themselves to an agronomist' },
           { status: 400 }
@@ -181,7 +181,8 @@ export async function POST(request: NextRequest) {
     }
 
     const shouldWriteClientLink = !(
-      activeClientLink?.organization_id === organizationId && !hasAssignedToField
+      activeClientLink?.organization_id === organizationId &&
+      (!hasAssignedToField || isSelfAdd)
     )
 
     if (shouldWriteClientLink) {
