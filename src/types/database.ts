@@ -1982,6 +1982,48 @@ export type Database = {
         }
         Relationships: []
       }
+      warehouse_items: {
+        Row: {
+          id: number
+          user_id: string
+          name: string
+          type: 'fertilizer' | 'spray'
+          quantity: number
+          unit: 'kg' | 'liter' | 'gram' | 'ml'
+          unit_price: number
+          reorder_quantity: number | null
+          notes: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          name: string
+          type: 'fertilizer' | 'spray'
+          quantity: number
+          unit: 'kg' | 'liter' | 'gram' | 'ml'
+          unit_price: number
+          reorder_quantity?: number | null
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          name?: string
+          type?: 'fertilizer' | 'spray'
+          quantity?: number
+          unit?: 'kg' | 'liter' | 'gram' | 'ml'
+          unit_price?: number
+          reorder_quantity?: number | null
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       organizations: {
         Row: {
           id: string
@@ -2020,7 +2062,7 @@ export type Database = {
           id: string
           organization_id: string
           user_id: string
-          role: string
+          role: 'owner' | 'admin' | 'agronomist'
           is_owner: boolean | null
           joined_at: string | null
         }
@@ -2028,7 +2070,7 @@ export type Database = {
           id?: string
           organization_id: string
           user_id: string
-          role?: string
+          role?: 'owner' | 'admin' | 'agronomist'
           is_owner?: boolean | null
           joined_at?: string | null
         }
@@ -2036,7 +2078,7 @@ export type Database = {
           id?: string
           organization_id?: string
           user_id?: string
-          role?: string
+          role?: 'owner' | 'admin' | 'agronomist'
           is_owner?: boolean | null
           joined_at?: string | null
         }
@@ -2055,25 +2097,37 @@ export type Database = {
           id: string
           organization_id: string
           client_user_id: string
+          assigned_to: string | null
           assigned_by: string | null
+          status: 'active' | 'inactive' | 'pending'
           assigned_at: string | null
           notes: string | null
+          created_at: string | null
+          updated_at: string | null
         }
         Insert: {
           id?: string
           organization_id: string
           client_user_id: string
+          assigned_to?: string | null
           assigned_by?: string | null
+          status?: 'active' | 'inactive' | 'pending'
           assigned_at?: string | null
           notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
           id?: string
           organization_id?: string
           client_user_id?: string
+          assigned_to?: string | null
           assigned_by?: string | null
+          status?: 'active' | 'inactive' | 'pending'
           assigned_at?: string | null
           notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {

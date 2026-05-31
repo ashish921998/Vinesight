@@ -70,7 +70,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
   const soilTrendData: TrendData[] = [...soilTests]
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .map((record) => ({
-      date: record.date,
+      date: new Date(record.date).toISOString(),
       displayDate: format(new Date(record.date), 'MMM dd, yyyy'),
       // Primary parameters
       ph: record.parameters?.ph ?? null,
@@ -98,7 +98,7 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
   const petioleTrendData: TrendData[] = [...petioleTests]
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .map((record) => ({
-      date: record.date,
+      date: new Date(record.date).toISOString(),
       displayDate: format(new Date(record.date), 'MMM dd, yyyy'),
       // Major nutrients
       total_nitrogen: record.parameters?.total_nitrogen ?? null,

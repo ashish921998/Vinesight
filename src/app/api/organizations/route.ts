@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import type { Database } from '@/types/database'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 // P0/P2: Validate input with proper schema
@@ -77,7 +76,7 @@ export async function POST(request: NextRequest) {
     const { error: memberError } = await getSupabaseAdmin().from('organization_members').insert({
       organization_id: org.id,
       user_id: userId,
-      role: 'admin',
+      role: 'owner',
       is_owner: true
     })
 

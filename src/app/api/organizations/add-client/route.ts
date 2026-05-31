@@ -8,7 +8,8 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin'
 // P0: Validate input schema
 const AddClientSchema = z.object({
   userId: z.string().uuid(),
-  organizationId: z.string().uuid()
+  organizationId: z.string().uuid(),
+  assignedTo: z.string().uuid().nullable().optional()
 })
 
 export async function POST(request: NextRequest) {
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    const { userId, organizationId } = parseResult.data
+    const { userId, organizationId, assignedTo } = parseResult.data
 
     // Validate environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -91,7 +92,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to verify permissions' }, { status: 500 })
       }
 
-      if (!membership || (membership.role !== 'admin' && !membership.is_owner)) {
+      if (
+        !membership ||
+        (!membership.is_owner && membership.role !== 'owner' && membership.role !== 'admin')
+      ) {
         return NextResponse.json(
           { error: 'Unauthorized - must be organization admin or owner' },
           { status: 403 }
@@ -120,7 +124,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update user profile with consultant organization
+    const { error: clientError } = await getSupabaseAdmin()
+      .from('organization_clients')
+      .upsert(
+        {
+          organization_id: organizationId,
+          client_user_id: userId,
+          assigned_to: assignedTo ?? null,
+          assigned_by: authUser.id,
+          status: 'active'
+        },
+        { onConflict: 'organization_id,client_user_id' }
+      )
+
+    if (clientError) {
+      console.error('Error adding organization client:', clientError)
+      return NextResponse.json({ error: 'Failed to add as client' }, { status: 500 })
+    }
+
+    // Keep this as a backward-compatible mirror while older screens migrate.
     const { error: updateError } = await getSupabaseAdmin()
       .from('profiles')
       .update({ consultant_organization_id: organizationId })

@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify user has admin/owner role to send invitations
-    if (membership.role !== 'admin' && !membership.is_owner) {
+    if (!membership.is_owner && membership.role !== 'owner' && membership.role !== 'admin') {
       return NextResponse.json(
         { error: 'Insufficient permissions: Only admins and owners can send invitations' },
         { status: 403 }
