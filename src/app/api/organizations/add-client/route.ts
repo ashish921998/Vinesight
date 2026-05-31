@@ -179,29 +179,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { error: clientError } = await getSupabaseAdmin()
-      .from('organization_clients')
-      .upsert(
-        {
-          organization_id: organizationId,
-          client_user_id: userId,
-          assigned_to: assignedTo ?? null,
-          assigned_by: authUser.id,
-          status: 'active'
-        },
-        { onConflict: 'organization_id,client_user_id' }
-      )
+    const shouldWriteClientLink = !(
+      isSelfAdd && activeClientLink?.organization_id === organizationId
+    )
 
-    if (clientError) {
-      if (isUniqueConstraintError(clientError)) {
-        return NextResponse.json(
-          { error: 'Client is already active in another organization' },
-          { status: 409 }
+    if (shouldWriteClientLink) {
+      const { error: clientError } = await getSupabaseAdmin()
+        .from('organization_clients')
+        .upsert(
+          {
+            organization_id: organizationId,
+            client_user_id: userId,
+            assigned_to: assignedTo ?? null,
+            assigned_by: authUser.id,
+            status: 'active'
+          },
+          { onConflict: 'organization_id,client_user_id' }
         )
-      }
 
-      console.error('Error adding organization client:', clientError)
-      return NextResponse.json({ error: 'Failed to add as client' }, { status: 500 })
+      if (clientError) {
+        if (isUniqueConstraintError(clientError)) {
+          return NextResponse.json(
+            { error: 'Client is already active in another organization' },
+            { status: 409 }
+          )
+        }
+
+        console.error('Error adding organization client:', clientError)
+        return NextResponse.json({ error: 'Failed to add as client' }, { status: 500 })
+      }
     }
 
     // Keep this as a backward-compatible mirror while older screens migrate.
@@ -216,6 +222,7 @@ export async function POST(request: NextRequest) {
         userId,
         organizationId
       })
+      return NextResponse.json({ error: 'Failed to add as client' }, { status: 500 })
     }
 
     return NextResponse.json({
