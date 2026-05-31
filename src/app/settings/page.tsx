@@ -67,27 +67,29 @@ export default function SettingsPage() {
     if (!user) return
     try {
       setOrgLoading(true)
+      setCurrentOrg(null)
       const supabase = getTypedSupabaseClient()
 
-      // Check if user has a consultant organization in their profile
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('consultant_organization_id')
-        .eq('id', user.id)
+      const { data: clientLink, error: clientError } = await supabase
+        .from('organization_clients')
+        .select('organization_id')
+        .eq('client_user_id', user.id)
+        .eq('status', 'active')
         .maybeSingle()
 
-      if (profileError) {
-        console.error('Error fetching profile:', profileError)
+      if (clientError) {
+        console.error('Error fetching organization client link:', clientError)
         toast.error('Failed to fetch organization status')
         return
       }
 
-      if (profile?.consultant_organization_id) {
+      const organizationId = clientLink?.organization_id
+      if (organizationId) {
         // Fetch the organization details
         const { data: org, error: orgError } = await supabase
           .from('organizations')
           .select('id, name, slug')
-          .eq('id', profile.consultant_organization_id)
+          .eq('id', organizationId)
           .maybeSingle()
 
         if (orgError) {

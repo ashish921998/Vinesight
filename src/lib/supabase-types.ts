@@ -97,7 +97,8 @@ export interface TaskReminderCreateInput {
   completedAt?: string | null
 }
 
-export interface TaskReminderUpdateInput extends Partial<TaskReminderCreateInput> {
+export type TaskReminderUpdateInput = Omit<Partial<TaskReminderCreateInput>, 'dueDate'> & {
+  dueDate?: string | null
   status?: TaskReminder['status']
   completed?: boolean
   completedAt?: string | null

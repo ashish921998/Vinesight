@@ -560,7 +560,7 @@ export class AIInsightsService {
             id: record.id,
             activity_type: 'fertigation',
             date: record.date,
-            notes: record.notes || `${record.fertilizer} application`,
+            notes: record.notes || 'Fertigation application',
             created_at: record.created_at
           })
         })

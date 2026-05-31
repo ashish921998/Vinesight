@@ -8,8 +8,14 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin'
 // P0: Validate input schema
 const AddClientSchema = z.object({
   userId: z.string().uuid(),
-  organizationId: z.string().uuid()
+  organizationId: z.string().uuid(),
+  assignedTo: z.string().uuid().nullable().optional()
 })
+
+function isUniqueConstraintError(error: { code?: string; message?: string; details?: string }) {
+  const text = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase()
+  return error.code === '23505' || text.includes('duplicate') || text.includes('unique')
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +29,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    const { userId, organizationId } = parseResult.data
+    const { userId, organizationId, assignedTo } = parseResult.data
+    const hasAssignedToField = Object.prototype.hasOwnProperty.call(body, 'assignedTo')
 
     // Validate environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -60,6 +67,13 @@ export async function POST(request: NextRequest) {
     const isSelfAdd = authUser.id === userId
 
     if (isSelfAdd) {
+      if (assignedTo) {
+        return NextResponse.json(
+          { error: 'Self-service clients cannot assign themselves to an agronomist' },
+          { status: 400 }
+        )
+      }
+
       // Self-add flow: User is connecting themselves to an organization
       // This is allowed - users can choose their consultant organization
       // The organization must exist and be active
@@ -91,7 +105,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to verify permissions' }, { status: 500 })
       }
 
-      if (!membership || (membership.role !== 'admin' && !membership.is_owner)) {
+      if (
+        !membership ||
+        (!membership.is_owner && membership.role !== 'owner' && membership.role !== 'admin')
+      ) {
         return NextResponse.json(
           { error: 'Unauthorized - must be organization admin or owner' },
           { status: 403 }
@@ -120,15 +137,93 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update user profile with consultant organization
+    if (assignedTo) {
+      const { data: assigneeMembership, error: assigneeMembershipError } = await getSupabaseAdmin()
+        .from('organization_members')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .eq('user_id', assignedTo)
+        .maybeSingle()
+
+      if (assigneeMembershipError) {
+        console.error('Error checking assigned agronomist membership:', assigneeMembershipError)
+        return NextResponse.json({ error: 'Failed to verify assigned agronomist' }, { status: 500 })
+      }
+
+      if (!assigneeMembership) {
+        return NextResponse.json(
+          { error: 'Assigned agronomist must belong to the organization' },
+          { status: 400 }
+        )
+      }
+    }
+
+    const { data: activeClientLink, error: activeClientLinkError } = await getSupabaseAdmin()
+      .from('organization_clients')
+      .select('organization_id')
+      .eq('client_user_id', userId)
+      .eq('status', 'active')
+      .maybeSingle()
+
+    if (activeClientLinkError) {
+      console.error('Error checking active organization client link:', activeClientLinkError)
+      return NextResponse.json(
+        { error: 'Failed to verify current client organization' },
+        { status: 500 }
+      )
+    }
+
+    if (activeClientLink && activeClientLink.organization_id !== organizationId) {
+      return NextResponse.json(
+        { error: 'Client is already active in another organization' },
+        { status: 409 }
+      )
+    }
+
+    const shouldWriteClientLink = !(
+      activeClientLink?.organization_id === organizationId &&
+      (!hasAssignedToField || isSelfAdd)
+    )
+
+    if (shouldWriteClientLink) {
+      const { error: clientError } = await getSupabaseAdmin()
+        .from('organization_clients')
+        .upsert(
+          {
+            organization_id: organizationId,
+            client_user_id: userId,
+            assigned_to: assignedTo ?? null,
+            assigned_by: authUser.id,
+            status: 'active'
+          },
+          { onConflict: 'organization_id,client_user_id' }
+        )
+
+      if (clientError) {
+        if (isUniqueConstraintError(clientError)) {
+          return NextResponse.json(
+            { error: 'Client is already active in another organization' },
+            { status: 409 }
+          )
+        }
+
+        console.error('Error adding organization client:', clientError)
+        return NextResponse.json({ error: 'Failed to add as client' }, { status: 500 })
+      }
+    }
+
+    // Keep this as a backward-compatible mirror while older screens migrate.
     const { error: updateError } = await getSupabaseAdmin()
       .from('profiles')
       .update({ consultant_organization_id: organizationId })
       .eq('id', userId)
 
     if (updateError) {
-      console.error('Error updating profile:', updateError)
-      return NextResponse.json({ error: 'Failed to add as client' }, { status: 500 })
+      console.error('Error updating legacy profile organization mirror:', {
+        updateError,
+        userId,
+        organizationId
+      })
     }
 
     return NextResponse.json({

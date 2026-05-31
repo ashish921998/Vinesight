@@ -7,6 +7,9 @@ import { FarmerDashboard } from '@/components/dashboard/FarmerDashboard'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import posthog from 'posthog-js'
 
+const getErrorMessage = (value: unknown) =>
+  value instanceof Error ? value.message : String(value ?? 'Unknown authentication error')
+
 export default function DashboardPage() {
   const { user, loading, error } = useSupabaseAuth()
   const router = useRouter()
@@ -44,7 +47,7 @@ export default function DashboardPage() {
           <Button
             onClick={() => {
               posthog.capture('dashboard_connection_retry_clicked', {
-                error_message: error instanceof Error ? error.message : String(error)
+                error_message: getErrorMessage(error)
               })
               window.location.reload()
             }}

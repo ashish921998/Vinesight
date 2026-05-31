@@ -16,7 +16,7 @@ export interface OrganizationMember {
   id: string
   organization_id: string
   user_id: string
-  role: 'admin' | 'agronomist'
+  role: 'owner' | 'admin' | 'agronomist'
   is_owner: boolean | null
   joined_at: string | null
 }
@@ -25,11 +25,26 @@ export interface OrganizationClient {
   id: string
   organization_id: string
   client_user_id: string
+  assigned_to: string | null
   assigned_by: string | null
+  status: 'active' | 'inactive' | 'pending'
   assigned_at: string | null
   notes: string | null
+  created_at: string | null
+  updated_at: string | null
   full_name?: string | null
   email?: string | null
+}
+
+function canAdminOrganization(
+  member: Pick<OrganizationMember, 'role' | 'is_owner'> | null
+): boolean {
+  return Boolean(member && (member.is_owner || member.role === 'owner' || member.role === 'admin'))
+}
+
+function isUniqueConstraintError(error: { code?: string; message?: string; details?: string }) {
+  const text = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase()
+  return error.code === '23505' || text.includes('duplicate') || text.includes('unique')
 }
 
 export class OrganizationService {
@@ -94,7 +109,7 @@ export class OrganizationService {
   static async addOrganizationMember(
     organizationId: string,
     userId: string,
-    role: 'admin' | 'agronomist',
+    role: 'owner' | 'admin' | 'agronomist',
     isOwner = false
   ): Promise<OrganizationMember> {
     const supabase = await getTypedSupabaseClient()
@@ -129,7 +144,7 @@ export class OrganizationService {
     }
 
     // Require admin or owner role to add members
-    if (membership.role !== 'admin' && !membership.is_owner) {
+    if (!canAdminOrganization(membership as OrganizationMember | null)) {
       throw new Error('Permission denied: You are not authorized to modify this organization')
     }
 
@@ -178,29 +193,47 @@ export class OrganizationService {
 
   static async getOrganizationClients(organizationId: string): Promise<OrganizationClient[]> {
     const supabase = await getTypedSupabaseClient()
-    // Fetch limited profile fields (id, full_name, email, updated_at) to minimize PII exposure.
-    // Sensitive fields like phone, address, etc. are intentionally excluded.
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, full_name, email, updated_at')
-      .eq('consultant_organization_id', organizationId)
+    const { data: clients, error } = await supabase
+      .from('organization_clients')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .eq('status', 'active')
+      .order('updated_at', { ascending: false })
 
     if (error) throw error
 
-    // Map profiles to OrganizationClient structure
-    return (data ?? []).map((profile) => ({
-      id: profile.id,
-      client_user_id: profile.id,
-      organization_id: organizationId,
-      full_name: profile.full_name,
-      email: profile.email,
-      assigned_at: profile.updated_at,
-      assigned_by: null,
-      notes: null
-    }))
+    const clientRows = (clients ?? []) as OrganizationClient[]
+    const clientUserIds = clientRows.map((client) => client.client_user_id)
+
+    if (clientUserIds.length === 0) {
+      return []
+    }
+
+    // Fetch limited profile fields to minimize PII exposure.
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .in('id', clientUserIds)
+
+    if (profilesError) throw profilesError
+
+    const profilesById = new Map((profiles ?? []).map((profile) => [profile.id, profile]))
+
+    return clientRows.map((client) => {
+      const profile = profilesById.get(client.client_user_id)
+      return {
+        ...client,
+        full_name: profile?.full_name ?? null,
+        email: profile?.email ?? null
+      }
+    })
   }
 
-  static async addOrganizationClient(organizationId: string, clientUserId: string): Promise<void> {
+  static async addOrganizationClient(
+    organizationId: string,
+    clientUserId: string,
+    assignedTo?: string | null
+  ): Promise<void> {
     const supabase = await getTypedSupabaseClient()
 
     // Verify user is authenticated with distinct error handling
@@ -233,16 +266,79 @@ export class OrganizationService {
     }
 
     // Require admin or owner role to add clients
-    if (membership.role !== 'admin' && !membership.is_owner) {
+    if (!canAdminOrganization(membership as OrganizationMember | null)) {
       throw new Error('Permission denied: You are not authorized to modify this organization')
     }
 
-    const { error } = await supabase
+    if (assignedTo) {
+      const { data: assigneeMembership, error: assigneeMembershipError } = await supabase
+        .from('organization_members')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .eq('user_id', assignedTo)
+        .maybeSingle()
+
+      if (assigneeMembershipError) {
+        throw assigneeMembershipError
+      }
+
+      if (!assigneeMembership) {
+        throw new Error('Assigned agronomist must belong to the organization')
+      }
+    }
+
+    const { data: activeClientLink, error: activeClientLinkError } = await supabase
+      .from('organization_clients')
+      .select('organization_id')
+      .eq('client_user_id', clientUserId)
+      .eq('status', 'active')
+      .maybeSingle()
+
+    if (activeClientLinkError) {
+      throw activeClientLinkError
+    }
+
+    if (activeClientLink && activeClientLink.organization_id !== organizationId) {
+      throw new Error('Client is already active in another organization')
+    }
+
+    const shouldWriteClientLink = !(
+      activeClientLink?.organization_id === organizationId && assignedTo === undefined
+    )
+
+    if (shouldWriteClientLink) {
+      const { error } = await supabase.from('organization_clients').upsert(
+        {
+          organization_id: organizationId,
+          client_user_id: clientUserId,
+          assigned_to: assignedTo ?? null,
+          assigned_by: user.id,
+          status: 'active'
+        },
+        { onConflict: 'organization_id,client_user_id' }
+      )
+
+      if (error) {
+        if (isUniqueConstraintError(error)) {
+          throw new Error('Client is already active in another organization')
+        }
+        throw error
+      }
+    }
+
+    // Backward-compatible mirror for existing screens that still read profile state.
+    const { error: profileError } = await supabase
       .from('profiles')
       .update({ consultant_organization_id: organizationId })
       .eq('id', clientUserId)
 
-    if (error) throw error
+    if (profileError) {
+      console.error('Error updating legacy profile organization mirror:', {
+        profileError,
+        clientUserId,
+        organizationId
+      })
+    }
   }
 
   static async isUserOrgClient(
@@ -250,21 +346,18 @@ export class OrganizationService {
   ): Promise<{ isClient: boolean; organizationId?: string }> {
     const supabase = await getTypedSupabaseClient()
     const { data, error } = await supabase
-      .from('profiles')
-      .select('consultant_organization_id')
-      .eq('id', userId)
-      .single()
+      .from('organization_clients')
+      .select('organization_id')
+      .eq('client_user_id', userId)
+      .eq('status', 'active')
+      .maybeSingle()
 
     if (error) {
-      // Handle profile not found gracefully - treat as not a client
-      if (error.code === 'PGRST116') {
-        return { isClient: false }
-      }
       throw error
     }
 
-    if (data && data.consultant_organization_id) {
-      return { isClient: true, organizationId: data.consultant_organization_id }
+    if (data?.organization_id) {
+      return { isClient: true, organizationId: data.organization_id }
     }
     return { isClient: false }
   }
