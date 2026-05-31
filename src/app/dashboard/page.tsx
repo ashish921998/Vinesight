@@ -44,7 +44,7 @@ export default function DashboardPage() {
           <Button
             onClick={() => {
               posthog.capture('dashboard_connection_retry_clicked', {
-                error_message: error || 'Unknown authentication error'
+                error_message: String(error ?? 'Unknown authentication error')
               })
               window.location.reload()
             }}

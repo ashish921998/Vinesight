@@ -1750,7 +1750,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           description: string | null
-          due_date: string
+          due_date: string | null
           estimated_duration_minutes: number | null
           farm_id: number | null
           id: number
@@ -1770,7 +1770,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           description?: string | null
-          due_date: string
+          due_date?: string | null
           estimated_duration_minutes?: number | null
           farm_id?: number | null
           id?: number
@@ -1790,7 +1790,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           description?: string | null
-          due_date?: string
+          due_date?: string | null
           estimated_duration_minutes?: number | null
           farm_id?: number | null
           id?: number
