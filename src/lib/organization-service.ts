@@ -198,7 +198,7 @@ export class OrganizationService {
       .select('*')
       .eq('organization_id', organizationId)
       .eq('status', 'active')
-      .order('assigned_at', { ascending: false })
+      .order('updated_at', { ascending: false })
 
     if (error) throw error
 
