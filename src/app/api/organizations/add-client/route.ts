@@ -224,7 +224,6 @@ export async function POST(request: NextRequest) {
         userId,
         organizationId
       })
-      return NextResponse.json({ error: 'Failed to add as client' }, { status: 500 })
     }
 
     return NextResponse.json({

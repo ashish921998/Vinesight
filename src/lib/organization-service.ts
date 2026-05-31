@@ -302,22 +302,28 @@ export class OrganizationService {
       throw new Error('Client is already active in another organization')
     }
 
-    const { error } = await supabase.from('organization_clients').upsert(
-      {
-        organization_id: organizationId,
-        client_user_id: clientUserId,
-        assigned_to: assignedTo ?? null,
-        assigned_by: user.id,
-        status: 'active'
-      },
-      { onConflict: 'organization_id,client_user_id' }
+    const shouldWriteClientLink = !(
+      activeClientLink?.organization_id === organizationId && assignedTo === undefined
     )
 
-    if (error) {
-      if (isUniqueConstraintError(error)) {
-        throw new Error('Client is already active in another organization')
+    if (shouldWriteClientLink) {
+      const { error } = await supabase.from('organization_clients').upsert(
+        {
+          organization_id: organizationId,
+          client_user_id: clientUserId,
+          assigned_to: assignedTo ?? null,
+          assigned_by: user.id,
+          status: 'active'
+        },
+        { onConflict: 'organization_id,client_user_id' }
+      )
+
+      if (error) {
+        if (isUniqueConstraintError(error)) {
+          throw new Error('Client is already active in another organization')
+        }
+        throw error
       }
-      throw error
     }
 
     // Backward-compatible mirror for existing screens that still read profile state.
