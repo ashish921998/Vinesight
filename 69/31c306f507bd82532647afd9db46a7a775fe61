@@ -1,0 +1,29 @@
+public/google-play-badge.svg
+  s_99e1f27d6f9581::t_f6e644a43cd928 1-39
+src/components/AppDownloadBadge.tsx
+  s_99e1f27d6f9581::t_f6e644a43cd928 1-34
+src/components/navigation.tsx
+  s_99e1f27d6f9581::t_f6e644a43cd928 107,110-111
+package.json
+  s_99e1f27d6f9581::t_f6e644a43cd928 73
+public/app-store-badge.svg
+  s_99e1f27d6f9581::t_f6e644a43cd928 1-10
+src/app/page.tsx
+  s_99e1f27d6f9581::t_f6e644a43cd928 7,113-125,228,231-232,277-281,445-449
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "6931c306f507bd82532647afd9db46a7a775fe61",
+  "prompts": {},
+  "sessions": {
+    "s_99e1f27d6f9581": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e7ca9-8935-70c0-81fa-619e8258292c",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
