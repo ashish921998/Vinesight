@@ -556,11 +556,21 @@ export class AIInsightsService {
 
       if (fertigations.data) {
         fertigations.data.forEach((record) => {
+          const fertilizers = Array.isArray(record.fertilizers) ? record.fertilizers : []
+          const fertilizerNames = fertilizers
+            .map((fertilizer) =>
+              typeof fertilizer === 'object' && fertilizer && 'name' in fertilizer
+                ? String(fertilizer.name)
+                : null
+            )
+            .filter(Boolean)
+            .join(', ')
+
           activities.push({
             id: record.id,
             activity_type: 'fertigation',
             date: record.date,
-            notes: record.notes || 'Fertigation application',
+            notes: record.notes || `${fertilizerNames || 'Fertilizer'} application`,
             created_at: record.created_at
           })
         })

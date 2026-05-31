@@ -68,7 +68,7 @@ export class ClusterService {
         `
         )
         .in('id', cluster.affected_farm_ids)
-        .order('petiole_test_records.date', { ascending: false })
+        .order('date', { foreignTable: 'petiole_test_records', ascending: false })
 
       const farmDetails = (farms || []).map((farm) => {
         const latestTest = farm.petiole_test_records?.[0]

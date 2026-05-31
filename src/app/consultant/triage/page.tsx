@@ -466,7 +466,7 @@ export default function TriageQueuePage() {
                         A fertilizer plan has been auto-drafted based on this classification.
                       </p>
                       <Link
-                        href={`/clients/${selectedItem.farm_id}/farms/${selectedItem.farm_id}?plan=${selectedItem.ai_draft_plan_id}`}
+                        href={`/consultant/farmers/${selectedItem.farmer_id}/farms/${selectedItem.farm_id}?plan=${selectedItem.ai_draft_plan_id}`}
                         className="text-sm text-accent hover:underline mt-2 inline-block"
                       >
                         View Plan Details →

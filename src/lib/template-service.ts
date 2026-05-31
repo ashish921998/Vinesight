@@ -147,7 +147,7 @@ export class TemplateService {
         season_stage: input.season_stage,
         soil_type: input.soil_type || null,
         trigger_conditions: input.trigger_conditions,
-        template_items: validatedItems,
+        template_items: validatedItems as unknown as Json,
         is_active: true
       })
       .select()

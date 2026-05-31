@@ -27,14 +27,14 @@ export interface PetioleTriage {
   updated_at: string
 
   // Joined data
-  farm_name?: string
-  farm_region?: string
+  farm_name?: string | null
+  farm_region?: string | null
   farmer_id?: string | null
-  farmer_name?: string
-  latest_petiole_date?: string
-  nutrient_n?: number
-  nutrient_p?: number
-  nutrient_k?: number
+  farmer_name?: string | null
+  latest_petiole_date?: string | null
+  nutrient_n?: number | null
+  nutrient_p?: number | null
+  nutrient_k?: number | null
 }
 
 export interface TriageQueueItem extends PetioleTriage {
@@ -59,6 +59,12 @@ export interface ReviewTriageInput {
       notes?: string
     }>
   }
+}
+
+export interface SubmitAcknowledgmentInput {
+  triageId: string
+  acknowledgment: AcknowledgmentType
+  notes?: string
 }
 
 export class TriageService {
@@ -94,8 +100,8 @@ export class TriageService {
       reviewed_at: item.reviewed_at,
       farmer_acknowledgment: null,
       farmer_acknowledged_at: null,
-      created_at: item.created_at,
-      updated_at: item.created_at,
+      created_at: item.created_at || new Date().toISOString(),
+      updated_at: item.created_at || new Date().toISOString(),
       farm_name: item.farm_name,
       farm_region: item.farm_region,
       farmer_id: item.farmer_id,
@@ -105,6 +111,21 @@ export class TriageService {
       nutrient_p: item.nutrient_p,
       nutrient_k: item.nutrient_k
     }))
+  }
+
+  static async submitAcknowledgment(input: SubmitAcknowledgmentInput): Promise<void> {
+    const supabase = await getTypedSupabaseClient()
+
+    const { error } = await supabase
+      .from('petiole_triage')
+      .update({
+        farmer_acknowledgment: input.acknowledgment,
+        farmer_acknowledged_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', input.triageId)
+
+    if (error) throw error
   }
 
   // Get triage statistics for Mission Control

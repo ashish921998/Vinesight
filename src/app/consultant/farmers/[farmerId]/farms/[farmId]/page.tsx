@@ -61,7 +61,7 @@ export default function ConsultantFarmPage() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
-      const supabase = getTypedSupabaseClient()
+      const supabase = await getTypedSupabaseClient()
 
       // Get farmer's profile
       const { data: profile } = await supabase

@@ -178,6 +178,20 @@ Return ONLY valid JSON in this exact format:
       .replace(/\s*```$/, '')
     const plan = JSON.parse(text)
 
+    // Validate response shape before returning
+    if (
+      !plan ||
+      typeof plan !== 'object' ||
+      typeof plan.title !== 'string' ||
+      typeof plan.reasoning !== 'string' ||
+      !Array.isArray(plan.items) ||
+      !Array.isArray(plan.warnings) ||
+      typeof plan.confidence !== 'number'
+    ) {
+      console.error('AI returned malformed plan structure:', plan)
+      return Response.json({ error: 'AI returned an invalid plan structure' }, { status: 500 })
+    }
+
     return Response.json(plan)
   } catch (error) {
     console.error('AI plan generation failed:', error)

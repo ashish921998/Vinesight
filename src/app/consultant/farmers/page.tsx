@@ -30,9 +30,6 @@ import {
 
 interface FarmTriage {
   classification: string | null
-  nutrient_n: number | null
-  nutrient_p: number | null
-  nutrient_k: number | null
 }
 
 interface Farm {
@@ -129,7 +126,7 @@ export default function FarmerDirectoryPage() {
       if (farmIds.length > 0) {
         const { data: triageData } = await supabase
           .from('petiole_triage')
-          .select('farm_id, classification, nutrient_n:confidence_score')
+          .select('farm_id, classification')
           .in('farm_id', farmIds)
           .order('created_at', { ascending: false })
 
@@ -138,10 +135,7 @@ export default function FarmerDirectoryPage() {
           for (const t of triageData) {
             if (!triageMap[t.farm_id]) {
               triageMap[t.farm_id] = {
-                classification: t.classification,
-                nutrient_n: t.nutrient_n,
-                nutrient_p: null,
-                nutrient_k: null
+                classification: t.classification
               }
             }
           }
@@ -389,15 +383,6 @@ export default function FarmerDirectoryPage() {
                               {farm.soil_texture_class && <span>{farm.soil_texture_class}</span>}
                             </div>
                           </div>
-
-                          {/* Mini nutrient values */}
-                          {farm.triage?.nutrient_n != null && (
-                            <div className="flex gap-2 text-xs">
-                              <span className="px-2 py-1 bg-chart-1/10 rounded">
-                                N: {farm.triage.nutrient_n}%
-                              </span>
-                            </div>
-                          )}
 
                           <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         </div>

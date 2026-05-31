@@ -2101,7 +2101,6 @@ export type Database = {
           assigned_by: string | null
           status: 'active' | 'inactive' | 'pending'
           assigned_at: string | null
-          assigned_to: string | null
           notes: string | null
           created_at: string | null
           updated_at: string | null
@@ -2114,7 +2113,6 @@ export type Database = {
           assigned_by?: string | null
           status?: 'active' | 'inactive' | 'pending'
           assigned_at?: string | null
-          assigned_to?: string | null
           notes?: string | null
           created_at?: string | null
           updated_at?: string | null
@@ -2127,7 +2125,6 @@ export type Database = {
           assigned_by?: string | null
           status?: 'active' | 'inactive' | 'pending'
           assigned_at?: string | null
-          assigned_to?: string | null
           notes?: string | null
           created_at?: string | null
           updated_at?: string | null
@@ -2440,48 +2437,6 @@ export type Database = {
           }
         ]
       }
-      warehouse_items: {
-        Row: {
-          id: number
-          user_id: string
-          name: string
-          type: string
-          quantity: number
-          unit: string
-          unit_price: number
-          reorder_quantity: number | null
-          notes: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: number
-          user_id: string
-          name: string
-          type: string
-          quantity: number
-          unit: string
-          unit_price: number
-          reorder_quantity?: number | null
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: number
-          user_id?: string
-          name?: string
-          type?: string
-          quantity?: number
-          unit?: string
-          unit_price?: number
-          reorder_quantity?: number | null
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -2520,6 +2475,7 @@ export type Database = {
           triage_id: string
           petiole_test_id: number
           farm_id: number
+          farmer_id: string | null
           farm_name: string | null
           farm_region: string | null
           classification: string
@@ -2528,7 +2484,7 @@ export type Database = {
           ai_draft_plan_id: string | null
           reviewed_by: string | null
           reviewed_at: string | null
-          created_at: string | null
+          created_at: string
           farmer_name: string | null
           latest_petiole_date: string | null
           nutrient_n: number | null

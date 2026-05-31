@@ -110,7 +110,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         .limit(1)
         .maybeSingle()
 
-      if (!membership || membership.role !== 'agronomist') {
+      if (
+        !membership ||
+        (membership.role !== 'agronomist' &&
+          membership.role !== 'owner' &&
+          membership.role !== 'admin')
+      ) {
         setRoleCheckState('denied')
         return
       }

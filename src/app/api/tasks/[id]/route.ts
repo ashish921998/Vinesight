@@ -118,15 +118,16 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (data.task_type !== undefined) updates.type = data.task_type
     if (data.status !== undefined) updates.status = data.status
     if (data.priority !== undefined) updates.priority = data.priority
-    if (data.due_date !== undefined) updates.dueDate = data.due_date ?? null
+    if (data.due_date !== undefined) updates.dueDate = data.due_date ?? undefined
     if (data.estimated_duration_minutes !== undefined)
       updates.estimatedDurationMinutes = data.estimated_duration_minutes ?? null
     if (data.location !== undefined) updates.location = data.location ?? null
     if (data.assigned_to_user_id !== undefined)
-      updates.assignedToUserId = data.assigned_to_user_id ?? null
+      updates.assignedToUserId = data.assigned_to_user_id ?? undefined
     if (data.linked_record_type !== undefined)
-      updates.linkedRecordType = data.linked_record_type ?? null
-    if (data.linked_record_id !== undefined) updates.linkedRecordId = data.linked_record_id ?? null
+      updates.linkedRecordType = data.linked_record_type ?? undefined
+    if (data.linked_record_id !== undefined)
+      updates.linkedRecordId = data.linked_record_id ?? undefined
     if (data.completed_at !== undefined) updates.completedAt = data.completed_at ?? null
     if (data.farm_id !== undefined) updates.farmId = data.farm_id
 
