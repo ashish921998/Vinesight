@@ -145,6 +145,28 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const { data: activeClientLink, error: activeClientLinkError } = await getSupabaseAdmin()
+      .from('organization_clients')
+      .select('organization_id')
+      .eq('client_user_id', userId)
+      .eq('status', 'active')
+      .maybeSingle()
+
+    if (activeClientLinkError) {
+      console.error('Error checking active organization client link:', activeClientLinkError)
+      return NextResponse.json(
+        { error: 'Failed to verify current client organization' },
+        { status: 500 }
+      )
+    }
+
+    if (activeClientLink && activeClientLink.organization_id !== organizationId) {
+      return NextResponse.json(
+        { error: 'Client is already active in another organization' },
+        { status: 409 }
+      )
+    }
+
     const { error: clientError } = await getSupabaseAdmin()
       .from('organization_clients')
       .upsert(

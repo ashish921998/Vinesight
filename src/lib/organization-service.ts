@@ -282,6 +282,21 @@ export class OrganizationService {
       }
     }
 
+    const { data: activeClientLink, error: activeClientLinkError } = await supabase
+      .from('organization_clients')
+      .select('organization_id')
+      .eq('client_user_id', clientUserId)
+      .eq('status', 'active')
+      .maybeSingle()
+
+    if (activeClientLinkError) {
+      throw activeClientLinkError
+    }
+
+    if (activeClientLink && activeClientLink.organization_id !== organizationId) {
+      throw new Error('Client is already active in another organization')
+    }
+
     const { error } = await supabase.from('organization_clients').upsert(
       {
         organization_id: organizationId,
