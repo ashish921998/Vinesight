@@ -1,0 +1,40 @@
+src/lib/triage-service.ts
+  s_475021dcaec5c9::t_a0fea7cb3b5e8b 30-31,33-37,64-69,103-104,116-128
+src/types/database.ts
+  s_475021dcaec5c9::t_a0fea7cb3b5e8b 2478,2487
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/page.tsx
+  s_475021dcaec5c9::t_a0fea7cb3b5e8b 64
+src/lib/ai-insights-service.ts
+  s_475021dcaec5c9::t_a0fea7cb3b5e8b 559-568,573
+src/app/api/ai/fertilizer-plan/route.ts
+  s_475021dcaec5c9::t_a0fea7cb3b5e8b 181-194
+src/app/consultant/triage/page.tsx
+  s_475021dcaec5c9::t_a0fea7cb3b5e8b 469
+src/lib/cluster-service.ts
+  s_475021dcaec5c9::t_a0fea7cb3b5e8b 71
+src/app/api/tasks/[id]/route.ts
+  s_475021dcaec5c9::t_a0fea7cb3b5e8b 121,126,128-130
+src/app/consultant/farmers/page.tsx
+  s_475021dcaec5c9::t_f99dc35a685603 138
+  s_475021dcaec5c9::t_a0fea7cb3b5e8b 129
+src/lib/template-service.ts
+  s_475021dcaec5c9::t_a0fea7cb3b5e8b 150
+src/app/consultant/layout.tsx
+  s_475021dcaec5c9::t_44879a522cf301 113-118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "4f6043120955bd9fa78e4e77545907085996dbe8",
+  "prompts": {},
+  "sessions": {
+    "s_475021dcaec5c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e7894-d4d0-75e0-aed1-e539ecda6482",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
