@@ -1,0 +1,42 @@
+src/app/settings/page.tsx
+  s_475021dcaec5c9::t_0071b41c1c340f 72-77,79-80,85-86,91
+src/lib/organization-service.ts
+  s_475021dcaec5c9::t_0ca37f60d181c2 19,28,30,33-34,39-44,107,142,191-196,200-224,227-231,264,268-282,287,295-299,305-307
+src/app/api/tasks/[id]/route.ts
+  s_475021dcaec5c9::t_eaeb98e87b1917 121
+src/app/api/organizations/add-client/route.ts
+  s_475021dcaec5c9::t_2aeae921f5caff 11-12,27,95-98,127-145
+src/app/dashboard/page.tsx
+  s_475021dcaec5c9::t_637935189860f6 47
+src/components/lab-tests/FertilizerPlanGenerator.tsx
+  s_475021dcaec5c9::t_42e41f5c67b51a 81,84-85
+src/types/database.ts
+  s_475021dcaec5c9::t_e755dfb32fe6b3 1985-2026
+  s_475021dcaec5c9::t_5b5f74de5a3c2d 2065,2073,2081,2100,2102,2105-2106,2112,2114,2117-2118,2124,2126,2129-2130
+src/app/api/invite/route.ts
+  s_475021dcaec5c9::t_66adfe6e74c6c6 136
+src/lib/ai-insights-service.ts
+  s_475021dcaec5c9::t_8fd5f506f3e9e6 563
+src/components/lab-tests/LabTestTrendCharts.tsx
+  s_475021dcaec5c9::t_918c7bc7cd0e41 73,101
+src/app/api/organizations/route.ts
+  s_475021dcaec5c9::t_99592deb0ce369 79
+supabase/supabase-schema.sql
+  s_475021dcaec5c9::t_96c0200e0ed59a 927,933-948,995-997,1007,1015,1047-1063,1071-1075,1146-1147
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "5dc4aaac1b2839a34d01d54aa401ff442b93ec5a",
+  "prompts": {},
+  "sessions": {
+    "s_475021dcaec5c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e7894-d4d0-75e0-aed1-e539ecda6482",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
