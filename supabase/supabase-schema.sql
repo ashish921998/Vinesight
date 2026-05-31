@@ -1076,7 +1076,10 @@ CREATE POLICY "Admins can delete organization members" ON organization_members F
 -- RLS Policies for organization_clients
 CREATE POLICY "Members can view organization clients" ON organization_clients FOR SELECT USING (
   client_user_id = auth.uid()
-  OR EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_clients.organization_id AND om.user_id = auth.uid())
+  OR (
+    status = 'active'
+    AND EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_clients.organization_id AND om.user_id = auth.uid())
+  )
 );
 CREATE POLICY "Admins can insert organization clients" ON organization_clients FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_clients.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
