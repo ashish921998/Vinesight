@@ -151,7 +151,7 @@ function UsersPage() {
             <DialogHeader>
               <DialogTitle>Invite Team Member</DialogTitle>
               <DialogDescription>
-                Share this link with agronomists or admins to join your organization.
+                Share this link with consultant team members to join your organization.
               </DialogDescription>
             </DialogHeader>
 
@@ -175,7 +175,7 @@ function UsersPage() {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    New team members will join as agronomists
+                    New team members will join as consultant team members
                   </p>
                 </div>
               )}
@@ -197,7 +197,7 @@ function UsersPage() {
             <Users className="h-12 w-12 text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold mb-2">No Team Members</h2>
             <p className="text-muted-foreground text-center max-w-md mb-4">
-              Invite agronomists and admins to join your organization
+              Invite consultant team members to join your organization
             </p>
             <Button onClick={() => setShowInviteDialog(true)} className="gap-2">
               <UserPlus className="h-4 w-4" />
