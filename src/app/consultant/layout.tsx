@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Button } from '@/components/ui/button'
-import { Contact, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Contact, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getConsultantAccess } from '@/lib/consultant-access'
 import { toast } from 'sonner'
@@ -20,6 +20,11 @@ const navItems = [
     label: 'Farmers',
     href: '/consultant/farmers',
     icon: Contact
+  },
+  {
+    label: 'Triage',
+    href: '/consultant/triage',
+    icon: ClipboardList
   }
 ]
 

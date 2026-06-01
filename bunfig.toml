@@ -1,0 +1,4 @@
+[test]
+# Tests inject mock Supabase clients, but importing src/lib/supabase.ts eagerly
+# constructs a browser client that requires these env vars to be present.
+preload = ["./test/setup-env.ts"]

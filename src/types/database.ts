@@ -2139,6 +2139,82 @@ export type Database = {
           }
         ]
       }
+      petiole_triage: {
+        Row: {
+          id: string
+          organization_id: string
+          farm_id: number
+          petiole_test_id: number | null
+          client_user_id: string
+          status: 'pending' | 'in_review' | 'reviewed' | 'escalated' | 'resolved'
+          severity: 'low' | 'medium' | 'high' | 'critical' | null
+          classification: string | null
+          summary: string | null
+          recommendation: string | null
+          review_notes: string | null
+          reviewed_by: string | null
+          reviewed_at: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          farm_id: number
+          petiole_test_id?: number | null
+          client_user_id: string
+          status?: 'pending' | 'in_review' | 'reviewed' | 'escalated' | 'resolved'
+          severity?: 'low' | 'medium' | 'high' | 'critical' | null
+          classification?: string | null
+          summary?: string | null
+          recommendation?: string | null
+          review_notes?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          farm_id?: number
+          petiole_test_id?: number | null
+          client_user_id?: string
+          status?: 'pending' | 'in_review' | 'reviewed' | 'escalated' | 'resolved'
+          severity?: 'low' | 'medium' | 'high' | 'critical' | null
+          classification?: string | null
+          summary?: string | null
+          recommendation?: string | null
+          review_notes?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'petiole_triage_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'petiole_triage_farm_id_fkey'
+            columns: ['farm_id']
+            isOneToOne: false
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'petiole_triage_petiole_test_id_fkey'
+            columns: ['petiole_test_id']
+            isOneToOne: false
+            referencedRelation: 'petiole_test_records'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       farmer_invitations: {
         Row: {
           id: string
