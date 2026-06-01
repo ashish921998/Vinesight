@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { DocumentService } from '@/lib/document-service'
 import { validateUserSession } from '@/lib/auth-utils'
+import { checkFarmAccess } from '@/lib/farm-access'
 import type { Database } from '@/types/database'
 
 export const runtime = 'nodejs'
@@ -66,21 +67,9 @@ export async function POST(request: NextRequest) {
       auth: { persistSession: false }
     })
 
-    const { data: farm, error: farmError } = await supabaseAdmin
-      .from('farms')
-      .select('id, user_id')
-      .eq('id', farmId)
-      .single()
-
-    if (farmError) {
-      if (farmError.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Resource not found' }, { status: 404 })
-      }
-      throw farmError
-    }
-
-    if (!farm || farm.user_id !== user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    const access = await checkFarmAccess(user.id, farmId, { supabaseAdmin })
+    if (!access.allowed) {
+      return NextResponse.json({ error: access.reason }, { status: access.status })
     }
 
     // Validate expiresIn type

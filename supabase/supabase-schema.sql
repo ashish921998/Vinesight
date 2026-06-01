@@ -420,6 +420,21 @@ ALTER TABLE soil_profiles ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for farms table
 CREATE POLICY "Users can view their own farms" ON farms FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Org members can view client farms" ON farms FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om
+      ON om.organization_id = oc.organization_id
+     AND om.user_id = auth.uid()
+    WHERE oc.client_user_id = farms.user_id
+      AND oc.status = 'active'
+      AND (
+        om.role IN ('owner', 'admin')
+        OR om.is_owner = TRUE
+        OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
+      )
+  )
+);
 CREATE POLICY "Users can insert their own farms" ON farms FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update their own farms" ON farms FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own farms" ON farms FOR DELETE USING (auth.uid() = user_id);
@@ -565,6 +580,22 @@ CREATE POLICY "Users can delete their warehouse items" ON warehouse_items FOR DE
 CREATE POLICY "Users can view their farm soil test records" ON soil_test_records FOR SELECT USING (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_test_records.farm_id AND farms.user_id = auth.uid())
 );
+CREATE POLICY "Org members can view client soil tests" ON soil_test_records FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om
+      ON om.organization_id = oc.organization_id
+     AND om.user_id = auth.uid()
+    JOIN farms f ON f.user_id = oc.client_user_id
+    WHERE f.id = soil_test_records.farm_id
+      AND oc.status = 'active'
+      AND (
+        om.role IN ('owner', 'admin')
+        OR om.is_owner = TRUE
+        OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
+      )
+  )
+);
 CREATE POLICY "Users can insert soil test records for their farms" ON soil_test_records FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_test_records.farm_id AND farms.user_id = auth.uid())
 );
@@ -578,6 +609,22 @@ CREATE POLICY "Users can delete soil test records for their farms" ON soil_test_
 -- Petiole test records
 CREATE POLICY "Users can view their farm petiole test records" ON petiole_test_records FOR SELECT USING (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = petiole_test_records.farm_id AND farms.user_id = auth.uid())
+);
+CREATE POLICY "Org members can view client petiole tests" ON petiole_test_records FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om
+      ON om.organization_id = oc.organization_id
+     AND om.user_id = auth.uid()
+    JOIN farms f ON f.user_id = oc.client_user_id
+    WHERE f.id = petiole_test_records.farm_id
+      AND oc.status = 'active'
+      AND (
+        om.role IN ('owner', 'admin')
+        OR om.is_owner = TRUE
+        OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
+      )
+  )
 );
 CREATE POLICY "Users can insert petiole test records for their farms" ON petiole_test_records FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = petiole_test_records.farm_id AND farms.user_id = auth.uid())
