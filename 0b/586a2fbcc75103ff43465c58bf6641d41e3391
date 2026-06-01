@@ -1,0 +1,40 @@
+src/lib/__tests__/consultant-triage-service.test.ts
+  s_b369dfcf4bd8eb::t_21a8488c194abb 2,81-84,134-137,143-160,178-180,229-231,234-238,248-250,264-266,276-278,296-299,327-330,336-341,350-353,368-371
+  s_b369dfcf4bd8eb::t_d49eeeb9d34674 1,3-68,87,91-102,104-106,108,110-133,138-142,161-177,181-228,232-233,239-247,251-263,267-275,279-295,300-326,331-335,342-349,354-367,372-389
+  s_b369dfcf4bd8eb::t_e15a3ac2a66684 69-80,85-86,88-90,103,107,109
+bunfig.toml
+  s_b369dfcf4bd8eb::t_47c8c24c95d6bd 1-4
+src/app/consultant/triage/page.tsx
+  s_b369dfcf4bd8eb::t_f0cfa8b557ef4c 1-526
+src/app/consultant/layout.tsx
+  s_b369dfcf4bd8eb::t_77466bbfada0cd 8
+  s_b369dfcf4bd8eb::t_8ae2834473cd61 23-27
+src/lib/consultant-triage-service.ts
+  s_b369dfcf4bd8eb::t_9dbc14b8d18e89 1-397,399-413
+  s_b369dfcf4bd8eb::t_21a8488c194abb 398
+supabase/supabase-schema.sql
+  s_b369dfcf4bd8eb::t_4d15cea7553a2e 1103-1107
+  s_b369dfcf4bd8eb::t_1d0416ec049158 1248-1313
+  s_b369dfcf4bd8eb::t_1c97616f347161 1061-1083
+  s_b369dfcf4bd8eb::t_787a2cbcdc3009 1123
+src/types/database.ts
+  s_b369dfcf4bd8eb::t_6fcf4eabda6a31 2142-2217
+test/setup-env.ts
+  s_b369dfcf4bd8eb::t_5b0e038ae73c2d 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "0b586a2fbcc75103ff43465c58bf6641d41e3391",
+  "prompts": {},
+  "sessions": {
+    "s_b369dfcf4bd8eb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b46a0051-92f7-4a36-a416-a6853a6c1a4f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
