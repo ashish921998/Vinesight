@@ -550,16 +550,20 @@
         <h2>Suggested SQL Shape</h2>
         <p>
           This is not a final migration, but it shows the direction the schema should move toward.
+          It assumes the DB Foundation work is already merged and should not duplicate constraints
+          or policies that now exist in the base schema.
         </p>
         <pre><code>-- Canonical farmer/client relationship
 ALTER TABLE organization_clients
   ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active'
-    CHECK (status IN ('invited', 'active', 'paused', 'archived')),
+    CHECK (status IN ('active', 'inactive', 'pending')),
   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
 
-CREATE UNIQUE INDEX IF NOT EXISTS organization_clients_org_client_unique
-  ON organization_clients(organization_id, client_user_id);
+-- Already expected from DB Foundation:
+-- UNIQUE (organization_id, client_user_id)
+-- SELECT/INSERT/UPDATE/DELETE RLS on organization_clients
+-- fertilizer_plans.organization_id and organization-scoped RLS
 
 -- Optional only if real invites are in V1
 CREATE TABLE organization_invitations (
@@ -578,6 +582,15 @@ CREATE TABLE organization_invitations (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   accepted_at TIMESTAMPTZ
 );</code></pre>
+        <div class="callout">
+          <h3>Status Values</h3>
+          <p>
+            Current code and schema use <code>active</code>, <code>inactive</code>, and
+            <code>pending</code> for <code>organization_clients.status</code>. Do not introduce
+            <code>invited</code>, <code>paused</code>, or <code>archived</code> unless we also ship
+            an explicit status migration, generated type update, and UI behavior change.
+          </p>
+        </div>
       </section>
 
       <section>
@@ -786,6 +799,10 @@ CREATE TABLE organization_invitations (
 
       <section>
         <h2>Main Gaps</h2>
+        <p>
+          This section tracks the current post-DB-foundation state. It separates issues already
+          solved in the base schema from issues still present in the consultant dashboard branch.
+        </p>
         <table>
           <thead>
             <tr>
@@ -798,8 +815,23 @@ CREATE TABLE organization_invitations (
           <tbody>
             <tr>
               <td><span class="status high">High</span></td>
-              <td><code>/consultant</code> only authorizes <code>role === 'agronomist'</code>.</td>
-              <td>Owners and admins can manage the organization but are blocked from the dashboard.</td>
+              <td>Farmer directory still reads <code>profiles.consultant_organization_id</code>.</td>
+              <td>
+                <code>/consultant/farmers</code> and the farmer detail page still use the legacy
+                profile FK as the primary relationship. That bypasses
+                <code>organization_clients.assigned_to</code> and breaks agronomist-scoped
+                visibility.
+              </td>
+              <td>
+                PR 2 must move all farmer directory reads to <code>organization_clients</code>, join
+                <code>profiles</code> only for display fields, and apply owner/admin versus assigned
+                agronomist filtering in one shared query helper.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="status high">High</span></td>
+              <td><code>/consultant</code> role access must stay aligned with DB roles.</td>
+              <td>Owners and admins can manage the organization and should not be blocked from consultant pages.</td>
               <td>
                 Authorize <code>owner</code>, <code>admin</code>, and <code>agronomist</code>.
                 Gate capabilities inside pages based on role.
@@ -810,7 +842,8 @@ CREATE TABLE organization_invitations (
               <td>Role definitions are inconsistent.</td>
               <td>
                 DB allows <code>owner</code>, <code>admin</code>, <code>agronomist</code>, while
-                Settings UI includes <code>viewer</code> and service types omit <code>owner</code>.
+                Settings UI still includes <code>viewer</code>. The database constraint does not
+                support that value, so the invite dialog can fail at the DB layer if it is used.
               </td>
               <td>
                 For V1, remove <code>viewer</code> from UI and types. Use one shared role union:
@@ -831,7 +864,7 @@ CREATE TABLE organization_invitations (
             </tr>
             <tr>
               <td><span class="status high">High</span></td>
-              <td>Farmer-client relationship is split between two models.</td>
+              <td>Farmer-client relationship is still split between two models.</td>
               <td>
                 Some code reads farmers through <code>profiles.consultant_organization_id</code>,
                 while RLS and assignment use <code>organization_clients</code>.
@@ -840,6 +873,19 @@ CREATE TABLE organization_invitations (
                 Make <code>organization_clients</code> canonical. Keep
                 <code>profiles.consultant_organization_id</code> only as a denormalized convenience
                 if needed.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="status high">High</span></td>
+              <td>Current branch SQL depends on DB Foundation tables and policies.</td>
+              <td>
+                The branch migration references <code>fertilizer_plans.organization_id</code> and
+                <code>organization_clients</code> behavior that must come from the merged base
+                schema. Without that prerequisite, plan RLS and upserts can break.
+              </td>
+              <td>
+                Treat DB Foundation as a hard prerequisite. Do not duplicate the schema in later
+                PRs, but call out the dependency clearly in migration notes and PR descriptions.
               </td>
             </tr>
             <tr>
@@ -853,6 +899,59 @@ CREATE TABLE organization_invitations (
               <td>
                 Use <code>plan_acknowledgments</code> for farmer app reactions. Remove or reserve
                 triage acknowledgment for triage-specific status only.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="status medium">Medium</span></td>
+              <td>Triage farmer acknowledgment RLS is too broad.</td>
+              <td>
+                The current policy lets farm owners update triage rows through a self-join pattern
+                and does not restrict updates to acknowledgment-only fields.
+              </td>
+              <td>
+                In the triage PR, replace this with a narrow RPC or stricter RLS that only permits
+                farmer-owned acknowledgment fields to change.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="status medium">Medium</span></td>
+              <td><code>get_farm_clusters</code> does not apply agronomist assignment scope.</td>
+              <td>
+                The function checks organization membership, so an agronomist can see org-wide
+                cluster data rather than only farmers assigned through
+                <code>organization_clients.assigned_to</code>.
+              </td>
+              <td>
+                Restrict cluster reads by role: owner/admin can see all org clients; agronomists
+                only see assigned clients. Alternatively keep clusters out of PR 2 and fix them in a
+                later settings/polish PR.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="status medium">Medium</span></td>
+              <td>React Native contract is not specified enough.</td>
+              <td>
+                The doc says farmer plan feedback should align with
+                <code>plan_acknowledgments</code>, but it does not identify current RN calls, API
+                routes, or payload changes.
+              </td>
+              <td>
+                Add a contract discovery step before Farmer Feedback: list current RN endpoints,
+                plan read path, acknowledgment payload, offline behavior, and required web API/RLS
+                changes.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="status medium">Medium</span></td>
+              <td><code>organization_clients.status</code> values were inconsistent.</td>
+              <td>
+                Earlier SQL examples used <code>invited</code>, <code>paused</code>, and
+                <code>archived</code>, while current code/schema use <code>active</code>,
+                <code>inactive</code>, and <code>pending</code>.
+              </td>
+              <td>
+                Keep the current values for now. Only change them in a dedicated migration with
+                generated types, UI mapping, seed cleanup, and tests.
               </td>
             </tr>
             <tr>
@@ -883,6 +982,59 @@ CREATE TABLE organization_invitations (
               <td>Copy says "agronomist consultants only".</td>
               <td>It conflates role and product area, making owner/admin access confusing.</td>
               <td>Use "consultant team members" for area-level copy.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Already Covered by DB Foundation</h2>
+        <p>
+          These are not open gaps in the current schema if the merged DB Foundation work is present.
+          Keep them as prerequisites, but do not reimplement them in the smaller feature PRs.
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Area</th>
+              <th>Current Position</th>
+              <th>What Later PRs Should Do</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>fertilizer_plans.organization_id</code></td>
+              <td>
+                The base schema includes organization scoping and organization-member RLS for
+                fertilizer plans and plan items.
+              </td>
+              <td>
+                Later plan work should rely on the existing column and policies, then add only
+                feature-specific reads, writes, and tests.
+              </td>
+            </tr>
+            <tr>
+              <td><code>organization_clients</code> uniqueness</td>
+              <td>
+                The base schema expects one canonical row per
+                <code>organization_id</code>/<code>client_user_id</code> pair.
+              </td>
+              <td>
+                Service upserts can use <code>onConflict: 'organization_id,client_user_id'</code>.
+                Do not add duplicate indexes in feature migrations.
+              </td>
+            </tr>
+            <tr>
+              <td><code>organization_clients</code> RLS</td>
+              <td>
+                The base schema includes read policies for clients/org members and admin mutation
+                policies for insert, update, and delete.
+              </td>
+              <td>
+                Feature PRs still need application-level permission checks, but DB-level protection
+                should remain centralized in the foundation schema.
+              </td>
             </tr>
           </tbody>
         </table>
@@ -962,19 +1114,26 @@ CREATE TABLE organization_invitations (
           </li>
           <li>
             Change farmer directory and plan builder reads to use
-            <code>organization_clients</code> as the canonical membership table.
+            <code>organization_clients</code> as the canonical membership table. Treat
+            <code>/consultant/farmers</code> and <code>/consultant/farmers/[farmerId]</code> as
+            the immediate PR 2 blocker because they still read
+            <code>profiles.consultant_organization_id</code>.
           </li>
           <li>
             Decide whether invites are in V1. If not, hide the invite button. If yes, implement a
             real pending invite flow.
           </li>
           <li>
-            Move farmer plan reactions to <code>plan_acknowledgments</code> and align React Native
-            app calls with that table.
+            Before Farmer Feedback work, audit the React Native app contract: current plan read API,
+            acknowledgment payload, offline queue behavior, and Supabase/RLS expectations.
           </li>
           <li>
             Add targeted tests around role authorization and farmer visibility:
             owner/admin all clients, agronomist assigned clients only, farmer own plan only.
+          </li>
+          <li>
+            In the triage PR, fix farmer acknowledgment mutation scope and ensure
+            <code>get_farm_clusters</code> does not leak org-wide data to assigned agronomists.
           </li>
         </ol>
       </section>
@@ -1010,7 +1169,8 @@ CREATE TABLE organization_invitations (
               <td>Consultant can view farmers and farms through canonical client mapping.</td>
               <td>
                 <code>/consultant/farmers</code>, farmer profile page, farm detail page, assigned
-                farmer filtering.
+                farmer filtering, replacement of
+                <code>profiles.consultant_organization_id</code> reads.
               </td>
               <td>Triage, templates, plan generation, settings expansion.</td>
             </tr>
@@ -1019,9 +1179,9 @@ CREATE TABLE organization_invitations (
               <td>Petiole classification and review workflow.</td>
               <td>
                 <code>petiole_triage</code>, classification utilities, triage service, triage queue,
-                focused tests.
+                farmer acknowledgment RLS fix, cluster scoping decision, focused tests.
               </td>
-              <td>Plan builder, clusters, unrelated dashboard polish.</td>
+              <td>Plan builder, cluster UI polish, unrelated dashboard polish.</td>
             </tr>
             <tr>
               <td>4. Plans and Templates</td>
@@ -1036,8 +1196,8 @@ CREATE TABLE organization_invitations (
               <td>5. Farmer Feedback</td>
               <td>Mobile farmer can acknowledge/respond to delivered plans.</td>
               <td>
-                <code>plan_acknowledgments</code>, RN/web API alignment, consultant visibility of
-                acknowledgment status.
+                React Native contract audit, <code>plan_acknowledgments</code>, RN/web API
+                alignment, consultant visibility of acknowledgment status.
               </td>
               <td>Triage-level duplicate acknowledgment fields.</td>
             </tr>
