@@ -42,6 +42,10 @@ export async function checkFarmAccess(
     return { allowed: false, reason: 'Farm not found', status: 404 }
   }
 
+  if (!farm.user_id) {
+    return { allowed: false, reason: 'Forbidden', status: 403 }
+  }
+
   // Rule 1: Farm owner
   if (farm.user_id === userId) {
     return { allowed: true }
@@ -59,7 +63,13 @@ export async function checkFarmAccess(
     return { allowed: false, reason: 'Forbidden', status: 403 }
   }
 
-  const orgIds = memberships.map((m) => m.organization_id)
+  const orgIds = memberships
+    .map((membership) => membership.organization_id)
+    .filter((organizationId): organizationId is string => Boolean(organizationId))
+
+  if (orgIds.length === 0) {
+    return { allowed: false, reason: 'Forbidden', status: 403 }
+  }
 
   // Check active client links across all orgs
   const { data: clientLinks, error: clientLinksError } = await supabaseAdmin

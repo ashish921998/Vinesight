@@ -11,9 +11,11 @@ function mockChain(result: Maybe<any> = { data: null, error: null }) {
   const chain: any = {
     select: vi.fn(() => chain),
     eq: vi.fn(() => chain),
+    in: vi.fn(() => chain),
     single: vi.fn().mockResolvedValue(result),
     maybeSingle: vi.fn().mockResolvedValue(result),
-    limit: vi.fn(() => chain)
+    limit: vi.fn(() => chain),
+    then: vi.fn((resolve, reject) => Promise.resolve(result).then(resolve, reject))
   }
   return chain
 }
@@ -58,11 +60,11 @@ describe('checkFarmAccess', () => {
     const chains: Record<string, any> = {
       farms: mockChain({ data: { id: farmId, user_id: farmerId }, error: null }),
       organization_members: mockChain({
-        data: { organization_id: orgId, role: 'owner', is_owner: true },
+        data: [{ organization_id: orgId, role: 'owner', is_owner: true }],
         error: null
       }),
       organization_clients: mockChain({
-        data: { id: 'oc-1', assigned_to: null, status: 'active' },
+        data: [{ organization_id: orgId, assigned_to: null, status: 'active' }],
         error: null
       })
     }
@@ -84,11 +86,11 @@ describe('checkFarmAccess', () => {
     const chains: Record<string, any> = {
       farms: mockChain({ data: { id: farmId, user_id: farmerId }, error: null }),
       organization_members: mockChain({
-        data: { organization_id: orgId, role: 'admin', is_owner: false },
+        data: [{ organization_id: orgId, role: 'admin', is_owner: false }],
         error: null
       }),
       organization_clients: mockChain({
-        data: { id: 'oc-2', assigned_to: null, status: 'active' },
+        data: [{ organization_id: orgId, assigned_to: null, status: 'active' }],
         error: null
       })
     }
@@ -110,11 +112,11 @@ describe('checkFarmAccess', () => {
     const chains: Record<string, any> = {
       farms: mockChain({ data: { id: farmId, user_id: farmerId }, error: null }),
       organization_members: mockChain({
-        data: { organization_id: orgId, role: 'agronomist', is_owner: false },
+        data: [{ organization_id: orgId, role: 'agronomist', is_owner: false }],
         error: null
       }),
       organization_clients: mockChain({
-        data: { id: 'oc-3', assigned_to: agronomistId, status: 'active' },
+        data: [{ organization_id: orgId, assigned_to: agronomistId, status: 'active' }],
         error: null
       })
     }
@@ -136,11 +138,11 @@ describe('checkFarmAccess', () => {
     const chains: Record<string, any> = {
       farms: mockChain({ data: { id: farmId, user_id: farmerId }, error: null }),
       organization_members: mockChain({
-        data: { organization_id: orgId, role: 'agronomist', is_owner: false },
+        data: [{ organization_id: orgId, role: 'agronomist', is_owner: false }],
         error: null
       }),
       organization_clients: mockChain({
-        data: { id: 'oc-4', assigned_to: 'other-agro', status: 'active' },
+        data: [{ organization_id: orgId, assigned_to: 'other-agro', status: 'active' }],
         error: null
       })
     }
@@ -180,10 +182,10 @@ describe('checkFarmAccess', () => {
     const chains: Record<string, any> = {
       farms: mockChain({ data: { id: farmId, user_id: farmerId }, error: null }),
       organization_members: mockChain({
-        data: { organization_id: orgId, role: 'owner', is_owner: true },
+        data: [{ organization_id: orgId, role: 'owner', is_owner: true }],
         error: null
       }),
-      organization_clients: mockChain({ data: null, error: null })
+      organization_clients: mockChain({ data: [], error: null })
     }
 
     const from = vi.fn((table: string) => chains[table])
@@ -192,5 +194,40 @@ describe('checkFarmAccess', () => {
     const result = await checkFarmAccess(memberId, farmId, { supabaseAdmin })
 
     expect(result).toEqual({ allowed: false, reason: 'Forbidden', status: 403 })
+  })
+
+  it('allows a multi-org member through the org with the active client link', async () => {
+    const farmId = 8
+    const farmerId = 'user-farmer'
+    const consultantId = 'user-consultant'
+    const inactiveOrgId = 'org-inactive'
+    const activeOrgId = 'org-active'
+
+    const chains: Record<string, any> = {
+      farms: mockChain({ data: { id: farmId, user_id: farmerId }, error: null }),
+      organization_members: mockChain({
+        data: [
+          { organization_id: inactiveOrgId, role: 'agronomist', is_owner: false },
+          { organization_id: activeOrgId, role: 'admin', is_owner: false }
+        ],
+        error: null
+      }),
+      organization_clients: mockChain({
+        data: [{ organization_id: activeOrgId, assigned_to: null, status: 'active' }],
+        error: null
+      })
+    }
+
+    const from = vi.fn((table: string) => chains[table])
+    const supabaseAdmin = mockSupabaseClient({ from })
+
+    const result = await checkFarmAccess(consultantId, farmId, { supabaseAdmin })
+
+    expect(result).toEqual({ allowed: true })
+    expect(chains.organization_members.maybeSingle).not.toHaveBeenCalled()
+    expect(chains.organization_clients.in).toHaveBeenCalledWith('organization_id', [
+      inactiveOrgId,
+      activeOrgId
+    ])
   })
 })
