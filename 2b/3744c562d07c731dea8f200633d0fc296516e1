@@ -1,0 +1,23 @@
+context/consultant-workflow-gaps.html
+  s_475021dcaec5c9::t_bdafd095500565 553-554,560,563-566,585-593
+  s_475021dcaec5c9::t_8e92842d73b6ac 991-1042
+  s_475021dcaec5c9::t_0e1f4775b049f2 1117-1120,1127-1128,1134-1137,1172-1173,1182,1199-1200
+  s_475021dcaec5c9::t_c3f917173b5d53 802-805,818-834,845-846,867,878-890,904-954
+  s_475021dcaec5c9::t_a8566dd1562a04 1184
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "2b3744c562d07c731dea8f200633d0fc296516e1",
+  "prompts": {},
+  "sessions": {
+    "s_475021dcaec5c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e7894-d4d0-75e0-aed1-e539ecda6482",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
