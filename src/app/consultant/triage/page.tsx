@@ -187,6 +187,13 @@ export default function TriagePage() {
     }
   }
 
+  // Close the drawer and invalidate any in-flight detail fetch, so a slow
+  // request that resolves after the user closes can't re-open the sheet.
+  const closeDetail = () => {
+    detailRequestRef.current = null
+    setSelected(null)
+  }
+
   const handleSave = async () => {
     if (!access || !selected) return
     setSaving(true)
@@ -218,7 +225,7 @@ export default function TriagePage() {
         )
       )
       toast.success('Triage updated')
-      setSelected(null)
+      closeDetail()
     } catch (error) {
       console.error('Failed to update triage:', error)
       toast.error('Failed to update triage')
@@ -378,7 +385,7 @@ export default function TriagePage() {
       )}
 
       {/* Detail / review drawer */}
-      <Sheet open={selected !== null} onOpenChange={(open) => !open && setSelected(null)}>
+      <Sheet open={selected !== null} onOpenChange={(open) => !open && closeDetail()}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{selected?.farmerName || 'Triage review'}</SheetTitle>
@@ -498,7 +505,7 @@ export default function TriagePage() {
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               Save review
             </Button>
-            <Button variant="outline" onClick={() => setSelected(null)} disabled={saving}>
+            <Button variant="outline" onClick={closeDetail} disabled={saving}>
               Cancel
             </Button>
           </SheetFooter>
