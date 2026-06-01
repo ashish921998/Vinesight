@@ -6,11 +6,15 @@ on:
   pull_request_review_comment:
     types: [created]
   issues:
-    types: [opened, assigned]
+    types: [opened]
   pull_request_review:
     types: [submitted]
   pull_request:
     types: [opened, edited]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
 
 jobs:
   droid:
@@ -33,6 +37,6 @@ jobs:
         with:
           fetch-depth: 1
       - name: Run Droid Exec
-        uses: Factory-AI/droid-action@main
+        uses: Factory-AI/droid-action@8ea31f351ee6636ebef918ccb64682f477af7184
         with:
           factory_api_key: ${{ secrets.FACTORY_API_KEY }}
