@@ -355,6 +355,7 @@ export async function updateTriageReview(
     .from('petiole_triage')
     .update(update)
     .eq('id', triageId)
+    .eq('organization_id', access.organizationId)
     .select('*')
     .single()
 

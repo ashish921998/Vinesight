@@ -240,6 +240,92 @@ describe('getTriageItems', () => {
     expect(items).toEqual([])
     expect(from).not.toHaveBeenCalledWith('petiole_triage')
   })
+
+  it('wires status, severity, and farmId filters into the triage query', async () => {
+    const triage = mockChain({ data: [], error: null })
+    const { client } = mockClient({
+      organization_clients: [
+        mockChain({ data: [{ client_user_id: 'farmer-1', assigned_to: null }], error: null })
+      ],
+      petiole_triage: [triage]
+    })
+
+    await getTriageItems(ownerAccess(), { status: 'reviewed', severity: 'high', farmId: 1 }, client)
+
+    expect(triage.calls).toContainEqual(['eq', ['status', 'reviewed']])
+    expect(triage.calls).toContainEqual(['eq', ['severity', 'high']])
+    expect(triage.calls).toContainEqual(['eq', ['farm_id', 1]])
+    // Newest-first ordering is requested from the DB, not sorted in memory.
+    expect(triage.calls).toContainEqual(['order', ['created_at', { ascending: false }]])
+  })
+
+  it('enriches items with the linked petiole test date', async () => {
+    const testChain = mockChain({ data: [{ id: 99, date: '2026-02-01' }], error: null })
+    const { client } = mockClient({
+      organization_clients: [
+        mockChain({ data: [{ client_user_id: 'farmer-1', assigned_to: null }], error: null })
+      ],
+      petiole_triage: [
+        mockChain({
+          data: [makeRow({ id: 't1', client_user_id: 'farmer-1', petiole_test_id: 99 })],
+          error: null
+        })
+      ],
+      profiles: [mockChain({ data: [{ id: 'farmer-1', full_name: 'Farmer One' }], error: null })],
+      farms: [mockChain({ data: [{ id: 1, name: 'Farm 1' }], error: null })],
+      petiole_test_records: [testChain]
+    })
+
+    const items = await getTriageItems(ownerAccess(), {}, client)
+
+    expect(items[0].testDate).toBe('2026-02-01')
+    expect(testChain.calls).toContainEqual(['in', ['id', [99]]])
+  })
+
+  it('applies the in-memory search filter on farmer and farm names', async () => {
+    const { client } = mockClient({
+      organization_clients: [
+        mockChain({
+          data: [
+            { client_user_id: 'farmer-1', assigned_to: null },
+            { client_user_id: 'farmer-2', assigned_to: null }
+          ],
+          error: null
+        })
+      ],
+      petiole_triage: [
+        mockChain({
+          data: [
+            makeRow({ id: 't1', client_user_id: 'farmer-1', farm_id: 1 }),
+            makeRow({ id: 't2', client_user_id: 'farmer-2', farm_id: 2 })
+          ],
+          error: null
+        })
+      ],
+      profiles: [
+        mockChain({
+          data: [
+            { id: 'farmer-1', full_name: 'Alice Grower' },
+            { id: 'farmer-2', full_name: 'Bob Vintner' }
+          ],
+          error: null
+        })
+      ],
+      farms: [
+        mockChain({
+          data: [
+            { id: 1, name: 'North Block' },
+            { id: 2, name: 'South Block' }
+          ],
+          error: null
+        })
+      ]
+    })
+
+    const items = await getTriageItems(ownerAccess(), { search: 'alice' }, client)
+
+    expect(items.map((i) => i.id)).toEqual(['t1'])
+  })
 })
 
 describe('getTriageItem', () => {
@@ -283,6 +369,42 @@ describe('getTriageItem', () => {
 
     expect(item).toBeNull()
   })
+
+  it('maps the linked petiole test values into the detail', async () => {
+    const { client } = mockClient({
+      petiole_triage: [
+        mockChain({
+          data: makeRow({ id: 't1', client_user_id: 'farmer-1', petiole_test_id: 99 }),
+          error: null
+        })
+      ],
+      organization_clients: [mockChain({ data: { assigned_to: null }, error: null })],
+      profiles: [mockChain({ data: [{ id: 'farmer-1', full_name: 'Farmer One' }], error: null })],
+      farms: [mockChain({ data: [{ id: 1, name: 'Farm 1' }], error: null })],
+      petiole_test_records: [
+        // First call: loadDisplayMaps .in() for the list test-date map.
+        mockChain({ data: [{ id: 99, date: '2026-02-01' }], error: null }),
+        // Second call: the detail .maybeSingle() fetch.
+        mockChain({
+          data: {
+            id: 99,
+            date: '2026-02-01',
+            date_of_pruning: '2025-12-15',
+            parameters: { N: 2.1, K: 1.4 },
+            recommendations: 'Increase N',
+            notes: null
+          },
+          error: null
+        })
+      ]
+    })
+
+    const item = await getTriageItem(ownerAccess(), 't1', client)
+
+    expect(item?.petioleTest?.id).toBe(99)
+    expect(item?.petioleTest?.dateOfPruning).toBe('2025-12-15')
+    expect(item?.petioleTest?.parameters).toEqual({ N: 2.1, K: 1.4 })
+  })
 })
 
 describe('updateTriageReview', () => {
@@ -322,13 +444,14 @@ describe('updateTriageReview', () => {
   })
 
   it('assigned agronomist can update review fields', async () => {
+    const updateChain = mockChain({ data: makeRow({ id: 't1', status: 'in_review' }), error: null })
     const { client } = mockClient({
       petiole_triage: [
         mockChain({
           data: { id: 't1', organization_id: 'org-1', client_user_id: 'farmer-2' },
           error: null
         }),
-        mockChain({ data: makeRow({ id: 't1', status: 'in_review' }), error: null })
+        updateChain
       ],
       organization_clients: [mockChain({ data: { assigned_to: 'agro-1' }, error: null })]
     })
@@ -341,6 +464,10 @@ describe('updateTriageReview', () => {
     )
 
     expect(result.status).toBe('in_review')
+    // Stamp must carry the acting agronomist's id, not a hardcoded reviewer.
+    const updateCall = updateChain.calls.find((c) => c[0] === 'update')
+    const payload = (updateCall?.[1] as Record<string, unknown>[])[0]
+    expect(payload.reviewed_by).toBe('agro-1')
   })
 
   it('unassigned agronomist cannot update and never issues an update', async () => {

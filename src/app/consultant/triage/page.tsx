@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -95,6 +95,7 @@ export default function TriagePage() {
   const [severityFilter, setSeverityFilter] = useState<string>('all')
 
   const [selected, setSelected] = useState<TriageDetail | null>(null)
+  const detailRequestRef = useRef<string | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -123,7 +124,7 @@ export default function TriagePage() {
       setItems(data)
     } catch (error) {
       console.error('Failed to load triage:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to load triage queue')
+      toast.error('Failed to load triage queue')
     } finally {
       setLoading(false)
     }
@@ -159,8 +160,11 @@ export default function TriagePage() {
     if (!access) return
     setDetailLoading(true)
     setSelected({ ...item, petioleTest: null })
+    detailRequestRef.current = item.id
     try {
       const detail = await getTriageItem(access, item.id)
+      // Ignore a stale response if a different item was opened in the meantime.
+      if (detailRequestRef.current !== item.id) return
       if (!detail) {
         toast.error('Triage item is no longer available')
         setSelected(null)
@@ -174,11 +178,12 @@ export default function TriagePage() {
       setFormRecommendation(detail.recommendation ?? '')
       setFormReviewNotes(detail.reviewNotes ?? '')
     } catch (error) {
+      if (detailRequestRef.current !== item.id) return
       console.error('Failed to load triage detail:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to load triage detail')
+      toast.error('Failed to load triage detail')
       setSelected(null)
     } finally {
-      setDetailLoading(false)
+      if (detailRequestRef.current === item.id) setDetailLoading(false)
     }
   }
 
@@ -216,7 +221,7 @@ export default function TriagePage() {
       setSelected(null)
     } catch (error) {
       console.error('Failed to update triage:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to update triage')
+      toast.error('Failed to update triage')
     } finally {
       setSaving(false)
     }
@@ -518,7 +523,9 @@ function PetioleParameters({ parameters }: { parameters: unknown }) {
       {entries.map(([key, value]) => (
         <div key={key} className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">{key}</span>
-          <span className="font-medium">{String(value)}</span>
+          <span className="font-medium">
+            {value !== null && typeof value === 'object' ? JSON.stringify(value) : String(value)}
+          </span>
         </div>
       ))}
     </div>
