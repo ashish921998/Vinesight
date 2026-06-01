@@ -1058,6 +1058,29 @@ CREATE TABLE fertilizer_plan_items (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Petiole triage table (consultant review queue for client petiole tests)
+-- organization_id and client_user_id are kept denormalized for simpler RLS/querying;
+-- visibility is never derived from joins through farms alone.
+CREATE TABLE petiole_triage (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  farm_id BIGINT NOT NULL REFERENCES farms(id) ON DELETE CASCADE,
+  petiole_test_id BIGINT REFERENCES petiole_test_records(id) ON DELETE CASCADE,
+  client_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  status VARCHAR(50) DEFAULT 'pending' NOT NULL
+    CHECK (status IN ('pending', 'in_review', 'reviewed', 'escalated', 'resolved')),
+  severity VARCHAR(50)
+    CHECK (severity IN ('low', 'medium', 'high', 'critical')),
+  classification TEXT,
+  summary TEXT,
+  recommendation TEXT,
+  review_notes TEXT,
+  reviewed_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  reviewed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Add organization_id to farms table (for farms managed by organizations)
 -- Note: This is an ALTER TABLE statement - run separately if table already exists
 -- ALTER TABLE farms ADD COLUMN organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL;
@@ -1077,6 +1100,12 @@ CREATE INDEX idx_farmer_invitations_status ON farmer_invitations(status);
 CREATE INDEX idx_fertilizer_plans_farm_id ON fertilizer_plans(farm_id);
 CREATE INDEX idx_fertilizer_plans_organization_id ON fertilizer_plans(organization_id);
 CREATE INDEX idx_fertilizer_plan_items_plan_id ON fertilizer_plan_items(plan_id);
+CREATE INDEX idx_petiole_triage_organization_id ON petiole_triage(organization_id);
+CREATE INDEX idx_petiole_triage_client_user_id ON petiole_triage(client_user_id);
+CREATE INDEX idx_petiole_triage_farm_id ON petiole_triage(farm_id);
+CREATE INDEX idx_petiole_triage_petiole_test_id ON petiole_triage(petiole_test_id);
+CREATE INDEX idx_petiole_triage_status ON petiole_triage(status);
+CREATE INDEX idx_petiole_triage_org_status ON petiole_triage(organization_id, status);
 
 -- Composite indexes for AI and analytics queries
 CREATE INDEX idx_organization_members_org_user ON organization_members(organization_id, user_id);
@@ -1092,6 +1121,7 @@ ALTER TABLE organization_clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE farmer_invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fertilizer_plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fertilizer_plan_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE petiole_triage ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for organizations
 CREATE POLICY "Users can view organizations they belong to" ON organizations FOR SELECT USING (
@@ -1215,6 +1245,125 @@ CREATE POLICY "Org members can delete fertilizer plan items" ON fertilizer_plan_
     WHERE fp.id = fertilizer_plan_items.plan_id AND om.user_id = auth.uid()
   )
 );
+
+-- RLS Policies for petiole_triage
+-- Read: owner/admin see all active org clients; agronomists see only clients
+-- assigned to them. Uses the denormalized client_user_id + organization_id so
+-- visibility never relies on farm joins alone.
+-- NOTE: This slice is consultant-facing only. There is intentionally NO farmer
+-- SELECT policy: petiole_triage carries consultant-only columns (review_notes,
+-- reviewed_by) and RLS cannot hide individual columns. If farmer-facing triage
+-- is added later, expose it via a farmer-safe view that omits internal fields
+-- rather than granting direct SELECT on this table.
+CREATE POLICY "Org members can view client triage" ON petiole_triage FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om
+      ON om.organization_id = oc.organization_id
+     AND om.user_id = auth.uid()
+    WHERE oc.organization_id = petiole_triage.organization_id
+      AND oc.client_user_id = petiole_triage.client_user_id
+      AND oc.status = 'active'
+      AND (
+        om.role IN ('owner', 'admin')
+        OR om.is_owner = TRUE
+        OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
+      )
+  )
+);
+-- Insert: org members can create triage for clients they can see
+-- (owner/admin any active client; agronomist only assigned clients).
+CREATE POLICY "Org members can insert client triage" ON petiole_triage FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om
+      ON om.organization_id = oc.organization_id
+     AND om.user_id = auth.uid()
+    WHERE oc.organization_id = petiole_triage.organization_id
+      AND oc.client_user_id = petiole_triage.client_user_id
+      AND oc.status = 'active'
+      AND (
+        om.role IN ('owner', 'admin')
+        OR om.is_owner = TRUE
+        OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
+      )
+  )
+);
+-- Update: consultant review fields. Owner/admin for all active clients;
+-- agronomist only for assigned clients. Farmers cannot update triage.
+CREATE POLICY "Org members can update client triage" ON petiole_triage FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om
+      ON om.organization_id = oc.organization_id
+     AND om.user_id = auth.uid()
+    WHERE oc.organization_id = petiole_triage.organization_id
+      AND oc.client_user_id = petiole_triage.client_user_id
+      AND oc.status = 'active'
+      AND (
+        om.role IN ('owner', 'admin')
+        OR om.is_owner = TRUE
+        OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
+      )
+  )
+);
+
+-- Trigger to keep petiole_triage updated_at current
+CREATE TRIGGER update_petiole_triage_updated_at
+  BEFORE UPDATE ON petiole_triage
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Enforce that a triage row's denormalized scope is internally consistent:
+-- the farm must belong to the client, and the linked petiole test (if any) must
+-- belong to that farm. RLS only checks organization_id + client_user_id, so
+-- without this a row could reference another farmer's farm/test.
+CREATE OR REPLACE FUNCTION validate_petiole_triage_consistency()
+RETURNS TRIGGER AS $$
+DECLARE
+  farm_owner UUID;
+  test_farm_id BIGINT;
+BEGIN
+  SELECT f.user_id INTO farm_owner FROM farms f WHERE f.id = NEW.farm_id;
+  IF farm_owner IS NULL OR farm_owner <> NEW.client_user_id THEN
+    RAISE EXCEPTION 'farm_id % does not belong to client_user_id %', NEW.farm_id, NEW.client_user_id;
+  END IF;
+
+  IF NEW.petiole_test_id IS NOT NULL THEN
+    SELECT p.farm_id INTO test_farm_id FROM petiole_test_records p WHERE p.id = NEW.petiole_test_id;
+    IF test_farm_id IS NULL OR test_farm_id <> NEW.farm_id THEN
+      RAISE EXCEPTION 'petiole_test_id % does not belong to farm_id %', NEW.petiole_test_id, NEW.farm_id;
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER validate_petiole_triage_consistency_trigger
+  BEFORE INSERT OR UPDATE ON petiole_triage
+  FOR EACH ROW
+  EXECUTE FUNCTION validate_petiole_triage_consistency();
+
+-- Identity/scope columns are immutable after insert. RLS cannot reference OLD,
+-- so a trigger is the only way to stop an authorized member from silently
+-- re-attributing an existing triage row to a different org/client/farm/test.
+CREATE OR REPLACE FUNCTION prevent_petiole_triage_scope_mutation()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (OLD.organization_id, OLD.client_user_id, OLD.farm_id, OLD.petiole_test_id)
+     IS DISTINCT FROM
+     (NEW.organization_id, NEW.client_user_id, NEW.farm_id, NEW.petiole_test_id) THEN
+    RAISE EXCEPTION 'petiole_triage scope columns (organization_id, client_user_id, farm_id, petiole_test_id) are immutable after creation';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER prevent_petiole_triage_scope_mutation_trigger
+  BEFORE UPDATE ON petiole_triage
+  FOR EACH ROW
+  EXECUTE FUNCTION prevent_petiole_triage_scope_mutation();
 
 -- Trigger to update fertilizer_plans updated_at timestamp
 CREATE TRIGGER update_fertilizer_plans_updated_at
