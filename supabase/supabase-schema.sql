@@ -420,6 +420,21 @@ ALTER TABLE soil_profiles ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for farms table
 CREATE POLICY "Users can view their own farms" ON farms FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Org members can view client farms" ON farms FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM organization_clients oc
+    JOIN organization_members om
+      ON om.organization_id = oc.organization_id
+     AND om.user_id = auth.uid()
+    WHERE oc.client_user_id = farms.user_id
+      AND oc.status = 'active'
+      AND (
+        om.role IN ('owner', 'admin')
+        OR om.is_owner = TRUE
+        OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
+      )
+  )
+);
 CREATE POLICY "Users can insert their own farms" ON farms FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update their own farms" ON farms FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own farms" ON farms FOR DELETE USING (auth.uid() = user_id);
@@ -576,6 +591,7 @@ CREATE POLICY "Org members can view client soil tests" ON soil_test_records FOR 
       AND oc.status = 'active'
       AND (
         om.role IN ('owner', 'admin')
+        OR om.is_owner = TRUE
         OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
       )
   )
@@ -605,6 +621,7 @@ CREATE POLICY "Org members can view client petiole tests" ON petiole_test_record
       AND oc.status = 'active'
       AND (
         om.role IN ('owner', 'admin')
+        OR om.is_owner = TRUE
         OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
       )
   )
