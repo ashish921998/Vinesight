@@ -1,0 +1,1209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VineSight Consultant Workflow Gaps</title>
+    <style>
+      :root {
+        --ink: #17211a;
+        --muted: #647067;
+        --line: #dfe7df;
+        --paper: #fbfdf9;
+        --band: #eef6ec;
+        --green: #4f7f44;
+        --amber: #9a6500;
+        --red: #a33a2b;
+        --blue: #315b83;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: var(--paper);
+        line-height: 1.55;
+      }
+
+      header {
+        border-bottom: 1px solid var(--line);
+        background: #ffffff;
+      }
+
+      main,
+      .inner {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 28px;
+      }
+
+      header .inner {
+        padding-top: 40px;
+        padding-bottom: 30px;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--green);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 860px;
+        font-size: 38px;
+        line-height: 1.12;
+        letter-spacing: 0;
+      }
+
+      .subtitle {
+        margin: 14px 0 0;
+        max-width: 880px;
+        color: var(--muted);
+        font-size: 17px;
+      }
+
+      section {
+        padding: 30px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h2 {
+        margin: 0 0 14px;
+        font-size: 24px;
+        line-height: 1.25;
+        letter-spacing: 0;
+      }
+
+      h3 {
+        margin: 0 0 8px;
+        font-size: 17px;
+        letter-spacing: 0;
+      }
+
+      p {
+        margin: 0 0 12px;
+      }
+
+      ul,
+      ol {
+        margin: 10px 0 0;
+        padding-left: 22px;
+      }
+
+      li {
+        margin: 7px 0;
+      }
+
+      code {
+        padding: 2px 5px;
+        border: 1px solid #d7ded7;
+        border-radius: 4px;
+        background: #f5f8f4;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.92em;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+      }
+
+      th,
+      td {
+        padding: 12px 14px;
+        text-align: left;
+        vertical-align: top;
+        border-bottom: 1px solid var(--line);
+      }
+
+      th {
+        background: var(--band);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 16px;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .high {
+        color: #ffffff;
+        background: var(--red);
+      }
+
+      .medium {
+        color: #ffffff;
+        background: var(--amber);
+      }
+
+      .low {
+        color: #ffffff;
+        background: var(--blue);
+      }
+
+      .callout {
+        margin-top: 16px;
+        padding: 16px;
+        border-left: 4px solid var(--green);
+        background: var(--band);
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .step {
+        min-height: 112px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 14px;
+      }
+
+      .step-number {
+        display: inline-flex;
+        width: 24px;
+        height: 24px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: var(--green);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .small {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 840px) {
+        main,
+        .inner {
+          padding: 0 18px;
+        }
+
+        h1 {
+          font-size: 30px;
+        }
+
+        .grid,
+        .flow {
+          grid-template-columns: 1fr;
+        }
+
+        table,
+        thead,
+        tbody,
+        th,
+        td,
+        tr {
+          display: block;
+        }
+
+        th {
+          display: none;
+        }
+
+        td {
+          border-bottom: 0;
+          padding: 10px 14px;
+        }
+
+        tr {
+          border-bottom: 1px solid var(--line);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="inner">
+        <p class="eyebrow">Current Branch Review</p>
+        <h1>Consultant, Agronomist, and Farmer Workflow Gaps</h1>
+        <p class="subtitle">
+          Review of the current PR #131 consultant dashboard implementation, focused on how the web
+          consultant workflow should connect with agronomists and farmer users in the React Native
+          app.
+        </p>
+      </div>
+    </header>
+
+    <main>
+      <section>
+        <h2>Intended Operating Model</h2>
+        <div class="flow">
+          <div class="step">
+            <span class="step-number">1</span>
+            <h3>Consultant Org</h3>
+            <p class="small">FPC, exporter, or advisory business owns the customer relationship.</p>
+          </div>
+          <div class="step">
+            <span class="step-number">2</span>
+            <h3>Team Members</h3>
+            <p class="small">Owners, admins, and agronomists access the web consultant dashboard.</p>
+          </div>
+          <div class="step">
+            <span class="step-number">3</span>
+            <h3>Farmers</h3>
+            <p class="small">Farmers use the React Native app and are linked as clients.</p>
+          </div>
+          <div class="step">
+            <span class="step-number">4</span>
+            <h3>Advisor Work</h3>
+            <p class="small">Agronomists review triage, create plans, and manage follow-up.</p>
+          </div>
+          <div class="step">
+            <span class="step-number">5</span>
+            <h3>Farmer Feedback</h3>
+            <p class="small">Farmers receive plans and acknowledge or ask questions in mobile.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Current Data Model</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Table</th>
+              <th>Current Meaning</th>
+              <th>Comment</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>organizations</code></td>
+              <td>Consultant organization or operating entity.</td>
+              <td>This is the right anchor for the web consultant business account.</td>
+            </tr>
+            <tr>
+              <td><code>organization_members</code></td>
+              <td>Internal consultant team membership with role.</td>
+              <td>Should be the source of truth for consultant staff access.</td>
+            </tr>
+            <tr>
+              <td><code>profiles</code></td>
+              <td>User profile fields and <code>consultant_organization_id</code>.</td>
+              <td>
+                Current code uses this to link farmers to an org. It should not be the primary
+                source of consultant staff membership.
+              </td>
+            </tr>
+            <tr>
+              <td><code>organization_clients</code></td>
+              <td>Farmer/client relationship and agronomist assignment via <code>assigned_to</code>.</td>
+              <td>This should become the canonical client membership and assignment table.</td>
+            </tr>
+            <tr>
+              <td><code>petiole_triage</code></td>
+              <td>AI classification, review status, and current farmer acknowledgment fields.</td>
+              <td>Works for triage, but acknowledgment overlaps with <code>plan_acknowledgments</code>.</td>
+            </tr>
+            <tr>
+              <td><code>plan_acknowledgments</code></td>
+              <td>Farmer reaction per fertilizer plan.</td>
+              <td>Better long-term home for mobile plan feedback than triage-level fields.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Proposed Database Mapping</h2>
+        <p>
+          We do not need a separate <code>consultants</code> table for V1. The clean model is to
+          treat the consultant business as an <code>organization</code>, consultant staff as
+          <code>organization_members</code>, and farmers as clients connected through
+          <code>organization_clients</code>.
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Concept</th>
+              <th>Table / Columns</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Consultant company, FPC, exporter, or advisor business</td>
+              <td><code>organizations</code></td>
+              <td>Keep. This is the account/workspace boundary.</td>
+            </tr>
+            <tr>
+              <td>Owner, admin, agronomist staff users</td>
+              <td><code>organization_members.user_id</code>, <code>organization_members.role</code></td>
+              <td>
+                Keep and standardize. Use roles <code>owner</code>, <code>admin</code>,
+                <code>agronomist</code>.
+              </td>
+            </tr>
+            <tr>
+              <td>Farmer mobile app user</td>
+              <td><code>auth.users</code>, <code>profiles</code>, <code>farms.user_id</code></td>
+              <td>Keep. Farmer remains a normal authenticated user who owns farms and records.</td>
+            </tr>
+            <tr>
+              <td>Farmer belongs to consultant org</td>
+              <td><code>organization_clients.organization_id</code>, <code>client_user_id</code></td>
+              <td>
+                Make canonical. Read farmer directory and plan builder from this table, joined to
+                <code>profiles</code> and <code>farms</code>.
+              </td>
+            </tr>
+            <tr>
+              <td>Farmer assigned to specific agronomist</td>
+              <td><code>organization_clients.assigned_to</code></td>
+              <td>Keep. This is the core scoping field for agronomist access.</td>
+            </tr>
+            <tr>
+              <td>Petiole AI triage and review workflow</td>
+              <td><code>petiole_triage</code></td>
+              <td>Keep. It is org-scoped and farm-scoped.</td>
+            </tr>
+            <tr>
+              <td>Reusable consultant fertilizer templates</td>
+              <td><code>plan_templates</code></td>
+              <td>Keep. It is correctly scoped by <code>organization_id</code>.</td>
+            </tr>
+            <tr>
+              <td>Farmer reaction to a delivered plan</td>
+              <td><code>plan_acknowledgments</code></td>
+              <td>
+                Use this as the canonical table. Do not store long-term plan feedback on
+                <code>petiole_triage</code>.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout">
+          <h3>Important Direction</h3>
+          <p>
+            Avoid using <code>profiles.consultant_organization_id</code> as the primary relationship
+            between a farmer and a consultant organization. It is too limited for assignments,
+            history, status, and future cases where a farmer may move between consultants or be
+            served by multiple programs.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Table Changes Needed</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Table</th>
+              <th>Change</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>organization_members</code></td>
+              <td>
+                Ensure role constraint allows exactly <code>owner</code>, <code>admin</code>,
+                <code>agronomist</code>. Add or keep an ownership flag only if the rest of the app
+                already depends on it.
+              </td>
+              <td>One consistent staff role model across DB, RLS, TypeScript, and UI.</td>
+            </tr>
+            <tr>
+              <td><code>organization_clients</code></td>
+              <td>
+                Add/confirm columns:
+                <code>id</code>, <code>organization_id</code>, <code>client_user_id</code>,
+                <code>assigned_to</code>, <code>status</code>, <code>assigned_by</code>,
+                <code>assigned_at</code>, <code>notes</code>, <code>created_at</code>,
+                <code>updated_at</code>.
+              </td>
+              <td>
+                This table must represent the business relationship, assignment, and lifecycle of a
+                farmer under a consultant org.
+              </td>
+            </tr>
+            <tr>
+              <td><code>profiles</code></td>
+              <td>
+                Stop relying on <code>consultant_organization_id</code> for core reads. Either keep
+                it as a denormalized shortcut or plan a later migration to remove it.
+              </td>
+              <td>
+                A single FK on profile cannot represent assignments, status, invitations, history, or
+                multiple relationships.
+              </td>
+            </tr>
+            <tr>
+              <td><code>plan_acknowledgments</code></td>
+              <td>
+                Add optional columns if mobile feedback needs them:
+                <code>note</code>, <code>created_by_role</code>, <code>updated_at</code>.
+              </td>
+              <td>
+                Farmers may need to say "questions" with a short note. The consultant dashboard can
+                then show plan-level feedback reliably.
+              </td>
+            </tr>
+            <tr>
+              <td><code>petiole_triage</code></td>
+              <td>
+                Keep triage review fields, but remove or stop using
+                <code>farmer_acknowledgment</code> for plan reactions.
+              </td>
+              <td>Triage and delivered-plan feedback are different lifecycle events.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>New Tables To Add</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Need</th>
+              <th>Table</th>
+              <th>V1 Recommendation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Real team and farmer invitations</td>
+              <td><code>organization_invitations</code></td>
+              <td>
+                Add only if onboarding through the product is required for the pilot. Otherwise hide
+                invite UI and seed users manually.
+              </td>
+            </tr>
+            <tr>
+              <td>Server-side notification preferences</td>
+              <td><code>user_notification_preferences</code> or <code>organization_notification_preferences</code></td>
+              <td>
+                Defer unless alerts are part of pilot scope. Current localStorage settings are not
+                operationally meaningful.
+              </td>
+            </tr>
+            <tr>
+              <td>Audit trail for consultant actions</td>
+              <td><code>consultant_activity_log</code></td>
+              <td>
+                Defer for V1 unless compliance/audit evidence is a near-term sales requirement.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout">
+          <h3>Recommended V1 Addition</h3>
+          <p>
+            The only new table worth adding now is <code>organization_invitations</code>, and only if
+            we want real onboarding from the Settings page. Everything else can be handled by
+            cleaning up current tables and code paths.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Suggested SQL Shape</h2>
+        <p>
+          This is not a final migration, but it shows the direction the schema should move toward.
+        </p>
+        <pre><code>-- Canonical farmer/client relationship
+ALTER TABLE organization_clients
+  ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active'
+    CHECK (status IN ('invited', 'active', 'paused', 'archived')),
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+CREATE UNIQUE INDEX IF NOT EXISTS organization_clients_org_client_unique
+  ON organization_clients(organization_id, client_user_id);
+
+-- Optional only if real invites are in V1
+CREATE TABLE organization_invitations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  invite_type TEXT NOT NULL CHECK (invite_type IN ('team_member', 'farmer_client')),
+  role TEXT CHECK (role IN ('admin', 'agronomist')),
+  assigned_to UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  invited_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  accepted_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'accepted', 'expired', 'revoked')),
+  token_hash TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  accepted_at TIMESTAMPTZ
+);</code></pre>
+      </section>
+
+      <section>
+        <h2>Authentication and Onboarding Flow</h2>
+        <p>
+          All user types should use the same Supabase Auth system. We should not create separate
+          auth models for consultants, agronomists, and farmers. Their product context comes from
+          relationship tables after sign-in.
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>User Type</th>
+              <th>How They Sign In</th>
+              <th>Rows Created / Linked</th>
+              <th>Resulting Access</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Consultant owner</td>
+              <td>Web signup with Google or email/password.</td>
+              <td>
+                <code>auth.users</code>, <code>profiles</code>, <code>organizations</code>,
+                <code>organization_members(role = owner)</code>.
+              </td>
+              <td>Can access consultant dashboard, manage org settings, team, and all farmers.</td>
+            </tr>
+            <tr>
+              <td>Admin</td>
+              <td>Web signup/sign-in, then added to consultant org.</td>
+              <td>
+                <code>auth.users</code>, <code>profiles</code>,
+                <code>organization_members(role = admin)</code>.
+              </td>
+              <td>Can manage most org operations, farmers, templates, assignments, and team.</td>
+            </tr>
+            <tr>
+              <td>Agronomist</td>
+              <td>Web signup/sign-in, then added to consultant org.</td>
+              <td>
+                <code>auth.users</code>, <code>profiles</code>,
+                <code>organization_members(role = agronomist)</code>.
+              </td>
+              <td>Can access consultant dashboard and work assigned farmers.</td>
+            </tr>
+            <tr>
+              <td>Farmer</td>
+              <td>React Native app signup/sign-in.</td>
+              <td>
+                <code>auth.users</code>, <code>profiles</code>, farmer-owned <code>farms</code>,
+                and <code>organization_clients</code> row when linked to a consultant org.
+              </td>
+              <td>Can use the mobile app, own farm data, receive plans, and acknowledge plans.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout">
+          <h3>V1 Onboarding Recommendation</h3>
+          <p>
+            For pilot testing, onboard consultant owners through web signup, manually add
+            agronomists to <code>organization_members</code>, and link farmers through
+            <code>organization_clients</code>. Add real invitation flows only when we need
+            self-serve onboarding.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Supported Flows After V1 Fixes</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Flow</th>
+              <th>How It Works</th>
+              <th>Tables Involved</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Consultant dashboard access</td>
+              <td>
+                After sign-in, the web app checks whether the user has an
+                <code>organization_members</code> row with role <code>owner</code>,
+                <code>admin</code>, or <code>agronomist</code>.
+              </td>
+              <td><code>auth.users</code>, <code>organization_members</code></td>
+            </tr>
+            <tr>
+              <td>Team role behavior</td>
+              <td>
+                Owner/admin can see and manage organization-wide data. Agronomists can operate on
+                assigned farmers only.
+              </td>
+              <td><code>organization_members</code>, <code>organization_clients</code></td>
+            </tr>
+            <tr>
+              <td>Farmer directory</td>
+              <td>
+                The directory reads farmers from <code>organization_clients</code> and joins
+                <code>profiles</code> for display fields such as name, email, and phone.
+              </td>
+              <td><code>organization_clients</code>, <code>profiles</code>, <code>farms</code></td>
+            </tr>
+            <tr>
+              <td>Agronomist assignment</td>
+              <td>
+                Owner/admin assigns a farmer to an agronomist by setting
+                <code>organization_clients.assigned_to</code>.
+              </td>
+              <td><code>organization_clients</code>, <code>organization_members</code></td>
+            </tr>
+            <tr>
+              <td>Farm detail access</td>
+              <td>
+                Owner/admin can open any farmer farm under the org. Agronomists can open farms only
+                when the farmer is assigned to them.
+              </td>
+              <td><code>organization_clients</code>, <code>farms</code>, farm record tables</td>
+            </tr>
+            <tr>
+              <td>Petiole triage</td>
+              <td>
+                Triage rows remain scoped by <code>organization_id</code> and <code>farm_id</code>.
+                Visibility follows the same owner/admin/all versus agronomist/assigned rule.
+              </td>
+              <td><code>petiole_triage</code>, <code>organization_clients</code>, <code>farms</code></td>
+            </tr>
+            <tr>
+              <td>Fertilizer plan creation</td>
+              <td>
+                Consultant users create plans for farmers they can access. Plans stay attached to
+                farms and are visible to the farmer in the mobile app.
+              </td>
+              <td><code>fertilizer_plans</code>, <code>fertilizer_plan_items</code>, <code>farms</code></td>
+            </tr>
+            <tr>
+              <td>Template usage</td>
+              <td>
+                Templates are scoped to the consultant organization and can be applied during plan
+                creation.
+              </td>
+              <td><code>plan_templates</code>, <code>organizations</code></td>
+            </tr>
+            <tr>
+              <td>Farmer mobile acknowledgment</td>
+              <td>
+                Farmer receives a plan in React Native and responds with understood, questions, or
+                thanks. Store this as plan-level feedback.
+              </td>
+              <td><code>plan_acknowledgments</code>, <code>fertilizer_plans</code>, <code>auth.users</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Out Of Scope For V1</h2>
+        <div class="grid">
+          <div class="panel">
+            <h3>Self-Serve Invites</h3>
+            <p>
+              Real email invite acceptance can wait unless pilot onboarding depends on it. Do not
+              keep a fake invite success state.
+            </p>
+          </div>
+          <div class="panel">
+            <h3>Billing</h3>
+            <p>
+              Billing can be modeled later at the organization level. It should not block the
+              consultant dashboard data model.
+            </p>
+          </div>
+          <div class="panel">
+            <h3>Multi-Org Switching</h3>
+            <p>
+              For V1, assume one consultant organization per staff user or explicitly choose the
+              first membership. Add an org switcher later.
+            </p>
+          </div>
+          <div class="panel">
+            <h3>Audit Log</h3>
+            <p>
+              A consultant activity log is useful for compliance, but not required to validate the
+              core consultant-farmer workflow.
+            </p>
+          </div>
+          <div class="panel">
+            <h3>Notification Delivery</h3>
+            <p>
+              Real email/SMS alerts require server-side preferences and delivery jobs. LocalStorage
+              settings are only UI state.
+            </p>
+          </div>
+          <div class="panel">
+            <h3>Viewer Role</h3>
+            <p>
+              Viewer should wait until DB constraints, RLS, UI permissions, and product need are all
+              aligned.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Main Gaps</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Priority</th>
+              <th>Gap</th>
+              <th>Why It Matters</th>
+              <th>Recommended Change</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="status high">High</span></td>
+              <td><code>/consultant</code> only authorizes <code>role === 'agronomist'</code>.</td>
+              <td>Owners and admins can manage the organization but are blocked from the dashboard.</td>
+              <td>
+                Authorize <code>owner</code>, <code>admin</code>, and <code>agronomist</code>.
+                Gate capabilities inside pages based on role.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="status high">High</span></td>
+              <td>Role definitions are inconsistent.</td>
+              <td>
+                DB allows <code>owner</code>, <code>admin</code>, <code>agronomist</code>, while
+                Settings UI includes <code>viewer</code> and service types omit <code>owner</code>.
+              </td>
+              <td>
+                For V1, remove <code>viewer</code> from UI and types. Use one shared role union:
+                <code>owner | admin | agronomist</code>.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="status high">High</span></td>
+              <td>Invite flow is fake.</td>
+              <td>
+                Settings shows invitation success, but it only sleeps and clears the form. No user,
+                member, invite, or email is created.
+              </td>
+              <td>
+                Either hide invites for V1 or implement a real invite table/API that creates pending
+                organization membership.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="status high">High</span></td>
+              <td>Farmer-client relationship is split between two models.</td>
+              <td>
+                Some code reads farmers through <code>profiles.consultant_organization_id</code>,
+                while RLS and assignment use <code>organization_clients</code>.
+              </td>
+              <td>
+                Make <code>organization_clients</code> canonical. Keep
+                <code>profiles.consultant_organization_id</code> only as a denormalized convenience
+                if needed.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="status medium">Medium</span></td>
+              <td>Acknowledgment is implemented in two places.</td>
+              <td>
+                <code>petiole_triage</code> has <code>farmer_acknowledgment</code>, and
+                <code>plan_acknowledgments</code> has reaction rows. Mobile plan feedback should be
+                plan-level.
+              </td>
+              <td>
+                Use <code>plan_acknowledgments</code> for farmer app reactions. Remove or reserve
+                triage acknowledgment for triage-specific status only.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="status medium">Medium</span></td>
+              <td>Notification preferences are stored in localStorage.</td>
+              <td>
+                They do not travel across devices, users, or browsers, and cannot drive server-side
+                alerts.
+              </td>
+              <td>
+                Add <code>organization_notification_preferences</code> or
+                <code>user_notification_preferences</code> after V1 if alerts are real.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="status medium">Medium</span></td>
+              <td>Organization selection assumes one membership.</td>
+              <td>
+                Code frequently uses <code>.limit(1).maybeSingle()</code>. A consultant may later
+                belong to multiple organizations.
+              </td>
+              <td>
+                For V1, explicitly enforce one org per consultant user or add an org switcher.
+              </td>
+            </tr>
+            <tr>
+              <td><span class="status low">Low</span></td>
+              <td>Copy says "agronomist consultants only".</td>
+              <td>It conflates role and product area, making owner/admin access confusing.</td>
+              <td>Use "consultant team members" for area-level copy.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Recommended V1 Changes</h2>
+        <div class="grid">
+          <div class="panel">
+            <h3>1. Normalize Roles</h3>
+            <p>
+              Create one shared role definition used by UI, services, database types, and RLS:
+              <code>owner</code>, <code>admin</code>, <code>agronomist</code>.
+            </p>
+            <ul>
+              <li>Owner/admin can access all organization consultant pages.</li>
+              <li>Agronomist can access assigned operational work.</li>
+              <li>Remove viewer from V1 until implemented end to end.</li>
+            </ul>
+          </div>
+
+          <div class="panel">
+            <h3>2. Add Membership Helper</h3>
+            <p>
+              Add a single helper such as <code>getCurrentOrganizationMembership()</code> and use it
+              across consultant pages.
+            </p>
+            <ul>
+              <li>Returns <code>organization_id</code>, <code>role</code>, and permissions.</li>
+              <li>Avoids each page reimplementing auth and role lookup.</li>
+              <li>Makes future org switching easier.</li>
+            </ul>
+          </div>
+
+          <div class="panel">
+            <h3>3. Canonicalize Clients</h3>
+            <p>
+              Move farmer/client membership reads to <code>organization_clients</code> and join
+              <code>profiles</code> only for display.
+            </p>
+            <ul>
+              <li>Use <code>assigned_to</code> for agronomist scoping.</li>
+              <li>Owner/admin see all org clients.</li>
+              <li>Agronomist sees assigned clients.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout">
+          <h3>V1 Position</h3>
+          <p>
+            Do not add more abstractions than needed. Keep one consultant organization, one team
+            membership table, one canonical farmer-client table, and one assignment field. That is
+            enough to support the consultant, agronomist, and React Native farmer workflow.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Concrete Implementation Checklist</h2>
+        <ol>
+          <li>
+            Update consultant layout authorization from exact <code>agronomist</code> to
+            <code>owner/admin/agronomist</code>.
+          </li>
+          <li>
+            Update "Access Denied" copy to say "consultant team members" rather than "agronomist
+            consultants".
+          </li>
+          <li>
+            Remove <code>viewer</code> from Settings invite role UI and local TypeScript interfaces.
+          </li>
+          <li>
+            Add shared permission helpers for <code>canManageTeam</code>,
+            <code>canManageTemplates</code>, <code>canViewAllFarmers</code>, and
+            <code>canReviewAssignedFarmers</code>.
+          </li>
+          <li>
+            Change farmer directory and plan builder reads to use
+            <code>organization_clients</code> as the canonical membership table.
+          </li>
+          <li>
+            Decide whether invites are in V1. If not, hide the invite button. If yes, implement a
+            real pending invite flow.
+          </li>
+          <li>
+            Move farmer plan reactions to <code>plan_acknowledgments</code> and align React Native
+            app calls with that table.
+          </li>
+          <li>
+            Add targeted tests around role authorization and farmer visibility:
+            owner/admin all clients, agronomist assigned clients only, farmer own plan only.
+          </li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>PR Split Plan</h2>
+        <p>
+          The current PR is too large to review safely. Split it into stacked PRs so each one has a
+          clear data contract, test surface, and rollback path.
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>PR</th>
+              <th>Scope</th>
+              <th>Include</th>
+              <th>Do Not Include</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1. DB Foundation</td>
+              <td>Schema, roles, RLS, and shared access helpers.</td>
+              <td>
+                <code>organization_clients</code>, role normalization, generated types,
+                <code>getCurrentOrganizationMembership()</code>, consultant layout access fix.
+              </td>
+              <td>Large dashboard pages, clusters, AI plan builder, fake invites.</td>
+            </tr>
+            <tr>
+              <td>2. Farmer Directory</td>
+              <td>Consultant can view farmers and farms through canonical client mapping.</td>
+              <td>
+                <code>/consultant/farmers</code>, farmer profile page, farm detail page, assigned
+                farmer filtering.
+              </td>
+              <td>Triage, templates, plan generation, settings expansion.</td>
+            </tr>
+            <tr>
+              <td>3. Triage</td>
+              <td>Petiole classification and review workflow.</td>
+              <td>
+                <code>petiole_triage</code>, classification utilities, triage service, triage queue,
+                focused tests.
+              </td>
+              <td>Plan builder, clusters, unrelated dashboard polish.</td>
+            </tr>
+            <tr>
+              <td>4. Plans and Templates</td>
+              <td>Consultant creates plans and reuses templates.</td>
+              <td>
+                <code>plan_templates</code>, fertilizer plan builder, template matching, plan copy
+                flow if still needed.
+              </td>
+              <td>Fake invites, notification preferences, large settings UI.</td>
+            </tr>
+            <tr>
+              <td>5. Farmer Feedback</td>
+              <td>Mobile farmer can acknowledge/respond to delivered plans.</td>
+              <td>
+                <code>plan_acknowledgments</code>, RN/web API alignment, consultant visibility of
+                acknowledgment status.
+              </td>
+              <td>Triage-level duplicate acknowledgment fields.</td>
+            </tr>
+            <tr>
+              <td>6. Settings and Polish</td>
+              <td>Team management, org settings, clusters, and optional invites.</td>
+              <td>
+                Settings page cleanup, hide or implement invites, optional cluster views, final UX
+                polish.
+              </td>
+              <td>Core DB/RLS changes that should already be merged.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout">
+          <h3>Immediate Scope Reduction</h3>
+          <p>
+            The first PR should prove the foundation only: consultant team access works, farmers can
+            be linked through <code>organization_clients</code>, and owner/admin/agronomist
+            permissions are enforced. Everything else builds on top.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Testing Strategy</h2>
+        <p>
+          We cannot prove the feature is entirely bug-free, but we can make the important failure
+          modes repeatable and hard to miss by testing the role matrix at the database, service, page,
+          and end-to-end levels.
+        </p>
+
+        <h3>Seeded Persona Matrix</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Persona</th>
+              <th>Purpose</th>
+              <th>Expected Access</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Consultant owner</td>
+              <td>Organization owner and admin-equivalent operator.</td>
+              <td>All org farmers, all triage, templates, settings.</td>
+            </tr>
+            <tr>
+              <td>Consultant admin</td>
+              <td>Non-owner manager.</td>
+              <td>All org farmers, team operations except owner-only actions if any.</td>
+            </tr>
+            <tr>
+              <td>Agronomist A</td>
+              <td>Assigned operator for Farmer A.</td>
+              <td>Only Farmer A and Farmer A's farms/triage/plans.</td>
+            </tr>
+            <tr>
+              <td>Agronomist B</td>
+              <td>Assigned operator for Farmer B.</td>
+              <td>Only Farmer B and Farmer B's farms/triage/plans.</td>
+            </tr>
+            <tr>
+              <td>Farmer A</td>
+              <td>React Native app user assigned to Agronomist A.</td>
+              <td>Own farms, own plans, own acknowledgments.</td>
+            </tr>
+            <tr>
+              <td>Unrelated user</td>
+              <td>Negative access test.</td>
+              <td>No consultant dashboard, no org farmer data.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Required Test Layers</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Layer</th>
+              <th>What To Test</th>
+              <th>Tools / Gates</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Database and RLS</td>
+              <td>
+                Owner/admin all clients, agronomist assigned clients only, farmer own records only,
+                unrelated user denied, duplicate client rows blocked.
+              </td>
+              <td>Supabase local migrations, SQL/RLS tests, seeded users.</td>
+            </tr>
+            <tr>
+              <td>Services and helpers</td>
+              <td>
+                Membership lookup, role helpers, farmer access helper, directory query, triage query,
+                plan creation permissions.
+              </td>
+              <td><code>bun run test:run</code> with focused unit/integration tests.</td>
+            </tr>
+            <tr>
+              <td>Web route access</td>
+              <td>
+                Logged out sees auth gate, farmer sees denied state, owner/admin/agronomist see
+                consultant shell, wrong-org user is denied.
+              </td>
+              <td>Browser checks with seeded sessions and route-level assertions.</td>
+            </tr>
+            <tr>
+              <td>End-to-end happy path</td>
+              <td>
+                Owner links farmer, assigns agronomist, agronomist reviews triage, creates plan,
+                farmer sees plan in RN, farmer acknowledges plan, consultant sees response.
+              </td>
+              <td>Manual QA first, then Playwright/Detox-style automation when stable.</td>
+            </tr>
+            <tr>
+              <td>Regression gates</td>
+              <td>Type safety, lint, unit tests, production build, migration validity.</td>
+              <td>
+                <code>bun run typecheck</code>, <code>bun run lint</code>,
+                <code>bun run test:run</code>, <code>bun run build</code>, Supabase reset/lint.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout">
+          <h3>Testing Rule</h3>
+          <p>
+            Every PR should include tests for the permission branch it changes. If a page shows
+            different data for owner/admin versus agronomist, both paths need explicit test coverage.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Decision Needed</h2>
+        <p>
+          The only product decision to make before implementation is whether V1 supports a real team
+          invitation flow.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Tradeoff</th>
+              <th>Recommendation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Hide invites for V1</td>
+              <td>Fastest and avoids fake success states.</td>
+              <td>Best if the immediate goal is to test consultant workflows with manually seeded users.</td>
+            </tr>
+            <tr>
+              <td>Build real invites now</td>
+              <td>More complete, but requires API, email, pending invite state, and acceptance flow.</td>
+              <td>Do this only if onboarding consultant teams is required for the pilot.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </body>
+</html>
