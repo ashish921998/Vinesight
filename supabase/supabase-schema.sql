@@ -566,14 +566,14 @@ CREATE POLICY "Users can view their farm soil test records" ON soil_test_records
   EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_test_records.farm_id AND farms.user_id = auth.uid())
 );
 CREATE POLICY "Org members can view client soil tests" ON soil_test_records FOR SELECT USING (
-  EXISTS (SELECT 1 FROM farms WHERE farms.id = soil_test_records.farm_id AND farms.user_id = auth.uid())
-  OR EXISTS (
+  EXISTS (
     SELECT 1 FROM organization_clients oc
     JOIN organization_members om
       ON om.organization_id = oc.organization_id
      AND om.user_id = auth.uid()
     JOIN farms f ON f.user_id = oc.client_user_id
     WHERE f.id = soil_test_records.farm_id
+      AND oc.status = 'active'
       AND (
         om.role IN ('owner', 'admin')
         OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())
@@ -595,14 +595,14 @@ CREATE POLICY "Users can view their farm petiole test records" ON petiole_test_r
   EXISTS (SELECT 1 FROM farms WHERE farms.id = petiole_test_records.farm_id AND farms.user_id = auth.uid())
 );
 CREATE POLICY "Org members can view client petiole tests" ON petiole_test_records FOR SELECT USING (
-  EXISTS (SELECT 1 FROM farms WHERE farms.id = petiole_test_records.farm_id AND farms.user_id = auth.uid())
-  OR EXISTS (
+  EXISTS (
     SELECT 1 FROM organization_clients oc
     JOIN organization_members om
       ON om.organization_id = oc.organization_id
      AND om.user_id = auth.uid()
     JOIN farms f ON f.user_id = oc.client_user_id
     WHERE f.id = petiole_test_records.farm_id
+      AND oc.status = 'active'
       AND (
         om.role IN ('owner', 'admin')
         OR (om.role = 'agronomist' AND oc.assigned_to = auth.uid())

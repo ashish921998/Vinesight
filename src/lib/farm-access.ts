@@ -47,43 +47,48 @@ export async function checkFarmAccess(
     return { allowed: true }
   }
 
-  // Check organization membership and client links
-  const { data: membership, error: membershipError } = await supabaseAdmin
+  // Fetch all org memberships for the user
+  const { data: memberships, error: membershipsError } = await supabaseAdmin
     .from('organization_members')
     .select('organization_id, role, is_owner')
     .eq('user_id', userId)
-    .maybeSingle()
 
-  if (membershipError) throw membershipError
+  if (membershipsError) throw membershipsError
 
-  if (!membership) {
+  if (!memberships || memberships.length === 0) {
     return { allowed: false, reason: 'Forbidden', status: 403 }
   }
 
-  const { data: clientLink, error: clientLinkError } = await supabaseAdmin
+  const orgIds = memberships.map((m) => m.organization_id)
+
+  // Check active client links across all orgs
+  const { data: clientLinks, error: clientLinksError } = await supabaseAdmin
     .from('organization_clients')
-    .select('id, assigned_to, status')
-    .eq('organization_id', membership.organization_id)
+    .select('organization_id, assigned_to, status')
+    .in('organization_id', orgIds)
     .eq('client_user_id', farm.user_id)
     .eq('status', 'active')
-    .maybeSingle()
 
-  if (clientLinkError) throw clientLinkError
+  if (clientLinksError) throw clientLinksError
 
-  if (!clientLink) {
+  if (!clientLinks || clientLinks.length === 0) {
     return { allowed: false, reason: 'Forbidden', status: 403 }
   }
 
-  // Rule 2: Consultant owner/admin
-  const isAdmin = membership.is_owner || membership.role === 'owner' || membership.role === 'admin'
+  for (const link of clientLinks) {
+    const member = memberships.find((m) => m.organization_id === link.organization_id)
+    if (!member) continue
 
-  if (isAdmin) {
-    return { allowed: true }
-  }
+    // Rule 2: Consultant owner/admin
+    const isAdmin = member.is_owner || member.role === 'owner' || member.role === 'admin'
+    if (isAdmin) {
+      return { allowed: true }
+    }
 
-  // Rule 3: Agronomist assigned to this client
-  if (membership.role === 'agronomist' && clientLink.assigned_to === userId) {
-    return { allowed: true }
+    // Rule 3: Agronomist assigned to this client
+    if (member.role === 'agronomist' && link.assigned_to === userId) {
+      return { allowed: true }
+    }
   }
 
   return { allowed: false, reason: 'Forbidden', status: 403 }
