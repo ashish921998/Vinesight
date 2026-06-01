@@ -7,7 +7,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Button } from '@/components/ui/button'
 import { Contact, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getTypedSupabaseClient } from '@/lib/supabase'
+import { getConsultantAccess } from '@/lib/consultant-access'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
@@ -32,27 +32,9 @@ export default function ConsultantLayout({ children }: DashboardLayoutProps) {
   useEffect(() => {
     async function checkAccess() {
       try {
-        const supabase = await getTypedSupabaseClient()
-        const {
-          data: { user }
-        } = await supabase.auth.getUser()
+        const access = await getConsultantAccess()
 
-        if (!user) {
-          setAuthorized(false)
-          return
-        }
-
-        const { data: membership } = await supabase
-          .from('organization_members')
-          .select('role, is_owner')
-          .eq('user_id', user.id)
-          .limit(1)
-          .maybeSingle()
-
-        const role = membership?.is_owner ? 'owner' : membership?.role
-        const isConsultant = role === 'owner' || role === 'admin' || role === 'agronomist'
-
-        if (!isConsultant) {
+        if (!access) {
           toast.error('Access denied. Consultant team members only.')
           router.push('/dashboard')
           setAuthorized(false)
@@ -80,7 +62,13 @@ export default function ConsultantLayout({ children }: DashboardLayoutProps) {
   }
 
   if (!authorized) {
-    return null
+    return (
+      <ProtectedRoute>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      </ProtectedRoute>
+    )
   }
 
   return (

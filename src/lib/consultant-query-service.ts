@@ -94,7 +94,8 @@ export async function getFarmerClients(access: ConsultantAccess): Promise<Farmer
 
   const farmsByUser: Record<string, FarmerFarm[]> = {}
   for (const farm of farms ?? []) {
-    const uid = farm.user_id as string
+    const uid = farm.user_id
+    if (!uid) continue
     if (!farmsByUser[uid]) farmsByUser[uid] = []
     farmsByUser[uid].push({
       id: farm.id,

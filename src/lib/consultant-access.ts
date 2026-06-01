@@ -39,7 +39,13 @@ export async function getConsultantAccess(): Promise<ConsultantAccess | null> {
     return null
   }
 
-  const role: ConsultantRole = membership.is_owner ? 'owner' : (membership.role as ConsultantRole)
+  const validRoles: string[] = ['owner', 'admin', 'agronomist']
+  const resolvedRole = membership.is_owner ? 'owner' : membership.role
+  if (!validRoles.includes(resolvedRole)) {
+    return null
+  }
+
+  const role = resolvedRole as ConsultantRole
 
   const canViewAllFarmers = role === 'owner' || role === 'admin'
 

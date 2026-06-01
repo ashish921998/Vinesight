@@ -19,7 +19,7 @@ import {
 import Image from 'next/image'
 import { toast } from 'sonner'
 import type { LabTestRecord } from '@/types/lab-tests'
-import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
+import { getConsultantAccess } from '@/lib/consultant-access'
 import {
   validateFarmerClient,
   getFarmDetail,
@@ -31,7 +31,8 @@ export default function ConsultantFarmPage() {
   const params = useParams()
   const router = useRouter()
   const farmerId = params.farmerId as string
-  const farmId = parseInt(params.farmId as string, 10)
+  const rawFarmId = parseInt(params.farmId as string, 10)
+  const farmId = isNaN(rawFarmId) ? null : rawFarmId
 
   const [loading, setLoading] = useState(true)
   const [farm, setFarm] = useState<FarmDetail | null>(null)
@@ -58,6 +59,12 @@ export default function ConsultantFarmPage() {
       }
 
       // Validate farm belongs to farmer through farms.user_id
+      if (farmId === null) {
+        toast.error('Invalid farm ID')
+        router.push(`/consultant/farmers/${farmerId}`)
+        return
+      }
+
       const farmData = await getFarmDetail(farmId)
       if (!farmData || farmData.user_id !== farmerId) {
         toast.error('Farm not found or does not belong to this farmer')
