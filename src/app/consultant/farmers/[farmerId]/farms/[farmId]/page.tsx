@@ -386,6 +386,9 @@ function TestCard({ test, type }: { test: LabTestRecord; type: 'soil' | 'petiole
       if (response.ok) {
         const { signedUrl } = await response.json()
         setReportUrl(signedUrl)
+      } else {
+        const body = await response.text().catch(() => null)
+        console.warn(`Failed to load report signed URL (${response.status}):`, body)
       }
     } catch (error) {
       console.error('Error loading report:', error)
