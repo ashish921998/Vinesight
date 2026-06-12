@@ -1,0 +1,32 @@
+supabase/migrations/202606040003_consultant_petiole_triage.sql
+  s_475021dcaec5c9::t_12a71eec809fc3 1-100,103-116,119-137
+  s_475021dcaec5c9::t_095d9fcd28092b 101-102,117-118
+src/instrumentation-client.ts
+  s_475021dcaec5c9::t_7e7858447b599a 10,12
+supabase/migrations/202606040001_consultant_client_foundation.sql
+  s_475021dcaec5c9::t_a44db4dac94128 198,237-239
+  s_475021dcaec5c9::t_095d9fcd28092b 4-5,36-37,132-134,152-154,181-183
+  s_475021dcaec5c9::t_b7cbc8cac158af 34-35,38
+  s_475021dcaec5c9::t_12a71eec809fc3 1-3,6-15,33,39-131,135-151,155-180,184-197,199-236,240-248
+  s_475021dcaec5c9::t_07efd63d3672fe 16-32
+supabase/migrations/202606040002_consultant_lab_access.sql
+  s_475021dcaec5c9::t_12a71eec809fc3 1-33,43-68
+  s_475021dcaec5c9::t_095d9fcd28092b 35-37
+  s_475021dcaec5c9::t_b7cbc8cac158af 34,38-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "62779f5434a31773946e05786ec4019d51564dd9",
+  "prompts": {},
+  "sessions": {
+    "s_475021dcaec5c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e7894-d4d0-75e0-aed1-e539ecda6482",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
