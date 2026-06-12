@@ -1,0 +1,36 @@
+src/lib/seo-constants.ts
+  s_01646728c77e17::t_d2e3356faebebd 3
+src/app/page.tsx
+  s_d8fac434681bfd::t_fe52b2a29a6fda 201
+  s_01646728c77e17::t_aea2b2a318506b 204-206
+  s_01646728c77e17::t_8c119172c90b1b 230
+  s_01646728c77e17::t_e4fe7d3db8f451 409
+  s_01646728c77e17::t_be443d463baded 26
+  s_d8fac434681bfd::t_2fce48a27efd82 15,21-22,36-37,39-41,119-122,124-128,130-131,133,136-143,145,165,186,196-198,202,207-214,216-217,224-225,243,247-248,253-256,258,260,268,291,366-368,370,419-423,433
+  s_d8fac434681bfd::t_acfb17faa4fd9f 226,232,239
+  s_d8fac434681bfd::t_990410ac075b7c 11,13-14,23,25,27,30-32,35,38,45,47,49,52,54,57,59,63,65-71,74-80,83-89,93-102,123,129,134-135,144,185,190,203,215,218-223,227-229,231,233-238,240-242,249-250,252,257,259,269-277,279-283,286,290,292-300,302-329,333-350,352-364,369,371-398,403-405,408,411-415,417-418
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "795cd60493dc64a19977cd6307e5d229f6206e76",
+  "prompts": {},
+  "sessions": {
+    "s_01646728c77e17": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5b50d5a-52ec-4367-88fd-9ac04053bf79",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_d8fac434681bfd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "55fb421c-8c5d-4f83-b21c-08c586df2fb3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
