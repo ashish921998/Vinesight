@@ -45,6 +45,16 @@ export function LayoutContent({ children }: LayoutContentProps) {
     )
   }
 
+  // Hold consultant routes until the main auth check settles to avoid a race between
+  // getConsultantAccess() and the Supabase session initialization.
+  if (loading && isAppShellExcludedRoute) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Toaster />
+      </div>
+    )
+  }
+
   // For loading state on private routes, show basic layout
   if (loading && !isPublicRoute && !isAppShellExcludedRoute) {
     return (

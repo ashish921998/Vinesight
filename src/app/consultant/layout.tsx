@@ -111,7 +111,12 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
     return (
       <ProtectedRoute>
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+          <div className="text-center space-y-3">
+            <p className="text-sm text-muted-foreground">Redirecting to dashboard…</p>
+            <Link href="/dashboard" className="text-sm underline text-primary">
+              Go to dashboard
+            </Link>
+          </div>
         </div>
       </ProtectedRoute>
     )
