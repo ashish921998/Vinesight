@@ -62,7 +62,7 @@ interface SchemaSoftwareApplication {
   name: string
   applicationCategory: string
   operatingSystem: string
-  offers: {
+  offers?: {
     '@type': 'Offer'
     price: string
     priceCurrency: string
@@ -188,13 +188,13 @@ export function SEOSchema({
         },
         sameAs: ['https://twitter.com/VineSight', 'https://linkedin.com/company/vinesight'],
         description:
-          'AI-powered smart farm management system for precision agriculture and intelligent crop monitoring'
+          'Grower network management for grape exporters, FPCs, and consultants worldwide: field records, lab results, advisory, and export compliance across every farm'
       },
       {
         '@type': 'WebSite',
         '@id': 'https://vinesight.vercel.app/#website',
         url: 'https://vinesight.vercel.app',
-        name: 'VineSight - Smart Farm Management System',
+        name: 'VineSight - Grower Network Management for Grape Exporters',
         publisher: {
           '@id': 'https://vinesight.vercel.app/#organization'
         },
@@ -213,9 +213,9 @@ export function SEOSchema({
       '@type': 'WebPage',
       '@id': 'https://vinesight.vercel.app/#webpage',
       url: 'https://vinesight.vercel.app',
-      name: 'VineSight - AI-Powered Smart Farm Management System',
+      name: 'VineSight - Grower Network Management for Grape Exporters',
       description:
-        'Transform your farming operations with AI-driven crop monitoring, yield prediction, disease detection, and automation for modern agriculture.',
+        'One view of your grower network for grape exporters, FPCs, and consultants worldwide: spray records, lab results, advisory, and export compliance across every farm.',
       isPartOf: {
         '@id': 'https://vinesight.vercel.app/#website'
       },
@@ -227,26 +227,14 @@ export function SEOSchema({
         name: 'VineSight',
         applicationCategory: 'AgricultureApplication',
         operatingSystem: 'Web, iOS, Android',
-        offers: {
-          '@type': 'Offer',
-          price: '0',
-          priceCurrency: 'USD'
-        },
-        aggregateRating: {
-          '@type': 'AggregateRating',
-          ratingValue: '4.8',
-          ratingCount: '156',
-          bestRating: '5',
-          worstRating: '1'
-        },
         featureList: [
-          'AI Crop Monitoring',
-          'Yield Prediction',
-          'Disease Detection',
-          'Weather Analytics',
-          'Irrigation Management',
-          'Harvest Planning',
-          'Farm Analytics'
+          'Spray and Field Records',
+          'Soil and Petiole Lab Tests',
+          'Advisory Coordination',
+          'Export Compliance Records',
+          'Irrigation Calculators',
+          'Labour and Cost Tracking',
+          'Grower Network Dashboard'
         ]
       }
     }

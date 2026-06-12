@@ -226,7 +226,7 @@ export default function LandingPage() {
             <div className="lg:col-span-5 flex justify-center lg:justify-end motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-6 duration-700">
               <div className="flex items-start">
                 <PhoneFrame
-                  src="/screenshots/dashboard-nashik.png"
+                  src="/screenshots/dashboard.png"
                   alt="VineSight farmer app dashboard for a vineyard with quick actions for logs, water calculations, lab tests, and weather"
                   priority
                   width={238}
@@ -417,21 +417,20 @@ export default function LandingPage() {
             Book a demo
           </a>
         </section>
-
-        <footer className="border-t border-border">
-          <div className="max-w-6xl mx-auto px-4 py-8 text-xs text-muted-foreground">
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6">
-              <p className="sm:mr-auto">© {new Date().getFullYear()} VineSight.</p>
-              <Link className="hover:text-foreground transition-colors" href="/privacy">
-                Privacy Policy
-              </Link>
-              <Link className="hover:text-foreground transition-colors" href="/terms">
-                Terms of Service
-              </Link>
-            </div>
-          </div>
-        </footer>
       </main>
+      <footer className="border-t border-border">
+        <div className="max-w-6xl mx-auto px-4 py-8 text-xs text-muted-foreground">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6">
+            <p className="sm:mr-auto">© {new Date().getFullYear()} VineSight.</p>
+            <Link className="hover:text-foreground transition-colors" href="/privacy">
+              Privacy Policy
+            </Link>
+            <Link className="hover:text-foreground transition-colors" href="/terms">
+              Terms of Service
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
