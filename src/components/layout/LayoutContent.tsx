@@ -24,11 +24,16 @@ export function LayoutContent({ children }: LayoutContentProps) {
     '/auth'
   ]
 
+  const appShellExcludedPrefixes = ['/consultant']
+
   // Check if current route is public
   const isPublicRoute = publicRoutes.includes(pathname)
+  const isAppShellExcludedRoute = appShellExcludedPrefixes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  )
 
   // Show sidebar only for authenticated users on private routes
-  const showSidebar = !isPublicRoute && !!user
+  const showSidebar = !isPublicRoute && !isAppShellExcludedRoute && !!user
 
   // For loading state on public routes, don't show sidebar
   if (loading && isPublicRoute) {
@@ -40,8 +45,19 @@ export function LayoutContent({ children }: LayoutContentProps) {
     )
   }
 
+  // Hold consultant routes until the main auth check settles to avoid a race between
+  // getConsultantAccess() and the Supabase session initialization.
+  if (loading && isAppShellExcludedRoute) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <Toaster />
+      </div>
+    )
+  }
+
   // For loading state on private routes, show basic layout
-  if (loading && !isPublicRoute) {
+  if (loading && !isPublicRoute && !isAppShellExcludedRoute) {
     return (
       <div className="min-h-screen bg-background">
         <main className="lg:pl-72">
@@ -57,8 +73,8 @@ export function LayoutContent({ children }: LayoutContentProps) {
     )
   }
 
-  // Public routes (homepage, auth, calculators) - no sidebar
-  if (isPublicRoute) {
+  // Public routes and routes with their own shell (e.g. /consultant) — no farmer app shell
+  if (isPublicRoute || isAppShellExcludedRoute) {
     return (
       <div className="min-h-screen bg-background">
         <main>{children}</main>

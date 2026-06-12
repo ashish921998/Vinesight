@@ -6,6 +6,7 @@ import { User } from '@supabase/supabase-js'
 import { toast } from 'sonner'
 import { VALIDATION } from '@/lib/constants'
 import { clearLastRoute } from '@/lib/route-persistence'
+import posthog from 'posthog-js'
 
 interface AuthState {
   user: User | null
@@ -324,6 +325,16 @@ export function useSupabaseAuth() {
       }))
 
       toast.success('Email verified successfully!')
+
+      // 'email' is the only otpType this app ever passes here (verify-otp page is signup-only).
+      if (otpType === 'email') {
+        posthog.identify(data.user?.id, { email: data.user?.email })
+        posthog.capture('New user created', {
+          user_id: data.user?.id,
+          timestamp: new Date().toISOString()
+        })
+      }
+
       return { success: true, user: data.user }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'

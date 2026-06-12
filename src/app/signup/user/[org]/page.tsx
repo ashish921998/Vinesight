@@ -62,7 +62,7 @@ export default function OrgUserSignupPage() {
 
   useEffect(() => {
     if (user && user.email_confirmed_at) {
-      router.push('/clients')
+      router.push('/consultant')
     }
   }, [user, router])
 
@@ -129,7 +129,7 @@ export default function OrgUserSignupPage() {
           `/auth/verify-otp?email=${encodeURIComponent(trimmedEmail)}&org=${encodeURIComponent(orgSlug)}`
         )
       } else {
-        router.push('/clients')
+        router.push('/consultant')
       }
     }
   }

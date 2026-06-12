@@ -2,6 +2,12 @@ import { getTypedSupabaseClient } from './supabase'
 
 export type ConsultantRole = 'owner' | 'admin' | 'agronomist'
 
+export const roleLabels: Record<ConsultantRole, string> = {
+  owner: 'Owner',
+  admin: 'Admin',
+  agronomist: 'Agronomist'
+}
+
 export interface ConsultantAccess {
   userId: string
   organizationId: string

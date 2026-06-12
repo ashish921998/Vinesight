@@ -1,7 +1,0 @@
-runtime: tmux
-agent: codex
-tracker:
-  plugin: github
-scm:
-  plugin: github
-reactions: {}
