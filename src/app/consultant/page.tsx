@@ -6,13 +6,7 @@ import { ArrowRight, ClipboardList, Loader2, ShieldCheck, Users } from 'lucide-r
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ConsultantAccess, getConsultantAccess } from '@/lib/consultant-access'
-
-const roleLabels: Record<ConsultantAccess['role'], string> = {
-  owner: 'Owner',
-  admin: 'Admin',
-  agronomist: 'Agronomist'
-}
+import { ConsultantAccess, getConsultantAccess, roleLabels } from '@/lib/consultant-access'
 
 const workspaceLinks = [
   {
@@ -40,6 +34,8 @@ export default function ConsultantOverviewPage() {
       try {
         const result = await getConsultantAccess()
         setAccess(result)
+      } catch (error) {
+        console.error('Failed to load consultant access:', error)
       } finally {
         setLoading(false)
       }

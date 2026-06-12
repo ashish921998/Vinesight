@@ -12,14 +12,13 @@ import {
   ClipboardCheck,
   ClipboardList,
   FileText,
-  Home,
   LayoutDashboard,
   Settings,
   Sprout,
   UsersRound
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ConsultantAccess, getConsultantAccess } from '@/lib/consultant-access'
+import { ConsultantAccess, getConsultantAccess, roleLabels } from '@/lib/consultant-access'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
@@ -32,19 +31,22 @@ const navItems = [
     label: 'Command Center',
     href: '/consultant',
     icon: LayoutDashboard,
-    description: 'Org overview'
+    description: 'Org overview',
+    exact: true
   },
   {
     label: 'Client Farmers',
     href: '/consultant/farmers',
     icon: UsersRound,
-    description: 'Directory and reports'
+    description: 'Directory and reports',
+    exact: false
   },
   {
     label: 'Petiole Triage',
     href: '/consultant/triage',
     icon: ClipboardList,
-    description: 'Review queue'
+    description: 'Review queue',
+    exact: false
   }
 ]
 
@@ -62,12 +64,6 @@ const upcomingItems = [
     icon: Settings
   }
 ]
-
-const roleLabels: Record<ConsultantAccess['role'], string> = {
-  owner: 'Owner',
-  admin: 'Admin',
-  agronomist: 'Agronomist'
-}
 
 export default function ConsultantLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
@@ -173,7 +169,7 @@ export default function ConsultantLayout({ children }: DashboardLayoutProps) {
                     <span>Org</span>
                   </div>
                   <div className="flex items-center justify-center gap-2 rounded-full px-3 py-2 text-sidebar-foreground/75 transition-colors group-hover:bg-sidebar group-hover:text-sidebar-foreground">
-                    <Home className="h-4 w-4" aria-hidden="true" />
+                    <Sprout className="h-4 w-4" aria-hidden="true" />
                     <span>Farmer</span>
                   </div>
                 </div>
@@ -199,7 +195,8 @@ export default function ConsultantLayout({ children }: DashboardLayoutProps) {
               )}
               <div className="space-y-1">
                 {navItems.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                  const isActive =
+                    pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`))
                   const Icon = item.icon
 
                   return (

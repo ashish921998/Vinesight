@@ -58,6 +58,8 @@ create table if not exists public.organization_clients (
   constraint organization_clients_org_client_unique unique (organization_id, client_user_id)
 );
 
+-- Upgrade path for pre-existing tables created before this migration ran.
+-- Safe to re-run: IF NOT EXISTS guards skip columns already present from the CREATE TABLE above.
 alter table public.organization_clients
   add column if not exists assigned_to uuid references auth.users(id) on delete set null,
   add column if not exists assigned_by uuid references auth.users(id) on delete set null,

@@ -103,6 +103,7 @@ revoke all on function public.validate_petiole_triage_consistency() from public;
 create or replace function public.prevent_petiole_triage_scope_mutation()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   if (old.organization_id, old.client_user_id, old.farm_id, old.petiole_test_id)
