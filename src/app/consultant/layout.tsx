@@ -5,9 +5,21 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Button } from '@/components/ui/button'
-import { Contact, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react'
+import {
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardCheck,
+  ClipboardList,
+  FileText,
+  Home,
+  LayoutDashboard,
+  Settings,
+  Sprout,
+  UsersRound
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getConsultantAccess } from '@/lib/consultant-access'
+import { ConsultantAccess, getConsultantAccess } from '@/lib/consultant-access'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
@@ -17,22 +29,52 @@ interface DashboardLayoutProps {
 
 const navItems = [
   {
-    label: 'Farmers',
-    href: '/consultant/farmers',
-    icon: Contact
+    label: 'Command Center',
+    href: '/consultant',
+    icon: LayoutDashboard,
+    description: 'Org overview'
   },
   {
-    label: 'Triage',
+    label: 'Client Farmers',
+    href: '/consultant/farmers',
+    icon: UsersRound,
+    description: 'Directory and reports'
+  },
+  {
+    label: 'Petiole Triage',
     href: '/consultant/triage',
-    icon: ClipboardList
+    icon: ClipboardList,
+    description: 'Review queue'
   }
 ]
+
+const upcomingItems = [
+  {
+    label: 'Plans',
+    icon: ClipboardCheck
+  },
+  {
+    label: 'Templates',
+    icon: FileText
+  },
+  {
+    label: 'Team Settings',
+    icon: Settings
+  }
+]
+
+const roleLabels: Record<ConsultantAccess['role'], string> = {
+  owner: 'Owner',
+  admin: 'Admin',
+  agronomist: 'Agronomist'
+}
 
 export default function ConsultantLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
   const [authorized, setAuthorized] = useState<boolean | null>(null)
+  const [access, setAccess] = useState<ConsultantAccess | null>(null)
 
   useEffect(() => {
     async function checkAccess() {
@@ -46,6 +88,7 @@ export default function ConsultantLayout({ children }: DashboardLayoutProps) {
           return
         }
 
+        setAccess(access)
         setAuthorized(true)
       } catch (error) {
         console.error('Access check failed:', error)
@@ -82,47 +125,156 @@ export default function ConsultantLayout({ children }: DashboardLayoutProps) {
         {/* Sidebar */}
         <aside
           className={cn(
-            'border-r bg-card transition-all duration-200 flex flex-col',
-            collapsed ? 'w-16' : 'w-64'
+            'border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200 flex flex-col',
+            collapsed ? 'w-20' : 'w-72'
           )}
         >
-          <div className="p-4 border-b flex items-center justify-between">
-            {!collapsed && <span className="font-semibold text-sm">Consultant</span>}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setCollapsed(!collapsed)}
-            >
-              {collapsed ? (
-                <ChevronRight className="h-4 w-4" />
-              ) : (
-                <ChevronLeft className="h-4 w-4" />
-              )}
-            </Button>
+          <div className="border-b p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <Building2 className="h-5 w-5" />
+                </div>
+                {!collapsed && (
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">Organization Workspace</p>
+                    <p className="truncate text-xs text-sidebar-foreground/70">
+                      {access ? roleLabels[access.role] : 'Consultant team'}
+                    </p>
+                  </div>
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                onClick={() => setCollapsed(!collapsed)}
+                aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              >
+                {collapsed ? (
+                  <ChevronRight className="h-4 w-4" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
 
-          <nav className="flex-1 p-2 space-y-1">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
-              const Icon = item.icon
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
-                    isActive
-                      ? 'bg-primary/10 text-primary font-medium'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  )}
-                >
-                  <Icon className="h-4 w-4 flex-shrink-0" />
-                  {!collapsed && <span>{item.label}</span>}
-                </Link>
-              )
-            })}
+          {!collapsed && (
+            <div className="space-y-3 border-b px-4 py-3">
+              <Link
+                href="/dashboard"
+                className="group block rounded-full border border-sidebar-border bg-sidebar-accent/60 p-1 transition-colors hover:bg-sidebar-accent"
+                aria-label="Switch to farmer workspace"
+              >
+                <div className="grid grid-cols-2 gap-1 text-sm font-medium">
+                  <div className="flex items-center justify-center gap-2 rounded-full bg-primary px-3 py-2 text-primary-foreground">
+                    <Building2 className="h-4 w-4" aria-hidden="true" />
+                    <span>Org</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2 rounded-full px-3 py-2 text-sidebar-foreground/75 transition-colors group-hover:bg-sidebar group-hover:text-sidebar-foreground">
+                    <Home className="h-4 w-4" aria-hidden="true" />
+                    <span>Farmer</span>
+                  </div>
+                </div>
+              </Link>
+              <div className="rounded-lg bg-sidebar-accent/60 p-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Sprout className="h-4 w-4 text-primary" />
+                  Consultant Ops
+                </div>
+                <p className="mt-1 text-xs leading-5 text-sidebar-foreground/70">
+                  Farmers, test reports, and crop review work scoped by organization access.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <nav className="flex-1 space-y-6 p-3">
+            <div>
+              {!collapsed && (
+                <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wide text-sidebar-foreground/60">
+                  Workspace
+                </p>
+              )}
+              <div className="space-y-1">
+                {navItems.map((item) => {
+                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                  const Icon = item.icon
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        'group flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors',
+                        isActive
+                          ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
+                          : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                      )}
+                    >
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      {!collapsed && (
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium">{item.label}</span>
+                          <span
+                            className={cn(
+                              'block truncate text-xs',
+                              isActive
+                                ? 'text-sidebar-accent-foreground/75'
+                                : 'text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground/75'
+                            )}
+                          >
+                            {item.description}
+                          </span>
+                        </span>
+                      )}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div>
+              {!collapsed && (
+                <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wide text-sidebar-foreground/60">
+                  Coming Next
+                </p>
+              )}
+              <div className="space-y-1">
+                {upcomingItems.map((item) => {
+                  const Icon = item.icon
+
+                  return (
+                    <div
+                      key={item.label}
+                      className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/45"
+                      aria-disabled="true"
+                    >
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      {!collapsed && (
+                        <span className="flex min-w-0 flex-1 items-center justify-between gap-3">
+                          <span className="truncate">{item.label}</span>
+                          <span className="rounded-full bg-sidebar-accent px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sidebar-foreground/60">
+                            Soon
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           </nav>
+
+          {!collapsed && (
+            <div className="border-t p-4">
+              <p className="text-xs font-medium text-sidebar-foreground/60">Access Mode</p>
+              <p className="mt-1 text-sm">
+                {access?.canViewAllFarmers ? 'All active client farmers' : 'Assigned farmers only'}
+              </p>
+            </div>
+          )}
         </aside>
 
         {/* Main content */}

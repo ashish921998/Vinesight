@@ -24,11 +24,16 @@ export function LayoutContent({ children }: LayoutContentProps) {
     '/auth'
   ]
 
+  const appShellExcludedPrefixes = ['/consultant']
+
   // Check if current route is public
   const isPublicRoute = publicRoutes.includes(pathname)
+  const isAppShellExcludedRoute = appShellExcludedPrefixes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  )
 
   // Show sidebar only for authenticated users on private routes
-  const showSidebar = !isPublicRoute && !!user
+  const showSidebar = !isPublicRoute && !isAppShellExcludedRoute && !!user
 
   // For loading state on public routes, don't show sidebar
   if (loading && isPublicRoute) {
@@ -41,7 +46,7 @@ export function LayoutContent({ children }: LayoutContentProps) {
   }
 
   // For loading state on private routes, show basic layout
-  if (loading && !isPublicRoute) {
+  if (loading && !isPublicRoute && !isAppShellExcludedRoute) {
     return (
       <div className="min-h-screen bg-background">
         <main className="lg:pl-72">
@@ -59,6 +64,15 @@ export function LayoutContent({ children }: LayoutContentProps) {
 
   // Public routes (homepage, auth, calculators) - no sidebar
   if (isPublicRoute) {
+    return (
+      <div className="min-h-screen bg-background">
+        <main>{children}</main>
+        <Toaster />
+      </div>
+    )
+  }
+
+  if (isAppShellExcludedRoute) {
     return (
       <div className="min-h-screen bg-background">
         <main>{children}</main>

@@ -9,16 +9,15 @@ import {
   Calculator,
   Settings,
   Activity,
-  Users,
   Home,
   CloudSun,
   BarChart3,
   TrendingUp,
   Brain,
   Package,
-  Contact,
   Bell,
-  UserCog
+  UserCog,
+  Building2
 } from 'lucide-react'
 import { LoginButton } from './auth/LoginButton'
 import { UserMenu } from './auth/UserMenu'
@@ -40,12 +39,6 @@ export const getBaseNavigation = (t: (key: string) => string) => [
   { name: t('navigation.reports'), href: '/reports', icon: BarChart3 },
   { name: t('navigation.farmEfficiency'), href: '/performance', icon: TrendingUp },
   { name: t('navigation.settings'), href: '/settings', icon: Settings }
-]
-
-// Org-only navigation items - P2: Use translation function
-const getOrgNavigation = (t: (key: string) => string) => [
-  { name: t('navigation.clients'), href: '/clients', icon: Contact },
-  { name: t('navigation.users'), href: '/users', icon: Users }
 ]
 
 export default function Navigation() {
@@ -89,12 +82,7 @@ export default function Navigation() {
     }
   }, [user])
 
-  // Build navigation based on user type
-  const baseNav = getBaseNavigation(t)
-  const orgNav = getOrgNavigation(t)
-  const navigation = isOrgMember
-    ? [...baseNav.slice(0, 2), ...orgNav, ...baseNav.slice(2)]
-    : baseNav
+  const navigation = getBaseNavigation(t)
 
   return (
     <>
@@ -114,6 +102,26 @@ export default function Navigation() {
               <span className="text-xl font-bold text-primary">VineSight</span>
             </Link>
           </div>
+
+          {isOrgMember && (
+            <Link
+              href="/consultant"
+              className="group rounded-full border border-sidebar-border bg-sidebar-accent/60 p-1 transition-colors hover:bg-sidebar-accent"
+              aria-label="Switch to organization workspace"
+            >
+              <div className="grid grid-cols-2 gap-1 text-sm font-medium">
+                <div className="flex items-center justify-center gap-2 rounded-full bg-primary px-3 py-2 text-primary-foreground">
+                  <Sprout className="h-4 w-4" aria-hidden="true" />
+                  Farmer
+                </div>
+                <div className="flex items-center justify-center gap-2 rounded-full px-3 py-2 text-sidebar-foreground/75 transition-colors group-hover:bg-sidebar group-hover:text-sidebar-foreground">
+                  <Building2 className="h-4 w-4" aria-hidden="true" />
+                  <span>Org</span>
+                </div>
+              </div>
+            </Link>
+          )}
+
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>
