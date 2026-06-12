@@ -8,7 +8,7 @@ trap 'rm -f "$TEMP_FILE"' EXIT
 
 # Get staged files and store them
 git diff --cached --name-only -z --diff-filter=ACM | \
-  grep -zE '\.(js|jsx|ts|tsx|json|css|scss|md)$' > "$TEMP_FILE"
+  grep -zE '\.(js|jsx|ts|tsx|json|css|scss|md)$' > "$TEMP_FILE" || true
 
 # Check if we have any files to process
 if [ -s "$TEMP_FILE" ]; then

@@ -45,15 +45,21 @@ create table if not exists public.organization_clients (
 );
 
 -- Upgrade path for pre-existing tables created before this migration ran.
--- Safe to re-run: IF NOT EXISTS guards skip columns already present from the CREATE TABLE above.
+-- IF NOT EXISTS skips ADD COLUMN entirely if the column already exists, so NOT NULL and
+-- SET DEFAULT are applied separately below to handle nullable pre-existing columns.
 alter table public.organization_clients
   add column if not exists assigned_to uuid references auth.users(id) on delete set null,
   add column if not exists assigned_by uuid references auth.users(id) on delete set null,
-  add column if not exists status text not null default 'active',
+  add column if not exists status text default 'active',
   add column if not exists notes text,
   add column if not exists assigned_at timestamptz default current_timestamp,
   add column if not exists created_at timestamptz default current_timestamp,
   add column if not exists updated_at timestamptz default current_timestamp;
+
+-- Ensure status is always non-null regardless of whether the column was just added or pre-existed.
+update public.organization_clients set status = 'active' where status is null;
+alter table public.organization_clients alter column status set not null;
+alter table public.organization_clients alter column status set default 'active';
 
 do $$
 begin
