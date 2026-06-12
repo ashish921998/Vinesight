@@ -13,23 +13,9 @@ begin
 end;
 $$;
 
-do $$
-declare
-  constraint_record record;
-begin
-  for constraint_record in
-    select conname
-    from pg_constraint
-    where conrelid = 'public.organization_members'::regclass
-      and contype = 'c'
-      and pg_get_constraintdef(oid) ilike '%role%'
-  loop
-    execute format(
-      'alter table public.organization_members drop constraint if exists %I',
-      constraint_record.conname
-    );
-  end loop;
-end $$;
+-- Drop the known previous role check constraint before recreating with the canonical name.
+alter table public.organization_members drop constraint if exists organization_members_role_check;
+alter table public.organization_members drop constraint if exists check_role;
 
 update public.organization_members
 set role = 'agronomist'
@@ -196,7 +182,7 @@ create policy "Members can view organization clients"
   for select
   to authenticated
   using (
-    client_user_id = (select auth.uid())
+    public.is_org_admin(organization_id)
     or public.can_access_org_client(organization_id, client_user_id)
   );
 

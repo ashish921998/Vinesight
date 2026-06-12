@@ -22,7 +22,7 @@ import { ConsultantAccess, getConsultantAccess, roleLabels } from '@/lib/consult
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
-interface DashboardLayoutProps {
+interface ConsultantLayoutProps {
   children: React.ReactNode
 }
 
@@ -65,7 +65,7 @@ const upcomingItems = [
   }
 ]
 
-export default function ConsultantLayout({ children }: DashboardLayoutProps) {
+export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
@@ -88,6 +88,8 @@ export default function ConsultantLayout({ children }: DashboardLayoutProps) {
         setAuthorized(true)
       } catch (error) {
         console.error('Access check failed:', error)
+        toast.error('Unable to verify consultant access. Please try again.')
+        router.push('/dashboard')
         setAuthorized(false)
       }
     }

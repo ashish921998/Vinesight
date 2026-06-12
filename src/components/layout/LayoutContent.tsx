@@ -62,17 +62,8 @@ export function LayoutContent({ children }: LayoutContentProps) {
     )
   }
 
-  // Public routes (homepage, auth, calculators) - no sidebar
-  if (isPublicRoute) {
-    return (
-      <div className="min-h-screen bg-background">
-        <main>{children}</main>
-        <Toaster />
-      </div>
-    )
-  }
-
-  if (isAppShellExcludedRoute) {
+  // Public routes and routes with their own shell (e.g. /consultant) — no farmer app shell
+  if (isPublicRoute || isAppShellExcludedRoute) {
     return (
       <div className="min-h-screen bg-background">
         <main>{children}</main>

@@ -106,10 +106,10 @@ language plpgsql
 set search_path = public
 as $$
 begin
-  if (old.organization_id, old.client_user_id, old.farm_id, old.petiole_test_id)
+  if (old.organization_id, old.client_user_id, old.farm_id)
      is distinct from
-     (new.organization_id, new.client_user_id, new.farm_id, new.petiole_test_id) then
-    raise exception 'petiole_triage scope columns (organization_id, client_user_id, farm_id, petiole_test_id) are immutable after creation';
+     (new.organization_id, new.client_user_id, new.farm_id) then
+    raise exception 'petiole_triage scope columns (organization_id, client_user_id, farm_id) are immutable after creation';
   end if;
 
   return new;

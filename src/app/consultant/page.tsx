@@ -28,14 +28,20 @@ const workspaceLinks = [
 export default function ConsultantOverviewPage() {
   const [access, setAccess] = useState<ConsultantAccess | null>(null)
   const [loading, setLoading] = useState(true)
+  const [accessError, setAccessError] = useState(false)
 
   useEffect(() => {
     async function loadAccess() {
       try {
         const result = await getConsultantAccess()
+        if (!result) {
+          setAccessError(true)
+          return
+        }
         setAccess(result)
       } catch (error) {
         console.error('Failed to load consultant access:', error)
+        setAccessError(true)
       } finally {
         setLoading(false)
       }
@@ -52,13 +58,23 @@ export default function ConsultantOverviewPage() {
     )
   }
 
+  if (accessError || !access) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-sm text-muted-foreground">
+          Access unavailable. Please refresh or return to the dashboard.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight">Consultant Workspace</h1>
-            {access && <Badge variant="secondary">{roleLabels[access.role]}</Badge>}
+            <Badge variant="secondary">{roleLabels[access.role]}</Badge>
           </div>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             Manage assigned farmers, lab visibility, and consultant review work from one place.
@@ -102,7 +118,7 @@ export default function ConsultantOverviewPage() {
           <div>
             <h2 className="text-base font-semibold">Access Scope</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {access?.canViewAllFarmers
+              {access.canViewAllFarmers
                 ? 'You can view active client farmers across this organization.'
                 : 'You can view farmers assigned to you by this organization.'}
             </p>
