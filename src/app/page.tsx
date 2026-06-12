@@ -8,107 +8,100 @@ import { AppDownloadBadge, type AppDownloadLink } from '@/components/AppDownload
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { getLastRoute } from '@/lib/route-persistence'
 import {
-  BadgeDollarSign,
+  BarChart3,
   CheckCircle,
-  Download,
-  Leaf,
+  ClipboardList,
+  Handshake,
+  Languages,
   ShieldCheck,
-  Signal,
   Sprout,
-  Users,
   XCircle
 } from 'lucide-react'
 
-const manageCategories = [
+const DEMO_URL = 'https://calendar.app.google/vq1JzfjiT59v9dAS7'
+
+const proofPoints = [
   {
-    title: 'Field Operations',
-    icon: Sprout,
+    title: 'Running with Fratelli Fruits FPC',
+    description: 'Active deployment across a grape-export farmer network.',
+    icon: Handshake
+  },
+  {
+    title: '80+ farms onboarded',
+    description: 'Growers brought onto the platform in the last six months.',
+    icon: Sprout
+  },
+  {
+    title: 'Built for field adoption',
+    description: (
+      <>
+        Works offline, in English, <span lang="hi">हिंदी</span>, and <span lang="mr">मराठी</span>.
+      </>
+    ),
+    icon: Languages
+  }
+]
+
+const workflowSteps = [
+  {
+    title: 'Onboard your network',
+    description:
+      'Add your growers under your organization with per-farmer licenses. We help with onboarding and field visits.'
+  },
+  {
+    title: 'Growers log from the field',
+    description:
+      'Sprays, irrigation, labour, and lab samples recorded in seconds, offline if needed, in their own language.'
+  },
+  {
+    title: 'You see everything',
+    description:
+      'Advisory activity, spray records, lab results, and crop status across every farm you source from.'
+  }
+]
+
+const visibilityGroups = [
+  {
+    title: 'Advisory coordination',
+    icon: ClipboardList,
     items: [
-      'Irrigation and spray events',
-      'Labour hours logged by block and task',
-      'Soil moisture data recorded alongside irrigation',
-      'Daily scouting and field observations'
+      'Recommendations logged against the farm, not lost in chat',
+      'Follow-through visible against actual field activity',
+      'Soil and petiole issues triaged in a review queue'
     ]
   },
   {
-    title: 'Inputs & Assets',
-    icon: Leaf,
+    title: 'Compliance and traceability',
+    icon: ShieldCheck,
     items: [
-      'Chemical and fertilizer inventory tracking',
-      'Input usage history by block',
-      'Equipment and machinery maintenance records'
+      'Spray records with product, dose, and date',
+      'Audit-ready documentation for export buyers',
+      'Labour and cost records per block'
     ]
   },
   {
-    title: 'Costs & Compliance',
-    icon: BadgeDollarSign,
+    title: 'Network overview',
+    icon: BarChart3,
     items: [
-      'Cost tracking per block and activity',
-      'Labour cost accountability',
-      'Regulatory reporting and audit-ready records'
+      'Farms, licenses, and activity in one dashboard',
+      'Lab results and trends for every grower',
+      'Farmer directory with farm-level access control'
     ]
   }
 ]
 
 const comparison = {
   old: [
-    'Late nights re-typing field notes into Excel',
-    'Searching paper logs to find spray or irrigation dates',
-    'Guessing labour hours, chemical usage, or inventory left'
+    'Advisory sent over WhatsApp, lost in chat history',
+    'Spray and harvest records re-typed into Excel, weeks late',
+    'No visibility into what actually happened on each farm'
   ],
   with: [
-    'Log irrigation, sprays, and labour in under 10 seconds from the field',
-    'Instantly view block history and past activities',
-    'Know exactly what was applied, where, and when'
+    'Advisory logged per farm, with follow-through visible',
+    'Field records captured the same day, from the field',
+    'Crop status and compliance across the whole network'
   ]
 }
-
-const modules = [
-  {
-    title: 'Field Records',
-    description:
-      'Log vineyard activities directly from the field or tractor. Works offline and syncs automatically.',
-    preview: 'field'
-  },
-  {
-    title: 'Lab Results',
-    description:
-      'Track soil and petiole test results over time. Maintain historical soil profiles for each block and spot trends early.',
-    preview: 'lab'
-  },
-  {
-    title: 'Planning',
-    description:
-      'Plan irrigation, sprays, and crew work. See what’s scheduled today and across the week.',
-    preview: 'planning'
-  }
-]
-
-const personas = [
-  {
-    title: 'Owners',
-    description:
-      'Get clear visibility into costs, records, and vineyard history. Make decisions based on actual data, not assumptions.',
-    icon: Users
-  },
-  {
-    title: 'Managers',
-    description: 'Plan daily work, assign tasks, and track progress by block.',
-    icon: ShieldCheck
-  },
-  {
-    title: 'Consultants',
-    description:
-      'Review client data remotely and provide recommendations based on historical records.',
-    icon: Leaf
-  }
-]
-
-const trustBadges = [
-  { label: 'Export your data anytime (CSV / PDF)', icon: Download },
-  { label: 'Your data stays private and secure', icon: ShieldCheck },
-  { label: 'Built with agronomists', icon: Users }
-]
 
 const appDownloadLinks: AppDownloadLink[] = [
   {
@@ -123,86 +116,33 @@ const appDownloadLinks: AppDownloadLink[] = [
   }
 ]
 
-function ModulePreview({ type }: { type: 'field' | 'lab' | 'planning' }) {
-  if (type === 'field') {
-    return (
-      <div className="w-[200px] bg-card rounded-xl border border-border p-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-        <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
-          <div className="text-[10px] font-bold text-muted-foreground uppercase">New Activity</div>
-          <div className="size-1.5 rounded-full bg-accent" />
-        </div>
-        <div className="space-y-2">
-          <div className="bg-muted p-2.5 rounded-lg border border-border">
-            <div className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">
-              Block
-            </div>
-            <div className="text-xs font-bold text-foreground">B4-Merlot</div>
-          </div>
-          <div className="bg-muted p-2.5 rounded-lg border border-border">
-            <div className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">
-              Task
-            </div>
-            <div className="text-xs font-bold text-foreground">Canopy Mgmt</div>
-          </div>
-          <div className="w-full bg-accent text-accent-foreground text-[10px] font-bold py-2 rounded-lg mt-1 text-center shadow-sm">
-            Save Record
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (type === 'lab') {
-    return (
-      <div className="w-[220px] bg-card rounded-xl border border-border overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-        <div className="bg-muted px-3 py-2 border-b border-border flex justify-between">
-          <span className="text-[10px] font-bold text-muted-foreground uppercase">
-            Soil Analysis
-          </span>
-        </div>
-        <table className="w-full text-[11px]">
-          <tbody className="divide-y divide-border text-foreground">
-            <tr>
-              <td className="px-3 py-2">Nitrogen</td>
-              <td className="px-3 py-2 text-right text-accent">→</td>
-            </tr>
-            <tr>
-              <td className="px-3 py-2">Potassium</td>
-              <td className="px-3 py-2 text-right text-accent">↘</td>
-            </tr>
-            <tr>
-              <td className="px-3 py-2">Magnesium</td>
-              <td className="px-3 py-2 text-right text-accent">→</td>
-            </tr>
-            <tr>
-              <td className="px-3 py-2">Calcium</td>
-              <td className="px-3 py-2 text-right text-accent">↗</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    )
-  }
-
+function PhoneFrame({
+  src,
+  alt,
+  priority = false,
+  width = 290,
+  className = ''
+}: {
+  src: string
+  alt: string
+  priority?: boolean
+  width?: number
+  className?: string
+}) {
   return (
-    <div className="w-[200px] flex gap-2 overflow-hidden relative">
-      <div className="flex-1 bg-card border border-border rounded-xl p-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)] min-w-[120px]">
-        <div className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Today</div>
-        <div className="bg-accent/10 border border-accent/20 p-2 rounded-lg mb-2">
-          <div className="text-[10px] font-bold text-accent">Sector N</div>
-          <div className="text-[9px] text-accent/80 mt-0.5">Irrigation</div>
-        </div>
-        <div className="bg-muted border border-border p-2 rounded-lg">
-          <div className="text-[10px] font-bold text-muted-foreground">Crew A</div>
-          <div className="text-[9px] text-muted-foreground/80 mt-0.5">Pruning</div>
-        </div>
-      </div>
-      <div className="flex-1 bg-card border border-border rounded-xl p-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)] min-w-[120px] opacity-40">
-        <div className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Tomorrow</div>
-        <div className="bg-accent/10 border border-accent/20 p-2 rounded-lg">
-          <div className="text-[10px] font-bold text-accent">Fert: K+</div>
-        </div>
-      </div>
+    <div
+      className={`relative rounded-[2.25rem] border border-border bg-card p-2 shadow-[0_24px_60px_-24px_rgba(47,58,68,0.35)] ${className}`}
+      style={{ width }}
+    >
+      <Image
+        src={src}
+        alt={alt}
+        width={600}
+        height={1298}
+        priority={priority}
+        className="h-auto w-full rounded-[1.75rem] select-none"
+        sizes={`${width}px`}
+      />
     </div>
   )
 }
@@ -222,7 +162,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Image
               src="/logo-mark.png"
@@ -242,145 +182,104 @@ export default function LandingPage() {
               Log In
             </Link>
             <a
-              className="hidden sm:block bg-accent hover:bg-accent/90 active:scale-95 transition-all text-accent-foreground text-sm font-semibold px-4 py-2 rounded-lg shadow-sm"
-              href="https://calendar.app.google/vq1JzfjiT59v9dAS7"
+              className="bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-accent-foreground text-sm font-semibold px-4 py-2 rounded-lg shadow-sm"
+              href={DEMO_URL}
               target="_blank"
               rel="noopener noreferrer"
             >
-              See how it fits your vineyard
+              Book a demo
             </a>
           </div>
         </div>
       </header>
 
-      <main className="flex flex-col items-center overflow-hidden w-full">
-        <section className="w-full max-w-5xl px-4 py-24 md:py-32 flex flex-col items-center text-center">
-          <h2 className="text-[36px] md:text-[52px] font-extrabold leading-[1.15] tracking-tight mb-6 max-w-[800px]">
-            All your vineyard records, schedules, and lab reports{' '}
-            <span className="text-accent">in one place.</span>
-          </h2>
-          <p className="text-muted-foreground text-lg md:text-[20px] leading-[1.6] font-normal mb-10 max-w-[640px]">
-            Track sprays, irrigation, labour, and lab results — block by block. Designed for daily
-            vineyard operations, not spreadsheets.
-          </p>
-          <div className="flex flex-col sm:flex-row w-full gap-3 max-w-[400px]">
-            <a
-              className="bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-accent-foreground text-base font-semibold px-6 py-3.5 rounded-xl shadow-md w-full text-center flex items-center justify-center gap-2"
-              href="https://calendar.app.google/vq1JzfjiT59v9dAS7"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              See how it fits your vineyard
-              <span aria-hidden="true">→</span>
-            </a>
-          </div>
-          <div className="mt-4 flex w-full max-w-[360px] flex-col items-stretch justify-center gap-3 md:max-w-none md:flex-row">
-            {appDownloadLinks.map((link) => (
-              <AppDownloadBadge key={link.label} link={link} />
-            ))}
+      <main className="w-full overflow-hidden">
+        <section className="max-w-6xl mx-auto px-4 pt-16 pb-20 md:pt-24 md:pb-24">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+            <div className="lg:col-span-7 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <h2 className="text-4xl md:text-5xl lg:text-[48px] font-extrabold leading-[1.1] tracking-tight mb-6">
+                Every grape farm you source from, <span className="text-accent">in one place.</span>
+              </h2>
+              <p className="text-muted-foreground text-lg md:text-xl leading-relaxed mb-9 max-w-[540px]">
+                Built for grape exporters, wine producers, and cooperatives worldwide. Growers log
+                sprays, irrigation, and lab results from the field; you see compliance and crop
+                status across every farm.
+              </p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <a
+                  className="bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-accent-foreground text-base font-semibold px-6 py-3.5 rounded-lg shadow-md text-center inline-flex items-center justify-center gap-2"
+                  href={DEMO_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Book a demo
+                  <span aria-hidden="true">→</span>
+                </a>
+                <a
+                  className="text-accent hover:text-accent/80 transition-colors text-base font-semibold px-2 py-3.5 text-center"
+                  href="#field-app"
+                >
+                  See the field app
+                </a>
+              </div>
+            </div>
+            <div className="lg:col-span-5 flex justify-center lg:justify-end motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-6 duration-700">
+              <div className="flex items-start">
+                <PhoneFrame
+                  src="/screenshots/dashboard.png"
+                  alt="VineSight farmer app dashboard for a vineyard with quick actions for logs, water calculations, lab tests, and weather"
+                  priority
+                  width={238}
+                  className="hidden sm:block mt-10"
+                />
+                <PhoneFrame
+                  src="/screenshots/lab-tests.png"
+                  alt="VineSight lab tests screen showing soil and petiole analysis results with nutrient levels"
+                  priority
+                  width={238}
+                  className="sm:-ml-14 z-10"
+                />
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="w-full max-w-5xl px-4 py-20 border-t border-border">
-          <div className="text-center mb-12">
-            <h3 className="text-[28px] font-bold tracking-tight mb-3">
-              What this helps you manage
-            </h3>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              A single operational record for your vineyard — without fragmented notes, files, or
-              guesswork.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {manageCategories.map((category) => {
-              const Icon = category.icon
+        <section className="border-y border-border bg-secondary">
+          <div className="max-w-6xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
+            {proofPoints.map((point) => {
+              const Icon = point.icon
               return (
-                <div
-                  key={category.title}
-                  className="bg-card p-8 rounded-xl border border-border shadow-[0_2px_8px_-2px_rgba(47,58,68,0.08)]"
-                >
-                  <div className="size-12 bg-accent/5 rounded-lg flex items-center justify-center mb-6 text-accent">
-                    <Icon className="h-6 w-6" />
+                <div key={point.title} className="flex items-start gap-4">
+                  <div className="size-10 shrink-0 rounded-lg bg-accent/10 text-accent flex items-center justify-center">
+                    <Icon className="h-5 w-5" />
                   </div>
-                  <h4 className="text-lg font-bold mb-4">{category.title}</h4>
-                  <ul className="space-y-4">
-                    {category.items.map((item) => (
-                      <li
-                        key={item}
-                        className="flex gap-3 items-start text-sm text-muted-foreground"
-                      >
-                        <CheckCircle className="text-accent h-5 w-5 shrink-0 mt-0.5" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div>
+                    <h3 className="font-bold text-sm mb-1">{point.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {point.description}
+                    </p>
+                  </div>
                 </div>
               )
             })}
           </div>
         </section>
 
-        <section className="w-full bg-secondary py-24 border-y border-border" id="daily-work">
-          <div className="max-w-5xl mx-auto px-4">
-            <h3 className="text-[28px] font-bold tracking-tight mb-10 text-center md:text-left">
-              How it fits daily work
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-card p-8 rounded-xl border-l-[6px] border-l-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] relative overflow-hidden">
-                <div className="flex items-center gap-3 mb-6">
-                  <Signal className="text-muted-foreground h-7 w-7" />
-                  <h4 className="font-bold text-lg text-muted-foreground">The Old Way</h4>
+        <section className="max-w-6xl mx-auto px-4 py-20 md:py-24">
+          <h3 className="text-3xl font-bold tracking-tight mb-12">How it works</h3>
+          <div className="space-y-10">
+            {workflowSteps.map((step, index) => (
+              <div
+                key={step.title}
+                className="grid grid-cols-[64px_1fr] sm:grid-cols-[96px_1fr] gap-4 sm:gap-8 items-start"
+              >
+                <div className="text-5xl sm:text-6xl font-extrabold text-accent/25 leading-none select-none">
+                  {index + 1}
                 </div>
-                <ul className="space-y-6">
-                  {comparison.old.map((item) => (
-                    <li key={item} className="flex gap-3 items-start">
-                      <XCircle className="text-muted-foreground h-5 w-5 shrink-0 mt-0.5" />
-                      <span className="text-[16px] text-muted-foreground leading-snug">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="bg-card p-8 rounded-xl border-l-[6px] border-l-accent shadow-[0_2px_8px_-2px_rgba(47,58,68,0.08)] relative overflow-hidden">
-                <div className="flex items-center gap-3 mb-6">
-                  <CheckCircle className="text-accent h-7 w-7" />
-                  <h4 className="font-bold text-lg text-accent">With VineSight</h4>
-                </div>
-                <ul className="space-y-6">
-                  {comparison.with.map((item) => (
-                    <li key={item} className="flex gap-3 items-start">
-                      <CheckCircle className="text-accent h-5 w-5 shrink-0 mt-0.5" />
-                      <span className="text-[16px] text-foreground leading-snug">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="mt-6 text-center md:text-left">
-              <p className="text-sm text-muted-foreground font-medium flex items-center justify-center md:justify-start gap-2">
-                <Signal className="h-4 w-4" />
-                Works reliably from the field — even with poor connectivity.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="w-full max-w-5xl px-4 py-24">
-          <div className="text-center mb-16">
-            <h3 className="text-[28px] font-bold tracking-tight mb-3">Core modules</h3>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Everything you need to replace notebooks and spreadsheets — without complexity.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {modules.map((module) => (
-              <div key={module.title} className="flex flex-col gap-5">
-                <div className="bg-card rounded-xl p-6 flex justify-center items-center border border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] h-[240px]">
-                  <ModulePreview type={module.preview as 'field' | 'lab' | 'planning'} />
-                </div>
-                <div>
-                  <h4 className="text-lg font-bold mb-2">{module.title}</h4>
-                  <p className="text-muted-foreground text-base leading-relaxed">
-                    {module.description}
+                <div className="pt-1 sm:pt-2">
+                  <h4 className="font-bold text-xl mb-2">{step.title}</h4>
+                  <p className="text-muted-foreground text-base leading-relaxed max-w-[560px]">
+                    {step.description}
                   </p>
                 </div>
               </div>
@@ -388,78 +287,150 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="w-full bg-secondary py-24 px-4 border-t border-border">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
-              <h3 className="text-[28px] font-bold tracking-tight mb-3">Built for your team</h3>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                VineSight supports real vineyard workflows — without duplicating effort.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-              {personas.map((persona) => {
-                const Icon = persona.icon
-                return (
-                  <div
-                    key={persona.title}
-                    className="bg-card p-6 rounded-xl border border-border h-full shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <Icon className="h-6 w-6 text-accent" />
-                      <h4 className="font-bold text-base">{persona.title}</h4>
+        <section className="bg-secondary border-y border-border">
+          <div className="max-w-6xl mx-auto px-4 py-20 md:py-24">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+              <div className="lg:col-span-4">
+                <h3 className="text-3xl font-bold tracking-tight mb-4">
+                  One view of advisory, compliance, and crop status
+                </h3>
+                <p className="text-muted-foreground text-base leading-relaxed">
+                  Your agronomists and your growers work in the same system, so the records build
+                  themselves as the season runs.
+                </p>
+              </div>
+              <div className="lg:col-span-8 divide-y divide-border">
+                {visibilityGroups.map((group) => {
+                  const Icon = group.icon
+                  return (
+                    <div
+                      key={group.title}
+                      className="py-7 first:pt-0 last:pb-0 grid grid-cols-1 sm:grid-cols-[240px_1fr] gap-3 sm:gap-8"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className="h-5 w-5 text-accent shrink-0" />
+                        <h4 className="font-bold text-base">{group.title}</h4>
+                      </div>
+                      <ul className="space-y-2.5">
+                        {group.items.map((item) => (
+                          <li
+                            key={item}
+                            className="flex gap-3 items-start text-sm text-muted-foreground"
+                          >
+                            <CheckCircle className="text-accent h-4 w-4 shrink-0 mt-0.5" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {persona.description}
-                    </p>
-                  </div>
-                )
-              })}
-            </div>
-            <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 border-t border-border pt-10">
-              {trustBadges.map((badge) => {
-                const Icon = badge.icon
-                return (
-                  <div key={badge.label} className="flex items-center gap-2 text-muted-foreground">
-                    <Icon className="h-5 w-5 text-accent" />
-                    <span className="text-xs font-bold uppercase tracking-wide">{badge.label}</span>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="w-full max-w-[560px] px-4 py-24 text-center">
-          <h3 className="text-[28px] font-bold tracking-tight mb-4">
-            Start organizing your vineyard today
+        <section className="max-w-6xl mx-auto px-4 py-20 md:py-24">
+          <h3 className="text-3xl font-bold tracking-tight mb-10">
+            From WhatsApp and Excel to one system
           </h3>
-          <p className="text-muted-foreground text-base mb-8 leading-relaxed">
-            Setup takes less than 15 minutes. No credit card required.
-          </p>
-          <button
-            className="bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-accent-foreground text-lg font-bold px-8 py-4 rounded-xl shadow-lg shadow-accent/25 w-full sm:w-auto"
-            onClick={() => router.push('/login')}
-          >
-            Try it for your vineyard
-          </button>
-          <div className="mx-auto mt-5 flex w-full max-w-[360px] flex-col items-stretch justify-center gap-3 md:max-w-none md:flex-row">
-            {appDownloadLinks.map((link) => (
-              <AppDownloadBadge key={link.label} link={link} compact />
-            ))}
-          </div>
-          <div className="mt-16 pt-8 border-t border-border text-[11px] text-muted-foreground">
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
-              <p className="sm:mr-auto">© {new Date().getFullYear()} VineSight.</p>
-              <Link className="hover:text-foreground transition-colors" href="/privacy">
-                Privacy Policy
-              </Link>
-              <Link className="hover:text-foreground transition-colors" href="/terms">
-                Terms of Service
-              </Link>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-card p-8 rounded-xl border border-border">
+              <div className="flex items-center gap-3 mb-6">
+                <XCircle className="text-muted-foreground h-6 w-6" />
+                <h4 className="font-bold text-lg text-muted-foreground">Today</h4>
+              </div>
+              <ul className="space-y-5">
+                {comparison.old.map((item) => (
+                  <li key={item} className="flex gap-3 items-start">
+                    <XCircle className="text-muted-foreground/60 h-5 w-5 shrink-0 mt-0.5" />
+                    <span className="text-base text-muted-foreground leading-snug">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-accent/5 p-8 rounded-xl border border-accent/30">
+              <div className="flex items-center gap-3 mb-6">
+                <CheckCircle className="text-accent h-6 w-6" />
+                <h4 className="font-bold text-lg text-accent">With VineSight</h4>
+              </div>
+              <ul className="space-y-5">
+                {comparison.with.map((item) => (
+                  <li key={item} className="flex gap-3 items-start">
+                    <CheckCircle className="text-accent h-5 w-5 shrink-0 mt-0.5" />
+                    <span className="text-base text-foreground leading-snug">{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </section>
+
+        <section className="bg-secondary border-y border-border" id="field-app">
+          <div className="max-w-6xl mx-auto px-4 py-20 md:py-24">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              <div className="lg:col-span-6">
+                <h3 className="text-3xl font-bold tracking-tight mb-4">
+                  The app your growers actually use
+                </h3>
+                <p className="text-muted-foreground text-lg leading-relaxed max-w-[520px] mb-6">
+                  Simple enough for daily field work: log a spray, mark attendance, or run an
+                  irrigation calculation in seconds. Adoption is our problem, not yours.
+                </p>
+                <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                  {appDownloadLinks.map((link) => (
+                    <AppDownloadBadge key={link.label} link={link} compact />
+                  ))}
+                </div>
+              </div>
+              <div className="lg:col-span-6 flex justify-center lg:justify-end gap-6">
+                <PhoneFrame
+                  src="/screenshots/workers-wages.png"
+                  alt="VineSight workers screen showing daily attendance and wage totals in rupees"
+                  width={230}
+                />
+                <PhoneFrame
+                  src="/screenshots/irrigation-calculator.png"
+                  alt="VineSight MAD calculator computing maximum allowable deficit from root depth and water retention"
+                  width={230}
+                  className="hidden sm:block mt-10"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="max-w-xl mx-auto px-4 py-20 md:py-24 text-center">
+          <h3 className="text-3xl font-bold tracking-tight mb-4">
+            See it on your own grower network
+          </h3>
+          <p className="text-muted-foreground text-base mb-8 leading-relaxed">
+            A 30-minute walkthrough with your farms and workflows. Pilot deployments available for
+            exporters, cooperatives, and wine producers worldwide.
+          </p>
+          <a
+            className="bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-accent-foreground text-lg font-bold px-8 py-4 rounded-lg shadow-lg shadow-accent/25 w-full sm:w-auto inline-block"
+            href={DEMO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Book a demo
+          </a>
+        </section>
       </main>
+      <footer className="border-t border-border">
+        <div className="max-w-6xl mx-auto px-4 py-8 text-xs text-muted-foreground">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6">
+            <p className="sm:mr-auto">© {new Date().getFullYear()} VineSight.</p>
+            <Link className="hover:text-foreground transition-colors" href="/privacy">
+              Privacy Policy
+            </Link>
+            <Link className="hover:text-foreground transition-colors" href="/terms">
+              Terms of Service
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
