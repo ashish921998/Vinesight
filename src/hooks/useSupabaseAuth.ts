@@ -326,12 +326,13 @@ export function useSupabaseAuth() {
 
       toast.success('Email verified successfully!')
 
-      // Track "New user created" event when registration flow completes
-      posthog.capture('New user created', {
-        email: data.user?.email,
-        user_id: data.user?.id,
-        timestamp: new Date().toISOString()
-      })
+      if (otpType === 'email') {
+        posthog.capture('New user created', {
+          email: data.user?.email,
+          user_id: data.user?.id,
+          timestamp: new Date().toISOString()
+        })
+      }
 
       return { success: true, user: data.user }
     } catch (err) {
