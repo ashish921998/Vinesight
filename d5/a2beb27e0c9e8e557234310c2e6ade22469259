@@ -1,0 +1,47 @@
+src/app/layout.tsx
+  s_d8fac434681bfd::t_6fea144f6d9d4a 89,91,98
+  s_d8fac434681bfd::t_cf56bc9db542a7 57
+  s_19f6b24e2d4564::t_d09f3bf5b78149 59
+  s_d8fac434681bfd::t_4ab4ddbd699a6d 104,106
+src/app/page.tsx
+  s_01646728c77e17::t_ae01331d01c72d 421-433
+  s_01646728c77e17::t_bde2852e1701aa 229
+src/components/SEOSchema.tsx
+  s_d8fac434681bfd::t_c827f4452e0a50 65
+  s_d8fac434681bfd::t_528f5faefe3b3b 216,231-237
+  s_19f6b24e2d4564::t_c1490004bb336a 218
+  s_19f6b24e2d4564::t_938223f364dd39 191
+  s_d8fac434681bfd::t_4d2bd8cb31d7b7 197
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "d5a2beb27e0c9e8e557234310c2e6ade22469259",
+  "prompts": {},
+  "sessions": {
+    "s_01646728c77e17": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5b50d5a-52ec-4367-88fd-9ac04053bf79",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_19f6b24e2d4564": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f696441b-15f9-45c4-9378-f9e165afe8e3",
+        "model": "glm-4.7"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_d8fac434681bfd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "55fb421c-8c5d-4f83-b21c-08c586df2fb3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
