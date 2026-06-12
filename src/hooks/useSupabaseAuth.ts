@@ -328,8 +328,8 @@ export function useSupabaseAuth() {
 
       // 'email' is the only otpType this app ever passes here (verify-otp page is signup-only).
       if (otpType === 'email') {
+        posthog.identify(data.user?.id, { email: data.user?.email })
         posthog.capture('New user created', {
-          email: data.user?.email,
           user_id: data.user?.id,
           timestamp: new Date().toISOString()
         })
