@@ -7,9 +7,9 @@ import { parseEnvFloat, parseEnvBoolean } from '@/lib/sentry-env-helpers'
 import { createClient } from '@/lib/supabase'
 import posthog from 'posthog-js'
 
-// Initialize PostHog for analytics (only if key is available)
+// Initialize PostHog for analytics (only on the client and only if key is available)
 const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
-if (posthogKey) {
+if (typeof window !== 'undefined' && posthogKey) {
   posthog.init(posthogKey, {
     api_host: '/ingest',
     ui_host: 'https://us.posthog.com',
