@@ -1,0 +1,20 @@
+src/hooks/useSupabaseAuth.ts
+  s_33863ab2624923::t_ff6235f62ec0e0 9
+  s_33863ab2624923::t_aa46a732ee0524 328-335
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "d0ef89f161e6d777fc6440e7b80329e9fd6d2685",
+  "prompts": {},
+  "sessions": {
+    "s_33863ab2624923": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b5b7bccc-7aef-4524-84f9-1224080c2e38",
+        "model": "glm-4.7"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
