@@ -1,0 +1,21 @@
+src/app/consultant/layout.tsx
+  s_d8fac434681bfd::t_e567c21c5d5427 114-119
+src/components/layout/LayoutContent.tsx
+  s_d8fac434681bfd::t_255d3463227c97 48-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "e026599bd86cce8c1b06bcee8a5ff3797ad5efc8",
+  "prompts": {},
+  "sessions": {
+    "s_d8fac434681bfd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "55fb421c-8c5d-4f83-b21c-08c586df2fb3",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
