@@ -1,0 +1,31 @@
+supabase/migrations/202606040001_consultant_client_foundation.sql
+  s_d8fac434681bfd::t_f97157e730d8fc 185
+  s_d8fac434681bfd::t_fb052b94c73f45 16-18
+src/components/layout/LayoutContent.tsx
+  s_d8fac434681bfd::t_721dcd1ef190b5 65-66
+src/app/consultant/page.tsx
+  s_d8fac434681bfd::t_de7d519528d3af 77
+  s_d8fac434681bfd::t_74376f4b07809a 121
+  s_d8fac434681bfd::t_c9c479630feb3d 31,37-40,44,61-66
+src/app/consultant/layout.tsx
+  s_d8fac434681bfd::t_b88844d6032619 25,68
+  s_d8fac434681bfd::t_e4a13776a5f060 91-92
+supabase/migrations/202606040003_consultant_petiole_triage.sql
+  s_d8fac434681bfd::t_82f54e49080b84 109,111-112
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "59d745e10de2bf959f86f7766f0965ffdcb8f6eb",
+  "prompts": {},
+  "sessions": {
+    "s_d8fac434681bfd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "55fb421c-8c5d-4f83-b21c-08c586df2fb3",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
