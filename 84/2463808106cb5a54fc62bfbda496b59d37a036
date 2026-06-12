@@ -1,0 +1,39 @@
+src/app/consultant/layout.tsx
+  s_d8fac434681bfd::t_5f698027811278 21
+  s_f5bfe25ed1c80e::t_2d6bc0f6829ee6 198-199
+  s_d8fac434681bfd::t_961734a9dad8cd 34-35,41-42,48-49
+  s_d8fac434681bfd::t_64c988b9626bff 172
+supabase/migrations/202606040003_consultant_petiole_triage.sql
+  s_d8fac434681bfd::t_4f92c4979360a5 106
+src/app/consultant/page.tsx
+  s_d8fac434681bfd::t_fe6d2db323bff2 9
+  s_d8fac434681bfd::t_5e570f111716e2 37-38
+supabase/migrations/202606040001_consultant_client_foundation.sql
+  s_d8fac434681bfd::t_0bad24882478f6 61-62
+src/lib/consultant-access.ts
+  s_d8fac434681bfd::t_2588176ac93d5d 5-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "842463808106cb5a54fc62bfbda496b59d37a036",
+  "prompts": {},
+  "sessions": {
+    "s_d8fac434681bfd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "55fb421c-8c5d-4f83-b21c-08c586df2fb3",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_f5bfe25ed1c80e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b4bcf65d-d6eb-4cae-b974-ef6a46d270a8",
+        "model": "glm-4.7"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
