@@ -326,7 +326,8 @@ export function useSupabaseAuth() {
 
       toast.success('Email verified successfully!')
 
-      if (otpType === 'signup') {
+      // 'email' is the only otpType this app ever passes here (verify-otp page is signup-only).
+      if (otpType === 'email') {
         posthog.capture('New user created', {
           email: data.user?.email,
           user_id: data.user?.id,
