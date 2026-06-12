@@ -1,0 +1,31 @@
+src/app/consultant/page.tsx
+  s_475021dcaec5c9::t_8cd554a6e47650 1-118
+src/components/layout/LayoutContent.tsx
+  s_475021dcaec5c9::t_dc7003d516a955 27-28,31-33,36,49,75
+src/app/consultant/layout.tsx
+  s_475021dcaec5c9::t_a12aba4852e15d 128,141,150,167-168,175,181,186,196,212-213,224-225,240,251,258,272
+  s_475021dcaec5c9::t_8cd554a6e47650 33,36
+  s_475021dcaec5c9::t_b80cd8939ffeef 8-14,16-20,22,32,34-35,38,40-41,44,46-47,51-71,77,91,129,132-140,142-149,151-160,163,182-185,187-195,197-211,214-223,226-239,241-250,252-257,259-267,269-271,273-277
+  s_475021dcaec5c9::t_acd04a0acb0da0 15,164-166,169-174,176-180
+src/components/navigation.tsx
+  s_475021dcaec5c9::t_8810f5873a20b9 109,112,115,119
+  s_475021dcaec5c9::t_56d8526543751c 110,113-114,117-118
+  s_475021dcaec5c9::t_a8a3243abb8dda 85
+  s_475021dcaec5c9::t_b78b1516a593dd 19-20,105-108,111,116,120-124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "c3627c8c39816e5c76f8ff52494edb05875c002d",
+  "prompts": {},
+  "sessions": {
+    "s_475021dcaec5c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e7894-d4d0-75e0-aed1-e539ecda6482",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
