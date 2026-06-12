@@ -1,0 +1,19 @@
+next.config.mjs
+  s_d8fac434681bfd::t_93616828ed82b3 166-168
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "b8b7cef78552bfe1f9c79cf68a68ddbd566037c8",
+  "prompts": {},
+  "sessions": {
+    "s_d8fac434681bfd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "55fb421c-8c5d-4f83-b21c-08c586df2fb3",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
