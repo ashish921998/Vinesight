@@ -1,0 +1,24 @@
+src/app/signup/user/[org]/page.tsx
+  s_d8fac434681bfd::t_7d66d3689fb3fc 65,132
+src/app/signup/org/page.tsx
+  s_d8fac434681bfd::t_87fb14b1094142 138
+src/app/auth/verify-otp/page.tsx
+  s_d8fac434681bfd::t_c454bd17ba5465 115
+  s_d8fac434681bfd::t_71918126864a43 64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "4b277d59e8042c7b45e01e876963aa2be72cb4d8",
+  "prompts": {},
+  "sessions": {
+    "s_d8fac434681bfd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "55fb421c-8c5d-4f83-b21c-08c586df2fb3",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
