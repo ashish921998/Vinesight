@@ -1,0 +1,35 @@
+src/lib/phone.ts
+  s_329df4f3fe78ea::t_a2831c943009c3 19-26,37,46-48,50-56,59-60
+src/components/consultant/InviteFarmerDialog.tsx
+  s_329df4f3fe78ea::t_e90a159bfcb826 104-105
+src/app/api/invite/resolve/route.ts
+  s_329df4f3fe78ea::t_9d98c93f436a92 37,43-49
+src/lib/__tests__/phone.test.ts
+  s_329df4f3fe78ea::t_c87b2fa94f430c 1-65
+src/app/signup/invite/[token]/page.tsx
+  s_329df4f3fe78ea::t_ff396e384a1ba5 142-145,159,166
+src/app/api/invite/accept/route.ts
+  s_329df4f3fe78ea::t_fc8f25fcad3baa 224-225,229,233-242
+  s_329df4f3fe78ea::t_2e438a6eb04456 112
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "da1adbe784a67d58c3b067bf84980f756cbe7e5a",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_329df4f3fe78ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a8d2e8d-dbfd-4a34-a2c8-f8fc4b370d1b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
