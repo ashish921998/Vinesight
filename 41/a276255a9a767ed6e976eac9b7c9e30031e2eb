@@ -1,0 +1,56 @@
+package.json
+  s_329df4f3fe78ea::t_ddfeff5151d7f3 68
+  s_0cf1dde478da80::t_dd9b2ba46ea5ba 108
+  s_0cf1dde478da80::t_6f931d7ba201d6 67
+  s_0cf1dde478da80::t_92186eb55deac6 70
+bun.lock
+  s_329df4f3fe78ea::t_508f43f53cdec1 49-50,52,90,95,130,160,162,186,214,218,254-255,344,346,348,350,352,354,356,358,360,362,388,392,394,444,450-567,760-761,790,792,972-973,1148-1149,1198-1199,1268,1304-1306,1422-1423,1454-1455,1468-1470,1498,1532,1760-1763,1802,1938-1939,1944-1945,1948,1950,2026-2027,2182,2240-2247,2376-2377,2602-2605,2632-2633,2706-2707,2782,2802-2803,2834-2835,2850-2851,2856-2885,2908-2909,2912-2997,3032-3033,3042-3054,3112-3117,3130-3135,3186-3187,3192-3193,3200-3201,3206-3207,3222-3229,3232-3233,3250-3253,3304-3353,3376-3377,3380-3475,3478-3490,3508-3509,3516-3517,3552-3553,3578-3629,3632
+next.config.mjs
+  s_e4fd9f51d6bd27::t_fd0c2aee97479a 11-14
+  s_81b7773e7b3545::t_7bd4c11626f287 170-172
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "41a276255a9a767ed6e976eac9b7c9e30031e2eb",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_0cf1dde478da80": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "df5c3a32-f4a2-479f-a71b-2dd85a61e9d6",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_329df4f3fe78ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a8d2e8d-dbfd-4a34-a2c8-f8fc4b370d1b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_81b7773e7b3545": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e45a95cb-55fa-4b36-a267-f222c3dfb0ae",
+        "model": "glm-4.7"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_e4fd9f51d6bd27": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "0e3d10c4-3b94-434c-b861-84d8af021e63",
+        "model": "custom:GLM-5.1-0"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
