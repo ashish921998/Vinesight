@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -16,14 +15,12 @@ import {
   Brain,
   Package,
   Bell,
-  UserCog,
-  Building2
+  UserCog
 } from 'lucide-react'
 import { LoginButton } from './auth/LoginButton'
 import { UserMenu } from './auth/UserMenu'
 import { useTranslation } from 'react-i18next'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
-import { getTypedSupabaseClient } from '@/lib/supabase'
 
 // Base navigation (shown to all users)
 export const getBaseNavigation = (t: (key: string) => string) => [
@@ -45,42 +42,6 @@ export default function Navigation() {
   const pathname = usePathname()
   const { t } = useTranslation()
   const { user, loading } = useSupabaseAuth()
-  const [isOrgMember, setIsOrgMember] = useState(false)
-
-  // Check if user is an org member
-  useEffect(() => {
-    let cancelled = false
-    async function checkOrgMembership() {
-      if (!user) {
-        setIsOrgMember(false)
-        return
-      }
-
-      try {
-        const supabase = await getTypedSupabaseClient()
-        const { data, error } = await supabase
-          .from('organization_members')
-          .select('id')
-          .eq('user_id', user.id)
-          .limit(1)
-
-        // P2: Handle Supabase error field
-        if (error) {
-          console.error('Error checking org membership:', error)
-          if (!cancelled) setIsOrgMember(false)
-          return
-        }
-        if (!cancelled) setIsOrgMember(data && data.length > 0)
-      } catch {
-        if (!cancelled) setIsOrgMember(false)
-      }
-    }
-
-    checkOrgMembership()
-    return () => {
-      cancelled = true
-    }
-  }, [user])
 
   const navigation = getBaseNavigation(t)
 
@@ -102,25 +63,6 @@ export default function Navigation() {
               <span className="text-xl font-bold text-primary">VineSight</span>
             </Link>
           </div>
-
-          {isOrgMember && (
-            <Link
-              href="/consultant"
-              className="group rounded-full border border-sidebar-border bg-sidebar-accent/60 p-1 transition-colors hover:bg-sidebar-accent"
-              aria-label="Switch to organization workspace"
-            >
-              <div className="grid grid-cols-2 gap-1 text-sm font-medium">
-                <div className="flex items-center justify-center gap-2 rounded-full bg-primary px-3 py-2 text-primary-foreground">
-                  <Sprout className="h-4 w-4" aria-hidden="true" />
-                  Farmer
-                </div>
-                <div className="flex items-center justify-center gap-2 rounded-full px-3 py-2 text-sidebar-foreground/75 transition-colors group-hover:bg-sidebar group-hover:text-sidebar-foreground">
-                  <Building2 className="h-4 w-4" aria-hidden="true" />
-                  <span>Org</span>
-                </div>
-              </div>
-            </Link>
-          )}
 
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
