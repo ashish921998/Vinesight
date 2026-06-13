@@ -9,6 +9,7 @@ import {
 } from 'next/font/google'
 import './globals.css'
 import { I18nProvider } from '@/components/providers/I18nProvider'
+import { MotionConfigProvider } from '@/components/providers/MotionConfigProvider'
 import { AsyncErrorBoundary } from '@/components/ErrorBoundary'
 import { SentryErrorBoundary } from '@/components/SentryErrorBoundary'
 import { Suspense } from 'react'
@@ -179,9 +180,11 @@ export default function RootLayout({
               }
             >
               <GlobalAuthErrorHandler />
-              <I18nProvider>
-                <LayoutContent>{children}</LayoutContent>
-              </I18nProvider>
+              <MotionConfigProvider>
+                <I18nProvider>
+                  <LayoutContent>{children}</LayoutContent>
+                </I18nProvider>
+              </MotionConfigProvider>
             </Suspense>
           </AsyncErrorBoundary>
         </SentryErrorBoundary>
