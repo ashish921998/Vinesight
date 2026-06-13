@@ -39,6 +39,7 @@ export default function InvitedFarmerSignupPage() {
   const {
     sendPhoneOtp,
     verifyPhoneOtp,
+    signOut,
     loading: authLoading,
     error,
     user,
@@ -96,15 +97,6 @@ export default function InvitedFarmerSignupPage() {
     loadInvite()
   }, [loadInvite])
 
-  // An already-logged-in visitor has nothing to sign up for. Only redirect on the initial
-  // details step — during OTP verification `user` becomes set and we must NOT bounce away
-  // before the bind call below runs.
-  useEffect(() => {
-    if (step === 'details' && user && (user.phone_confirmed_at || user.email_confirmed_at)) {
-      router.push('/dashboard')
-    }
-  }, [user, router, step])
-
   useEffect(() => {
     if (error) {
       setShowError(true)
@@ -119,6 +111,58 @@ export default function InvitedFarmerSignupPage() {
   const namesValid = firstName.trim() !== '' && lastName.trim() !== ''
   const normalized = normalizePhone(phone)
   const canSendOtp = namesValid && Boolean(normalized)
+
+  // A visitor who's already signed in can't "sign up" again. Compare their session phone to
+  // the invited number (the same digit-only comparison the accept route uses): a match means
+  // we can link them in one tap without another OTP; anything else means they're signed in as
+  // a different account and need to sign out first.
+  const sessionPhoneDigits = (user?.phone ?? '').replace(/\D/g, '')
+  const invitePhoneDigits = (invite?.phone ?? '').replace(/\D/g, '')
+  const isSignedIn = Boolean(user)
+  const signedInPhoneMatches =
+    Boolean(user?.phone_confirmed_at) &&
+    invitePhoneDigits.length > 0 &&
+    sessionPhoneDigits === invitePhoneDigits
+
+  // Which UI the card shows. The OTP step always wins (we must not swap the form out from
+  // under an in-progress verification); otherwise a signed-in visitor gets the join /
+  // wrong-account panel and everyone else gets the normal details form.
+  const mode: 'details' | 'otp' | 'join-current' | 'wrong-account' =
+    step === 'otp'
+      ? 'otp'
+      : isSignedIn && signedInPhoneMatches
+        ? 'join-current'
+        : isSignedIn
+          ? 'wrong-account'
+          : 'details'
+
+  // POST the accept route to bind `userId` to the inviting org. Returns true on success; on
+  // failure it surfaces a toast and returns false so the caller keeps the user on the page.
+  const bindToOrg = async (userId: string): Promise<boolean> => {
+    try {
+      setBinding(true)
+      const response = await fetch('/api/invite/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, token })
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        console.error('Error accepting invitation:', data.error)
+        toast.error(
+          'Couldn’t link your account to the organization. Please contact your consultant.'
+        )
+        return false
+      }
+      return true
+    } catch (err) {
+      console.error('Error accepting invitation:', err)
+      toast.error('Couldn’t link your account to the organization. Please contact your consultant.')
+      return false
+    } finally {
+      setBinding(false)
+    }
+  }
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -139,36 +183,21 @@ export default function InvitedFarmerSignupPage() {
     const result = await verifyPhoneOtp({ phone: normalized.e164, token: otp.trim() })
     if (!result.success || !result.user) return
 
-    // Phone verified — bind the farmer to the inviting organization (service role). Only
-    // navigate to the dashboard once that link actually succeeds: on failure we keep the
-    // farmer on this page with the error (and the Back/Resend retry path) instead of
-    // silently dropping them on an unlinked dashboard where the toast is lost.
-    try {
-      setBinding(true)
-      const response = await fetch('/api/invite/accept', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: result.user.id, token })
-      })
-      if (!response.ok) {
-        const data = await response.json()
-        console.error('Error accepting invitation:', data.error)
-        toast.error(
-          'Phone verified but linking to the organization failed. Please contact your consultant.'
-        )
-        return
-      }
-    } catch (err) {
-      console.error('Error accepting invitation:', err)
-      toast.error(
-        'Phone verified but linking to the organization failed. Please contact your consultant.'
-      )
-      return
-    } finally {
-      setBinding(false)
+    // Phone verified — bind to the org, and only navigate once that link succeeds. On failure
+    // we stay on this page (with the error + Back/Resend) instead of dropping the farmer on an
+    // unlinked dashboard where the toast is lost.
+    if (await bindToOrg(result.user.id)) {
+      router.push('/dashboard')
     }
+  }
 
-    router.push('/dashboard')
+  // Already signed in with the invited number: the existing session already proves phone
+  // ownership, so skip the OTP and link straight to the org.
+  const handleJoinAsCurrentUser = async () => {
+    if (!user) return
+    if (await bindToOrg(user.id)) {
+      router.push('/dashboard')
+    }
   }
 
   if (loading) {
@@ -213,9 +242,13 @@ export default function InvitedFarmerSignupPage() {
             {invite.organizationName ? `Join ${invite.organizationName}` : 'Create your account'}
           </h1>
           <p className="text-muted-foreground text-base font-normal font-sans">
-            {step === 'details'
-              ? 'Confirm your details and we’ll text you a verification code'
-              : `Enter the 6-digit code we sent to ${normalized?.e164 ?? phone}`}
+            {mode === 'otp'
+              ? `Enter the 6-digit code we sent to ${normalized?.e164 ?? phone}`
+              : mode === 'join-current'
+                ? 'You’re already signed in — confirm to join.'
+                : mode === 'wrong-account'
+                  ? 'You’re signed in as a different account.'
+                  : 'Confirm your details and we’ll text you a verification code'}
           </p>
         </div>
 
@@ -226,7 +259,7 @@ export default function InvitedFarmerSignupPage() {
             </Alert>
           )}
 
-          {step === 'details' ? (
+          {mode === 'details' ? (
             <form onSubmit={handleSendOtp} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -298,7 +331,7 @@ export default function InvitedFarmerSignupPage() {
                 )}
               </Button>
             </form>
-          ) : (
+          ) : mode === 'otp' ? (
             <form onSubmit={handleVerify} className="space-y-6">
               <div>
                 <label
@@ -365,14 +398,85 @@ export default function InvitedFarmerSignupPage() {
                 </button>
               </div>
             </form>
+          ) : mode === 'join-current' ? (
+            <div className="space-y-6">
+              <div className="rounded-lg border bg-muted/40 p-4 text-sm">
+                <p className="text-card-foreground">
+                  You’re signed in as <span className="font-medium">+{sessionPhoneDigits}</span>.
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  {invite.organizationName
+                    ? `Tap below to join ${invite.organizationName} with this account.`
+                    : 'Tap below to join the organization with this account.'}
+                </p>
+              </div>
+
+              <Button
+                onClick={handleJoinAsCurrentUser}
+                disabled={busy}
+                className="w-full min-h-[48px]"
+              >
+                {binding ? (
+                  <div className="flex items-center">
+                    <Loader2 className="animate-spin h-5 w-5 mr-2" />
+                    Joining…
+                  </div>
+                ) : invite.organizationName ? (
+                  `Join ${invite.organizationName}`
+                ) : (
+                  'Join organization'
+                )}
+              </Button>
+
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void signOut()}
+                className="w-full text-center text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
+              >
+                Use a different account
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <Alert className="border-amber-200 bg-amber-50">
+                <AlertDescription className="text-amber-800">
+                  You’re signed in as a different account
+                  {user?.phone
+                    ? ` (+${sessionPhoneDigits})`
+                    : user?.email
+                      ? ` (${user.email})`
+                      : ''}
+                  , but this invitation is for a different number. Sign out to continue with the
+                  invited number.
+                </AlertDescription>
+              </Alert>
+
+              <Button
+                onClick={() => void signOut()}
+                disabled={busy}
+                className="w-full min-h-[48px]"
+              >
+                {authLoading ? (
+                  <div className="flex items-center">
+                    <Loader2 className="animate-spin h-5 w-5 mr-2" />
+                    Signing out…
+                  </div>
+                ) : (
+                  'Sign out & continue'
+                )}
+              </Button>
+            </div>
           )}
 
-          <p className="mt-8 text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <Link href="/login" className="font-medium text-primary hover:text-primary/80">
-              Sign in
-            </Link>
-          </p>
+          {!isSignedIn && (
+            <p className="mt-8 text-center text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <Link href="/login" className="font-medium text-primary hover:text-primary/80">
+                Sign in
+              </Link>
+            </p>
+          )}
         </div>
       </div>
     </div>
