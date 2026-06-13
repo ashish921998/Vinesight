@@ -1,0 +1,53 @@
+src/app/consultant/team/page.tsx
+  s_7105be0647c3c0::t_7f5e30a7a9e364 474-475,480-484
+  s_7105be0647c3c0::t_d82fa322145f4e 1-46,48-473,476-479,485-493
+  s_7105be0647c3c0::t_b33ed19a6d21bc 47
+src/app/api/organizations/remove-member/route.ts
+  s_7105be0647c3c0::t_99a0468c99738e 1-132
+src/app/auth/verify-otp/page.tsx
+  s_7105be0647c3c0::t_4765265902880f 21,24
+  s_7105be0647c3c0::t_eb09bf25791784 62-66
+  s_7105be0647c3c0::t_8c0866f8f2f5b2 12
+  s_7105be0647c3c0::t_c38bf2c125e5bf 70-71,73-99
+  s_7105be0647c3c0::t_c8d42f21a096f6 148-152
+src/types/database.ts
+  s_7105be0647c3c0::t_fe9d4b3b9858ae 2253-2311
+src/app/consultant/team/assignments/page.tsx
+  s_7105be0647c3c0::t_7f5e30a7a9e364 72,190,203
+  s_7105be0647c3c0::t_02d8135b50c779 1-71,73-189,191-202,204-350
+src/app/api/organizations/invite-member/revoke/route.ts
+  s_7105be0647c3c0::t_e16b2ad0f963f6 1-108
+supabase/supabase-schema.sql
+  s_7105be0647c3c0::t_8a1f14f57f1a27 1226-1243
+  s_7105be0647c3c0::t_a42f325fcb162f 1034-1054
+  s_7105be0647c3c0::t_e5ffb3748d8230 1121-1124
+src/app/api/organizations/accept-invite/route.ts
+  s_7105be0647c3c0::t_7f065475f673f2 59-76,81,83-86
+  s_7105be0647c3c0::t_eaaf685dab5223 1-58,77-80,82,87-152
+src/app/consultant/layout.tsx
+  s_7105be0647c3c0::t_458655932470fb 50-56
+supabase/migrations/202606130001_org_member_invitations.sql
+  s_7105be0647c3c0::t_545ab4fdb5b050 1-80
+src/app/api/organizations/invite-member/route.ts
+  s_7105be0647c3c0::t_3e4370de3a89e0 1-225
+src/lib/team-service.ts
+  s_7105be0647c3c0::t_fabfded554753e 1-112
+src/app/api/organizations/assign/route.ts
+  s_7105be0647c3c0::t_95a52b1bcda8b4 1-123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "af77d9bbb7e52a2d83fd8aee5ed0186205bc6e93",
+  "prompts": {},
+  "sessions": {
+    "s_7105be0647c3c0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a93d19af-a3f4-4fb1-a17e-85262cc85b6e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
