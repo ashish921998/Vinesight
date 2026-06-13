@@ -114,12 +114,17 @@ export function TaskModal({
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [prevOpen, setPrevOpen] = useState(open)
+  // Key the transient reset to the same transition as the form reset below
+  // (open + task identity + currentUserId) so that switching tasks while the
+  // dialog stays open clears stale error/saving/deleting flags too.
+  const transientResetKey = `${open}:${task?.id ?? 'new'}:${currentUserId ?? 'anonymous'}`
+  const [prevTransientResetKey, setPrevTransientResetKey] = useState(transientResetKey)
 
   // Reset the transient error/saving/deleting flags during render when the
-  // dialog opens, so the user never briefly sees a stale value between commits.
-  if (open !== prevOpen) {
-    setPrevOpen(open)
+  // dialog opens (or the open task changes), so the user never briefly sees a
+  // stale value between commits.
+  if (transientResetKey !== prevTransientResetKey) {
+    setPrevTransientResetKey(transientResetKey)
     if (open) {
       setError(null)
       setSaving(false)

@@ -33,11 +33,18 @@ export function TestReminderNotification({
   const [hasSoilTestTask, setHasSoilTestTask] = useState(false)
   const [hasPetioleTestTask, setHasPetioleTestTask] = useState(false)
 
-  // Reset dismissed state when farmId changes, during render to avoid a stale flash
+  // Reset all farm-scoped state when farmId changes, during render to avoid a
+  // stale flash. Without this, the previous farm's reminders and has*Task flags
+  // would render until loadReminders() completes, so the banner could briefly
+  // show farm A's overdue tests while the buttons already act on farm B.
   const [prevFarmId, setPrevFarmId] = useState(farmId)
   if (farmId !== prevFarmId) {
     setPrevFarmId(farmId)
     setDismissed(false)
+    setReminders(null)
+    setHasSoilTestTask(false)
+    setHasPetioleTestTask(false)
+    setLoading(true)
   }
 
   const loadReminders = useCallback(async () => {

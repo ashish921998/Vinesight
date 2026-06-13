@@ -474,8 +474,13 @@ export function EditRecordModal({
 
   // Adjust form/report/upload state inline during render when the record or
   // recordType prop changes, avoiding the stale-flash that a useEffect would cause.
-  const [prevProps, setPrevProps] = useState({ record, recordType })
-  if (record !== prevProps.record || recordType !== prevProps.recordType) {
+  // `prevProps` starts as null so the very first render (when the record/recordType
+  // props are already set) still hydrates formData/reportMeta instead of opening blank.
+  const [prevProps, setPrevProps] = useState<{
+    record: typeof record
+    recordType: typeof recordType
+  } | null>(null)
+  if (!prevProps || record !== prevProps.record || recordType !== prevProps.recordType) {
     setPrevProps({ record, recordType })
     setFormData(computeFormData(record, recordType))
     setReportMeta(computeReportMeta(record, recordType))

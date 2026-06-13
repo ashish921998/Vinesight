@@ -76,6 +76,7 @@ function AlertCard({ alert, onAlertAction, onDismiss }: AlertCardProps) {
         <button
           onClick={() => onDismiss(alert.id)}
           className="absolute top-2 right-2 p-1 rounded-full hover:bg-black/10 transition-colors"
+          aria-label="Dismiss alert"
         >
           <X className="h-4 w-4 text-gray-500" />
         </button>

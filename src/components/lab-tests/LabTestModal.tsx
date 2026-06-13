@@ -52,11 +52,13 @@ export function LabTestModal({
   // Initialize form when modal opens or existingTest changes.
   // Adjusting state inline during render (rather than in a useEffect)
   // avoids a stale flash between the prop change and the next commit.
+  // `openKey` becomes null while closed, and we always record it (even on close)
+  // so reopening the SAME item produces a key change and re-initializes the form.
   const [prevOpenKey, setPrevOpenKey] = useState<string | null>(null)
   const openKey = isOpen ? `${mode}:${existingTest?.id ?? 'new'}` : null
-  if (isOpen && openKey !== prevOpenKey) {
+  if (openKey !== prevOpenKey) {
     setPrevOpenKey(openKey)
-    if (mode === 'edit' && existingTest) {
+    if (isOpen && mode === 'edit' && existingTest) {
       setDate(existingTest.date)
       setDateOfPruning(existingTest.date_of_pruning || '')
       setNotes(existingTest.notes || '')
@@ -69,7 +71,16 @@ export function LabTestModal({
         }
       })
       setParameters(params)
-    } else {
+
+      // Clear transient parse/report UI state so stale AI badges/warnings or a
+      // report from a prior add/parse session don't leak into this edit session.
+      setReportFile(null)
+      setReportPath(null)
+      setParseConfidence(null)
+      setParseStatus('idle')
+      setAutoFilledFields(new Set())
+      setFieldWarnings({})
+    } else if (isOpen) {
       // Reset for add mode
       setDate(new Date().toISOString().split('T')[0])
       setDateOfPruning('')
@@ -82,6 +93,8 @@ export function LabTestModal({
       setAutoFilledFields(new Set())
       setFieldWarnings({})
     }
+    // On close (openKey === null) we intentionally only record the key so the
+    // next open re-initializes; no state reset needed while hidden.
   }
 
   // Field definitions for soil tests
