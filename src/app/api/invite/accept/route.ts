@@ -13,22 +13,30 @@ const AcceptSchema = z.object({
   token: z.string().min(1)
 })
 
-// True when the user is already an active client of the org. Used to keep acceptance
-// idempotent: a retry/double-submit of an already-successful accept should report success,
-// not a false "already used" error, whether the second request arrives after the first
-// committed (status already 'accepted') or merely lost the concurrent claim race.
+// True when the user is already an active client of the org, false when they aren't, and null
+// when the link status can't be determined (a transient DB error). Used to keep acceptance
+// idempotent: a retry/double-submit of an already-successful accept should report success, not a
+// false "already used" error, whether the second request arrives after the first committed
+// (status already 'accepted') or merely lost the concurrent claim race. Returning null on error —
+// instead of collapsing it to false — lets the retry call sites fail with a 500 rather than
+// mistaking the error for "not linked" and answering a benign retry with a wrong 409. This
+// matches the fail-closed convention used by the guards below (membership / existing-client).
 async function hasActiveClientLink(
   admin: ReturnType<typeof getSupabaseAdmin>,
   organizationId: string,
   userId: string
-): Promise<boolean> {
-  const { data } = await admin
+): Promise<boolean | null> {
+  const { data, error } = await admin
     .from('organization_clients')
     .select('id')
     .eq('organization_id', organizationId)
     .eq('client_user_id', userId)
     .eq('status', 'active')
     .maybeSingle()
+  if (error) {
+    console.error('Error checking active client link:', error)
+    return null
+  }
   return Boolean(data)
 }
 
@@ -90,11 +98,14 @@ export async function POST(request: NextRequest) {
       // client, it's a benign retry of their own successful accept (e.g. the first response
       // was lost, or a delayed double-submit) — report success instead of a false "already
       // used" error. Otherwise the token is genuinely spent (someone else, or revoked/expired).
-      if (
-        invite.status === 'accepted' &&
-        (await hasActiveClientLink(admin, invite.organization_id, userId))
-      ) {
-        return NextResponse.json({ success: true, message: 'Linked to organization' })
+      if (invite.status === 'accepted') {
+        const link = await hasActiveClientLink(admin, invite.organization_id, userId)
+        if (link === null) {
+          return NextResponse.json({ error: 'Failed to verify client status' }, { status: 500 })
+        }
+        if (link) {
+          return NextResponse.json({ success: true, message: 'Linked to organization' })
+        }
       }
       return NextResponse.json({ error: 'Invitation already used or revoked' }, { status: 409 })
     }
@@ -217,7 +228,11 @@ export async function POST(request: NextRequest) {
       // Lost the concurrent claim race (another request flipped pending→accepted between our
       // read and update). Same benign-retry rule as the early guard: success if this user is
       // already the org's active client, otherwise the token's genuinely spent.
-      if (await hasActiveClientLink(admin, invite.organization_id, userId)) {
+      const link = await hasActiveClientLink(admin, invite.organization_id, userId)
+      if (link === null) {
+        return NextResponse.json({ error: 'Failed to verify client status' }, { status: 500 })
+      }
+      if (link) {
         return NextResponse.json({ success: true, message: 'Linked to organization' })
       }
       return NextResponse.json({ error: 'Invitation already used or revoked' }, { status: 409 })
@@ -241,15 +256,21 @@ export async function POST(request: NextRequest) {
     })
 
     if (clientError) {
-      // Linking failed after we claimed the token — release the claim so the farmer can
-      // retry with the same link instead of being locked out by a now-spent invitation.
-      await admin.from('farmer_invitations').update({ status: 'pending' }).eq('id', invite.id)
-
-      // 23505 = a concurrent request linked this farmer first. If they're now an active client
-      // of THIS org it's a benign race → success; otherwise the one-active-org-per-client index
-      // rejected them because they're already active in another org.
+      // 23505 = a permanent conflict: a concurrent request linked this farmer first, or (rare) a
+      // pending organization_clients row already exists in THIS org. The token is genuinely spent,
+      // not retryable, so expire it — otherwise resetting it to 'pending' would resurrect a
+      // re-bindable bearer secret that could later silently re-bind the farmer (e.g. after they're
+      // removed from whichever org now holds them).
       if (clientError.code === '23505') {
-        if (await hasActiveClientLink(admin, invite.organization_id, userId)) {
+        await admin.from('farmer_invitations').update({ status: 'expired' }).eq('id', invite.id)
+        // If they're now an active client of THIS org it's a benign concurrent race → success;
+        // otherwise the one-active-org-per-client index rejected them because they're active
+        // elsewhere.
+        const link = await hasActiveClientLink(admin, invite.organization_id, userId)
+        if (link === null) {
+          return NextResponse.json({ error: 'Failed to verify client status' }, { status: 500 })
+        }
+        if (link) {
           return NextResponse.json({ success: true, message: 'Linked to organization' })
         }
         return NextResponse.json(
@@ -257,7 +278,18 @@ export async function POST(request: NextRequest) {
           { status: 409 }
         )
       }
+
+      // Transient error (connection drop, statement timeout) — the token is still retryable. Release
+      // THIS request's claim, gated on the status still being 'accepted', so the farmer can retry
+      // the same link instead of being locked out by a now-spent invitation. The status predicate
+      // avoids resurrecting a token that a concurrent create-route sweep (which only expires
+      // 'pending' rows) or another accept already moved past.
       console.error('Error linking client:', clientError)
+      await admin
+        .from('farmer_invitations')
+        .update({ status: 'pending' })
+        .eq('id', invite.id)
+        .eq('status', 'accepted')
       return NextResponse.json({ error: 'Failed to link to organization' }, { status: 500 })
     }
 
