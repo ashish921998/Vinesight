@@ -1217,8 +1217,12 @@ CREATE POLICY "Users can view org member profiles" ON profiles FOR SELECT TO aut
 CREATE POLICY "Members can view invitations" ON farmer_invitations FOR SELECT USING (
   EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = farmer_invitations.organization_id AND om.user_id = auth.uid())
 );
-CREATE POLICY "Admins can insert invitations" ON farmer_invitations FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = farmer_invitations.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
+-- Any active member (owner/admin/agronomist) may create invitations — the invite-create route
+-- enforces this with an explicit membership check. The route uses the service-role client, so this
+-- policy isn't the live gate; it's kept truthful so a future user-scoped caller isn't silently
+-- blocked and so the policy matches what the app actually allows.
+CREATE POLICY "Members can insert invitations" ON farmer_invitations FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = farmer_invitations.organization_id AND om.user_id = auth.uid())
 );
 CREATE POLICY "Admins can update invitations" ON farmer_invitations FOR UPDATE USING (
   EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = farmer_invitations.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))

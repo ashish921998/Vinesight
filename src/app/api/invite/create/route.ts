@@ -47,9 +47,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Any active member of the org (owner/admin/agronomist) can invite farmers.
-    // We use the admin client for the membership check + insert so agronomists aren't
-    // blocked by the owner/admin-only RLS insert policy on farmer_invitations.
+    // Any active member of the org (owner/admin/agronomist) can invite farmers — the
+    // farmer_invitations INSERT policy allows any member to match this. We use the admin client
+    // for the membership existence check + insert so they run in one privileged context rather
+    // than relying on per-request RLS evaluation.
     const admin = getSupabaseAdmin()
 
     const { data: membership, error: membershipError } = await admin
