@@ -1,0 +1,19 @@
+src/hooks/useSupabaseAuth.ts
+  s_080a4b805ddcee::t_336a8d5e7268ce 164,167,169-182
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "80d83649c02cfdcfe5a29eeea80dae25f8318310",
+  "prompts": {},
+  "sessions": {
+    "s_080a4b805ddcee": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8eaff6d9-f4a7-4d63-b435-466d632b8159",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
