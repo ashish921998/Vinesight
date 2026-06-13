@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
-// Public lookup for the invited-farmer signup page. The visitor is unauthenticated,
-// so RLS would hide farmer_invitations — we use the admin client and only return
-// the minimal, non-sensitive fields needed to render the page (org name + display name).
+// Public lookup for the invited-farmer signup page. The visitor is unauthenticated, so RLS
+// would hide farmer_invitations — we use the admin client but return only the minimum the page
+// needs: the org name (for branding) and the invited phone (the page sends the OTP to it
+// client-side, so it can't be masked away here). We deliberately do NOT return the farmer's
+// name: this token is a 7-day bearer secret that can leak (forwarded link, preview crawler),
+// so PII exposed on it is kept to the unavoidable minimum.
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     const { data: invite, error } = await admin
       .from('farmer_invitations')
-      .select('status, expires_at, farmer_name, organization_id, phone')
+      .select('status, expires_at, organization_id, phone')
       .eq('token', token)
       .maybeSingle()
 
@@ -51,7 +54,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       valid: true,
       organizationName: org?.name ?? null,
-      farmerName: invite.farmer_name ?? null,
       phone: invite.phone ?? null
     })
   } catch (error) {

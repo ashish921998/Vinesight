@@ -15,7 +15,6 @@ import { toast } from 'sonner'
 
 interface ResolvedInvite {
   organizationName: string | null
-  farmerName: string | null
   phone: string | null
 }
 
@@ -46,7 +45,7 @@ export default function InvitedFarmerSignupPage() {
     clearError
   } = useSupabaseAuth()
 
-  // Resolve the invitation token (org name + prefill name/phone).
+  // Resolve the invitation token (org name + prefilled phone).
   const loadInvite = useCallback(async () => {
     try {
       setLoading(true)
@@ -67,25 +66,12 @@ export default function InvitedFarmerSignupPage() {
 
       setInvite({
         organizationName: data.organizationName,
-        farmerName: data.farmerName,
         phone: data.phone
       })
 
       // Prefill the phone from the invite — the farmer signs up with the number they were
       // invited at, which is also the number the OTP is sent to (and that accept verifies).
       if (data.phone) setPhone(data.phone)
-
-      // Prefill name from the invite (split on the first space).
-      if (data.farmerName) {
-        const trimmed = data.farmerName.trim()
-        const spaceIdx = trimmed.indexOf(' ')
-        if (spaceIdx === -1) {
-          setFirstName(trimmed)
-        } else {
-          setFirstName(trimmed.slice(0, spaceIdx))
-          setLastName(trimmed.slice(spaceIdx + 1))
-        }
-      }
     } catch {
       setInviteError('Failed to load invitation. Please try again.')
     } finally {
