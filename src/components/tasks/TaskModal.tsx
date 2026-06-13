@@ -114,6 +114,18 @@ export function TaskModal({
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [prevOpen, setPrevOpen] = useState(open)
+
+  // Reset the transient error/saving/deleting flags during render when the
+  // dialog opens, so the user never briefly sees a stale value between commits.
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (open) {
+      setError(null)
+      setSaving(false)
+      setDeleting(false)
+    }
+  }
 
   useEffect(() => {
     if (open) {
@@ -137,9 +149,6 @@ export function TaskModal({
           assignment: currentUserId ? 'me' : 'unassigned'
         }))
       }
-      setError(null)
-      setSaving(false)
-      setDeleting(false)
     }
   }, [open, task, currentUserId])
 

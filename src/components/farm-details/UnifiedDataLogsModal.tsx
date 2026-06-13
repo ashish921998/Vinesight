@@ -194,31 +194,63 @@ export function UnifiedDataLogsModal({
     isLoading: false
   })
 
-  // Initialize modal state when opened or when mode/existingLogs change
-  useEffect(() => {
+  // Initialize modal state when opened or when mode/existingLogs change.
+  // Adjusting state DURING render (instead of in a useEffect) avoids an extra
+  // render where the user briefly sees the stale (pre-reset) value.
+  // Tracking the previous trigger captures the same dependencies the effect had:
+  // [isOpen, mode, existingLogs, selectedDate, existingDayNote, existingDayNoteId].
+  // existingLogs is an array prop; compare by reference + length (stable identity
+  // is maintained by the parent across renders when nothing actually changed).
+  const [prevTrigger, setPrevTrigger] = useState<{
+    isOpen: boolean
+    mode: 'add' | 'edit'
+    existingLogs: LogEntry[]
+    selectedDate?: string
+    existingDayNote?: string
+    existingDayNoteId?: number | null
+  }>({
+    isOpen,
+    mode,
+    existingLogs,
+    selectedDate,
+    existingDayNote,
+    existingDayNoteId
+  })
+  if (
+    isOpen !== prevTrigger.isOpen ||
+    mode !== prevTrigger.mode ||
+    existingLogs !== prevTrigger.existingLogs ||
+    selectedDate !== prevTrigger.selectedDate ||
+    existingDayNote !== prevTrigger.existingDayNote ||
+    existingDayNoteId !== prevTrigger.existingDayNoteId
+  ) {
+    setPrevTrigger({
+      isOpen,
+      mode,
+      existingLogs,
+      selectedDate,
+      existingDayNote,
+      existingDayNoteId
+    })
+
     if (isOpen) {
       // First, completely reset all state to prevent any leakage
-      const resetState = () => {
-        setCurrentLogType(null)
-        setCurrentFormData({})
-        setSessionLogs([])
-        setEditingLogId(null)
-        setDayNotes('')
-        setDayPhotos([])
-        setMultipleSprayMode(false)
-        setSprayEntries([])
-        setWaterVolume('')
-        setSprayNotes('')
-        setChemicals([makeEmptyChemical()])
-        setMultipleFertigationMode(false)
-        setFertigationEntries([])
-        setFertilizers([makeEmptyFertilizer()])
-        setFertigationNotes('')
-        setActiveDailyNoteId(null)
-      }
-
-      // Reset state immediately
-      resetState()
+      setCurrentLogType(null)
+      setCurrentFormData({})
+      setSessionLogs([])
+      setEditingLogId(null)
+      setDayNotes('')
+      setDayPhotos([])
+      setMultipleSprayMode(false)
+      setSprayEntries([])
+      setWaterVolume('')
+      setSprayNotes('')
+      setChemicals([makeEmptyChemical()])
+      setMultipleFertigationMode(false)
+      setFertigationEntries([])
+      setFertilizers([makeEmptyFertilizer()])
+      setFertigationNotes('')
+      setActiveDailyNoteId(null)
 
       // Initialize state based on mode
       // No setTimeout needed - React will batch these state updates
@@ -259,7 +291,7 @@ export function UnifiedDataLogsModal({
       setFertigationNotes('')
       setActiveDailyNoteId(null)
     }
-  }, [isOpen, mode, existingLogs, selectedDate, existingDayNote, existingDayNoteId])
+  }
 
   // Reset current form when log type changes
   useEffect(() => {

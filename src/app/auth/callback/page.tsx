@@ -8,6 +8,7 @@ function AuthCallbackContent() {
   const router = useRouter()
 
   useEffect(() => {
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null
     const handleAuthCallback = async () => {
       try {
         const supabase = createClient()
@@ -37,7 +38,7 @@ function AuthCallbackContent() {
           if (data?.session) {
             // Successfully exchanged code for session
             // Add a small delay to ensure the auth state is properly set
-            setTimeout(() => {
+            redirectTimer = setTimeout(() => {
               router.push('/dashboard')
             }, 500)
             return
@@ -57,7 +58,7 @@ function AuthCallbackContent() {
         if (data?.user) {
           // User is authenticated, redirect to dashboard
           // Add a small delay to ensure the auth state is properly set
-          setTimeout(() => {
+          redirectTimer = setTimeout(() => {
             router.push('/dashboard')
           }, 500)
           return
@@ -72,6 +73,12 @@ function AuthCallbackContent() {
     }
 
     handleAuthCallback()
+
+    return () => {
+      if (redirectTimer) {
+        clearTimeout(redirectTimer)
+      }
+    }
   }, [router])
 
   return (

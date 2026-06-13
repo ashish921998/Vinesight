@@ -33,9 +33,12 @@ export function TestReminderNotification({
   const [hasSoilTestTask, setHasSoilTestTask] = useState(false)
   const [hasPetioleTestTask, setHasPetioleTestTask] = useState(false)
 
-  useEffect(() => {
+  // Reset dismissed state when farmId changes, during render to avoid a stale flash
+  const [prevFarmId, setPrevFarmId] = useState(farmId)
+  if (farmId !== prevFarmId) {
+    setPrevFarmId(farmId)
     setDismissed(false)
-  }, [farmId])
+  }
 
   const loadReminders = useCallback(async () => {
     setLoading(true)

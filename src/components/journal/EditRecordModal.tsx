@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, type ChangeEvent } from 'react'
+import { useState, type ChangeEvent } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -275,19 +275,17 @@ export function EditRecordModal({
     })
   }
 
-  useEffect(() => {
-    if (!record) {
-      setFormData(undefined)
-      setReportMeta(null)
-      return
-    }
+  // Compute form data derived from the current record/recordType props.
+  // (Pure derivation — replaces a previous useEffect that adjusted state on prop change.)
+  const computeFormData = (
+    rec: typeof record,
+    type: typeof recordType
+  ): EditRecordFormData | undefined => {
+    if (!rec) return undefined
 
-    setReportUploadError(null)
-
-    // Initialize form data based on record type
-    if (recordType === 'irrigation') {
-      const irrigationRecord = record as IrrigationRecord
-      setFormData({
+    if (type === 'irrigation') {
+      const irrigationRecord = rec as IrrigationRecord
+      return {
         recordType: 'irrigation',
         date: irrigationRecord.date,
         notes: irrigationRecord.notes || '',
@@ -299,9 +297,9 @@ export function EditRecordModal({
         growth_stage: irrigationRecord.growth_stage || '',
         moisture_status: irrigationRecord.moisture_status || '',
         system_discharge: irrigationRecord.system_discharge?.toString() || ''
-      })
-    } else if (recordType === 'spray') {
-      const sprayRecord = record as SprayRecord
+      }
+    } else if (type === 'spray') {
+      const sprayRecord = rec as SprayRecord
       // Helper function to ensure spray chemicals format consistency
       const ensureSprayChemicalsFormat = (sprayRecord: SprayRecord) => {
         const generateChemicalId = () => {
@@ -349,16 +347,16 @@ export function EditRecordModal({
 
       const chemicals = ensureSprayChemicalsFormat(sprayRecord)
 
-      setFormData({
+      return {
         recordType: 'spray',
         date: sprayRecord.date,
         notes: sprayRecord.notes || '',
         water_volume: sprayRecord.water_volume?.toString() || '',
         chemicals: chemicals
-      })
-    } else if (recordType === 'harvest') {
-      const harvestRecord = record as HarvestRecord
-      setFormData({
+      }
+    } else if (type === 'harvest') {
+      const harvestRecord = rec as HarvestRecord
+      return {
         recordType: 'harvest',
         date: harvestRecord.date,
         notes: harvestRecord.notes || '',
@@ -366,9 +364,9 @@ export function EditRecordModal({
         grade: harvestRecord.grade || '',
         price: harvestRecord.price?.toString() || '',
         buyer: harvestRecord.buyer || ''
-      })
-    } else if (recordType === 'fertigation') {
-      const fertigationRecord = record as FertigationRecord
+      }
+    } else if (type === 'fertigation') {
+      const fertigationRecord = rec as FertigationRecord
       // Helper function to ensure fertigation fertilizers format consistency
       const ensureFertigationFertilizersFormat = (fertigationRecord: FertigationRecord) => {
         const generateFertilizerId = () => {
@@ -406,15 +404,15 @@ export function EditRecordModal({
 
       const fertilizers = ensureFertigationFertilizersFormat(fertigationRecord)
 
-      setFormData({
+      return {
         recordType: 'fertigation',
         date: fertigationRecord.date,
         notes: fertigationRecord.notes || '',
         fertilizers: fertilizers
-      })
-    } else if (recordType === 'expense') {
-      const expenseRecord = record as ExpenseRecord
-      setFormData({
+      }
+    } else if (type === 'expense') {
+      const expenseRecord = rec as ExpenseRecord
+      return {
         recordType: 'expense',
         date: expenseRecord.date,
         notes: '',
@@ -427,45 +425,62 @@ export function EditRecordModal({
         work_type: expenseRecord.work_type || '',
         rate_per_unit: expenseRecord.rate_per_unit?.toString() || '',
         worker_names: expenseRecord.worker_names || ''
-      })
-    } else if (recordType === 'soil_test') {
-      const soilTestRecord = record as SoilTestRecord
-      setFormData({
+      }
+    } else if (type === 'soil_test') {
+      const soilTestRecord = rec as SoilTestRecord
+      return {
         recordType: 'soil_test',
         date: soilTestRecord.date,
         notes: soilTestRecord.notes || '',
         parameters: soilTestRecord.parameters || {},
         recommendations: soilTestRecord.recommendations || ''
-      })
-
-      if (soilTestRecord.report_storage_path) {
-        setReportMeta({
-          storagePath: soilTestRecord.report_storage_path,
-          signedUrl: soilTestRecord.report_url || '',
-          filename: soilTestRecord.report_filename || 'test-report',
-          mimeType:
-            soilTestRecord.report_type === 'image'
-              ? 'image/*'
-              : soilTestRecord.report_type === 'pdf'
-                ? 'application/pdf'
-                : soilTestRecord.report_type || 'application/octet-stream',
-          reportType: (soilTestRecord.report_type as 'image' | 'pdf') || 'pdf',
-          extractionStatus:
-            (soilTestRecord.extraction_status as 'pending' | 'success' | 'failed') || 'pending',
-          extractionError: soilTestRecord.extraction_error || undefined,
-          parsedParameters: soilTestRecord.parsed_parameters || undefined,
-          rawNotes: soilTestRecord.raw_notes || null,
-          summary: undefined,
-          confidence: undefined
-        })
-      } else {
-        setReportMeta(null)
       }
-    } else {
-      setFormData(undefined)
-      setReportMeta(null)
     }
-  }, [record, recordType])
+
+    return undefined
+  }
+
+  // Compute report metadata derived from the current record/recordType props.
+  const computeReportMeta = (
+    rec: typeof record,
+    type: typeof recordType
+  ): ReportAttachmentMeta | null => {
+    if (!rec) return null
+    if (type !== 'soil_test') return null
+
+    const soilTestRecord = rec as SoilTestRecord
+    if (!soilTestRecord.report_storage_path) return null
+
+    return {
+      storagePath: soilTestRecord.report_storage_path,
+      signedUrl: soilTestRecord.report_url || '',
+      filename: soilTestRecord.report_filename || 'test-report',
+      mimeType:
+        soilTestRecord.report_type === 'image'
+          ? 'image/*'
+          : soilTestRecord.report_type === 'pdf'
+            ? 'application/pdf'
+            : soilTestRecord.report_type || 'application/octet-stream',
+      reportType: (soilTestRecord.report_type as 'image' | 'pdf') || 'pdf',
+      extractionStatus:
+        (soilTestRecord.extraction_status as 'pending' | 'success' | 'failed') || 'pending',
+      extractionError: soilTestRecord.extraction_error || undefined,
+      parsedParameters: soilTestRecord.parsed_parameters || undefined,
+      rawNotes: soilTestRecord.raw_notes || null,
+      summary: undefined,
+      confidence: undefined
+    }
+  }
+
+  // Adjust form/report/upload state inline during render when the record or
+  // recordType prop changes, avoiding the stale-flash that a useEffect would cause.
+  const [prevProps, setPrevProps] = useState({ record, recordType })
+  if (record !== prevProps.record || recordType !== prevProps.recordType) {
+    setPrevProps({ record, recordType })
+    setFormData(computeFormData(record, recordType))
+    setReportMeta(computeReportMeta(record, recordType))
+    setReportUploadError(null)
+  }
 
   const applyParsedParameters = (parameters?: Record<string, number>) => {
     if (!parameters || recordType !== 'soil_test') return
