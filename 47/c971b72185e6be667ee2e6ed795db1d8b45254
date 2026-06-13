@@ -1,0 +1,19 @@
+.gitignore
+  s_b85e2a89e8899c::t_3486c68aed12fa 81-82
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "47c971b72185e6be667ee2e6ed795db1d8b45254",
+  "prompts": {},
+  "sessions": {
+    "s_b85e2a89e8899c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1a968b4-45b4-46d2-a7a9-322cc95429f9",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
