@@ -1,0 +1,29 @@
+src/components/navigation.tsx
+  s_329df4f3fe78ea::t_2a4160a23f2f43 18
+middleware.ts
+  s_329df4f3fe78ea::t_2a4160a23f2f43 5-38,53,73-119
+src/app/consultant/layout.tsx
+  s_329df4f3fe78ea::t_2a4160a23f2f43 94,111-113,133,140,153-160,162-163,165-177
+  s_329df4f3fe78ea::t_34992200412bf9 134-139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "39df04016ee91545104fcb1555b222db873f8b5e",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_329df4f3fe78ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a8d2e8d-dbfd-4a34-a2c8-f8fc4b370d1b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
