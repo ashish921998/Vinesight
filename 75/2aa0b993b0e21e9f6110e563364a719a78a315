@@ -1,0 +1,28 @@
+src/app/api/invite/accept/route.ts
+  s_b85e2a89e8899c::t_bc5d01e94f875b 231-235
+  s_b85e2a89e8899c::t_158951db3b7797 16-23,28-29,36-39
+  s_b85e2a89e8899c::t_53d3f8af388df0 259-263,265-268,281-286,288-292
+  s_b85e2a89e8899c::t_5f144d2a51a6a6 101-108
+  s_b85e2a89e8899c::t_0faed68a0b5877 269-273
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "752aa0b993b0e21e9f6110e563364a719a78a315",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_b85e2a89e8899c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1a968b4-45b4-46d2-a7a9-322cc95429f9",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
