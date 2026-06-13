@@ -113,8 +113,8 @@ export async function POST(request: NextRequest) {
       { data: profile, error: profileError },
       { data: activeLink, error: activeLinkError },
       { data: org, error: orgError },
-      { data: orgMember },
-      { data: existingClient }
+      { data: orgMember, error: orgMemberError },
+      { data: existingClient, error: existingClientError }
     ] = await Promise.all([
       admin.from('profiles').select('phone').eq('id', userId).maybeSingle(),
       admin
@@ -137,6 +137,20 @@ export async function POST(request: NextRequest) {
         .eq('client_user_id', userId)
         .maybeSingle()
     ])
+
+    // The two guards below (staff-as-farmer block, removed-client re-admission block) are
+    // authorization checks, so a transient DB error on either query must fail CLOSED. Without
+    // capturing these errors, a failed query returns null/undefined data that reads as "no row
+    // found" — silently passing the guard and letting a staff member bind as a farmer, or a
+    // deliberately-removed client re-admit themselves via a leftover token.
+    if (orgMemberError) {
+      console.error('Error checking organization membership:', orgMemberError)
+      return NextResponse.json({ error: 'Failed to verify account status' }, { status: 500 })
+    }
+    if (existingClientError) {
+      console.error('Error checking existing client link:', existingClientError)
+      return NextResponse.json({ error: 'Failed to verify client status' }, { status: 500 })
+    }
 
     // A team member (staff) of the inviting org must not be bound as a client of that same org —
     // that would make one account both staff and farmer. This is the reliable backstop for the

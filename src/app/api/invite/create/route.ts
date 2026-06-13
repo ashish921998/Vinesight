@@ -101,6 +101,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Defense-in-depth: revoke any earlier still-pending invite for this same number+org before
+    // issuing a new one, so at most one token is live per (org, phone). Each pending token is a
+    // 7-day bearer secret, so leaving stale duplicates around only widens the leak surface (and
+    // clutters the table). Non-fatal — a failed cleanup just leaves the prior token(s) live, which
+    // is today's baseline and is already harmless (the accept route re-checks client status from a
+    // live query, not the token), so it shouldn't block the consultant from issuing the new link.
+    const { error: revokeError } = await admin
+      .from('farmer_invitations')
+      .update({ status: 'expired' })
+      .eq('organization_id', organizationId)
+      .eq('phone', normalized.e164)
+      .eq('status', 'pending')
+
+    if (revokeError) {
+      console.error('Error revoking prior pending invitations (non-fatal):', revokeError)
+    }
+
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + INVITATION_TTL_DAYS)
     const token = crypto.randomUUID()
