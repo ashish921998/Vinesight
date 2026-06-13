@@ -1,0 +1,29 @@
+src/app/auth/callback/page.tsx
+  s_329df4f3fe78ea::t_18b475a2d40280 11-14,27,34,55,77,84
+src/components/journal/EditRecordModal.tsx
+  s_329df4f3fe78ea::t_e8cb7ae6940d05 477-483
+src/components/lab-tests/TestReminderNotification.tsx
+  s_329df4f3fe78ea::t_f493358aa021a1 36-39,44-47
+src/components/tasks/TaskModal.tsx
+  s_329df4f3fe78ea::t_bbe118081e50c6 117-121,124-127
+src/components/farm/CriticalAlertsBanner.tsx
+  s_329df4f3fe78ea::t_e56df1699be038 79
+src/components/lab-tests/LabTestModal.tsx
+  s_329df4f3fe78ea::t_ebe291636874b4 55-56,59,61,74-83,96-97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "dc60a235af00ef44d3d84dd255a4648d8302f077",
+  "prompts": {},
+  "sessions": {
+    "s_329df4f3fe78ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a8d2e8d-dbfd-4a34-a2c8-f8fc4b370d1b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
