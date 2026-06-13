@@ -89,8 +89,8 @@ function ClientsPage() {
     try {
       setSending(true)
 
-      const signupLink = `${window.location.origin}/signup`
-
+      // The API builds the token-bound signup link server-side (/signup/invite/<token>),
+      // so the farmer is auto-linked to this organization on signup — matching the phone flow.
       const response = await fetch('/api/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -98,8 +98,7 @@ function ClientsPage() {
           organizationId: organization.id,
           organizationName: organization.name,
           farmerName: inviteName.trim(),
-          farmerEmail: inviteEmail.trim(),
-          signupLink
+          farmerEmail: inviteEmail.trim()
         })
       })
 
