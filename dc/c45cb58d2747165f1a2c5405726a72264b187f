@@ -1,0 +1,27 @@
+src/app/api/invite/resolve/route.ts
+  s_329df4f3fe78ea::t_78eed43606e2ed 22
+  s_329df4f3fe78ea::t_1151ad62d3f605 4-9
+src/app/signup/invite/[token]/page.tsx
+  s_329df4f3fe78ea::t_7b1be4000f9627 48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "dcc45cb58d2747165f1a2c5405726a72264b187f",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_329df4f3fe78ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a8d2e8d-dbfd-4a34-a2c8-f8fc4b370d1b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
