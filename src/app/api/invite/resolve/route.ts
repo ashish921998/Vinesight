@@ -37,9 +37,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ valid: false, reason: 'expired' })
     }
 
+    // A pending invite without a phone is unusable — the signup page renders a read-only,
+    // empty phone field and the Send button stays permanently disabled. Reject it here
+    // instead of stranding the farmer on a form they can never submit.
+    if (!invite.phone) {
+      return NextResponse.json({ valid: false, reason: 'invalid' })
+    }
+
     const { data: org, error: orgError } = await admin
       .from('organizations')
-      .select('name')
+      .select('name, is_active')
       .eq('id', invite.organization_id)
       .maybeSingle()
 
@@ -51,10 +58,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ valid: false, reason: 'error' }, { status: 500 })
     }
 
+    // Don't let a farmer burn an OTP on a deactivated org. resolve is the earliest gate;
+    // accept would only reject them (400) after they'd already created a confirmed phone
+    // account that then blocks that number from ever being re-invited.
+    if (!org?.is_active) {
+      return NextResponse.json({ valid: false, reason: 'org_inactive' })
+    }
+
     return NextResponse.json({
       valid: true,
-      organizationName: org?.name ?? null,
-      phone: invite.phone ?? null
+      organizationName: org.name,
+      phone: invite.phone
     })
   } catch (error) {
     console.error('Error in invite/resolve API:', error)

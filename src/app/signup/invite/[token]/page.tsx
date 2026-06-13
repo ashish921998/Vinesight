@@ -58,6 +58,9 @@ export default function InvitedFarmerSignupPage() {
           already_used: 'This invitation has already been used.',
           not_found: 'This invitation link is invalid.',
           missing_token: 'This invitation link is invalid.',
+          org_inactive: 'This organization is no longer active. Please contact your consultant.',
+          invalid:
+            'This invitation is missing required details. Please ask your consultant for a new link.',
           error: 'We couldn’t load this invitation. Please try again in a moment.'
         }
         setInviteError(reasons[data.reason] || 'This invitation link is invalid.')
@@ -135,8 +138,11 @@ export default function InvitedFarmerSignupPage() {
       if (!response.ok) {
         const data = await response.json().catch(() => ({}))
         console.error('Error accepting invitation:', data.error)
+        // Surface the route's specific reason (e.g. 410 expired, 409 already-linked-elsewhere,
+        // 403 removed-as-client) instead of collapsing every failure to a generic message.
         toast.error(
-          'Couldn’t link your account to the organization. Please contact your consultant.'
+          data.error ||
+            'Couldn’t link your account to the organization. Please contact your consultant.'
         )
         return false
       }

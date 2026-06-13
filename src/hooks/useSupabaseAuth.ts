@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
 import { toast } from 'sonner'
@@ -430,6 +430,23 @@ export function useSupabaseAuth() {
 
       setAuthState((prev) => ({ ...prev, user: data.user ?? null, loading: false }))
       toast.success('Phone verified')
+
+      // Phone-OTP verify is the acquisition funnel for the consultant-invite feature: identify the
+      // farmer and fire 'New user created' for genuinely new accounts (created within the last
+      // couple of minutes), mirroring the email verify path. PII (phone) stays in identify(),
+      // never in the capture event. TODO: email + phone both identify per-flow, but the documented
+      // convention is to identify once at the onAuthStateChange chokepoint; consolidate later.
+      if (data.user) {
+        posthog.identify(data.user.id, { phone: data.user.phone })
+        const createdMs = data.user.created_at ? new Date(data.user.created_at).getTime() : 0
+        if (createdMs && Date.now() - createdMs < 2 * 60 * 1000) {
+          posthog.capture('New user created', {
+            user_id: data.user.id,
+            timestamp: new Date().toISOString()
+          })
+        }
+      }
+
       return { success: true, user: data.user }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
@@ -554,9 +571,12 @@ export function useSupabaseAuth() {
     }
   }
 
-  const clearError = () => {
+  // Stable identity — it only calls the stable setAuthState setter — so callers can list it
+  // in an effect's dependency array without the effect re-running (and re-arming timers) on
+  // every render.
+  const clearError = useCallback(() => {
     setAuthState((prev) => ({ ...prev, error: null }))
-  }
+  }, [])
 
   return {
     user: authState.user,

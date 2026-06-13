@@ -101,8 +101,9 @@ export function InviteFarmerDialog({ organizationId, trigger }: InviteFarmerDial
   const waHref = result
     ? `https://wa.me/${result.e164.replace('+', '')}?text=${encodeURIComponent(message)}`
     : '#'
-  // iOS Messages ignores `?body=` and only honors `&body=` (which Android accepts too).
-  const smsHref = result ? `sms:${result.e164}&body=${encodeURIComponent(message)}` : '#'
+  // iOS Messages only honors `&body=` (not `?body=`); Android accepts both. The leading `?`
+  // opens the query string so the whole `&body=…` isn't parsed as the recipient on iOS.
+  const smsHref = result ? `sms:${result.e164}?&body=${encodeURIComponent(message)}` : '#'
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
