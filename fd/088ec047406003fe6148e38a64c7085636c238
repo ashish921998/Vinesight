@@ -1,0 +1,25 @@
+.gitignore
+  s_329df4f3fe78ea::t_14d1d168d8c673 47
+.husky/pre-commit
+  s_329df4f3fe78ea::t_5947b7e6c84d7c 32
+  s_329df4f3fe78ea::t_67b1a1a4dc1443 16,21
+.github/workflows/react-doctor.yml
+  s_329df4f3fe78ea::t_cee2a0d8d2e329 44-51,53-55
+  s_329df4f3fe78ea::t_71221470c70c26 33-39,41-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "fd088ec047406003fe6148e38a64c7085636c238",
+  "prompts": {},
+  "sessions": {
+    "s_329df4f3fe78ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a8d2e8d-dbfd-4a34-a2c8-f8fc4b370d1b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
