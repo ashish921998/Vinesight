@@ -61,7 +61,8 @@ export default function InvitedFarmerSignupPage() {
           org_inactive: 'This organization is no longer active. Please contact your consultant.',
           invalid:
             'This invitation is missing required details. Please ask your consultant for a new link.',
-          error: 'We couldn’t load this invitation. Please try again in a moment.'
+          error: 'We couldn’t load this invitation. Please try again in a moment.',
+          rate_limited: 'Too many attempts. Please wait a minute and try again.'
         }
         setInviteError(reasons[data.reason] || 'This invitation link is invalid.')
         return

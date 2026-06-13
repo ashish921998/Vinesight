@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { globalRateLimiter } from '@/lib/validation'
 
 // Public lookup for the invited-farmer signup page. The visitor is unauthenticated, so RLS
 // would hide farmer_invitations — we use the admin client but return only the minimum the page
@@ -10,6 +11,15 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 export async function GET(request: NextRequest) {
   try {
+    // Unauthenticated endpoint: rate-limit by IP so a holder of a token (or an attacker probing
+    // random tokens) can't hammer it. Matches the tasks/route.ts convention.
+    const clientIP =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous'
+    const rateLimit = globalRateLimiter.checkLimit(`invite-resolve-${clientIP}`)
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ valid: false, reason: 'rate_limited' }, { status: 429 })
+    }
+
     const token = request.nextUrl.searchParams.get('token')
     if (!token) {
       return NextResponse.json({ valid: false, reason: 'missing_token' }, { status: 400 })

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { validateUserSession } from '@/lib/auth-utils'
 import { normalizePhone } from '@/lib/phone'
+import { globalRateLimiter } from '@/lib/validation'
 
 // Creates a phone-based farmer invitation and returns a shareable signup link.
 // Unlike /api/invite (email), this endpoint does NOT send anything — the consultant
@@ -18,6 +19,17 @@ const INVITATION_TTL_DAYS = 7
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate-limit before any work: this route wraps the phone_in_use() RPC, which is an
+    // account-existence oracle (any authenticated org member can test whether an arbitrary
+    // number has a VineSight account). Capping calls per IP narrows that surface and aligns
+    // with the tasks/route.ts convention. Authenticated callers get the higher limit.
+    const clientIP =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous'
+    const rateLimit = globalRateLimiter.checkLimit(`invite-create-${clientIP}`, true)
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ error: rateLimit.reason || 'Too many requests' }, { status: 429 })
+    }
+
     const body = await request.json()
 
     const parsed = CreateInviteSchema.safeParse(body)

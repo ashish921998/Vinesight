@@ -383,7 +383,7 @@
         <text x="560" y="108" text-anchor="middle" font-family="sans-serif" font-size="13.5" font-weight="700" fill="#15803d">Open link</text>
         <text x="560" y="128" text-anchor="middle" font-family="monospace" font-size="10" fill="#16a34a">GET /api/invite/resolve</text>
         <text x="560" y="148" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#78716c">validates token,</text>
-        <text x="560" y="162" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#78716c">prefills org + name</text>
+        <text x="560" y="162" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#78716c">prefills org + phone</text>
 
         <!-- 4 -->
         <rect x="690" y="78" width="180" height="96" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"></rect>
@@ -442,7 +442,7 @@
         <tr>
           <td><span class="tag get">GET</span> resolve</td>
           <td><code>src/app/api/invite/resolve/route.ts</code></td>
-          <td>Public. Validates the token and returns only minimal, non-sensitive fields: <code>{ valid, organizationName, farmerName, phone }</code> or <code>{ valid:false, reason }</code> (<code>not_found · expired · already_used</code>). The returned phone prefills the signup form.</td>
+          <td>Public. Validates the token and returns only minimal, non-sensitive fields: <code>{ valid, organizationName, phone }</code> or <code>{ valid:false, reason }</code> (<code>missing_token · not_found · expired · already_used · org_inactive · invalid · rate_limited</code>). All three invite routes are IP-rate-limited via <code>globalRateLimiter</code>. The returned phone prefills the signup form. The farmer's name is intentionally <strong>not</strong> returned — the token is a 7-day bearer secret, so PII is kept to the unavoidable minimum.</td>
         </tr>
         <tr>
           <td><span class="tag post">POST</span> accept</td>
@@ -452,7 +452,7 @@
         <tr>
           <td>Signup page</td>
           <td><code>src/app/signup/invite/[token]/page.tsx</code></td>
-          <td>Resolves the token, prefills the farmer's name, runs <strong>phone-OTP signup</strong> (no email/password; first and last name required, phone prefilled read-only), then calls <code>accept</code> to bind before redirecting to <code>/dashboard</code>.</td>
+          <td>Resolves the token, prefills the phone read-only, runs <strong>phone-OTP signup</strong> (no email/password; first and last name entered by the farmer, phone prefilled read-only), then calls <code>accept</code> to bind before redirecting to <code>/dashboard</code>.</td>
         </tr>
         <tr>
           <td>Dialog</td>
@@ -561,9 +561,9 @@
       <div class="step commit">
         <div class="badge">7</div>
         <div class="body">
-          <div class="h">Link, rollback on failure &amp; finish</div>
-          <div class="d">Upsert into <code class="inline">organization_clients</code> (active, assigned to the inviter). If it fails, the claim is <strong>released back to <code class="inline">pending</code></strong> so the farmer can retry. On success, sync the legacy <code class="inline">profiles.consultant_organization_id</code> mirror and backfill the invited phone if the farmer has none.</div>
-          <div class="fail">23505 cross-org → 409 · else rollback + 500</div>
+          <div class="h">Link, token-disposition on failure &amp; finish</div>
+          <div class="d">Insert into <code class="inline">organization_clients</code> (active, assigned to the inviter). On a <strong>permanent 23505 conflict</strong> (a concurrent request linked the farmer first, or the one-active-org-per-client index fired) the token is <strong>expired, not reset</strong> — a spent token must never resurrect as a re-bindable bearer secret. Only a <strong>transient</strong> error (connection drop, statement timeout) releases the claim back to <code class="inline">pending</code>, gated on <code class="inline">status='accepted'</code>, so the farmer can retry the same link. On success, sync the legacy <code class="inline">profiles.consultant_organization_id</code> mirror and backfill the invited phone if the farmer has none.</div>
+          <div class="fail">23505 → expire token → success (this org) or 409 (other org) · transient → release-to-pending + 500</div>
         </div>
       </div>
     </div>

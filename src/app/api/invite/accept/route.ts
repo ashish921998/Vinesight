@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { validateUserSession } from '@/lib/auth-utils'
+import { globalRateLimiter } from '@/lib/validation'
 
 // Binds an invited farmer to the inviting organization as an active client. Called from the
 // invited-farmer signup page right after the farmer verifies the OTP sent to their phone.
@@ -42,6 +43,15 @@ async function hasActiveClientLink(
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate-limit before any DB work. Matches the tasks/route.ts convention; authenticated
+    // callers get the higher limit.
+    const clientIP =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous'
+    const rateLimit = globalRateLimiter.checkLimit(`invite-accept-${clientIP}`, true)
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ error: rateLimit.reason || 'Too many requests' }, { status: 429 })
+    }
+
     const body = await request.json()
 
     const parsed = AcceptSchema.safeParse(body)
