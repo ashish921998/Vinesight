@@ -20,7 +20,7 @@
     "typecheck": "tsc --noEmit",
     "prepare": "husky || true",
     "postinstall": "[ -n \"$CI\" ] || husky install || true",
-    "doctor": "npx react-doctor@latest"
+    "doctor": "react-doctor"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.51",
