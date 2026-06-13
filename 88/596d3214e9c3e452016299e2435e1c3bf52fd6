@@ -1,0 +1,40 @@
+src/app/signup/invite/[token]/page.tsx
+  s_b85e2a89e8899c::t_3de36375e2d04b 64-65
+src/app/api/invite/resolve/route.ts
+  s_85b07dad2be36e::t_9ad52795f50af9 3,14-22
+docs/consultant-invite-flow-design.html
+  s_85b07dad2be36e::t_4ddd811a30cb4e 455
+  s_85b07dad2be36e::t_b268ed78bce26b 386
+  s_b85e2a89e8899c::t_62ec5c9d459ebc 445
+  s_85b07dad2be36e::t_ca9bad06de524f 564-566
+src/app/api/invite/accept/route.ts
+  s_85b07dad2be36e::t_6acc904dd4444c 46-54
+  s_85b07dad2be36e::t_d4380b72e33c00 5
+src/app/api/invite/create/route.ts
+  s_85b07dad2be36e::t_45db522229e3ad 6
+  s_85b07dad2be36e::t_5ad1b0990cd8a1 22-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "88596d3214e9c3e452016299e2435e1c3bf52fd6",
+  "prompts": {},
+  "sessions": {
+    "s_85b07dad2be36e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_13dc41e79ffeNv9B5Tt3xsLyMC",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_b85e2a89e8899c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1a968b4-45b4-46d2-a7a9-322cc95429f9",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
