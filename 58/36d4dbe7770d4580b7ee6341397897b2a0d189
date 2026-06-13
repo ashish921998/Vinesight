@@ -1,0 +1,30 @@
+src/app/signup/invite/[token]/page.tsx
+  s_329df4f3fe78ea::t_16c428126587ac 401-454,460-469,472-479
+  s_329df4f3fe78ea::t_47c386b16aa8cb 42
+  s_329df4f3fe78ea::t_9234e9193f3902 115-166,186-190,192,194-200
+  s_329df4f3fe78ea::t_2c145fe1db11da 334
+  s_329df4f3fe78ea::t_efd64dcb3ae2c2 455-459
+  s_329df4f3fe78ea::t_c4c3e4ad377c7b 245-251
+  s_329df4f3fe78ea::t_ab7ffc7714d427 262
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "5836d4dbe7770d4580b7ee6341397897b2a0d189",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_329df4f3fe78ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a8d2e8d-dbfd-4a34-a2c8-f8fc4b370d1b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
