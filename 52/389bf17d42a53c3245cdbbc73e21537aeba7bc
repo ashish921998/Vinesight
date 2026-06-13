@@ -1,0 +1,29 @@
+src/app/layout.tsx
+  s_0cf1dde478da80::t_6905f2b8ec94e0 12
+  s_0cf1dde478da80::t_3ca43fcbefdde6 183-187
+src/components/providers/MotionConfigProvider.tsx
+  s_0cf1dde478da80::t_57af98b8ef82e1 1-16
+src/app/globals.css
+  s_0cf1dde478da80::t_13ea8eaa9a8f39 377-396
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "52389bf17d42a53c3245cdbbc73e21537aeba7bc",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_0cf1dde478da80": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "df5c3a32-f4a2-479f-a71b-2dd85a61e9d6",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
