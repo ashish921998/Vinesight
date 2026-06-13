@@ -105,14 +105,16 @@ export async function POST(request: NextRequest) {
 
     // These reads are independent and the invitation is already validated, so fetch them
     // concurrently: the farmer's profile (to backfill their phone), any existing active client
-    // link, and the inviting org's current active flag. create() checked is_active up to 7 days
-    // ago, so we re-check at bind time — a since-deactivated org shouldn't acquire new clients
-    // (mirrors /api/organizations/add-client, the sibling client-binding path).
+    // link (across orgs), the inviting org's current active flag, whether the caller is staff,
+    // and the farmer's existing client row IN THIS ORG (any status). create() checked is_active
+    // up to 7 days ago, so we re-check at bind time — a since-deactivated org shouldn't acquire
+    // new clients (mirrors /api/organizations/add-client, the sibling client-binding path).
     const [
       { data: profile, error: profileError },
       { data: activeLink, error: activeLinkError },
       { data: org, error: orgError },
-      { data: orgMember }
+      { data: orgMember },
+      { data: existingClient }
     ] = await Promise.all([
       admin.from('profiles').select('phone').eq('id', userId).maybeSingle(),
       admin
@@ -127,6 +129,12 @@ export async function POST(request: NextRequest) {
         .select('user_id')
         .eq('organization_id', invite.organization_id)
         .eq('user_id', userId)
+        .maybeSingle(),
+      admin
+        .from('organization_clients')
+        .select('status')
+        .eq('organization_id', invite.organization_id)
+        .eq('client_user_id', userId)
         .maybeSingle()
     ])
 
@@ -136,6 +144,17 @@ export async function POST(request: NextRequest) {
     if (orgMember) {
       return NextResponse.json(
         { error: 'This account is a team member of the organization and can’t join as a farmer.' },
+        { status: 403 }
+      )
+    }
+
+    // A client the org deliberately deactivated must not re-activate themselves by accepting a
+    // leftover/duplicate invite — re-admitting a removed farmer is the org's decision, not the
+    // farmer's. Checked before claiming the token. (A brand-new or still-active client falls
+    // through; the link step below decides insert vs. idempotent no-op.)
+    if (existingClient?.status === 'inactive') {
+      return NextResponse.json(
+        { error: 'You were removed from this organization. Please contact them to be re-added.' },
         { status: 403 }
       )
     }
@@ -190,26 +209,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invitation already used or revoked' }, { status: 409 })
     }
 
-    // Token claimed — link the farmer as an active client, assigned to whoever sent the invite.
-    const { error: clientError } = await admin.from('organization_clients').upsert(
-      {
-        organization_id: invite.organization_id,
-        client_user_id: userId,
-        assigned_to: invite.invited_by ?? null,
-        assigned_by: invite.invited_by ?? null,
-        status: 'active'
-      },
-      { onConflict: 'organization_id,client_user_id' }
-    )
+    // Token claimed — link the farmer to the org. An already-active client of this org is a
+    // benign duplicate/leftover-token re-accept: leave their row (and its assignment) intact
+    // instead of re-asserting it, so a stray invite can't silently reassign them to a different
+    // staff member. Only a brand-new client gets a row, assigned to whoever sent the invite.
+    // (A deactivated row was already refused above, so existingClient is undefined or active.)
+    if (existingClient?.status === 'active') {
+      return NextResponse.json({ success: true, message: 'Linked to organization' })
+    }
+
+    const { error: clientError } = await admin.from('organization_clients').insert({
+      organization_id: invite.organization_id,
+      client_user_id: userId,
+      assigned_to: invite.invited_by ?? null,
+      assigned_by: invite.invited_by ?? null,
+      status: 'active'
+    })
 
     if (clientError) {
       // Linking failed after we claimed the token — release the claim so the farmer can
       // retry with the same link instead of being locked out by a now-spent invitation.
       await admin.from('farmer_invitations').update({ status: 'pending' }).eq('id', invite.id)
 
-      // A concurrent signup can link this farmer to another org first; the
-      // one-active-org-per-client unique index surfaces that as a conflict, not a 500.
+      // 23505 = a concurrent request linked this farmer first. If they're now an active client
+      // of THIS org it's a benign race → success; otherwise the one-active-org-per-client index
+      // rejected them because they're already active in another org.
       if (clientError.code === '23505') {
+        if (await hasActiveClientLink(admin, invite.organization_id, userId)) {
+          return NextResponse.json({ success: true, message: 'Linked to organization' })
+        }
         return NextResponse.json(
           { error: 'You are already linked to another organization' },
           { status: 409 }
