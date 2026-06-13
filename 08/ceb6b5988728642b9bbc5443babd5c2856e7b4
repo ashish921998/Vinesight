@@ -1,0 +1,69 @@
+src/components/farm/CriticalAlertsBanner.tsx
+  s_329df4f3fe78ea::t_b17b176aef15ab 151-156,161-166
+  s_0cf1dde478da80::t_ae4e7ed650d1c9 17-21,23-37,39,41-56,59-65,67,72-82,84-95,97-111,113-126,129-141,144-145
+src/components/lab-tests/TestReminderNotification.tsx
+  s_0cf1dde478da80::t_168436d8b5709d 36-39,41
+src/app/farms/[id]/logs/page.tsx
+  s_329df4f3fe78ea::t_2ecdb54f4ff776 3-11
+  s_0cf1dde478da80::t_09e6bc9e43de2f 821
+  s_0cf1dde478da80::t_dbb4940a4baac7 807
+  s_0cf1dde478da80::t_3da9f13e41dc21 278-279
+src/components/tasks/TaskModal.tsx
+  s_0cf1dde478da80::t_78c454da496325 117-128
+src/components/lab-tests/LabTestModal.tsx
+  s_0cf1dde478da80::t_93e61131fb2833 52-62,64-83,85
+  s_0cf1dde478da80::t_2c0086048f0017 3
+src/components/calculators/ETc/LocationForm.tsx
+  s_0cf1dde478da80::t_32ac9baebf2ed8 23,31-44
+src/actions/search-logs.ts
+  s_0cf1dde478da80::t_05a49de1cb01ed 56-61
+src/components/journal/EditRecordModal.tsx
+  s_0cf1dde478da80::t_0656a9db26bc7d 284-286
+  s_0cf1dde478da80::t_4e138124f42cfb 3
+  s_0cf1dde478da80::t_4e4c86ef504cc6 477-479
+  s_0cf1dde478da80::t_7a8c5cc5b681a1 278-279,287-288,300-302,350,356-359,367-369,407,412-415,428-431,439-476,480-483
+  s_329df4f3fe78ea::t_b17b176aef15ab 280-283
+src/app/auth/callback/page.tsx
+  s_0cf1dde478da80::t_979889afd23d6b 11,41,61,76-81
+src/components/warehouse/WarehouseItemSelect.tsx
+  s_0cf1dde478da80::t_705c67b07f081a 3
+  s_0cf1dde478da80::t_913f4e00511538 135
+  s_0cf1dde478da80::t_3cf219955001bb 41
+  s_0cf1dde478da80::t_4aedf3bb1fb0e5 116
+src/components/farm-details/forms/FarmModal.tsx
+  s_0cf1dde478da80::t_0ec6aff3e72313 353
+  s_0cf1dde478da80::t_b212150fd25444 3
+  s_0cf1dde478da80::t_b8ff93b12eb7e3 159-163,166-170,201,236
+  s_0cf1dde478da80::t_39098dc98200b7 248-251
+src/components/farm-details/UnifiedDataLogsModal.tsx
+  s_0cf1dde478da80::t_01d648c29429db 197-235,238-253,294
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "08ceb6b5988728642b9bbc5443babd5c2856e7b4",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_0cf1dde478da80": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "df5c3a32-f4a2-479f-a71b-2dd85a61e9d6",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_329df4f3fe78ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a8d2e8d-dbfd-4a34-a2c8-f8fc4b370d1b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
