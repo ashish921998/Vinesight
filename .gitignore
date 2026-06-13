@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local agent / tooling scaffolding (not part of the app)
+.agents/
+.claude/
+.factory/
+skills/
