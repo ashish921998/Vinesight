@@ -1,0 +1,28 @@
+supabase/migrations/202606040007_member_invite_insert_policy.sql
+  s_b85e2a89e8899c::t_882a6382d4b74a 1-24
+src/app/api/invite/create/route.ts
+  s_b85e2a89e8899c::t_3699c2d9e7bd0e 50-53
+supabase/supabase-schema.sql
+  s_b85e2a89e8899c::t_97bc743ce6319e 1220-1225
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "c835376c10b0800654f368a56187750d29df531a",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_b85e2a89e8899c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1a968b4-45b4-46d2-a7a9-322cc95429f9",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
