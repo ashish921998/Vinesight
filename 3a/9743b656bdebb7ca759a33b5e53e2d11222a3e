@@ -1,0 +1,100 @@
+supabase/migrations/202606040006_phone_in_use_check.sql
+  s_329df4f3fe78ea::t_daeea22575a7f0 1-36
+src/app/api/invite/accept/route.ts
+  s_329df4f3fe78ea::t_4eb88f5794fb6d 1-3,5,10-15,35-60,88,99-105,142-154,194-205,218-221,229,232-238
+  s_329df4f3fe78ea::t_d2690cd8635509 114-115,124-130,132-141
+  s_329df4f3fe78ea::t_9e98921828b01c 165-183,188-193,206-209,222-223,231
+  s_329df4f3fe78ea::t_6c37c5f2a90e43 89-98
+  s_329df4f3fe78ea::t_82392e585578c5 227
+  s_329df4f3fe78ea::t_addd728282f387 118-122,131
+  s_329df4f3fe78ea::t_0bd94781be38ae 106,111-113,116,123
+  s_329df4f3fe78ea::t_af5b208bf3703e 61-87
+  s_329df4f3fe78ea::t_64dff59257dc36 4,6-9
+  s_329df4f3fe78ea::t_5c8ab489f7342f 16-34
+  s_329df4f3fe78ea::t_d381c98156091e 184-187
+  s_329df4f3fe78ea::t_05e8c993c15702 155-164
+  s_329df4f3fe78ea::t_fb244422e22c1a 107-110,117
+  s_329df4f3fe78ea::t_bc00b0616d99e2 210-217,224-226,228,230
+src/lib/phone.ts
+  s_329df4f3fe78ea::t_807d49b51ca2e3 32-40
+  s_329df4f3fe78ea::t_4448cb1b4f5516 1-31,41-56
+src/components/consultant/InviteFarmerDialog.tsx
+  s_329df4f3fe78ea::t_c14be4956517fd 22
+  s_329df4f3fe78ea::t_c7b6cea6028758 1-21,23-67,69-101,103-129,133-137,139-197
+  s_329df4f3fe78ea::t_64f5711457061c 102
+  s_329df4f3fe78ea::t_4b5de94f283ddb 130-132,138
+  s_329df4f3fe78ea::t_1614ae8aaf6dd5 68
+src/components/ui/sonner.tsx
+  s_329df4f3fe78ea::t_a22ad0333fcbad 21-25
+src/types/database.ts
+  s_329df4f3fe78ea::t_88303b70c73c3c 2225-2227,2236-2238,2247-2249
+  s_329df4f3fe78ea::t_81771da8233329 2373-2376
+src/app/api/invite/route.ts
+  s_fbaf16e6e3cc69::t_f7c43da63d4461 163-166
+  s_fbaf16e6e3cc69::t_170666c0665990 46,49,58-67
+  s_fbaf16e6e3cc69::t_98b062a5ed1f28 226-227
+  s_fbaf16e6e3cc69::t_3bfd4fe07a4552 133-136,142,144-146
+src/app/signup/invite/[token]/page.tsx
+  s_329df4f3fe78ea::t_1ab99e101e84df 129-130
+  s_329df4f3fe78ea::t_6c0feb4cf48b21 39-46
+  s_329df4f3fe78ea::t_5363dda97d5193 60-61
+  s_329df4f3fe78ea::t_c2b4e8ad3ad2e4 1-7,9-11,13-18,20-32,37-38,47,49-59,62-66,72,77-78,80-98,102,104-105,107-118,124,131,134,156,164,167-182,186-193,196-210,214-222,264-266,268-269,271,279,283,298-299,301-302,304,307,315-316,364-375
+  s_329df4f3fe78ea::t_8e4f7ee1a55ea5 79
+  s_329df4f3fe78ea::t_61e1990652d66d 8,12,19,33-36,48,67-71,73-76,99-101,103,106,119-123,125-128,132-133,135-152,154,157-163,165-166,194-195,211-213,223-263,267,270,272-278,280-282,284-297,300,303,305-306,308-314,317-321,323-363
+  s_329df4f3fe78ea::t_232794f6e98f5e 153,155,183-185,322
+src/hooks/useSupabaseAuth.ts
+  s_329df4f3fe78ea::t_8236add1550d79 40-50
+  s_329df4f3fe78ea::t_e40c190a144287 358-441
+  s_329df4f3fe78ea::t_57d08e3c50695f 568-569
+src/app/api/invite/resolve/route.ts
+  s_329df4f3fe78ea::t_1df879736d1054 1-18,20-45,48-53
+  s_329df4f3fe78ea::t_86a9cf55ca5168 46-47
+  s_329df4f3fe78ea::t_febe314994c073 19
+supabase/migrations/202606040005_consultant_foundation_followups.sql
+  s_329df4f3fe78ea::t_f6385b391c3839 1-33
+src/app/consultant/farmers/page.tsx
+  s_329df4f3fe78ea::t_9efc5de7ecafdd 107-115
+  s_329df4f3fe78ea::t_52b44e096d45ac 29
+src/app/api/invite/create/route.ts
+  s_329df4f3fe78ea::t_4b5178f522a6d4 1-3,5-43,46-83,104-136
+  s_329df4f3fe78ea::t_4a83e3eac58baa 4
+  s_329df4f3fe78ea::t_088a6f23561b4a 84-91,93-94,97
+  s_329df4f3fe78ea::t_a2b2d6e8fa8672 92,95-96,98-103
+  s_329df4f3fe78ea::t_d0332e8a8b6b31 44-45
+supabase/supabase-schema.sql
+  s_329df4f3fe78ea::t_3eb321c3b01192 1126-1127
+  s_329df4f3fe78ea::t_966865b45943d1 1140-1141
+  s_329df4f3fe78ea::t_8b3faf007e6f55 1054-1056
+  s_329df4f3fe78ea::t_cdebd5e60c4f88 73-95
+supabase/migrations/202606040004_farmer_phone_invitations.sql
+  s_329df4f3fe78ea::t_82511db076aa56 1-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "3a9743b656bdebb7ca759a33b5e53e2d11222a3e",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_329df4f3fe78ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a8d2e8d-dbfd-4a34-a2c8-f8fc4b370d1b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_fbaf16e6e3cc69": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e077616c-5c09-4d69-a420-9c6630f4a99b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
