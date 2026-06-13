@@ -9,6 +9,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
+import { toast } from 'sonner'
 
 function VerifyOtpContent() {
   const [loading, setLoading] = useState(false)
@@ -17,8 +18,10 @@ function VerifyOtpContent() {
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [email, setEmail] = useState<string | null>(null)
   const [orgSlug, setOrgSlug] = useState<string | null>(null)
+  const [inviteToken, setInviteToken] = useState<string | null>(null)
   const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const initialOrgRef = useRef<string | null>(null)
+  const inviteHandledRef = useRef(false)
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -56,14 +59,44 @@ function VerifyOtpContent() {
         initialOrgRef.current = null
       }
     }
+
+    const inviteTokenParam = searchParams.get('inviteToken')
+    if (inviteTokenParam && /^[a-zA-Z0-9-]{8,100}$/.test(inviteTokenParam)) {
+      setInviteToken(inviteTokenParam)
+    }
   }, [searchParams])
 
   useEffect(() => {
-    if (user && user.email_confirmed_at && !authLoading) {
-      const targetOrg = orgSlug || initialOrgRef.current
-      router.push(targetOrg ? '/consultant' : '/dashboard')
+    if (!user || !user.email_confirmed_at || authLoading) {
+      return
     }
-  }, [user, authLoading, router, orgSlug])
+
+    // Invite flow: now that the email is verified, bind the user to the org via the
+    // invite token, then send them to the consultant workspace.
+    if (inviteToken && !inviteHandledRef.current) {
+      inviteHandledRef.current = true
+      void (async () => {
+        try {
+          const resp = await fetch('/api/organizations/accept-invite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, token: inviteToken })
+          })
+          if (!resp.ok) {
+            const data = await resp.json().catch(() => ({}))
+            toast.error(data.error || 'Failed to join organization. Please contact support.')
+          }
+        } catch {
+          toast.error('Failed to join organization. Please contact support.')
+        }
+        router.push('/consultant')
+      })()
+      return
+    }
+
+    const targetOrg = orgSlug || initialOrgRef.current
+    router.push(targetOrg ? '/consultant' : '/dashboard')
+  }, [user, authLoading, router, orgSlug, inviteToken])
 
   useEffect(() => {
     return () => {
@@ -112,7 +145,11 @@ function VerifyOtpContent() {
       const result = await verifyOtp({ email: email.toLowerCase(), token: otpCode })
 
       if (result.success) {
-        router.push(orgSlug ? '/consultant' : '/dashboard')
+        // For invite acceptances, the post-confirmation effect runs accept-invite
+        // and then redirects. For all other signups, redirect immediately.
+        if (!inviteToken) {
+          router.push(orgSlug ? '/consultant' : '/dashboard')
+        }
       } else {
         setError(result.error || 'Verification failed')
       }

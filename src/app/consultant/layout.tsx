@@ -47,6 +47,13 @@ const navItems = [
     icon: ClipboardList,
     description: 'Review queue',
     exact: false
+  },
+  {
+    label: 'Team',
+    href: '/consultant/team',
+    icon: Settings,
+    description: 'Members & assignments',
+    exact: false
   }
 ]
 
@@ -58,10 +65,6 @@ const upcomingItems = [
   {
     label: 'Templates',
     icon: FileText
-  },
-  {
-    label: 'Team Settings',
-    icon: Settings
   }
 ]
 

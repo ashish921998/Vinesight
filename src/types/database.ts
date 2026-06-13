@@ -2250,6 +2250,65 @@ export type Database = {
           }
         ]
       }
+      organization_member_invitations: {
+        Row: {
+          id: string
+          organization_id: string
+          email: string
+          first_name: string
+          last_name: string
+          role: 'admin' | 'agronomist'
+          token: string
+          status: 'pending' | 'accepted' | 'revoked' | 'expired'
+          invited_by: string | null
+          expires_at: string
+          accepted_at: string | null
+          accepted_user_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          email: string
+          first_name: string
+          last_name: string
+          role: 'admin' | 'agronomist'
+          token: string
+          status?: 'pending' | 'accepted' | 'revoked' | 'expired'
+          invited_by?: string | null
+          expires_at: string
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          email?: string
+          first_name?: string
+          last_name?: string
+          role?: 'admin' | 'agronomist'
+          token?: string
+          status?: 'pending' | 'accepted' | 'revoked' | 'expired'
+          invited_by?: string | null
+          expires_at?: string
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'organization_member_invitations_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       fertilizer_plans: {
         Row: {
           id: string
