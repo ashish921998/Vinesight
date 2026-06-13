@@ -30,17 +30,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Don't leave the GITHUB_TOKEN in .git/config for the third-party
+          # react-doctor step that runs after this checkout.
+          persist-credentials: false
+          # Full history so react-doctor can resolve the PR merge base and only
+          # report newly introduced findings (not pre-existing ones).
+          fetch-depth: 0
 
-      - uses: millionco/react-doctor@v2
-        # Advisory by default: React Doctor reports findings on every PR — a
-        # sticky summary comment, inline review comments, and a commit status
-        # with the health score — but never fails the check, so it won't red-X
-        # a teammate's PR on day one. When your team trusts the signal, graduate
-        # the gate: uncomment the block below and set blocking to "error" (fail
-        # on new error-severity findings) or "warning" (fail on any finding).
+      # Pinned to the immutable commit SHA that v2 (v2.1.0) points to, so a
+      # retargeted tag or upstream compromise can't change what runs here.
+      - uses: millionco/react-doctor@547e1e4ecdb70315d81a91ec3605701d58616ee2 # v2
+        # Run advisory: React Doctor reports findings on every PR — a sticky
+        # summary comment, inline review comments, and a commit status with the
+        # health score — but never fails the check, so it won't red-X a
+        # teammate's PR on day one. NOTE: react-doctor's `blocking` defaults to
+        # "error" (it fails on new error-severity findings), so we set it to
+        # "none" explicitly below to keep this advisory. When your team trusts
+        # the signal, graduate the gate: change `blocking` to "warning" (fail on
+        # any finding) or "error" (fail on new error-severity findings).
         # Full reference: https://www.react.doctor/ci
-        # with:
-        #   blocking: error          # Gate level: "none" (advisory, the default) | "warning" | "error"
+        with:
+          blocking: none # Gate level: "none" (advisory) | "warning" | "error". Default is "error".
+        # Other available options (defaults shown):
         #   scope: full              # On PRs, scan the whole project instead of just changed files
         #   comment: false           # Disable the sticky PR summary comment
         #   review-comments: false   # Disable inline review comments on changed lines
