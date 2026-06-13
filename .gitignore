@@ -79,3 +79,4 @@ next-env.d.ts
 
 # Locally installed agent skills (e.g. ./skills/react-doctor)
 /skills/
+.gstack/
