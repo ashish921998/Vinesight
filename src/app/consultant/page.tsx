@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ConsultantAccess, getConsultantAccess, roleLabels } from '@/lib/consultant-access'
+import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
 
 const workspaceLinks = [
   {
@@ -80,6 +81,7 @@ export default function ConsultantOverviewPage() {
             Manage assigned farmers, lab visibility, and consultant review work from one place.
           </p>
         </div>
+        <InviteFarmerDialog organizationId={access.organizationId} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

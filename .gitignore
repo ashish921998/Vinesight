@@ -39,3 +39,44 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AI / agent tooling — local configs, installed skills, and worktrees.
+# Created by agent tooling installs (e.g. `npx react-doctor install`), not app source.
+# Listed explicitly so real dot-dirs (.github/, .husky/) stay trackable.
+.adal/
+.agents/
+.augment/
+.codebuddy/
+.commandcode/
+.continue/
+.crush/
+.factory/
+.goose/
+.iflow/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.mcpjam/
+.mux/
+.neovate/
+.openhands/
+.pochi/
+.qoder/
+.qwen/
+.roo/
+.trae/
+.vibe/
+.windsurf/
+.zencoder/
+
+# Claude Code local state (keep shared settings.json/ and commands/ committable)
+.claude/settings.local.json
+.claude/worktrees/
+.claude/skills/
+.claude/projects/
+.claude/*.lock
+
+# Locally installed agent skills (e.g. ./skills/react-doctor)
+/skills/
+.gstack/
