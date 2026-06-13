@@ -10,7 +10,6 @@ interface InviteRequest {
   organizationName: string
   farmerName: string
   farmerEmail: string
-  signupLink: string
 }
 
 // HTML escape utility to prevent XSS/HTML injection
@@ -44,10 +43,10 @@ function getResendClient() {
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as InviteRequest
-    const { organizationId, organizationName, farmerName, farmerEmail, signupLink } = body
+    const { organizationId, organizationName, farmerName, farmerEmail } = body
 
     // Validate required fields
-    if (!organizationId || !organizationName || !farmerName || !farmerEmail || !signupLink) {
+    if (!organizationId || !organizationName || !farmerName || !farmerEmail) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -56,34 +55,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
     }
 
-    // Validate signup link is a valid URL and matches our domain
-    let validatedUrl: URL
-    try {
-      validatedUrl = new URL(signupLink)
-
-      // SECURITY: NEXT_PUBLIC_APP_URL must be configured to validate signup link domain.
-      // This prevents accepting invitations with arbitrary domains that could be used for phishing.
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL
-      if (!appUrl) {
-        console.error('NEXT_PUBLIC_APP_URL is not configured')
-        return NextResponse.json(
-          { error: 'Server misconfiguration: NEXT_PUBLIC_APP_URL not set' },
-          { status: 500 }
-        )
-      }
-
-      // Compare origins to validate the domain
-      if (validatedUrl.origin !== new URL(appUrl).origin) {
-        return NextResponse.json({ error: 'Invalid signup link domain' }, { status: 400 })
-      }
-    } catch {
-      return NextResponse.json({ error: 'Invalid signup link' }, { status: 400 })
+    // NEXT_PUBLIC_APP_URL must be configured so we can build a token-bound signup link
+    // (/signup/invite/<token>) on our own domain. This mirrors the phone-invite flow
+    // (/api/invite/create) and ensures the farmer is auto-linked to the org on signup.
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (!appUrl) {
+      console.error('NEXT_PUBLIC_APP_URL is not configured')
+      return NextResponse.json(
+        { error: 'Server misconfiguration: NEXT_PUBLIC_APP_URL not set' },
+        { status: 500 }
+      )
     }
 
     // Escape HTML in user-provided values for HTML body (prevents XSS)
     const safeFarmerName = escapeHtml(farmerName)
     const safeOrgName = escapeHtml(organizationName)
-    const safeSignupLink = escapeHtml(validatedUrl.toString())
 
     // Validate Supabase environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -144,14 +130,20 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + INVITATION_TTL_DAYS)
 
+    // Token-bound signup link. On signup, /signup/invite/[token] -> /api/invite/accept
+    // binds the farmer to this organization, assigned to whoever sent the invite.
+    const token = crypto.randomUUID()
+
     // Create invitation record with expiration
     const { data: invitation, error: invError } = await supabase
       .from('farmer_invitations')
       .insert({
         organization_id: organizationId,
-        token: crypto.randomUUID(),
+        token,
         status: 'pending',
-        expires_at: expiresAt.toISOString()
+        expires_at: expiresAt.toISOString(),
+        farmer_name: farmerName.trim() || null,
+        invited_by: user.id
       })
       .select()
       .single()
@@ -167,6 +159,10 @@ export async function POST(request: NextRequest) {
       console.error('RESEND_FROM_EMAIL not configured')
       return NextResponse.json({ error: 'Email service not configured' }, { status: 500 })
     }
+
+    // Build the token-bound signup link on our own domain (escaped for the HTML body).
+    const inviteUrl = `${appUrl.replace(/\/$/, '')}/signup/invite/${token}`
+    const safeSignupLink = escapeHtml(inviteUrl)
 
     // Send email using Resend
     // Use raw organizationName for subject (plain text), escaped values for HTML body
@@ -227,6 +223,8 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Invitation sent',
       invitationId: invitation.id,
+      token,
+      inviteUrl,
       expiresAt: expiresAt.toISOString()
     })
   } catch (error) {

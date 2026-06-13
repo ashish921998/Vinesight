@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
 import { getFarmerClients, type FarmerWithFarms } from '@/lib/consultant-query-service'
+import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
 
 export default function FarmerDirectoryPage() {
   const [farmers, setFarmers] = useState<FarmerWithFarms[]>([])
@@ -103,12 +104,15 @@ export default function FarmerDirectoryPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Farmer Directory</h1>
-        <p className="text-muted-foreground">
-          {farmers.length} farmer{farmers.length !== 1 ? 's' : ''}{' '}
-          {access?.isAgronomist ? 'assigned to you' : 'in your organization'}
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Farmer Directory</h1>
+          <p className="text-muted-foreground">
+            {farmers.length} farmer{farmers.length !== 1 ? 's' : ''}{' '}
+            {access?.isAgronomist ? 'assigned to you' : 'in your organization'}
+          </p>
+        </div>
+        {access && <InviteFarmerDialog organizationId={access.organizationId} />}
       </div>
 
       {/* Filters */}
