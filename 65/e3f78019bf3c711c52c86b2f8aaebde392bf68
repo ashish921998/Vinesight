@@ -1,0 +1,39 @@
+docs/consultant-invite-flow-design.html
+  s_329df4f3fe78ea::t_fc7b499b9d4945 617-623
+  s_329df4f3fe78ea::t_64758498e9c063 688
+  s_329df4f3fe78ea::t_630bfc6e156e9a 455
+  s_329df4f3fe78ea::t_051005f8371a63 460
+  s_329df4f3fe78ea::t_72b69ad0683781 440
+  s_329df4f3fe78ea::t_d198498f16ab9e 445
+  s_329df4f3fe78ea::t_289c9cddf8f678 711
+  s_329df4f3fe78ea::t_271fa1c78d3f2d 723-724
+  s_329df4f3fe78ea::t_3c18f9d724227f 709
+  s_329df4f3fe78ea::t_b18f6905509725 266-267
+  s_329df4f3fe78ea::t_a3f179caaa2c27 697
+  s_329df4f3fe78ea::t_562f678c183480 223
+  s_329df4f3fe78ea::t_bf43346d385b75 1-222,224-265,268-439,441-444,446-454,456-459,461-504,509-516,520-521,523-524,528-529,531-532,536-537,539-540,543-544,546-547,551-552,554,563,567-616,624-687,689-696,698-708,710,712-713,715-722,725-739
+  s_329df4f3fe78ea::t_1722585d8286f1 505-508
+  s_329df4f3fe78ea::t_e72bea4abcdfe4 517-519,522,525-527,530,533-535,538,541-542,545,548-550,553,555-562,564-566
+  s_329df4f3fe78ea::t_15108c7d087c8c 714
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "65e3f78019bf3c711c52c86b2f8aaebde392bf68",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_329df4f3fe78ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a8d2e8d-dbfd-4a34-a2c8-f8fc4b370d1b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
