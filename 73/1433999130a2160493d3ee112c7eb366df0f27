@@ -1,0 +1,24 @@
+.gitignore
+  s_0cf1dde478da80::t_f071fab280b9f6 41-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "731433999130a2160493d3ee112c7eb366df0f27",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_0cf1dde478da80": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "df5c3a32-f4a2-479f-a71b-2dd85a61e9d6",
+        "model": "glm-5.2"
+      },
+      "human_author": null
+    }
+  }
+}
