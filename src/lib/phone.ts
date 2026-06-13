@@ -16,10 +16,14 @@ export interface NormalizedPhone {
  * Returns null if the input can't be coerced into a plausible international number.
  *
  * Rules:
- *  - Leading "+"            -> treated as already international, digits kept as-is.
- *  - 10 digits             -> assumed Indian mobile, prefixed with 91.
- *  - 11 digits with lead 0 -> Indian number with trunk 0, dropped and prefixed with 91.
- *  - 12 digits with lead 91-> already an Indian international number.
+ *  - Leading "+"             -> treated as already international, digits kept as-is.
+ *  - 10 digits              -> assumed Indian mobile, prefixed with 91.
+ *  - 11 digits with lead 0  -> Indian number with trunk 0, dropped and prefixed with 91.
+ *  - Any 91-prefixed number -> must be exactly 91 + a 10-digit mobile starting 6-9, so a
+ *                              one-digit typo like "91987654321" is rejected rather than
+ *                              passed through as a malformed "+91987654321".
+ *  - Other intl numbers     -> accepted at a plausible E.164 length (11-15 digits).
+ * A leading 0 after normalization (e.g. a "+0..." input) is rejected as malformed.
  */
 export function normalizePhone(input: string): NormalizedPhone | null {
   if (!input) return null
@@ -30,8 +34,7 @@ export function normalizePhone(input: string): NormalizedPhone | null {
   if (!digits) return null
 
   // Bare numbers (no leading +) are treated as Indian and get the +91 country code.
-  // Numbers entered with a + are already international, and 12-digit 91-prefixed numbers
-  // fall through unchanged to the length check below.
+  // Numbers entered with a + are already international and fall through to the checks below.
   if (!trimmed.startsWith('+')) {
     if (digits.length === 10) {
       digits = DEFAULT_COUNTRY_CODE + digits
@@ -40,14 +43,21 @@ export function normalizePhone(input: string): NormalizedPhone | null {
     }
   }
 
-  // Plausible international length: country code + subscriber number.
-  if (digits.length < 11 || digits.length > 15) return null
+  // No valid E.164 number has a 0 immediately after the country code; reject a leading 0
+  // (e.g. a "+0..." input, or a trunk 0 we didn't strip) instead of emitting a bad number.
+  if (digits.startsWith('0')) return null
 
-  // For Indian numbers, the subscriber part must be a valid mobile (starts 6-9).
-  if (digits.startsWith(DEFAULT_COUNTRY_CODE) && digits.length === 12) {
-    const national = digits.slice(2)
-    if (!/^[6-9]\d{9}$/.test(national)) return null
+  // Indian numbers (the default market, and the only ones we can validate precisely) must be
+  // exactly the country code + a 10-digit mobile starting 6-9. Validating EVERY 91-prefixed
+  // number — not only the 12-digit case — rejects the too-short/too-long typos that would
+  // otherwise slip through the generic length check below.
+  if (digits.startsWith(DEFAULT_COUNTRY_CODE)) {
+    if (!/^91[6-9]\d{9}$/.test(digits)) return null
+    return { e164: `+${digits}`, wa: digits }
   }
+
+  // Non-Indian international numbers: accept a plausible E.164 length.
+  if (digits.length < 11 || digits.length > 15) return null
 
   return {
     e164: `+${digits}`,

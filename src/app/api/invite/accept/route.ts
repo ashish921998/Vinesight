@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     // ago, so we re-check at bind time — a since-deactivated org shouldn't acquire new clients
     // (mirrors /api/organizations/add-client, the sibling client-binding path).
     const [
-      { data: profile },
+      { data: profile, error: profileError },
       { data: activeLink, error: activeLinkError },
       { data: org, error: orgError },
       { data: orgMember }
@@ -221,14 +221,25 @@ export async function POST(request: NextRequest) {
 
     // Keep the legacy profiles.consultant_organization_id mirror in sync (older screens
     // read it), backfilling the invited phone in the same write when the farmer has none.
+    // Only backfill when the profile read above actually succeeded — a failed read leaves
+    // `profile` undefined, which must not be mistaken for "farmer has no phone".
     const profilePatch: { consultant_organization_id: string; phone?: string } = {
       consultant_organization_id: invite.organization_id
     }
-    if (invite.phone && !profile?.phone) {
+    if (!profileError && invite.phone && !profile?.phone) {
       profilePatch.phone = invite.phone
     }
 
-    await admin.from('profiles').update(profilePatch).eq('id', userId)
+    // Non-fatal: organization_clients (linked above) is the source of truth for scoping, so a
+    // failed mirror write only leaves legacy screens stale — log it rather than failing the
+    // accept, since the farmer is already correctly linked.
+    const { error: mirrorError } = await admin
+      .from('profiles')
+      .update(profilePatch)
+      .eq('id', userId)
+    if (mirrorError) {
+      console.error('Error syncing legacy profile org mirror:', mirrorError)
+    }
 
     return NextResponse.json({ success: true, message: 'Linked to organization' })
   } catch (error) {

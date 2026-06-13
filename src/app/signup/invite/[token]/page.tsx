@@ -139,7 +139,10 @@ export default function InvitedFarmerSignupPage() {
     const result = await verifyPhoneOtp({ phone: normalized.e164, token: otp.trim() })
     if (!result.success || !result.user) return
 
-    // Phone verified — bind the farmer to the inviting organization (service role).
+    // Phone verified — bind the farmer to the inviting organization (service role). Only
+    // navigate to the dashboard once that link actually succeeds: on failure we keep the
+    // farmer on this page with the error (and the Back/Resend retry path) instead of
+    // silently dropping them on an unlinked dashboard where the toast is lost.
     try {
       setBinding(true)
       const response = await fetch('/api/invite/accept', {
@@ -153,12 +156,14 @@ export default function InvitedFarmerSignupPage() {
         toast.error(
           'Phone verified but linking to the organization failed. Please contact your consultant.'
         )
+        return
       }
     } catch (err) {
       console.error('Error accepting invitation:', err)
       toast.error(
         'Phone verified but linking to the organization failed. Please contact your consultant.'
       )
+      return
     } finally {
       setBinding(false)
     }

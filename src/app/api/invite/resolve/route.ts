@@ -34,11 +34,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ valid: false, reason: 'expired' })
     }
 
-    const { data: org } = await admin
+    const { data: org, error: orgError } = await admin
       .from('organizations')
       .select('name')
       .eq('id', invite.organization_id)
       .maybeSingle()
+
+    // Surface a transient org-lookup failure as an error instead of returning a "valid"
+    // invite with a null org name (which would render the page unbranded and hide the
+    // backend failure).
+    if (orgError) {
+      console.error('Error resolving invitation organization:', orgError)
+      return NextResponse.json({ valid: false, reason: 'error' }, { status: 500 })
+    }
 
     return NextResponse.json({
       valid: true,
