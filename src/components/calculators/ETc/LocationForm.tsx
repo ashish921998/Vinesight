@@ -20,6 +20,7 @@ interface LocationFormProps {
 
 export function LocationForm({ formData, onInputChange, onLocationSelect }: LocationFormProps) {
   const [searchQuery, setSearchQuery] = useState(formData.locationName || '')
+  const [prevSearchQuery, setPrevSearchQuery] = useState(searchQuery)
   const [suggestions, setSuggestions] = useState<LocationResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -27,14 +28,26 @@ export function LocationForm({ formData, onInputChange, onLocationSelect }: Loca
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
 
-  // Handle search input changes with debouncing
+  // Adjust search state inline during render when the query changes,
+  // so the UI never briefly shows the stale value between commits.
+  if (searchQuery !== prevSearchQuery) {
+    setPrevSearchQuery(searchQuery)
+    if (searchQuery.length >= 2) {
+      setIsSearching(true)
+    } else {
+      setSuggestions([])
+      setShowSuggestions(false)
+      setIsSearching(false)
+    }
+  }
+
+  // Handle search input changes with debounced fetch
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current)
     }
 
     if (searchQuery.length >= 2) {
-      setIsSearching(true)
       searchTimeoutRef.current = setTimeout(async () => {
         try {
           const results = await OpenMeteoGeocodingService.getLocationSuggestions(searchQuery, 8)
@@ -47,10 +60,6 @@ export function LocationForm({ formData, onInputChange, onLocationSelect }: Loca
           setIsSearching(false)
         }
       }, 300)
-    } else {
-      setSuggestions([])
-      setShowSuggestions(false)
-      setIsSearching(false)
     }
 
     return () => {

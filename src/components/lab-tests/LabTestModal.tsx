@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -49,37 +49,53 @@ export function LabTestModal({
   const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(new Set())
   const [fieldWarnings, setFieldWarnings] = useState<Record<string, string>>({})
 
-  // Initialize form when modal opens or existingTest changes
-  useEffect(() => {
-    if (isOpen) {
-      if (mode === 'edit' && existingTest) {
-        setDate(existingTest.date)
-        setDateOfPruning(existingTest.date_of_pruning || '')
-        setNotes(existingTest.notes || '')
+  // Initialize form when modal opens or existingTest changes.
+  // Adjusting state inline during render (rather than in a useEffect)
+  // avoids a stale flash between the prop change and the next commit.
+  // `openKey` becomes null while closed, and we always record it (even on close)
+  // so reopening the SAME item produces a key change and re-initializes the form.
+  const [prevOpenKey, setPrevOpenKey] = useState<string | null>(null)
+  const openKey = isOpen ? `${mode}:${existingTest?.id ?? 'new'}` : null
+  if (openKey !== prevOpenKey) {
+    setPrevOpenKey(openKey)
+    if (isOpen && mode === 'edit' && existingTest) {
+      setDate(existingTest.date)
+      setDateOfPruning(existingTest.date_of_pruning || '')
+      setNotes(existingTest.notes || '')
 
-        // Convert parameters to strings for form inputs
-        const params: Record<string, string> = {}
-        Object.entries(existingTest.parameters).forEach(([key, value]) => {
-          if (value !== null && value !== undefined && value !== '') {
-            params[key] = String(value)
-          }
-        })
-        setParameters(params)
-      } else {
-        // Reset for add mode
-        setDate(new Date().toISOString().split('T')[0])
-        setDateOfPruning('')
-        setNotes('')
-        setParameters({})
-        setReportFile(null)
-        setReportPath(null)
-        setParseConfidence(null)
-        setParseStatus('idle')
-        setAutoFilledFields(new Set())
-        setFieldWarnings({})
-      }
+      // Convert parameters to strings for form inputs
+      const params: Record<string, string> = {}
+      Object.entries(existingTest.parameters).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          params[key] = String(value)
+        }
+      })
+      setParameters(params)
+
+      // Clear transient parse/report UI state so stale AI badges/warnings or a
+      // report from a prior add/parse session don't leak into this edit session.
+      setReportFile(null)
+      setReportPath(null)
+      setParseConfidence(null)
+      setParseStatus('idle')
+      setAutoFilledFields(new Set())
+      setFieldWarnings({})
+    } else if (isOpen) {
+      // Reset for add mode
+      setDate(new Date().toISOString().split('T')[0])
+      setDateOfPruning('')
+      setNotes('')
+      setParameters({})
+      setReportFile(null)
+      setReportPath(null)
+      setParseConfidence(null)
+      setParseStatus('idle')
+      setAutoFilledFields(new Set())
+      setFieldWarnings({})
     }
-  }, [isOpen, mode, existingTest])
+    // On close (openKey === null) we intentionally only record the key so the
+    // next open re-initializes; no state reset needed while hidden.
+  }
 
   // Field definitions for soil tests
   const soilFields = [
