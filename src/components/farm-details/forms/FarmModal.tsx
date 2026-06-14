@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -139,7 +139,6 @@ export function FarmModal({
 
   const [cropError, setCropError] = useState<string | null>(null)
   const [areaError, setAreaError] = useState<string | null>(null)
-  const [soilCompositionWarning, setSoilCompositionWarning] = useState<string | null>(null)
   const [isCustomVariety, setIsCustomVariety] = useState(false)
 
   const safeParseNumber = (value: string | undefined): number | undefined => {
@@ -157,18 +156,18 @@ export function FarmModal({
   const cropOptions = useMemo(() => getAllCrops(), [])
   const varietyOptions = useMemo(() => getVarietiesForCrop(formData.crop), [formData.crop])
 
-  // Detect custom varieties on edit
-  useEffect(() => {
-    if (editingFarm && editingFarm.cropVariety) {
-      const predefinedVarieties = getVarietiesForCrop(editingFarm.crop || 'Grapes')
-      const hasCustomVariety = !predefinedVarieties.includes(editingFarm.cropVariety)
-      setIsCustomVariety(hasCustomVariety)
-    }
-  }, [editingFarm])
+  // Sync form state when the editingFarm prop changes — done during render
+  // (with a prev-prop tracker) instead of an effect to avoid a stale flash.
+  const [prevEditingFarm, setPrevEditingFarm] = useState(editingFarm)
+  if (editingFarm !== prevEditingFarm) {
+    setPrevEditingFarm(editingFarm)
 
-  // Update form data when editingFarm prop changes
-  useEffect(() => {
     if (editingFarm) {
+      const predefinedVarieties = getVarietiesForCrop(editingFarm.crop || 'Grapes')
+      const hasCustomVariety = !!(
+        editingFarm.cropVariety && !predefinedVarieties.includes(editingFarm.cropVariety)
+      )
+
       setFormData({
         name: editingFarm.name || '',
         region: editingFarm.region || '',
@@ -199,6 +198,7 @@ export function FarmModal({
 
       setCropError(null)
       setAreaError(null)
+      setIsCustomVariety(hasCustomVariety)
     } else {
       // Reset form when not editing (adding new farm)
       setFormData({
@@ -233,7 +233,7 @@ export function FarmModal({
       setAreaError(null)
       setIsCustomVariety(false)
     }
-  }, [editingFarm])
+  }
 
   const soilCompositionSum = useMemo(() => {
     const sand = parseFloat(formData.sandPercentage)
@@ -245,17 +245,10 @@ export function FarmModal({
     return sand + silt + clay
   }, [formData.sandPercentage, formData.siltPercentage, formData.clayPercentage])
 
-  useEffect(() => {
-    if (soilCompositionSum === null) {
-      setSoilCompositionWarning(null)
-      return
-    }
-    if (soilCompositionSum < 95 || soilCompositionSum > 105) {
-      setSoilCompositionWarning('Sand + silt + clay should total roughly 100%')
-    } else {
-      setSoilCompositionWarning(null)
-    }
-  }, [soilCompositionSum])
+  const soilCompositionWarning =
+    soilCompositionSum === null || (soilCompositionSum >= 95 && soilCompositionSum <= 105)
+      ? null
+      : 'Sand + silt + clay should total roughly 100%'
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     if (field === 'dateOfPruning') {
@@ -357,7 +350,7 @@ export function FarmModal({
   }
 
   const resetAndClose = () => {
-    // Form data will be reset by useEffect when editingFarm changes
+    // Form data is reset during render when the editingFarm prop changes
     onClose()
   }
 

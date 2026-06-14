@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import {
   Geist,
   Geist_Mono,
@@ -9,12 +9,13 @@ import {
 } from 'next/font/google'
 import './globals.css'
 import { I18nProvider } from '@/components/providers/I18nProvider'
+import { MotionConfigProvider } from '@/components/providers/MotionConfigProvider'
 import { AsyncErrorBoundary } from '@/components/ErrorBoundary'
 import { SentryErrorBoundary } from '@/components/SentryErrorBoundary'
 import { Suspense } from 'react'
 import { GlobalAuthErrorHandler } from '@/components/auth/GlobalAuthErrorHandler'
 import { Analytics } from '@vercel/analytics/next'
-import { GoogleAnalytics, SearchConsoleVerification } from '@/components/GoogleAnalytics'
+import { GoogleAnalytics } from '@/components/GoogleAnalytics'
 import dynamic from 'next/dynamic'
 import { SEO_KEYWORDS } from '@/lib/seo-constants'
 
@@ -58,6 +59,7 @@ export const metadata: Metadata = {
   description:
     'One view of your grower network for grape exporters, FPCs, and consultants worldwide: spray records, lab results, advisory, and export compliance across every farm.',
   keywords: SEO_KEYWORDS,
+  applicationName: 'VineSight',
   authors: [{ name: 'VineSight Team' }],
   creator: 'VineSight - Smart Agriculture Solutions',
   publisher: 'VineSight Technologies',
@@ -78,6 +80,14 @@ export const metadata: Metadata = {
   category: 'agriculture',
   classification: 'Agriculture Technology',
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    title: 'VineSight',
+    statusBarStyle: 'default'
+  },
+  formatDetection: {
+    telephone: false
+  },
   metadataBase: new URL('https://vinesight.vercel.app'),
   alternates: {
     canonical: '/'
@@ -113,10 +123,20 @@ export const metadata: Metadata = {
       { url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' }
     ],
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }]
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'msapplication-TileColor': '#6F8F5E',
+    'msapplication-config': '/browserconfig.xml',
+    rating: 'general',
+    distribution: 'global',
+    language: 'en',
+    'geo.region': 'IN',
+    'geo.placename': 'India'
   }
 }
 
-export const viewport = {
+export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: '#6F8F5E'
@@ -128,41 +148,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#6F8F5E" />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="VineSight" />
-
-        {/* Enhanced SEO Meta Tags */}
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="application-name" content="VineSight" />
-        <meta name="msapplication-TileColor" content="#6F8F5E" />
-        <meta name="msapplication-config" content="/browserconfig.xml" />
-
-        {/* Preconnect for performance */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-
-        {/* Canonical URL will be set per page */}
-        <link rel="canonical" href="https://vinesight.vercel.app" />
-
-        {/* Additional SEO enhancements */}
-        <meta name="keywords" content={SEO_KEYWORDS} />
-        <meta name="rating" content="general" />
-        <meta name="distribution" content="global" />
-        <meta name="language" content="en" />
-        <meta name="geo.region" content="IN" />
-        <meta name="geo.placename" content="India" />
-
-        {/* Google Search Console Verification */}
-        <SearchConsoleVerification />
-      </head>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${merriweather.variable} ${sourceCodePro.variable} antialiased`}
       >
@@ -179,9 +165,11 @@ export default function RootLayout({
               }
             >
               <GlobalAuthErrorHandler />
-              <I18nProvider>
-                <LayoutContent>{children}</LayoutContent>
-              </I18nProvider>
+              <MotionConfigProvider>
+                <I18nProvider>
+                  <LayoutContent>{children}</LayoutContent>
+                </I18nProvider>
+              </MotionConfigProvider>
             </Suspense>
           </AsyncErrorBoundary>
         </SentryErrorBoundary>

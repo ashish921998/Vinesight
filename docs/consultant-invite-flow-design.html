@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VineSight — Consultant Farmer Invite Flow · Technical Design</title>
+<style>
+  :root {
+    --grape: #7c3aed;
+    --grape-dark: #6d28d9;
+    --grape-deep: #5b21b6;
+    --vine: #16a34a;
+    --vine-dark: #15803d;
+    --amber: #b45309;
+    --amber-bg: #fffbeb;
+    --rose: #be123c;
+    --rose-bg: #fff1f2;
+    --blue: #1d4ed8;
+    --blue-bg: #eff6ff;
+    --ink: #1c1917;
+    --ink-soft: #44403c;
+    --muted: #78716c;
+    --line: #e7e5e4;
+    --line-soft: #f0eeec;
+    --bg: #faf9f7;
+    --card: #ffffff;
+    --code-bg: #1e1b2e;
+    --code-fg: #e9e6f5;
+    --code-muted: #9d94c4;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, var(--grape-deep) 0%, var(--grape) 55%, #8b5cf6 100%);
+    color: #fff;
+    padding: 64px 0 56px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    right: -80px; top: -80px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.16), transparent 70%);
+    pointer-events: none;
+  }
+  .hero .wrap { position: relative; z-index: 1; }
+  .eyebrow {
+    display: inline-block;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    font-weight: 700;
+    background: rgba(255,255,255,0.16);
+    padding: 6px 12px; border-radius: 999px;
+    margin-bottom: 18px;
+  }
+  .hero h1 { margin: 0 0 10px; font-size: 38px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em; }
+  .hero .sub { margin: 0; font-size: 18px; opacity: 0.92; font-weight: 500; }
+  .hero .meta { margin-top: 22px; font-size: 13px; opacity: 0.8; display: flex; gap: 10px; flex-wrap: wrap; }
+  .hero .meta span { background: rgba(255,255,255,0.12); padding: 4px 10px; border-radius: 6px; }
+
+  main { padding: 8px 0 64px; }
+  section { padding: 38px 0 8px; border-bottom: 1px solid var(--line-soft); }
+  section:last-of-type { border-bottom: none; }
+
+  h2 {
+    font-size: 24px; font-weight: 800; letter-spacing: -0.01em;
+    margin: 0 0 6px; color: var(--ink);
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  h2 .num {
+    font-size: 13px; font-weight: 700; color: var(--grape);
+    background: #f3effe; border: 1px solid #e4d9fb;
+    width: 28px; height: 28px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  h3 { font-size: 16px; font-weight: 700; margin: 26px 0 8px; color: var(--ink); }
+  p { margin: 12px 0; color: var(--ink-soft); }
+  .lead { font-size: 17px; color: var(--ink-soft); }
+  a { color: var(--grape-dark); }
+  code.inline {
+    background: #f3effe; color: var(--grape-deep);
+    padding: 1px 6px; border-radius: 5px;
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 0.86em; border: 1px solid #ece3fb;
+  }
+
+  /* TOC */
+  .toc {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 20px 24px; margin: 30px 0 8px;
+    box-shadow: 0 1px 2px rgba(28,25,23,0.04);
+  }
+  .toc h4 { margin: 0 0 12px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .toc ol { margin: 0; padding: 0; list-style: none; columns: 2; column-gap: 32px; }
+  .toc li { margin: 0 0 8px; font-size: 14px; break-inside: avoid; }
+  .toc a { text-decoration: none; color: var(--ink-soft); display: flex; gap: 10px; }
+  .toc a:hover { color: var(--grape-dark); }
+  .toc .tn { color: var(--grape); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* Cards & callouts */
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 22px 24px; margin: 18px 0;
+    box-shadow: 0 1px 2px rgba(28,25,23,0.04);
+  }
+  .callout {
+    border-radius: 12px; padding: 16px 18px 16px 20px; margin: 16px 0;
+    border-left: 4px solid var(--grape); background: #faf7ff;
+  }
+  .callout .t { font-weight: 700; font-size: 14px; margin-bottom: 4px; color: var(--grape-deep); display: flex; align-items: center; gap: 8px; }
+  .callout p { margin: 4px 0 0; font-size: 14.5px; }
+  .callout.security { border-left-color: var(--amber); background: var(--amber-bg); }
+  .callout.security .t { color: var(--amber); }
+  .callout.gotcha { border-left-color: var(--rose); background: var(--rose-bg); }
+  .callout.gotcha .t { color: var(--rose); }
+  .callout.good { border-left-color: var(--vine); background: #f0fdf4; }
+  .callout.good .t { color: var(--vine-dark); }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); font-weight: 700; background: var(--line-soft); }
+  td code, th code { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; color: var(--grape-deep); }
+  tr:last-child td { border-bottom: none; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 5px; font-family: "SF Mono", ui-monospace, Menlo, monospace; }
+  .tag.post { background: #eef2ff; color: #4338ca; }
+  .tag.get { background: #ecfdf5; color: #047857; }
+
+  /* Code blocks */
+  pre {
+    background: var(--code-bg); color: var(--code-fg);
+    border-radius: 12px; padding: 18px 20px; margin: 16px 0;
+    overflow-x: auto; font-size: 13px; line-height: 1.6;
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    border: 1px solid #2c2842;
+  }
+  pre .c { color: var(--code-muted); font-style: italic; }
+  pre .k { color: #c4b5fd; }
+  pre .s { color: #86efac; }
+  pre .hl { color: #fcd34d; font-weight: 600; }
+  .codecap { font-size: 12px; color: var(--muted); margin: -8px 0 18px; padding-left: 4px; }
+
+  /* Diagram frame */
+  .figure { margin: 22px 0; }
+  .figure svg { width: 100%; height: auto; display: block; }
+  .figcap { font-size: 13px; color: var(--muted); margin-top: 10px; text-align: center; }
+
+  /* Pipeline (accept endpoint steps) */
+  .pipe { margin: 18px 0; position: relative; }
+  .pipe .step { display: flex; gap: 16px; padding: 0 0 18px; position: relative; }
+  .pipe .step::before {
+    content: ""; position: absolute; left: 15px; top: 32px; bottom: -4px; width: 2px; background: var(--line);
+  }
+  .pipe .step:last-child::before { display: none; }
+  .pipe .badge {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    background: var(--grape); color: #fff; font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; justify-content: center; z-index: 1;
+  }
+  .pipe .step.gate .badge { background: var(--amber); }
+  .pipe .step.commit .badge { background: var(--vine); }
+  .pipe .body { padding-top: 4px; }
+  .pipe .body .h { font-weight: 700; font-size: 14.5px; color: var(--ink); }
+  .pipe .body .d { font-size: 13.5px; color: var(--ink-soft); margin-top: 2px; }
+  .pipe .body .fail { font-size: 12.5px; color: var(--rose); margin-top: 4px; font-family: "SF Mono", ui-monospace, Menlo, monospace; }
+
+  /* State machine */
+  .states { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 18px 0; }
+  .state { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 8px; border: 1.5px solid; }
+  .state.pending { color: var(--blue); border-color: #bfdbfe; background: var(--blue-bg); }
+  .state.accepted { color: var(--vine-dark); border-color: #bbf7d0; background: #f0fdf4; }
+  .state.expired { color: var(--muted); border-color: var(--line); background: #fafafa; }
+  .state.revoked { color: var(--rose); border-color: #fecdd3; background: var(--rose-bg); }
+  .arrow { color: var(--muted); font-size: 18px; }
+  .arrow small { display: block; font-size: 10px; line-height: 1; }
+
+  ul.clean { margin: 12px 0; padding-left: 20px; }
+  ul.clean li { margin: 7px 0; color: var(--ink-soft); }
+
+  .pill-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
+  .pill { font-size: 12.5px; font-weight: 600; padding: 5px 12px; border-radius: 999px; background: #f3effe; color: var(--grape-deep); border: 1px solid #e4d9fb; }
+  .pill.ok { background: #f0fdf4; color: var(--vine-dark); border-color: #bbf7d0; }
+
+  footer { background: #1c1917; color: #d6d3d1; padding: 30px 0; font-size: 13px; }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  footer a { color: #c4b5fd; }
+
+  @media (max-width: 640px) {
+    .toc ol { columns: 1; }
+    .hero h1 { font-size: 30px; }
+  }
+  @media print {
+    .hero { background: var(--grape-deep) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    pre, .card, .callout, table { break-inside: avoid; }
+    .toc { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Technical Design Document</span>
+    <h1>Consultant Farmer Invitation Flow</h1>
+    <p class="sub">Phone-based farmer onboarding, token-bound signup, and role-based module gating.</p>
+    <div class="meta">
+      <span>VineSight · B2B Consultant Platform</span>
+      <span>Next.js 15 · Supabase · TypeScript</span>
+      <span>June 2026</span>
+      <span>Status: in review · PR #143</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#overview"><span class="tn">1</span> Overview</a></li>
+      <li><a href="#context"><span class="tn">2</span> Context &amp; constraints</a></li>
+      <li><a href="#architecture"><span class="tn">3</span> System architecture</a></li>
+      <li><a href="#lifecycle"><span class="tn">4</span> Invitation lifecycle</a></li>
+      <li><a href="#components"><span class="tn">5</span> Components &amp; API</a></li>
+      <li><a href="#data"><span class="tn">6</span> Data model</a></li>
+      <li><a href="#accept"><span class="tn">7</span> The accept endpoint</a></li>
+      <li><a href="#decisions"><span class="tn">8</span> Key design decisions</a></li>
+      <li><a href="#gating"><span class="tn">9</span> Module gating</a></li>
+      <li><a href="#migrations"><span class="tn">10</span> Migrations &amp; rollout</a></li>
+      <li><a href="#verification"><span class="tn">11</span> Verification &amp; status</a></li>
+    </ol>
+  </nav>
+</div>
+
+<main class="wrap">
+
+  <!-- 1. OVERVIEW -->
+  <section id="overview">
+    <h2><span class="num">1</span> Overview</h2>
+    <p class="lead">
+      This feature lets an agricultural consultant invite a farmer to their organization by phone number.
+      The consultant generates a <strong>single-use, token-bound signup link</strong> and shares it over
+      WhatsApp, SMS, or copy/paste from their own device — there is <strong>no SMS gateway</strong>. When the
+      farmer signs up through that link, they are automatically bound to the consultant's organization as an
+      <strong>active client</strong>. A companion change centralizes role-based routing in middleware so org
+      staff and farmers each land in — and stay within — their own module.
+    </p>
+    <div class="pill-row">
+      <span class="pill">3 API routes</span>
+      <span class="pill">1 signup page</span>
+      <span class="pill">1 dialog component</span>
+      <span class="pill">Phone normalization util</span>
+      <span class="pill">Middleware gating</span>
+      <span class="pill">3 migrations</span>
+      <span class="pill ok">tsc · eslint · 27 tests ✓</span>
+    </div>
+  </section>
+
+  <!-- 2. CONTEXT -->
+  <section id="context">
+    <h2><span class="num">2</span> Context &amp; constraints</h2>
+    <p>
+      VineSight is a B2B platform: the buyers are Nashik grape exporters, FPCs, and agronomy consultants;
+      the farmers are the deployed end-users. A consultant's first job after onboarding is to bring their
+      roster of farmers into the platform — so farmer onboarding has to be <em>fast and frictionless for the
+      consultant</em>, who is doing the inviting.
+    </p>
+    <h3>Why deep links instead of an SMS/WhatsApp API</h3>
+    <p>
+      For the MVP we deliberately avoided an integrated messaging provider. A real SMS/WhatsApp Business
+      integration would require provider accounts, DLT-approved templates, and per-message cost — overhead
+      that doesn't fit an early go-to-market. Instead, <code class="inline">/api/invite/create</code> returns a
+      ready-to-share link, and the UI renders <strong>Copy / WhatsApp / SMS</strong> buttons the consultant
+      taps from their own phone. The link is the entire payload; nothing is sent server-side.
+    </p>
+    <h3>Two frontends, one backend</h3>
+    <p>
+      VineSight runs <strong>two frontends on one Supabase backend</strong>: this Next.js web app and a separate
+      React Native app that owns the farmer experience. The web app is becoming the <strong>org/consultant
+      cockpit</strong>; the web farmer module is frozen (kept only as a desktop fallback). The invite flow lives
+      on the web side because that is where consultants work — but it onboards farmers who will primarily use
+      the RN app.
+    </p>
+  </section>
+
+  <!-- 3. ARCHITECTURE -->
+  <section id="architecture">
+    <h2><span class="num">3</span> System architecture</h2>
+    <p>
+      Authenticated requests flow through a single middleware chokepoint that decides which module a user
+      belongs to, based on whether they have a row in <code class="inline">organization_members</code>.
+    </p>
+
+    <div class="figure">
+      <svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Module gating architecture">
+        <defs>
+          <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+            <path d="M0,0 L9,4.5 L0,9 z" fill="#a8a29e"></path>
+          </marker>
+        </defs>
+        <!-- request -->
+        <rect x="290" y="18" width="180" height="52" rx="11" fill="#ffffff" stroke="#e7e5e4" stroke-width="1.5"></rect>
+        <text x="380" y="40" text-anchor="middle" font-family="sans-serif" font-size="13.5" font-weight="700" fill="#1c1917">Authenticated request</text>
+        <text x="380" y="57" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#78716c">/auth · module roots</text>
+        <line x1="380" y1="70" x2="380" y2="104" stroke="#a8a29e" stroke-width="1.6" marker-end="url(#ah)"></line>
+
+        <!-- middleware -->
+        <rect x="250" y="106" width="260" height="74" rx="12" fill="#f3effe" stroke="#7c3aed" stroke-width="1.8"></rect>
+        <text x="380" y="132" text-anchor="middle" font-family="monospace" font-size="13.5" font-weight="700" fill="#5b21b6">middleware.ts</text>
+        <text x="380" y="151" text-anchor="middle" font-family="sans-serif" font-size="11.5" fill="#6d28d9">look up organization_members</text>
+        <text x="380" y="167" text-anchor="middle" font-family="sans-serif" font-size="11.5" fill="#6d28d9">for the signed-in user</text>
+
+        <!-- branches -->
+        <path d="M310,180 C260,210 210,196 200,212" fill="none" stroke="#a8a29e" stroke-width="1.6" marker-end="url(#ah)"></path>
+        <path d="M450,180 C500,210 550,196 560,212" fill="none" stroke="#a8a29e" stroke-width="1.6" marker-end="url(#ah)"></path>
+        <text x="232" y="202" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="600" fill="#15803d">member row exists</text>
+        <text x="536" y="202" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="600" fill="#b45309">no membership</text>
+
+        <!-- outcomes -->
+        <rect x="78" y="216" width="232" height="62" rx="11" fill="#faf7ff" stroke="#7c3aed" stroke-width="1.5"></rect>
+        <text x="194" y="241" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#5b21b6">Consultant module</text>
+        <text x="194" y="259" text-anchor="middle" font-family="monospace" font-size="12" fill="#6d28d9">/consultant</text>
+
+        <rect x="450" y="216" width="232" height="62" rx="11" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"></rect>
+        <text x="566" y="241" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#15803d">Farmer module</text>
+        <text x="566" y="259" text-anchor="middle" font-family="monospace" font-size="12" fill="#15803d">/dashboard</text>
+      </svg>
+      <div class="figcap">Middleware is the single redirect authority — each role is only ever sent to its own home, so the modules can never ping-pong.</div>
+    </div>
+  </section>
+
+  <!-- 4. LIFECYCLE -->
+  <section id="lifecycle">
+    <h2><span class="num">4</span> Invitation lifecycle</h2>
+    <p>
+      The happy path spans two actors: the consultant (in the web cockpit) creates and shares the link; the
+      farmer opens it, signs up, and is bound to the org.
+    </p>
+
+    <div class="figure">
+      <svg viewBox="0 0 1120 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Invitation lifecycle">
+        <defs>
+          <marker id="ah2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+            <path d="M0,0 L9,4.5 L0,9 z" fill="#a8a29e"></path>
+          </marker>
+        </defs>
+
+        <!-- actor brackets -->
+        <text x="230" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" letter-spacing="0.08em" fill="#6d28d9">CONSULTANT · WEB COCKPIT</text>
+        <line x1="30" y1="44" x2="430" y2="44" stroke="#ddd6fe" stroke-width="2"></line>
+        <text x="780" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" letter-spacing="0.08em" fill="#15803d">FARMER · SIGNUP LINK</text>
+        <line x1="470" y1="44" x2="1090" y2="44" stroke="#bbf7d0" stroke-width="2"></line>
+
+        <!-- nodes -->
+        <!-- 1 -->
+        <rect x="30" y="78" width="180" height="96" rx="12" fill="#faf7ff" stroke="#7c3aed" stroke-width="1.6"></rect>
+        <text x="120" y="108" text-anchor="middle" font-family="sans-serif" font-size="13.5" font-weight="700" fill="#5b21b6">Create invite</text>
+        <text x="120" y="128" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#7c3aed">POST /api/invite/create</text>
+        <text x="120" y="148" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#78716c">token + 7-day expiry,</text>
+        <text x="120" y="162" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#78716c">returns share link</text>
+
+        <!-- 2 -->
+        <rect x="250" y="78" width="180" height="96" rx="12" fill="#faf7ff" stroke="#a78bfa" stroke-width="1.6" stroke-dasharray="5 4"></rect>
+        <text x="340" y="108" text-anchor="middle" font-family="sans-serif" font-size="13.5" font-weight="700" fill="#5b21b6">Share link</text>
+        <text x="340" y="130" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#6d28d9">WhatsApp · SMS · Copy</text>
+        <text x="340" y="150" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#78716c">from consultant's own</text>
+        <text x="340" y="164" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#78716c">device (no gateway)</text>
+
+        <!-- 3 -->
+        <rect x="470" y="78" width="180" height="96" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"></rect>
+        <text x="560" y="108" text-anchor="middle" font-family="sans-serif" font-size="13.5" font-weight="700" fill="#15803d">Open link</text>
+        <text x="560" y="128" text-anchor="middle" font-family="monospace" font-size="10" fill="#16a34a">GET /api/invite/resolve</text>
+        <text x="560" y="148" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#78716c">validates token,</text>
+        <text x="560" y="162" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#78716c">prefills org + phone</text>
+
+        <!-- 4 -->
+        <rect x="690" y="78" width="180" height="96" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"></rect>
+        <text x="780" y="108" text-anchor="middle" font-family="sans-serif" font-size="13.5" font-weight="700" fill="#15803d">Sign up</text>
+        <text x="780" y="128" text-anchor="middle" font-family="monospace" font-size="9.5" fill="#16a34a">/signup/invite/[token]</text>
+        <text x="780" y="148" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#78716c">create account,</text>
+        <text x="780" y="162" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#78716c">verify OTP</text>
+
+        <!-- 5 -->
+        <rect x="910" y="78" width="180" height="96" rx="12" fill="#dcfce7" stroke="#15803d" stroke-width="2"></rect>
+        <text x="1000" y="108" text-anchor="middle" font-family="sans-serif" font-size="13.5" font-weight="800" fill="#14532d">Bound to org</text>
+        <text x="1000" y="128" text-anchor="middle" font-family="monospace" font-size="10" fill="#15803d">POST /api/invite/accept</text>
+        <text x="1000" y="148" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#166534">active client of the</text>
+        <text x="1000" y="162" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#166534">organization</text>
+
+        <!-- arrows -->
+        <line x1="210" y1="126" x2="248" y2="126" stroke="#a8a29e" stroke-width="1.7" marker-end="url(#ah2)"></line>
+        <line x1="430" y1="126" x2="468" y2="126" stroke="#a8a29e" stroke-width="1.7" stroke-dasharray="5 4" marker-end="url(#ah2)"></line>
+        <line x1="650" y1="126" x2="688" y2="126" stroke="#a8a29e" stroke-width="1.7" marker-end="url(#ah2)"></line>
+        <line x1="870" y1="126" x2="908" y2="126" stroke="#a8a29e" stroke-width="1.7" marker-end="url(#ah2)"></line>
+      </svg>
+      <div class="figcap">The dashed handoff (consultant → farmer) is the out-of-band share; everything else is server-mediated.</div>
+    </div>
+
+    <h3>Invitation status states</h3>
+    <div class="states">
+      <span class="state pending">pending</span>
+      <span class="arrow">→<small>accept</small></span>
+      <span class="state accepted">accepted</span>
+      <span style="width:24px"></span>
+      <span class="state pending">pending</span>
+      <span class="arrow">→<small>TTL</small></span>
+      <span class="state expired">expired</span>
+      <span style="width:24px"></span>
+      <span class="state pending">pending</span>
+      <span class="arrow">→<small>admin</small></span>
+      <span class="state revoked">revoked</span>
+    </div>
+    <p style="font-size:14px">
+      The <code class="inline">pending → accepted</code> transition is the <strong>single-use gate</strong>, and it
+      is performed atomically (see §7). The other terminal states are reached by TTL expiry or manual revocation.
+    </p>
+  </section>
+
+  <!-- 5. COMPONENTS -->
+  <section id="components">
+    <h2><span class="num">5</span> Components &amp; API</h2>
+    <table>
+      <thead><tr><th>Surface</th><th>File</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="tag post">POST</span> create</td>
+          <td><code>src/app/api/invite/create/route.ts</code></td>
+          <td>Authenticated consultant action. Normalizes the phone, verifies the requester is a member of the org, checks the org is active, <strong>blocks numbers that already belong to an account</strong> (via the <code>phone_in_use</code> RPC), inserts a <code>pending</code> invitation, returns the share link + org name.</td>
+        </tr>
+        <tr>
+          <td><span class="tag get">GET</span> resolve</td>
+          <td><code>src/app/api/invite/resolve/route.ts</code></td>
+          <td>Public. Validates the token and returns only minimal, non-sensitive fields: <code>{ valid, organizationName, phone }</code> or <code>{ valid:false, reason }</code> (<code>missing_token · not_found · expired · already_used · org_inactive · invalid · rate_limited</code>). All three invite routes are IP-rate-limited via <code>globalRateLimiter</code>. The returned phone prefills the signup form. The farmer's name is intentionally <strong>not</strong> returned — the token is a 7-day bearer secret, so PII is kept to the unavoidable minimum.</td>
+        </tr>
+        <tr>
+          <td><span class="tag post">POST</span> accept</td>
+          <td><code>src/app/api/invite/accept/route.ts</code></td>
+          <td>Binds the freshly-signed-up farmer to the org as an active client. The robustness centerpiece — atomic single-use claim, idempotent retries, org re-validation, rollback on failure (see §7).</td>
+        </tr>
+        <tr>
+          <td>Signup page</td>
+          <td><code>src/app/signup/invite/[token]/page.tsx</code></td>
+          <td>Resolves the token, prefills the phone read-only, runs <strong>phone-OTP signup</strong> (no email/password; first and last name entered by the farmer, phone prefilled read-only), then calls <code>accept</code> to bind before redirecting to <code>/dashboard</code>.</td>
+        </tr>
+        <tr>
+          <td>Dialog</td>
+          <td><code>src/components/consultant/InviteFarmerDialog.tsx</code></td>
+          <td>Reusable. Phone-only form (the farmer fills in their name at signup) → <code>create</code> → result step with Copy / WhatsApp (<code>wa.me</code>) / SMS (<code>sms:</code>) deep-link buttons.</td>
+        </tr>
+        <tr>
+          <td>Utility</td>
+          <td><code>src/lib/phone.ts</code></td>
+          <td>Normalizes input to E.164 + <code>wa.me</code> digits; India-first (+91 subscriber validation), tolerant of other country codes by length.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 6. DATA MODEL -->
+  <section id="data">
+    <h2><span class="num">6</span> Data model</h2>
+    <p>Two tables carry the flow. The new invitation columns are nullable so the pre-existing email-invite path keeps working unchanged.</p>
+
+    <h3><code class="inline">farmer_invitations</code></h3>
+    <table>
+      <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>token</code></td><td>varchar(255)</td><td><strong>unique</strong> · the bearer secret in the link (<code>crypto.randomUUID()</code>)</td></tr>
+        <tr><td><code>status</code></td><td>varchar(50)</td><td>default <code>pending</code> · CHECK in (pending, accepted, expired, revoked)</td></tr>
+        <tr><td><code>organization_id</code></td><td>uuid</td><td>FK → organizations</td></tr>
+        <tr><td><code>expires_at</code></td><td>timestamptz</td><td>create() sets now + 7 days</td></tr>
+        <tr><td><code>phone</code></td><td>varchar(20)</td><td><span class="pill" style="font-size:10px;padding:1px 7px">0004</span> E.164, used to deliver + backfill profile</td></tr>
+        <tr><td><code>farmer_name</code></td><td>varchar(255)</td><td><span class="pill" style="font-size:10px;padding:1px 7px">0004</span> optional, for personalization + prefill</td></tr>
+        <tr><td><code>invited_by</code></td><td>uuid</td><td><span class="pill" style="font-size:10px;padding:1px 7px">0004</span> FK → auth.users · the farmer is auto-assigned to this member</td></tr>
+      </tbody>
+    </table>
+
+    <h3><code class="inline">organization_clients</code> (the binding target)</h3>
+    <ul class="clean">
+      <li><code class="inline">UNIQUE(organization_id, client_user_id)</code> — a user can't double-link to the same org; backs the accept upsert's <code class="inline">ON CONFLICT</code>.</li>
+      <li><code class="inline">UNIQUE (client_user_id) WHERE status = 'active'</code> — <strong>one active org per client</strong>; surfaces a cross-org conflict as a <code>23505</code> the accept route maps to a clean 409.</li>
+    </ul>
+    <div class="callout gotcha">
+      <div class="t">⚠ The constraints do <em>not</em> stop one token binding two users</div>
+      <p>Neither unique rule prevents two <em>different</em> fresh accounts from accepting the <em>same</em> token (different <code>client_user_id</code>s never collide). That guarantee lives in the application layer — the atomic claim in §7 — not the schema.</p>
+    </div>
+  </section>
+
+  <!-- 7. ACCEPT -->
+  <section id="accept">
+    <h2><span class="num">7</span> The accept endpoint</h2>
+    <p>
+      <code class="inline">accept</code> is where the security and concurrency work concentrates. It runs on the
+      service-role admin client (the bind crosses RLS while the farmer is mid-signup), but authorizes by
+      <strong>phone-ownership proof</strong> — the caller's authenticated session must carry a confirmed phone
+      that matches the invitation — and adds an atomic single-use guarantee that survives forwarded links and
+      browser retries.
+    </p>
+
+    <h3>Request pipeline</h3>
+    <div class="pipe">
+      <div class="step">
+        <div class="badge">1</div>
+        <div class="body">
+          <div class="h">Load the invitation</div>
+          <div class="d">Fetch by token on the service-role client (RLS would otherwise hide the row from this caller).</div>
+          <div class="fail">→ 404 not found</div>
+        </div>
+      </div>
+      <div class="step gate">
+        <div class="badge">2</div>
+        <div class="body">
+          <div class="h">Prove phone ownership</div>
+          <div class="d"><code class="inline">validateUserSession</code> — the caller's session user must equal the posted <code class="inline">userId</code>, and its <strong>confirmed phone must digit-match <code class="inline">invite.phone</code></strong>. This is the authorization gate, replacing the old account-creation-time window.</div>
+          <div class="fail">→ 401 no session · 403 session/phone mismatch</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">3</div>
+        <div class="body">
+          <div class="h">Status &amp; expiry pre-check</div>
+          <div class="d">A non-<code class="inline">pending</code> status is a fast path — for an already-<code class="inline">accepted</code> invite it first checks whether <em>this user</em> is already the org's active client (idempotent retry, below); past <code class="inline">expires_at</code> flips the row to <code class="inline">expired</code>.</div>
+          <div class="fail">→ 410 expired · 409 spent</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="badge">4</div>
+        <div class="body">
+          <div class="h">Concurrent reads</div>
+          <div class="d">One <code class="inline">Promise.all</code>: the farmer's profile (for phone backfill), any existing active client link, the inviting org's <code class="inline">is_active</code> flag, and the caller's <code class="inline">organization_members</code> row.</div>
+        </div>
+      </div>
+      <div class="step gate">
+        <div class="badge">5</div>
+        <div class="body">
+          <div class="h">Guards — before claiming the token</div>
+          <div class="d"><strong>Staff guard</strong> (a member of the inviting org can't bind as its own client); one-active-org-per-client; and the org must <em>still</em> be active (create's check is up to 7 days stale).</div>
+          <div class="fail">→ 403 staff · 409 other org · 400 org inactive</div>
+        </div>
+      </div>
+      <div class="step gate">
+        <div class="badge">6</div>
+        <div class="body">
+          <div class="h">Atomically claim the single-use token</div>
+          <div class="d">A conditional <code class="inline">UPDATE … WHERE status = 'pending'</code>. Of any concurrent callers, exactly one matches a row and proceeds; the rest match zero and stop. <strong>This</strong> is what enforces single-use — not the read in step 3.</div>
+          <div class="fail">lost race → idempotent-retry check → success or 409</div>
+        </div>
+      </div>
+      <div class="step commit">
+        <div class="badge">7</div>
+        <div class="body">
+          <div class="h">Link, token-disposition on failure &amp; finish</div>
+          <div class="d">Insert into <code class="inline">organization_clients</code> (active, assigned to the inviter). On a <strong>permanent 23505 conflict</strong> (a concurrent request linked the farmer first, or the one-active-org-per-client index fired) the token is <strong>expired, not reset</strong> — a spent token must never resurrect as a re-bindable bearer secret. Only a <strong>transient</strong> error (connection drop, statement timeout) releases the claim back to <code class="inline">pending</code>, gated on <code class="inline">status='accepted'</code>, so the farmer can retry the same link. On success, sync the legacy <code class="inline">profiles.consultant_organization_id</code> mirror and backfill the invited phone if the farmer has none.</div>
+          <div class="fail">23505 → expire token → success (this org) or 409 (other org) · transient → release-to-pending + 500</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>The atomic claim</h3>
+    <pre><span class="c">// Reading status then later writing 'accepted' is a TOCTOU race: two concurrent</span>
+<span class="c">// accepts of one forwarded link could both pass the read and both bind. The</span>
+<span class="c">// conditional UPDATE is the real gate.</span>
+<span class="k">const</span> { data: claimed } = <span class="k">await</span> admin
+  .from(<span class="s">'farmer_invitations'</span>)
+  .update({ status: <span class="s">'accepted'</span> })
+  .eq(<span class="s">'id'</span>, invite.id)
+  .eq(<span class="s">'status'</span>, <span class="s">'pending'</span>)   <span class="hl">// ← only one concurrent caller matches a row</span>
+  .select(<span class="s">'id'</span>)
+  .maybeSingle()</pre>
+    <div class="codecap">src/app/api/invite/accept/route.ts — Postgres applies the <code>WHERE status='pending'</code> predicate atomically.</div>
+
+    <h3>Idempotent retries in both timing windows</h3>
+    <p>
+      A single farmer can legitimately hit <code class="inline">accept</code> twice — a lost response, or a
+      double-submit. There are two windows, and a benign retry must succeed (not show a scary "linking failed")
+      in <em>both</em>:
+    </p>
+    <pre><span class="k">async function</span> <span class="hl">hasActiveClientLink</span>(admin, organizationId, userId) {
+  <span class="k">const</span> { data } = <span class="k">await</span> admin.from(<span class="s">'organization_clients'</span>)
+    .select(<span class="s">'id'</span>).eq(<span class="s">'organization_id'</span>, organizationId)
+    .eq(<span class="s">'client_user_id'</span>, userId).eq(<span class="s">'status'</span>, <span class="s">'active'</span>).maybeSingle()
+  <span class="k">return</span> Boolean(data)
+}
+
+<span class="c">// Window A — sequential retry: the first request already committed 'accepted'.</span>
+<span class="k">if</span> (invite.status !== <span class="s">'pending'</span>) {
+  <span class="k">if</span> (invite.status === <span class="s">'accepted'</span> &amp;&amp;
+      <span class="k">await</span> hasActiveClientLink(admin, invite.organization_id, userId))
+    <span class="k">return</span> ok()           <span class="c">// it's me, already linked → success</span>
+  <span class="k">return</span> conflict()
+}
+<span class="c">// Window B — concurrent: we read 'pending' but lost the atomic claim race.</span>
+<span class="k">if</span> (!claimed) {
+  <span class="k">if</span> (<span class="k">await</span> hasActiveClientLink(admin, invite.organization_id, userId)) <span class="k">return</span> ok()
+  <span class="k">return</span> conflict()
+}</pre>
+    <div class="codecap">One helper, two call sites — sequential retries hit the early guard, concurrent ones hit the claim-loss branch.</div>
+  </section>
+
+  <!-- 8. DECISIONS -->
+  <section id="decisions">
+    <h2><span class="num">8</span> Key design decisions</h2>
+
+    <div class="callout security">
+      <div class="t">🔐 Authorize by phone-ownership, not a creation-time window</div>
+      <p>The bind runs on the service-role client (it crosses RLS while the farmer is mid-signup). To stop it binding <em>arbitrary</em> users, accept requires the caller's authenticated session to carry a <strong>confirmed phone that digit-matches the invitation</strong>, and the session user to equal the posted <code class="inline">userId</code>. This replaces an earlier "account created &lt; 5 min ago" heuristic — it rejects a forwarded link opened on a different number, still lets an already-registered farmer accept, and survives slow OTP entry.</p>
+    </div>
+
+    <div class="callout security">
+      <div class="t">🚫 Block known numbers at create, backstop at accept</div>
+      <p>create() refuses to invite a number that already has an account, via the <code class="inline">phone_in_use(p_e164)</code> SECURITY DEFINER RPC — it reads <code class="inline">auth.users.phone</code> (unreachable from app code over PostgREST) plus <code class="inline">profiles.phone</code>. An email-only account keeps no phone anywhere, so accept is the reliable backstop: it refuses to bind a <code class="inline">userId</code> that is already an <code class="inline">organization_members</code> row of the inviting org — staff can't become a client of their own org.</p>
+    </div>
+
+    <div class="callout">
+      <div class="t">⚛ Single-use is an application invariant, enforced atomically</div>
+      <p>The schema can't express "one token → one client" (different users never collide on the unique keys). So single-use is enforced by the conditional <code class="inline">UPDATE … WHERE status='pending'</code>. Without it, a forwarded link accepted concurrently by two fresh accounts would bind both.</p>
+    </div>
+
+    <div class="callout good">
+      <div class="t">↻ Idempotent by design, not by accident</div>
+      <p>Retries and double-submits are normal browser behavior. Rather than hope they don't happen, the endpoint treats "this user is already the org's active client" as success in both the sequential and concurrent windows — the farmer never sees a false error after a successful signup.</p>
+    </div>
+
+    <div class="callout">
+      <div class="t">🏢 Re-validate the org at bind time</div>
+      <p>create() checks <code class="inline">is_active</code>, but that check is up to 7 days stale by the time the farmer accepts. accept() re-reads it (folded into the existing concurrent read, so no extra latency) — mirroring the sibling <code class="inline">/api/organizations/add-client</code> path. A since-deactivated org can't silently acquire new clients.</p>
+    </div>
+
+    <div class="callout">
+      <div class="t">🧭 Gate on the authoritative table, not a cached column</div>
+      <p>Middleware decides the module from <code class="inline">organization_members</code> — the same source <code class="inline">getConsultantAccess()</code> uses — rather than <code class="inline">profiles.user_type</code>, a derived cache that can lag membership. Keying off the cache risked bouncing a real member off <code class="inline">/consultant</code> before the layout could admit them.</p>
+    </div>
+
+    <div class="callout good">
+      <div class="t">📲 Share via deep links, no provider integration</div>
+      <p>The link is built server-side and shared by the consultant from their own device. No Twilio/Gupshup/DLT, no per-message cost, no template approvals — the right scope for the MVP, and a clean upgrade path if integrated sending is added later.</p>
+    </div>
+  </section>
+
+  <!-- 9. GATING -->
+  <section id="gating">
+    <h2><span class="num">9</span> Module gating</h2>
+    <p>
+      Because farmer routes are scattered across ~16 top-level paths with no shared layout, the gate lives in
+      <code class="inline">middleware.ts</code> — the one place every request already passes through for auth.
+    </p>
+    <pre><span class="k">const</span> { data: membership } = <span class="k">await</span> supabase
+  .from(<span class="s">'organization_members'</span>)
+  .select(<span class="s">'user_id'</span>)
+  .eq(<span class="s">'user_id'</span>, user.id)
+  .limit(<span class="hl">1</span>)            <span class="c">// safe for multi-org users</span>
+  .maybeSingle()
+
+<span class="k">const</span> isOrgUser = Boolean(membership)
+<span class="c">// org member → /consultant ;  everyone else (farmers) → /dashboard</span></pre>
+    <ul class="clean">
+      <li>Org member on a farmer route → redirected to <code class="inline">/consultant</code>; non-member on <code class="inline">/consultant</code> → <code class="inline">/dashboard</code>.</li>
+      <li>The membership lookup only runs on <code class="inline">/auth</code> + the two module root-sets — shared pages (settings, help, legal, homepage) pass through untouched.</li>
+      <li>The lookup is indexed (<code class="inline">idx_organization_members_user_id</code>) and RLS self-readable, so it's the same cost as the prior profile read.</li>
+      <li>The consultant layout no longer auto-redirects on access failure (it renders an inline message) — so it can't fight middleware into a loop.</li>
+    </ul>
+    <div class="callout gotcha">
+      <div class="t">⚠ Farmers have <code style="font-family:inherit">user_type = NULL</code>, never <code style="font-family:inherit">'farmer'</code></div>
+      <p>The <code class="inline">handle_new_user()</code> trigger never sets <code class="inline">user_type</code>; only the org create/join routes write <code class="inline">'org_member'</code>. The gate fails open to the farmer module, so a missing or odd <code class="inline">user_type</code> can never lock anyone out — another reason it reads <code class="inline">organization_members</code> instead.</p>
+    </div>
+  </section>
+
+  <!-- 10. MIGRATIONS -->
+  <section id="migrations">
+    <h2><span class="num">10</span> Migrations &amp; rollout</h2>
+    <table>
+      <thead><tr><th>Migration</th><th>Change</th></tr></thead>
+      <tbody>
+        <tr><td><code>202606040004_farmer_phone_invitations</code></td><td>Adds <code>phone</code>, <code>farmer_name</code>, <code>invited_by</code> to <code>farmer_invitations</code> + two indexes. All columns nullable — the email-invite path is unaffected.</td></tr>
+        <tr><td><code>202606040005_consultant_foundation_followups</code></td><td>Drops a redundant composite index (the <code>UNIQUE</code> constraint already backs the upsert) and tightens the petiole-triage immutability guard to include <code>petiole_test_id</code>. Idempotent.</td></tr>
+        <tr><td><code>202606040006_phone_in_use_check</code></td><td>Adds the <code>phone_in_use(text)</code> SECURITY DEFINER function that <code>create</code> uses to block inviting a number that already has an account (reads <code>auth.users.phone</code> + <code>profiles.phone</code>).</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <div class="t">📦 Why <code style="font-family:inherit">0005</code> exists instead of editing <code style="font-family:inherit">0001</code>/<code style="font-family:inherit">0003</code></div>
+      <p>Migrations <code class="inline">0001</code>–<code class="inline">0003</code> are already applied to production. Applied migrations are immutable — editing them in place would silently never re-run. So the two deltas that were briefly staged as in-place edits were reverted and re-issued as a new forward migration, keeping a live DB and a fresh install converging to the same end state.</p>
+    </div>
+    <div class="callout security">
+      <div class="t">🚦 Deploy gate</div>
+      <p>The flow <strong>hard-depends</strong> on <code class="inline">0004</code>'s columns — <code class="inline">create</code>/<code class="inline">accept</code> will 500 without them, and <code class="inline">create</code> additionally needs <code class="inline">0006</code>'s <code class="inline">phone_in_use</code> function. All three — <code class="inline">0004</code>, <code class="inline">0005</code>, and <code class="inline">0006</code> — must be applied to the target database as part of (or before) the deploy.</p>
+    </div>
+  </section>
+
+  <!-- 11. VERIFICATION -->
+  <section id="verification">
+    <h2><span class="num">11</span> Verification &amp; status</h2>
+    <div class="card">
+      <div class="pill-row">
+        <span class="pill ok">tsc --noEmit · 0 errors</span>
+        <span class="pill ok">eslint · 0 errors</span>
+        <span class="pill ok">bun test · 27 / 27 pass</span>
+        <span class="pill">live smoke test pending</span>
+      </div>
+      <p style="margin-bottom:6px">Static verification is green across the new routes; a live build + Supabase round-trip is the remaining check (see below). Hardened across independent review passes:</p>
+      <ul class="clean">
+        <li><strong>Concurrent forwarded-link race</strong> → atomic single-use claim.</li>
+        <li><strong>Existing number / forwarded link on a different phone</strong> → blocked at create (<code class="inline">phone_in_use</code>) and by the phone-ownership gate at accept.</li>
+        <li><strong>Same-user retry / double-submit</strong> → idempotent success in both timing windows.</li>
+        <li><strong>Org deactivated after invite</strong> → re-validated at bind time.</li>
+        <li><strong>Middleware vs. layout divergence</strong> → both now read <code class="inline">organization_members</code>.</li>
+        <li><strong>Migration immutability</strong> → forward <code class="inline">0005</code> instead of in-place edits.</li>
+      </ul>
+    </div>
+    <h3>Remaining before ship</h3>
+    <ul class="clean">
+      <li>Apply <code class="inline">0004</code>–<code class="inline">0006</code> to prod/staging on deploy.</li>
+      <li>Commit + open the PR — done (<a href="https://github.com/ashish921998/Vinesight/pull/143">PR #143</a>); the role-routing companion ships separately as <a href="https://github.com/ashish921998/Vinesight/pull/147">PR #147</a>.</li>
+      <li><em>Recommended:</em> one live smoke test — an org-member account and a farmer account — confirming redirects and a full invite → signup → bind round trip, since none of this has yet touched a live Supabase.</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>VineSight · Consultant Farmer Invitation Flow — Technical Design</span>
+    <span>Generated June 2026 · <code style="color:#a78bfa">docs/consultant-invite-flow-design.html</code></span>
+  </div>
+</footer>
+
+</body>
+</html>

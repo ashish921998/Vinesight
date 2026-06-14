@@ -53,6 +53,12 @@ export async function searchLogs({
   try {
     const supabase = await createServerSupabaseClient()
 
+    // Verify the caller is authenticated before any data access
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
     // Fetch all record types in parallel
     const [
       irrigationResult,

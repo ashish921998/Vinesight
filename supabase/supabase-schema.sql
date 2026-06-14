@@ -70,6 +70,29 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW
   EXECUTE FUNCTION handle_new_user();
 
+-- Used by the invite-create path to check whether a phone already belongs to an account before
+-- issuing an invite. SECURITY DEFINER so the service-role caller can reach auth.users (the auth
+-- schema isn't exposed to app code). Checks auth.users.phone (digits, no '+') and profiles.phone
+-- (E.164). See migration 202606040006.
+CREATE OR REPLACE FUNCTION public.phone_in_use(p_e164 text)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM auth.users
+    WHERE phone = regexp_replace(coalesce(p_e164, ''), '\D', '', 'g')
+  ) OR EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE phone = p_e164
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.phone_in_use(text) FROM public, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.phone_in_use(text) TO service_role;
+
 -- Trigger to auto-update profiles updated_at timestamp
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON profiles
@@ -1028,6 +1051,9 @@ CREATE TABLE farmer_invitations (
   token VARCHAR(255) NOT NULL UNIQUE,
   status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'expired', 'revoked')),
   expires_at TIMESTAMP WITH TIME ZONE,
+  phone VARCHAR(20),
+  farmer_name VARCHAR(255),
+  invited_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -1122,6 +1148,8 @@ CREATE INDEX idx_org_member_invitations_organization_id ON organization_member_i
 CREATE INDEX idx_org_member_invitations_token ON organization_member_invitations(token);
 CREATE INDEX idx_org_member_invitations_status ON organization_member_invitations(organization_id, status);
 CREATE UNIQUE INDEX idx_org_member_invitations_one_pending_per_email ON organization_member_invitations(organization_id, lower(email)) WHERE status = 'pending';
+CREATE INDEX idx_farmer_invitations_phone ON farmer_invitations(phone);
+CREATE INDEX idx_farmer_invitations_invited_by ON farmer_invitations(invited_by);
 CREATE INDEX idx_fertilizer_plans_farm_id ON fertilizer_plans(farm_id);
 CREATE INDEX idx_fertilizer_plans_organization_id ON fertilizer_plans(organization_id);
 CREATE INDEX idx_fertilizer_plan_items_plan_id ON fertilizer_plan_items(plan_id);
@@ -1134,7 +1162,8 @@ CREATE INDEX idx_petiole_triage_org_status ON petiole_triage(organization_id, st
 
 -- Composite indexes for AI and analytics queries
 CREATE INDEX idx_organization_members_org_user ON organization_members(organization_id, user_id);
-CREATE INDEX idx_organization_clients_org_client ON organization_clients(organization_id, client_user_id);
+-- Note: no separate (organization_id, client_user_id) index — the UNIQUE(organization_id,
+-- client_user_id) constraint on organization_clients already provides one (see migration 0005).
 CREATE INDEX idx_fertilizer_plans_org_farm ON fertilizer_plans(organization_id, farm_id);
 CREATE INDEX idx_fertilizer_plan_items_plan_date ON fertilizer_plan_items(plan_id, application_date);
 
@@ -1213,8 +1242,12 @@ CREATE POLICY "Users can view org member profiles" ON profiles FOR SELECT TO aut
 CREATE POLICY "Members can view invitations" ON farmer_invitations FOR SELECT USING (
   EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = farmer_invitations.organization_id AND om.user_id = auth.uid())
 );
-CREATE POLICY "Admins can insert invitations" ON farmer_invitations FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = farmer_invitations.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
+-- Any active member (owner/admin/agronomist) may create invitations — the invite-create route
+-- enforces this with an explicit membership check. The route uses the service-role client, so this
+-- policy isn't the live gate; it's kept truthful so a future user-scoped caller isn't silently
+-- blocked and so the policy matches what the app actually allows.
+CREATE POLICY "Members can insert invitations" ON farmer_invitations FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = farmer_invitations.organization_id AND om.user_id = auth.uid())
 );
 CREATE POLICY "Admins can update invitations" ON farmer_invitations FOR UPDATE USING (
   EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = farmer_invitations.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
