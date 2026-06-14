@@ -26,14 +26,29 @@ const FARMER_ROOTS = [
   '/warehouse',
   '/portfolio',
   '/precision-agriculture',
+  '/performance',
   '/export',
   '/grape-farming-guide'
 ]
 // Org-module route roots. Non-org users who hit these are sent to FARMER_HOME.
-const ORG_ROOTS = ['/consultant']
+// /users is the org member-management page (OrganizationService) — org-scoped.
+const ORG_ROOTS = ['/consultant', '/users']
 
 function matchesRoot(pathname: string, roots: string[]) {
   return roots.some((root) => pathname === root || pathname.startsWith(`${root}/`))
+}
+
+// Build a redirect that carries the session cookies already set on `source`.
+// supabase.auth.getUser() may refresh the access token and write new cookies onto
+// supabaseResponse; a bare NextResponse.redirect() returns a fresh response and drops
+// them, which logs the user out mid-navigation. (Supabase SSR requirement.)
+function redirectPreservingCookies(url: URL, source: NextResponse) {
+  const res = NextResponse.redirect(url)
+  source.cookies.getAll().forEach((cookie) => {
+    const { name, value, ...options } = cookie
+    res.cookies.set(name, value, options)
+  })
+  return res
 }
 
 export async function middleware(req: NextRequest) {
@@ -90,12 +105,23 @@ export async function middleware(req: NextRequest) {
     // accounts created before it was written), and any disagreement with the layout would
     // bounce a real member off /consultant before the layout could admit them. limit(1)
     // keeps maybeSingle() safe if a user ever belongs to more than one org.
-    const { data: membership } = await supabase
+    const { data: membership, error: membershipError } = await supabase
       .from('organization_members')
       .select('user_id')
       .eq('user_id', user.id)
       .limit(1)
       .maybeSingle()
+
+    // On a transient error we can't safely decide the user's module. Pass through and
+    // let the destination page gate normally (e.g. consultant layout's
+    // getConsultantAccess) rather than silently treating a real org member as a farmer.
+    if (membershipError) {
+      console.error(
+        '[middleware] organization_members lookup failed; passing through:',
+        membershipError.message
+      )
+      return supabaseResponse
+    }
 
     const isOrgUser = Boolean(membership)
     const home = isOrgUser ? ORG_HOME : FARMER_HOME
@@ -107,15 +133,15 @@ export async function middleware(req: NextRequest) {
       !pathname.startsWith('/auth/verify-email') &&
       !pathname.startsWith('/auth/verify-otp')
     ) {
-      return NextResponse.redirect(new URL(home, req.url))
+      return redirectPreservingCookies(new URL(home, req.url), supabaseResponse)
     }
 
     // Keep each role inside its own module.
     if (isOrgUser && onFarmerRoute) {
-      return NextResponse.redirect(new URL(ORG_HOME, req.url))
+      return redirectPreservingCookies(new URL(ORG_HOME, req.url), supabaseResponse)
     }
     if (!isOrgUser && onOrgRoute) {
-      return NextResponse.redirect(new URL(FARMER_HOME, req.url))
+      return redirectPreservingCookies(new URL(FARMER_HOME, req.url), supabaseResponse)
     }
   }
 
