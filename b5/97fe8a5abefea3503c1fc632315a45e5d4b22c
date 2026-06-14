@@ -1,0 +1,28 @@
+middleware.ts
+  s_9a91a4904292ce::t_97d6b96b9fb2e6 35-36
+src/app/consultant/layout.tsx
+  s_9a91a4904292ce::t_1b50e28324f2d5 70-73
+  s_9a91a4904292ce::t_e7fe8bdd2c10b0 99,109,115-117,119-131
+  s_9a91a4904292ce::t_e81fe9632990d5 83,88,92
+src/app/clients/[id]/farms/[farmId]/page.tsx
+  s_9a91a4904292ce::t_577fc0d5b37a2e 1-12
+src/app/clients/[id]/page.tsx
+  s_9a91a4904292ce::t_46954416878d85 7
+  s_9a91a4904292ce::t_bcdc90ccc6defc 1-6,8-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "b597fe8a5abefea3503c1fc632315a45e5d4b22c",
+  "prompts": {},
+  "sessions": {
+    "s_9a91a4904292ce": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fc87fb61-4dda-4e0a-b44a-4ad281eadae5",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
