@@ -1,6 +1,14 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef, useMemo, useTransition } from 'react'
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+  useTransition,
+  useId
+} from 'react'
 import { useParams, useRouter } from 'next/navigation'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -266,6 +274,8 @@ export default function FarmLogsPage() {
   const [showEditModal, setShowEditModal] = useState(false)
 
   const { preferences: userPreferences } = useUserPreferences(currentFarm?.userId)
+
+  const activityTypeListboxId = useId()
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(totalLogs / itemsPerPage)),
@@ -794,6 +804,7 @@ export default function FarmLogsPage() {
                         variant="outline"
                         role="combobox"
                         aria-expanded={multiSelectOpen}
+                        aria-controls={activityTypeListboxId}
                         className="h-9 w-full justify-between text-xs"
                       >
                         {selectedActivityTypes.length > 0
@@ -807,7 +818,7 @@ export default function FarmLogsPage() {
                         <CommandInput placeholder="Search activity types..." className="h-9" />
                         <CommandEmpty>No activity type found.</CommandEmpty>
                         <CommandGroup>
-                          <CommandList>
+                          <CommandList id={activityTypeListboxId}>
                             {activityTypes.map((activityType) => (
                               <CommandItem
                                 key={activityType.value}

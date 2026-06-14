@@ -2222,6 +2222,9 @@ export type Database = {
           token: string
           status: string
           expires_at: string | null
+          phone: string | null
+          farmer_name: string | null
+          invited_by: string | null
           created_at: string | null
         }
         Insert: {
@@ -2230,6 +2233,9 @@ export type Database = {
           token: string
           status?: string
           expires_at?: string | null
+          phone?: string | null
+          farmer_name?: string | null
+          invited_by?: string | null
           created_at?: string | null
         }
         Update: {
@@ -2238,6 +2244,9 @@ export type Database = {
           token?: string
           status?: string
           expires_at?: string | null
+          phone?: string | null
+          farmer_name?: string | null
+          invited_by?: string | null
           created_at?: string | null
         }
         Relationships: [
@@ -2360,6 +2369,10 @@ export type Database = {
       expire_old_task_recommendations: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      phone_in_use: {
+        Args: { p_e164: string }
+        Returns: boolean
       }
     }
     Enums: {
