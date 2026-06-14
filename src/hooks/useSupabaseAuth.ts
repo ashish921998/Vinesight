@@ -172,10 +172,25 @@ export function useSupabaseAuth() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       // Only update the user state, don't change loading state here
       // to avoid interfering with the loading states from auth operations
+      const sessionUser = session?.user ?? null
       setAuthState((prev) => ({
         ...prev,
-        user: session?.user ?? null
+        user: sessionUser
       }))
+
+      // Keep PostHog's distinct_id in sync with the authenticated user so every
+      // event is attributed to a stable unique identifier across all entry
+      // paths — email login, Google OAuth, and session restore — not just the
+      // signup OTP flow. The id guard avoids redundant identify calls (this
+      // listener runs once per mounted hook instance). Reset on sign-out so the
+      // next user on a shared browser doesn't inherit this identity.
+      if (sessionUser) {
+        if (posthog.get_distinct_id() !== sessionUser.id) {
+          posthog.identify(sessionUser.id, { email: sessionUser.email })
+        }
+      } else if (event === 'SIGNED_OUT') {
+        posthog.reset()
+      }
     })
 
     getInitialUser()
