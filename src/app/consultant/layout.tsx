@@ -20,7 +20,6 @@ import {
 import { cn } from '@/lib/utils'
 import { ConsultantAccess, getConsultantAccess, roleLabels } from '@/lib/consultant-access'
 import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
 
 interface ConsultantLayoutProps {
   children: React.ReactNode
@@ -67,9 +66,11 @@ const upcomingItems = [
 
 export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
   const pathname = usePathname()
-  const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
-  const [authorized, setAuthorized] = useState<boolean | null>(null)
+  // 'loading' → checking access; 'ok' → admitted; 'denied' → not a consultant;
+  // 'error' → couldn’t verify (transient). Kept distinct so an outage isn’t shown
+  // to a valid consultant as an authorization denial.
+  const [accessState, setAccessState] = useState<'loading' | 'ok' | 'denied' | 'error'>('loading')
   const [access, setAccess] = useState<ConsultantAccess | null>(null)
 
   useEffect(() => {
@@ -79,25 +80,23 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
 
         if (!access) {
           toast.error('Access denied. Consultant team members only.')
-          router.push('/dashboard')
-          setAuthorized(false)
+          setAccessState('denied')
           return
         }
 
         setAccess(access)
-        setAuthorized(true)
+        setAccessState('ok')
       } catch (error) {
         console.error('Access check failed:', error)
         toast.error('Unable to verify consultant access. Please try again.')
-        router.push('/dashboard')
-        setAuthorized(false)
+        setAccessState('error')
       }
     }
 
     checkAccess()
-  }, [router])
+  }, [])
 
-  if (authorized === null) {
+  if (accessState === 'loading') {
     return (
       <ProtectedRoute>
         <div className="min-h-screen flex items-center justify-center">
@@ -107,15 +106,29 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
     )
   }
 
-  if (!authorized) {
+  if (accessState === 'denied' || accessState === 'error') {
     return (
       <ProtectedRoute>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center space-y-3">
-            <p className="text-sm text-muted-foreground">Redirecting to dashboard…</p>
-            <Link href="/dashboard" className="text-sm underline text-primary">
-              Go to dashboard
-            </Link>
+            <p className="text-sm text-muted-foreground">
+              {accessState === 'error'
+                ? 'We couldn’t verify your access right now. Please try again.'
+                : 'You don’t have access to the organization workspace.'}
+            </p>
+            {accessState === 'error' ? (
+              <button
+                type="button"
+                className="text-sm underline text-primary"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </button>
+            ) : (
+              <Link href="/dashboard" className="text-sm underline text-primary">
+                Go to dashboard
+              </Link>
+            )}
           </div>
         </div>
       </ProtectedRoute>
@@ -132,9 +145,14 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
             collapsed ? 'w-20' : 'w-72'
           )}
         >
-          <div className="border-b p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
+          <div className={cn('border-b', collapsed ? 'p-3' : 'p-4')}>
+            <div
+              className={cn(
+                'flex items-center gap-3',
+                collapsed ? 'justify-center' : 'justify-between'
+              )}
+            >
+              <div className={cn('flex min-w-0 items-center gap-3', collapsed && 'min-w-0')}>
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <Building2 className="h-5 w-5" />
                 </div>
@@ -147,40 +165,35 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
                   </div>
                 )}
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 shrink-0 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                onClick={() => setCollapsed(!collapsed)}
-                aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              >
-                {collapsed ? (
-                  <ChevronRight className="h-4 w-4" />
-                ) : (
+              {!collapsed && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  onClick={() => setCollapsed(!collapsed)}
+                  aria-label="Collapse sidebar"
+                >
                   <ChevronLeft className="h-4 w-4" />
-                )}
-              </Button>
+                </Button>
+              )}
             </div>
+            {collapsed && (
+              <div className="mt-2 flex justify-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  onClick={() => setCollapsed(!collapsed)}
+                  aria-label="Expand sidebar"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
 
           {!collapsed && (
             <div className="space-y-3 border-b px-4 py-3">
-              <Link
-                href="/dashboard"
-                className="group block rounded-full border border-sidebar-border bg-sidebar-accent/60 p-1 transition-colors hover:bg-sidebar-accent"
-                aria-label="Switch to farmer workspace"
-              >
-                <div className="grid grid-cols-2 gap-1 text-sm font-medium">
-                  <div className="flex items-center justify-center gap-2 rounded-full bg-primary px-3 py-2 text-primary-foreground">
-                    <Building2 className="h-4 w-4" aria-hidden="true" />
-                    <span>Org</span>
-                  </div>
-                  <div className="flex items-center justify-center gap-2 rounded-full px-3 py-2 text-sidebar-foreground/75 transition-colors group-hover:bg-sidebar group-hover:text-sidebar-foreground">
-                    <Sprout className="h-4 w-4" aria-hidden="true" />
-                    <span>Farmer</span>
-                  </div>
-                </div>
-              </Link>
               <div className="rounded-lg bg-sidebar-accent/60 p-3">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <Sprout className="h-4 w-4 text-primary" />
