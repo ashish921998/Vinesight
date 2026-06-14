@@ -106,14 +106,10 @@ export async function POST(request: NextRequest) {
     // failure can't strip access while leaving dangling assignments or a stale
     // profile org linkage (the farmer FK references auth.users(id), not the
     // membership row, so deleting the membership does NOT auto-null it).
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC not yet in generated types; remove after running migration + type regen
-    const { error: rpcError } = await (getSupabaseAdmin() as any).rpc(
-      'remove_organization_member',
-      {
-        p_organization_id: organizationId,
-        p_user_id: userId
-      }
-    )
+    const { error: rpcError } = await getSupabaseAdmin().rpc('remove_organization_member', {
+      p_organization_id: organizationId,
+      p_user_id: userId
+    })
 
     if (rpcError) {
       console.error('Error in remove_organization_member RPC:', rpcError)

@@ -2421,6 +2421,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_organization_invite: {
+        Args: {
+          p_user_id: string
+          p_invite_id: string
+          p_organization_id: string
+          p_role: string
+          p_first_name: string
+          p_last_name: string
+        }
+        Returns: undefined
+      }
       decay_context_relevance: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2432,6 +2443,10 @@ export type Database = {
       phone_in_use: {
         Args: { p_e164: string }
         Returns: boolean
+      }
+      remove_organization_member: {
+        Args: { p_organization_id: string; p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {

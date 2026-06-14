@@ -108,8 +108,7 @@ export async function POST(request: NextRequest) {
 
     // Atomically: insert membership, update profile, mark invite accepted.
     // Uses a Postgres RPC function so all three mutations are in a single transaction.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC not yet in generated types; remove after running migration + type regen
-    const { error: rpcError } = await (admin as any).rpc('accept_organization_invite', {
+    const { error: rpcError } = await admin.rpc('accept_organization_invite', {
       p_user_id: userId,
       p_invite_id: invite.id,
       p_organization_id: invite.organization_id,
