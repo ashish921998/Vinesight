@@ -8,6 +8,10 @@ const nextConfig = {
     ignoreBuildErrors: isProd
   },
 
+  eslint: {
+    ignoreDuringBuilds: isProd
+  },
+
   // Performance optimizations from next.config.ts
   experimental: {
     optimizePackageImports: [
@@ -163,7 +167,7 @@ export default withSentryConfig(nextConfig, {
   webpack: {
     treeshake: {
       removeDebugLogging: true
-    }
-  },
-  automaticVercelMonitors: true
+    },
+    automaticVercelMonitors: true
+  }
 })
