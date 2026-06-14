@@ -32,6 +32,8 @@ const FARMER_ROOTS = [
 ]
 // Org-module route roots. Non-org users who hit these are sent to FARMER_HOME.
 // /users is the org member-management page (OrganizationService) — org-scoped.
+// (/clients/* is deprecated — those pages redirect to /consultant/farmers/... — so
+// the /consultant root already covers their canonical destinations.)
 const ORG_ROOTS = ['/consultant', '/users']
 
 function matchesRoot(pathname: string, roots: string[]) {

@@ -67,7 +67,10 @@ const upcomingItems = [
 export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
-  const [authorized, setAuthorized] = useState<boolean | null>(null)
+  // 'loading' → checking access; 'ok' → admitted; 'denied' → not a consultant;
+  // 'error' → couldn’t verify (transient). Kept distinct so an outage isn’t shown
+  // to a valid consultant as an authorization denial.
+  const [accessState, setAccessState] = useState<'loading' | 'ok' | 'denied' | 'error'>('loading')
   const [access, setAccess] = useState<ConsultantAccess | null>(null)
 
   useEffect(() => {
@@ -77,23 +80,23 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
 
         if (!access) {
           toast.error('Access denied. Consultant team members only.')
-          setAuthorized(false)
+          setAccessState('denied')
           return
         }
 
         setAccess(access)
-        setAuthorized(true)
+        setAccessState('ok')
       } catch (error) {
         console.error('Access check failed:', error)
         toast.error('Unable to verify consultant access. Please try again.')
-        setAuthorized(false)
+        setAccessState('error')
       }
     }
 
     checkAccess()
   }, [])
 
-  if (authorized === null) {
+  if (accessState === 'loading') {
     return (
       <ProtectedRoute>
         <div className="min-h-screen flex items-center justify-center">
@@ -103,17 +106,29 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
     )
   }
 
-  if (!authorized) {
+  if (accessState === 'denied' || accessState === 'error') {
     return (
       <ProtectedRoute>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center space-y-3">
             <p className="text-sm text-muted-foreground">
-              You don’t have access to the organization workspace.
+              {accessState === 'error'
+                ? 'We couldn’t verify your access right now. Please try again.'
+                : 'You don’t have access to the organization workspace.'}
             </p>
-            <Link href="/dashboard" className="text-sm underline text-primary">
-              Go to dashboard
-            </Link>
+            {accessState === 'error' ? (
+              <button
+                type="button"
+                className="text-sm underline text-primary"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </button>
+            ) : (
+              <Link href="/dashboard" className="text-sm underline text-primary">
+                Go to dashboard
+              </Link>
+            )}
           </div>
         </div>
       </ProtectedRoute>
