@@ -288,7 +288,7 @@
 create unique index idx_org_member_invitations_one_pending_per_email
   on organization_member_invitations(organization_id, lower(email))
   where status = 'pending';</code></pre>
-  <p class="small muted">Re-inviting an email expires the prior pending row first, so the admin gets a fresh link instead of a 409 they can't clear. Plus B-tree indexes on <code>organization_id</code>, <code>token</code>, and <code>(organization_id, status)</code>.</p>
+  <p class="small muted">Re-inviting an email expires the prior pending row first, so the admin gets a fresh link instead of a 409 they can't clear. The <code>token</code> column is indexed by its <code>UNIQUE</code> constraint; plus B-tree indexes on <code>organization_id</code> and <code>(organization_id, status)</code>.</p>
 
   <details>
     <summary>The atomic accept RPC (defense-in-depth highlights)</summary>
@@ -322,7 +322,7 @@ create unique index idx_org_member_invitations_one_pending_per_email
       <tr>
         <td><code>/api/organizations/invite-member/revoke</code></td>
         <td><span class="badge b-post">POST</span></td>
-        <td>Mark a pending invite <code>revoked</code></td>
+        <td>Mark a pending invite <code>revoked</code> (409 if no longer pending)</td>
         <td>Admin of invite's org</td>
       </tr>
       <tr>

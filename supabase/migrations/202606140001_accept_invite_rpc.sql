@@ -2,6 +2,11 @@
 -- Wraps membership insert, profile update, and invitation status change
 -- in a single transaction to prevent inconsistent state.
 
+-- Drop the redundant token index: the UNIQUE constraint on
+-- organization_member_invitations.token already provides an equivalent index.
+-- Idempotent cleanup for environments where 202606130001 already created it.
+drop index if exists public.idx_org_member_invitations_token;
+
 create or replace function public.accept_organization_invite(
   p_user_id uuid,
   p_invite_id uuid,
@@ -69,3 +74,46 @@ $$;
 -- Only the service role (via API routes) should call this function.
 revoke all on function public.accept_organization_invite(uuid, uuid, uuid, text, text, text) from public;
 revoke all on function public.accept_organization_invite(uuid, uuid, uuid, text, text, text) from authenticated;
+
+-- Atomic RPC for removing an organization member.
+-- Unassigns the member's farmers, deletes the membership row, and resets the
+-- removed user's profile in a single transaction so a partial failure can't
+-- leave the member without access while their profile still references the org
+-- (or vice versa). Permission checks stay in the API route.
+create or replace function public.remove_organization_member(
+  p_organization_id uuid,
+  p_user_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- 1. Unassign any farmers currently assigned to this member. The
+  --    organization_clients.assigned_to FK references auth.users(id), not the
+  --    membership row, so deleting the membership does NOT auto-null it.
+  update organization_clients
+  set assigned_to = null,
+      assigned_by = null,
+      assigned_at = null
+  where organization_id = p_organization_id
+    and assigned_to = p_user_id;
+
+  -- 2. Delete the membership row.
+  delete from organization_members
+  where organization_id = p_organization_id
+    and user_id = p_user_id;
+
+  -- 3. Reset the removed user's profile. Single-org model: profiles carry one
+  --    consultant_organization_id, so a removal always clears org linkage.
+  update profiles
+  set user_type = null,
+      consultant_organization_id = null
+  where id = p_user_id;
+end;
+$$;
+
+-- Only the service role (via API routes) should call this function.
+revoke all on function public.remove_organization_member(uuid, uuid) from public;
+revoke all on function public.remove_organization_member(uuid, uuid) from authenticated;
