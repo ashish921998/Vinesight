@@ -70,6 +70,9 @@ export default function TeamSettingsPage() {
   const [role, setRole] = useState<InviteRole>('agronomist')
   const [inviting, setInviting] = useState(false)
   const [createdToken, setCreatedToken] = useState<string | null>(null)
+  const [createdReason, setCreatedReason] = useState<'existing_account' | 'email_failed' | null>(
+    null
+  )
 
   // Remove member state
   const [memberToRemove, setMemberToRemove] = useState<OrgMember | null>(null)
@@ -133,6 +136,7 @@ export default function TeamSettingsPage() {
     setEmail('')
     setRole('agronomist')
     setCreatedToken(null)
+    setCreatedReason(null)
   }
 
   const handleInviteOpenChange = (open: boolean) => {
@@ -169,8 +173,17 @@ export default function TeamSettingsPage() {
         throw new Error(data.error || 'Failed to send invitation')
       }
 
-      setCreatedToken(data.invitation.token)
-      toast.success('Invitation created')
+      if (data.emailed) {
+        // Supabase delivered the invite email — no link to copy, just confirm and close.
+        toast.success(`Invitation emailed to ${email.trim()}`)
+        handleInviteOpenChange(false)
+      } else {
+        // No email was sent (the invitee already has an account, or delivery failed). Fall back to
+        // the shareable link so the admin can still get them in.
+        setCreatedToken(data.invitation.token)
+        setCreatedReason(data.reason ?? 'email_failed')
+        toast.success('Invitation created')
+      }
     } catch (error) {
       console.error('Failed to invite member:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to send invitation')
@@ -382,7 +395,9 @@ export default function TeamSettingsPage() {
           {createdToken ? (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Share this link with the invitee. It expires in 7 days.
+                {createdReason === 'existing_account'
+                  ? 'This person already has a VineSight account, so we couldn’t email a new invite. Share this link — they can sign in to accept. It expires in 7 days.'
+                  : 'We couldn’t send the invite email. Share this link with the invitee instead. It expires in 7 days.'}
               </p>
               <div className="flex items-center gap-2">
                 <Input readOnly value={inviteLink(createdToken)} className="text-xs" />

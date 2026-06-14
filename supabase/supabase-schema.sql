@@ -1145,7 +1145,7 @@ CREATE INDEX idx_farmer_invitations_organization_id ON farmer_invitations(organi
 CREATE INDEX idx_farmer_invitations_token ON farmer_invitations(token);
 CREATE INDEX idx_farmer_invitations_status ON farmer_invitations(status);
 CREATE INDEX idx_org_member_invitations_organization_id ON organization_member_invitations(organization_id);
-CREATE INDEX idx_org_member_invitations_token ON organization_member_invitations(token);
+-- No separate index on token: the UNIQUE constraint on the column already creates one.
 CREATE INDEX idx_org_member_invitations_status ON organization_member_invitations(organization_id, status);
 CREATE UNIQUE INDEX idx_org_member_invitations_one_pending_per_email ON organization_member_invitations(organization_id, lower(email)) WHERE status = 'pending';
 CREATE INDEX idx_farmer_invitations_phone ON farmer_invitations(phone);
@@ -1259,18 +1259,18 @@ CREATE POLICY "Admins can delete invitations" ON farmer_invitations FOR DELETE U
 -- RLS Policies for organization_member_invitations
 -- Admins/owners manage invites; acceptance is server-side via service role (no public SELECT).
 ALTER TABLE organization_member_invitations ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Admins can view member invitations" ON organization_member_invitations FOR SELECT USING (
+CREATE POLICY "Admins can view member invitations" ON organization_member_invitations FOR SELECT TO authenticated USING (
   public.is_org_admin(organization_id)
 );
-CREATE POLICY "Admins can insert member invitations" ON organization_member_invitations FOR INSERT WITH CHECK (
+CREATE POLICY "Admins can insert member invitations" ON organization_member_invitations FOR INSERT TO authenticated WITH CHECK (
   public.is_org_admin(organization_id)
 );
-CREATE POLICY "Admins can update member invitations" ON organization_member_invitations FOR UPDATE USING (
+CREATE POLICY "Admins can update member invitations" ON organization_member_invitations FOR UPDATE TO authenticated USING (
   public.is_org_admin(organization_id)
 ) WITH CHECK (
   public.is_org_admin(organization_id)
 );
-CREATE POLICY "Admins can delete member invitations" ON organization_member_invitations FOR DELETE USING (
+CREATE POLICY "Admins can delete member invitations" ON organization_member_invitations FOR DELETE TO authenticated USING (
   public.is_org_admin(organization_id)
 );
 
@@ -1449,6 +1449,11 @@ CREATE TRIGGER update_fertilizer_plans_updated_at
 
 CREATE TRIGGER update_organization_clients_updated_at
   BEFORE UPDATE ON organization_clients
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_org_member_invitations_updated_at
+  BEFORE UPDATE ON organization_member_invitations
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 

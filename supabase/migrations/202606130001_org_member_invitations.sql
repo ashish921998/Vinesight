@@ -27,8 +27,7 @@ create table if not exists public.organization_member_invitations (
 
 create index if not exists idx_org_member_invitations_organization_id
   on public.organization_member_invitations(organization_id);
-create index if not exists idx_org_member_invitations_token
-  on public.organization_member_invitations(token);
+-- No separate index on token: the UNIQUE constraint on the column already creates one.
 create index if not exists idx_org_member_invitations_status
   on public.organization_member_invitations(organization_id, status);
 

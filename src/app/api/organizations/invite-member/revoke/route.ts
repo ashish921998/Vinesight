@@ -90,14 +90,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { error: updateError } = await getSupabaseAdmin()
+    // Only pending invitations can be revoked. Guarding on status here prevents
+    // clobbering the audit trail of an already-accepted invite (accepted_at,
+    // accepted_user_id) and avoids reviving/overwriting expired or revoked rows.
+    const { data: revoked, error: updateError } = await getSupabaseAdmin()
       .from('organization_member_invitations')
       .update({ status: 'revoked' })
       .eq('id', invitationId)
+      .eq('status', 'pending')
+      .select('id')
 
     if (updateError) {
       console.error('Error revoking invitation:', updateError)
       return NextResponse.json({ error: 'Failed to revoke invitation' }, { status: 500 })
+    }
+
+    // Zero rows updated means the invite was no longer pending (already accepted,
+    // expired, or revoked) — report it rather than returning a misleading success.
+    if (!revoked || revoked.length === 0) {
+      return NextResponse.json(
+        { error: 'Invitation is no longer pending and cannot be revoked' },
+        { status: 409 }
+      )
     }
 
     return NextResponse.json({ success: true })

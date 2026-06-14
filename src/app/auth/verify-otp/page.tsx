@@ -80,14 +80,21 @@ function VerifyOtpContent() {
           const resp = await fetch('/api/organizations/accept-invite', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id, token: inviteToken })
+            body: JSON.stringify({ token: inviteToken })
           })
           if (!resp.ok) {
+            // Membership write failed (e.g. RPC not deployed, email mismatch).
+            // Do NOT push to /consultant — that strands the user in a workspace
+            // they have no membership in. Surface the error and allow a retry.
             const data = await resp.json().catch(() => ({}))
             toast.error(data.error || 'Failed to join organization. Please contact support.')
+            inviteHandledRef.current = false
+            return
           }
         } catch {
           toast.error('Failed to join organization. Please contact support.')
+          inviteHandledRef.current = false
+          return
         }
         router.push('/consultant')
       })()

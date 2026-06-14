@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { z } from 'zod'
 import type { Database } from '@/types/database'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { globalRateLimiter } from '@/lib/validation'
 
 // Invitation TTL in days
 const INVITATION_TTL_DAYS = 7
@@ -24,6 +25,18 @@ function isUniqueConstraintError(error: { code?: string; message?: string; detai
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate-limit before any work. Each accepted invite both sends an email (a spendable resource
+    // under the project's SMTP quota) and creates an auth user via inviteUserByEmail, so cap how
+    // fast a single caller can fan these out. This runs before the session is verified, so we use
+    // the stricter (unauthenticated) tier — sending invites is low-frequency, so 50/min/IP is
+    // ample for legitimate admins and an unauthenticated flood doesn't get the elevated limit.
+    const clientIP =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous'
+    const rateLimit = globalRateLimiter.checkLimit(`invite-member-${clientIP}`, false)
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ error: rateLimit.reason || 'Too many requests' }, { status: 429 })
+    }
+
     const body = await request.json()
 
     // Validate input with Zod
@@ -120,6 +133,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Expire any earlier still-pending invite for this email+org before issuing a new one, so
+    // re-inviting just refreshes the link instead of colliding with the one-pending-per-email
+    // unique index (which previously surfaced as a 409 the admin couldn't clear without revoking).
+    const { error: expireError } = await getSupabaseAdmin()
+      .from('organization_member_invitations')
+      .update({ status: 'expired' })
+      .eq('organization_id', organizationId)
+      .eq('email', email)
+      .eq('status', 'pending')
+
+    if (expireError) {
+      console.error('Error expiring prior pending invitations (non-fatal):', expireError)
+    }
+
     // Calculate expiration date (7 days from now)
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + INVITATION_TTL_DAYS)
@@ -154,8 +181,50 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 })
     }
 
+    // Send the invite email via Supabase Auth. inviteUserByEmail creates a confirmed-on-click,
+    // passwordless auth user and emails them a link; our custom invite email template turns
+    // `org_invite_token` into a link to /auth/confirm?next=/signup/member/<token>, where the
+    // invitee sets a password and the membership is written. This rides Supabase's mailer, so it
+    // needs no sending domain (same channel as the existing OTP/verification emails).
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin).replace(/\/$/, '')
+    const redirectTo = `${appUrl}/auth/confirm?next=${encodeURIComponent(`/signup/member/${token}`)}`
+
+    let emailed = false
+    let reason: 'existing_account' | 'email_failed' | undefined
+
+    const { error: inviteEmailError } = await getSupabaseAdmin().auth.admin.inviteUserByEmail(
+      email,
+      {
+        data: {
+          org_invite_token: token,
+          first_name: firstName,
+          last_name: lastName,
+          invited_role: role
+        },
+        redirectTo
+      }
+    )
+
+    if (!inviteEmailError) {
+      emailed = true
+    } else if (
+      inviteEmailError.code === 'user_already_exists' ||
+      inviteEmailError.code === 'email_exists' ||
+      /already.*(registered|exists)/i.test(inviteEmailError.message)
+    ) {
+      // The invitee already has a VineSight account, so Supabase won't re-invite them. The
+      // invitation row is still valid: they can open the share link while signed in to accept.
+      reason = 'existing_account'
+    } else {
+      // Email delivery hiccup — don't fail the whole invite, the link still works as a fallback.
+      console.error('Error sending member invite email:', inviteEmailError)
+      reason = 'email_failed'
+    }
+
     return NextResponse.json({
       success: true,
+      emailed,
+      reason,
       invitation: {
         id: invitation.id,
         token: invitation.token,

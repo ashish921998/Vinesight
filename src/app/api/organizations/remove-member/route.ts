@@ -101,27 +101,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Cannot remove the owner' }, { status: 403 })
     }
 
-    // Delete the membership row (organization_clients.assigned_to auto-nulls via FK)
-    const { error: deleteError } = await getSupabaseAdmin()
-      .from('organization_members')
-      .delete()
-      .eq('organization_id', organizationId)
-      .eq('user_id', userId)
+    // Atomically: unassign the member's farmers, delete the membership, reset the
+    // profile. A Postgres RPC wraps all three in one transaction so a partial
+    // failure can't strip access while leaving dangling assignments or a stale
+    // profile org linkage (the farmer FK references auth.users(id), not the
+    // membership row, so deleting the membership does NOT auto-null it).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC not yet in generated types; remove after running migration + type regen
+    const { error: rpcError } = await (getSupabaseAdmin() as any).rpc(
+      'remove_organization_member',
+      {
+        p_organization_id: organizationId,
+        p_user_id: userId
+      }
+    )
 
-    if (deleteError) {
-      console.error('Error removing organization member:', deleteError)
+    if (rpcError) {
+      console.error('Error in remove_organization_member RPC:', rpcError)
       return NextResponse.json({ error: 'Failed to remove member' }, { status: 500 })
-    }
-
-    // Reset the removed user's profile
-    const { error: profileError } = await getSupabaseAdmin()
-      .from('profiles')
-      .update({ user_type: null, consultant_organization_id: null })
-      .eq('id', userId)
-
-    if (profileError) {
-      console.error('Error resetting removed member profile:', profileError)
-      return NextResponse.json({ error: 'Failed to reset member profile' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })

@@ -2,9 +2,9 @@
 
 import type React from 'react'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -12,19 +12,27 @@ import { LoginButton } from '@/components/auth/LoginButton'
 import { PasswordInput } from '@/components/ui/password-input'
 import posthog from 'posthog-js'
 
-export default function LoginPage() {
+function LoginPageContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showError, setShowError] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { signInWithEmail, loading, error, user, clearError } = useSupabaseAuth()
 
-  // Redirect if user is already logged in and email is confirmed
+  // Support ?redirect= for invite flows and other post-login redirects.
+  // Only allow relative paths to prevent open-redirect attacks.
+  const redirectTo = (() => {
+    const param = searchParams.get('redirect')
+    if (param && param.startsWith('/') && !param.startsWith('//')) return param
+    return '/dashboard'
+  })()
+
   useEffect(() => {
     if (user && user.email_confirmed_at) {
-      router.push('/dashboard')
+      router.push(redirectTo)
     }
-  }, [user, router])
+  }, [user, router, redirectTo])
 
   // Show error if authentication fails
   useEffect(() => {
@@ -50,7 +58,7 @@ export default function LoginPage() {
     posthog.capture('login_submitted', { method: 'email', success: result.success })
 
     if (result.success) {
-      router.push('/dashboard')
+      router.push(redirectTo)
     }
   }
 
@@ -198,5 +206,19 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   )
 }

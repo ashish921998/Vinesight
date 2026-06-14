@@ -6,12 +6,11 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PasswordInput } from '@/components/ui/password-input'
 import { Badge } from '@/components/ui/badge'
-import { VALIDATION } from '@/lib/constants'
 import { Loader2, Building2, Mail } from 'lucide-react'
 import { toast } from 'sonner'
+import { createClient } from '@/lib/supabase'
 
 interface InviteDetails {
   email: string
@@ -37,17 +36,22 @@ export default function InviteAcceptPage() {
   const [invite, setInvite] = useState<InviteDetails | null>(null)
   const [inviteError, setInviteError] = useState<string | null>(null)
 
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [showError, setShowError] = useState(false)
-  const [accepting, setAccepting] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [acceptError, setAcceptError] = useState(false)
   const submittingRef = useRef(false)
 
-  const { signUpWithEmail, loading: authLoading, error, user, clearError } = useSupabaseAuth()
+  const { loading: authLoading, user } = useSupabaseAuth()
 
-  // Load invite by token
+  // The invitee arrives here authenticated via the Supabase invite email (auth.admin
+  // .inviteUserByEmail stamps `org_invite_token` into user_metadata). That account is
+  // passwordless, so we collect a password before binding them to the org. Matching the token
+  // guards against a stale metadata value left over from an unrelated invite.
+  const inviteMetaToken = (user?.user_metadata as Record<string, unknown> | undefined)
+    ?.org_invite_token
+  const isInvitedUser = !!user?.email_confirmed_at && inviteMetaToken === token
+
   const loadInvite = useCallback(async () => {
     try {
       setLoading(true)
@@ -62,8 +66,6 @@ export default function InviteAcceptPage() {
 
       const data: InviteDetails = await response.json()
       setInvite(data)
-      setFirstName(data.firstName ?? '')
-      setLastName(data.lastName ?? '')
     } catch {
       setInviteError('This invite is invalid or has expired')
     } finally {
@@ -75,99 +77,108 @@ export default function InviteAcceptPage() {
     loadInvite()
   }, [loadInvite])
 
+  // Returns true only on a 2xx. The route returns success for the idempotent
+  // already-accepted-by-this-user case, so a non-2xx (e.g. a revoked invite, or one accepted by
+  // someone else) is a genuine failure — surface an error + retry rather than redirecting into a
+  // workspace the user has no membership in (mirrors the verify-otp invite path).
+  const acceptInvite = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/organizations/accept-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      })
+      if (response.ok) return true
+      const data = await response.json().catch(() => ({}))
+      toast.error(data.error || 'Failed to join organization. Please contact support.')
+      return false
+    } catch {
+      toast.error('Failed to join organization. Please contact support.')
+      return false
+    }
+  }, [token])
+
   useEffect(() => {
-    // Only auto-redirect an already-signed-in user who lands here directly.
-    // During submission, handleSubmit owns the redirect (after accept-invite completes).
-    if (user && user.email_confirmed_at && !submittingRef.current) {
+    // An already-registered user who opens the invite link (e.g. the admin shared it because the
+    // invitee already had an account) is signed in with a real password and no invite metadata —
+    // accept for them directly. Invited (passwordless) users use the set-password form below.
+    //
+    // Wait for the invite fetch to settle first: without the `loading` guard an authenticated user
+    // is redirected to /consultant while `invite` is still null, skipping acceptance entirely.
+    if (loading || authLoading || !user || !user.email_confirmed_at) return
+    if (isInvitedUser) return
+    if (!invite || !token) {
       router.push('/consultant')
-    }
-  }, [user, router])
-
-  useEffect(() => {
-    if (error) {
-      setShowError(true)
-      const timer = setTimeout(() => {
-        setShowError(false)
-        clearError()
-      }, 5000)
-      return () => clearTimeout(timer)
-    }
-  }, [error, clearError])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!invite) return
-
-    const trimmedFirstName = firstName.trim()
-    const trimmedLastName = lastName.trim()
-
-    if (!trimmedFirstName || !trimmedLastName || !password || !confirmPassword) {
       return
     }
-
-    if (password !== confirmPassword) {
-      return
-    }
-
+    if (submittingRef.current) return
     submittingRef.current = true
-    const result = await signUpWithEmail({
-      email: invite.email,
-      password,
-      confirmPassword,
-      firstName: trimmedFirstName,
-      lastName: trimmedLastName
-    })
+    setSubmitting(true)
 
-    if (result.success && result.user) {
-      // Email not yet verified: defer the membership write to after OTP confirmation.
-      // accept-invite requires a verified email, so a leaked link can't grant access.
-      if (result.needsOtpVerification) {
-        const params = new URLSearchParams({ email: invite.email, inviteToken: token })
-        if (invite.organizationSlug) {
-          params.set('org', invite.organizationSlug)
-        }
-        router.push(`/auth/verify-otp?${params.toString()}`)
+    void (async () => {
+      const ok = await acceptInvite()
+      if (ok) {
+        router.push('/consultant')
         return
       }
-
-      // Email already confirmed (auto-confirm projects): bind to the org now.
-      setAccepting(true)
-      try {
-        const response = await fetch('/api/organizations/accept-invite', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: result.user.id,
-            token
-          })
-        })
-
-        if (!response.ok) {
-          const data = await response.json()
-          console.error('Error accepting invite:', data.error)
-          toast.error(
-            data.error || 'Account created but failed to join organization. Please contact support.'
-          )
-          setAccepting(false)
-          submittingRef.current = false
-          return
-        }
-      } catch (err) {
-        console.error('Error accepting invite:', err)
-        toast.error('Account created but failed to join organization. Please contact support.')
-        setAccepting(false)
-        submittingRef.current = false
-        return
-      }
-      setAccepting(false)
-      router.push('/consultant')
-    } else {
+      // Acceptance failed — don't strand them in /consultant. Surface the error state with a
+      // retry. submittingRef stays reset so the retry handler can run; the effect won't auto-loop
+      // because acceptError isn't a dependency.
       submittingRef.current = false
+      setSubmitting(false)
+      setAcceptError(true)
+    })()
+  }, [loading, authLoading, user, isInvitedUser, invite, token, router, acceptInvite])
+
+  const retryAccept = async () => {
+    if (submittingRef.current) return
+    submittingRef.current = true
+    setSubmitting(true)
+    setAcceptError(false)
+
+    const ok = await acceptInvite()
+    if (ok) {
+      router.push('/consultant')
+      return
     }
+    submittingRef.current = false
+    setSubmitting(false)
+    setAcceptError(true)
   }
 
-  if (loading) {
+  const handleSetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (password.length < 6 || password !== confirmPassword || submittingRef.current) return
+
+    submittingRef.current = true
+    setSubmitting(true)
+
+    const supabase = createClient()
+    const { error } = await supabase.auth.updateUser({ password })
+
+    if (error) {
+      toast.error(error.message || 'Could not set your password. Please try again.')
+      submittingRef.current = false
+      setSubmitting(false)
+      return
+    }
+
+    const ok = await acceptInvite()
+    if (!ok) {
+      // Password is set but membership failed. Keep them on the form (org_invite_token is still
+      // present, so isInvitedUser stays true) so they can retry without re-entering anything.
+      submittingRef.current = false
+      setSubmitting(false)
+      setAcceptError(true)
+      return
+    }
+
+    // Joined — clear org_invite_token so revisiting the link doesn't re-trigger this flow.
+    await supabase.auth.updateUser({ data: { org_invite_token: null } })
+    router.push('/consultant')
+  }
+
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -192,162 +203,154 @@ export default function InviteAcceptPage() {
     )
   }
 
-  const isLoading = authLoading || accepting
+  // Existing account: accepting in the background, or a recoverable failure with a retry.
+  if (user?.email_confirmed_at && !isInvitedUser) {
+    if (acceptError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center px-4">
+          <div className="text-center space-y-4 max-w-sm">
+            <Building2 className="h-12 w-12 text-muted-foreground mx-auto" />
+            <h1 className="text-xl font-semibold">Couldn&apos;t join {invite.organizationName}</h1>
+            <p className="text-sm text-muted-foreground">
+              Something went wrong accepting the invitation. Please try again, or contact support if
+              it keeps failing.
+            </p>
+            <Button onClick={retryAccept} disabled={submitting}>
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Try again'}
+            </Button>
+          </div>
+        </div>
+      )
+    }
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-sm text-muted-foreground">Joining {invite.organizationName}…</p>
+        </div>
+      </div>
+    )
+  }
 
+  const header = (
+    <div className="text-center mb-8">
+      <Link href="/" className="inline-block mb-6">
+        <div className="text-foreground text-2xl font-medium font-sans">Vinesight</div>
+      </Link>
+      <div className="inline-flex items-center gap-2 mb-4">
+        <Badge variant="secondary">{ROLE_LABELS[invite.role]}</Badge>
+      </div>
+      <h1 className="text-foreground text-2xl font-semibold font-sans mb-2">
+        Join {invite.organizationName}
+      </h1>
+    </div>
+  )
+
+  // Invited user: set a password to finish joining.
+  if (isInvitedUser) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col justify-center items-center px-4">
+        <div className="w-full max-w-md">
+          {header}
+          <p className="text-center text-muted-foreground text-base font-normal font-sans -mt-4 mb-6">
+            Set a password to finish setting up your account
+          </p>
+
+          <div className="bg-card rounded-lg shadow-[0px_0px_0px_1px_rgba(55,50,47,0.08)] p-8">
+            <form onSubmit={handleSetPassword} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Email address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="email"
+                    value={invite.email}
+                    readOnly
+                    disabled
+                    className="w-full pl-9 pr-3 py-2 border border-border rounded-md shadow-sm bg-muted text-muted-foreground cursor-not-allowed focus:outline-none min-h-[44px]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <PasswordInput
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  placeholder="Create a password"
+                  label="Password"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">Minimum 6 characters</p>
+              </div>
+
+              <div>
+                <PasswordInput
+                  id="confirm-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  placeholder="Confirm password"
+                  label="Confirm password"
+                  error={
+                    password !== confirmPassword && confirmPassword
+                      ? 'Passwords do not match'
+                      : undefined
+                  }
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={
+                  submitting ||
+                  password.length < 6 ||
+                  password !== confirmPassword ||
+                  !confirmPassword
+                }
+                className="w-full min-h-[48px]"
+              >
+                {submitting ? (
+                  <div className="flex items-center">
+                    <Loader2 className="animate-spin h-5 w-5 mr-2" />
+                    Joining organization…
+                  </div>
+                ) : (
+                  'Set password & join'
+                )}
+              </Button>
+            </form>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Not signed in: the invite link establishes the session, so direct visitors are told to use
+  // their email. Existing-account invitees (shared link) sign in and are auto-accepted above.
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center items-center px-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-6">
-            <div className="text-foreground text-2xl font-medium font-sans">Vinesight</div>
-          </Link>
-          <div className="inline-flex items-center gap-2 mb-4">
-            <Badge variant="secondary">{ROLE_LABELS[invite.role]}</Badge>
-          </div>
-          <h1 className="text-foreground text-2xl font-semibold font-sans mb-2">
-            Join {invite.organizationName}
-          </h1>
-          <p className="text-muted-foreground text-base font-normal font-sans">
-            Set up your account to accept the invitation
+        {header}
+        <div className="bg-card rounded-lg shadow-[0px_0px_0px_1px_rgba(55,50,47,0.08)] p-8 text-center space-y-4">
+          <Mail className="h-10 w-10 text-primary mx-auto" />
+          <p className="text-card-foreground">
+            We&apos;ve emailed an invitation to <span className="font-medium">{invite.email}</span>.
+            Open the link in that email to set your password and join.
           </p>
-        </div>
-
-        <div className="bg-card rounded-lg shadow-[0px_0px_0px_1px_rgba(55,50,47,0.08)] p-8">
-          {showError && error && (
-            <Alert className="mb-4 border-red-200 bg-red-50">
-              <AlertDescription className="text-red-800">
-                {error}
-                <span className="block mt-1">
-                  Already have an account?{' '}
-                  <Link href="/login" className="font-medium underline hover:no-underline">
-                    Sign in
-                  </Link>
-                </span>
-              </AlertDescription>
-            </Alert>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="firstName"
-                  className="block text-sm font-medium text-card-foreground mb-2"
-                >
-                  First name
-                </label>
-                <input
-                  id="firstName"
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value.trimStart())}
-                  required
-                  maxLength={VALIDATION.MAX_NAME_LENGTH}
-                  className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
-                  placeholder="First name"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="lastName"
-                  className="block text-sm font-medium text-card-foreground mb-2"
-                >
-                  Last name
-                </label>
-                <input
-                  id="lastName"
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value.trimStart())}
-                  required
-                  maxLength={VALIDATION.MAX_NAME_LENGTH}
-                  className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
-                  placeholder="Last name"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-card-foreground mb-2"
-              >
-                Email address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  id="email"
-                  type="email"
-                  value={invite.email}
-                  readOnly
-                  disabled
-                  className="w-full pl-9 pr-3 py-2 border border-border rounded-md shadow-sm bg-muted text-muted-foreground cursor-not-allowed focus:outline-none min-h-[44px]"
-                />
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                This invite is locked to this email
-              </p>
-            </div>
-
-            <div>
-              <PasswordInput
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                placeholder="Create a password"
-                label="Password"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">Minimum 6 characters</p>
-            </div>
-
-            <div>
-              <PasswordInput
-                id="confirm-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={6}
-                placeholder="Confirm password"
-                label="Confirm password"
-                error={
-                  password !== confirmPassword && confirmPassword
-                    ? 'Passwords do not match'
-                    : undefined
-                }
-              />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={
-                isLoading ||
-                password !== confirmPassword ||
-                !firstName.trim() ||
-                !lastName.trim() ||
-                !password ||
-                !confirmPassword
-              }
-              className="w-full min-h-[48px]"
+          <p className="text-sm text-muted-foreground">
+            Already have a VineSight account?{' '}
+            <Link
+              href={`/login?redirect=${encodeURIComponent(`/signup/member/${token}`)}`}
+              className="font-medium text-primary hover:text-primary/80"
             >
-              {isLoading ? (
-                <div className="flex items-center">
-                  <Loader2 className="animate-spin h-5 w-5 mr-2" />
-                  {accepting ? 'Joining organization...' : 'Creating account...'}
-                </div>
-              ) : (
-                'Accept Invite'
-              )}
-            </Button>
-          </form>
-
-          <p className="mt-8 text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <Link href="/login" className="font-medium text-primary hover:text-primary/80">
               Sign in
-            </Link>
+            </Link>{' '}
+            to accept.
           </p>
         </div>
       </div>

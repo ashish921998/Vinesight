@@ -76,10 +76,11 @@ export async function POST(request: NextRequest) {
     }
 
     // If assigning to an agronomist, verify they belong to the organization
+    // and actually hold the agronomist role (not just any member).
     if (agronomistUserId) {
       const { data: assigneeMembership, error: assigneeMembershipError } = await getSupabaseAdmin()
         .from('organization_members')
-        .select('id')
+        .select('id, role')
         .eq('organization_id', organizationId)
         .eq('user_id', agronomistUserId)
         .maybeSingle()
@@ -92,6 +93,13 @@ export async function POST(request: NextRequest) {
       if (!assigneeMembership) {
         return NextResponse.json(
           { error: 'Assigned agronomist must belong to the organization' },
+          { status: 400 }
+        )
+      }
+
+      if (assigneeMembership.role !== 'agronomist') {
+        return NextResponse.json(
+          { error: 'Assigned user must have the agronomist role' },
           { status: 400 }
         )
       }

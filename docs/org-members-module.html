@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Organization Members Module — Branch Implementation</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --surface-2: #f0f0ee;
+    --border: #e2e2dd;
+    --text: #1c1c1a;
+    --muted: #6b6b66;
+    --accent: #3f7d4e;
+    --accent-soft: #e6f0e8;
+    --code-bg: #0f172a;
+    --code-text: #e2e8f0;
+    --green: #3f7d4e;
+    --amber: #b8860b;
+    --red: #b54545;
+    --blue: #3b6ea5;
+    --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16161a;
+      --surface: #1f1f24;
+      --surface-2: #26262c;
+      --border: #34343c;
+      --text: #e7e7e4;
+      --muted: #a0a09a;
+      --accent: #6fb583;
+      --accent-soft: #1f3326;
+      --code-bg: #0b1120;
+      --code-text: #e2e8f0;
+      --green: #6fb583;
+      --amber: #d9a84a;
+      --red: #e08585;
+      --blue: #7aa7d6;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.25);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 48px 24px 96px; }
+  .eyebrow { text-transform: uppercase; letter-spacing: .08em; font-size: 12px; font-weight: 600; color: var(--accent); margin: 0 0 8px; }
+  h1 { font-size: 32px; line-height: 1.2; margin: 0 0 12px; letter-spacing: -.02em; }
+  h2 { font-size: 22px; margin: 56px 0 16px; letter-spacing: -.01em; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 17px; margin: 28px 0 10px; }
+  p { margin: 0 0 14px; }
+  .lede { font-size: 18px; color: var(--muted); max-width: 70ch; }
+  a { color: var(--accent); }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .88em; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+  pre { background: var(--code-bg); color: var(--code-text); padding: 16px 18px; border-radius: 10px; overflow-x: auto; font-size: 13px; line-height: 1.55; font-variant-numeric: tabular-nums; }
+  pre code { background: none; padding: 0; color: inherit; font-size: 13px; }
+
+  .meta-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; }
+  .chip { font-size: 12.5px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; color: var(--muted); }
+  .chip strong { color: var(--text); font-weight: 600; }
+
+  .grid { display: grid; gap: 14px; }
+  .stats { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin: 24px 0; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .stat .num { font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+  .stat .lbl { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; box-shadow: var(--shadow); margin: 16px 0; }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14.5px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+  td code { white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; letter-spacing: .02em; }
+  .b-get { background: var(--accent-soft); color: var(--accent); }
+  .b-post { background: rgba(59,110,165,.15); color: var(--blue); }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+  .d-green { background: var(--green); } .d-amber { background: var(--amber); } .d-red { background: var(--red); } .d-blue { background: var(--blue); }
+
+  ul.tight { margin: 8px 0 14px; padding-left: 20px; }
+  ul.tight li { margin: 5px 0; }
+
+  figure { margin: 20px 0; }
+  figcaption { font-size: 13px; color: var(--muted); text-align: center; margin-top: 8px; }
+  svg { max-width: 100%; height: auto; display: block; }
+
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; padding: 0 16px; }
+  details[open] { padding-bottom: 12px; }
+  summary { cursor: pointer; padding: 13px 0; font-weight: 600; font-size: 15px; list-style: none; display: flex; align-items: center; gap: 8px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "▸"; color: var(--muted); transition: transform .15s; }
+  details[open] summary::before { transform: rotate(90deg); }
+
+  .note { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14.5px; }
+  .note.warn { border-color: var(--amber); background: rgba(184,134,11,.1); }
+
+  .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 22px; margin: 28px 0; }
+  .toc ol { margin: 6px 0 0; padding-left: 20px; columns: 2; column-gap: 32px; font-size: 14.5px; }
+  .toc li { margin: 4px 0; break-inside: avoid; }
+  .toc a { text-decoration: none; color: var(--text); }
+  .toc a:hover { color: var(--accent); }
+
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Branch · claude/youthful-wing-456a2f</p>
+  <h1>Organization Members Module</h1>
+  <p class="lede">Link- and email-based invites that let a consultant organization grow a team of <strong>admins</strong> and <strong>agronomists</strong>, then bulk-assign farmer clients to those agronomists — with the whole acceptance path guarded by email verification, RLS, and an atomic Postgres transaction.</p>
+
+  <div class="meta-bar">
+    <span class="chip"><strong>1</strong> feature commit</span>
+    <span class="chip"><strong>14</strong> files</span>
+    <span class="chip" style="color:var(--green)"><strong>+2282</strong></span>
+    <span class="chip" style="color:var(--red)"><strong>−9</strong></span>
+    <span class="chip"><strong>2</strong> migrations</span>
+    <span class="chip"><strong>5</strong> API routes</span>
+    <span class="chip">base: <strong>main</strong></span>
+  </div>
+
+  <div class="grid stats">
+    <div class="stat"><div class="num">5</div><div class="lbl">API endpoints (invite, accept, revoke, assign, remove)</div></div>
+    <div class="stat"><div class="num">2</div><div class="lbl">Invitable roles — admin &amp; agronomist</div></div>
+    <div class="stat"><div class="num">7d</div><div class="lbl">Invitation TTL before auto-expiry</div></div>
+    <div class="stat"><div class="num">3</div><div class="lbl">New UI pages — team, assignments, accept</div></div>
+  </div>
+
+  <div class="toc">
+    <strong>Contents</strong>
+    <ol>
+      <li><a href="#what">What this branch ships</a></li>
+      <li><a href="#arch">Architecture &amp; invite lifecycle</a></li>
+      <li><a href="#data">Data model</a></li>
+      <li><a href="#api">API endpoints</a></li>
+      <li><a href="#accept">Two acceptance paths</a></li>
+      <li><a href="#ui">Frontend pages</a></li>
+      <li><a href="#security">Security model</a></li>
+      <li><a href="#files">File map</a></li>
+      <li><a href="#followups">Observations &amp; follow-ups</a></li>
+    </ol>
+  </div>
+
+  <h2 id="what">What this branch ships</h2>
+  <p>VineSight already had <em>farmer</em> invitations (onboarding grower clients). This branch adds the parallel, distinct concept of <strong>team-member</strong> invitations: bringing fellow staff into a consultant organization. The owner/admins can now invite colleagues by email, assign them a role, and distribute the farmer book across agronomists — all from a new <strong>Team</strong> area in the consultant workspace.</p>
+
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
+    <div class="card">
+      <h3 style="margin-top:0">👥 Membership</h3>
+      <p class="small muted" style="margin:0">Invite by email, choose <code>admin</code> or <code>agronomist</code>, list current members sorted owner→admin→agronomist, and remove members (with farmer reassignment cleanup).</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">✉️ Invitations</h3>
+      <p class="small muted" style="margin:0">Supabase-mailed invite links, one-pending-per-email, 7-day expiry, revoke, copy-link fallback when email can't be sent.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🧑‍🌾 Assignment</h3>
+      <p class="small muted" style="margin:0">Bulk-assign / unassign farmer clients to a chosen agronomist with search, select-all, and live current-assignment labels.</p>
+    </div>
+  </div>
+
+  <h2 id="arch">Architecture &amp; invite lifecycle</h2>
+  <p>An invite row drives a state machine. The admin creates it; Supabase Auth mails a passwordless magic link; the invitee confirms their email server-side at <code>/auth/confirm</code>, lands on the accept page, sets a password, and an atomic RPC writes the membership. The status column moves <code>pending → accepted</code> (or <code>revoked</code> / <code>expired</code>).</p>
+
+  <figure>
+  <svg viewBox="0 0 900 430" role="img" aria-label="Invitation lifecycle flow diagram" font-family="-apple-system, sans-serif">
+    <defs>
+      <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="currentColor"/>
+      </marker>
+      <style>
+        .box{fill:var(--surface);stroke:var(--border);stroke-width:1.5;rx:10;}
+        .lbl{fill:var(--text);font-size:13px;font-weight:600;}
+        .sub{fill:var(--muted);font-size:11px;}
+        .ln{stroke:var(--muted);stroke-width:1.5;fill:none;}
+        .acc{fill:var(--accent-soft);stroke:var(--accent);}
+        .accl{fill:var(--accent);font-size:13px;font-weight:600;}
+      </style>
+    </defs>
+
+    <!-- Row 1 -->
+    <rect class="box" x="20" y="24" width="180" height="66" rx="10"/>
+    <text class="lbl" x="36" y="50">Admin · Team page</text>
+    <text class="sub" x="36" y="68">fills invite form,</text>
+    <text class="sub" x="36" y="82">picks role</text>
+
+    <rect class="box acc" x="250" y="24" width="200" height="66" rx="10"/>
+    <text class="accl" x="266" y="50">POST /invite-member</text>
+    <text class="sub" x="266" y="68">rate-limit → authz → insert</text>
+    <text class="sub" x="266" y="82">row + inviteUserByEmail</text>
+
+    <rect class="box" x="500" y="24" width="180" height="66" rx="10"/>
+    <text class="lbl" x="516" y="50">Supabase Auth</text>
+    <text class="sub" x="516" y="68">emails magic link</text>
+    <text class="sub" x="516" y="82">(passwordless user)</text>
+
+    <rect class="box" x="730" y="24" width="150" height="66" rx="10"/>
+    <text class="lbl" x="746" y="50">Invitee inbox</text>
+    <text class="sub" x="746" y="68">clicks link</text>
+
+    <line class="ln" x1="200" y1="57" x2="248" y2="57" marker-end="url(#arr)"/>
+    <line class="ln" x1="450" y1="57" x2="498" y2="57" marker-end="url(#arr)"/>
+    <line class="ln" x1="680" y1="57" x2="728" y2="57" marker-end="url(#arr)"/>
+
+    <!-- down connector -->
+    <line class="ln" x1="805" y1="90" x2="805" y2="140" marker-end="url(#arr)"/>
+
+    <!-- Row 2 (right to left) -->
+    <rect class="box" x="700" y="144" width="180" height="66" rx="10"/>
+    <text class="lbl" x="716" y="170">GET /auth/confirm</text>
+    <text class="sub" x="716" y="188">verifyOtp(token_hash),</text>
+    <text class="sub" x="716" y="202">sets session cookies</text>
+
+    <rect class="box" x="430" y="144" width="240" height="66" rx="10"/>
+    <text class="lbl" x="446" y="170">/signup/member/[token]</text>
+    <text class="sub" x="446" y="188">shows org + role, invitee</text>
+    <text class="sub" x="446" y="202">sets a password</text>
+
+    <line class="ln" x1="700" y1="177" x2="672" y2="177" marker-end="url(#arr)"/>
+    <line class="ln" x1="430" y1="177" x2="402" y2="177" marker-end="url(#arr)"/>
+
+    <rect class="box acc" x="190" y="144" width="210" height="66" rx="10"/>
+    <text class="accl" x="206" y="170">POST /accept-invite</text>
+    <text class="sub" x="206" y="188">re-checks email match +</text>
+    <text class="sub" x="206" y="202">email_confirmed_at</text>
+
+    <!-- down connector -->
+    <line class="ln" x1="295" y1="210" x2="295" y2="258" marker-end="url(#arr)"/>
+
+    <!-- Row 3 -->
+    <rect class="box acc" x="150" y="262" width="300" height="78" rx="10"/>
+    <text class="accl" x="166" y="288">RPC accept_organization_invite()</text>
+    <text class="sub" x="166" y="308">① insert membership (ON CONFLICT DO NOTHING)</text>
+    <text class="sub" x="166" y="324">② update profile → org_member</text>
+    <text class="sub" x="166" y="340">③ mark invite accepted (guard status=pending)</text>
+
+    <rect class="box" x="500" y="266" width="180" height="70" rx="10"/>
+    <text class="lbl" x="516" y="292">Member is in</text>
+    <text class="sub" x="516" y="310">redirect → /consultant</text>
+    <text class="sub" x="516" y="326">workspace</text>
+
+    <line class="ln" x1="450" y1="301" x2="498" y2="301" marker-end="url(#arr)"/>
+
+    <!-- side states -->
+    <rect class="box" x="730" y="266" width="150" height="70" rx="10"/>
+    <text class="lbl" x="746" y="292">Terminal states</text>
+    <text class="sub" x="746" y="310">revoked · expired</text>
+    <text class="sub" x="746" y="326">(410 / 400 / 404)</text>
+  </svg>
+  <figcaption>Invitation lifecycle — admin create → Supabase mail → email-confirm → set password → atomic accept RPC.</figcaption>
+  </figure>
+
+  <h2 id="data">Data model</h2>
+  <p>One new table, <code>organization_member_invitations</code>, plus a <code>security definer</code> RPC. Shipped both as an incremental migration and folded into the canonical schema dump. The generated TypeScript <code>Database</code> type was updated by hand for the new table.</p>
+
+  <table>
+    <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>id</code></td><td>uuid PK</td><td><code>uuid_generate_v4()</code></td></tr>
+      <tr><td><code>organization_id</code></td><td>uuid FK</td><td>→ organizations, <code>ON DELETE CASCADE</code></td></tr>
+      <tr><td><code>email</code></td><td>text</td><td>Invitee address</td></tr>
+      <tr><td><code>first_name / last_name</code></td><td>text</td><td>Prefills profile name on accept</td></tr>
+      <tr><td><code>role</code></td><td>text</td><td>CHECK <code>('admin','agronomist')</code> — owner is never invitable</td></tr>
+      <tr><td><code>token</code></td><td>text UNIQUE</td><td><code>crypto.randomUUID()</code>, used in the share link</td></tr>
+      <tr><td><code>status</code></td><td>text</td><td>CHECK <code>('pending','accepted','revoked','expired')</code></td></tr>
+      <tr><td><code>invited_by</code></td><td>uuid</td><td>→ auth.users, <code>ON DELETE SET NULL</code></td></tr>
+      <tr><td><code>expires_at</code></td><td>timestamptz</td><td>now + 7 days</td></tr>
+      <tr><td><code>accepted_at / accepted_user_id</code></td><td>—</td><td>Stamped by the accept RPC</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Key indexes &amp; the partial-unique guard</h3>
+  <pre><code>-- At most one LIVE invite per email per org (case-insensitive).
+create unique index idx_org_member_invitations_one_pending_per_email
+  on organization_member_invitations(organization_id, lower(email))
+  where status = 'pending';</code></pre>
+  <p class="small muted">Re-inviting an email expires the prior pending row first, so the admin gets a fresh link instead of a 409 they can't clear. Plus B-tree indexes on <code>organization_id</code>, <code>token</code>, and <code>(organization_id, status)</code>.</p>
+
+  <details>
+    <summary>The atomic accept RPC (defense-in-depth highlights)</summary>
+    <ul class="tight">
+      <li><strong>Role re-validation</strong> — rejects anything but <code>admin</code>/<code>agronomist</code> even though the table CHECK already constrains it.</li>
+      <li><strong>Membership insert is <code>ON CONFLICT DO NOTHING</code></strong> — a stale invite can never demote an existing owner/admin.</li>
+      <li><strong>Name preserved</strong> — only sets <code>full_name</code> if the profile's is currently null/empty.</li>
+      <li><strong>Status guard</strong> — the final <code>update … where status='pending'</code> means two concurrent acceptances (double-fired effect, two tabs) can't both win.</li>
+      <li><strong>Locked down</strong> — <code>revoke all … from public/authenticated</code>; only the service role calls it.</li>
+    </ul>
+  </details>
+
+  <h2 id="api">API endpoints</h2>
+  <p>All routes authenticate via the session cookie (never trusting an id in the body), validate input with Zod, and use the service-role admin client for privileged reads/writes. Every mutating route re-checks that the caller is an owner/admin of the target org.</p>
+
+  <table>
+    <thead><tr><th>Endpoint</th><th>Method</th><th>Purpose</th><th>Guards</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>/api/organizations/invite-member</code></td>
+        <td><span class="badge b-post">POST</span></td>
+        <td>Create invite + send Supabase email</td>
+        <td>Rate-limit (50/min/IP), admin check, reject existing member, expire prior pending</td>
+      </tr>
+      <tr>
+        <td><code>/api/organizations/invite-member</code></td>
+        <td><span class="badge b-get">GET</span></td>
+        <td>Public lookup of invite by token (for accept page)</td>
+        <td>Hides revoked/accepted (404), 410 on expiry</td>
+      </tr>
+      <tr>
+        <td><code>/api/organizations/invite-member/revoke</code></td>
+        <td><span class="badge b-post">POST</span></td>
+        <td>Mark a pending invite <code>revoked</code></td>
+        <td>Admin of invite's org</td>
+      </tr>
+      <tr>
+        <td><code>/api/organizations/accept-invite</code></td>
+        <td><span class="badge b-post">POST</span></td>
+        <td>Bind authenticated user to org via RPC</td>
+        <td>Email match, <code>email_confirmed_at</code> required, idempotent re-accept</td>
+      </tr>
+      <tr>
+        <td><code>/api/organizations/assign</code></td>
+        <td><span class="badge b-post">POST</span></td>
+        <td>Bulk (re)assign farmers to an agronomist</td>
+        <td>Admin check + assignee must hold <code>agronomist</code> role; writes via RLS client</td>
+      </tr>
+      <tr>
+        <td><code>/api/organizations/remove-member</code></td>
+        <td><span class="badge b-post">POST</span></td>
+        <td>Remove member, unassign their farmers, reset profile</td>
+        <td>Can't remove self or owner</td>
+      </tr>
+      <tr>
+        <td><code>/auth/confirm</code></td>
+        <td><span class="badge b-get">GET</span></td>
+        <td>Server-side email-OTP verification (token_hash)</td>
+        <td>Same-origin redirect only (open-redirect safe)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>Why <code>inviteUserByEmail</code> + <code>/auth/confirm</code> instead of the PKCE <code>?code=</code> flow?</strong> The <code>token_hash</code> path works <em>cross-device</em> — the invitee can open the email in a different browser than the inviter. It also rides Supabase's existing mailer, so no separate sending domain is needed.
+  </div>
+
+  <h2 id="accept">Two acceptance paths</h2>
+  <p>The accept page <code>/signup/member/[token]</code> handles two distinct kinds of visitor, distinguished by whether the auth user carries the <code>org_invite_token</code> metadata that <code>inviteUserByEmail</code> stamps on.</p>
+
+  <div class="grid" style="grid-template-columns:1fr 1fr;">
+    <div class="card">
+      <h3 style="margin-top:0"><span class="dot d-green"></span>New invitee (passwordless)</h3>
+      <p class="small">Arrives authenticated via the magic link with matching <code>org_invite_token</code>. Sees org name + role badge, sets a password (<code>updateUser</code>), then accept-invite runs. On success the token metadata is cleared so a revisit doesn't re-trigger.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0"><span class="dot d-blue"></span>Existing account (shared link)</h3>
+      <p class="small">Already has a VineSight account (Supabase won't re-invite), so the admin shares the raw link. They sign in, and acceptance fires automatically in the background → redirect to <code>/consultant</code>. A failure surfaces a "Couldn't join" retry rather than stranding them.</p>
+    </div>
+  </div>
+
+  <p class="small muted">A third, parallel entry exists in <code>/auth/verify-otp</code>: when an <code>inviteToken</code> query param is present, the post-confirmation effect calls accept-invite before redirecting — covering the OTP signup flow.</p>
+
+  <h2 id="ui">Frontend pages</h2>
+  <ul class="tight">
+    <li><strong>Team</strong> (<code>/consultant/team</code>) — member list with role badges, invite dialog (form → emailed, or copy-link fallback), pending-invites list with copy/revoke, remove-member confirmation. Admin-gated via <code>access.canViewAllFarmers</code>.</li>
+    <li><strong>Assignments</strong> (<code>/consultant/team/assignments</code>) — target-agronomist picker, searchable farmer list with select-all, current-assignment labels, bulk assign/unassign. Agronomists get a read-only "Only admins can assign" notice.</li>
+    <li><strong>Accept</strong> (<code>/signup/member/[token]</code>) — the dual-path acceptance screen described above.</li>
+    <li><strong>Nav</strong> — consultant layout gains a <em>Team</em> nav item; the old "Team Settings — upcoming" placeholder is removed.</li>
+  </ul>
+
+  <h2 id="security">Security model</h2>
+  <table>
+    <thead><tr><th>Layer</th><th>Control</th></tr></thead>
+    <tbody>
+      <tr><td><span class="dot d-green"></span>Authentication</td><td>Every route resolves the user from the session cookie via <code>supabase.auth.getUser()</code> — body-supplied ids are never trusted.</td></tr>
+      <tr><td><span class="dot d-green"></span>Authorization</td><td>Mutations re-verify owner/admin membership server-side; <code>assign</code> additionally checks the target holds the <code>agronomist</code> role.</td></tr>
+      <tr><td><span class="dot d-green"></span>RLS</td><td>Invite table is admin-only for all CRUD via <code>is_org_admin()</code>; no public SELECT (acceptance is service-role). Assignment writes go through the <em>authed</em> client so RLS enforces admin-only.</td></tr>
+      <tr><td><span class="dot d-green"></span>Email verification</td><td>accept-invite requires <code>email_confirmed_at</code> AND a case-insensitive email match — a leaked link can't write a privileged row for an address the actor doesn't control.</td></tr>
+      <tr><td><span class="dot d-green"></span>Rate limiting</td><td>invite-member capped at 50/min/IP (unauthenticated tier) before any work, since each invite spends SMTP quota and creates an auth user.</td></tr>
+      <tr><td><span class="dot d-green"></span>Open-redirect</td><td><code>/auth/confirm</code> only honours relative same-origin <code>next</code> paths.</td></tr>
+      <tr><td><span class="dot d-amber"></span>Atomicity</td><td>The 3-step accept (membership + profile + status) runs in one <code>security definer</code> transaction, with concurrency guards on both the insert and the status update.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="files">File map</h2>
+  <table>
+    <thead><tr><th>File</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/migrations/…_org_member_invitations.sql</code></td><td>New invite table + indexes + RLS + updated_at trigger</td></tr>
+      <tr><td><code>supabase/migrations/…_accept_invite_rpc.sql</code></td><td>Atomic <code>accept_organization_invite()</code> RPC</td></tr>
+      <tr><td><code>supabase/supabase-schema.sql</code></td><td>Canonical schema updated to match (+43)</td></tr>
+      <tr><td><code>src/types/database.ts</code></td><td>Hand-added <code>organization_member_invitations</code> table type (+59)</td></tr>
+      <tr><td><code>src/lib/team-service.ts</code></td><td><code>listOrgMembers</code> + <code>listPendingInvites</code> (client reads, RLS-scoped)</td></tr>
+      <tr><td><code>src/app/api/organizations/invite-member/route.ts</code></td><td>Create invite (POST) + token lookup (GET)</td></tr>
+      <tr><td><code>src/app/api/organizations/invite-member/revoke/route.ts</code></td><td>Revoke a pending invite</td></tr>
+      <tr><td><code>src/app/api/organizations/accept-invite/route.ts</code></td><td>Bind user → org via RPC</td></tr>
+      <tr><td><code>src/app/api/organizations/assign/route.ts</code></td><td>Bulk farmer→agronomist assignment</td></tr>
+      <tr><td><code>src/app/api/organizations/remove-member/route.ts</code></td><td>Remove member + cleanup</td></tr>
+      <tr><td><code>src/app/auth/confirm/route.ts</code></td><td>Server-side email-OTP confirm (cross-device)</td></tr>
+      <tr><td><code>src/app/consultant/team/page.tsx</code></td><td>Team management UI</td></tr>
+      <tr><td><code>src/app/consultant/team/assignments/page.tsx</code></td><td>Bulk assignment UI</td></tr>
+      <tr><td><code>src/app/signup/member/[token]/page.tsx</code></td><td>Dual-path invite acceptance UI</td></tr>
+      <tr><td><code>src/app/auth/verify-otp/page.tsx</code></td><td>OTP path now accepts via <code>inviteToken</code> param</td></tr>
+      <tr><td><code>src/app/consultant/layout.tsx</code></td><td>Adds Team nav item</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="followups">Observations &amp; follow-ups</h2>
+  <ul class="tight">
+    <li><span class="dot d-amber"></span><strong>Generated type is hand-edited.</strong> <code>database.ts</code> gained the table by hand, and accept-invite calls the RPC through an <code>(admin as any).rpc(...)</code> cast with an eslint-disable — the comment says to regenerate types after the migration runs. Worth doing to drop the cast.</li>
+    <li><span class="dot d-amber"></span><strong>verify-otp sends a body <code>userId</code>.</strong> The OTP path posts <code>{ userId, token }</code>, but accept-invite ignores body <code>userId</code> entirely (uses the session) — harmless but dead data worth trimming.</li>
+    <li><span class="dot d-blue"></span><strong>Expiry is lazy.</strong> Rows flip to <code>expired</code> on read/accept rather than via a cron — fine for correctness (every consumer checks <code>expires_at</code>), but the pending list could briefly show a just-expired invite until next load.</li>
+    <li><span class="dot d-blue"></span><strong>Two migrations both define schema</strong> (incremental file + canonical dump). Confirm the deploy pipeline applies the incremental migrations and treats <code>supabase-schema.sql</code> as reference only, to avoid double-create on fresh DBs.</li>
+    <li><span class="dot d-amber"></span><strong>External dependency not in this diff.</strong> The cross-device <code>/auth/confirm</code> flow relies on a <em>custom Supabase invite email template</em> that emits <code>token_hash</code> and links to <code>/auth/confirm?next=…</code>. That template lives in Supabase project config, not the repo — the code asserts it (invite-member route comment) but the diff alone can't verify the email renders the right link.</li>
+    <li><span class="dot d-green"></span><strong>Not independently run/tested here</strong> — this doc is a read of the diff, not a verification of runtime behavior. Suggested manual QA: invite a brand-new email, invite an existing-account email (link fallback), revoke, re-invite same email, accept, then bulk-assign + remove.</li>
+  </ul>
+
+  <hr>
+  <p class="small muted">Generated from <code>git diff main...claude/youthful-wing-456a2f</code> (commit <code>af77d9b</code>). Self-contained — open in any browser, attach to a PR, or drop in S3 for a shareable link.</p>
+
+</div>
+</body>
+</html>
