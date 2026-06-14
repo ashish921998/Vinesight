@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useId } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -38,6 +38,7 @@ export function WarehouseItemSelect({
   const [customInput, setCustomInput] = useState(value)
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>('')
   const [searchOpen, setSearchOpen] = useState(false)
+  const listboxId = useId()
 
   const loadWarehouseItems = useCallback(async () => {
     try {
@@ -112,6 +113,7 @@ export function WarehouseItemSelect({
               variant="outline"
               role="combobox"
               aria-expanded={searchOpen}
+              aria-controls={listboxId}
               className={`w-full justify-between ${className}`}
             >
               {selectedWarehouseId ? (
@@ -130,7 +132,7 @@ export function WarehouseItemSelect({
                 placeholder={`Search ${type === 'spray' ? 'chemicals' : 'fertilizers'}...`}
               />
               <CommandEmpty>No items found in warehouse.</CommandEmpty>
-              <CommandList>
+              <CommandList id={listboxId}>
                 <CommandGroup>
                   {warehouseItems.map((item) => (
                     <CommandItem

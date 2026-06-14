@@ -61,7 +61,7 @@ function VerifyOtpContent() {
   useEffect(() => {
     if (user && user.email_confirmed_at && !authLoading) {
       const targetOrg = orgSlug || initialOrgRef.current
-      router.push(targetOrg ? '/clients' : '/dashboard')
+      router.push(targetOrg ? '/consultant' : '/dashboard')
     }
   }, [user, authLoading, router, orgSlug])
 
@@ -112,7 +112,7 @@ function VerifyOtpContent() {
       const result = await verifyOtp({ email: email.toLowerCase(), token: otpCode })
 
       if (result.success) {
-        router.push(orgSlug ? '/clients' : '/dashboard')
+        router.push(orgSlug ? '/consultant' : '/dashboard')
       } else {
         setError(result.error || 'Verification failed')
       }

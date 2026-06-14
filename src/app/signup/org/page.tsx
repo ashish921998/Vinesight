@@ -135,7 +135,7 @@ export default function OrganizationSignupPage() {
           `/auth/verify-otp?email=${encodeURIComponent(trimmedEmail)}&org=${encodeURIComponent(trimmedOrgSlug)}`
         )
       } else {
-        router.push('/clients')
+        router.push('/consultant')
       }
     }
   }

@@ -9,6 +9,7 @@ import {
 } from 'next/font/google'
 import './globals.css'
 import { I18nProvider } from '@/components/providers/I18nProvider'
+import { MotionConfigProvider } from '@/components/providers/MotionConfigProvider'
 import { AsyncErrorBoundary } from '@/components/ErrorBoundary'
 import { SentryErrorBoundary } from '@/components/SentryErrorBoundary'
 import { Suspense } from 'react'
@@ -54,9 +55,9 @@ const sourceCodePro = Source_Code_Pro({
 })
 
 export const metadata: Metadata = {
-  title: 'VineSight - AI-Powered Smart Farm Management',
+  title: 'VineSight - Grower Network Management for Grape Exporters',
   description:
-    'AI-powered vineyard management with crop monitoring, yield prediction, and disease detection. Transform your farming operations with precision agriculture technology.',
+    'One view of your grower network for grape exporters, FPCs, and consultants worldwide: spray records, lab results, advisory, and export compliance across every farm.',
   keywords: SEO_KEYWORDS,
   applicationName: 'VineSight',
   authors: [{ name: 'VineSight Team' }],
@@ -95,24 +96,24 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://vinesight.vercel.app',
-    title: 'VineSight - AI-Powered Smart Farm Management System',
+    title: 'VineSight - Grower Network Management for Grape Exporters',
     description:
-      'Transform your farming operations with AI-driven crop monitoring, yield prediction, and automated farm management. Perfect for grape farming and precision agriculture.',
+      'Growers log sprays, irrigation, and lab results from the field. Exporters, FPCs, and consultants see compliance and crop status across every farm they source from.',
     siteName: 'VineSight',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'VineSight - Smart Farm Management System'
+        alt: 'VineSight - Grower network management for grape exporters'
       }
     ]
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'VineSight - AI-Powered Smart Farm Management',
+    title: 'VineSight - Grower Network Management for Grape Exporters',
     description:
-      'Transform farming with AI-driven crop monitoring, yield prediction, and automated management systems.',
+      'One view of your grower network: spray records, lab results, advisory, and export compliance across every farm.',
     images: ['/og-image.png'],
     creator: '@VineSight'
   },
@@ -165,9 +166,11 @@ export default function RootLayout({
               }
             >
               <GlobalAuthErrorHandler />
-              <I18nProvider>
-                <LayoutContent>{children}</LayoutContent>
-              </I18nProvider>
+              <MotionConfigProvider>
+                <I18nProvider>
+                  <LayoutContent>{children}</LayoutContent>
+                </I18nProvider>
+              </MotionConfigProvider>
             </Suspense>
           </AsyncErrorBoundary>
         </SentryErrorBoundary>

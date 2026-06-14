@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
 import { toast } from 'sonner'
 import { VALIDATION } from '@/lib/constants'
 import { clearLastRoute } from '@/lib/route-persistence'
+import posthog from 'posthog-js'
 
 interface AuthState {
   user: User | null
@@ -34,6 +35,17 @@ interface VerifyOtpParams {
   email: string
   token: string
   otpType?: 'email' | 'recovery' | 'invite' | 'email_change'
+}
+
+interface SendPhoneOtpParams {
+  phone: string // E.164, e.g. +919876543210
+  firstName?: string
+  lastName?: string
+}
+
+interface VerifyPhoneOtpParams {
+  phone: string // E.164
+  token: string
 }
 
 interface SignInWithGoogleParams {
@@ -160,10 +172,25 @@ export function useSupabaseAuth() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       // Only update the user state, don't change loading state here
       // to avoid interfering with the loading states from auth operations
+      const sessionUser = session?.user ?? null
       setAuthState((prev) => ({
         ...prev,
-        user: session?.user ?? null
+        user: sessionUser
       }))
+
+      // Keep PostHog's distinct_id in sync with the authenticated user so every
+      // event is attributed to a stable unique identifier across all entry
+      // paths — email login, Google OAuth, and session restore — not just the
+      // signup OTP flow. The id guard avoids redundant identify calls (this
+      // listener runs once per mounted hook instance). Reset on sign-out so the
+      // next user on a shared browser doesn't inherit this identity.
+      if (sessionUser) {
+        if (posthog.get_distinct_id() !== sessionUser.id) {
+          posthog.identify(sessionUser.id, { email: sessionUser.email })
+        }
+      } else if (event === 'SIGNED_OUT') {
+        posthog.reset()
+      }
     })
 
     getInitialUser()
@@ -324,6 +351,117 @@ export function useSupabaseAuth() {
       }))
 
       toast.success('Email verified successfully!')
+
+      // 'email' is the only otpType this app ever passes here (verify-otp page is signup-only).
+      if (otpType === 'email') {
+        posthog.identify(data.user?.id, { email: data.user?.email })
+        posthog.capture('New user created', {
+          user_id: data.user?.id,
+          timestamp: new Date().toISOString()
+        })
+      }
+
+      return { success: true, user: data.user }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
+      toast.error(`Verification failed: ${errorMessage}`)
+      return { success: false, error: errorMessage }
+    }
+  }
+
+  // Sends an SMS OTP to the given phone, creating the account if it doesn't exist. Names are
+  // attached as user metadata here because Supabase only applies it at user-creation time
+  // (this call) — the same full_name the handle_new_user trigger reads into profiles.
+  const sendPhoneOtp = async ({ phone, firstName, lastName }: SendPhoneOtpParams) => {
+    setAuthState((prev) => ({ ...prev, loading: true, error: null }))
+
+    const userMetadata: Record<string, string> = {}
+
+    const firstNameResult = sanitizeAndValidateName(firstName, 'First name')
+    if (!firstNameResult.isValid) {
+      const error = firstNameResult.error || 'Invalid first name'
+      setAuthState((prev) => ({ ...prev, error, loading: false }))
+      toast.error(error)
+      return { success: false, error }
+    }
+    if (firstNameResult.value) userMetadata.first_name = firstNameResult.value
+
+    const lastNameResult = sanitizeAndValidateName(lastName, 'Last name')
+    if (!lastNameResult.isValid) {
+      const error = lastNameResult.error || 'Invalid last name'
+      setAuthState((prev) => ({ ...prev, error, loading: false }))
+      toast.error(error)
+      return { success: false, error }
+    }
+    if (lastNameResult.value) userMetadata.last_name = lastNameResult.value
+
+    if (userMetadata.first_name && userMetadata.last_name) {
+      userMetadata.full_name = `${userMetadata.first_name} ${userMetadata.last_name}`
+    } else if (userMetadata.first_name) {
+      userMetadata.full_name = userMetadata.first_name
+    } else if (userMetadata.last_name) {
+      userMetadata.full_name = userMetadata.last_name
+    }
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithOtp({
+        phone,
+        options: { channel: 'sms', data: userMetadata }
+      })
+
+      if (error) {
+        setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
+        toast.error(`Couldn't send code: ${error.message}`)
+        return { success: false, error: error.message }
+      }
+
+      setAuthState((prev) => ({ ...prev, loading: false }))
+      toast.success('Verification code sent')
+      return { success: true }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
+      toast.error(`Couldn't send code: ${errorMessage}`)
+      return { success: false, error: errorMessage }
+    }
+  }
+
+  // Verifies the SMS OTP. On success the user has a confirmed phone and an active session
+  // (cookie-based), which the invite/accept route reads to prove phone ownership.
+  const verifyPhoneOtp = async ({ phone, token }: VerifyPhoneOtpParams) => {
+    setAuthState((prev) => ({ ...prev, loading: true, error: null }))
+
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' })
+
+      if (error) {
+        setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
+        toast.error(`Verification failed: ${error.message}`)
+        return { success: false, error: error.message }
+      }
+
+      setAuthState((prev) => ({ ...prev, user: data.user ?? null, loading: false }))
+      toast.success('Phone verified')
+
+      // Phone-OTP verify is the acquisition funnel for the consultant-invite feature: identify the
+      // farmer and fire 'New user created' for genuinely new accounts (created within the last
+      // couple of minutes), mirroring the email verify path. PII (phone) stays in identify(),
+      // never in the capture event. TODO: email + phone both identify per-flow, but the documented
+      // convention is to identify once at the onAuthStateChange chokepoint; consolidate later.
+      if (data.user) {
+        posthog.identify(data.user.id, { phone: data.user.phone })
+        const createdMs = data.user.created_at ? new Date(data.user.created_at).getTime() : 0
+        if (createdMs && Date.now() - createdMs < 2 * 60 * 1000) {
+          posthog.capture('New user created', {
+            user_id: data.user.id,
+            timestamp: new Date().toISOString()
+          })
+        }
+      }
+
       return { success: true, user: data.user }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
@@ -448,9 +586,12 @@ export function useSupabaseAuth() {
     }
   }
 
-  const clearError = () => {
+  // Stable identity — it only calls the stable setAuthState setter — so callers can list it
+  // in an effect's dependency array without the effect re-running (and re-arming timers) on
+  // every render.
+  const clearError = useCallback(() => {
     setAuthState((prev) => ({ ...prev, error: null }))
-  }
+  }, [])
 
   return {
     user: authState.user,
@@ -459,6 +600,8 @@ export function useSupabaseAuth() {
     signInWithEmail,
     signUpWithEmail,
     verifyOtp,
+    sendPhoneOtp,
+    verifyPhoneOtp,
     signInWithGoogle,
     resendVerificationEmail,
     resetPassword,

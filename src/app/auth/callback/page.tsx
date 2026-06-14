@@ -8,6 +8,11 @@ function AuthCallbackContent() {
   const router = useRouter()
 
   useEffect(() => {
+    // The callback is async and can resume after this component unmounts (e.g. the
+    // user navigates away). Guard every redirect/timer with `isMounted` so we never
+    // schedule a timer or push a route after cleanup has already run.
+    let isMounted = true
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null
     const handleAuthCallback = async () => {
       try {
         const supabase = createClient()
@@ -19,13 +24,14 @@ function AuthCallbackContent() {
 
         // Handle errors
         if (error) {
-          router.push(`/auth/auth-code-error?error=${error}`)
+          if (isMounted) router.push(`/auth/auth-code-error?error=${error}`)
           return
         }
 
         // If we have a code, exchange it for a session
         if (code) {
           const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+          if (!isMounted) return
 
           if (exchangeError) {
             router.push(
@@ -37,7 +43,7 @@ function AuthCallbackContent() {
           if (data?.session) {
             // Successfully exchanged code for session
             // Add a small delay to ensure the auth state is properly set
-            setTimeout(() => {
+            redirectTimer = setTimeout(() => {
               router.push('/dashboard')
             }, 500)
             return
@@ -46,6 +52,7 @@ function AuthCallbackContent() {
 
         // If no code, check if we already have a valid authenticated user
         const { data, error: userError } = await supabase.auth.getUser()
+        if (!isMounted) return
 
         if (userError) {
           router.push(
@@ -57,7 +64,7 @@ function AuthCallbackContent() {
         if (data?.user) {
           // User is authenticated, redirect to dashboard
           // Add a small delay to ensure the auth state is properly set
-          setTimeout(() => {
+          redirectTimer = setTimeout(() => {
             router.push('/dashboard')
           }, 500)
           return
@@ -67,11 +74,18 @@ function AuthCallbackContent() {
         router.push(`/auth/auth-code-error?error=no_tokens`)
       } catch (error) {
         console.error('Auth callback error:', error)
-        router.push(`/auth/auth-code-error?error=unexpected`)
+        if (isMounted) router.push(`/auth/auth-code-error?error=unexpected`)
       }
     }
 
     handleAuthCallback()
+
+    return () => {
+      isMounted = false
+      if (redirectTimer) {
+        clearTimeout(redirectTimer)
+      }
+    }
   }, [router])
 
   return (
