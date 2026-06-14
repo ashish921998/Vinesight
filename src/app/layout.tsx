@@ -151,7 +151,6 @@ export default function RootLayout({
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${merriweather.variable} ${sourceCodePro.variable} antialiased`}
-        suppressHydrationWarning
       >
         <SentryErrorBoundary>
           <AsyncErrorBoundary>
