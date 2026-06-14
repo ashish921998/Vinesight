@@ -1,0 +1,22 @@
+middleware.ts
+  s_9a91a4904292ce::t_e4c22f522a505e 41-53
+  s_9a91a4904292ce::t_f225c2245be369 29,34-35
+  s_9a91a4904292ce::t_855898c13a1fca 108,115-124
+  s_9a91a4904292ce::t_73f72b7eddbfa9 136,141,144
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "3c381a32b4187d46f31df872d5eebe8bb72f3496",
+  "prompts": {},
+  "sessions": {
+    "s_9a91a4904292ce": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fc87fb61-4dda-4e0a-b44a-4ad281eadae5",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
