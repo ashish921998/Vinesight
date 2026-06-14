@@ -107,10 +107,11 @@ export default function InviteAcceptPage() {
     // is redirected to /consultant while `invite` is still null, skipping acceptance entirely.
     if (loading || authLoading || !user || !user.email_confirmed_at) return
     if (isInvitedUser) return
-    if (!invite || !token) {
-      router.push('/consultant')
-      return
-    }
+    // Invite failed to load (revoked / expired / 404). `invite` is null only on a
+    // failed fetch here, so don't redirect — let the render show the "Invite
+    // Unavailable" error screen instead of silently bouncing the user to
+    // /consultant (which strands a non-org user on an access-denied page).
+    if (inviteError || !invite || !token) return
     if (submittingRef.current) return
     submittingRef.current = true
     setSubmitting(true)
@@ -128,7 +129,7 @@ export default function InviteAcceptPage() {
       setSubmitting(false)
       setAcceptError(true)
     })()
-  }, [loading, authLoading, user, isInvitedUser, invite, token, router, acceptInvite])
+  }, [loading, authLoading, user, isInvitedUser, inviteError, invite, token, router, acceptInvite])
 
   const retryAccept = async () => {
     if (submittingRef.current) return

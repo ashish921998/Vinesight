@@ -103,10 +103,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Reject if an active member already has that email in this organization
+    // Reject if this email already belongs to an organization. The product is
+    // single-org-per-user (profiles.consultant_organization_id holds one org),
+    // and accept_organization_invite overwrites that pointer — so inviting a
+    // user who already belongs to ANY org (this one or another) would silently
+    // sever their original affiliation on accept. Guard against both cases here.
     const { data: existingProfile, error: profileError } = await getSupabaseAdmin()
       .from('profiles')
-      .select('id')
+      .select('id, consultant_organization_id')
       .ilike('email', email)
       .maybeSingle()
 
@@ -116,20 +120,28 @@ export async function POST(request: NextRequest) {
     }
 
     if (existingProfile) {
-      const { data: existingMember, error: existingMemberError } = await getSupabaseAdmin()
+      const { data: existingMembership, error: existingMembershipError } = await getSupabaseAdmin()
         .from('organization_members')
-        .select('id')
-        .eq('organization_id', organizationId)
+        .select('id, organization_id')
         .eq('user_id', existingProfile.id)
         .maybeSingle()
 
-      if (existingMemberError) {
-        console.error('Error checking existing membership:', existingMemberError)
+      if (existingMembershipError) {
+        console.error('Error checking existing membership:', existingMembershipError)
         return NextResponse.json({ error: 'Failed to verify invitee' }, { status: 500 })
       }
 
-      if (existingMember) {
+      // Already a member of this org — nothing to invite.
+      if (existingMembership?.organization_id === organizationId) {
         return NextResponse.json({ error: 'Already a member' }, { status: 409 })
+      }
+
+      // Belongs to a different org (membership row or a lingering profile pointer).
+      if (existingMembership || existingProfile.consultant_organization_id) {
+        return NextResponse.json(
+          { error: 'This user already belongs to another organization' },
+          { status: 409 }
+        )
       }
     }
 

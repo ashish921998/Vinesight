@@ -22,6 +22,7 @@ set search_path = public
 as $$
 declare
   v_existing_name text;
+  v_existing_org uuid;
   v_full_name text;
 begin
   -- 0. Defense in depth: never let a malformed invite grant an unexpected role.
@@ -29,6 +30,19 @@ begin
   --    gate before a membership row is written.
   if p_role not in ('admin', 'agronomist') then
     raise exception 'invalid role: %', p_role;
+  end if;
+
+  -- 0b. Single-org-per-user invariant. The invite-member route already blocks
+  --     inviting a user who belongs to another org, but a stale invite created
+  --     before the user joined elsewhere could still reach here. Refuse rather
+  --     than silently overwriting consultant_organization_id and severing the
+  --     user's existing affiliation. Accepting your own current org is fine.
+  select consultant_organization_id into v_existing_org
+  from profiles
+  where id = p_user_id;
+
+  if v_existing_org is not null and v_existing_org <> p_organization_id then
+    raise exception 'user already belongs to another organization';
   end if;
 
   -- 1. Insert membership only if not already a member.
