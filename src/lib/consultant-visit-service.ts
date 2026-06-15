@@ -108,16 +108,25 @@ async function hydrateVisits(supabase: VisitClient, visits: VisitRow[]): Promise
   // Resolve display labels in batch: farm names, visitor names, recommendation text.
   const farmNames = new Map<number, string | null>()
   if (farmIds.length > 0) {
-    const { data: farms } = await supabase.from('farms').select('id, name').in('id', farmIds)
+    const { data: farms, error: farmsError } = await supabase
+      .from('farms')
+      .select('id, name')
+      .in('id', farmIds)
+    if (farmsError) {
+      throw new Error(`Failed to load farm names: ${farmsError.message}`)
+    }
     for (const f of farms ?? []) farmNames.set(f.id, f.name)
   }
 
   const visitorNames = new Map<string, string | null>()
   if (visitorIds.length > 0) {
-    const { data: profiles } = await supabase
+    const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, full_name')
       .in('id', visitorIds)
+    if (profilesError) {
+      throw new Error(`Failed to load visitor names: ${profilesError.message}`)
+    }
     for (const p of profiles ?? []) visitorNames.set(p.id, p.full_name)
   }
 
@@ -126,10 +135,13 @@ async function hydrateVisits(supabase: VisitClient, visits: VisitRow[]): Promise
     { recommendation: string | null; classification: string | null }
   >()
   if (triageIds.length > 0) {
-    const { data: triage } = await supabase
+    const { data: triage, error: triageError } = await supabase
       .from('petiole_triage')
       .select('id, recommendation, classification')
       .in('id', triageIds)
+    if (triageError) {
+      throw new Error(`Failed to load recommendation details: ${triageError.message}`)
+    }
     for (const t of triage ?? []) {
       triageById.set(t.id, { recommendation: t.recommendation, classification: t.classification })
     }

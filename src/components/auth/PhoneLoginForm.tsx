@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { normalizePhone } from '@/lib/phone'
+import { toast } from 'sonner'
 import posthog from 'posthog-js'
 
 interface PhoneLoginFormProps {
@@ -27,7 +28,10 @@ export function PhoneLoginForm({ onSuccess }: PhoneLoginFormProps) {
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
     const normalized = normalizePhone(phone)
-    if (!normalized) return
+    if (!normalized) {
+      toast.error('Enter a valid phone number, e.g. 98765 43210')
+      return
+    }
 
     // Login must not create accounts: an unknown number should fail, not spin up
     // an orphaned auth user with no profile/org. Farmer accounts come from invites.
