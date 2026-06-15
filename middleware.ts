@@ -93,7 +93,9 @@ export async function middleware(req: NextRequest) {
   }
 
   const { pathname } = req.nextUrl
-  const isAuthRoute = pathname.startsWith('/auth')
+  // Match the /auth area only — NOT sibling paths like /auth.md (the agent-registration
+  // discovery doc), which must stay publicly reachable for signed-in users too.
+  const isAuthRoute = pathname === '/auth' || pathname.startsWith('/auth/')
   const onFarmerRoute = matchesRoot(pathname, FARMER_ROOTS)
   const onOrgRoute = matchesRoot(pathname, ORG_ROOTS)
 

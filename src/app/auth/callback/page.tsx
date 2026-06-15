@@ -22,6 +22,18 @@ function AuthCallbackContent() {
         const code = currentUrl.searchParams.get('code')
         const error = currentUrl.searchParams.get('error')
 
+        // Optional post-login destination (e.g. the agent claim page). Only same-origin
+        // relative paths are honored, to avoid open-redirects; everything else → dashboard.
+        // Reject protocol-relative ('//host') and backslash forms ('/\host', which browsers
+        // normalize toward '//host'), and anything not starting with a single slash.
+        const nextParam = currentUrl.searchParams.get('next')
+        const isSafeInternalPath =
+          !!nextParam &&
+          nextParam.startsWith('/') &&
+          !nextParam.startsWith('//') &&
+          !nextParam.includes('\\')
+        const dest = isSafeInternalPath ? (nextParam as string) : '/dashboard'
+
         // Handle errors
         if (error) {
           if (isMounted) router.push(`/auth/auth-code-error?error=${error}`)
@@ -44,7 +56,7 @@ function AuthCallbackContent() {
             // Successfully exchanged code for session
             // Add a small delay to ensure the auth state is properly set
             redirectTimer = setTimeout(() => {
-              router.push('/dashboard')
+              router.push(dest)
             }, 500)
             return
           }
@@ -65,7 +77,7 @@ function AuthCallbackContent() {
           // User is authenticated, redirect to dashboard
           // Add a small delay to ensure the auth state is properly set
           redirectTimer = setTimeout(() => {
-            router.push('/dashboard')
+            router.push(dest)
           }, 500)
           return
         }
