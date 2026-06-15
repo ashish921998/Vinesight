@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { createServerSupabaseClient } from '@/lib/auth-utils'
 import { TaskReminderSchema, validateAndSanitize, globalRateLimiter } from '@/lib/validation'
+import { authenticateResourceRequest } from '@/lib/agent-auth/resource'
 import {
   TaskReminderCreateInput,
   toApplicationTaskReminder,
@@ -28,15 +29,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: rateLimit.reason || 'Too many requests' }, { status: 429 })
     }
 
-    const supabase = await createServerSupabaseClient()
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-    }
+    // Accept either a browser cookie session or an agent bearer token (scope: tasks.read).
+    const auth = await authenticateResourceRequest(request, 'tasks.read')
+    if (!auth.ok) return auth.response
+    const supabase = auth.db
 
     const searchParams = request.nextUrl.searchParams
     const farmIdParam = searchParams.get('farmId')
@@ -48,6 +44,17 @@ export async function GET(request: NextRequest) {
       .order('due_date', { ascending: true })
       .order('priority', { ascending: false })
       .order('created_at', { ascending: true })
+
+    // Cookie sessions are scoped by RLS. Agent tokens use the service-role client (RLS
+    // bypassed), so restrict tasks to farms the bound user owns.
+    if (auth.viaAgent) {
+      const { data: ownFarms } = await supabase
+        .from('farms')
+        .select('id')
+        .eq('user_id', auth.userId)
+      const farmIds = (ownFarms || []).map((farm: any) => farm.id)
+      query = query.in('farm_id', farmIds.length ? farmIds : [-1])
+    }
 
     if (farmIdParam) {
       const parsedFarmId = Number.parseInt(farmIdParam, 10)

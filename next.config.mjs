@@ -122,7 +122,7 @@ const nextConfig = {
     ]
   },
 
-  // Rewrites for PostHog analytics ingestion
+  // Rewrites for PostHog analytics ingestion + auth.md agent-registration discovery.
   async rewrites() {
     return [
       {
@@ -132,6 +132,20 @@ const nextConfig = {
       {
         source: '/ingest/:path*',
         destination: 'https://us.i.posthog.com/:path*'
+      },
+      // auth.md: expose the discovery artifacts at their well-known public paths while the
+      // route handlers live under /api (so the request origin can be computed dynamically).
+      {
+        source: '/.well-known/oauth-protected-resource',
+        destination: '/api/agent-auth/oauth-protected-resource'
+      },
+      {
+        source: '/.well-known/oauth-authorization-server',
+        destination: '/api/agent-auth/oauth-authorization-server'
+      },
+      {
+        source: '/auth.md',
+        destination: '/api/agent-auth/auth-md'
       }
     ]
   },

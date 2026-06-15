@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseClient } from '@/lib/supabase'
 import { FarmSchema, validateAndSanitize, globalRateLimiter } from '@/lib/validation'
+import { authenticateResourceRequest } from '@/lib/agent-auth/resource'
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,22 +17,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = getSupabaseClient()
+    // Accept either a browser cookie session or an agent bearer token (scope: farms.read).
+    const auth = await authenticateResourceRequest(request, 'farms.read')
+    if (!auth.ok) return auth.response
 
-    // Get the current authenticated user
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-    }
-
-    const { data, error } = await supabase
+    const { data, error } = await auth.db
       .from('farms')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', auth.userId)
       .order('created_at', { ascending: false })
 
     if (error) {
