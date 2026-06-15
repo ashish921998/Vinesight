@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { ClipboardCheck, Loader2 } from 'lucide-react'
+import posthog from 'posthog-js'
 import { type ConsultantAccess } from '@/lib/consultant-access'
 import {
   getVisitableRecommendations,
@@ -81,6 +82,7 @@ export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: Recor
       setRecommendations(recs)
       setDrafts(Object.fromEntries(recs.map((r) => [r.triageId, { status: '', note: '' }])))
     } catch (err) {
+      posthog.captureException(err, { context: 'getVisitableRecommendations', farmerId })
       toast.error(err instanceof Error ? err.message : 'Failed to load recommendations')
     } finally {
       setLoading(false)
@@ -127,10 +129,23 @@ export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: Recor
         summary,
         followups
       })
+      posthog.capture('consultant_visit_recorded', {
+        farmer_id: farmerId,
+        farm_scoped: farmId !== 'none',
+        total_recommendations: recommendations.length,
+        recommendations_verified: followups.length,
+        followed_count: followups.filter((f) => f.followedStatus === 'followed').length,
+        partially_followed_count: followups.filter((f) => f.followedStatus === 'partially_followed')
+          .length,
+        not_followed_count: followups.filter((f) => f.followedStatus === 'not_followed').length,
+        has_summary: summary.trim().length > 0,
+        role: access.role
+      })
       toast.success('Visit recorded')
       onRecorded?.(visit)
       setOpen(false)
     } catch (err) {
+      posthog.captureException(err, { context: 'createVisit', farmerId })
       toast.error(err instanceof Error ? err.message : 'Failed to record visit')
     } finally {
       setSubmitting(false)

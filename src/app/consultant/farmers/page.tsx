@@ -28,6 +28,7 @@ import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-acc
 import { getFarmerClients, type FarmerWithFarms } from '@/lib/consultant-query-service'
 import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
 import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
+import posthog from 'posthog-js'
 
 export default function FarmerDirectoryPage() {
   const [farmers, setFarmers] = useState<FarmerWithFarms[]>([])
@@ -53,6 +54,7 @@ export default function FarmerDirectoryPage() {
       setFarmers(data)
     } catch (error) {
       console.error('Failed to load farmers:', error)
+      posthog.captureException(error, { context: 'getFarmerClients' })
       toast.error(error instanceof Error ? error.message : 'Failed to load farmer directory')
     } finally {
       setLoading(false)

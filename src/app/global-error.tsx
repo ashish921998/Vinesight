@@ -1,6 +1,7 @@
 'use client'
 
 import * as Sentry from '@sentry/nextjs'
+import posthog from 'posthog-js'
 import { useEffect } from 'react'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import Link from 'next/link'
@@ -20,6 +21,12 @@ export default function GlobalError({
         digest: error.digest
       },
       level: 'fatal'
+    })
+
+    // Capture the error with PostHog Error Tracking
+    posthog.captureException(error, {
+      location: 'global-error',
+      digest: error.digest ?? 'unknown'
     })
   }, [error])
 

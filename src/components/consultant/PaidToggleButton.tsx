@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { IndianRupee, Loader2, CircleAlert } from 'lucide-react'
+import posthog from 'posthog-js'
 import { setClientPaymentStatus } from '@/lib/consultant-query-service'
 
 interface PaidToggleButtonProps {
@@ -40,9 +41,14 @@ export function PaidToggleButton({
       const confirmed = await setClientPaymentStatus(clientRecordId, next)
       setPaid(confirmed)
       onChange?.(confirmed)
+      posthog.capture('client_payment_status_toggled', {
+        client_record_id: clientRecordId,
+        is_paid: confirmed
+      })
       toast.success(confirmed ? 'Marked as paid' : 'Marked as unpaid')
     } catch (err) {
       setPaid(!next) // rollback
+      posthog.captureException(err, { context: 'set_client_payment_status', clientRecordId })
       toast.error(err instanceof Error ? err.message : 'Failed to update payment status')
     } finally {
       setSaving(false)
