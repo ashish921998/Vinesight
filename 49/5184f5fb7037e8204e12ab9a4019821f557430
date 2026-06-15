@@ -1,0 +1,19 @@
+src/lib/consultant-visit-service.ts
+  s_7548896b8d2a18::t_01eedbf6f04d4c 111-117,123,127-129,138,142-144
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "495184f5fb7037e8204e12ab9a4019821f557430",
+  "prompts": {},
+  "sessions": {
+    "s_7548896b8d2a18": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ecb63-0d10-7c93-8446-22b1a1882626",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
