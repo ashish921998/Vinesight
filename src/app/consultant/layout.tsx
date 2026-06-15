@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { UserMenu } from '@/components/auth/UserMenu'
 import { Button } from '@/components/ui/button'
 import {
   Building2,
@@ -295,6 +296,10 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
               </p>
             </div>
           )}
+
+          <div className={cn('border-t', collapsed ? 'p-2' : 'p-3')}>
+            <UserMenu />
+          </div>
         </aside>
 
         {/* Main content */}

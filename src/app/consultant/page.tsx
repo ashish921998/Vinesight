@@ -117,14 +117,6 @@ export default function ConsultantOverviewPage() {
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
             <ShieldCheck className="h-5 w-5" />
           </div>
-          <div>
-            <h2 className="text-base font-semibold">Access Scope</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {access.canViewAllFarmers
-                ? 'You can view active client farmers across this organization.'
-                : 'You can view farmers assigned to you by this organization.'}
-            </p>
-          </div>
         </div>
       </div>
     </div>
