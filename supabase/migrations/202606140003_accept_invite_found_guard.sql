@@ -1,19 +1,14 @@
--- Catch-up migration for environments that applied an earlier version of
--- 202606140001_accept_invite_rpc.sql before it gained the single-org guard, the
--- remove_organization_member RPC, and the redundant-index drop.
+-- Catch-up migration: propagate the "profile row must exist" guard to databases
+-- that already applied 202606140002 (and so will never re-run it).
 --
--- Migration runners never re-run an already-applied file, so editing 202606140001
--- in place left those databases stale. Every statement below is idempotent
--- (drop ... if exists / create or replace), so applying this is safe whether the
--- objects already exist in their final form or not. Fresh environments that run
--- 202606140001 first will simply re-create the identical definitions here.
+-- Earlier versions of accept_organization_invite updated profiles with no check
+-- on the affected row count: a missing profile row (e.g. the auth.users ->
+-- profiles trigger never fired) left the UPDATE a silent no-op while membership
+-- and invite were still committed, producing a membership row with no profile
+-- org linkage. This re-applies the function with an `if not found` guard so that
+-- case rolls the whole transaction back. Idempotent (create or replace); fresh
+-- environments that ran 202606140001/2 first simply re-create the same body.
 
--- 1. Redundant token index: the UNIQUE constraint on
---    organization_member_invitations.token already provides an equivalent index.
-drop index if exists public.idx_org_member_invitations_token;
-
--- 2. accept_organization_invite — final form, including the single-org-per-user
---    guard (0b) that refuses to overwrite a differing consultant_organization_id.
 create or replace function public.accept_organization_invite(
   p_user_id uuid,
   p_invite_id uuid,
@@ -37,11 +32,9 @@ begin
     raise exception 'invalid role: %', p_role;
   end if;
 
-  -- 0b. Single-org-per-user invariant. The invite-member route already blocks
-  --     inviting a user who belongs to another org, but a stale invite created
-  --     before the user joined elsewhere could still reach here. Refuse rather
-  --     than silently overwriting consultant_organization_id and severing the
-  --     user's existing affiliation. Accepting your own current org is fine.
+  -- 0b. Single-org-per-user invariant. Refuse rather than silently overwriting
+  --     consultant_organization_id and severing the user's existing affiliation.
+  --     Accepting your own current org is fine.
   select consultant_organization_id into v_existing_org
   from profiles
   where id = p_user_id;
@@ -96,38 +89,3 @@ $$;
 
 revoke all on function public.accept_organization_invite(uuid, uuid, uuid, text, text, text) from public;
 revoke all on function public.accept_organization_invite(uuid, uuid, uuid, text, text, text) from authenticated;
-
--- 3. remove_organization_member — atomic unassign + delete + profile reset.
-create or replace function public.remove_organization_member(
-  p_organization_id uuid,
-  p_user_id uuid
-)
-returns void
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  -- 1. Unassign any farmers currently assigned to this member.
-  update organization_clients
-  set assigned_to = null,
-      assigned_by = null,
-      assigned_at = null
-  where organization_id = p_organization_id
-    and assigned_to = p_user_id;
-
-  -- 2. Delete the membership row.
-  delete from organization_members
-  where organization_id = p_organization_id
-    and user_id = p_user_id;
-
-  -- 3. Reset the removed user's profile (single-org model).
-  update profiles
-  set user_type = null,
-      consultant_organization_id = null
-  where id = p_user_id;
-end;
-$$;
-
-revoke all on function public.remove_organization_member(uuid, uuid) from public;
-revoke all on function public.remove_organization_member(uuid, uuid) from authenticated;

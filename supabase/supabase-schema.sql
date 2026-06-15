@@ -1191,8 +1191,13 @@ CREATE POLICY "Owners can delete their organizations" ON organizations FOR DELET
 );
 
 -- RLS Policies for organization_members
-CREATE POLICY "Members can view organization members" ON organization_members FOR SELECT USING (
-  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_members.organization_id AND om.user_id = auth.uid())
+-- SELECT is scoped via the is_org_member() SECURITY DEFINER helper (defined in
+-- migration 202606040001) rather than an inline EXISTS sub-query on
+-- organization_members: a self-referential sub-query inside this policy would
+-- re-trigger the policy and raise "infinite recursion detected in policy for
+-- relation organization_members". See migration 202606140004.
+CREATE POLICY "Members can view organization members" ON organization_members FOR SELECT TO authenticated USING (
+  public.is_org_member(organization_id)
 );
 CREATE POLICY "Admins can insert organization members" ON organization_members FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_members.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))

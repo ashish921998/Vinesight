@@ -73,6 +73,16 @@ begin
     where id = p_user_id;
   end if;
 
+  -- 2b. Both branches above target the same profile row. If neither touched a
+  --     row the profile is missing (e.g. the auth.users -> profiles trigger
+  --     never fired or hasn't committed). Fail loudly so the whole transaction
+  --     rolls back, rather than leaving a membership row and an accepted invite
+  --     with no matching profile org linkage — the exact inconsistent state this
+  --     RPC's atomicity is meant to prevent.
+  if not found then
+    raise exception 'profile row not found for user %, cannot complete org membership', p_user_id;
+  end if;
+
   -- 3. Mark invitation as accepted. Guard on status = 'pending' so two
   --    concurrent acceptances (a double-fired effect or two open tabs) can't
   --    both transition the row; only the first wins.

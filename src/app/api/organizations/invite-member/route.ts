@@ -120,11 +120,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (existingProfile) {
-      const { data: existingMembership, error: existingMembershipError } = await getSupabaseAdmin()
+      // Don't use .maybeSingle() here: it raises a PGRST116 error if legacy or
+      // partial-failure data ever left this user with more than one membership row
+      // (the table's only unique constraint is composite (organization_id, user_id),
+      // so multiple rows per user are possible). Fetch the rows and reason over them
+      // so a corrupt multi-row state still resolves to a clean 409 instead of a 500
+      // that would block the admin from re-inviting.
+      const { data: existingMemberships, error: existingMembershipError } = await getSupabaseAdmin()
         .from('organization_members')
-        .select('id, organization_id')
+        .select('organization_id')
         .eq('user_id', existingProfile.id)
-        .maybeSingle()
 
       if (existingMembershipError) {
         console.error('Error checking existing membership:', existingMembershipError)
@@ -132,12 +137,12 @@ export async function POST(request: NextRequest) {
       }
 
       // Already a member of this org — nothing to invite.
-      if (existingMembership?.organization_id === organizationId) {
+      if (existingMemberships?.some((m) => m.organization_id === organizationId)) {
         return NextResponse.json({ error: 'Already a member' }, { status: 409 })
       }
 
       // Belongs to a different org (membership row or a lingering profile pointer).
-      if (existingMembership || existingProfile.consultant_organization_id) {
+      if ((existingMemberships?.length ?? 0) > 0 || existingProfile.consultant_organization_id) {
         return NextResponse.json(
           { error: 'This user already belongs to another organization' },
           { status: 409 }
