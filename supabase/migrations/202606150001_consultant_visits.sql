@@ -236,10 +236,16 @@ language plpgsql
 set search_path = public
 as $$
 begin
-  if (old.organization_id, old.client_user_id, old.visited_by)
+  if (old.organization_id, old.client_user_id)
      is distinct from
-     (new.organization_id, new.client_user_id, new.visited_by) then
-    raise exception 'consultant_visits scope/authorship columns (organization_id, client_user_id, visited_by) are immutable after creation';
+     (new.organization_id, new.client_user_id) then
+    raise exception 'consultant_visits scope columns (organization_id, client_user_id) are immutable after creation';
+  end if;
+
+  -- visited_by may only clear to NULL via the FK ON DELETE SET NULL cascade
+  -- (account deletion); it must never be rewritten to another member.
+  if old.visited_by is distinct from new.visited_by and new.visited_by is not null then
+    raise exception 'consultant_visits.visited_by is immutable after creation';
   end if;
 
   return new;
