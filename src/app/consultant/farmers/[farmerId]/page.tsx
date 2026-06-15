@@ -7,7 +7,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { ArrowLeft, Loader2, User, Mail, Phone, Sprout, MapPin, ChevronRight } from 'lucide-react'
+import {
+  ArrowLeft,
+  Loader2,
+  User,
+  Mail,
+  Phone,
+  Sprout,
+  MapPin,
+  ChevronRight,
+  ClipboardCheck,
+  CalendarDays,
+  CheckCircle2,
+  MinusCircle,
+  XCircle
+} from 'lucide-react'
 import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
 import {
   validateFarmerClient,
@@ -15,6 +29,15 @@ import {
   getFarmerFarms,
   type FarmerFarm
 } from '@/lib/consultant-query-service'
+import {
+  getVisitsForFarmer,
+  followedStatusLabels,
+  type Visit,
+  type FollowedStatus
+} from '@/lib/consultant-visit-service'
+import { RecordVisitDialog } from '@/components/consultant/RecordVisitDialog'
+import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
+import posthog from 'posthog-js'
 
 interface FarmerProfile {
   id: string
@@ -31,29 +54,37 @@ export default function FarmerProfilePage() {
   const [farms, setFarms] = useState<FarmerFarm[]>([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [access, setAccess] = useState<ConsultantAccess | null>(null)
+  const [clientRecordId, setClientRecordId] = useState<string | null>(null)
+  const [isPaid, setIsPaid] = useState(false)
+  const [visits, setVisits] = useState<Visit[]>([])
 
   const loadFarmerProfile = useCallback(async () => {
     try {
       setLoading(true)
       setNotFound(false)
 
-      const access = await getConsultantAccess()
-      if (!access) {
+      const currentAccess = await getConsultantAccess()
+      if (!currentAccess) {
         toast.error('Not authenticated')
         return
       }
+      setAccess(currentAccess)
 
       // Validate farmer is an active client of the organization
       // Validate agronomist assignment if current user is agronomist
-      const validation = await validateFarmerClient(access, farmerId)
+      const validation = await validateFarmerClient(currentAccess, farmerId)
       if (!validation.isValid) {
         setNotFound(true)
         return
       }
+      setClientRecordId(validation.clientRecordId)
+      setIsPaid(validation.isPaid)
 
-      const [profile, farmsData] = await Promise.all([
+      const [profile, farmsData, visitsData] = await Promise.all([
         getFarmerProfile(farmerId),
-        getFarmerFarms(farmerId)
+        getFarmerFarms(farmerId),
+        getVisitsForFarmer(currentAccess, farmerId)
       ])
 
       if (!profile) {
@@ -63,8 +94,10 @@ export default function FarmerProfilePage() {
 
       setFarmer(profile)
       setFarms(farmsData)
+      setVisits(visitsData)
     } catch (error) {
       console.error('Failed to load farmer profile:', error)
+      posthog.captureException(error, { context: 'loadFarmerProfile', farmerId })
       toast.error(error instanceof Error ? error.message : 'Failed to load farmer profile')
     } finally {
       setLoading(false)
@@ -119,26 +152,49 @@ export default function FarmerProfilePage() {
       </Link>
 
       {/* Farmer profile header */}
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <User className="h-6 w-6 text-accent" />
-          {farmer.full_name || 'Unknown Farmer'}
-        </h1>
-        <div className="flex flex-wrap items-center gap-4 mt-1 text-sm text-muted-foreground">
-          {farmer.email && (
-            <span className="flex items-center gap-1">
-              <Mail className="h-3 w-3" />
-              {farmer.email}
-            </span>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <User className="h-6 w-6 text-accent" />
+            {farmer.full_name || 'Unknown Farmer'}
+          </h1>
+          <div className="flex flex-wrap items-center gap-4 mt-1 text-sm text-muted-foreground">
+            {farmer.email && (
+              <span className="flex items-center gap-1">
+                <Mail className="h-3 w-3" />
+                {farmer.email}
+              </span>
+            )}
+            {farmer.phone && (
+              <span className="flex items-center gap-1">
+                <Phone className="h-3 w-3" />
+                {farmer.phone}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {clientRecordId && (
+            <PaidToggleButton
+              clientRecordId={clientRecordId}
+              isPaid={isPaid}
+              size="default"
+              onChange={setIsPaid}
+            />
           )}
-          {farmer.phone && (
-            <span className="flex items-center gap-1">
-              <Phone className="h-3 w-3" />
-              {farmer.phone}
-            </span>
+          {access && (
+            <RecordVisitDialog
+              access={access}
+              farmerId={farmerId}
+              farms={farms.map((f) => ({ id: f.id, name: f.name }))}
+              onRecorded={(visit) => setVisits((prev) => [visit, ...prev])}
+            />
           )}
         </div>
       </div>
+
+      {/* Visit history */}
+      <VisitHistory visits={visits} />
 
       {/* Farms section */}
       <div>
@@ -187,6 +243,88 @@ export default function FarmerProfilePage() {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+const followedStatusIcon: Record<FollowedStatus, React.ReactNode> = {
+  followed: <CheckCircle2 className="h-4 w-4 text-green-600" />,
+  partially_followed: <MinusCircle className="h-4 w-4 text-amber-600" />,
+  not_followed: <XCircle className="h-4 w-4 text-red-600" />
+}
+
+function VisitHistory({ visits }: { visits: Visit[] }) {
+  return (
+    <div>
+      <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+        <ClipboardCheck className="h-5 w-5 text-accent" />
+        Visits ({visits.length})
+      </h2>
+
+      {visits.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <CalendarDays className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">
+              No visits recorded yet. Use “Record Visit” to log one and verify recommendation
+              follow-up.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {visits.map((visit) => (
+            <Card key={visit.id}>
+              <CardHeader className="pb-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-accent" />
+                    {new Date(visit.visitDate).toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </CardTitle>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    {visit.farmName && (
+                      <Badge variant="secondary" className="gap-1">
+                        <Sprout className="h-3 w-3" />
+                        {visit.farmName}
+                      </Badge>
+                    )}
+                    {visit.visitedByName && <span>by {visit.visitedByName}</span>}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-3">
+                {visit.summary && <p className="text-sm">{visit.summary}</p>}
+
+                {visit.followups.length > 0 && (
+                  <div className="space-y-2">
+                    {visit.followups.map((f) => (
+                      <div key={f.id} className="rounded-lg border bg-muted/40 p-3">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          {followedStatusIcon[f.followedStatus]}
+                          {followedStatusLabels[f.followedStatus]}
+                          {f.classification && (
+                            <Badge variant="outline" className="ml-1 font-normal">
+                              {f.classification}
+                            </Badge>
+                          )}
+                        </div>
+                        {f.recommendation && (
+                          <p className="mt-1 text-sm text-muted-foreground">{f.recommendation}</p>
+                        )}
+                        {f.note && <p className="mt-1 text-sm">{f.note}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

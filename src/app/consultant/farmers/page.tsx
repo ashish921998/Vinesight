@@ -27,6 +27,8 @@ import {
 import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
 import { getFarmerClients, type FarmerWithFarms } from '@/lib/consultant-query-service'
 import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
+import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
+import posthog from 'posthog-js'
 
 export default function FarmerDirectoryPage() {
   const [farmers, setFarmers] = useState<FarmerWithFarms[]>([])
@@ -52,6 +54,7 @@ export default function FarmerDirectoryPage() {
       setFarmers(data)
     } catch (error) {
       console.error('Failed to load farmers:', error)
+      posthog.captureException(error, { context: 'getFarmerClients' })
       toast.error(error instanceof Error ? error.message : 'Failed to load farmer directory')
     } finally {
       setLoading(false)
@@ -184,10 +187,16 @@ export default function FarmerDirectoryPage() {
                       )}
                     </div>
                   </div>
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    <Sprout className="h-3 w-3" />
-                    {farmer.farms.length} farm{farmer.farms.length !== 1 ? 's' : ''}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <PaidToggleButton
+                      clientRecordId={farmer.clientRecordId}
+                      isPaid={farmer.isPaid}
+                    />
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <Sprout className="h-3 w-3" />
+                      {farmer.farms.length} farm{farmer.farms.length !== 1 ? 's' : ''}
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
 

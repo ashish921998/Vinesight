@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoginButton } from '@/components/auth/LoginButton'
+import { PhoneLoginForm } from '@/components/auth/PhoneLoginForm'
 import { PasswordInput } from '@/components/ui/password-input'
 import posthog from 'posthog-js'
 
@@ -16,6 +17,7 @@ function LoginPageContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showError, setShowError] = useState(false)
+  const [method, setMethod] = useState<'email' | 'phone'>('email')
   const router = useRouter()
   const searchParams = useSearchParams()
   const { signInWithEmail, loading, error, user, clearError } = useSupabaseAuth()
@@ -29,7 +31,8 @@ function LoginPageContent() {
   })()
 
   useEffect(() => {
-    if (user && user.email_confirmed_at) {
+    // Email/Google users confirm via email; phone-OTP users confirm via SMS.
+    if (user && (user.email_confirmed_at || user.phone_confirmed_at)) {
       router.push(redirectTo)
     }
   }, [user, router, redirectTo])
@@ -98,89 +101,119 @@ function LoginPageContent() {
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-card-foreground mb-2"
-              >
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
-                placeholder="Enter your email"
-              />
-            </div>
+          {/* Email / Phone method switch */}
+          <div className="mb-6 grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+            <button
+              type="button"
+              onClick={() => setMethod('email')}
+              className={`rounded-md py-2 text-sm font-medium transition-colors ${
+                method === 'email'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Email
+            </button>
+            <button
+              type="button"
+              onClick={() => setMethod('phone')}
+              className={`rounded-md py-2 text-sm font-medium transition-colors ${
+                method === 'phone'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Phone
+            </button>
+          </div>
 
-            <div>
-              <PasswordInput
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Enter your password"
-                label="Password"
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-muted-foreground">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  className="font-medium text-primary hover:text-primary/80"
+          {method === 'phone' ? (
+            <PhoneLoginForm onSuccess={() => router.push(redirectTo)} />
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-card-foreground mb-2"
                 >
-                  Forgot your password?
-                </button>
+                  Email address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
+                  placeholder="Enter your email"
+                />
               </div>
-            </div>
 
-            <Button type="submit" disabled={loading} className="w-full h-12 px-4">
-              {loading ? (
+              <div>
+                <PasswordInput
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="Enter your password"
+                  label="Password"
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-accent-foreground"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Signing in...
+                  <input
+                    id="remember-me"
+                    type="checkbox"
+                    className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
+                  />
+                  <label htmlFor="remember-me" className="ml-2 block text-sm text-muted-foreground">
+                    Remember me
+                  </label>
                 </div>
-              ) : (
-                'Sign in'
-              )}
-            </Button>
-          </form>
+
+                <div className="text-sm">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="font-medium text-primary hover:text-primary/80"
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
+              </div>
+
+              <Button type="submit" disabled={loading} className="w-full h-12 px-4">
+                {loading ? (
+                  <div className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-accent-foreground"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Signing in...
+                  </div>
+                ) : (
+                  'Sign in'
+                )}
+              </Button>
+            </form>
+          )}
 
           <div className="mt-6">
             <div className="relative">

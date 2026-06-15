@@ -41,6 +41,10 @@ interface SendPhoneOtpParams {
   phone: string // E.164, e.g. +919876543210
   firstName?: string
   lastName?: string
+  // Defaults to true so the invite flow still creates the farmer account. The
+  // login page passes false so an unknown number can't silently create an
+  // orphaned account with no profile/org.
+  shouldCreateUser?: boolean
 }
 
 interface VerifyPhoneOtpParams {
@@ -373,7 +377,12 @@ export function useSupabaseAuth() {
   // Sends an SMS OTP to the given phone, creating the account if it doesn't exist. Names are
   // attached as user metadata here because Supabase only applies it at user-creation time
   // (this call) — the same full_name the handle_new_user trigger reads into profiles.
-  const sendPhoneOtp = async ({ phone, firstName, lastName }: SendPhoneOtpParams) => {
+  const sendPhoneOtp = async ({
+    phone,
+    firstName,
+    lastName,
+    shouldCreateUser = true
+  }: SendPhoneOtpParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
 
     const userMetadata: Record<string, string> = {}
@@ -408,7 +417,7 @@ export function useSupabaseAuth() {
       const supabase = createClient()
       const { error } = await supabase.auth.signInWithOtp({
         phone,
-        options: { channel: 'sms', data: userMetadata }
+        options: { channel: 'sms', shouldCreateUser, data: userMetadata }
       })
 
       if (error) {

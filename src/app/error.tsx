@@ -1,6 +1,7 @@
 'use client'
 
 import * as Sentry from '@sentry/nextjs'
+import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
@@ -27,6 +28,12 @@ export default function Error({
         location: 'page-error',
         digest: error.digest ?? 'unknown'
       }
+    })
+
+    // Capture the error with PostHog Error Tracking
+    posthog.captureException(error, {
+      location: 'page-error',
+      digest: error.digest ?? 'unknown'
     })
   }, [error])
 

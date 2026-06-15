@@ -2102,6 +2102,9 @@ export type Database = {
           status: 'active' | 'inactive' | 'pending'
           assigned_at: string | null
           notes: string | null
+          is_paid: boolean
+          paid_at: string | null
+          paid_by: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -2114,6 +2117,9 @@ export type Database = {
           status?: 'active' | 'inactive' | 'pending'
           assigned_at?: string | null
           notes?: string | null
+          is_paid?: boolean
+          paid_at?: string | null
+          paid_by?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -2126,6 +2132,9 @@ export type Database = {
           status?: 'active' | 'inactive' | 'pending'
           assigned_at?: string | null
           notes?: string | null
+          is_paid?: boolean
+          paid_at?: string | null
+          paid_by?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -2211,6 +2220,99 @@ export type Database = {
             columns: ['petiole_test_id']
             isOneToOne: false
             referencedRelation: 'petiole_test_records'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      consultant_visits: {
+        Row: {
+          id: string
+          organization_id: string
+          client_user_id: string
+          farm_id: number | null
+          visited_by: string | null
+          visit_date: string
+          summary: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          client_user_id: string
+          farm_id?: number | null
+          visited_by?: string | null
+          visit_date?: string
+          summary?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          client_user_id?: string
+          farm_id?: number | null
+          visited_by?: string | null
+          visit_date?: string
+          summary?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'consultant_visits_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'consultant_visits_farm_id_fkey'
+            columns: ['farm_id']
+            isOneToOne: false
+            referencedRelation: 'farms'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      visit_recommendation_followups: {
+        Row: {
+          id: string
+          visit_id: string
+          triage_id: string
+          followed_status: 'followed' | 'partially_followed' | 'not_followed'
+          note: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          visit_id: string
+          triage_id: string
+          followed_status: 'followed' | 'partially_followed' | 'not_followed'
+          note?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          visit_id?: string
+          triage_id?: string
+          followed_status?: 'followed' | 'partially_followed' | 'not_followed'
+          note?: string | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'visit_recommendation_followups_visit_id_fkey'
+            columns: ['visit_id']
+            isOneToOne: false
+            referencedRelation: 'consultant_visits'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'visit_recommendation_followups_triage_id_fkey'
+            columns: ['triage_id']
+            isOneToOne: false
+            referencedRelation: 'petiole_triage'
             referencedColumns: ['id']
           }
         ]
@@ -2447,6 +2549,44 @@ export type Database = {
       remove_organization_member: {
         Args: { p_organization_id: string; p_user_id: string }
         Returns: undefined
+      }
+      create_visit_with_followups: {
+        Args: {
+          p_farmer_id: string
+          p_farm_id: number | null
+          p_visit_date: string
+          p_summary: string | null
+          p_followups: Json
+        }
+        Returns: {
+          id: string
+          organization_id: string
+          client_user_id: string
+          farm_id: number | null
+          visited_by: string | null
+          visit_date: string
+          summary: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+      }
+      set_client_payment_status: {
+        Args: { p_client_id: string; p_is_paid: boolean }
+        Returns: {
+          id: string
+          organization_id: string
+          client_user_id: string
+          assigned_to: string | null
+          assigned_by: string | null
+          status: 'active' | 'inactive' | 'pending'
+          assigned_at: string | null
+          notes: string | null
+          is_paid: boolean
+          paid_at: string | null
+          paid_by: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
       }
     }
     Enums: {

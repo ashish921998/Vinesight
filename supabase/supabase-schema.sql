@@ -1038,6 +1038,10 @@ CREATE TABLE organization_clients (
   assigned_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   status VARCHAR(50) DEFAULT 'active' NOT NULL CHECK (status IN ('active', 'inactive', 'pending')),
   notes TEXT,
+  -- Per-client payment status, toggled via set_client_payment_status() (see migration 202606150002).
+  is_paid BOOLEAN NOT NULL DEFAULT FALSE,
+  paid_at TIMESTAMP WITH TIME ZONE,
+  paid_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   assigned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -1468,6 +1472,231 @@ ALTER TABLE profiles
   FOREIGN KEY (consultant_organization_id)
   REFERENCES organizations(id)
   ON DELETE SET NULL;
+
+-- ============================================================================
+-- CONSULTANT VISITS (migrations 202606150001 / 202606150002)
+-- Per-visit verification that each prior recommendation was followed, plus the
+-- per-client payment toggle RPC. Access is gated by can_access_org_client()
+-- (defined in the consultant-access migrations), matching the convention used
+-- by the petiole_triage policies above.
+-- ============================================================================
+
+-- A consultant farm visit, scoped to one farmer within an organization.
+CREATE TABLE consultant_visits (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  client_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  farm_id BIGINT REFERENCES farms(id) ON DELETE SET NULL,
+  -- Nullable on purpose: ON DELETE SET NULL preserves the visit row (audit history)
+  -- when the visiting member's auth.users row is deleted. NOT NULL here would make
+  -- the SET NULL action violate the constraint and block account deletion.
+  visited_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  visit_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  summary TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_consultant_visits_organization_id ON consultant_visits(organization_id);
+CREATE INDEX idx_consultant_visits_client_user_id ON consultant_visits(client_user_id);
+CREATE INDEX idx_consultant_visits_visited_by ON consultant_visits(visited_by);
+CREATE INDEX idx_consultant_visits_farm_id ON consultant_visits(farm_id);
+CREATE INDEX idx_consultant_visits_org_client_date ON consultant_visits(organization_id, client_user_id, visit_date DESC);
+
+-- Per-recommendation follow-up captured during a visit.
+CREATE TABLE visit_recommendation_followups (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  visit_id UUID NOT NULL REFERENCES consultant_visits(id) ON DELETE CASCADE,
+  triage_id UUID NOT NULL REFERENCES petiole_triage(id) ON DELETE CASCADE,
+  followed_status TEXT NOT NULL CHECK (followed_status IN ('followed', 'partially_followed', 'not_followed')),
+  note TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT visit_recommendation_followups_visit_triage_unique UNIQUE (visit_id, triage_id)
+);
+
+CREATE INDEX idx_visit_followups_visit_id ON visit_recommendation_followups(visit_id);
+CREATE INDEX idx_visit_followups_triage_id ON visit_recommendation_followups(triage_id);
+
+-- Payment status columns are declared inline on organization_clients above;
+-- this index supports the consultant "who has paid" filter.
+CREATE INDEX idx_organization_clients_org_is_paid
+  ON organization_clients(organization_id, is_paid)
+  WHERE status = 'active';
+
+-- RLS: anyone who can act on the client can read/write that client's visits.
+ALTER TABLE consultant_visits ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Org members can view client visits" ON consultant_visits FOR SELECT TO authenticated
+  USING (can_access_org_client(organization_id, client_user_id));
+CREATE POLICY "Org members can insert client visits" ON consultant_visits FOR INSERT TO authenticated
+  WITH CHECK (can_access_org_client(organization_id, client_user_id) AND visited_by = (SELECT auth.uid()));
+CREATE POLICY "Org members can update client visits" ON consultant_visits FOR UPDATE TO authenticated
+  USING (can_access_org_client(organization_id, client_user_id))
+  WITH CHECK (can_access_org_client(organization_id, client_user_id));
+CREATE POLICY "Org members can delete client visits" ON consultant_visits FOR DELETE TO authenticated
+  USING (can_access_org_client(organization_id, client_user_id));
+
+-- RLS: follow-ups inherit access from their parent visit.
+ALTER TABLE visit_recommendation_followups ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Org members can view visit followups" ON visit_recommendation_followups FOR SELECT TO authenticated
+  USING (EXISTS (SELECT 1 FROM consultant_visits v WHERE v.id = visit_recommendation_followups.visit_id AND can_access_org_client(v.organization_id, v.client_user_id)));
+CREATE POLICY "Org members can insert visit followups" ON visit_recommendation_followups FOR INSERT TO authenticated
+  WITH CHECK (EXISTS (SELECT 1 FROM consultant_visits v WHERE v.id = visit_recommendation_followups.visit_id AND can_access_org_client(v.organization_id, v.client_user_id)));
+CREATE POLICY "Org members can update visit followups" ON visit_recommendation_followups FOR UPDATE TO authenticated
+  USING (EXISTS (SELECT 1 FROM consultant_visits v WHERE v.id = visit_recommendation_followups.visit_id AND can_access_org_client(v.organization_id, v.client_user_id)))
+  WITH CHECK (EXISTS (SELECT 1 FROM consultant_visits v WHERE v.id = visit_recommendation_followups.visit_id AND can_access_org_client(v.organization_id, v.client_user_id)));
+CREATE POLICY "Org members can delete visit followups" ON visit_recommendation_followups FOR DELETE TO authenticated
+  USING (EXISTS (SELECT 1 FROM consultant_visits v WHERE v.id = visit_recommendation_followups.visit_id AND can_access_org_client(v.organization_id, v.client_user_id)));
+
+-- Integrity triggers: a visit's farm must belong to the visited farmer; a
+-- follow-up's triage row must share the visit's org + farmer.
+CREATE OR REPLACE FUNCTION validate_consultant_visit_consistency()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  farm_owner UUID;
+BEGIN
+  IF new.farm_id IS NOT NULL THEN
+    SELECT f.user_id INTO farm_owner FROM farms f WHERE f.id = new.farm_id;
+    IF farm_owner IS NULL OR farm_owner <> new.client_user_id THEN
+      RAISE EXCEPTION 'farm_id % does not belong to client_user_id %', new.farm_id, new.client_user_id;
+    END IF;
+  END IF;
+  RETURN new;
+END;
+$$;
+REVOKE ALL ON FUNCTION validate_consultant_visit_consistency() FROM public;
+
+CREATE OR REPLACE FUNCTION validate_visit_followup_consistency()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_org UUID;
+  v_client UUID;
+  t_org UUID;
+  t_client UUID;
+BEGIN
+  SELECT organization_id, client_user_id INTO v_org, v_client FROM consultant_visits WHERE id = new.visit_id;
+  SELECT organization_id, client_user_id INTO t_org, t_client FROM petiole_triage WHERE id = new.triage_id;
+  IF t_org IS NULL THEN
+    RAISE EXCEPTION 'triage_id % does not exist', new.triage_id;
+  END IF;
+  IF t_org <> v_org OR t_client <> v_client THEN
+    RAISE EXCEPTION 'triage_id % does not belong to the same organization/farmer as visit %', new.triage_id, new.visit_id;
+  END IF;
+  RETURN new;
+END;
+$$;
+REVOKE ALL ON FUNCTION validate_visit_followup_consistency() FROM public;
+
+-- Scope/authorship columns are immutable after creation: a visit's org, farmer,
+-- and the member who performed it (visited_by) must never change via a later
+-- UPDATE, so no member can PATCH an existing visit to rewrite authorship or
+-- re-point it to another client. farm_id/visit_date/summary remain editable.
+CREATE OR REPLACE FUNCTION prevent_consultant_visits_scope_mutation()
+RETURNS TRIGGER LANGUAGE plpgsql SET search_path = public AS $$
+BEGIN
+  IF (old.organization_id, old.client_user_id, old.visited_by)
+     IS DISTINCT FROM
+     (new.organization_id, new.client_user_id, new.visited_by) THEN
+    RAISE EXCEPTION 'consultant_visits scope/authorship columns (organization_id, client_user_id, visited_by) are immutable after creation';
+  END IF;
+  RETURN new;
+END;
+$$;
+REVOKE ALL ON FUNCTION prevent_consultant_visits_scope_mutation() FROM public;
+
+CREATE TRIGGER update_consultant_visits_updated_at
+  BEFORE UPDATE ON consultant_visits
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER validate_consultant_visit_consistency_trigger
+  BEFORE INSERT OR UPDATE ON consultant_visits
+  FOR EACH ROW
+  EXECUTE FUNCTION validate_consultant_visit_consistency();
+CREATE TRIGGER prevent_consultant_visits_scope_mutation_trigger
+  BEFORE UPDATE ON consultant_visits
+  FOR EACH ROW
+  EXECUTE FUNCTION prevent_consultant_visits_scope_mutation();
+CREATE TRIGGER validate_visit_followup_consistency_trigger
+  BEFORE INSERT OR UPDATE ON visit_recommendation_followups
+  FOR EACH ROW
+  EXECUTE FUNCTION validate_visit_followup_consistency();
+
+-- Atomic visit + follow-ups: a single transaction so a failing follow-up rolls
+-- the whole visit back (no orphaned empty visit). Org is derived from the
+-- farmer's active client row; access enforced by can_access_org_client.
+CREATE OR REPLACE FUNCTION create_visit_with_followups(
+  p_farmer_id UUID,
+  p_farm_id BIGINT,
+  p_visit_date DATE,
+  p_summary TEXT,
+  p_followups JSONB
+)
+RETURNS consultant_visits LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_org UUID;
+  v_visit consultant_visits;
+  v_elem JSONB;
+BEGIN
+  SELECT organization_id INTO v_org FROM organization_clients
+  WHERE client_user_id = p_farmer_id AND status = 'active';
+  IF v_org IS NULL THEN
+    RAISE EXCEPTION 'farmer % is not an active client of any organization', p_farmer_id;
+  END IF;
+  IF NOT can_access_org_client(v_org, p_farmer_id) THEN
+    RAISE EXCEPTION 'not authorized to record a visit for this farmer';
+  END IF;
+
+  INSERT INTO consultant_visits (organization_id, client_user_id, farm_id, visited_by, visit_date, summary)
+  VALUES (v_org, p_farmer_id, p_farm_id, (SELECT auth.uid()), COALESCE(p_visit_date, CURRENT_DATE), NULLIF(BTRIM(COALESCE(p_summary, '')), ''))
+  RETURNING * INTO v_visit;
+
+  IF p_followups IS NOT NULL THEN
+    FOR v_elem IN SELECT * FROM jsonb_array_elements(p_followups) LOOP
+      INSERT INTO visit_recommendation_followups (visit_id, triage_id, followed_status, note)
+      VALUES (v_visit.id, (v_elem->>'triage_id')::UUID, v_elem->>'followed_status', NULLIF(BTRIM(COALESCE(v_elem->>'note', '')), ''));
+    END LOOP;
+  END IF;
+
+  RETURN v_visit;
+END;
+$$;
+REVOKE ALL ON FUNCTION create_visit_with_followups(UUID, BIGINT, DATE, TEXT, JSONB) FROM public;
+GRANT EXECUTE ON FUNCTION create_visit_with_followups(UUID, BIGINT, DATE, TEXT, JSONB) TO authenticated;
+
+-- Toggle a client's payment status while only ever mutating the payment columns.
+-- can_access_org_client lets an assigned agronomist (or admin/owner) flip it.
+CREATE OR REPLACE FUNCTION set_client_payment_status(
+  p_client_id UUID,
+  p_is_paid BOOLEAN
+)
+RETURNS organization_clients LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_row organization_clients;
+  v_org UUID;
+  v_client UUID;
+BEGIN
+  SELECT organization_id, client_user_id INTO v_org, v_client FROM organization_clients
+  WHERE id = p_client_id AND status = 'active';
+  IF v_org IS NULL THEN
+    RAISE EXCEPTION 'organization client % not found or inactive', p_client_id;
+  END IF;
+  IF NOT can_access_org_client(v_org, v_client) THEN
+    RAISE EXCEPTION 'not authorized to update payment status for this client';
+  END IF;
+
+  UPDATE organization_clients
+  SET is_paid = p_is_paid,
+      paid_at = CASE WHEN p_is_paid THEN CURRENT_TIMESTAMP ELSE NULL END,
+      paid_by = CASE WHEN p_is_paid THEN (SELECT auth.uid()) ELSE NULL END
+  WHERE id = p_client_id
+  RETURNING * INTO v_row;
+
+  RETURN v_row;
+END;
+$$;
+REVOKE ALL ON FUNCTION set_client_payment_status(UUID, BOOLEAN) FROM public;
+GRANT EXECUTE ON FUNCTION set_client_payment_status(UUID, BOOLEAN) TO authenticated;
 
 -- ============================================================================
 -- END ORGANIZATION / RBAC TABLES
