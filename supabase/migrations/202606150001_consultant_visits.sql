@@ -11,7 +11,10 @@ create table if not exists public.consultant_visits (
   organization_id uuid not null references public.organizations(id) on delete cascade,
   client_user_id uuid not null references auth.users(id) on delete cascade,
   farm_id bigint references public.farms(id) on delete set null,
-  visited_by uuid not null references auth.users(id) on delete set null,
+  -- Nullable on purpose: ON DELETE SET NULL preserves the visit row (audit history)
+  -- when the visiting member's auth.users row is deleted. NOT NULL here would make
+  -- the SET NULL action violate the constraint and block account deletion outright.
+  visited_by uuid references auth.users(id) on delete set null,
   visit_date date not null default current_date,
   summary text,
   created_at timestamptz default current_timestamp,
@@ -238,3 +241,70 @@ create trigger validate_visit_followup_consistency_trigger
   before insert or update on public.visit_recommendation_followups
   for each row
   execute function public.validate_visit_followup_consistency();
+
+-- ----------------------------------------------------------------------------
+-- Atomic visit + follow-ups. A plpgsql function runs in a single transaction, so
+-- a failing follow-up (bad triage_id, failed consistency trigger) rolls the whole
+-- visit back — no orphaned empty visit shell. The org is derived from the farmer's
+-- single active client row, and access is enforced with can_access_org_client so
+-- an assigned agronomist (or admin/owner) can record visits, others cannot.
+-- p_followups shape: [{ "triage_id": uuid, "followed_status": text, "note": text }]
+-- ----------------------------------------------------------------------------
+create or replace function public.create_visit_with_followups(
+  p_farmer_id uuid,
+  p_farm_id bigint,
+  p_visit_date date,
+  p_summary text,
+  p_followups jsonb
+)
+returns public.consultant_visits
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_org uuid;
+  v_visit public.consultant_visits;
+  v_elem jsonb;
+begin
+  select organization_id into v_org
+  from public.organization_clients
+  where client_user_id = p_farmer_id
+    and status = 'active';
+
+  if v_org is null then
+    raise exception 'farmer % is not an active client of any organization', p_farmer_id;
+  end if;
+
+  if not public.can_access_org_client(v_org, p_farmer_id) then
+    raise exception 'not authorized to record a visit for this farmer';
+  end if;
+
+  insert into public.consultant_visits
+    (organization_id, client_user_id, farm_id, visited_by, visit_date, summary)
+  values
+    (v_org, p_farmer_id, p_farm_id, (select auth.uid()),
+     coalesce(p_visit_date, current_date),
+     nullif(btrim(coalesce(p_summary, '')), ''))
+  returning * into v_visit;
+
+  if p_followups is not null then
+    for v_elem in select * from jsonb_array_elements(p_followups)
+    loop
+      insert into public.visit_recommendation_followups
+        (visit_id, triage_id, followed_status, note)
+      values (
+        v_visit.id,
+        (v_elem->>'triage_id')::uuid,
+        v_elem->>'followed_status',
+        nullif(btrim(coalesce(v_elem->>'note', '')), '')
+      );
+    end loop;
+  end if;
+
+  return v_visit;
+end;
+$$;
+
+revoke all on function public.create_visit_with_followups(uuid, bigint, date, text, jsonb) from public;
+grant execute on function public.create_visit_with_followups(uuid, bigint, date, text, jsonb) to authenticated;

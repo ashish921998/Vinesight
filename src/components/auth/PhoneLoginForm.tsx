@@ -29,7 +29,9 @@ export function PhoneLoginForm({ onSuccess }: PhoneLoginFormProps) {
     const normalized = normalizePhone(phone)
     if (!normalized) return
 
-    const result = await sendPhoneOtp({ phone: normalized.e164 })
+    // Login must not create accounts: an unknown number should fail, not spin up
+    // an orphaned auth user with no profile/org. Farmer accounts come from invites.
+    const result = await sendPhoneOtp({ phone: normalized.e164, shouldCreateUser: false })
     posthog.capture('login_otp_requested', { method: 'phone', success: result.success })
     if (result.success) {
       setE164(normalized.e164)
@@ -103,6 +105,10 @@ export function PhoneLoginForm({ onSuccess }: PhoneLoginFormProps) {
       <Button type="submit" disabled={loading || !phone.trim()} className="w-full h-12">
         {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Send code'}
       </Button>
+      <p className="text-center text-xs text-muted-foreground">
+        Phone sign-in works for existing accounts. New farmers join through their consultant&apos;s
+        invite.
+      </p>
     </form>
   )
 }

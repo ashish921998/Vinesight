@@ -45,7 +45,7 @@ export interface Visit {
   clientUserId: string
   farmId: number | null
   farmName: string | null
-  visitedBy: string
+  visitedBy: string | null
   visitedByName: string | null
   visitDate: string
   summary: string | null
@@ -71,35 +71,6 @@ type VisitClient = SupabaseClient<Database>
 
 async function resolveClient(client?: VisitClient): Promise<VisitClient> {
   return client ?? (await getTypedSupabaseClient())
-}
-
-/**
- * Confirm the consultant may act on this farmer (active client of the org, and —
- * for agronomists — assigned to them). Mirrors the triage service guard so visit
- * reads/writes stay scoped consistently.
- */
-async function assertCanAccessClient(
-  access: ConsultantAccess,
-  farmerId: string,
-  supabase: VisitClient
-): Promise<void> {
-  const { data, error } = await supabase
-    .from('organization_clients')
-    .select('assigned_to')
-    .eq('organization_id', access.organizationId)
-    .eq('client_user_id', farmerId)
-    .eq('status', 'active')
-    .maybeSingle()
-
-  if (error) {
-    throw new Error(`Failed to validate farmer access: ${error.message}`)
-  }
-  if (!data) {
-    throw new Error('Farmer is not an active client of your organization')
-  }
-  if (!access.canViewAllFarmers && data.assigned_to !== access.userId) {
-    throw new Error('This farmer is not assigned to you')
-  }
 }
 
 /**
@@ -160,7 +131,9 @@ export async function getVisitsForFarmer(
   const farmIds = Array.from(
     new Set(visits.map((v) => v.farm_id).filter((id): id is number => id != null))
   )
-  const visitorIds = Array.from(new Set(visits.map((v) => v.visited_by)))
+  const visitorIds = Array.from(
+    new Set(visits.map((v) => v.visited_by).filter((id): id is string => id != null))
+  )
 
   const { data: followupRows, error: followupError } = await supabase
     .from('visit_recommendation_followups')
@@ -227,7 +200,7 @@ export async function getVisitsForFarmer(
     farmId: v.farm_id,
     farmName: v.farm_id != null ? (farmNames.get(v.farm_id) ?? null) : null,
     visitedBy: v.visited_by,
-    visitedByName: visitorNames.get(v.visited_by) ?? null,
+    visitedByName: v.visited_by != null ? (visitorNames.get(v.visited_by) ?? null) : null,
     visitDate: v.visit_date,
     summary: v.summary,
     createdAt: v.created_at,
@@ -236,9 +209,11 @@ export async function getVisitsForFarmer(
 }
 
 /**
- * Record a visit and its per-recommendation follow-ups. The visit is stamped
- * with the acting consultant as visited_by; RLS + the consistency triggers
- * enforce scope and that each triage row belongs to this farmer.
+ * Record a visit and its per-recommendation follow-ups in a single transaction
+ * via the create_visit_with_followups RPC. The RPC derives the org from the
+ * farmer's active client row, enforces can_access_org_client (so an unassigned
+ * agronomist is rejected server-side), stamps visited_by = auth.uid(), and rolls
+ * the whole thing back if any follow-up fails — no orphaned empty visit.
  */
 export async function createVisit(
   access: ConsultantAccess,
@@ -247,42 +222,20 @@ export async function createVisit(
 ): Promise<Visit> {
   const supabase = await resolveClient(client)
 
-  await assertCanAccessClient(access, input.farmerId, supabase)
-
-  const { data: visit, error } = await supabase
-    .from('consultant_visits')
-    .insert({
-      organization_id: access.organizationId,
-      client_user_id: input.farmerId,
-      farm_id: input.farmId ?? null,
-      visited_by: access.userId,
-      visit_date: input.visitDate,
-      summary: input.summary?.trim() ? input.summary.trim() : null
-    })
-    .select('id')
-    .single()
-
-  if (error || !visit) {
-    throw new Error(`Failed to record visit: ${error?.message ?? 'unknown error'}`)
-  }
-
-  if (input.followups.length > 0) {
-    const rows = input.followups.map((f) => ({
-      visit_id: visit.id,
+  const { data: visit, error } = await supabase.rpc('create_visit_with_followups', {
+    p_farmer_id: input.farmerId,
+    p_farm_id: input.farmId ?? null,
+    p_visit_date: input.visitDate,
+    p_summary: input.summary?.trim() ? input.summary.trim() : null,
+    p_followups: input.followups.map((f) => ({
       triage_id: f.triageId,
       followed_status: f.followedStatus,
       note: f.note?.trim() ? f.note.trim() : null
     }))
+  })
 
-    const { error: followupError } = await supabase
-      .from('visit_recommendation_followups')
-      .insert(rows)
-
-    if (followupError) {
-      // Roll back the visit so we don't leave an empty shell on partial failure.
-      await supabase.from('consultant_visits').delete().eq('id', visit.id)
-      throw new Error(`Failed to save visit follow-ups: ${followupError.message}`)
-    }
+  if (error || !visit) {
+    throw new Error(`Failed to record visit: ${error?.message ?? 'unknown error'}`)
   }
 
   const visits = await getVisitsForFarmer(access, input.farmerId, supabase)

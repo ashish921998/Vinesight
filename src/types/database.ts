@@ -2230,7 +2230,7 @@ export type Database = {
           organization_id: string
           client_user_id: string
           farm_id: number | null
-          visited_by: string
+          visited_by: string | null
           visit_date: string
           summary: string | null
           created_at: string | null
@@ -2241,7 +2241,7 @@ export type Database = {
           organization_id: string
           client_user_id: string
           farm_id?: number | null
-          visited_by: string
+          visited_by?: string | null
           visit_date?: string
           summary?: string | null
           created_at?: string | null
@@ -2252,7 +2252,7 @@ export type Database = {
           organization_id?: string
           client_user_id?: string
           farm_id?: number | null
-          visited_by?: string
+          visited_by?: string | null
           visit_date?: string
           summary?: string | null
           created_at?: string | null
@@ -2549,6 +2549,26 @@ export type Database = {
       remove_organization_member: {
         Args: { p_organization_id: string; p_user_id: string }
         Returns: undefined
+      }
+      create_visit_with_followups: {
+        Args: {
+          p_farmer_id: string
+          p_farm_id: number | null
+          p_visit_date: string
+          p_summary: string | null
+          p_followups: Json
+        }
+        Returns: {
+          id: string
+          organization_id: string
+          client_user_id: string
+          farm_id: number | null
+          visited_by: string | null
+          visit_date: string
+          summary: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
       }
       set_client_payment_status: {
         Args: { p_client_id: string; p_is_paid: boolean }
