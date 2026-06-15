@@ -223,8 +223,34 @@ $$;
 
 revoke all on function public.validate_visit_followup_consistency() from public;
 
+-- Scope/authorship columns are immutable after creation: a visit's org, farmer,
+-- and the member who performed it (visited_by) must never change via a later
+-- UPDATE. Without this, any member with can_access_org_client could PATCH an
+-- existing visit through PostgREST and rewrite visited_by (falsifying who made
+-- the visit) or re-point the row to another client they can access. Mirrors
+-- prevent_petiole_triage_scope_mutation. farm_id, visit_date, and summary stay
+-- editable (farm_id is still ownership-checked by the consistency trigger).
+create or replace function public.prevent_consultant_visits_scope_mutation()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if (old.organization_id, old.client_user_id, old.visited_by)
+     is distinct from
+     (new.organization_id, new.client_user_id, new.visited_by) then
+    raise exception 'consultant_visits scope/authorship columns (organization_id, client_user_id, visited_by) are immutable after creation';
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function public.prevent_consultant_visits_scope_mutation() from public;
+
 drop trigger if exists update_consultant_visits_updated_at on public.consultant_visits;
 drop trigger if exists validate_consultant_visit_consistency_trigger on public.consultant_visits;
+drop trigger if exists prevent_consultant_visits_scope_mutation_trigger on public.consultant_visits;
 drop trigger if exists validate_visit_followup_consistency_trigger on public.visit_recommendation_followups;
 
 create trigger update_consultant_visits_updated_at
@@ -236,6 +262,11 @@ create trigger validate_consultant_visit_consistency_trigger
   before insert or update on public.consultant_visits
   for each row
   execute function public.validate_consultant_visit_consistency();
+
+create trigger prevent_consultant_visits_scope_mutation_trigger
+  before update on public.consultant_visits
+  for each row
+  execute function public.prevent_consultant_visits_scope_mutation();
 
 create trigger validate_visit_followup_consistency_trigger
   before insert or update on public.visit_recommendation_followups

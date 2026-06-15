@@ -68,61 +68,19 @@ export interface CreateVisitInput {
 }
 
 type VisitClient = SupabaseClient<Database>
+type VisitRow = Database['public']['Tables']['consultant_visits']['Row']
 
 async function resolveClient(client?: VisitClient): Promise<VisitClient> {
   return client ?? (await getTypedSupabaseClient())
 }
 
 /**
- * Recommendations available to verify on a visit: triage items for this farmer
- * that carry a consultant recommendation. Newest first.
+ * Turn raw consultant_visits rows into hydrated Visit objects: load their
+ * follow-ups and resolve farm/visitor/recommendation display labels in batch.
+ * Access is enforced by the caller (RLS on the rows already fetched), so this
+ * never re-filters by org — it works for any set of rows handed to it.
  */
-export async function getVisitableRecommendations(
-  access: ConsultantAccess,
-  farmerId: string,
-  client?: VisitClient
-): Promise<VisitableRecommendation[]> {
-  const supabase = await resolveClient(client)
-
-  const items = await getTriageItems(access, { farmerId }, supabase)
-
-  return items
-    .filter((item) => item.recommendation && item.recommendation.trim().length > 0)
-    .map((item) => ({
-      triageId: item.id,
-      farmId: item.farmId,
-      farmName: item.farmName,
-      recommendation: item.recommendation as string,
-      classification: item.classification,
-      severity: item.severity,
-      createdAt: item.createdAt
-    }))
-}
-
-/**
- * Visits recorded for a farmer, newest first, each with its per-recommendation
- * follow-up outcomes and the visiting member's name.
- */
-export async function getVisitsForFarmer(
-  access: ConsultantAccess,
-  farmerId: string,
-  client?: VisitClient
-): Promise<Visit[]> {
-  const supabase = await resolveClient(client)
-
-  const { data: visitRows, error } = await supabase
-    .from('consultant_visits')
-    .select('*')
-    .eq('organization_id', access.organizationId)
-    .eq('client_user_id', farmerId)
-    .order('visit_date', { ascending: false })
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    throw new Error(`Failed to load visits: ${error.message}`)
-  }
-
-  const visits = visitRows ?? []
+async function hydrateVisits(supabase: VisitClient, visits: VisitRow[]): Promise<Visit[]> {
   if (visits.length === 0) {
     return []
   }
@@ -209,6 +167,58 @@ export async function getVisitsForFarmer(
 }
 
 /**
+ * Recommendations available to verify on a visit: triage items for this farmer
+ * that carry a consultant recommendation. Newest first.
+ */
+export async function getVisitableRecommendations(
+  access: ConsultantAccess,
+  farmerId: string,
+  client?: VisitClient
+): Promise<VisitableRecommendation[]> {
+  const supabase = await resolveClient(client)
+
+  const items = await getTriageItems(access, { farmerId }, supabase)
+
+  return items
+    .filter((item) => item.recommendation && item.recommendation.trim().length > 0)
+    .map((item) => ({
+      triageId: item.id,
+      farmId: item.farmId,
+      farmName: item.farmName,
+      recommendation: item.recommendation as string,
+      classification: item.classification,
+      severity: item.severity,
+      createdAt: item.createdAt
+    }))
+}
+
+/**
+ * Visits recorded for a farmer, newest first, each with its per-recommendation
+ * follow-up outcomes and the visiting member's name.
+ */
+export async function getVisitsForFarmer(
+  access: ConsultantAccess,
+  farmerId: string,
+  client?: VisitClient
+): Promise<Visit[]> {
+  const supabase = await resolveClient(client)
+
+  const { data: visitRows, error } = await supabase
+    .from('consultant_visits')
+    .select('*')
+    .eq('organization_id', access.organizationId)
+    .eq('client_user_id', farmerId)
+    .order('visit_date', { ascending: false })
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    throw new Error(`Failed to load visits: ${error.message}`)
+  }
+
+  return hydrateVisits(supabase, visitRows ?? [])
+}
+
+/**
  * Record a visit and its per-recommendation follow-ups in a single transaction
  * via the create_visit_with_followups RPC. The RPC derives the org from the
  * farmer's active client row, enforces can_access_org_client (so an unassigned
@@ -216,7 +226,7 @@ export async function getVisitsForFarmer(
  * the whole thing back if any follow-up fails — no orphaned empty visit.
  */
 export async function createVisit(
-  access: ConsultantAccess,
+  _access: ConsultantAccess,
   input: CreateVisitInput,
   client?: VisitClient
 ): Promise<Visit> {
@@ -238,10 +248,18 @@ export async function createVisit(
     throw new Error(`Failed to record visit: ${error?.message ?? 'unknown error'}`)
   }
 
-  const visits = await getVisitsForFarmer(access, input.farmerId, supabase)
-  const created = visits.find((v) => v.id === visit.id)
-  if (!created) {
+  // Reload by the visit's own id rather than re-filtering by access.organizationId:
+  // the RPC derives the org from the farmer's active client row, which need not
+  // equal the caller's access org. The write already succeeded and RLS still
+  // gates this read, so a successful record can never surface as a failure.
+  const { data: row, error: reloadError } = await supabase
+    .from('consultant_visits')
+    .select('*')
+    .eq('id', visit.id)
+    .single()
+  if (reloadError || !row) {
     throw new Error('Visit was recorded but could not be reloaded')
   }
+  const [created] = await hydrateVisits(supabase, [row])
   return created
 }

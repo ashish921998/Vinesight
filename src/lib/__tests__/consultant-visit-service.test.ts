@@ -215,26 +215,64 @@ describe('getVisitsForFarmer', () => {
     expect(v2.farmName).toBeNull()
     expect(v2.followups).toEqual([])
   })
+
+  it('throws when the visits query errors', async () => {
+    const { client } = mockClient({
+      consultant_visits: [mockChain({ data: null, error: { message: 'db down' } })]
+    })
+
+    await expect(getVisitsForFarmer(ownerAccess(), 'farmer-1', client)).rejects.toThrow(
+      'Failed to load visits: db down'
+    )
+  })
+
+  it('throws when the follow-ups query errors', async () => {
+    // farm_id and visited_by are null so hydrateVisits skips the farms/profiles
+    // lookups and the follow-ups query is the next call to fail.
+    const { client } = mockClient({
+      consultant_visits: [
+        mockChain({
+          data: [
+            {
+              id: 'v1',
+              organization_id: 'org-1',
+              client_user_id: 'farmer-1',
+              farm_id: null,
+              visited_by: null,
+              visit_date: '2026-03-01',
+              summary: null,
+              created_at: '2026-03-01T00:00:00Z'
+            }
+          ],
+          error: null
+        })
+      ],
+      visit_recommendation_followups: [mockChain({ data: null, error: { message: 'rls' } })]
+    })
+
+    await expect(getVisitsForFarmer(ownerAccess(), 'farmer-1', client)).rejects.toThrow(
+      'Failed to load visit follow-ups: rls'
+    )
+  })
 })
 
 describe('createVisit', () => {
   it('calls the atomic RPC with mapped follow-ups and returns the reloaded visit', async () => {
     const { client, rpc } = mockClient(
       {
+        // createVisit reloads the single row by id via .single(), not an array.
         consultant_visits: [
           mockChain({
-            data: [
-              {
-                id: 'v1',
-                organization_id: 'org-1',
-                client_user_id: 'farmer-1',
-                farm_id: null,
-                visited_by: 'agro-1',
-                visit_date: '2026-03-01',
-                summary: 'note',
-                created_at: '2026-03-01T00:00:00Z'
-              }
-            ],
+            data: {
+              id: 'v1',
+              organization_id: 'org-1',
+              client_user_id: 'farmer-1',
+              farm_id: null,
+              visited_by: 'agro-1',
+              visit_date: '2026-03-01',
+              summary: 'note',
+              created_at: '2026-03-01T00:00:00Z'
+            },
             error: null
           })
         ],
@@ -276,5 +314,66 @@ describe('createVisit', () => {
         client
       )
     ).rejects.toThrow('Failed to record visit: not authorized')
+  })
+
+  it('sends null for a blank summary and blank follow-up notes', async () => {
+    // Whitespace-only summary/notes must reach the RPC as null, never '' or '   '.
+    const { client, rpc } = mockClient(
+      {
+        consultant_visits: [
+          mockChain({
+            data: {
+              id: 'v1',
+              organization_id: 'org-1',
+              client_user_id: 'farmer-1',
+              farm_id: null,
+              visited_by: null,
+              visit_date: '2026-03-01',
+              summary: null,
+              created_at: '2026-03-01T00:00:00Z'
+            },
+            error: null
+          })
+        ],
+        visit_recommendation_followups: [mockChain({ data: [], error: null })]
+      },
+      { data: { id: 'v1' }, error: null }
+    )
+
+    await createVisit(
+      agronomistAccess('agro-1'),
+      {
+        farmerId: 'farmer-1',
+        visitDate: '2026-03-01',
+        summary: '   ',
+        followups: [{ triageId: 't1', followedStatus: 'followed', note: '  ' }]
+      },
+      client
+    )
+
+    expect(rpc).toHaveBeenCalledWith('create_visit_with_followups', {
+      p_farmer_id: 'farmer-1',
+      p_farm_id: null,
+      p_visit_date: '2026-03-01',
+      p_summary: null,
+      p_followups: [{ triage_id: 't1', followed_status: 'followed', note: null }]
+    })
+  })
+
+  it('throws when the recorded visit cannot be reloaded', async () => {
+    // RPC succeeds but the reload-by-id finds nothing (e.g. RLS hides the row):
+    // surface a clear error rather than returning a phantom visit.
+    const { client } = mockClient(
+      { consultant_visits: [mockChain({ data: null, error: null })] },
+      { data: { id: 'v1' }, error: null }
+    )
+
+    await expect(
+      createVisit(
+        agronomistAccess('agro-1'),
+        { farmerId: 'farmer-1', visitDate: '2026-03-01', followups: [] },
+        client
+      )
+    ).rejects.toThrow('could not be reloaded')
   })
 })

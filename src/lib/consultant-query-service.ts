@@ -132,7 +132,7 @@ export async function getFarmerClients(access: ConsultantAccess): Promise<Farmer
 export interface ValidatedFarmerClient {
   isValid: boolean
   assigned_to: string | null
-  /** organization_clients.id — present whenever the farmer is an active client. */
+  /** organization_clients.id — non-null only on a valid result (null when isValid is false). */
   clientRecordId: string | null
   isPaid: boolean
 }
@@ -161,13 +161,12 @@ export async function validateFarmerClient(
     return { isValid: false, assigned_to: null, clientRecordId: null, isPaid: false }
   }
 
+  // Invalid results never carry the client record id or payment state. A caller
+  // that reads clientRecordId/isPaid without first checking isValid must not be
+  // able to act on (or see payment for) a farmer this agronomist isn't assigned
+  // to — so an unauthorized result looks identical to "not a client at all".
   if (!access.canViewAllFarmers && client.assigned_to !== access.userId) {
-    return {
-      isValid: false,
-      assigned_to: client.assigned_to,
-      clientRecordId: client.id,
-      isPaid: client.is_paid
-    }
+    return { isValid: false, assigned_to: null, clientRecordId: null, isPaid: false }
   }
 
   return {
