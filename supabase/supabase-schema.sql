@@ -1057,6 +1057,27 @@ CREATE TABLE farmer_invitations (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Organization member invitations table
+-- Link-only, email-addressed invites for TEAM MEMBERS (admin / agronomist).
+-- Distinct from farmer_invitations, which onboards farmer clients.
+CREATE TABLE organization_member_invitations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  role VARCHAR(50) NOT NULL CHECK (role IN ('admin', 'agronomist')),
+  token TEXT NOT NULL UNIQUE,
+  status VARCHAR(50) NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'accepted', 'revoked', 'expired')),
+  invited_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  accepted_at TIMESTAMP WITH TIME ZONE,
+  accepted_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Fertilizer plans table (organization recommendations for farms)
 CREATE TABLE fertilizer_plans (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -1123,6 +1144,10 @@ CREATE UNIQUE INDEX idx_organization_clients_one_active_per_client ON organizati
 CREATE INDEX idx_farmer_invitations_organization_id ON farmer_invitations(organization_id);
 CREATE INDEX idx_farmer_invitations_token ON farmer_invitations(token);
 CREATE INDEX idx_farmer_invitations_status ON farmer_invitations(status);
+CREATE INDEX idx_org_member_invitations_organization_id ON organization_member_invitations(organization_id);
+-- No separate index on token: the UNIQUE constraint on the column already creates one.
+CREATE INDEX idx_org_member_invitations_status ON organization_member_invitations(organization_id, status);
+CREATE UNIQUE INDEX idx_org_member_invitations_one_pending_per_email ON organization_member_invitations(organization_id, lower(email)) WHERE status = 'pending';
 CREATE INDEX idx_farmer_invitations_phone ON farmer_invitations(phone);
 CREATE INDEX idx_farmer_invitations_invited_by ON farmer_invitations(invited_by);
 CREATE INDEX idx_fertilizer_plans_farm_id ON fertilizer_plans(farm_id);
@@ -1166,8 +1191,13 @@ CREATE POLICY "Owners can delete their organizations" ON organizations FOR DELET
 );
 
 -- RLS Policies for organization_members
-CREATE POLICY "Members can view organization members" ON organization_members FOR SELECT USING (
-  EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_members.organization_id AND om.user_id = auth.uid())
+-- SELECT is scoped via the is_org_member() SECURITY DEFINER helper (defined in
+-- migration 202606040001) rather than an inline EXISTS sub-query on
+-- organization_members: a self-referential sub-query inside this policy would
+-- re-trigger the policy and raise "infinite recursion detected in policy for
+-- relation organization_members". See migration 202606140004.
+CREATE POLICY "Members can view organization members" ON organization_members FOR SELECT TO authenticated USING (
+  public.is_org_member(organization_id)
 );
 CREATE POLICY "Admins can insert organization members" ON organization_members FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = organization_members.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
@@ -1229,6 +1259,24 @@ CREATE POLICY "Admins can update invitations" ON farmer_invitations FOR UPDATE U
 );
 CREATE POLICY "Admins can delete invitations" ON farmer_invitations FOR DELETE USING (
   EXISTS (SELECT 1 FROM organization_members om WHERE om.organization_id = farmer_invitations.organization_id AND om.user_id = auth.uid() AND (om.role IN ('owner', 'admin') OR om.is_owner = TRUE))
+);
+
+-- RLS Policies for organization_member_invitations
+-- Admins/owners manage invites; acceptance is server-side via service role (no public SELECT).
+ALTER TABLE organization_member_invitations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admins can view member invitations" ON organization_member_invitations FOR SELECT TO authenticated USING (
+  public.is_org_admin(organization_id)
+);
+CREATE POLICY "Admins can insert member invitations" ON organization_member_invitations FOR INSERT TO authenticated WITH CHECK (
+  public.is_org_admin(organization_id)
+);
+CREATE POLICY "Admins can update member invitations" ON organization_member_invitations FOR UPDATE TO authenticated USING (
+  public.is_org_admin(organization_id)
+) WITH CHECK (
+  public.is_org_admin(organization_id)
+);
+CREATE POLICY "Admins can delete member invitations" ON organization_member_invitations FOR DELETE TO authenticated USING (
+  public.is_org_admin(organization_id)
 );
 
 -- RLS Policies for fertilizer_plans
@@ -1406,6 +1454,11 @@ CREATE TRIGGER update_fertilizer_plans_updated_at
 
 CREATE TRIGGER update_organization_clients_updated_at
   BEFORE UPDATE ON organization_clients
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_org_member_invitations_updated_at
+  BEFORE UPDATE ON organization_member_invitations
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 

@@ -2259,6 +2259,65 @@ export type Database = {
           }
         ]
       }
+      organization_member_invitations: {
+        Row: {
+          id: string
+          organization_id: string
+          email: string
+          first_name: string
+          last_name: string
+          role: 'admin' | 'agronomist'
+          token: string
+          status: 'pending' | 'accepted' | 'revoked' | 'expired'
+          invited_by: string | null
+          expires_at: string
+          accepted_at: string | null
+          accepted_user_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          email: string
+          first_name: string
+          last_name: string
+          role: 'admin' | 'agronomist'
+          token: string
+          status?: 'pending' | 'accepted' | 'revoked' | 'expired'
+          invited_by?: string | null
+          expires_at: string
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          email?: string
+          first_name?: string
+          last_name?: string
+          role?: 'admin' | 'agronomist'
+          token?: string
+          status?: 'pending' | 'accepted' | 'revoked' | 'expired'
+          invited_by?: string | null
+          expires_at?: string
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'organization_member_invitations_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       fertilizer_plans: {
         Row: {
           id: string
@@ -2362,6 +2421,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_organization_invite: {
+        Args: {
+          p_user_id: string
+          p_invite_id: string
+          p_organization_id: string
+          p_role: string
+          p_first_name: string
+          p_last_name: string
+        }
+        Returns: undefined
+      }
       decay_context_relevance: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2373,6 +2443,10 @@ export type Database = {
       phone_in_use: {
         Args: { p_e164: string }
         Returns: boolean
+      }
+      remove_organization_member: {
+        Args: { p_organization_id: string; p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {
