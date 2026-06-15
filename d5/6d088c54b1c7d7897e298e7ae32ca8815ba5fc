@@ -1,0 +1,24 @@
+supabase/migrations/202606150001_consultant_visits.sql
+  s_7c3d86a9d6794b::t_b6769d5f2256ad 230-233,246-254
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "d56d088c54b1c7d7897e298e7ae32ca8815ba5fc",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_7c3d86a9d6794b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_134a39efcffeksjiv6wupiwi1R",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
