@@ -1,0 +1,25 @@
+src/app/consultant/layout.tsx
+  s_7c3d86a9d6794b::t_13f4aa0e6dd3da 301
+src/app/consultant/page.tsx
+  s_7c3d86a9d6794b::t_5a99765b8a990b 5
+src/components/auth/UserMenu.tsx
+  s_7c3d86a9d6794b::t_bd28e9f5faf293 16
+  s_7c3d86a9d6794b::t_d61c55c07cdf25 18-22
+  s_7c3d86a9d6794b::t_561ee0358923d1 71-74,76,80-92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "b0c66f0a20b5ee5c42d1574ce22e9552a570e930",
+  "prompts": {},
+  "sessions": {
+    "s_7c3d86a9d6794b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_134a39efcffeksjiv6wupiwi1R",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
