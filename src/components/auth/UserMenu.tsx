@@ -13,8 +13,13 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { cn } from '@/lib/utils'
 
-export function UserMenu() {
+interface UserMenuProps {
+  collapsed?: boolean
+}
+
+export function UserMenu({ collapsed = false }: UserMenuProps) {
   const { user, signOut } = useSupabaseAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -63,21 +68,28 @@ export function UserMenu() {
           type="button"
           aria-label={`User menu for ${displayName}`}
           aria-haspopup="menu"
-          className="group flex w-full items-center gap-3 rounded-md p-2 text-left text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+          className={cn(
+            'group flex w-full items-center rounded-md p-2 text-left text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground',
+            collapsed ? 'justify-center' : 'gap-3'
+          )}
         >
-          <Avatar className="h-9 w-9">
+          <Avatar className="h-9 w-9 shrink-0">
             <AvatarImage src={user.user_metadata?.avatar_url} alt={displayName} />
             <AvatarFallback>{initials || 'US'}</AvatarFallback>
           </Avatar>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">{displayName}</p>
-            {displayEmail ? (
-              <p className="truncate text-xs text-sidebar-foreground/70 group-hover:text-sidebar-accent-foreground group-data-[state=open]:text-sidebar-accent-foreground">
-                {displayEmail}
-              </p>
-            ) : null}
-          </div>
-          <ChevronsUpDown className="ml-auto h-4 w-4 text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground group-data-[state=open]:text-sidebar-accent-foreground" />
+          {!collapsed && (
+            <>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">{displayName}</p>
+                {displayEmail ? (
+                  <p className="truncate text-xs text-sidebar-foreground/70 group-hover:text-sidebar-accent-foreground group-data-[state=open]:text-sidebar-accent-foreground">
+                    {displayEmail}
+                  </p>
+                ) : null}
+              </div>
+              <ChevronsUpDown className="ml-auto h-4 w-4 text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground group-data-[state=open]:text-sidebar-accent-foreground" />
+            </>
+          )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="start" side="top" forceMount>

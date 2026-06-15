@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ClipboardList, Loader2, ShieldCheck, Users } from 'lucide-react'
+import { ArrowRight, ClipboardList, Loader2, Users } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -110,14 +110,6 @@ export default function ConsultantOverviewPage() {
             </Card>
           )
         })}
-      </div>
-
-      <div className="rounded-lg border bg-card p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-            <ShieldCheck className="h-5 w-5" />
-          </div>
-        </div>
       </div>
     </div>
   )

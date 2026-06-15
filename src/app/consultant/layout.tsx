@@ -298,7 +298,7 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
           )}
 
           <div className={cn('border-t', collapsed ? 'p-2' : 'p-3')}>
-            <UserMenu />
+            <UserMenu collapsed={collapsed} />
           </div>
         </aside>
 
