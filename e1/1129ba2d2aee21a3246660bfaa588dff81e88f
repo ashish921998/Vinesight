@@ -1,0 +1,37 @@
+src/components/auth/PhoneLoginForm.tsx
+  s_fb89c5dcdf31d3::t_b62c366371a5f0 1-108
+supabase/migrations/202606150002_client_payment_status.sql
+  s_fb89c5dcdf31d3::t_b62c366371a5f0 1-58
+src/app/consultant/farmers/page.tsx
+  s_fb89c5dcdf31d3::t_b62c366371a5f0 30,188-197
+src/components/consultant/PaidToggleButton.tsx
+  s_fb89c5dcdf31d3::t_b62c366371a5f0 1-75
+src/types/database.ts
+  s_fb89c5dcdf31d3::t_b62c366371a5f0 2105-2107,2120-2122,2135-2137,2227-2319,2553-2569
+src/lib/consultant-query-service.ts
+  s_fb89c5dcdf31d3::t_b62c366371a5f0 23-25,56,121-123,132-139,143,146,148,161,165-197,200
+src/lib/consultant-visit-service.ts
+  s_fb89c5dcdf31d3::t_b62c366371a5f0 1-294
+src/components/consultant/RecordVisitDialog.tsx
+  s_fb89c5dcdf31d3::t_b62c366371a5f0 1-281
+src/app/login/page.tsx
+  s_fb89c5dcdf31d3::t_b62c366371a5f0 12,20,34-35,104-140,142-148,152-160,163,165-179,181-182,184-216
+src/app/consultant/farmers/[farmerId]/page.tsx
+  s_fb89c5dcdf31d3::t_b62c366371a5f0 10-24,32-39,56-59,66-67,71,75,80-81,83,85-86,96,153-181,183-189,194-196,247-325
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "e11129ba2d2aee21a3246660bfaa588dff81e88f",
+  "prompts": {},
+  "sessions": {
+    "s_fb89c5dcdf31d3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2bbce05a-423d-45df-973d-0874124748ca",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
