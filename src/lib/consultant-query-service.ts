@@ -20,6 +20,9 @@ export interface FarmerFarm {
 export interface FarmerWithFarms extends FarmerProfile {
   farms: FarmerFarm[]
   assigned_to: string | null
+  /** organization_clients.id — the handle for payment-status updates. */
+  clientRecordId: string
+  isPaid: boolean
 }
 
 export interface FarmDetail {
@@ -50,7 +53,7 @@ export async function getFarmerClients(access: ConsultantAccess): Promise<Farmer
 
   let query = supabase
     .from('organization_clients')
-    .select('client_user_id, assigned_to')
+    .select('id, client_user_id, assigned_to, is_paid')
     .eq('organization_id', access.organizationId)
     .eq('status', 'active')
 
@@ -115,7 +118,9 @@ export async function getFarmerClients(access: ConsultantAccess): Promise<Farmer
       email: profile?.email ?? null,
       phone: profile?.phone ?? null,
       farms: farmsByUser[client.client_user_id] || [],
-      assigned_to: client.assigned_to
+      assigned_to: client.assigned_to,
+      clientRecordId: client.id,
+      isPaid: client.is_paid
     }
   })
 }
@@ -124,15 +129,23 @@ export async function getFarmerClients(access: ConsultantAccess): Promise<Farmer
  * Validate a single farmer is an active client of the current organization.
  * For agronomists, also validate assignment.
  */
+export interface ValidatedFarmerClient {
+  isValid: boolean
+  assigned_to: string | null
+  /** organization_clients.id — present whenever the farmer is an active client. */
+  clientRecordId: string | null
+  isPaid: boolean
+}
+
 export async function validateFarmerClient(
   access: ConsultantAccess,
   farmerId: string
-): Promise<{ isValid: boolean; assigned_to: string | null }> {
+): Promise<ValidatedFarmerClient> {
   const supabase = await getTypedSupabaseClient()
 
-  let query = supabase
+  const query = supabase
     .from('organization_clients')
-    .select('assigned_to')
+    .select('id, assigned_to, is_paid')
     .eq('organization_id', access.organizationId)
     .eq('client_user_id', farmerId)
     .eq('status', 'active')
@@ -145,14 +158,46 @@ export async function validateFarmerClient(
   }
 
   if (!client) {
-    return { isValid: false, assigned_to: null }
+    return { isValid: false, assigned_to: null, clientRecordId: null, isPaid: false }
   }
 
   if (!access.canViewAllFarmers && client.assigned_to !== access.userId) {
-    return { isValid: false, assigned_to: client.assigned_to }
+    return {
+      isValid: false,
+      assigned_to: client.assigned_to,
+      clientRecordId: client.id,
+      isPaid: client.is_paid
+    }
   }
 
-  return { isValid: true, assigned_to: client.assigned_to }
+  return {
+    isValid: true,
+    assigned_to: client.assigned_to,
+    clientRecordId: client.id,
+    isPaid: client.is_paid
+  }
+}
+
+/**
+ * Toggle a farmer's payment status via the set_client_payment_status RPC, which
+ * enforces can_access_org_client() server-side (so an assigned agronomist may
+ * mark their own farmers paid/unpaid). Returns the new paid state.
+ */
+export async function setClientPaymentStatus(
+  clientRecordId: string,
+  isPaid: boolean
+): Promise<boolean> {
+  const supabase = await getTypedSupabaseClient()
+  const { data, error } = await supabase.rpc('set_client_payment_status', {
+    p_client_id: clientRecordId,
+    p_is_paid: isPaid
+  })
+
+  if (error) {
+    throw new Error(`Failed to update payment status: ${error.message}`)
+  }
+
+  return data?.is_paid ?? isPaid
 }
 
 /**

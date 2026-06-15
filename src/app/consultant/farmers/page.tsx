@@ -27,6 +27,7 @@ import {
 import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
 import { getFarmerClients, type FarmerWithFarms } from '@/lib/consultant-query-service'
 import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
+import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
 
 export default function FarmerDirectoryPage() {
   const [farmers, setFarmers] = useState<FarmerWithFarms[]>([])
@@ -184,10 +185,16 @@ export default function FarmerDirectoryPage() {
                       )}
                     </div>
                   </div>
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    <Sprout className="h-3 w-3" />
-                    {farmer.farms.length} farm{farmer.farms.length !== 1 ? 's' : ''}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <PaidToggleButton
+                      clientRecordId={farmer.clientRecordId}
+                      isPaid={farmer.isPaid}
+                    />
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <Sprout className="h-3 w-3" />
+                      {farmer.farms.length} farm{farmer.farms.length !== 1 ? 's' : ''}
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
 
