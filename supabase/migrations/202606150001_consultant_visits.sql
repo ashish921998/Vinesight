@@ -227,10 +227,9 @@ revoke all on function public.validate_visit_followup_consistency() from public;
 -- and the member who performed it (visited_by) must never change via a later
 -- UPDATE. Without this, any member with can_access_org_client could PATCH an
 -- existing visit through PostgREST and rewrite visited_by (falsifying who made
--- the visit), erase authorship by nulling it out, or re-point the row to another
--- client they can access. Mirrors prevent_petiole_triage_scope_mutation.
--- farm_id, visit_date, and summary stay editable (farm_id is still
--- ownership-checked by the consistency trigger).
+-- the visit) or re-point the row to another client they can access. Mirrors
+-- prevent_petiole_triage_scope_mutation. farm_id, visit_date, and summary stay
+-- editable (farm_id is still ownership-checked by the consistency trigger).
 create or replace function public.prevent_consultant_visits_scope_mutation()
 returns trigger
 language plpgsql
@@ -243,15 +242,10 @@ begin
     raise exception 'consultant_visits scope columns (organization_id, client_user_id) are immutable after creation';
   end if;
 
-  -- visited_by is fully immutable from user-facing UPDATEs (including setting it
-  -- to NULL, which would erase audit authorship). The sole permitted change is
-  -- the FK ON DELETE SET NULL cascade from auth.users deletion. That cascade
-  -- fires this trigger at depth > 1 (nested inside the DELETE operation), so we
-  -- exempt nested calls to let account deletion proceed.
-  if old.visited_by is distinct from new.visited_by then
-    if new.visited_by is not null or pg_trigger_depth() = 1 then
-      raise exception 'consultant_visits.visited_by is immutable after creation';
-    end if;
+  -- visited_by may only clear to NULL via the FK ON DELETE SET NULL cascade
+  -- (account deletion); it must never be rewritten to another member.
+  if old.visited_by is distinct from new.visited_by and new.visited_by is not null then
+    raise exception 'consultant_visits.visited_by is immutable after creation';
   end if;
 
   return new;
