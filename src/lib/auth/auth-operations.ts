@@ -250,8 +250,8 @@ export async function verifyPhoneOtp(
     // Phone-OTP verify is the acquisition funnel for the consultant-invite feature: identify the
     // farmer and fire 'New user created' for genuinely new accounts (created within the last
     // couple of minutes), mirroring the email verify path. PII (phone) stays in identify(),
-    // never in the capture event. TODO: email + phone both identify per-flow, but the documented
-    // convention is to identify once at the onAuthStateChange chokepoint; consolidate later.
+    // never in the capture event. NOTE: email + phone both identify per-flow here; consolidating
+    // these onto the onAuthStateChange chokepoint is tracked in #158.
     if (data.user) {
       posthog.identify(data.user.id, { phone: data.user.phone })
       const createdMs = data.user.created_at ? new Date(data.user.created_at).getTime() : 0

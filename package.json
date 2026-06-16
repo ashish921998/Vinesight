@@ -115,6 +115,7 @@
     "shadcn": "^3.6.2",
     "supabase": "^2.70.5",
     "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.1"
   }
 }
