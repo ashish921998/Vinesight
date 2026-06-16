@@ -1,0 +1,35 @@
+src/lib/auth/auth-operations.ts
+  s_0b15d23cf3694c::t_93b1b6065bb7b0 164-166,254-258
+src/lib/__tests__/auth-session.test.ts
+  s_0b15d23cf3694c::t_d6eccd0d0aa9a5 136-147
+src/app/consultant/farmers/page.tsx
+  s_5bdecb5d232c6f::t_2e3bea346a82f9 74
+src/lib/auth/session.ts
+  s_0b15d23cf3694c::t_9942a0eb04e468 64-65,73-76
+src/lib/__tests__/auth-operations.test.ts
+  s_0b15d23cf3694c::t_336be9af3b1017 199,207,329,341,349,360
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "770ac213c06eb942ada88f963051896726e34a67",
+  "prompts": {},
+  "sessions": {
+    "s_0b15d23cf3694c": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019ecf66-eb9f-71ec-b618-82da94c819ab",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_5bdecb5d232c6f": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019ecfad-9522-7b36-a9b3-cc18700086e9",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
