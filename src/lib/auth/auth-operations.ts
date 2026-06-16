@@ -1,6 +1,7 @@
 import {
   type AuthOperationDeps,
   type ResetPasswordParams,
+  type ResendVerificationEmailParams,
   type ResendVerificationEmailResult,
   type ResetPasswordResult,
   type SendPhoneOtpParams,
@@ -272,7 +273,7 @@ export async function verifyPhoneOtp(
 }
 
 export async function resendVerificationEmail(
-  params: ResetPasswordParams,
+  params: ResendVerificationEmailParams,
   deps: AuthOperationDeps
 ): Promise<ResendVerificationEmailResult> {
   const { supabase } = deps

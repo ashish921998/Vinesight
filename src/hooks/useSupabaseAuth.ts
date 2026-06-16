@@ -9,6 +9,7 @@ import posthog from 'posthog-js'
 import {
   type AuthState,
   type ResetPasswordParams,
+  type ResendVerificationEmailParams,
   type SendPhoneOtpParams,
   type SignInWithEmailParams,
   type SignInWithGoogleParams,
@@ -151,7 +152,7 @@ export function useSupabaseAuth() {
     return applyResult(result, 'keepUser', setAuthState)
   }
 
-  const resendVerificationEmail = async (params: ResetPasswordParams) => {
+  const resendVerificationEmail = async (params: ResendVerificationEmailParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
     const result = await performResendVerificationEmail(params, {
       supabase: createClient(),

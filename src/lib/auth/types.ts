@@ -36,6 +36,10 @@ export interface ResetPasswordParams {
   email: string
 }
 
+export interface ResendVerificationEmailParams {
+  email: string
+}
+
 export interface VerifyOtpParams {
   email: string
   token: string
