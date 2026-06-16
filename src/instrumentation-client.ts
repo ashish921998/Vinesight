@@ -6,26 +6,13 @@ import * as Sentry from '@sentry/nextjs'
 import { parseEnvFloat, parseEnvBoolean } from '@/lib/sentry-env-helpers'
 import { createClient } from '@/lib/supabase'
 import posthog from 'posthog-js'
+import { redactInviteToken, redactInviteTokens } from '@/lib/analytics/redact-invite-token'
 
-// The consultant-invite signup link carries a 7-day bearer token in the URL PATH
-// (/signup/invite/<token>). PostHog autocapture ($pageview $current_url) and Sentry replay would
-// otherwise ship that token to first-party analytics, leaking a live invite secret to anyone with
-// analytics read access. Redact the token segment from any captured string before it leaves the
-// browser. (Residual: browser history and server access logs still carry the URL, which is
-// inherent to magic-link invites and acceptable here; a deeper fix would move the token out of
-// the URL entirely.)
-const INVITE_TOKEN_RE = /\/signup\/invite\/[^\s/?#$]+/g
-const redactInviteToken = (value: unknown): unknown =>
-  typeof value === 'string' ? value.replace(INVITE_TOKEN_RE, '/signup/invite/[redacted]') : value
-const redactInviteTokens = (obj: Record<string, unknown> | undefined | null): void => {
-  if (!obj) return
-  for (const key of Object.keys(obj)) {
-    obj[key] = redactInviteToken(obj[key])
-  }
-}
+// Invite-token redaction (used by both the PostHog before_send and the Sentry beforeSend below)
+// lives in @/lib/analytics/redact-invite-token.
 
 // Initialize PostHog for analytics (only on the client and only if key is available)
-const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
+const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN
 if (typeof window !== 'undefined' && posthogKey) {
   posthog.init(posthogKey, {
     api_host: '/ingest',
@@ -43,7 +30,9 @@ if (typeof window !== 'undefined' && posthogKey) {
   })
 } else if (typeof window !== 'undefined') {
   // Only warn on client-side, not during SSR/build
-  console.warn('[PostHog] NEXT_PUBLIC_POSTHOG_KEY is not set. Analytics will be disabled.')
+  console.warn(
+    '[PostHog] NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN is not set. Analytics will be disabled.'
+  )
 }
 
 // Lazy-load Supabase client for Sentry integration

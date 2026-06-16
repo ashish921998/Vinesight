@@ -52,6 +52,11 @@ export default function FarmerDirectoryPage() {
       setAccess(currentAccess)
       const data = await getFarmerClients(currentAccess)
       setFarmers(data)
+      posthog.capture('consultant_farmer_list_viewed', {
+        org_id: currentAccess.organizationId,
+        role: currentAccess.role,
+        farmer_count: data.length
+      })
     } catch (error) {
       console.error('Failed to load farmers:', error)
       posthog.captureException(error, { context: 'getFarmerClients' })

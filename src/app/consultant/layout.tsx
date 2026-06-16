@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ConsultantAccess, getConsultantAccess, roleLabels } from '@/lib/consultant-access'
+import posthog from 'posthog-js'
 import { toast } from 'sonner'
 
 interface ConsultantLayoutProps {
@@ -90,6 +91,11 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
 
         setAccess(access)
         setAccessState('ok')
+        posthog.identify(access.userId, {
+          role: access.role,
+          org_id: access.organizationId,
+          can_view_all_farmers: access.canViewAllFarmers
+        })
       } catch (error) {
         console.error('Access check failed:', error)
         toast.error('Unable to verify consultant access. Please try again.')

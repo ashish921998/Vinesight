@@ -1,9 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { LoginButton } from './LoginButton'
-import { Loader2, Lock } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 interface ProtectedRouteProps {
@@ -13,6 +12,7 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   const { user, loading } = useSupabaseAuth()
+  const router = useRouter()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -26,8 +26,20 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   const bypassAuth = isDevelopment && isLocalhost && process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true'
 
-  // Show loading until component is mounted and auth check is complete
-  if (!mounted || (loading && !bypassAuth)) {
+  // Once we know the user is unauthenticated, send them to the full login page
+  // (email/password, phone OTP, and Google) rather than a Google-only fallback.
+  // Preserve the page they wanted via ?redirect= so they return after signing in.
+  const shouldRedirect = mounted && !loading && !user && !bypassAuth && !fallback
+
+  useEffect(() => {
+    if (!shouldRedirect) return
+    const returnTo = window.location.pathname + window.location.search
+    router.replace(`/login?redirect=${encodeURIComponent(returnTo)}`)
+  }, [shouldRedirect, router])
+
+  // Show loading until component is mounted, auth check is complete, or while
+  // the redirect to /login is in flight.
+  if (!mounted || (loading && !bypassAuth) || shouldRedirect) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-2">
@@ -39,28 +51,8 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   }
 
   if (!user && !bypassAuth) {
-    if (fallback) {
-      return <>{fallback}</>
-    }
-
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <Lock className="h-12 w-12 text-primary" />
-            </div>
-            <CardTitle className="text-xl">Authentication Required</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p className="text-muted-foreground">
-              You need to sign in to access this page. Please use Google to continue.
-            </p>
-            <LoginButton className="w-full">Sign in to continue</LoginButton>
-          </CardContent>
-        </Card>
-      </div>
-    )
+    // A caller-supplied fallback takes precedence over the login redirect.
+    return <>{fallback}</>
   }
 
   return <>{children}</>

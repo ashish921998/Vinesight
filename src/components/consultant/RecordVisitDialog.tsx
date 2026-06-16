@@ -94,6 +94,7 @@ export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: Recor
     if (next) {
       reset()
       loadRecommendations()
+      posthog.capture('consultant_visit_started', { farmer_id: farmerId })
     }
   }
 

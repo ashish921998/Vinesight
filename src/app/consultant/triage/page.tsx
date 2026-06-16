@@ -25,6 +25,7 @@ import {
 import { toast } from 'sonner'
 import { Search, Loader2, ClipboardList, ChevronRight, FlaskConical } from 'lucide-react'
 import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
+import posthog from 'posthog-js'
 import {
   getTriageItems,
   getTriageItem,
@@ -122,6 +123,11 @@ export default function TriagePage() {
       setAccess(currentAccess)
       const data = await getTriageItems(currentAccess)
       setItems(data)
+      posthog.capture('consultant_triage_viewed', {
+        org_id: currentAccess.organizationId,
+        role: currentAccess.role,
+        item_count: data.length
+      })
     } catch (error) {
       console.error('Failed to load triage:', error)
       toast.error('Failed to load triage queue')
@@ -224,6 +230,11 @@ export default function TriagePage() {
             : it
         )
       )
+      posthog.capture('consultant_triage_item_actioned', {
+        status: formStatus,
+        severity: formSeverity === 'none' ? null : formSeverity,
+        has_recommendation: formRecommendation.trim().length > 0
+      })
       toast.success('Triage updated')
       closeDetail()
     } catch (error) {

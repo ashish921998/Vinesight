@@ -41,7 +41,7 @@ export function PaidToggleButton({
       const confirmed = await setClientPaymentStatus(clientRecordId, next)
       setPaid(confirmed)
       onChange?.(confirmed)
-      posthog.capture('client_payment_status_toggled', {
+      posthog.capture('consultant_client_payment_toggled', {
         client_record_id: clientRecordId,
         is_paid: confirmed
       })

@@ -34,6 +34,7 @@ import {
 import { toast } from 'sonner'
 import { Loader2, UserPlus, Users, Mail, Copy, Trash2, Clock } from 'lucide-react'
 import { getConsultantAccess, roleLabels, type ConsultantAccess } from '@/lib/consultant-access'
+import posthog from 'posthog-js'
 import {
   listOrgMembers,
   listPendingInvites,
@@ -97,6 +98,11 @@ export default function TeamSettingsPage() {
       const orgId = currentAccess.organizationId
       const memberRows = await listOrgMembers(orgId)
       setMembers(memberRows)
+      posthog.capture('consultant_team_viewed', {
+        org_id: orgId,
+        role: currentAccess.role,
+        member_count: memberRows.length
+      })
 
       if (currentAccess.canViewAllFarmers) {
         const inviteRows = await listPendingInvites(orgId)

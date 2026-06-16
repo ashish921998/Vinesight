@@ -95,6 +95,13 @@ export default function FarmerProfilePage() {
       setFarmer(profile)
       setFarms(farmsData)
       setVisits(visitsData)
+      posthog.capture('consultant_farmer_profile_viewed', {
+        farmer_id: farmerId,
+        org_id: currentAccess.organizationId,
+        role: currentAccess.role,
+        farm_count: farmsData.length,
+        visit_count: visitsData.length
+      })
     } catch (error) {
       console.error('Failed to load farmer profile:', error)
       posthog.captureException(error, { context: 'loadFarmerProfile', farmerId })
