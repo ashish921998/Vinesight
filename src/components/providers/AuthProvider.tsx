@@ -183,13 +183,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithEmail = async (params: SignInWithEmailParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
-    const result = await performSignInWithEmail(params, { supabase: createClient(), toast, posthog })
+    const result = await performSignInWithEmail(params, {
+      supabase: createClient(),
+      toast,
+      posthog
+    })
     return applyResult(result, 'setUser', setAuthState)
   }
 
   const signUpWithEmail = async (params: SignUpWithEmailParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
-    const result = await performSignUpWithEmail(params, { supabase: createClient(), toast, posthog })
+    const result = await performSignUpWithEmail(params, {
+      supabase: createClient(),
+      toast,
+      posthog
+    })
     return applyResult(result, 'setUser', setAuthState)
   }
 
