@@ -17,6 +17,7 @@
     "format": "prettier --write .",
     "perf": "npm run build && npm run start",
     "size": "npm run build && du -sh .next/static",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "prepare": "husky || true",
     "postinstall": "[ -n \"$CI\" ] || husky install || true",
