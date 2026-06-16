@@ -230,10 +230,12 @@ export default function TriagePage() {
             : it
         )
       )
+      // Report what the backend actually persisted (it may normalize/transform the form
+      // input), consistent with the list merge above — not the raw form state.
       posthog.capture('consultant_triage_item_actioned', {
-        status: formStatus,
-        severity: formSeverity === 'none' ? null : formSeverity,
-        has_recommendation: formRecommendation.trim().length > 0
+        status: updated.status,
+        severity: updated.severity,
+        has_recommendation: Boolean(updated.recommendation)
       })
       toast.success('Triage updated')
       closeDetail()

@@ -13,6 +13,7 @@ import {
   ClipboardList,
   Handshake,
   Languages,
+  Loader2,
   ShieldCheck,
   Sprout,
   XCircle
@@ -158,6 +159,22 @@ export default function LandingPage() {
       router.replace(targetRoute)
     }
   }, [loading, user, router])
+
+  // Authenticated visitors are being redirected to their module home by the effect
+  // above. Don't paint the marketing page in that window, or it flashes before the
+  // redirect lands. This stays client-side on purpose: the target comes from
+  // localStorage (getLastRoute), and middleware deliberately leaves the homepage
+  // redirect to the client to avoid dashboard redirect loops (see middleware.ts).
+  if (!loading && user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">

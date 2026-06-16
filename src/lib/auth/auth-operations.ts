@@ -362,7 +362,11 @@ export async function signOut(deps: AuthOperationDeps): Promise<SignOutResult> {
   const { supabase, toast } = deps
 
   try {
-    await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      toast.error(`Sign out failed: ${error.message}`)
+      return { success: false, error: error.message }
+    }
 
     toast.success('Signed out successfully')
     return { success: true }

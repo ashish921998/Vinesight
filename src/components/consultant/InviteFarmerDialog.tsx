@@ -82,9 +82,13 @@ export function InviteFarmerDialog({ organizationId, trigger }: InviteFarmerDial
       })
       posthog.capture('consultant_farmer_invite_created', { organization_id: organizationId })
     } catch (err) {
+      // Don't forward raw error text to analytics: server messages can carry the invitee's
+      // phone number (PII) and are unbounded/high-cardinality. Send a bounded category instead.
+      const reason =
+        err instanceof TypeError ? 'network_error' : err instanceof Error ? 'api_error' : 'unknown'
       posthog.capture('consultant_farmer_invite_failed', {
         organization_id: organizationId,
-        reason: err instanceof Error ? err.message : 'unknown'
+        reason
       })
       toast.error(err instanceof Error ? err.message : 'Failed to create invite')
     } finally {
