@@ -1,0 +1,58 @@
+package.json
+  s_2f4fdc6c8c4ac2::t_c5bf129ffbcf29 20
+src/lib/auth/name-validator.ts
+  s_2f4fdc6c8c4ac2::t_31b4abb1493a81 1-94
+vitest.config.ts
+  s_2f4fdc6c8c4ac2::t_8248aa6e47641a 11-12
+  s_2f4fdc6c8c4ac2::t_eca0abf1c45d30 1,3-4,10,13-16
+  s_2f4fdc6c8c4ac2::t_f278cb3ccc6e7b 2,5-9
+src/lib/auth/index.ts
+  s_2f4fdc6c8c4ac2::t_eed684843464f3 1-4
+src/lib/auth/types.ts
+  s_2f4fdc6c8c4ac2::t_1a9b06bdc99d64 66-68,74-76,90-92
+  s_2f4fdc6c8c4ac2::t_f05e493542a0e7 1-65,69-73,77-89,93-119,122-158
+  s_2f4fdc6c8c4ac2::t_f876483c2661c2 120-121
+src/lib/auth/session.ts
+  s_2f4fdc6c8c4ac2::t_a23a6fd3b94596 1-78
+src/lib/__tests__/name-validator.test.ts
+  s_2f4fdc6c8c4ac2::t_b18de0425ba01b 1-43,48,50-75,79-114
+  s_2f4fdc6c8c4ac2::t_c4326c54e78deb 44-47,49
+  s_2f4fdc6c8c4ac2::t_cdacf242111dcd 76-78
+src/lib/__tests__/auth-operations.test.ts
+  s_2f4fdc6c8c4ac2::t_cca1de334a62be 1-12,14-43,45-67,72-296,301-519
+  s_2f4fdc6c8c4ac2::t_2efc16b8ab294c 44
+  s_2f4fdc6c8c4ac2::t_1a9b06bdc99d64 68-71,297-300
+  s_2f4fdc6c8c4ac2::t_a70e7807072ceb 13
+src/hooks/useSupabaseAuth.ts
+  s_2f4fdc6c8c4ac2::t_1a9b06bdc99d64 108-112
+  s_2f4fdc6c8c4ac2::t_c6fc00e475864b 9-32,35-38,40-48,51-57,60,75,77,79,92,95,106,113,116,118-123,126,128-129,132,134-135,138,140-141,144,146-151,154,156-161,164,166-167,172-173,177
+vitest.setup.ts
+  s_2f4fdc6c8c4ac2::t_894118c59cd8aa 1-11
+src/lib/auth/auth-operations.ts
+  s_2f4fdc6c8c4ac2::t_71913d3b5d105c 1-100,102-205,207-372
+  s_2f4fdc6c8c4ac2::t_1a9b06bdc99d64 101,206
+src/lib/__tests__/auth-session.test.ts
+  s_2f4fdc6c8c4ac2::t_5db84282f278b7 1-2,9-114,122-180
+  s_2f4fdc6c8c4ac2::t_1a9b06bdc99d64 3-8,115-121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "2133d922a47c574869a06e9a00eb281fb4ecaab1",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_2f4fdc6c8c4ac2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_13198e933ffeu0HC06NsSrBqsF",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
