@@ -1,0 +1,30 @@
+src/hooks/useSupabaseAuth.ts
+  s_2f4fdc6c8c4ac2::t_0a616f04be6e1c 12
+  s_2f4fdc6c8c4ac2::t_e73088c085a7dc 155
+src/lib/auth/auth-operations.ts
+  s_2f4fdc6c8c4ac2::t_e4d10f3b117cec 4
+  s_2f4fdc6c8c4ac2::t_f6dc2ce035521a 276
+src/lib/auth/types.ts
+  s_2f4fdc6c8c4ac2::t_3af4d87842cc0d 39-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "49876515b68c2e7883dc68fc645443c0c8d5ea91",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_2f4fdc6c8c4ac2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_13198e933ffeu0HC06NsSrBqsF",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
