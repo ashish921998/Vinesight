@@ -29,3 +29,10 @@ export const VALIDATION = {
   MAX_PHOTOS_PER_DAY: 50,
   MAX_NAME_LENGTH: 50
 } as const
+
+// Auth constants
+export const AUTH = {
+  // A user is considered "new" (for the 'New user created' capture) if their account was
+  // created within this window of the verify op running.
+  NEW_USER_THRESHOLD_MS: 2 * 60 * 1000
+} as const

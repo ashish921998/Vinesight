@@ -19,6 +19,7 @@ import {
   type VerifyPhoneOtpResult
 } from './types'
 import { composeFullNameMetadata, sanitizeAndValidateName } from './name-validator'
+import { AUTH } from '../constants'
 
 /**
  * Auth operations extracted from `useSupabaseAuth` as plain, dependency-injected
@@ -256,7 +257,7 @@ export async function verifyPhoneOtp(
     if (data.user) {
       posthog.identify(data.user.id, { phone: data.user.phone })
       const createdMs = data.user.created_at ? new Date(data.user.created_at).getTime() : 0
-      if (createdMs && Date.now() - createdMs < 2 * 60 * 1000) {
+      if (createdMs && Date.now() - createdMs < AUTH.NEW_USER_THRESHOLD_MS) {
         posthog.capture('New user created', {
           user_id: data.user.id,
           timestamp: new Date().toISOString()
