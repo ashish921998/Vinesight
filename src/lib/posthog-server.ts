@@ -7,7 +7,7 @@ import { PostHog } from 'posthog-node'
 let posthogInstance: PostHog | null = null
 
 export function getPostHogServer(): PostHog | null {
-  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY
+  const key = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN
   if (!key) {
     // No key configured (e.g. local without analytics) — degrade gracefully.
     return null

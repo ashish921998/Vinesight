@@ -4,127 +4,61 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
 import { toast } from 'sonner'
-import { VALIDATION } from '@/lib/constants'
 import { clearLastRoute } from '@/lib/route-persistence'
 import posthog from 'posthog-js'
+import {
+  type AuthState,
+  type ResetPasswordParams,
+  type ResendVerificationEmailParams,
+  type SendPhoneOtpParams,
+  type SignInWithEmailParams,
+  type SignInWithGoogleParams,
+  type SignUpWithEmailParams,
+  type VerifyOtpParams,
+  type VerifyPhoneOtpParams,
+  reduceAuthStateChange,
+  resolveInitialUser,
+  signInWithEmail as performSignInWithEmail,
+  signInWithGoogle as performSignInWithGoogle,
+  resendVerificationEmail as performResendVerificationEmail,
+  resetPassword as performResetPassword,
+  sendPhoneOtp as performSendPhoneOtp,
+  signOut as performSignOut,
+  signUpWithEmail as performSignUpWithEmail,
+  verifyOtp as performVerifyOtp,
+  verifyPhoneOtp as performVerifyPhoneOtp
+} from '@/lib/auth'
 
-interface AuthState {
-  user: User | null
-  loading: boolean
-  error: string | null
-}
-
-interface SignInWithEmailParams {
-  email: string
-  password: string
-}
-
-interface SignUpWithEmailParams {
-  email: string
-  password: string
-  confirmPassword?: string
-  firstName?: string
-  lastName?: string
-}
-
-interface ResetPasswordParams {
-  email: string
-}
-
-interface VerifyOtpParams {
-  email: string
-  token: string
-  otpType?: 'email' | 'recovery' | 'invite' | 'email_change'
-}
-
-interface SendPhoneOtpParams {
-  phone: string // E.164, e.g. +919876543210
-  firstName?: string
-  lastName?: string
-  // Defaults to true so the invite flow still creates the farmer account. The
-  // login page passes false so an unknown number can't silently create an
-  // orphaned account with no profile/org.
-  shouldCreateUser?: boolean
-}
-
-interface VerifyPhoneOtpParams {
-  phone: string // E.164
-  token: string
-}
-
-interface SignInWithGoogleParams {
-  redirectTo?: string
-}
-
-interface SanitizedNameResult {
-  isValid: boolean
-  value?: string
-  error?: string
-}
+type AuthOperationResult = { success: true; user?: User | null } | { success: false; error: string }
+type ApplyMode = 'setUser' | 'keepUser' | 'resetUser'
 
 /**
- * Sanitizes and validates a name field
- * - Returns valid for undefined (optional parameter)
- * - Trims whitespace
- * - Removes control characters and newlines
- * - Collapses repeated spaces
- * - Enforces max length of 50 characters
+ * Maps an auth-operation result onto React state. The extracted operations own
+ * the Supabase calls, validation, toasts, and PostHog events; this thin glue
+ * owns only the loading/error/user state transitions, derived from the result
+ * shape — preserving the exact behavior of the pre-extraction hook.
  */
-function sanitizeAndValidateName(name: string | undefined, fieldName: string): SanitizedNameResult {
-  // Return valid if name is undefined (optional parameter)
-  if (name === undefined) {
-    return {
-      isValid: true
-    }
+function applyResult<T extends AuthOperationResult>(
+  result: T,
+  mode: ApplyMode,
+  setAuthState: (updater: (prev: AuthState) => AuthState) => void
+): T {
+  if (!result.success) {
+    const error = result.error
+    setAuthState((prev) => ({ ...prev, error, loading: false }))
+    return result
   }
 
-  // Trim whitespace
-  let sanitized = name.trim()
-
-  // Check if empty after trimming
-  if (!sanitized) {
-    return {
-      isValid: false,
-      error: `${fieldName} cannot be empty or contain only whitespace`
-    }
+  if (mode === 'resetUser') {
+    setAuthState(() => ({ user: null, loading: false, error: null }))
+  } else if (mode === 'setUser') {
+    const user = result.user ?? null
+    setAuthState((prev) => ({ ...prev, user, loading: false }))
+  } else {
+    setAuthState((prev) => ({ ...prev, loading: false }))
   }
 
-  // Remove control characters and newlines (ASCII 0-31 and 127)
-  // Using character-code filter instead of regex to avoid lint warnings
-  sanitized = sanitized
-    .split('')
-    .filter((char) => {
-      const code = char.charCodeAt(0)
-      return code >= 32 && code !== 127
-    })
-    .join('')
-
-  // Collapse repeated spaces into single space
-  sanitized = sanitized.replace(/\s+/g, ' ')
-
-  // Trim again after sanitization
-  sanitized = sanitized.trim()
-
-  // Check if empty after full sanitization
-  if (!sanitized) {
-    return {
-      isValid: false,
-      error: `${fieldName} contains only invalid characters`
-    }
-  }
-
-  // Check length and truncate if necessary
-  if (sanitized.length > VALIDATION.MAX_NAME_LENGTH) {
-    return {
-      isValid: false,
-      error: `${fieldName} must not exceed ${VALIDATION.MAX_NAME_LENGTH} characters (currently ${sanitized.length} characters)`
-    }
-  }
-
-  return {
-    isValid: true,
-    value: sanitized
-  }
+  return result
 }
 
 export function useSupabaseAuth() {
@@ -137,34 +71,14 @@ export function useSupabaseAuth() {
   useEffect(() => {
     const supabase = createClient()
 
-    // Get initial user - use getUser() for secure verification
     const getInitialUser = async () => {
       try {
-        const {
-          data: { user },
-          error
-        } = await supabase.auth.getUser()
-
+        const { user, error } = await resolveInitialUser({ supabase, posthog })
         if (error) {
-          // "Auth session missing!" means no session exists - this is expected when not logged in
-          // Don't treat this as an error, just set user to null
-          if (
-            error.message === 'Auth session missing!' ||
-            error.name === 'AuthSessionMissingError'
-          ) {
-            setAuthState((prev) => ({ ...prev, user: null }))
-          } else {
-            console.error('Auth error:', error.message, error.name)
-            setAuthState((prev) => ({ ...prev, error: error.message }))
-          }
+          setAuthState((prev) => ({ ...prev, error }))
         } else {
-          setAuthState((prev) => ({ ...prev, user: user ?? null }))
+          setAuthState((prev) => ({ ...prev, user }))
         }
-      } catch (err) {
-        setAuthState((prev) => ({
-          ...prev,
-          error: err instanceof Error ? err.message : 'An unexpected error occurred'
-        }))
       } finally {
         setAuthState((prev) => ({ ...prev, loading: false }))
       }
@@ -176,25 +90,11 @@ export function useSupabaseAuth() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       // Only update the user state, don't change loading state here
       // to avoid interfering with the loading states from auth operations
-      const sessionUser = session?.user ?? null
+      const { user } = reduceAuthStateChange(event, session, { posthog })
       setAuthState((prev) => ({
         ...prev,
-        user: sessionUser
+        user
       }))
-
-      // Keep PostHog's distinct_id in sync with the authenticated user so every
-      // event is attributed to a stable unique identifier across all entry
-      // paths — email login, Google OAuth, and session restore — not just the
-      // signup OTP flow. The id guard avoids redundant identify calls (this
-      // listener runs once per mounted hook instance). Reset on sign-out so the
-      // next user on a shared browser doesn't inherit this identity.
-      if (sessionUser) {
-        if (posthog.get_distinct_id() !== sessionUser.id) {
-          posthog.identify(sessionUser.id, { email: sessionUser.email })
-        }
-      } else if (event === 'SIGNED_OUT') {
-        posthog.reset()
-      }
     })
 
     getInitialUser()
@@ -204,395 +104,78 @@ export function useSupabaseAuth() {
     }
   }, [])
 
-  const signInWithEmail = async ({ email, password }: SignInWithEmailParams) => {
+  const signInWithEmail = async (params: SignInWithEmailParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
-
-    try {
-      const supabase = createClient()
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-
-      if (error) {
-        setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
-        toast.error(`Login failed: ${error.message}`)
-        return { success: false, error: error.message }
-      }
-
-      setAuthState((prev) => ({
-        ...prev,
-        user: data.user ?? null,
-        loading: false
-      }))
-
-      toast.success('Login successful!')
-      return { success: true, user: data.user }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
-      toast.error(`Login failed: ${errorMessage}`)
-      return { success: false, error: errorMessage }
-    }
+    const result = await performSignInWithEmail(params, {
+      supabase: createClient(),
+      toast,
+      posthog
+    })
+    return applyResult(result, 'setUser', setAuthState)
   }
 
-  const signUpWithEmail = async ({
-    email,
-    password,
-    confirmPassword,
-    firstName,
-    lastName
-  }: SignUpWithEmailParams) => {
+  const signUpWithEmail = async (params: SignUpWithEmailParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
-
-    // Validate password confirmation if provided
-    if (confirmPassword && password !== confirmPassword) {
-      const error = 'Passwords do not match'
-      setAuthState((prev) => ({ ...prev, error, loading: false }))
-      return { success: false, error }
-    }
-
-    // Validate and sanitize name fields
-    const userMetadata: Record<string, string> = {}
-
-    const firstNameResult = sanitizeAndValidateName(firstName, 'First name')
-    if (!firstNameResult.isValid) {
-      const error = firstNameResult.error || 'Invalid first name'
-      setAuthState((prev) => ({ ...prev, error, loading: false }))
-      toast.error(error)
-      return { success: false, error }
-    }
-    if (firstNameResult.value) {
-      userMetadata.first_name = firstNameResult.value
-    }
-
-    const lastNameResult = sanitizeAndValidateName(lastName, 'Last name')
-    if (!lastNameResult.isValid) {
-      const error = lastNameResult.error || 'Invalid last name'
-      setAuthState((prev) => ({ ...prev, error, loading: false }))
-      toast.error(error)
-      return { success: false, error }
-    }
-    if (lastNameResult.value) {
-      userMetadata.last_name = lastNameResult.value
-    }
-
-    // Create full_name field for UI display
-    if (userMetadata.first_name && userMetadata.last_name) {
-      userMetadata.full_name = `${userMetadata.first_name} ${userMetadata.last_name}`
-    } else if (userMetadata.first_name) {
-      userMetadata.full_name = userMetadata.first_name
-    } else if (userMetadata.last_name) {
-      userMetadata.full_name = userMetadata.last_name
-    }
-
-    try {
-      const supabase = createClient()
-
-      const { data, error } = await supabase.auth.signUp({
-        email: email.toLowerCase(),
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          data: userMetadata
-        }
-      })
-
-      if (error) {
-        setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
-        toast.error(`Sign up failed: ${error.message}`)
-        return { success: false, error: error.message }
-      }
-
-      setAuthState((prev) => ({
-        ...prev,
-        user: data.user ?? null,
-        loading: false
-      }))
-
-      const needsOtpVerification = !data.user?.email_confirmed_at
-      if (needsOtpVerification) {
-        toast.success('Account created! Please check your email for the verification code.')
-      } else {
-        toast.success('Account created successfully!')
-      }
-
-      return {
-        success: true,
-        user: data.user,
-        needsOtpVerification
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
-      toast.error(`Sign up failed: ${errorMessage}`)
-      return { success: false, error: errorMessage }
-    }
+    const result = await performSignUpWithEmail(params, {
+      supabase: createClient(),
+      toast,
+      posthog
+    })
+    return applyResult(result, 'setUser', setAuthState)
   }
 
-  const verifyOtp = async ({ email, token, otpType = 'email' }: VerifyOtpParams) => {
+  const verifyOtp = async (params: VerifyOtpParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
-
-    try {
-      const supabase = createClient()
-
-      const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: otpType
-      })
-
-      if (error) {
-        setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
-        toast.error(`Verification failed: ${error.message}`)
-        return { success: false, error: error.message }
-      }
-
-      setAuthState((prev) => ({
-        ...prev,
-        user: data.user ?? null,
-        loading: false
-      }))
-
-      toast.success('Email verified successfully!')
-
-      // 'email' is the only otpType this app ever passes here (verify-otp page is signup-only).
-      if (otpType === 'email') {
-        posthog.identify(data.user?.id, { email: data.user?.email })
-        posthog.capture('New user created', {
-          user_id: data.user?.id,
-          timestamp: new Date().toISOString()
-        })
-      }
-
-      return { success: true, user: data.user }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
-      toast.error(`Verification failed: ${errorMessage}`)
-      return { success: false, error: errorMessage }
-    }
+    const result = await performVerifyOtp(params, { supabase: createClient(), toast, posthog })
+    return applyResult(result, 'setUser', setAuthState)
   }
 
-  // Sends an SMS OTP to the given phone, creating the account if it doesn't exist. Names are
-  // attached as user metadata here because Supabase only applies it at user-creation time
-  // (this call) — the same full_name the handle_new_user trigger reads into profiles.
-  const sendPhoneOtp = async ({
-    phone,
-    firstName,
-    lastName,
-    shouldCreateUser = true
-  }: SendPhoneOtpParams) => {
+  const sendPhoneOtp = async (params: SendPhoneOtpParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
-
-    const userMetadata: Record<string, string> = {}
-
-    const firstNameResult = sanitizeAndValidateName(firstName, 'First name')
-    if (!firstNameResult.isValid) {
-      const error = firstNameResult.error || 'Invalid first name'
-      setAuthState((prev) => ({ ...prev, error, loading: false }))
-      toast.error(error)
-      return { success: false, error }
-    }
-    if (firstNameResult.value) userMetadata.first_name = firstNameResult.value
-
-    const lastNameResult = sanitizeAndValidateName(lastName, 'Last name')
-    if (!lastNameResult.isValid) {
-      const error = lastNameResult.error || 'Invalid last name'
-      setAuthState((prev) => ({ ...prev, error, loading: false }))
-      toast.error(error)
-      return { success: false, error }
-    }
-    if (lastNameResult.value) userMetadata.last_name = lastNameResult.value
-
-    if (userMetadata.first_name && userMetadata.last_name) {
-      userMetadata.full_name = `${userMetadata.first_name} ${userMetadata.last_name}`
-    } else if (userMetadata.first_name) {
-      userMetadata.full_name = userMetadata.first_name
-    } else if (userMetadata.last_name) {
-      userMetadata.full_name = userMetadata.last_name
-    }
-
-    try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.signInWithOtp({
-        phone,
-        options: { channel: 'sms', shouldCreateUser, data: userMetadata }
-      })
-
-      if (error) {
-        setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
-        toast.error(`Couldn't send code: ${error.message}`)
-        return { success: false, error: error.message }
-      }
-
-      setAuthState((prev) => ({ ...prev, loading: false }))
-      toast.success('Verification code sent')
-      return { success: true }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
-      toast.error(`Couldn't send code: ${errorMessage}`)
-      return { success: false, error: errorMessage }
-    }
+    const result = await performSendPhoneOtp(params, { supabase: createClient(), toast, posthog })
+    return applyResult(result, 'keepUser', setAuthState)
   }
 
-  // Verifies the SMS OTP. On success the user has a confirmed phone and an active session
-  // (cookie-based), which the invite/accept route reads to prove phone ownership.
-  const verifyPhoneOtp = async ({ phone, token }: VerifyPhoneOtpParams) => {
+  const verifyPhoneOtp = async (params: VerifyPhoneOtpParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
-
-    try {
-      const supabase = createClient()
-      const { data, error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' })
-
-      if (error) {
-        setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
-        toast.error(`Verification failed: ${error.message}`)
-        return { success: false, error: error.message }
-      }
-
-      setAuthState((prev) => ({ ...prev, user: data.user ?? null, loading: false }))
-      toast.success('Phone verified')
-
-      // Phone-OTP verify is the acquisition funnel for the consultant-invite feature: identify the
-      // farmer and fire 'New user created' for genuinely new accounts (created within the last
-      // couple of minutes), mirroring the email verify path. PII (phone) stays in identify(),
-      // never in the capture event. TODO: email + phone both identify per-flow, but the documented
-      // convention is to identify once at the onAuthStateChange chokepoint; consolidate later.
-      if (data.user) {
-        posthog.identify(data.user.id, { phone: data.user.phone })
-        const createdMs = data.user.created_at ? new Date(data.user.created_at).getTime() : 0
-        if (createdMs && Date.now() - createdMs < 2 * 60 * 1000) {
-          posthog.capture('New user created', {
-            user_id: data.user.id,
-            timestamp: new Date().toISOString()
-          })
-        }
-      }
-
-      return { success: true, user: data.user }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
-      toast.error(`Verification failed: ${errorMessage}`)
-      return { success: false, error: errorMessage }
-    }
+    const result = await performVerifyPhoneOtp(params, { supabase: createClient(), toast, posthog })
+    return applyResult(result, 'setUser', setAuthState)
   }
 
-  const resendVerificationEmail = async ({ email }: { email: string }) => {
+  const signInWithGoogle = async (params: SignInWithGoogleParams = {}) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
-
-    try {
-      const supabase = createClient()
-
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email.toLowerCase(),
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
-      })
-
-      if (error) {
-        setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
-        return { success: false, error: error.message }
-      }
-
-      setAuthState((prev) => ({ ...prev, loading: false }))
-      return { success: true, message: 'Verification code resent successfully' }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
-      return { success: false, error: errorMessage }
-    }
+    const result = await performSignInWithGoogle(params, {
+      supabase: createClient(),
+      toast,
+      posthog
+    })
+    return applyResult(result, 'keepUser', setAuthState)
   }
 
-  const resetPassword = async ({ email }: ResetPasswordParams) => {
+  const resendVerificationEmail = async (params: ResendVerificationEmailParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
-
-    try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`
-      })
-
-      if (error) {
-        setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
-        toast.error(`Password reset failed: ${error.message}`)
-        return { success: false, error: error.message }
-      }
-
-      setAuthState((prev) => ({ ...prev, loading: false }))
-      toast.success('Password reset email sent! Please check your inbox.')
-      return { success: true, message: 'Password reset email sent' }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
-      toast.error(`Password reset failed: ${errorMessage}`)
-      return { success: false, error: errorMessage }
-    }
+    const result = await performResendVerificationEmail(params, {
+      supabase: createClient(),
+      toast,
+      posthog
+    })
+    return applyResult(result, 'keepUser', setAuthState)
   }
 
-  const signInWithGoogle = async ({
-    redirectTo = `${window.location.origin}/auth/callback`
-  }: SignInWithGoogleParams = {}) => {
+  const resetPassword = async (params: ResetPasswordParams) => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
-
-    try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo,
-          queryParams: {
-            access_type: 'online',
-            prompt: 'consent'
-          }
-        }
-      })
-
-      if (error) {
-        setAuthState((prev) => ({ ...prev, error: error.message, loading: false }))
-        toast.error(`Google sign in failed: ${error.message}`)
-        return { success: false, error: error.message }
-      }
-
-      // The user will be redirected to the OAuth provider
-      // We don't set the user here as they will be redirected
-      setAuthState((prev) => ({ ...prev, loading: false }))
-      return { success: true }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
-      toast.error(`Google sign in failed: ${errorMessage}`)
-      return { success: false, error: errorMessage }
-    }
+    const result = await performResetPassword(params, { supabase: createClient(), toast, posthog })
+    return applyResult(result, 'keepUser', setAuthState)
   }
 
   const signOut = async () => {
     setAuthState((prev) => ({ ...prev, loading: true, error: null }))
-
-    try {
-      const supabase = createClient()
-      await supabase.auth.signOut()
-
+    const result = await performSignOut({ supabase: createClient(), toast, posthog })
+    if (result.success) {
       // Clear saved route to prevent restoring auth-protected pages
       clearLastRoute()
-
-      setAuthState((prev) => ({
-        user: null,
-        loading: false,
-        error: null
-      }))
-      toast.success('Signed out successfully')
-      return { success: true }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setAuthState((prev) => ({ ...prev, error: errorMessage, loading: false }))
-      toast.error(`Sign out failed: ${errorMessage}`)
-      return { success: false, error: errorMessage }
     }
+    return applyResult(result, 'resetUser', setAuthState)
   }
 
   // Stable identity — it only calls the stable setAuthState setter — so callers can list it

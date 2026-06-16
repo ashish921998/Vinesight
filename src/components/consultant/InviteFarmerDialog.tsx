@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { UserPlus, Copy, Check, MessageCircle, Send, Loader2, RefreshCw } from 'lucide-react'
 import { normalizePhone } from '@/lib/phone'
+import posthog from 'posthog-js'
 
 interface InviteResult {
   inviteUrl: string
@@ -79,7 +80,16 @@ export function InviteFarmerDialog({ organizationId, trigger }: InviteFarmerDial
         organizationName: data.organizationName,
         e164: normalized.e164
       })
+      posthog.capture('consultant_farmer_invite_created', { organization_id: organizationId })
     } catch (err) {
+      // Don't forward raw error text to analytics: server messages can carry the invitee's
+      // phone number (PII) and are unbounded/high-cardinality. Send a bounded category instead.
+      const reason =
+        err instanceof TypeError ? 'network_error' : err instanceof Error ? 'api_error' : 'unknown'
+      posthog.capture('consultant_farmer_invite_failed', {
+        organization_id: organizationId,
+        reason
+      })
       toast.error(err instanceof Error ? err.message : 'Failed to create invite')
     } finally {
       setSubmitting(false)
@@ -91,6 +101,10 @@ export function InviteFarmerDialog({ organizationId, trigger }: InviteFarmerDial
     try {
       await navigator.clipboard.writeText(result.inviteUrl)
       setCopied(true)
+      posthog.capture('consultant_invite_shared', {
+        organization_id: organizationId,
+        channel: 'copy'
+      })
       toast.success('Invite link copied')
       setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -174,13 +188,31 @@ export function InviteFarmerDialog({ organizationId, trigger }: InviteFarmerDial
                 {copied ? 'Copied' : 'Copy'}
               </Button>
               <Button asChild variant="outline" className="gap-2">
-                <a href={waHref} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={waHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() =>
+                    posthog.capture('consultant_invite_shared', {
+                      organization_id: organizationId,
+                      channel: 'whatsapp'
+                    })
+                  }
+                >
                   <MessageCircle className="h-4 w-4 text-green-600" />
                   WhatsApp
                 </a>
               </Button>
               <Button asChild variant="outline" className="gap-2">
-                <a href={smsHref}>
+                <a
+                  href={smsHref}
+                  onClick={() =>
+                    posthog.capture('consultant_invite_shared', {
+                      organization_id: organizationId,
+                      channel: 'sms'
+                    })
+                  }
+                >
                   <Send className="h-4 w-4" />
                   SMS
                 </a>

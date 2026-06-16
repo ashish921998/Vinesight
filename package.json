@@ -17,6 +17,7 @@
     "format": "prettier --write .",
     "perf": "npm run build && npm run start",
     "size": "npm run build && du -sh .next/static",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "prepare": "husky || true",
     "postinstall": "[ -n \"$CI\" ] || husky install || true",
@@ -114,6 +115,7 @@
     "shadcn": "^3.6.2",
     "supabase": "^2.70.5",
     "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.1"
   }
 }
