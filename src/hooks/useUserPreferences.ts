@@ -1,11 +1,7 @@
-import { useState, useEffect, useCallback, useContext } from 'react'
+import { useState, useEffect, useCallback, useRef, useContext } from 'react'
 import { AuthContext } from '@/components/providers/AuthProvider'
-import {
-  fetchAndValidateCurrency,
-  DEFAULT_CURRENCY,
-  isValidCurrency,
-  type CurrencyCode
-} from '@/lib/currency-utils'
+import { DEFAULT_CURRENCY, isValidCurrency, type CurrencyCode } from '@/lib/currency-utils'
+import { fetchAndValidateCurrency } from '@/lib/currency-preference'
 
 export type { CurrencyCode }
 export { isValidCurrency, DEFAULT_CURRENCY }
@@ -32,6 +28,7 @@ export function useUserPreferences(userId?: string) {
 
   const [fetchedPrefs, setFetchedPrefs] = useState<UserPreferences>(defaultPreferences)
   const [fetchLoading, setFetchLoading] = useState(false)
+  const refreshCancelledRef = useRef(false)
 
   // Cancellable fetch — cleans up if fetchUserId changes or component unmounts mid-flight.
   useEffect(() => {
@@ -49,16 +46,25 @@ export function useUserPreferences(userId?: string) {
     })
     return () => {
       cancelled = true
+      refreshCancelledRef.current = true
     }
   }, [fetchUserId])
 
   // Manual re-fetch for the "other user" path (e.g. after the grower updates their preference).
   const refreshFetchedPrefs = useCallback(async () => {
     if (!fetchUserId) return
+    refreshCancelledRef.current = false
     setFetchLoading(true)
-    const currency = await fetchAndValidateCurrency(fetchUserId)
-    setFetchedPrefs({ currencyPreference: currency })
-    setFetchLoading(false)
+    try {
+      const currency = await fetchAndValidateCurrency(fetchUserId)
+      if (!refreshCancelledRef.current) {
+        setFetchedPrefs({ currencyPreference: currency })
+      }
+    } finally {
+      if (!refreshCancelledRef.current) {
+        setFetchLoading(false)
+      }
+    }
   }, [fetchUserId])
 
   if (isSelf) {

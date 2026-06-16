@@ -36,7 +36,8 @@ import {
   verifyOtp as performVerifyOtp,
   verifyPhoneOtp as performVerifyPhoneOtp
 } from '@/lib/auth'
-import { fetchAndValidateCurrency, DEFAULT_CURRENCY, type CurrencyCode } from '@/lib/currency-utils'
+import { DEFAULT_CURRENCY, type CurrencyCode } from '@/lib/currency-utils'
+import { fetchAndValidateCurrency } from '@/lib/currency-preference'
 
 // ─── context shape ─────────────────────────────────────────────────────────────
 
@@ -121,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error: null
   })
   const [currencyPreference, setCurrencyPreference] = useState<CurrencyCode>(DEFAULT_CURRENCY)
-  const [currencyLoading, setCurrencyLoading] = useState(false)
+  const [currencyLoading, setCurrencyLoading] = useState(true)
   // Guards against stale writes when the user changes during an in-flight fetch.
   const currencyFetchUserRef = useRef<string | undefined>(undefined)
 

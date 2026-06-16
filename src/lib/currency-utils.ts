@@ -1,6 +1,3 @@
-import { getTypedSupabaseClient } from '@/lib/supabase'
-import { logger } from '@/lib/logger'
-
 export type CurrencyCode = 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD'
 
 const currencySymbols: Record<CurrencyCode, { symbol: string; locale: string }> = {
@@ -59,38 +56,10 @@ export function convertSpacing(value: number, fromUnit: SpacingUnit, toUnit: Spa
   return value
 }
 
-// ─── currency preference fetch ────────────────────────────────────────────────
-
 export const VALID_CURRENCIES: readonly CurrencyCode[] = ['INR', 'USD', 'EUR', 'GBP', 'AUD', 'CAD']
 
 export const DEFAULT_CURRENCY: CurrencyCode = 'INR'
 
 export function isValidCurrency(value: unknown): value is CurrencyCode {
   return typeof value === 'string' && VALID_CURRENCIES.includes(value as CurrencyCode)
-}
-
-export async function fetchAndValidateCurrency(userId: string): Promise<CurrencyCode> {
-  try {
-    const supabase = getTypedSupabaseClient()
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('currency_preference')
-      .eq('id', userId)
-      .maybeSingle()
-
-    if (error) {
-      logger.error('Error fetching currency preference:', error)
-      return DEFAULT_CURRENCY
-    }
-
-    if (profile && isValidCurrency(profile.currency_preference)) {
-      return profile.currency_preference
-    }
-
-    return DEFAULT_CURRENCY
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    logger.error('Error fetching currency preference:', msg)
-    return DEFAULT_CURRENCY
-  }
 }
