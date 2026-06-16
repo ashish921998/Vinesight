@@ -1,0 +1,32 @@
+src/app/consultant/triage/page.tsx
+  s_cf3da3180f66de::t_934a038cdf7275 233-234,236-238
+src/components/consultant/InviteFarmerDialog.tsx
+  s_cf3da3180f66de::t_934a038cdf7275 85-88,91
+src/lib/analytics/redact-invite-token.ts
+  s_cf3da3180f66de::t_934a038cdf7275 1-7,10,13
+src/lib/auth/auth-operations.ts
+  s_cf3da3180f66de::t_934a038cdf7275 365-369
+src/app/page.tsx
+  s_cf3da3180f66de::t_934a038cdf7275 16,163-177
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "7a0b43618c114e8538360eac4b7b51127a34755b",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_cf3da3180f66de": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019ecec0-0c3e-750f-a7c0-8cbeaa949145",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
