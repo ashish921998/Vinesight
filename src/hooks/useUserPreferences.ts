@@ -1,66 +1,63 @@
-import { useState, useEffect, useCallback } from 'react'
-import { getTypedSupabaseClient } from '@/lib/supabase'
-import { logger } from '@/lib/logger'
+import { useState, useEffect, useCallback, useContext } from 'react'
+import { AuthContext } from '@/components/providers/AuthProvider'
+import {
+  fetchAndValidateCurrency,
+  DEFAULT_CURRENCY,
+  isValidCurrency,
+  type CurrencyCode
+} from '@/lib/currency-utils'
+
+export type { CurrencyCode }
+export { isValidCurrency, DEFAULT_CURRENCY }
 
 export interface UserPreferences {
-  currencyPreference: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD'
+  currencyPreference: CurrencyCode
 }
 
 export const defaultPreferences: UserPreferences = {
-  currencyPreference: 'INR'
-}
-
-const VALID_CURRENCIES = ['INR', 'USD', 'EUR', 'GBP', 'AUD', 'CAD'] as const
-
-function isValidCurrency(value: unknown): value is 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD' {
-  return (
-    typeof value === 'string' &&
-    VALID_CURRENCIES.includes(value as (typeof VALID_CURRENCIES)[number])
-  )
+  currencyPreference: DEFAULT_CURRENCY
 }
 
 export function useUserPreferences(userId?: string) {
-  const [preferences, setPreferences] = useState<UserPreferences>(defaultPreferences)
-  const [loading, setLoading] = useState(!!userId)
+  const auth = useContext(AuthContext)
+  const loggedInId = auth?.user?.id
 
-  const fetchPreferences = useCallback(async () => {
-    if (!userId) {
-      setLoading(false)
+  // Self when: no arg supplied, or arg is the logged-in user's own id.
+  // Undefined userId (data still loading) is treated as self so we don't
+  // kick off a fetch before we know who owns the farm.
+  const isSelf = !userId || userId === loggedInId
+
+  // Fetch state for the "other user" path only
+  const fetchUserId = isSelf ? undefined : userId
+  const [fetchedPrefs, setFetchedPrefs] = useState<UserPreferences>(defaultPreferences)
+  const [fetchLoading, setFetchLoading] = useState(!!fetchUserId)
+
+  const doFetch = useCallback(async () => {
+    if (!fetchUserId) {
+      setFetchLoading(false)
       return
     }
-    try {
-      setLoading(true)
-      const supabase = getTypedSupabaseClient()
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('currency_preference')
-        .eq('id', userId)
-        .maybeSingle()
-
-      if (error) {
-        logger.error('Error fetching user preferences:', error)
-        setLoading(false)
-        return
-      }
-
-      if (profile) {
-        setPreferences({
-          currencyPreference: isValidCurrency(profile.currency_preference)
-            ? profile.currency_preference
-            : defaultPreferences.currencyPreference
-        })
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      logger.error('Error fetching user preferences:', errorMessage)
-    } finally {
-      setLoading(false)
-    }
-  }, [userId])
+    setFetchLoading(true)
+    const currency = await fetchAndValidateCurrency(fetchUserId)
+    setFetchedPrefs({ currencyPreference: currency })
+    setFetchLoading(false)
+  }, [fetchUserId])
 
   useEffect(() => {
-    fetchPreferences()
-  }, [fetchPreferences, userId])
+    doFetch()
+  }, [doFetch])
 
-  return { preferences, loading, refreshPreferences: fetchPreferences }
+  if (isSelf) {
+    return {
+      preferences: { currencyPreference: auth?.currencyPreference ?? DEFAULT_CURRENCY },
+      loading: auth?.currencyLoading ?? false,
+      refreshPreferences: auth?.refreshCurrency ?? (() => Promise.resolve())
+    }
+  }
+
+  return {
+    preferences: fetchedPrefs,
+    loading: fetchLoading,
+    refreshPreferences: doFetch
+  }
 }
