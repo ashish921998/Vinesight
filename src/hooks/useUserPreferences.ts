@@ -1,66 +1,83 @@
-import { useState, useEffect, useCallback } from 'react'
-import { getTypedSupabaseClient } from '@/lib/supabase'
-import { logger } from '@/lib/logger'
+import { useState, useEffect, useCallback, useRef, useContext } from 'react'
+import { AuthContext } from '@/components/providers/AuthProvider'
+import { DEFAULT_CURRENCY, isValidCurrency, type CurrencyCode } from '@/lib/currency-utils'
+import { fetchAndValidateCurrency } from '@/lib/currency-preference'
+
+export type { CurrencyCode }
+export { isValidCurrency, DEFAULT_CURRENCY }
 
 export interface UserPreferences {
-  currencyPreference: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD'
+  currencyPreference: CurrencyCode
 }
 
 export const defaultPreferences: UserPreferences = {
-  currencyPreference: 'INR'
-}
-
-const VALID_CURRENCIES = ['INR', 'USD', 'EUR', 'GBP', 'AUD', 'CAD'] as const
-
-function isValidCurrency(value: unknown): value is 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD' | 'CAD' {
-  return (
-    typeof value === 'string' &&
-    VALID_CURRENCIES.includes(value as (typeof VALID_CURRENCIES)[number])
-  )
+  currencyPreference: DEFAULT_CURRENCY
 }
 
 export function useUserPreferences(userId?: string) {
-  const [preferences, setPreferences] = useState<UserPreferences>(defaultPreferences)
-  const [loading, setLoading] = useState(!!userId)
+  const auth = useContext(AuthContext)
+  const loggedInId = auth?.user?.id
 
-  const fetchPreferences = useCallback(async () => {
-    if (!userId) {
-      setLoading(false)
+  // Self when: no arg supplied, or arg equals the logged-in user's own id.
+  // An undefined userId (data still loading) is treated as self to avoid
+  // kicking off a fetch before we know the farm owner's identity.
+  const isSelf = !userId || userId === loggedInId
+
+  // fetchUserId is non-null only on the "other user" path (consultant viewing a grower's farm).
+  const fetchUserId = isSelf ? undefined : userId
+
+  const [fetchedPrefs, setFetchedPrefs] = useState<UserPreferences>(defaultPreferences)
+  const [fetchLoading, setFetchLoading] = useState(false)
+  const refreshCancelledRef = useRef(false)
+
+  // Cancellable fetch — cleans up if fetchUserId changes or component unmounts mid-flight.
+  useEffect(() => {
+    if (!fetchUserId) {
+      setFetchLoading(false)
       return
     }
-    try {
-      setLoading(true)
-      const supabase = getTypedSupabaseClient()
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('currency_preference')
-        .eq('id', userId)
-        .maybeSingle()
-
-      if (error) {
-        logger.error('Error fetching user preferences:', error)
-        setLoading(false)
-        return
+    let cancelled = false
+    setFetchLoading(true)
+    fetchAndValidateCurrency(fetchUserId).then((currency) => {
+      if (!cancelled) {
+        setFetchedPrefs({ currencyPreference: currency })
+        setFetchLoading(false)
       }
-
-      if (profile) {
-        setPreferences({
-          currencyPreference: isValidCurrency(profile.currency_preference)
-            ? profile.currency_preference
-            : defaultPreferences.currencyPreference
-        })
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      logger.error('Error fetching user preferences:', errorMessage)
-    } finally {
-      setLoading(false)
+    })
+    return () => {
+      cancelled = true
+      refreshCancelledRef.current = true
     }
-  }, [userId])
+  }, [fetchUserId])
 
-  useEffect(() => {
-    fetchPreferences()
-  }, [fetchPreferences, userId])
+  // Manual re-fetch for the "other user" path (e.g. after the grower updates their preference).
+  const refreshFetchedPrefs = useCallback(async () => {
+    if (!fetchUserId) return
+    refreshCancelledRef.current = false
+    setFetchLoading(true)
+    try {
+      const currency = await fetchAndValidateCurrency(fetchUserId)
+      if (!refreshCancelledRef.current) {
+        setFetchedPrefs({ currencyPreference: currency })
+      }
+    } finally {
+      if (!refreshCancelledRef.current) {
+        setFetchLoading(false)
+      }
+    }
+  }, [fetchUserId])
 
-  return { preferences, loading, refreshPreferences: fetchPreferences }
+  if (isSelf) {
+    return {
+      preferences: { currencyPreference: auth?.currencyPreference ?? DEFAULT_CURRENCY },
+      loading: auth?.currencyLoading ?? false,
+      refreshPreferences: auth?.refreshCurrency ?? (() => Promise.resolve())
+    }
+  }
+
+  return {
+    preferences: fetchedPrefs,
+    loading: fetchLoading,
+    refreshPreferences: refreshFetchedPrefs
+  }
 }

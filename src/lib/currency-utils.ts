@@ -55,3 +55,11 @@ export function convertSpacing(value: number, fromUnit: SpacingUnit, toUnit: Spa
 
   return value
 }
+
+export const VALID_CURRENCIES: readonly CurrencyCode[] = ['INR', 'USD', 'EUR', 'GBP', 'AUD', 'CAD']
+
+export const DEFAULT_CURRENCY: CurrencyCode = 'INR'
+
+export function isValidCurrency(value: unknown): value is CurrencyCode {
+  return typeof value === 'string' && VALID_CURRENCIES.includes(value as CurrencyCode)
+}
