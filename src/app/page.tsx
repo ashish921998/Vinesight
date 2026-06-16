@@ -156,6 +156,10 @@ export default function LandingPage() {
     if (!loading && user) {
       const lastRoute = getLastRoute()
       const targetRoute = lastRoute || '/dashboard'
+      // Redirect stays client-side by design (localStorage last-route + middleware redirect-loop
+      // avoidance — see the render-gate note below); the flash this rule warns about is already
+      // prevented by that gate.
+      // react-doctor-disable-next-line react-doctor/nextjs-no-client-side-redirect, nextjs-no-client-side-redirect -- justified above
       router.replace(targetRoute)
     }
   }, [loading, user, router])
