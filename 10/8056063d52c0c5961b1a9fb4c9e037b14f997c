@@ -1,0 +1,46 @@
+bun.lock
+  s_cf3da3180f66de::t_20e82fa232f24d 100,699-730,853,933-934,1003-1004,1135-1148,1241-1242,1301-1302,1565,1623,1641-1642,2273-2274,2533-2534,2599-2600,2619-2620,2627-2628,2721-2723,2727-2728,2841-2844,2889-2890,2933-2938,3113-3120,3123-3124,3353-3354,3385-3394,3409-3410,3583-3584,3667-3689
+src/app/consultant/farmers/page.tsx
+  s_cf3da3180f66de::t_20e82fa232f24d 55
+src/app/consultant/triage/page.tsx
+  s_cf3da3180f66de::t_20e82fa232f24d 28,126-130,233
+src/components/consultant/PaidToggleButton.tsx
+  s_cf3da3180f66de::t_20e82fa232f24d 44
+src/components/consultant/RecordVisitDialog.tsx
+  s_cf3da3180f66de::t_20e82fa232f24d 97
+src/components/consultant/InviteFarmerDialog.tsx
+  s_cf3da3180f66de::t_20e82fa232f24d 18,83,85-88,100-103,187-197,203-206
+src/instrumentation-client.ts
+  s_cf3da3180f66de::t_20e82fa232f24d 12,15,33-34
+src/app/consultant/farmers/[farmerId]/page.tsx
+  s_cf3da3180f66de::t_20e82fa232f24d 98
+src/lib/posthog-server.ts
+  s_cf3da3180f66de::t_20e82fa232f24d 10
+src/lib/analytics/redact-invite-token.ts
+  s_cf3da3180f66de::t_20e82fa232f24d 9
+src/app/consultant/layout.tsx
+  s_cf3da3180f66de::t_20e82fa232f24d 23,94
+src/app/consultant/team/page.tsx
+  s_cf3da3180f66de::t_20e82fa232f24d 37,101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "108056063d52c0c5961b1a9fb4c9e037b14f997c",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_cf3da3180f66de": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019ecec0-0c3e-750f-a7c0-8cbeaa949145",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
