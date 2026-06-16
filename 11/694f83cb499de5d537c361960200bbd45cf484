@@ -1,0 +1,24 @@
+supabase/migrations/202606160001_join_org_by_slug_rpc.sql
+  s_9c39756d9b6e79::t_f634a08e9a9264 1-129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "11694f83cb499de5d537c361960200bbd45cf484",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_9c39756d9b6e79": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019ecfae-f435-705c-89e3-aeb01dee972e",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
