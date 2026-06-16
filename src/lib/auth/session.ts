@@ -41,8 +41,7 @@ export async function resolveInitialUser(deps: SessionDeps): Promise<InitialUser
 
 /**
  * Maps an `onAuthStateChange` event to the next session user state and keeps
- * PostHog's identity in sync. This is the single chokepoint for analytics
- * identity:
+ * PostHog's identity in sync. This is the single chokepoint for auth identity:
  *
  * - On an authenticated session, `identify` is called only when the PostHog
  *   distinct id differs from the session user's id (guard against redundant
@@ -62,13 +61,19 @@ export function reduceAuthStateChange(
   const sessionUser: User | null = session?.user ?? null
 
   // Keep PostHog's distinct_id in sync with the authenticated user so every
-  // event is attributed to a stable unique identifier across all entry
-  // paths — email login, Google OAuth, and session restore — not just the
-  // signup OTP flow. The id guard avoids redundant identify calls. Reset on
+  // event is attributed to a stable unique identifier across all entry paths —
+  // email login, Google OAuth, phone OTP, and session restore. The id guard
+  // avoids redundant identify calls. This is the single chokepoint for auth
+  // identity: email/phone person properties are attached here rather than in the
+  // verify operations (which no longer call identify). The consultant layout
+  // separately augments the same person with org/role properties. Reset on
   // sign-out so the next user on a shared browser doesn't inherit this identity.
   if (sessionUser) {
     if (posthog.get_distinct_id() !== sessionUser.id) {
-      posthog.identify(sessionUser.id, { email: sessionUser.email })
+      const personProperties: Record<string, string> = {}
+      if (sessionUser.email) personProperties.email = sessionUser.email
+      if (sessionUser.phone) personProperties.phone = sessionUser.phone
+      posthog.identify(sessionUser.id, personProperties)
     }
   } else if (event === 'SIGNED_OUT') {
     posthog.reset()

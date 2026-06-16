@@ -13,16 +13,46 @@ export function getSupabaseClient() {
   return createClient()
 }
 
-// Properly typed client for service operations
+// Properly typed client for service operations. Identical to createClient(); kept
+// as a named alias for the call sites that import it.
 export function getTypedSupabaseClient() {
-  return createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  return createClient()
 }
 
-// For backward compatibility
-export const supabase = getSupabaseClient()
+// Backward-compatible singleton. Created lazily on first access so that merely
+// importing this module does not require the Supabase env vars to be set
+// (importing must stay side-effect free — e.g. so unit tests that mock the client
+// can load service modules without real credentials). The underlying browser
+// client is itself a singleton per tab, so repeated access is cheap.
+//
+// Contract: consume this only via property access / method calls
+// (`supabase.from(...)`, `supabase.auth.getUser()`). Each method read returns a
+// freshly bound function, so do not rely on method reference identity and do not
+// `await` the proxy itself.
+let cachedSupabase: ReturnType<typeof createClient> | null = null
+function realClient(): ReturnType<typeof createClient> {
+  if (!cachedSupabase) cachedSupabase = createClient()
+  return cachedSupabase
+}
+export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
+  get(_target, prop) {
+    const client = realClient()
+    // Read the property off the real client and bind methods back to it. The
+    // Supabase client relies on private class fields, so `this` must be the real
+    // instance (not this proxy) or method calls throw on private-member access.
+    const value = (client as unknown as Record<string | symbol, unknown>)[prop]
+    return typeof value === 'function' ? value.bind(client) : value
+  },
+  // Forward membership checks and writes to the real client instead of the empty
+  // proxy target, so `'x' in supabase` and `supabase.x = y` behave as expected.
+  has(_target, prop) {
+    return prop in (realClient() as object)
+  },
+  set(_target, prop, value) {
+    ;(realClient() as unknown as Record<string | symbol, unknown>)[prop] = value
+    return true
+  }
+})
 
 // Database types based on your existing schema
 

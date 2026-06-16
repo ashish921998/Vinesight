@@ -133,6 +133,45 @@ describe('reduceAuthStateChange', () => {
     expect(posthog.reset).not.toHaveBeenCalled()
   })
 
+  it('attaches phone PII (not email) when identifying a phone-only user', () => {
+    const posthog = mockPosthog({ get_distinct_id: vi.fn().mockReturnValue('anon') as any })
+    const user = makeUser({ id: 'user-phone', phone: '+919876543210' })
+
+    const result = reduceAuthStateChange('SIGNED_IN', sessionWith(user), { posthog })
+
+    expect(result).toEqual({ user })
+    expect(posthog.identify).toHaveBeenCalledTimes(1)
+    expect(posthog.identify).toHaveBeenCalledWith('user-phone', { phone: '+919876543210' })
+    expect(posthog.reset).not.toHaveBeenCalled()
+  })
+
+  it('attaches both email and phone when the user has both', () => {
+    const posthog = mockPosthog({ get_distinct_id: vi.fn().mockReturnValue('anon') as any })
+    const user = makeUser({ id: 'user-both', email: 'a@b.com', phone: '+919876543210' })
+
+    const result = reduceAuthStateChange('SIGNED_IN', sessionWith(user), { posthog })
+
+    expect(result).toEqual({ user })
+    expect(posthog.identify).toHaveBeenCalledTimes(1)
+    expect(posthog.identify).toHaveBeenCalledWith('user-both', {
+      email: 'a@b.com',
+      phone: '+919876543210'
+    })
+    expect(posthog.reset).not.toHaveBeenCalled()
+  })
+
+  it('identifies with no person properties when the user has neither email nor phone', () => {
+    const posthog = mockPosthog({ get_distinct_id: vi.fn().mockReturnValue('anon') as any })
+    const user = makeUser({ id: 'user-bare' })
+
+    const result = reduceAuthStateChange('SIGNED_IN', sessionWith(user), { posthog })
+
+    expect(result).toEqual({ user })
+    expect(posthog.identify).toHaveBeenCalledTimes(1)
+    expect(posthog.identify).toHaveBeenCalledWith('user-bare', {})
+    expect(posthog.reset).not.toHaveBeenCalled()
+  })
+
   it('does NOT identify when distinct_id already matches (redundant guard)', () => {
     const posthog = mockPosthog({ get_distinct_id: vi.fn().mockReturnValue('user-1') as any })
     const user = makeUser({ id: 'user-1', email: 'a@b.com' })

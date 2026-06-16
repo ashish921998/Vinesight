@@ -161,8 +161,10 @@ export async function verifyOtp(
     toast.success('Email verified successfully!')
 
     // 'email' is the only otpType this app ever passes here (verify-otp page is signup-only).
+    // Identity (PostHog `identify`, including email PII) is owned by the single
+    // onAuthStateChange listener in AuthProvider — this operation fires only the
+    // acquisition-funnel `capture`, keeping PII out of capture events.
     if (otpType === 'email') {
-      posthog.identify(data.user?.id, { email: data.user?.email })
       posthog.capture('New user created', {
         user_id: data.user?.id,
         timestamp: new Date().toISOString()
@@ -249,13 +251,12 @@ export async function verifyPhoneOtp(
 
     toast.success('Phone verified')
 
-    // Phone-OTP verify is the acquisition funnel for the consultant-invite feature: identify the
-    // farmer and fire 'New user created' for genuinely new accounts (created within the last
-    // couple of minutes), mirroring the email verify path. PII (phone) stays in identify(),
-    // never in the capture event. NOTE: email + phone both identify per-flow here; consolidating
-    // these onto the onAuthStateChange chokepoint is tracked in #158.
+    // Phone-OTP verify is the acquisition funnel for the consultant-invite feature: fire
+    // 'New user created' for genuinely new accounts (created within the last couple of
+    // minutes), mirroring the email verify path. Identity (PostHog `identify`, including
+    // phone PII) is owned by the single onAuthStateChange listener in AuthProvider, so the
+    // capture event is the only analytics call left here — PII stays out of captures.
     if (data.user) {
-      posthog.identify(data.user.id, { phone: data.user.phone })
       const createdMs = data.user.created_at ? new Date(data.user.created_at).getTime() : 0
       if (createdMs && Date.now() - createdMs < AUTH.NEW_USER_THRESHOLD_MS) {
         posthog.capture('New user created', {
