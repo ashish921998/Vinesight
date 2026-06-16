@@ -1,0 +1,27 @@
+src/lib/constants.ts
+  s_2f4fdc6c8c4ac2::t_18ac040b59e9d7 32-38
+src/lib/auth/auth-operations.ts
+  s_2f4fdc6c8c4ac2::t_a14481d1f00f54 260
+  s_2f4fdc6c8c4ac2::t_fda052c02f5103 22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "05d9d9cf7535480d6c1dec3739d20e80b57126fa",
+  "prompts": {},
+  "humans": {
+    "h_fcdce7b1b8bf31": {
+      "author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_2f4fdc6c8c4ac2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_13198e933ffeu0HC06NsSrBqsF",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
