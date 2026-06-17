@@ -6,17 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import {
-  Users,
-  Search,
-  MapPin,
-  Sprout,
-  User,
-  Phone,
-  Mail,
-  Loader2,
-  ChevronRight
-} from 'lucide-react'
+import { Users, Search, Sprout, User, Phone, Mail, Loader2, ChevronRight } from 'lucide-react'
 import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
 import { getFarmerClients, type FarmerWithFarms } from '@/lib/consultant-query-service'
 import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
@@ -125,82 +115,55 @@ export default function FarmerDirectoryPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {filteredFarmers.map((farmer) => (
-            <Card key={farmer.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
+            <Card key={farmer.id} className="relative transition-colors hover:bg-muted/50">
+              {/* The whole row navigates to the farmer detail page. An overlay
+                  link (rather than wrapping the Card) lets the Paid toggle stay
+                  clickable without nesting a <button> inside an <a>. */}
+              <Link
+                href={`/consultant/farmers/${farmer.id}`}
+                aria-label={`View ${farmer.full_name || 'farmer'} details`}
+                className="absolute inset-0 z-0"
+              />
+              <CardHeader className="py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <User className="h-5 w-5 text-accent" />
-                      <Link href={`/consultant/farmers/${farmer.id}`} className="hover:underline">
-                        {farmer.full_name || 'Unknown Farmer'}
-                      </Link>
+                      <User className="h-5 w-5 text-accent flex-shrink-0" />
+                      <span className="truncate">{farmer.full_name || 'Unknown Farmer'}</span>
                     </CardTitle>
-                    <div className="flex flex-wrap items-center gap-4 mt-1 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
                       {farmer.email && (
-                        <span className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {farmer.email}
+                        <span className="flex items-center gap-1 min-w-0">
+                          <Mail className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{farmer.email}</span>
                         </span>
                       )}
                       {farmer.phone && (
-                        <span className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {farmer.phone}
+                        <span className="flex items-center gap-1 min-w-0">
+                          <Phone className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{farmer.phone}</span>
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <PaidToggleButton
-                      clientRecordId={farmer.clientRecordId}
-                      isPaid={farmer.isPaid}
-                    />
-                    <Badge variant="secondary" className="flex items-center gap-1">
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {/* Raised above the overlay so toggling payment never navigates. */}
+                    <div className="relative z-10">
+                      <PaidToggleButton
+                        clientRecordId={farmer.clientRecordId}
+                        isPaid={farmer.isPaid}
+                      />
+                    </div>
+                    <Badge variant="secondary" className="hidden sm:flex items-center gap-1">
                       <Sprout className="h-3 w-3" />
                       {farmer.farms.length} farm{farmer.farms.length !== 1 ? 's' : ''}
                     </Badge>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </div>
               </CardHeader>
-
-              {farmer.farms.length > 0 && (
-                <CardContent className="pt-0">
-                  <div className="space-y-2">
-                    {farmer.farms.map((farm) => (
-                      <Link
-                        key={farm.id}
-                        href={`/consultant/farmers/${farmer.id}/farms/${farm.id}`}
-                        className="block"
-                      >
-                        <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/50 hover:bg-muted transition-colors cursor-pointer">
-                          <Sprout className="h-4 w-4 text-accent flex-shrink-0" />
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium truncate">{farm.name}</span>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted-foreground">
-                              {farm.region && (
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="h-3 w-3" />
-                                  {farm.region}
-                                </span>
-                              )}
-                              {farm.crop_variety && <span>{farm.crop_variety}</span>}
-                              {farm.area && <span>{farm.area} acres</span>}
-                              {farm.soil_texture_class && <span>{farm.soil_texture_class}</span>}
-                            </div>
-                          </div>
-
-                          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </CardContent>
-              )}
             </Card>
           ))}
         </div>

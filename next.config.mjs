@@ -14,12 +14,7 @@ const nextConfig = {
 
   // Performance optimizations from next.config.ts
   experimental: {
-    optimizePackageImports: [
-      'lucide-react',
-      '@radix-ui/react-select',
-      '@radix-ui/react-progress',
-      'jspdf'
-    ]
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-progress', 'jspdf']
   },
 
   // Compiler optimizations
