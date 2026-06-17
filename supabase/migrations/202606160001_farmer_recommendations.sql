@@ -113,7 +113,7 @@ as $$
     t.summary,
     t.recommendation,
     rp.full_name::text                    as reviewed_by_name,
-    p.date::text                          as test_date,
+    to_char(p.date, 'YYYY-MM-DD')         as test_date,
     t.reviewed_at,
     t.created_at,
     t.updated_at
