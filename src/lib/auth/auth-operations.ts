@@ -164,9 +164,9 @@ export async function verifyOtp(
     // Identity (PostHog `identify`, including email PII) is owned by the single
     // onAuthStateChange listener in AuthProvider — this operation fires only the
     // acquisition-funnel `capture`, keeping PII out of capture events.
-    if (otpType === 'email') {
+    if (otpType === 'email' && data.user) {
       posthog.capture('New user created', {
-        user_id: data.user?.id,
+        user_id: data.user.id,
         timestamp: new Date().toISOString()
       })
     }
