@@ -187,5 +187,3 @@ export function CriticalAlertsBanner({
     </div>
   )
 }
-
-export default CriticalAlertsBanner

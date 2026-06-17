@@ -46,7 +46,14 @@ function buildDeps(auth: Record<string, any> = {}): DepsKit {
   const capture = vi.fn()
   const get_distinct_id = vi.fn().mockReturnValue('anon')
   const reset = vi.fn()
-  const posthog: DepsKit['posthog'] = { identify, capture, get_distinct_id, reset }
+  const setPersonProperties = vi.fn()
+  const posthog: DepsKit['posthog'] = {
+    identify,
+    capture,
+    get_distinct_id,
+    reset,
+    setPersonProperties
+  }
   const deps: AuthOperationDeps = {
     supabase: { auth: supabaseAuth } as unknown as SupabaseAuthClient,
     toast,
@@ -196,7 +203,7 @@ describe('signUpWithEmail', () => {
 })
 
 describe('verifyOtp (email)', () => {
-  it('succeeds, toasts, and fires identify + "New user created" once for email', async () => {
+  it('succeeds, toasts, and fires "New user created" once for email (identity left to the listener)', async () => {
     const user = makeUser({ id: 'u-verify', email: 'a@b.com' })
     const kit = buildDeps({ verifyOtp: vi.fn().mockResolvedValue({ data: { user }, error: null }) })
 
@@ -204,7 +211,7 @@ describe('verifyOtp (email)', () => {
 
     expect(result).toEqual({ success: true, user })
     expect(kit.toast.success).toHaveBeenCalledWith('Email verified successfully!')
-    expect(kit.posthog.identify).toHaveBeenCalledWith('u-verify', { email: 'a@b.com' })
+    expect(kit.posthog.identify).not.toHaveBeenCalled()
     expect(kit.posthog.capture).toHaveBeenCalledWith('New user created', {
       user_id: 'u-verify',
       timestamp: expect.any(String)
@@ -326,7 +333,7 @@ describe('sendPhoneOtp', () => {
 })
 
 describe('verifyPhoneOtp', () => {
-  it('succeeds, identifies, and captures "New user created" once for a genuinely new account', async () => {
+  it('succeeds and captures "New user created" once for a genuinely new account (identity left to the listener)', async () => {
     const user = makeUser({
       id: 'u-phone',
       phone: '+919876543210',
@@ -338,7 +345,7 @@ describe('verifyPhoneOtp', () => {
 
     expect(result).toEqual({ success: true, user })
     expect(kit.toast.success).toHaveBeenCalledWith('Phone verified')
-    expect(kit.posthog.identify).toHaveBeenCalledWith('u-phone', { phone: '+919876543210' })
+    expect(kit.posthog.identify).not.toHaveBeenCalled()
     expect(kit.posthog.capture).toHaveBeenCalledTimes(1)
     expect(kit.posthog.capture).toHaveBeenCalledWith('New user created', {
       user_id: 'u-phone',
@@ -346,7 +353,7 @@ describe('verifyPhoneOtp', () => {
     })
   })
 
-  it('identifies but does NOT capture "New user created" for an existing account', async () => {
+  it('does NOT capture "New user created" for an existing account', async () => {
     const user = makeUser({
       id: 'u-phone',
       phone: '+919876543210',
@@ -357,7 +364,7 @@ describe('verifyPhoneOtp', () => {
     const result = await verifyPhoneOtp({ phone: '+919876543210', token: '123456' }, kit.deps)
 
     expect(result).toEqual({ success: true, user })
-    expect(kit.posthog.identify).toHaveBeenCalledTimes(1)
+    expect(kit.posthog.identify).not.toHaveBeenCalled()
     expect(kit.posthog.capture).not.toHaveBeenCalled()
   })
 

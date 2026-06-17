@@ -1,14 +1,5 @@
 // @ts-nocheck
 import { supabase } from './supabase'
-import type {
-  AITaskRecommendation,
-  WeatherData,
-  TaskGenerationContext,
-  FarmerAIProfile,
-  AIServiceResponse,
-  RecommendationRequest,
-  RecommendationResponse
-} from './types/ai-types'
 import { AIProfileService } from './ai-profile-service'
 import { PestPredictionService } from './pest-prediction-service'
 import { OpenMeteoWeatherService } from './open-meteo-weather'

@@ -5,13 +5,6 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
 import { toast } from 'sonner'
 import {
   Users,
@@ -34,7 +27,6 @@ export default function FarmerDirectoryPage() {
   const [farmers, setFarmers] = useState<FarmerWithFarms[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [regionFilter, setRegionFilter] = useState<string>('all')
   const [access, setAccess] = useState<ConsultantAccess | null>(null)
 
   useEffect(() => {
@@ -66,17 +58,6 @@ export default function FarmerDirectoryPage() {
     }
   }
 
-  // Extract unique regions
-  const regions = useMemo(() => {
-    const regionSet = new Set<string>()
-    for (const farmer of farmers) {
-      for (const farm of farmer.farms) {
-        if (farm.region) regionSet.add(farm.region)
-      }
-    }
-    return Array.from(regionSet).sort()
-  }, [farmers])
-
   // Filtered farmers
   const filteredFarmers = useMemo(() => {
     return farmers.filter((farmer) => {
@@ -88,15 +69,9 @@ export default function FarmerDirectoryPage() {
         if (!nameMatch && !farmMatch) return false
       }
 
-      // Region filter
-      if (regionFilter !== 'all') {
-        const hasRegion = farmer.farms.some((f) => f.region === regionFilter)
-        if (!hasRegion) return false
-      }
-
       return true
     })
-  }, [farmers, searchQuery, regionFilter])
+  }, [farmers, searchQuery])
 
   if (loading) {
     return (
@@ -134,21 +109,6 @@ export default function FarmerDirectoryPage() {
             className="pl-9"
           />
         </div>
-
-        <Select value={regionFilter} onValueChange={setRegionFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-            <SelectValue placeholder="All Regions" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Regions</SelectItem>
-            {regions.map((region) => (
-              <SelectItem key={region} value={region}>
-                {region}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Results */}
