@@ -1,0 +1,19 @@
+package.json
+  s_52011001ec6fd1::t_e2a1705449d5da 89-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "53b63ac324eeeb032272c83f97a5c27b7c4b68e5",
+  "prompts": {},
+  "sessions": {
+    "s_52011001ec6fd1": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_12c0e3741ffeQfsILbypq42wym",
+        "model": "deepseek-v4-flash-free"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
