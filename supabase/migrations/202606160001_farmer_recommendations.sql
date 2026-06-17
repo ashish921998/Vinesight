@@ -17,6 +17,17 @@
 -- 1. CREATION: petiole test insert -> triage queue row(s)
 -- ============================================================================
 
+-- Durable idempotency guard. The trigger below carries a runtime NOT EXISTS
+-- check, but that only protects concurrent fan-outs of the *same* test; it does
+-- not stop a backfill, manual insert, or trigger retry from creating a duplicate
+-- (petiole_test_id, organization_id) pair. This partial unique index makes the
+-- one-row-per-test-per-org invariant enforced by the database, and lets the
+-- insert below fall back to ON CONFLICT DO NOTHING instead of racing. Partial
+-- because petiole_test_id is nullable (manual triage rows carry no test).
+create unique index if not exists idx_petiole_triage_unique_test_org
+  on public.petiole_triage (petiole_test_id, organization_id)
+  where petiole_test_id is not null;
+
 -- SECURITY DEFINER so the farmer's INSERT into petiole_test_records can fan out
 -- into petiole_triage despite the table's consultant-only INSERT policy. The row
 -- is constructed so the existing validate_petiole_triage_consistency trigger
@@ -55,7 +66,10 @@ begin
       from public.petiole_triage t
       where t.petiole_test_id = new.id
         and t.organization_id = oc.organization_id
-    );
+    )
+  on conflict (petiole_test_id, organization_id)
+    where petiole_test_id is not null
+  do nothing;
 
   return new;
 end;
@@ -74,12 +88,16 @@ create trigger create_triage_from_petiole_test_trigger
 -- 2. READ PATH: farmer reads their own reviewed recommendations
 -- ============================================================================
 
--- Returns only rows the consultant has actually written a recommendation on,
--- scoped to the calling farmer. SECURITY DEFINER bypasses the consultant-only
--- RLS on petiole_triage, but the WHERE clause hard-locks results to
--- auth.uid() = client_user_id, and the column list deliberately omits
--- review_notes (consultant-internal, "not shown to farmer"). Pass p_farm_id to
--- filter to a single farm, or leave null for all of the farmer's farms.
+-- Returns only PUBLISHED recommendations, scoped to the calling farmer. A
+-- consultant types `recommendation` and sets `status` independently, so a
+-- non-null recommendation alone can still be an in-progress draft (status
+-- 'pending'/'in_review'); the status gate below ensures the farmer only sees
+-- advice the consultant has marked 'reviewed' or 'resolved'. SECURITY DEFINER
+-- bypasses the consultant-only RLS on petiole_triage, but the WHERE clause
+-- hard-locks results to auth.uid() = client_user_id (and re-checks farm
+-- ownership), and the column list deliberately omits review_notes
+-- (consultant-internal, "not shown to farmer"). Pass p_farm_id to filter to a
+-- single farm, or leave null for all of the farmer's farms.
 create or replace function public.get_farmer_recommendations(p_farm_id bigint default null)
 returns table (
   id uuid,
@@ -126,7 +144,9 @@ as $$
     on rp.id = t.reviewed_by
   where auth.uid() is not null
     and t.client_user_id = auth.uid()
+    and f.user_id = auth.uid()
     and t.recommendation is not null
+    and t.status in ('reviewed', 'resolved')
     and (p_farm_id is null or t.farm_id = p_farm_id)
   order by coalesce(t.reviewed_at, t.updated_at, t.created_at) desc;
 $$;
