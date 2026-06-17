@@ -123,6 +123,7 @@ export interface ToastSeam {
 export interface PosthogSeam {
   identify: (distinctId: string | undefined, properties?: Record<string, any>) => void
   capture: (eventName: string, properties?: Record<string, any>) => void
+  setPersonProperties: (properties?: Record<string, any>) => void
   get_distinct_id: () => string
   reset: () => void
 }

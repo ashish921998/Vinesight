@@ -46,7 +46,14 @@ function buildDeps(auth: Record<string, any> = {}): DepsKit {
   const capture = vi.fn()
   const get_distinct_id = vi.fn().mockReturnValue('anon')
   const reset = vi.fn()
-  const posthog: DepsKit['posthog'] = { identify, capture, get_distinct_id, reset }
+  const setPersonProperties = vi.fn()
+  const posthog: DepsKit['posthog'] = {
+    identify,
+    capture,
+    get_distinct_id,
+    reset,
+    setPersonProperties
+  }
   const deps: AuthOperationDeps = {
     supabase: { auth: supabaseAuth } as unknown as SupabaseAuthClient,
     toast,

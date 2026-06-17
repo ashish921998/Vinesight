@@ -69,11 +69,18 @@ export function reduceAuthStateChange(
   // separately augments the same person with org/role properties. Reset on
   // sign-out so the next user on a shared browser doesn't inherit this identity.
   if (sessionUser) {
+    const personProperties: Record<string, string> = {}
+    if (sessionUser.email) personProperties.email = sessionUser.email
+    if (sessionUser.phone) personProperties.phone = sessionUser.phone
+
     if (posthog.get_distinct_id() !== sessionUser.id) {
-      const personProperties: Record<string, string> = {}
-      if (sessionUser.email) personProperties.email = sessionUser.email
-      if (sessionUser.phone) personProperties.phone = sessionUser.phone
+      // First identify of this session: bind the distinct_id and attach PII.
       posthog.identify(sessionUser.id, personProperties)
+    } else if (sessionUser.email || sessionUser.phone) {
+      // Already identified — keep email/phone in sync (e.g. a user who added a
+      // phone or changed email mid-session) via a property update, without a
+      // redundant identify call.
+      posthog.setPersonProperties(personProperties)
     }
   } else if (event === 'SIGNED_OUT') {
     posthog.reset()

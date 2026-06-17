@@ -24,18 +24,20 @@ function mockSupabase(getUser: () => any): SupabaseAuthClient {
 }
 
 function mockPosthog(overrides: Partial<PosthogSeam> = {}): PosthogSeam & {
-  calls: { identify: any[]; reset: any[]; capture: any[] }
+  calls: { identify: any[]; reset: any[]; capture: any[]; setPersonProperties: any[] }
 } {
   const identify = vi.fn()
   const reset = vi.fn()
   const capture = vi.fn()
+  const setPersonProperties = vi.fn()
   return {
     identify,
     reset,
     capture,
+    setPersonProperties,
     get_distinct_id: vi.fn().mockReturnValue('anon'),
     ...overrides,
-    calls: { identify, reset, capture }
+    calls: { identify, reset, capture, setPersonProperties }
   } as any
 }
 
@@ -172,14 +174,33 @@ describe('reduceAuthStateChange', () => {
     expect(posthog.reset).not.toHaveBeenCalled()
   })
 
-  it('does NOT identify when distinct_id already matches (redundant guard)', () => {
+  it('skips redundant identify but syncs person properties when distinct_id already matches', () => {
     const posthog = mockPosthog({ get_distinct_id: vi.fn().mockReturnValue('user-1') as any })
-    const user = makeUser({ id: 'user-1', email: 'a@b.com' })
+    const user = makeUser({ id: 'user-1', email: 'a@b.com', phone: '+919876543210' })
 
     const result = reduceAuthStateChange('SIGNED_IN', sessionWith(user), { posthog })
 
     expect(result).toEqual({ user })
     expect(posthog.identify).not.toHaveBeenCalled()
+    // email/phone are kept in sync via setPersonProperties so a mid-session
+    // change (e.g. user adds a phone) is not dropped by the distinct_id guard.
+    expect(posthog.setPersonProperties).toHaveBeenCalledTimes(1)
+    expect(posthog.setPersonProperties).toHaveBeenCalledWith({
+      email: 'a@b.com',
+      phone: '+919876543210'
+    })
+    expect(posthog.reset).not.toHaveBeenCalled()
+  })
+
+  it('does nothing when distinct_id matches and the user has no email or phone', () => {
+    const posthog = mockPosthog({ get_distinct_id: vi.fn().mockReturnValue('user-bare') as any })
+    const user = makeUser({ id: 'user-bare' })
+
+    const result = reduceAuthStateChange('SIGNED_IN', sessionWith(user), { posthog })
+
+    expect(result).toEqual({ user })
+    expect(posthog.identify).not.toHaveBeenCalled()
+    expect(posthog.setPersonProperties).not.toHaveBeenCalled()
     expect(posthog.reset).not.toHaveBeenCalled()
   })
 
