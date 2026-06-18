@@ -41,7 +41,6 @@ export default function FarmerDirectoryPage() {
         farmer_count: data.length
       })
     } catch (error) {
-      console.error('Failed to load farmers:', error)
       Sentry.captureException(error, { tags: { context: 'getFarmerClients' } })
       toast.error(error instanceof Error ? error.message : 'Failed to load farmer directory')
     } finally {

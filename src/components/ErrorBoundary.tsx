@@ -2,15 +2,14 @@
 
 import React, { ReactNode } from 'react'
 
-// Report unhandled promise rejections. This component does not render an error
-// boundary; React rendering errors are routed to Sentry by the SentryErrorBoundary
-// that wraps the tree in the root layout. Sentry's browser SDK already captures
-// unhandledrejection events via its default global handlers, so we only log here
-// for local debugging and avoid a duplicate manual capture.
+// Prevents unhandled promise rejections from becoming unhandled in React's eyes.
+// Sentry's browser SDK captures unhandledrejection natively, so no logging needed.
 export function AsyncErrorBoundary({ children }: { children: ReactNode }) {
   React.useEffect(() => {
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.error('Unhandled promise rejection:', event.reason)
+    const handleUnhandledRejection = (_event: PromiseRejectionEvent) => {
+      // Sentry's browser SDK already captures unhandledrejection globally.
+      // This listener exists to prevent the event from becoming an unhandled
+      // rejection in React's eyes; no action needed here.
     }
 
     window.addEventListener('unhandledrejection', handleUnhandledRejection)

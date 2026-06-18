@@ -104,7 +104,6 @@ export default function FarmerProfilePage() {
         visit_count: visitsData.length
       })
     } catch (error) {
-      console.error('Failed to load farmer profile:', error)
       Sentry.captureException(error, {
         tags: { context: 'loadFarmerProfile' },
         extra: { farmerId }
