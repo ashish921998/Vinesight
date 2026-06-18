@@ -1,0 +1,41 @@
+src/instrumentation-client.ts
+  s_861c7d435785c2::t_73641223220c1b 21
+  s_861c7d435785c2::t_ead37630fdbdcc 62-65
+src/instrumentation.ts
+  s_861c7d435785c2::t_d4c3d7ef16bdf9 14-15
+src/components/consultant/RecordVisitDialog.tsx
+  s_861c7d435785c2::t_de06b0d3c05007 86-89
+  s_861c7d435785c2::t_9a4a7d49a0e4da 153-156
+  s_861c7d435785c2::t_a5ebe3a9785e60 27
+src/app/consultant/farmers/[farmerId]/page.tsx
+  s_861c7d435785c2::t_e7da25837895b1 108-111
+  s_861c7d435785c2::t_15ece2768db024 40
+src/app/global-error.tsx
+  s_861c7d435785c2::t_5e120b61ded039 18
+src/components/consultant/PaidToggleButton.tsx
+  s_861c7d435785c2::t_314a96a90f76ec 7
+  s_861c7d435785c2::t_02b74f80ef4042 52-55
+sentry.server.config.ts
+  s_861c7d435785c2::t_b7e462b5a65e69 10
+src/app/consultant/farmers/page.tsx
+  s_861c7d435785c2::t_9fb5c19281aab7 45
+  s_861c7d435785c2::t_45f536e7810c8f 14
+src/components/ErrorBoundary.tsx
+  s_861c7d435785c2::t_97cf934f9a8cbb 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "edbd1291cc15fd98b9edd83d867bfa81d69bbc3d",
+  "prompts": {},
+  "sessions": {
+    "s_861c7d435785c2": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "8c10c6ba-1ca4-40eb-b998-3af7d87db359",
+        "model": "kimi-k2.7-code"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
