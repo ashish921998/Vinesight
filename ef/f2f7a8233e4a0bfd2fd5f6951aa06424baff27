@@ -1,0 +1,20 @@
+src/components/ErrorBoundary.tsx
+  s_cd29e92f113796::t_4c85682c9b9ab2 9-12
+  s_cd29e92f113796::t_35ac51b42fb6cb 5-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "eff2f7a8233e4a0bfd2fd5f6951aa06424baff27",
+  "prompts": {},
+  "sessions": {
+    "s_cd29e92f113796": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1259114e9ffeOuBxVUb6y1bktB",
+        "model": "deepseek-v4-flash-free"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
