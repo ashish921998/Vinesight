@@ -25,6 +25,26 @@ export interface NormalizedPhone {
  *  - Other intl numbers     -> accepted at a plausible E.164 length (11-15 digits).
  * A leading 0 after normalization (e.g. a "+0..." input) is rejected as malformed.
  */
+/**
+ * Reduce arbitrary user input to the bare 10-digit Indian national mobile number, for use with
+ * a fixed "+91" prefix in the UI. Forgiving about pasted values that already carry a country
+ * code or trunk 0 so the user doesn't end up with a doubled prefix:
+ *  - a 12-digit "91…" value     -> the 91 country code is dropped.
+ *  - an 11-digit "0…" value     -> the trunk 0 is dropped.
+ * The result is always digits only, capped at 10.
+ */
+export function toIndianNationalDigits(input: string): string {
+  let digits = (input || '').replace(/\D/g, '')
+
+  if (digits.length === 12 && digits.startsWith(DEFAULT_COUNTRY_CODE)) {
+    digits = digits.slice(2)
+  } else if (digits.length === 11 && digits.startsWith('0')) {
+    digits = digits.slice(1)
+  }
+
+  return digits.slice(0, 10)
+}
+
 export function normalizePhone(input: string): NormalizedPhone | null {
   if (!input) return null
 
