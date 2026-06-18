@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizePhone, toIndianNationalDigits } from '../phone'
+import { normalizePhone, toIndianNationalDigits } from '@/lib/phone'
 
 describe('normalizePhone', () => {
   it('prefixes a bare 10-digit Indian mobile with +91', () => {
@@ -82,6 +82,16 @@ describe('toIndianNationalDigits', () => {
   it('caps to 10 digits and strips non-digits', () => {
     expect(toIndianNationalDigits('9876543210999')).toBe('9876543210')
     expect(toIndianNationalDigits('abc987def654ghi3210')).toBe('9876543210')
+  })
+
+  it('strips a 91 country code even when the paste carries extra trailing digits', () => {
+    // "+91 98765 432100" -> would otherwise keep the 91 and yield a wrong "9198765432".
+    expect(toIndianNationalDigits('+91 98765 432100')).toBe('9876543210')
+    expect(toIndianNationalDigits('9198765432100')).toBe('9876543210')
+  })
+
+  it('leaves a genuine 10-digit mobile that starts with 91 untouched', () => {
+    expect(toIndianNationalDigits('9123456789')).toBe('9123456789')
   })
 
   it('returns an empty string for empty input', () => {

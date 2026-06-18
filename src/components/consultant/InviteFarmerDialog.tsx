@@ -156,7 +156,6 @@ export function InviteFarmerDialog({ organizationId, trigger }: InviteFarmerDial
                   type="tel"
                   inputMode="numeric"
                   autoComplete="tel-national"
-                  maxLength={10}
                   className="rounded-l-none"
                   value={phone}
                   onChange={(e) => setPhone(toIndianNationalDigits(e.target.value))}
