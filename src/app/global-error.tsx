@@ -13,9 +13,6 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    // global-error replaces the root layout, so Sentry's ErrorBoundary in the
-    // layout tree never sees this — it's the only capture path for root failures.
-    console.error('Global error boundary:', error)
     Sentry.captureException(error, {
       tags: {
         location: 'global-error',
