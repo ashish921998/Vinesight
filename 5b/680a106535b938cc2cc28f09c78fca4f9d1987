@@ -1,0 +1,25 @@
+package.json
+  s_9a8f61e17e266d::t_dcfd48ae03342b 3
+CHANGELOG.md
+  s_9a8f61e17e266d::t_dbd5983b2055b2 1-22
+TODOS.md
+  s_9a8f61e17e266d::t_fc66004fd8f3ab 1-14
+VERSION
+  s_9a8f61e17e266d::t_8a496a3c453af8 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "5b680a106535b938cc2cc28f09c78fca4f9d1987",
+  "prompts": {},
+  "sessions": {
+    "s_9a8f61e17e266d": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "c1b078cf-fd0e-4fa5-b00c-54d4a7367dde",
+        "model": "kimi-k2.7-code"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
