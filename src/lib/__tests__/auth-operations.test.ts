@@ -393,6 +393,19 @@ describe('sendPhoneOtp', () => {
       error: expect.stringMatching(/No account found for this number/)
     })
   })
+
+  it('does NOT translate when sign-in only and neither code nor message matches', async () => {
+    const kit = buildDeps({
+      signInWithOtp: vi.fn().mockResolvedValue({
+        error: { message: 'Rate limited', code: 'rate_limit' }
+      })
+    })
+
+    const result = await sendPhoneOtp({ phone: '+919876543210', shouldCreateUser: false }, kit.deps)
+
+    expect(result).toEqual({ success: false, error: 'Rate limited' })
+    expect(kit.toast.error).toHaveBeenCalledWith("Couldn't send code: Rate limited")
+  })
 })
 
 describe('verifyPhoneOtp', () => {

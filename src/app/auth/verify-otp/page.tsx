@@ -45,13 +45,24 @@ function VerifyOtpContent() {
   const [error, setError] = useState<string | null>(null)
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [email, setEmail] = useState<string | null>(null)
-  const [inviteToken, setInviteToken] = useState<string | null>(null)
   const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const redirectHandledRef = useRef(false)
 
   const searchParams = useSearchParams()
   const router = useRouter()
   const { user, loading: authLoading, verifyOtp, resendVerificationEmail } = useSupabaseAuth()
+
+  // Derive the invite token synchronously from the URL so the post-verification
+  // redirect branch is decided on the first render, not after a state update.
+  // This prevents a non-invite membership redirect from racing ahead while the
+  // invite token is still null in state.
+  const inviteToken = (() => {
+    const token = searchParams.get('inviteToken')
+    if (token && /^[a-zA-Z0-9-]{8,100}$/.test(token)) {
+      return token
+    }
+    return null
+  })()
 
   const inputRefs = [
     useRef<HTMLInputElement>(null),
@@ -72,11 +83,6 @@ function VerifyOtpContent() {
       } else {
         setEmail(null)
       }
-    }
-
-    const inviteTokenParam = searchParams.get('inviteToken')
-    if (inviteTokenParam && /^[a-zA-Z0-9-]{8,100}$/.test(inviteTokenParam)) {
-      setInviteToken(inviteTokenParam)
     }
   }, [searchParams])
 
@@ -134,6 +140,10 @@ function VerifyOtpContent() {
       // Invite flow: now that the email is verified, bind the user to the org
       // via the invite token, then send them to the consultant workspace.
       if (inviteToken) {
+        // Mark the redirect as handled before any async work so a pending or
+        // concurrent membership-based redirect cannot push /dashboard after the
+        // invite branch pushes /consultant.
+        redirectHandledRef.current = true
         const resp = await fetch('/api/organizations/accept-invite', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -227,6 +237,7 @@ function VerifyOtpContent() {
                 setLoading(true)
                 try {
                   if (inviteToken) {
+                    redirectHandledRef.current = true
                     const resp = await fetch('/api/organizations/accept-invite', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
