@@ -20,7 +20,6 @@ export default function Error({
   // Next.js App Router error boundaries swallow the error to render this fallback,
   // so it never reaches Sentry's global handlers — capture it explicitly.
   useEffect(() => {
-    console.error('Page error boundary:', error)
     Sentry.captureException(error, {
       tags: {
         location: 'page-error',
