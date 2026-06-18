@@ -25,14 +25,19 @@ const ORG_HOME = '/consultant'
 async function resolveModuleHome(userId: string): Promise<string> {
   try {
     const supabase = createClient()
-    const { data: membership } = await supabase
+    const { data: membership, error } = await supabase
       .from('organization_members')
       .select('user_id')
       .eq('user_id', userId)
       .limit(1)
       .maybeSingle()
+    if (error) {
+      console.error('resolveModuleHome: failed to check organization_members', error)
+      return FARMER_HOME
+    }
     return membership ? ORG_HOME : FARMER_HOME
-  } catch {
+  } catch (err) {
+    console.error('resolveModuleHome: unexpected error checking organization_members', err)
     // On a transient error we can't safely decide the module. Fall back to the
     // farmer home — the middleware will bounce a real org member to /consultant.
     return FARMER_HOME

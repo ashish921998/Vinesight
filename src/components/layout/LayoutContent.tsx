@@ -31,13 +31,16 @@ export function LayoutContent({ children }: LayoutContentProps) {
   // Track routes for authenticated users (for PWA state restoration)
   useRouteTracking(!!user)
 
-  // Check if current route is public
+  // Check if current route is public. pathname is null briefly on first render;
+  // treat it as non-public until it resolves so the public loading branch does not
+  // run with a null path and the app shell stays in its default state.
   const isPublicRoute =
-    publicRoutes.includes(pathname) ||
-    publicPrefixes.some((route) => pathname === route || pathname.startsWith(`${route}/`))
-  const isAppShellExcludedRoute = appShellExcludedPrefixes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  )
+    pathname !== null &&
+    (publicRoutes.includes(pathname) ||
+      publicPrefixes.some((route) => pathname === route || pathname.startsWith(`${route}/`)))
+  const isAppShellExcludedRoute =
+    pathname !== null &&
+    appShellExcludedPrefixes.some((route) => pathname === route || pathname.startsWith(`${route}/`))
 
   // Show sidebar only for authenticated users on private routes
   const showSidebar = !isPublicRoute && !isAppShellExcludedRoute && !!user
