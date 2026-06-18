@@ -1,0 +1,39 @@
+src/lib/__tests__/auth-operations.test.ts
+  s_828d610c0bb074::t_50a56f756da438 336-338
+vitest.setup.ts
+  s_828d610c0bb074::t_f5ba2f3c1d9147 7-9
+src/app/auth/verify-otp/page.tsx
+  s_828d610c0bb074::t_0a11fcd0d1d3b1 189
+  s_828d610c0bb074::t_872e01f4c10330 212
+  s_5b94a63e5787ff::t_1836c3a3f9af4e 10,15-40
+  s_5b94a63e5787ff::t_84ad60ad4f854f 51
+  s_5b94a63e5787ff::t_50763442bb9da5 179-180,182-184
+  s_5b94a63e5787ff::t_02346439003e9c 119-129
+  s_828d610c0bb074::t_ed0e447a15c6aa 181
+src/lib/auth/types.ts
+  s_828d610c0bb074::t_62e1c1805e39fb 53-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "ec415965f32536493438e8760922460ab8b6c9c3",
+  "prompts": {},
+  "sessions": {
+    "s_5b94a63e5787ff": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_126f4fe10ffelNm1Upl0Zx377L",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_828d610c0bb074": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "b1f4fbc1-5b96-4d3c-8c6b-8e252707ad6f",
+        "model": "kimi-k2.7-code"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
