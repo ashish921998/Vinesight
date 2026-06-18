@@ -330,6 +330,24 @@ describe('sendPhoneOtp', () => {
     expect(result).toEqual({ success: false, error: 'boom' })
     expect(kit.toast.error).toHaveBeenCalledWith("Couldn't send code: boom")
   })
+
+  it('translates the sign-in-only "Signups not allowed" error to a no-account message', async () => {
+    const kit = buildDeps({
+      signInWithOtp: vi.fn().mockResolvedValue({
+        error: { message: 'Signups not allowed for otp', code: 'otp_disabled' }
+      })
+    })
+
+    const result = await sendPhoneOtp({ phone: '+919876543210', shouldCreateUser: false }, kit.deps)
+
+    expect(result).toEqual({
+      success: false,
+      error: expect.stringMatching(/No account found for this number/)
+    })
+    expect(kit.toast.error).toHaveBeenCalledWith(
+      expect.stringMatching(/No account found for this number/)
+    )
+  })
 })
 
 describe('verifyPhoneOtp', () => {

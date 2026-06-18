@@ -7,9 +7,37 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Mail, CheckCircle, RefreshCw, ArrowLeft } from 'lucide-react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
+
+const FARMER_HOME = '/dashboard'
+const ORG_HOME = '/consultant'
+
+/**
+ * Resolve the user's module home the same way the middleware does: by checking
+ * organization_members. This replaces the old `orgSlug` URL-parameter heuristic,
+ * which could send a farmer to /consultant when the URL happened to carry an
+ * `org` param (shared link, stale history, etc.) — even if they have no real
+ * org membership.
+ */
+async function resolveModuleHome(userId: string): Promise<string> {
+  try {
+    const supabase = createClient()
+    const { data: membership } = await supabase
+      .from('organization_members')
+      .select('user_id')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle()
+    return membership ? ORG_HOME : FARMER_HOME
+  } catch {
+    // On a transient error we can't safely decide the module. Fall back to the
+    // farmer home — the middleware will bounce a real org member to /consultant.
+    return FARMER_HOME
+  }
+}
 
 function VerifyOtpContent() {
   const [loading, setLoading] = useState(false)
@@ -17,11 +45,10 @@ function VerifyOtpContent() {
   const [error, setError] = useState<string | null>(null)
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [email, setEmail] = useState<string | null>(null)
-  const [orgSlug, setOrgSlug] = useState<string | null>(null)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
-  const initialOrgRef = useRef<string | null>(null)
   const inviteHandledRef = useRef(false)
+  const redirectHandledRef = useRef(false)
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -38,7 +65,6 @@ function VerifyOtpContent() {
 
   useEffect(() => {
     const emailParam = searchParams.get('email')
-    const orgParam = searchParams.get('org')
 
     if (emailParam) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -46,17 +72,6 @@ function VerifyOtpContent() {
         setEmail(emailParam)
       } else {
         setEmail(null)
-      }
-    }
-
-    if (orgParam) {
-      const orgSlugRegex = /^[a-zA-Z0-9_-]+$/
-      if (orgSlugRegex.test(orgParam)) {
-        setOrgSlug(orgParam)
-        initialOrgRef.current = orgParam
-      } else {
-        setOrgSlug(null)
-        initialOrgRef.current = null
       }
     }
 
@@ -101,9 +116,17 @@ function VerifyOtpContent() {
       return
     }
 
-    const targetOrg = orgSlug || initialOrgRef.current
-    router.push(targetOrg ? '/consultant' : '/dashboard')
-  }, [user, authLoading, router, orgSlug, inviteToken])
+    // Route to the correct module home based on actual organization_members
+    // membership (same source of truth as the middleware), NOT the `org` URL
+    // param. The old heuristic trusted `orgSlug` from the URL, which sent
+    // farmers to /consultant whenever the URL carried an `org` param.
+    if (redirectHandledRef.current) return
+    redirectHandledRef.current = true
+    void (async () => {
+      const home = await resolveModuleHome(user.id)
+      router.push(home)
+    })()
+  }, [user, authLoading, router, inviteToken])
 
   useEffect(() => {
     return () => {
@@ -153,14 +176,17 @@ function VerifyOtpContent() {
 
       if (result.success) {
         // For invite acceptances, the post-confirmation effect runs accept-invite
-        // and then redirects. For all other signups, redirect immediately.
-        if (!inviteToken) {
-          router.push(orgSlug ? '/consultant' : '/dashboard')
+        // and then redirects. For all other signups, redirect based on actual
+        // org membership (not the `org` URL param).
+        if (!inviteToken && result.user && !redirectHandledRef.current) {
+          redirectHandledRef.current = true
+          const home = await resolveModuleHome(result.user.id)
+          router.push(home)
         }
       } else {
         setError(result.error || 'Verification failed')
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -183,7 +209,7 @@ function VerifyOtpContent() {
       } else {
         setError(result.error || 'Failed to resend verification code')
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
