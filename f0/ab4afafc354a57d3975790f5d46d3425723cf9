@@ -1,0 +1,24 @@
+src/lib/__tests__/auth-operations.test.ts
+  s_fe530b6b2b9b2e::t_8138f57cc14a52 376-394
+src/components/layout/LayoutContent.tsx
+  s_fe530b6b2b9b2e::t_df2751f3b4aebf 14-26
+src/app/auth/verify-otp/page.tsx
+  s_fe530b6b2b9b2e::t_db22c24b8870ea 206-263
+  s_fe530b6b2b9b2e::t_134c524dfdaa34 129,131-159
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "f0ab4afafc354a57d3975790f5d46d3425723cf9",
+  "prompts": {},
+  "sessions": {
+    "s_fe530b6b2b9b2e": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "c52031a5-8edf-4f63-939b-4add5a4a316e",
+        "model": "kimi-k2.7-code"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
