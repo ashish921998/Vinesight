@@ -1,0 +1,23 @@
+src/app/auth/verify-otp/page.tsx
+  s_9a8f61e17e266d::t_87bc6fe2cc97ed 240
+  s_9a8f61e17e266d::t_3c61fa7d007ff2 143-146
+  s_9a8f61e17e266d::t_8c2411497cdf4f 55-66
+src/lib/__tests__/auth-operations.test.ts
+  s_9a8f61e17e266d::t_735a33ba1fd20b 396-408
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "950c45a2048217b54209bdd5207584b83dff00e5",
+  "prompts": {},
+  "sessions": {
+    "s_9a8f61e17e266d": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "c1b078cf-fd0e-4fa5-b00c-54d4a7367dde",
+        "model": "kimi-k2.7-code"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
