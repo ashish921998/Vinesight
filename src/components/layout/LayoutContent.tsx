@@ -11,26 +11,25 @@ interface LayoutContentProps {
   children: React.ReactNode
 }
 
+// Routes that should never show the sidebar (public / unauthenticated pages).
+// The homepage is matched exactly; the auth & onboarding flows are matched by prefix so
+// nested pages (/auth/verify-otp, /signup/invite/[token], …) count as public too.
+//
+// This matters beyond the sidebar: on a private route the loading branches below swap
+// `children` out for a spinner, so any auth action that toggles `loading` (e.g. sending a
+// phone OTP) unmounts and remounts the page — wiping local form state like the login
+// method or a multi-step OTP form. Keeping these routes public renders an identical
+// children wrapper across the loading toggle, so their state survives.
+const publicRoutes = ['/'] // Homepage (exact match)
+const publicPrefixes = ['/auth', '/login', '/signup']
+const appShellExcludedPrefixes = ['/consultant']
+
 export function LayoutContent({ children }: LayoutContentProps) {
   const pathname = usePathname()
   const { user, loading } = useSupabaseAuth()
 
   // Track routes for authenticated users (for PWA state restoration)
   useRouteTracking(!!user)
-
-  // Routes that should never show the sidebar (public / unauthenticated pages).
-  // The homepage is matched exactly; the auth & onboarding flows are matched by prefix so
-  // nested pages (/auth/verify-otp, /signup/invite/[token], …) count as public too.
-  //
-  // This matters beyond the sidebar: on a private route the loading branches below swap
-  // `children` out for a spinner, so any auth action that toggles `loading` (e.g. sending a
-  // phone OTP) unmounts and remounts the page — wiping local form state like the login
-  // method or a multi-step OTP form. Keeping these routes public renders an identical
-  // children wrapper across the loading toggle, so their state survives.
-  const publicRoutes = ['/'] // Homepage (exact match)
-  const publicPrefixes = ['/auth', '/login', '/signup']
-
-  const appShellExcludedPrefixes = ['/consultant']
 
   // Check if current route is public
   const isPublicRoute =

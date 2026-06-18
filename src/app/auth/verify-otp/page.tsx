@@ -47,7 +47,6 @@ function VerifyOtpContent() {
   const [email, setEmail] = useState<string | null>(null)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
   const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
-  const inviteHandledRef = useRef(false)
   const redirectHandledRef = useRef(false)
 
   const searchParams = useSearchParams()
@@ -80,53 +79,6 @@ function VerifyOtpContent() {
       setInviteToken(inviteTokenParam)
     }
   }, [searchParams])
-
-  useEffect(() => {
-    if (!user || !user.email_confirmed_at || authLoading) {
-      return
-    }
-
-    // Invite flow: now that the email is verified, bind the user to the org via the
-    // invite token, then send them to the consultant workspace.
-    if (inviteToken && !inviteHandledRef.current) {
-      inviteHandledRef.current = true
-      void (async () => {
-        try {
-          const resp = await fetch('/api/organizations/accept-invite', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: inviteToken })
-          })
-          if (!resp.ok) {
-            // Membership write failed (e.g. RPC not deployed, email mismatch).
-            // Do NOT push to /consultant — that strands the user in a workspace
-            // they have no membership in. Surface the error and allow a retry.
-            const data = await resp.json().catch(() => ({}))
-            toast.error(data.error || 'Failed to join organization. Please contact support.')
-            inviteHandledRef.current = false
-            return
-          }
-        } catch {
-          toast.error('Failed to join organization. Please contact support.')
-          inviteHandledRef.current = false
-          return
-        }
-        router.push('/consultant')
-      })()
-      return
-    }
-
-    // Route to the correct module home based on actual organization_members
-    // membership (same source of truth as the middleware), NOT the `org` URL
-    // param. The old heuristic trusted `orgSlug` from the URL, which sent
-    // farmers to /consultant whenever the URL carried an `org` param.
-    if (redirectHandledRef.current) return
-    redirectHandledRef.current = true
-    void (async () => {
-      const home = await resolveModuleHome(user.id)
-      router.push(home)
-    })()
-  }, [user, authLoading, router, inviteToken])
 
   useEffect(() => {
     return () => {
@@ -174,17 +126,37 @@ function VerifyOtpContent() {
     try {
       const result = await verifyOtp({ email: email.toLowerCase(), token: otpCode })
 
-      if (result.success) {
-        // For invite acceptances, the post-confirmation effect runs accept-invite
-        // and then redirects. For all other signups, redirect based on actual
-        // org membership (not the `org` URL param).
-        if (!inviteToken && result.user && !redirectHandledRef.current) {
-          redirectHandledRef.current = true
-          const home = await resolveModuleHome(result.user.id)
-          router.push(home)
-        }
-      } else {
+      if (!result.success) {
         setError(result.error || 'Verification failed')
+        return
+      }
+
+      // Invite flow: now that the email is verified, bind the user to the org
+      // via the invite token, then send them to the consultant workspace.
+      if (inviteToken) {
+        const resp = await fetch('/api/organizations/accept-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: inviteToken })
+        })
+        if (!resp.ok) {
+          // Membership write failed (e.g. RPC not deployed, email mismatch).
+          // Do NOT push to /consultant — that strands the user in a workspace
+          // they have no membership in. Surface the error and allow a retry.
+          const data = await resp.json().catch(() => ({}))
+          toast.error(data.error || 'Failed to join organization. Please contact support.')
+          return
+        }
+        router.push('/consultant')
+        return
+      }
+
+      // For all other signups, redirect based on actual org membership
+      // (not the `org` URL param).
+      if (result.user && !redirectHandledRef.current) {
+        redirectHandledRef.current = true
+        const home = await resolveModuleHome(result.user.id)
+        router.push(home)
       }
     } catch (_err) {
       setError('An unexpected error occurred')
@@ -227,6 +199,64 @@ function VerifyOtpContent() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
           <p className="text-muted-foreground">Checking authentication status...</p>
         </div>
+      </div>
+    )
+  }
+
+  // Already verified: show a continue button instead of auto-redirecting from
+  // useEffect. React Doctor flags client-side redirects inside useEffect because
+  // they flash the wrong page before navigating.
+  if (user?.email_confirmed_at) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="p-3 bg-green-100 rounded-full">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+            </div>
+            <CardTitle className="text-xl">Email Verified</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-6">
+            <p className="text-muted-foreground">
+              Your email is already verified. Continue to your dashboard.
+            </p>
+            <Button
+              onClick={async () => {
+                setLoading(true)
+                try {
+                  if (inviteToken) {
+                    const resp = await fetch('/api/organizations/accept-invite', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ token: inviteToken })
+                    })
+                    if (!resp.ok) {
+                      const data = await resp.json().catch(() => ({}))
+                      toast.error(
+                        data.error || 'Failed to join organization. Please contact support.'
+                      )
+                      return
+                    }
+                    router.push('/consultant')
+                    return
+                  }
+                  const home = await resolveModuleHome(user.id)
+                  router.push(home)
+                } catch {
+                  toast.error('Failed to continue. Please contact support.')
+                } finally {
+                  setLoading(false)
+                }
+              }}
+              disabled={loading}
+              className="w-full"
+            >
+              {loading ? 'Continuing...' : 'Continue to Dashboard'}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
