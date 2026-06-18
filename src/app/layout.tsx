@@ -11,7 +11,6 @@ import './globals.css'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { MotionConfigProvider } from '@/components/providers/MotionConfigProvider'
 import { AuthProvider } from '@/components/providers/AuthProvider'
-import { AsyncErrorBoundary } from '@/components/ErrorBoundary'
 import { SentryErrorBoundary } from '@/components/SentryErrorBoundary'
 import { Suspense } from 'react'
 import { GlobalAuthErrorHandler } from '@/components/auth/GlobalAuthErrorHandler'
@@ -154,27 +153,25 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${merriweather.variable} ${sourceCodePro.variable} antialiased`}
       >
         <SentryErrorBoundary>
-          <AsyncErrorBoundary>
-            <Suspense
-              fallback={
-                <div className="min-h-screen flex items-center justify-center bg-background">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Loading VineSight...</p>
-                  </div>
+          <Suspense
+            fallback={
+              <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading VineSight...</p>
                 </div>
-              }
-            >
-              <GlobalAuthErrorHandler />
-              <AuthProvider>
-                <MotionConfigProvider>
-                  <I18nProvider>
-                    <LayoutContent>{children}</LayoutContent>
-                  </I18nProvider>
-                </MotionConfigProvider>
-              </AuthProvider>
-            </Suspense>
-          </AsyncErrorBoundary>
+              </div>
+            }
+          >
+            <GlobalAuthErrorHandler />
+            <AuthProvider>
+              <MotionConfigProvider>
+                <I18nProvider>
+                  <LayoutContent>{children}</LayoutContent>
+                </I18nProvider>
+              </MotionConfigProvider>
+            </AuthProvider>
+          </Suspense>
         </SentryErrorBoundary>
         <GoogleAnalytics />
         <Analytics />

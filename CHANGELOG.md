@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2.0] - 2026-06-18
+
+### Changed
+
+- Error tracking now flows through a single tracker. Sentry captures every client and server error; PostHog handles analytics only, so each failure surfaces once instead of twice.
+- Server-side request errors are captured through Sentry's `onRequestError` hook, replacing the separate PostHog server capture path.
+
+### Fixed
+
+- Duplicate Sentry events from the error boundaries are gone. The manual `console.error` calls that `captureConsoleIntegration` was re-capturing have been removed, so the page and global error fallbacks now capture exactly once.
+- The global error fallback no longer drops the error digest when it is missing (`digest ?? 'unknown'`).
+
+### Removed
+
+- `posthog-node` server dependency and its singleton (`src/lib/posthog-server.ts`).
+- The `AsyncErrorBoundary` wrapper and the old class `ErrorBoundary`. The async variant registered an inert no-op `unhandledrejection` listener that did nothing — and React error boundaries cannot catch promise rejections regardless.
+
+### Added
+
+- Sentry's Vercel AI integration on the server traces AI/LLM calls.
+
 ## [0.1.1.0] - 2026-06-18
 
 ### Fixed

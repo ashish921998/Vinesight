@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { IndianRupee, Loader2, CircleAlert } from 'lucide-react'
+import * as Sentry from '@sentry/nextjs'
 import posthog from 'posthog-js'
 import { setClientPaymentStatus } from '@/lib/consultant-query-service'
 
@@ -48,7 +49,10 @@ export function PaidToggleButton({
       toast.success(confirmed ? 'Marked as paid' : 'Marked as unpaid')
     } catch (err) {
       setPaid(!next) // rollback
-      posthog.captureException(err, { context: 'set_client_payment_status', clientRecordId })
+      Sentry.captureException(err, {
+        tags: { context: 'set_client_payment_status' },
+        extra: { clientRecordId }
+      })
       toast.error(err instanceof Error ? err.message : 'Failed to update payment status')
     } finally {
       setSaving(false)
