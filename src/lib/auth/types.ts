@@ -50,9 +50,8 @@ export interface SendPhoneOtpParams {
   phone: string // E.164, e.g. +919876543210
   firstName?: string
   lastName?: string
-  // Defaults to true so the invite flow still creates the farmer account. The
-  // login page passes false so an unknown number can't silently create an
-  // orphaned account with no profile/org.
+  // Defaults to true so the invite flow still creates the farmer account. Pass
+  // false to require the phone number to already belong to an existing account.
   shouldCreateUser?: boolean
 }
 
