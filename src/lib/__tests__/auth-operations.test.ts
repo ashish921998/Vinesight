@@ -330,6 +330,82 @@ describe('sendPhoneOtp', () => {
     expect(result).toEqual({ success: false, error: 'boom' })
     expect(kit.toast.error).toHaveBeenCalledWith("Couldn't send code: boom")
   })
+
+  it('translates the sign-in-only "Signups not allowed" error to a no-account message', async () => {
+    const kit = buildDeps({
+      signInWithOtp: vi.fn().mockResolvedValue({
+        error: { message: 'Signups not allowed for otp', code: 'otp_disabled' }
+      })
+    })
+
+    const result = await sendPhoneOtp({ phone: '+919876543210', shouldCreateUser: false }, kit.deps)
+
+    expect(result).toEqual({
+      success: false,
+      error: expect.stringMatching(/No account found for this number/)
+    })
+    expect(kit.toast.error).toHaveBeenCalledWith(
+      expect.stringMatching(/No account found for this number/)
+    )
+  })
+
+  it('does NOT translate the error for the invite flow (shouldCreateUser defaults to true)', async () => {
+    const kit = buildDeps({
+      signInWithOtp: vi.fn().mockResolvedValue({
+        error: { message: 'Signups not allowed for otp', code: 'otp_disabled' }
+      })
+    })
+
+    // No shouldCreateUser → defaults to true (the invite flow). The no-account
+    // translation must stay off so invited farmers still see the raw error.
+    const result = await sendPhoneOtp({ phone: '+919876543210' }, kit.deps)
+
+    expect(result).toEqual({ success: false, error: 'Signups not allowed for otp' })
+    expect(kit.toast.error).toHaveBeenCalledWith("Couldn't send code: Signups not allowed for otp")
+  })
+
+  it('translates via the message regex even when the error code is absent', async () => {
+    const kit = buildDeps({
+      signInWithOtp: vi.fn().mockResolvedValue({
+        error: { message: 'Signups not allowed for otp' }
+      })
+    })
+
+    const result = await sendPhoneOtp({ phone: '+919876543210', shouldCreateUser: false }, kit.deps)
+
+    expect(result).toEqual({
+      success: false,
+      error: expect.stringMatching(/No account found for this number/)
+    })
+  })
+
+  it('translates via the error code even when the message does not match the regex', async () => {
+    const kit = buildDeps({
+      signInWithOtp: vi.fn().mockResolvedValue({
+        error: { message: 'otp is disabled', code: 'otp_disabled' }
+      })
+    })
+
+    const result = await sendPhoneOtp({ phone: '+919876543210', shouldCreateUser: false }, kit.deps)
+
+    expect(result).toEqual({
+      success: false,
+      error: expect.stringMatching(/No account found for this number/)
+    })
+  })
+
+  it('does NOT translate when sign-in only and neither code nor message matches', async () => {
+    const kit = buildDeps({
+      signInWithOtp: vi.fn().mockResolvedValue({
+        error: { message: 'Rate limited', code: 'rate_limit' }
+      })
+    })
+
+    const result = await sendPhoneOtp({ phone: '+919876543210', shouldCreateUser: false }, kit.deps)
+
+    expect(result).toEqual({ success: false, error: 'Rate limited' })
+    expect(kit.toast.error).toHaveBeenCalledWith("Couldn't send code: Rate limited")
+  })
 })
 
 describe('verifyPhoneOtp', () => {

@@ -219,6 +219,18 @@ export async function sendPhoneOtp(
     })
 
     if (error) {
+      // Sign-in only (shouldCreateUser: false): Supabase returns "Signups not allowed for otp"
+      // (code: otp_disabled) when the number has no account. Surface a sign-in-context message
+      // instead of the raw string. The invite flow passes shouldCreateUser: true and never hits this.
+      const isUnknownNumber =
+        !shouldCreateUser &&
+        (error.code === 'otp_disabled' || /signups?\s+not\s+allowed/i.test(error.message))
+      if (isUnknownNumber) {
+        const message =
+          'No account found for this number. New farmers join through their consultant’s invite.'
+        toast.error(message)
+        return { success: false, error: message }
+      }
       toast.error(`Couldn't send code: ${error.message}`)
       return { success: false, error: error.message }
     }
