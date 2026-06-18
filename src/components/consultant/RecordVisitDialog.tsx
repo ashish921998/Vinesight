@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { ClipboardCheck, Loader2 } from 'lucide-react'
+import * as Sentry from '@sentry/nextjs'
 import posthog from 'posthog-js'
 import { type ConsultantAccess } from '@/lib/consultant-access'
 import {
@@ -82,7 +83,10 @@ export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: Recor
       setRecommendations(recs)
       setDrafts(Object.fromEntries(recs.map((r) => [r.triageId, { status: '', note: '' }])))
     } catch (err) {
-      posthog.captureException(err, { context: 'getVisitableRecommendations', farmerId })
+      Sentry.captureException(err, {
+        tags: { context: 'getVisitableRecommendations' },
+        extra: { farmerId }
+      })
       toast.error(err instanceof Error ? err.message : 'Failed to load recommendations')
     } finally {
       setLoading(false)
@@ -146,7 +150,10 @@ export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: Recor
       onRecorded?.(visit)
       setOpen(false)
     } catch (err) {
-      posthog.captureException(err, { context: 'createVisit', farmerId })
+      Sentry.captureException(err, {
+        tags: { context: 'createVisit' },
+        extra: { farmerId }
+      })
       toast.error(err instanceof Error ? err.message : 'Failed to record visit')
     } finally {
       setSubmitting(false)

@@ -1,7 +1,6 @@
 'use client'
 
 import * as Sentry from '@sentry/nextjs'
-import posthog from 'posthog-js'
 import { useEffect } from 'react'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import Link from 'next/link'
@@ -14,19 +13,15 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    // Capture the error with Sentry
+    // global-error replaces the root layout, so Sentry's ErrorBoundary in the
+    // layout tree never sees this — it's the only capture path for root failures.
+    console.error('Global error boundary:', error)
     Sentry.captureException(error, {
       tags: {
         location: 'global-error',
-        digest: error.digest
+        digest: error.digest ?? 'unknown'
       },
       level: 'fatal'
-    })
-
-    // Capture the error with PostHog Error Tracking
-    posthog.captureException(error, {
-      location: 'global-error',
-      digest: error.digest ?? 'unknown'
     })
   }, [error])
 

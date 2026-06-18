@@ -64,7 +64,6 @@
     "openai": "^6.15.0",
     "openmeteo": "^1.2.3",
     "posthog-js": "^1.310.2",
-    "posthog-node": "^5.18.0",
     "radix-ui": "^1.4.3",
     "react": "19.1.2",
     "react-dom": "19.1.2",

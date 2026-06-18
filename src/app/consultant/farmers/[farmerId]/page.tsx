@@ -37,6 +37,7 @@ import {
 } from '@/lib/consultant-visit-service'
 import { RecordVisitDialog } from '@/components/consultant/RecordVisitDialog'
 import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
+import * as Sentry from '@sentry/nextjs'
 import posthog from 'posthog-js'
 
 interface FarmerProfile {
@@ -104,7 +105,10 @@ export default function FarmerProfilePage() {
       })
     } catch (error) {
       console.error('Failed to load farmer profile:', error)
-      posthog.captureException(error, { context: 'loadFarmerProfile', farmerId })
+      Sentry.captureException(error, {
+        tags: { context: 'loadFarmerProfile' },
+        extra: { farmerId }
+      })
       toast.error(error instanceof Error ? error.message : 'Failed to load farmer profile')
     } finally {
       setLoading(false)

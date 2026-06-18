@@ -1,7 +1,6 @@
 'use client'
 
 import * as Sentry from '@sentry/nextjs'
-import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
@@ -18,22 +17,15 @@ export default function Error({
   // Cache timestamp to prevent hydration mismatch
   const errorTimestamp = useMemo(() => new Date().toISOString(), [])
 
+  // Next.js App Router error boundaries swallow the error to render this fallback,
+  // so it never reaches Sentry's global handlers — capture it explicitly.
   useEffect(() => {
-    // Log error to console
-    console.error('Error boundary:', error)
-
-    // Capture the error with Sentry
+    console.error('Page error boundary:', error)
     Sentry.captureException(error, {
       tags: {
         location: 'page-error',
         digest: error.digest ?? 'unknown'
       }
-    })
-
-    // Capture the error with PostHog Error Tracking
-    posthog.captureException(error, {
-      location: 'page-error',
-      digest: error.digest ?? 'unknown'
     })
   }, [error])
 

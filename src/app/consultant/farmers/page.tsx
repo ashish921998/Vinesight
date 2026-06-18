@@ -11,6 +11,7 @@ import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-acc
 import { getFarmerClients, type FarmerWithFarms } from '@/lib/consultant-query-service'
 import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
 import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
+import * as Sentry from '@sentry/nextjs'
 import posthog from 'posthog-js'
 
 export default function FarmerDirectoryPage() {
@@ -41,7 +42,7 @@ export default function FarmerDirectoryPage() {
       })
     } catch (error) {
       console.error('Failed to load farmers:', error)
-      posthog.captureException(error, { context: 'getFarmerClients' })
+      Sentry.captureException(error, { tags: { context: 'getFarmerClients' } })
       toast.error(error instanceof Error ? error.message : 'Failed to load farmer directory')
     } finally {
       setLoading(false)

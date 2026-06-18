@@ -18,7 +18,7 @@ if (typeof window !== 'undefined' && posthogKey) {
     api_host: '/ingest',
     ui_host: 'https://us.posthog.com',
     defaults: '2025-05-24',
-    capture_exceptions: true, // This enables capturing exceptions using Error Tracking
+    capture_exceptions: false, // Sentry is the primary error tracker; PostHog handles analytics only
     debug: process.env.NODE_ENV === 'development',
     // Strip invite tokens from $pageview URLs and other properties before capture.
     before_send: (event) => {
@@ -59,7 +59,10 @@ const getSupabaseClient = () => {
   return supabaseClient
 }
 
-// Base integrations for all environments
+// Base integrations for all environments.
+// vercelAIIntegration is intentionally omitted here; it is only available in
+// server/edge runtimes and is configured in sentry.server.config.ts and
+// sentry.edge.config.ts instead.
 const baseIntegrations = [
   Sentry.replayIntegration(),
   Sentry.captureConsoleIntegration(),
