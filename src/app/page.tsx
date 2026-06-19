@@ -156,9 +156,15 @@ export default function LandingPage() {
 
   useEffect(() => {
     if (!loading && user) {
+      let isMounted = true
       const lastRoute = getLastRoute()
       const resolveTargetRoute = async () => {
         const moduleHome = await resolveModuleHome(user.id)
+        // resolveModuleHome is async; if the component unmounts while the
+        // membership query is in flight (back button, fast nav), bail before
+        // calling router.replace on an unmounted component. Mirrors the guard
+        // in src/app/auth/callback/page.tsx.
+        if (!isMounted) return
         const targetRoute = moduleHome === ORG_HOME ? ORG_HOME : lastRoute || moduleHome
         router.replace(targetRoute)
       }
@@ -167,6 +173,9 @@ export default function LandingPage() {
       // prevented by that gate.
       // react-doctor-disable-next-line react-doctor/nextjs-no-client-side-redirect, nextjs-no-client-side-redirect -- justified above
       void resolveTargetRoute()
+      return () => {
+        isMounted = false
+      }
     }
   }, [loading, user, router])
 
