@@ -41,6 +41,7 @@ import {
   type OrgMember,
   type PendingInvite
 } from '@/lib/team-service'
+import { TeamTabs } from '@/components/consultant/TeamTabs'
 
 type InviteRole = 'admin' | 'agronomist'
 
@@ -262,6 +263,8 @@ export default function TeamSettingsPage() {
 
   return (
     <div className="space-y-6">
+      <TeamTabs canViewAllFarmers={isAdmin} />
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
