@@ -22,6 +22,8 @@ import { Loader2, Lock, Search, UserCog, Users } from 'lucide-react'
 import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
 import { getFarmerClients, type FarmerWithFarms } from '@/lib/consultant-query-service'
 import { listOrgMembers, type OrgMember } from '@/lib/team-service'
+import { TeamTabs } from '@/components/consultant/TeamTabs'
+import posthog from 'posthog-js'
 
 export default function FarmerAssignmentsPage() {
   const [access, setAccess] = useState<ConsultantAccess | null>(null)
@@ -156,6 +158,14 @@ export default function FarmerAssignmentsPage() {
           ? `Assigned ${count} farmer${count !== 1 ? 's' : ''} to ${targetAgronomistName}`
           : `Unassigned ${count} farmer${count !== 1 ? 's' : ''}`
       )
+      posthog.capture(
+        agronomistUserId ? 'consultant_farmer_assigned' : 'consultant_farmer_unassigned',
+        {
+          org_id: access.organizationId,
+          count,
+          agronomist_id: agronomistUserId ?? null
+        }
+      )
       await loadData()
     } catch (error) {
       console.error('Assignment failed:', error)
@@ -197,6 +207,8 @@ export default function FarmerAssignmentsPage() {
 
   return (
     <div className="space-y-6">
+      <TeamTabs canViewAllFarmers={access?.canViewAllFarmers ?? false} />
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Farmer Assignments</h1>

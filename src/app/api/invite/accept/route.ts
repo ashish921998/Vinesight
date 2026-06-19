@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { validateUserSession } from '@/lib/auth-utils'
 import { globalRateLimiter } from '@/lib/validation'
+import { resolveInviteAssignee } from '@/lib/assignment-access'
 
 // Binds an invited farmer to the inviting organization as an active client. Called from the
 // invited-farmer signup page right after the farmer verifies the OTP sent to their phone.
@@ -251,16 +252,27 @@ export async function POST(request: NextRequest) {
     // Token claimed — link the farmer to the org. An already-active client of this org is a
     // benign duplicate/leftover-token re-accept: leave their row (and its assignment) intact
     // instead of re-asserting it, so a stray invite can't silently reassign them to a different
-    // staff member. Only a brand-new client gets a row, assigned to whoever sent the invite.
-    // (A deactivated row was already refused above, so existingClient is undefined or active.)
+    // staff member. Only a brand-new client gets a row. (A deactivated row was already refused
+    // above, so existingClient is undefined or active.)
     if (existingClient?.status === 'active') {
       return NextResponse.json({ success: true, message: 'Linked to organization' })
     }
 
+    // An Assignment may only ever target an agronomist: inherit the inviter only when they
+    // hold that role, else land the client Unassigned so the assignment screen's "Unassigned"
+    // signal stays trustworthy. assigned_by still records who enrolled them, regardless of
+    // role. Shared with the assign/add-client paths and backstopped by a DB trigger. See
+    // docs/adr/0001-assignment-targets-agronomist.md.
+    const assignedAgronomist = await resolveInviteAssignee(
+      admin,
+      invite.organization_id,
+      invite.invited_by
+    )
+
     const { error: clientError } = await admin.from('organization_clients').insert({
       organization_id: invite.organization_id,
       client_user_id: userId,
-      assigned_to: invite.invited_by ?? null,
+      assigned_to: assignedAgronomist,
       assigned_by: invite.invited_by ?? null,
       status: 'active'
     })
