@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -30,7 +30,6 @@ export default function FarmerAssignmentsPage() {
   const access = accessQuery.data ?? null
   const farmerAccess = access?.canViewAllFarmers ? access : null
   const farmersQuery = useFarmerClients(farmerAccess)
-  const [farmers, setFarmers] = useState<FarmerWithFarms[]>([])
   const [members, setMembers] = useState<OrgMember[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -38,6 +37,31 @@ export default function FarmerAssignmentsPage() {
   const [targetAgronomist, setTargetAgronomist] = useState<string>('')
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
+
+  const loadData = useCallback(
+    async (currentAccess = access) => {
+      if (!currentAccess) return
+
+      try {
+        setLoading(true)
+
+        // Agronomists are read-only here; skip the heavier loads.
+        if (!currentAccess.canViewAllFarmers) {
+          return
+        }
+
+        const memberData = await listOrgMembers(currentAccess.organizationId)
+        setMembers(memberData)
+        setSelected(new Set())
+      } catch (error) {
+        console.error('Failed to load assignments:', error)
+        toast.error(error instanceof Error ? error.message : 'Failed to load assignments')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [access]
+  )
 
   useEffect(() => {
     if (accessQuery.isPending) return
@@ -47,30 +71,7 @@ export default function FarmerAssignmentsPage() {
       return
     }
     loadData(access)
-  }, [access, accessQuery.isError, accessQuery.isPending, farmersQuery.data])
-
-  const loadData = async (currentAccess = access) => {
-    if (!currentAccess) return
-
-    try {
-      setLoading(true)
-
-      // Agronomists are read-only here; skip the heavier loads.
-      if (!currentAccess.canViewAllFarmers) {
-        return
-      }
-
-      const memberData = await listOrgMembers(currentAccess.organizationId)
-      setFarmers(farmersQuery.data ?? [])
-      setMembers(memberData)
-      setSelected(new Set())
-    } catch (error) {
-      console.error('Failed to load assignments:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to load assignments')
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [access, accessQuery.isError, accessQuery.isPending, loadData])
 
   // Only agronomists can be assignment targets.
   const agronomists = useMemo(() => members.filter((m) => m.role === 'agronomist'), [members])
@@ -89,6 +90,8 @@ export default function FarmerAssignmentsPage() {
     if (access && farmer.assigned_to === access.userId) return 'You'
     return memberNameById.get(farmer.assigned_to) || 'Assigned'
   }
+
+  const farmers = farmersQuery.data ?? []
 
   const filteredFarmers = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -169,7 +172,9 @@ export default function FarmerAssignmentsPage() {
         }
       )
       const refreshedFarmers = await farmersQuery.refetch()
-      setFarmers(refreshedFarmers.data ?? [])
+      if (refreshedFarmers.error) {
+        throw refreshedFarmers.error
+      }
       const refreshedMembers = await listOrgMembers(access.organizationId)
       setMembers(refreshedMembers)
       setSelected(new Set())
@@ -188,6 +193,22 @@ export default function FarmerAssignmentsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
           <p className="text-sm text-muted-foreground">Loading assignments...</p>
         </div>
+      </div>
+    )
+  }
+
+  if (access?.canViewAllFarmers && farmersQuery.isError) {
+    return (
+      <div className="space-y-6">
+        <TeamTabs canViewAllFarmers />
+        <Alert variant="destructive">
+          <AlertTitle>Unable to load farmers</AlertTitle>
+          <AlertDescription>
+            {farmersQuery.error instanceof Error
+              ? farmersQuery.error.message
+              : 'Failed to load farmer assignments.'}
+          </AlertDescription>
+        </Alert>
       </div>
     )
   }

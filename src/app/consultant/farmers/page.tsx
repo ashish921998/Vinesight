@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,7 +31,11 @@ import { JoinCodeCard } from '@/components/consultant/JoinCodeCard'
 import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
 import * as Sentry from '@sentry/nextjs'
 import posthog from 'posthog-js'
-import { useConsultantAccess, useFarmerClients } from '@/hooks/consultant/useConsultantQueries'
+import {
+  farmerScope,
+  useConsultantAccess,
+  useFarmerClients
+} from '@/hooks/consultant/useConsultantQueries'
 import { consultantKeys } from '@/lib/consultant-query-keys'
 import type { FarmerWithFarms } from '@/lib/consultant-query-service'
 
@@ -41,6 +45,7 @@ const ALL_REGIONS = '__all__'
 
 export default function FarmerDirectoryPage() {
   const queryClient = useQueryClient()
+  const trackedViewKeyRef = useRef<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [regionFilter, setRegionFilter] = useState(ALL_REGIONS)
   const [unassignedOnly, setUnassignedOnly] = useState(false)
@@ -72,6 +77,10 @@ export default function FarmerDirectoryPage() {
   useEffect(() => {
     if (!access || !farmersQuery.data) return
 
+    const viewKey = `${access.userId}:${access.organizationId}`
+    if (trackedViewKeyRef.current === viewKey) return
+    trackedViewKeyRef.current = viewKey
+
     posthog.capture('consultant_farmer_list_viewed', {
       org_id: access.organizationId,
       role: access.role,
@@ -82,9 +91,8 @@ export default function FarmerDirectoryPage() {
   const updateCachedPaymentStatus = (clientRecordId: string, isPaid: boolean) => {
     if (!access) return
 
-    const scope = access.canViewAllFarmers ? 'all' : access.userId
     queryClient.setQueryData<FarmerWithFarms[]>(
-      consultantKeys.farmers(access.organizationId, scope),
+      consultantKeys.farmers(access.organizationId, farmerScope(access)),
       (current) =>
         current?.map((farmer) =>
           farmer.clientRecordId === clientRecordId ? { ...farmer, isPaid } : farmer
@@ -93,16 +101,14 @@ export default function FarmerDirectoryPage() {
   }
 
   // Unique regions across all farmers' farms, for the region filter dropdown.
-  const regions = useMemo(() => {
-    const set = new Set<string>()
-    for (const farmer of farmers) {
-      for (const farm of farmer.farms) {
-        const region = farm.region?.trim()
-        if (region && region !== ALL_REGIONS) set.add(region)
-      }
+  const regionSet = new Set<string>()
+  for (const farmer of farmers) {
+    for (const farm of farmer.farms) {
+      const region = farm.region?.trim()
+      if (region && region !== ALL_REGIONS) regionSet.add(region)
     }
-    return Array.from(set).sort((a, b) => a.localeCompare(b))
-  }, [farmers])
+  }
+  const regions = Array.from(regionSet).sort((a, b) => a.localeCompare(b))
 
   // Derive the effective region during render: if the selected region is no
   // longer present (e.g. the only farmer in it was removed or reassigned), fall
@@ -113,10 +119,7 @@ export default function FarmerDirectoryPage() {
   // Count of org clients with no agronomist assigned. Only meaningful for
   // owner/admin, whose directory includes the whole org; agronomists only ever
   // see their own assigned farmers, so the control below is gated on access.
-  const unassignedCount = useMemo(
-    () => farmers.filter((farmer) => !farmer.assigned_to).length,
-    [farmers]
-  )
+  const unassignedCount = farmers.filter((farmer) => !farmer.assigned_to).length
 
   // Owner/admin only, and only worth showing when there's at least one.
   const showUnassignedFilter = Boolean(access?.canViewAllFarmers) && unassignedCount > 0
@@ -127,30 +130,28 @@ export default function FarmerDirectoryPage() {
   const effectiveUnassignedOnly = showUnassignedFilter && unassignedOnly
 
   // Filtered farmers
-  const filteredFarmers = useMemo(() => {
-    return farmers.filter((farmer) => {
-      // Search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase()
-        const nameMatch = farmer.full_name?.toLowerCase().includes(query)
-        const farmMatch = farmer.farms.some((f) => f.name?.toLowerCase().includes(query))
-        if (!nameMatch && !farmMatch) return false
-      }
+  const filteredFarmers = farmers.filter((farmer) => {
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      const nameMatch = farmer.full_name?.toLowerCase().includes(query)
+      const farmMatch = farmer.farms.some((f) => f.name?.toLowerCase().includes(query))
+      if (!nameMatch && !farmMatch) return false
+    }
 
-      // Region filter — keep the farmer if any of their farms is in the region
-      if (effectiveRegion !== ALL_REGIONS) {
-        const regionMatch = farmer.farms.some((f) => f.region?.trim() === effectiveRegion)
-        if (!regionMatch) return false
-      }
+    // Region filter — keep the farmer if any of their farms is in the region
+    if (effectiveRegion !== ALL_REGIONS) {
+      const regionMatch = farmer.farms.some((f) => f.region?.trim() === effectiveRegion)
+      if (!regionMatch) return false
+    }
 
-      // Unassigned filter — restrict to farmers with no agronomist assigned
-      if (effectiveUnassignedOnly && farmer.assigned_to) {
-        return false
-      }
+    // Unassigned filter — restrict to farmers with no agronomist assigned
+    if (effectiveUnassignedOnly && farmer.assigned_to) {
+      return false
+    }
 
-      return true
-    })
-  }, [farmers, searchQuery, effectiveRegion, effectiveUnassignedOnly])
+    return true
+  })
 
   if (loading) {
     return (

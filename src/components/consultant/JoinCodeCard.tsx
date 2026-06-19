@@ -17,14 +17,16 @@ interface JoinCodeCardProps {
   access?: ConsultantAccess | null
 }
 
-export function JoinCodeCard({ access: providedAccess = null }: JoinCodeCardProps = {}) {
-  const fallbackAccessQuery = useConsultantAccess(providedAccess === null)
+export function JoinCodeCard(props: JoinCodeCardProps = {}) {
+  const hasProvidedAccess = Object.prototype.hasOwnProperty.call(props, 'access')
+  const providedAccess = props.access ?? null
+  const fallbackAccessQuery = useConsultantAccess(!hasProvidedAccess)
 
   // Derive the effective state: a parent-provided access is authoritative and is
   // never loading or errored; otherwise fall back to the cached access query.
-  const access = providedAccess ?? fallbackAccessQuery.data ?? null
-  const loading = providedAccess === null && fallbackAccessQuery.isPending
-  const error = providedAccess === null && fallbackAccessQuery.isError
+  const access = hasProvidedAccess ? providedAccess : (fallbackAccessQuery.data ?? null)
+  const loading = !hasProvidedAccess && fallbackAccessQuery.isPending
+  const error = !hasProvidedAccess && fallbackAccessQuery.isError
 
   if (loading) {
     return (

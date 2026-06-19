@@ -85,7 +85,7 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
     isError,
     error
   } = useConsultantAccess()
-  const accessState = getConsultantAccessState(isPending, isError, access)
+  const accessState = getConsultantAccessState(isPending, isError && !access, access)
 
   useEffect(() => {
     if (accessState === 'denied') {

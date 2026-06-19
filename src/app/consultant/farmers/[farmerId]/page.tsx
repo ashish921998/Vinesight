@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import { useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,7 @@ import {
   XCircle
 } from 'lucide-react'
 import {
+  farmerScope,
   useConsultantAccess,
   useFarmerFarms,
   useFarmerProfile,
@@ -37,11 +39,15 @@ import {
 } from '@/lib/consultant-visit-service'
 import { RecordVisitDialog } from '@/components/consultant/RecordVisitDialog'
 import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
+import { consultantKeys } from '@/lib/consultant-query-keys'
+import type { FarmerWithFarms, ValidatedFarmerClient } from '@/lib/consultant-query-service'
 import * as Sentry from '@sentry/nextjs'
 import posthog from 'posthog-js'
 
 export default function FarmerProfilePage() {
   const params = useParams()
+  const queryClient = useQueryClient()
+  const trackedProfileViewKeyRef = useRef<string | null>(null)
   const farmerId = params.farmerId as string
 
   const accessQuery = useConsultantAccess()
@@ -84,6 +90,10 @@ export default function FarmerProfilePage() {
   useEffect(() => {
     if (!access || !farmerQuery.data || !farmsQuery.data || !visitsQuery.data) return
 
+    const viewKey = `${access.userId}:${access.organizationId}:${farmerId}`
+    if (trackedProfileViewKeyRef.current === viewKey) return
+    trackedProfileViewKeyRef.current = viewKey
+
     posthog.capture('consultant_farmer_profile_viewed', {
       farmer_id: farmerId,
       org_id: access.organizationId,
@@ -92,6 +102,22 @@ export default function FarmerProfilePage() {
       visit_count: visitsQuery.data.length
     })
   }, [access, farmerId, farmerQuery.data, farmsQuery.data, visitsQuery.data])
+
+  const updateCachedPaymentStatus = (isPaid: boolean) => {
+    if (!access) return
+
+    const scope = farmerScope(access)
+
+    queryClient.setQueryData<ValidatedFarmerClient>(
+      consultantKeys.farmerValidation(farmerId, access.organizationId, scope),
+      (current) => (current ? { ...current, isPaid } : current)
+    )
+    queryClient.setQueryData<FarmerWithFarms[]>(
+      consultantKeys.farmers(access.organizationId, scope),
+      (current) =>
+        current?.map((farmer) => (farmer.id === farmerId ? { ...farmer, isPaid } : farmer))
+    )
+  }
 
   if (loading) {
     return (
@@ -164,6 +190,7 @@ export default function FarmerProfilePage() {
               clientRecordId={validation.clientRecordId}
               isPaid={validation.isPaid}
               size="default"
+              onChange={updateCachedPaymentStatus}
             />
           )}
           {access && (

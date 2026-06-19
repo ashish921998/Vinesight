@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -84,42 +84,47 @@ export default function TeamSettingsPage() {
 
   const isAdmin = access?.canViewAllFarmers ?? false
 
+  const loadTeam = useCallback(
+    async (currentAccess = access) => {
+      if (!currentAccess) return
+
+      try {
+        setLoading(true)
+
+        const orgId = currentAccess.organizationId
+        const memberRows = await listOrgMembers(orgId)
+        setMembers(memberRows)
+        posthog.capture('consultant_team_viewed', {
+          org_id: orgId,
+          role: currentAccess.role,
+          member_count: memberRows.length
+        })
+
+        if (currentAccess.canViewAllFarmers) {
+          const inviteRows = await listPendingInvites(orgId)
+          setInvites(inviteRows)
+        }
+      } catch (error) {
+        console.error('Failed to load team:', error)
+        toast.error(error instanceof Error ? error.message : 'Failed to load team')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [access]
+  )
+
   useEffect(() => {
     if (accessQuery.isPending) return
     if (!access) {
+      setMembers([])
+      setInvites([])
       if (accessQuery.isError) toast.error('Not authenticated')
       setLoading(false)
       return
     }
     loadTeam(access)
-  }, [access, accessQuery.isError, accessQuery.isPending])
-
-  const loadTeam = async (currentAccess = access) => {
-    if (!currentAccess) return
-
-    try {
-      setLoading(true)
-
-      const orgId = currentAccess.organizationId
-      const memberRows = await listOrgMembers(orgId)
-      setMembers(memberRows)
-      posthog.capture('consultant_team_viewed', {
-        org_id: orgId,
-        role: currentAccess.role,
-        member_count: memberRows.length
-      })
-
-      if (currentAccess.canViewAllFarmers) {
-        const inviteRows = await listPendingInvites(orgId)
-        setInvites(inviteRows)
-      }
-    } catch (error) {
-      console.error('Failed to load team:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to load team')
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [access, accessQuery.isError, accessQuery.isPending, loadTeam])
 
   const reloadMembers = async () => {
     if (!access) return

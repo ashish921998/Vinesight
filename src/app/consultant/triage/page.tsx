@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -109,6 +109,29 @@ export default function TriagePage() {
   const [formRecommendation, setFormRecommendation] = useState('')
   const [formReviewNotes, setFormReviewNotes] = useState('')
 
+  const loadTriage = useCallback(
+    async (currentAccess = access) => {
+      if (!currentAccess) return
+
+      try {
+        setLoading(true)
+        const data = await getTriageItems(currentAccess)
+        setItems(data)
+        posthog.capture('consultant_triage_viewed', {
+          org_id: currentAccess.organizationId,
+          role: currentAccess.role,
+          item_count: data.length
+        })
+      } catch (error) {
+        console.error('Failed to load triage:', error)
+        toast.error('Failed to load triage queue')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [access]
+  )
+
   useEffect(() => {
     if (accessQuery.isPending) return
     if (!access) {
@@ -117,27 +140,7 @@ export default function TriagePage() {
       return
     }
     loadTriage(access)
-  }, [access, accessQuery.isError, accessQuery.isPending])
-
-  const loadTriage = async (currentAccess = access) => {
-    if (!currentAccess) return
-
-    try {
-      setLoading(true)
-      const data = await getTriageItems(currentAccess)
-      setItems(data)
-      posthog.capture('consultant_triage_viewed', {
-        org_id: currentAccess.organizationId,
-        role: currentAccess.role,
-        item_count: data.length
-      })
-    } catch (error) {
-      console.error('Failed to load triage:', error)
-      toast.error('Failed to load triage queue')
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [access, accessQuery.isError, accessQuery.isPending, loadTriage])
 
   const counts = useMemo(() => {
     let pending = 0

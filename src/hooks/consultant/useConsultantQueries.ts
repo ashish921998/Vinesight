@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
 import { consultantKeys } from '@/lib/consultant-query-keys'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import {
   getFarmerClients,
   getFarmerFarms,
@@ -28,15 +29,18 @@ export function getConsultantAccessState(
   return access ? 'ok' : 'denied'
 }
 
-function farmerScope(access: ConsultantAccess) {
+export function farmerScope(access: ConsultantAccess) {
   return access.canViewAllFarmers ? 'all' : access.userId
 }
 
 export function useConsultantAccess(enabled = true) {
+  const { loading, user } = useSupabaseAuth()
+  const userId = user?.id ?? 'anonymous'
+
   return useQuery({
-    queryKey: consultantKeys.access(),
+    queryKey: consultantKeys.access(userId),
     queryFn: getConsultantAccess,
-    enabled
+    enabled: Boolean(enabled && !loading && user)
   })
 }
 
@@ -56,7 +60,7 @@ export function useValidatedFarmerClient(
 ) {
   return useQuery({
     queryKey: access
-      ? ['consultant', 'farmer', farmerId, 'validation', access.organizationId, farmerScope(access)]
+      ? consultantKeys.farmerValidation(farmerId, access.organizationId, farmerScope(access))
       : ['consultant', 'farmer', farmerId, 'validation', 'disabled'],
     queryFn: () => validateFarmerClient(access as ConsultantAccess, farmerId),
     enabled: Boolean(access && farmerId)
@@ -92,7 +96,9 @@ export function useFarmerVisits(
   farmerId: string
 ) {
   return useQuery({
-    queryKey: consultantKeys.farmerVisits(farmerId),
+    queryKey: access
+      ? consultantKeys.farmerVisits(farmerId, access.organizationId, farmerScope(access))
+      : ['consultant', 'farmer', farmerId, 'visits', 'disabled'],
     queryFn: () => getVisitsForFarmer(access as ConsultantAccess, farmerId),
     enabled: Boolean(access && farmerId)
   })
@@ -109,7 +115,10 @@ export function useCreateVisit(access: ConsultantAccess | null | undefined, farm
       return createVisit(access, input)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: consultantKeys.farmerVisits(farmerId) })
+      if (!access) return
+      queryClient.invalidateQueries({
+        queryKey: consultantKeys.farmerVisits(farmerId, access.organizationId, farmerScope(access))
+      })
     }
   })
 }
