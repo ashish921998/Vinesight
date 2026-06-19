@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Copy, Loader2, MessageSquareShare } from 'lucide-react'
-import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
+import { type ConsultantAccess } from '@/lib/consultant-access'
+import { useConsultantAccess } from '@/hooks/consultant/useConsultantQueries'
 import { buildJoinMessage } from '@/lib/join-message'
 import posthog from 'posthog-js'
 
@@ -17,40 +17,16 @@ interface JoinCodeCardProps {
   access?: ConsultantAccess | null
 }
 
-export function JoinCodeCard({ access: providedAccess = null }: JoinCodeCardProps = {}) {
-  // Only the fallback fetch owns state. When the parent supplies access we read
-  // it directly, so the prop is never mirrored into state.
-  const [fetchedAccess, setFetchedAccess] = useState<ConsultantAccess | null>(null)
-  const [fetchLoading, setFetchLoading] = useState(true)
-  const [fetchError, setFetchError] = useState(false)
-
-  useEffect(() => {
-    // Parent already has access — skip the redundant round-trip entirely.
-    if (providedAccess !== null) return
-
-    let active = true
-    const load = async () => {
-      try {
-        const currentAccess = await getConsultantAccess()
-        if (active) setFetchedAccess(currentAccess)
-      } catch (err) {
-        console.error('Failed to load join code:', err)
-        if (active) setFetchError(true)
-      } finally {
-        if (active) setFetchLoading(false)
-      }
-    }
-    load()
-    return () => {
-      active = false
-    }
-  }, [providedAccess])
+export function JoinCodeCard(props: JoinCodeCardProps = {}) {
+  const hasProvidedAccess = Object.prototype.hasOwnProperty.call(props, 'access')
+  const providedAccess = props.access ?? null
+  const fallbackAccessQuery = useConsultantAccess(!hasProvidedAccess)
 
   // Derive the effective state: a parent-provided access is authoritative and is
-  // never loading or errored; otherwise fall back to the fetch result.
-  const access = providedAccess ?? fetchedAccess
-  const loading = providedAccess === null && fetchLoading
-  const error = providedAccess === null && fetchError
+  // never loading or errored; otherwise fall back to the cached access query.
+  const access = hasProvidedAccess ? providedAccess : (fallbackAccessQuery.data ?? null)
+  const loading = !hasProvidedAccess && fallbackAccessQuery.isPending
+  const error = !hasProvidedAccess && fallbackAccessQuery.isError
 
   if (loading) {
     return (

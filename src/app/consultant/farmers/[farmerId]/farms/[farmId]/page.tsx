@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -18,83 +19,98 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from 'sonner'
+import * as Sentry from '@sentry/nextjs'
 import type { LabTestRecord } from '@/types/lab-tests'
-import { getConsultantAccess } from '@/lib/consultant-access'
+import type { FarmDetail } from '@/lib/consultant-query-service'
 import {
-  validateFarmerClient,
-  getFarmDetail,
-  type FarmDetail
-} from '@/lib/consultant-query-service'
+  useConsultantAccess,
+  useFarmDetail,
+  useFarmerProfile,
+  useValidatedFarmerClient
+} from '@/hooks/consultant/useConsultantQueries'
 import { SupabaseService } from '@/lib/supabase-service'
 
 export default function ConsultantFarmPage() {
   const params = useParams()
-  const router = useRouter()
   const farmerId = params.farmerId as string
   const rawFarmId = parseInt(params.farmId as string, 10)
   const farmId = isNaN(rawFarmId) ? null : rawFarmId
 
-  const [loading, setLoading] = useState(true)
-  const [farm, setFarm] = useState<FarmDetail | null>(null)
   const [soilTests, setSoilTests] = useState<LabTestRecord[]>([])
   const [petioleTests, setPetioleTests] = useState<LabTestRecord[]>([])
-  const [farmerName, setFarmerName] = useState<string>('')
+  const [labTestsFarmId, setLabTestsFarmId] = useState<number | null>(null)
+  const [labTestsLoading, setLabTestsLoading] = useState(false)
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true)
-
-      const access = await getConsultantAccess()
-      if (!access) {
-        toast.error('Not authenticated')
-        return
-      }
-
-      // Validate farmer belongs to org through organization_clients
-      const validation = await validateFarmerClient(access, farmerId)
-      if (!validation.isValid) {
-        toast.error('Farmer not found or not authorized')
-        router.push('/consultant/farmers')
-        return
-      }
-
-      // Validate farm belongs to farmer through farms.user_id
-      if (farmId === null) {
-        toast.error('Invalid farm ID')
-        router.push(`/consultant/farmers/${farmerId}`)
-        return
-      }
-
-      const farmData = await getFarmDetail(farmId)
-      if (!farmData || farmData.user_id !== farmerId) {
-        toast.error('Farm not found or does not belong to this farmer')
-        router.push(`/consultant/farmers/${farmerId}`)
-        return
-      }
-
-      setFarm(farmData)
-
-      // Fetch lab test records that are already safe to display
-      const [soilTestsData, petioleTestsData, profile] = await Promise.all([
-        SupabaseService.getSoilTestRecords(farmId),
-        SupabaseService.getPetioleTestRecords(farmId),
-        supabaseGetFarmerProfile(farmerId)
-      ])
-
-      setSoilTests((soilTestsData || []) as LabTestRecord[])
-      setPetioleTests((petioleTestsData || []) as LabTestRecord[])
-      setFarmerName(profile?.full_name || 'Farmer')
-    } catch (error) {
-      console.error('Error loading farm data:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to load farm data')
-    } finally {
-      setLoading(false)
-    }
-  }, [farmerId, farmId, router])
+  const accessQuery = useConsultantAccess()
+  const access = accessQuery.data ?? null
+  const validationQuery = useValidatedFarmerClient(access, farmerId)
+  const isValidClient = validationQuery.data?.isValid ?? false
+  const farmQuery = useFarmDetail(farmId, isValidClient, access)
+  const profileQuery = useFarmerProfile(farmerId, isValidClient)
+  const farm = isValidClient && farmQuery.data?.user_id === farmerId ? farmQuery.data : null
+  const farmerName = profileQuery.data?.full_name || 'Farmer'
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    const error = accessQuery.error ?? validationQuery.error ?? farmQuery.error ?? profileQuery.error
+    if (!error) return
+
+    console.error('Error loading farm data:', error)
+    Sentry.captureException(error, {
+      tags: { context: 'loadFarmDetail' },
+      extra: { farmerId, farmId }
+    })
+    toast.error(error instanceof Error ? error.message : 'Failed to load farm data')
+  }, [accessQuery.error, validationQuery.error, farmQuery.error, profileQuery.error, farmerId, farmId])
+
+  useEffect(() => {
+    if (!farmId || !isValidClient || !farm) {
+      setSoilTests([])
+      setPetioleTests([])
+      setLabTestsFarmId(null)
+      setLabTestsLoading(false)
+      return
+    }
+
+    let cancelled = false
+
+    async function loadLabTests() {
+      try {
+        setLabTestsLoading(true)
+        setLabTestsFarmId(null)
+        const [soilTestsData, petioleTestsData] = await Promise.all([
+          SupabaseService.getSoilTestRecords(farmId as number),
+          SupabaseService.getPetioleTestRecords(farmId as number)
+        ])
+
+        if (cancelled) return
+        setSoilTests((soilTestsData || []) as LabTestRecord[])
+        setPetioleTests((petioleTestsData || []) as LabTestRecord[])
+        setLabTestsFarmId(farm.id)
+      } catch (error) {
+        if (cancelled) return
+        setSoilTests([])
+        setPetioleTests([])
+        setLabTestsFarmId(null)
+        console.error('Error loading lab tests:', error)
+        toast.error(error instanceof Error ? error.message : 'Failed to load lab tests')
+      } finally {
+        if (!cancelled) setLabTestsLoading(false)
+      }
+    }
+
+    loadLabTests()
+
+    return () => {
+      cancelled = true
+    }
+  }, [farmId, farm, isValidClient])
+
+  const loading =
+    accessQuery.isPending ||
+    validationQuery.isPending ||
+    (isValidClient &&
+      farmId != null &&
+      (farmQuery.isPending || profileQuery.isPending || labTestsLoading))
 
   if (loading) {
     return (
@@ -108,206 +124,274 @@ export default function ConsultantFarmPage() {
   }
 
   if (!farm) {
-    return (
-      <div className="space-y-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push(`/consultant/farmers/${farmerId}`)}
-          className="flex items-center gap-2 -ml-2"
-        >
+    return <FarmNotFound farmerId={farmerId} />
+  }
+
+  const visibleSoilTests = labTestsFarmId === farm.id ? soilTests : []
+  const visiblePetioleTests = labTestsFarmId === farm.id ? petioleTests : []
+
+  return (
+    <div className="space-y-6">
+      <FarmHeader farm={farm} farmerId={farmerId} farmerName={farmerName} />
+      <FarmInfoCard farm={farm} farmerName={farmerName} />
+      <SoilPropertiesCard farm={farm} />
+      <LabTestsSection petioleTests={visiblePetioleTests} soilTests={visibleSoilTests} />
+    </div>
+  )
+}
+
+function FarmNotFound({ farmerId }: { farmerId: string }) {
+  return (
+    <div className="space-y-6">
+      <Button asChild variant="ghost" size="sm" className="flex items-center gap-2 -ml-2">
+        <Link href={`/consultant/farmers/${farmerId}`}>
           <ArrowLeft className="h-4 w-4" />
           Back to Farmer
-        </Button>
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Farm Not Found</h2>
-            <p className="text-muted-foreground">
-              This farm could not be found or does not belong to this farmer.
-            </p>
-          </CardContent>
-        </Card>
+        </Link>
+      </Button>
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Farm Not Found</h2>
+          <p className="text-muted-foreground">
+            This farm could not be found or does not belong to this farmer.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+function FarmHeader({
+  farm,
+  farmerId,
+  farmerName
+}: {
+  farm: FarmDetail
+  farmerId: string
+  farmerName: string
+}) {
+  return (
+    <div className="space-y-2">
+      <Button asChild variant="ghost" size="sm" className="flex items-center gap-2 -ml-2">
+        <Link href={`/consultant/farmers/${farmerId}`}>
+          <ArrowLeft className="h-4 w-4" />
+          Back to {farmerName}
+        </Link>
+      </Button>
+      <div className="flex items-center gap-3">
+        <Grape className="h-8 w-8 text-purple-600" />
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">{farm.name}</h1>
+          <p className="text-muted-foreground flex items-center gap-1">
+            <MapPin className="h-4 w-4" />
+            {farm.region}
+          </p>
+        </div>
       </div>
+    </div>
+  )
+}
+
+function FarmInfoCard({ farm, farmerName }: { farm: FarmDetail; farmerName: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Farm Details</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground">Variety</p>
+            <p className="font-medium">{farm.crop_variety || 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Area</p>
+            <p className="font-medium">{farm.area ? `${farm.area} acres` : 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Last Pruning</p>
+            <p className="font-medium flex items-center gap-1">
+              <Calendar className="h-3.5 w-3.5" />
+              {farm.date_of_pruning ? new Date(farm.date_of_pruning).toLocaleDateString() : 'N/A'}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Owner</p>
+            <p className="font-medium">{farmerName}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function SoilPropertiesCard({ farm }: { farm: FarmDetail }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <TestTube className="h-5 w-5 text-amber-600" />
+          Soil Properties
+        </CardTitle>
+        <CardDescription>Physical and chemical soil characteristics</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground">Texture Class</p>
+            <p className="font-medium">{farm.soil_texture_class || 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Bulk Density</p>
+            <p className="font-medium">
+              {farm.bulk_density ? `${farm.bulk_density} g/ml` : 'N/A'}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">CEC</p>
+            <p className="font-medium">
+              {farm.cation_exchange_capacity
+                ? `${farm.cation_exchange_capacity} meq/100g`
+                : 'N/A'}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Water Retention</p>
+            <p className="font-medium">
+              {farm.soil_water_retention ? `${farm.soil_water_retention} mm/m` : 'N/A'}
+            </p>
+          </div>
+        </div>
+
+        {(farm.sand_percentage || farm.silt_percentage || farm.clay_percentage) && (
+          <div className="mt-6">
+            <p className="text-sm font-medium text-muted-foreground mb-3">Soil Composition</p>
+            <div className="grid grid-cols-3 gap-4">
+              <SoilCompositionValue
+                label="Sand"
+                value={farm.sand_percentage}
+                className="bg-amber-50 text-amber-700"
+                labelClassName="text-amber-600"
+              />
+              <SoilCompositionValue
+                label="Silt"
+                value={farm.silt_percentage}
+                className="bg-stone-100 text-stone-700"
+                labelClassName="text-stone-600"
+              />
+              <SoilCompositionValue
+                label="Clay"
+                value={farm.clay_percentage}
+                className="bg-orange-50 text-orange-700"
+                labelClassName="text-orange-600"
+              />
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function SoilCompositionValue({
+  className,
+  label,
+  labelClassName,
+  value
+}: {
+  className: string
+  label: string
+  labelClassName: string
+  value: number | null
+}) {
+  return (
+    <div className={`rounded-lg p-3 text-center ${className}`}>
+      <p className="text-2xl font-bold">{value ?? '-'}%</p>
+      <p className={`text-sm ${labelClassName}`}>{label}</p>
+    </div>
+  )
+}
+
+function LabTestsSection({
+  petioleTests,
+  soilTests
+}: {
+  petioleTests: LabTestRecord[]
+  soilTests: LabTestRecord[]
+}) {
+  return (
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold">Lab Test Analysis</h2>
+
+      <Tabs defaultValue="soil" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="soil" className="flex items-center gap-2">
+            <TestTube className="h-4 w-4" />
+            Soil Tests ({soilTests.length})
+          </TabsTrigger>
+          <TabsTrigger value="petiole" className="flex items-center gap-2">
+            <Leaf className="h-4 w-4" />
+            Petiole Tests ({petioleTests.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="soil" className="space-y-4">
+          <TestList
+            emptyIcon="soil"
+            emptyText="No soil test records found for this farm."
+            emptyTitle="No Soil Tests"
+            tests={soilTests}
+            type="soil"
+          />
+        </TabsContent>
+
+        <TabsContent value="petiole" className="space-y-4">
+          <TestList
+            emptyIcon="petiole"
+            emptyText="No petiole test records found for this farm."
+            emptyTitle="No Petiole Tests"
+            tests={petioleTests}
+            type="petiole"
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
+
+function TestList({
+  emptyIcon,
+  emptyText,
+  emptyTitle,
+  tests,
+  type
+}: {
+  emptyIcon: 'soil' | 'petiole'
+  emptyText: string
+  emptyTitle: string
+  tests: LabTestRecord[]
+  type: 'soil' | 'petiole'
+}) {
+  const EmptyIcon = emptyIcon === 'soil' ? TestTube : Leaf
+
+  if (tests.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <EmptyIcon className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">{emptyTitle}</h3>
+          <p className="text-muted-foreground">{emptyText}</p>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push(`/consultant/farmers/${farmerId}`)}
-          className="flex items-center gap-2 -ml-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to {farmerName}
-        </Button>
-        <div className="flex items-center gap-3">
-          <Grape className="h-8 w-8 text-purple-600" />
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">{farm.name}</h1>
-            <p className="text-muted-foreground flex items-center gap-1">
-              <MapPin className="h-4 w-4" />
-              {farm.region}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Farm Info Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Farm Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Variety</p>
-              <p className="font-medium">{farm.crop_variety || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Area</p>
-              <p className="font-medium">{farm.area ? `${farm.area} acres` : 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Last Pruning</p>
-              <p className="font-medium flex items-center gap-1">
-                <Calendar className="h-3.5 w-3.5" />
-                {farm.date_of_pruning ? new Date(farm.date_of_pruning).toLocaleDateString() : 'N/A'}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Owner</p>
-              <p className="font-medium">{farmerName}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Soil Properties Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TestTube className="h-5 w-5 text-amber-600" />
-            Soil Properties
-          </CardTitle>
-          <CardDescription>Physical and chemical soil characteristics</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Texture Class</p>
-              <p className="font-medium">{farm.soil_texture_class || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Bulk Density</p>
-              <p className="font-medium">
-                {farm.bulk_density ? `${farm.bulk_density} g/ml` : 'N/A'}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">CEC</p>
-              <p className="font-medium">
-                {farm.cation_exchange_capacity
-                  ? `${farm.cation_exchange_capacity} meq/100g`
-                  : 'N/A'}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Water Retention</p>
-              <p className="font-medium">
-                {farm.soil_water_retention ? `${farm.soil_water_retention} mm/m` : 'N/A'}
-              </p>
-            </div>
-          </div>
-
-          {/* Soil Composition */}
-          {(farm.sand_percentage || farm.silt_percentage || farm.clay_percentage) && (
-            <div className="mt-6">
-              <p className="text-sm font-medium text-muted-foreground mb-3">Soil Composition</p>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-amber-50 rounded-lg p-3 text-center">
-                  <p className="text-2xl font-bold text-amber-700">
-                    {farm.sand_percentage ?? '-'}%
-                  </p>
-                  <p className="text-sm text-amber-600">Sand</p>
-                </div>
-                <div className="bg-stone-100 rounded-lg p-3 text-center">
-                  <p className="text-2xl font-bold text-stone-700">
-                    {farm.silt_percentage ?? '-'}%
-                  </p>
-                  <p className="text-sm text-stone-600">Silt</p>
-                </div>
-                <div className="bg-orange-50 rounded-lg p-3 text-center">
-                  <p className="text-2xl font-bold text-orange-700">
-                    {farm.clay_percentage ?? '-'}%
-                  </p>
-                  <p className="text-sm text-orange-600">Clay</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Lab Tests Section */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Lab Test Analysis</h2>
-
-        <Tabs defaultValue="soil" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="soil" className="flex items-center gap-2">
-              <TestTube className="h-4 w-4" />
-              Soil Tests ({soilTests.length})
-            </TabsTrigger>
-            <TabsTrigger value="petiole" className="flex items-center gap-2">
-              <Leaf className="h-4 w-4" />
-              Petiole Tests ({petioleTests.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="soil" className="space-y-4">
-            {soilTests.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <TestTube className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Soil Tests</h3>
-                  <p className="text-muted-foreground">No soil test records found for this farm.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-4">
-                {soilTests.map((test) => (
-                  <TestCard key={test.id} test={test} type="soil" />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="petiole" className="space-y-4">
-            {petioleTests.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Leaf className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Petiole Tests</h3>
-                  <p className="text-muted-foreground">
-                    No petiole test records found for this farm.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-4">
-                {petioleTests.map((test) => (
-                  <TestCard key={test.id} test={test} type="petiole" />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
+    <div className="grid gap-4">
+      {tests.map((test) => (
+        <TestCard key={test.id} test={test} type={type} />
+      ))}
     </div>
   )
 }
@@ -480,16 +564,4 @@ function TestCard({ test, type }: { test: LabTestRecord; type: 'soil' | 'petiole
       </CardContent>
     </Card>
   )
-}
-
-// Inline helper to fetch farmer profile for the farm page header
-async function supabaseGetFarmerProfile(farmerId: string) {
-  const { getTypedSupabaseClient } = await import('@/lib/supabase')
-  const supabase = await getTypedSupabaseClient()
-  const { data } = await supabase
-    .from('profiles')
-    .select('full_name')
-    .eq('id', farmerId)
-    .maybeSingle()
-  return data
 }

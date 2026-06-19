@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/sheet'
 import { toast } from 'sonner'
 import { Search, Loader2, ClipboardList, ChevronRight, FlaskConical } from 'lucide-react'
-import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
+import { useConsultantAccess } from '@/hooks/consultant/useConsultantQueries'
 import posthog from 'posthog-js'
 import {
   getTriageItems,
@@ -87,9 +87,10 @@ function formatDate(value: string | null) {
 }
 
 export default function TriagePage() {
+  const accessQuery = useConsultantAccess()
+  const access = accessQuery.data ?? null
   const [items, setItems] = useState<TriageItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [access, setAccess] = useState<ConsultantAccess | null>(null)
 
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -108,33 +109,38 @@ export default function TriagePage() {
   const [formRecommendation, setFormRecommendation] = useState('')
   const [formReviewNotes, setFormReviewNotes] = useState('')
 
-  useEffect(() => {
-    loadTriage()
-  }, [])
+  const loadTriage = useCallback(
+    async (currentAccess = access) => {
+      if (!currentAccess) return
 
-  const loadTriage = async () => {
-    try {
-      setLoading(true)
-      const currentAccess = await getConsultantAccess()
-      if (!currentAccess) {
-        toast.error('Not authenticated')
-        return
+      try {
+        setLoading(true)
+        const data = await getTriageItems(currentAccess)
+        setItems(data)
+        posthog.capture('consultant_triage_viewed', {
+          org_id: currentAccess.organizationId,
+          role: currentAccess.role,
+          item_count: data.length
+        })
+      } catch (error) {
+        console.error('Failed to load triage:', error)
+        toast.error('Failed to load triage queue')
+      } finally {
+        setLoading(false)
       }
-      setAccess(currentAccess)
-      const data = await getTriageItems(currentAccess)
-      setItems(data)
-      posthog.capture('consultant_triage_viewed', {
-        org_id: currentAccess.organizationId,
-        role: currentAccess.role,
-        item_count: data.length
-      })
-    } catch (error) {
-      console.error('Failed to load triage:', error)
-      toast.error('Failed to load triage queue')
-    } finally {
+    },
+    [access]
+  )
+
+  useEffect(() => {
+    if (accessQuery.isPending) return
+    if (!access) {
+      if (accessQuery.isError) toast.error('Not authenticated')
       setLoading(false)
+      return
     }
-  }
+    loadTriage(access)
+  }, [access, accessQuery.isError, accessQuery.isPending, loadTriage])
 
   const counts = useMemo(() => {
     let pending = 0

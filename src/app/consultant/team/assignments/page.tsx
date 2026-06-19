@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,15 +19,17 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { Loader2, Lock, Search, UserCog, Users } from 'lucide-react'
-import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
-import { getFarmerClients, type FarmerWithFarms } from '@/lib/consultant-query-service'
+import { useConsultantAccess, useFarmerClients } from '@/hooks/consultant/useConsultantQueries'
+import { type FarmerWithFarms } from '@/lib/consultant-query-service'
 import { listOrgMembers, type OrgMember } from '@/lib/team-service'
 import { TeamTabs } from '@/components/consultant/TeamTabs'
 import posthog from 'posthog-js'
 
 export default function FarmerAssignmentsPage() {
-  const [access, setAccess] = useState<ConsultantAccess | null>(null)
-  const [farmers, setFarmers] = useState<FarmerWithFarms[]>([])
+  const accessQuery = useConsultantAccess()
+  const access = accessQuery.data ?? null
+  const farmerAccess = access?.canViewAllFarmers ? access : null
+  const farmersQuery = useFarmerClients(farmerAccess)
   const [members, setMembers] = useState<OrgMember[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -36,39 +38,40 @@ export default function FarmerAssignmentsPage() {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
+  const loadData = useCallback(
+    async (currentAccess = access) => {
+      if (!currentAccess) return
+
+      try {
+        setLoading(true)
+
+        // Agronomists are read-only here; skip the heavier loads.
+        if (!currentAccess.canViewAllFarmers) {
+          return
+        }
+
+        const memberData = await listOrgMembers(currentAccess.organizationId)
+        setMembers(memberData)
+        setSelected(new Set())
+      } catch (error) {
+        console.error('Failed to load assignments:', error)
+        toast.error(error instanceof Error ? error.message : 'Failed to load assignments')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [access]
+  )
+
   useEffect(() => {
-    loadData()
-  }, [])
-
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      const currentAccess = await getConsultantAccess()
-      if (!currentAccess) {
-        toast.error('Not authenticated')
-        return
-      }
-      setAccess(currentAccess)
-
-      // Agronomists are read-only here; skip the heavier loads.
-      if (!currentAccess.canViewAllFarmers) {
-        return
-      }
-
-      const [farmerData, memberData] = await Promise.all([
-        getFarmerClients(currentAccess),
-        listOrgMembers(currentAccess.organizationId)
-      ])
-      setFarmers(farmerData)
-      setMembers(memberData)
-      setSelected(new Set())
-    } catch (error) {
-      console.error('Failed to load assignments:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to load assignments')
-    } finally {
+    if (accessQuery.isPending) return
+    if (!access) {
+      if (accessQuery.isError) toast.error('Not authenticated')
       setLoading(false)
+      return
     }
-  }
+    loadData(access)
+  }, [access, accessQuery.isError, accessQuery.isPending, loadData])
 
   // Only agronomists can be assignment targets.
   const agronomists = useMemo(() => members.filter((m) => m.role === 'agronomist'), [members])
@@ -87,6 +90,8 @@ export default function FarmerAssignmentsPage() {
     if (access && farmer.assigned_to === access.userId) return 'You'
     return memberNameById.get(farmer.assigned_to) || 'Assigned'
   }
+
+  const farmers = farmersQuery.data ?? []
 
   const filteredFarmers = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -166,7 +171,13 @@ export default function FarmerAssignmentsPage() {
           agronomist_id: agronomistUserId ?? null
         }
       )
-      await loadData()
+      const refreshedFarmers = await farmersQuery.refetch()
+      if (refreshedFarmers.error) {
+        throw refreshedFarmers.error
+      }
+      const refreshedMembers = await listOrgMembers(access.organizationId)
+      setMembers(refreshedMembers)
+      setSelected(new Set())
     } catch (error) {
       console.error('Assignment failed:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to update assignments')
@@ -175,13 +186,29 @@ export default function FarmerAssignmentsPage() {
     }
   }
 
-  if (loading) {
+  if (loading || (Boolean(access?.canViewAllFarmers) && farmersQuery.isPending)) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
           <p className="text-sm text-muted-foreground">Loading assignments...</p>
         </div>
+      </div>
+    )
+  }
+
+  if (access?.canViewAllFarmers && farmersQuery.isError) {
+    return (
+      <div className="space-y-6">
+        <TeamTabs canViewAllFarmers />
+        <Alert variant="destructive">
+          <AlertTitle>Unable to load farmers</AlertTitle>
+          <AlertDescription>
+            {farmersQuery.error instanceof Error
+              ? farmersQuery.error.message
+              : 'Failed to load farmer assignments.'}
+          </AlertDescription>
+        </Alert>
       </div>
     )
   }

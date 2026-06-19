@@ -29,13 +29,13 @@ import posthog from 'posthog-js'
 import { type ConsultantAccess } from '@/lib/consultant-access'
 import {
   getVisitableRecommendations,
-  createVisit,
   FOLLOWED_STATUSES,
   followedStatusLabels,
   type FollowedStatus,
   type VisitableRecommendation,
   type Visit
 } from '@/lib/consultant-visit-service'
+import { useCreateVisit } from '@/hooks/consultant/useConsultantQueries'
 
 interface RecordVisitDialogProps {
   access: ConsultantAccess
@@ -60,13 +60,14 @@ function todayLocal(): string {
 export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: RecordVisitDialogProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
   const [recommendations, setRecommendations] = useState<VisitableRecommendation[]>([])
 
   const [visitDate, setVisitDate] = useState(todayLocal())
   const [farmId, setFarmId] = useState<string>('none')
   const [summary, setSummary] = useState('')
   const [drafts, setDrafts] = useState<Record<string, FollowupDraft>>({})
+  const createVisitMutation = useCreateVisit(access, farmerId)
+  const submitting = createVisitMutation.isPending
 
   const reset = useCallback(() => {
     setVisitDate(todayLocal())
@@ -126,8 +127,7 @@ export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: Recor
     }
 
     try {
-      setSubmitting(true)
-      const visit = await createVisit(access, {
+      const visit = await createVisitMutation.mutateAsync({
         farmerId,
         farmId: farmId === 'none' ? null : Number(farmId),
         visitDate,
@@ -155,8 +155,6 @@ export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: Recor
         extra: { farmerId }
       })
       toast.error(err instanceof Error ? err.message : 'Failed to record visit')
-    } finally {
-      setSubmitting(false)
     }
   }
 
