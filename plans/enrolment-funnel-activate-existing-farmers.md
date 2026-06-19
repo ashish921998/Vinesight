@@ -52,7 +52,13 @@ implements, and surface self-joined farmers so they get assigned.
 
 - `src/app/consultant/page.tsx` (Command Center) — a prominent "Onboard your farmers" card.
 - `src/app/consultant/farmers/page.tsx` (Client Farmers) — alongside the existing `InviteFarmerDialog` (which stays for the new-farmer phone path).
-- Visible to all consultant members (sharing a code is harmless); emphasis on Command Center.
+- Visible to **all** consultant members — owner, admin, **and agronomist** (emphasis on Command
+  Center). **Decision (confirmed, deliberate):** an agronomist sharing the code creates Clients that
+  land Unassigned, i.e. work an owner/admin must pick up. That is acceptable and intended here —
+  maximising onboarding reach matters more, and the Unassigned surfaces (P2 + the Command-Center
+  nudge + Team → Assignments) exist precisely to catch and route that work. Revisit only if
+  agronomist-driven self-joins become a noise problem; gating the card to `canViewAllFarmers` is the
+  one-line lever.
 
 ## P2 — Unassigned visibility (close the loop)
 
