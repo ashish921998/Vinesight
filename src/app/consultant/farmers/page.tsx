@@ -82,14 +82,11 @@ export default function FarmerDirectoryPage() {
     return Array.from(set).sort((a, b) => a.localeCompare(b))
   }, [farmers])
 
-  // Reset a stale region filter when the selected region is no longer present
-  // (e.g. the only farmer in that region was removed or reassigned), otherwise
-  // the list would stay filtered to zero rows with no obvious way to recover.
-  useEffect(() => {
-    if (regionFilter !== ALL_REGIONS && !regions.includes(regionFilter)) {
-      setRegionFilter(ALL_REGIONS)
-    }
-  }, [regions, regionFilter])
+  // Derive the effective region during render: if the selected region is no
+  // longer present (e.g. the only farmer in it was removed or reassigned), fall
+  // back to "all" so the list never gets stuck on an empty, unrecoverable state.
+  const effectiveRegion =
+    regionFilter === ALL_REGIONS || regions.includes(regionFilter) ? regionFilter : ALL_REGIONS
 
   // Filtered farmers
   const filteredFarmers = useMemo(() => {
@@ -103,14 +100,14 @@ export default function FarmerDirectoryPage() {
       }
 
       // Region filter — keep the farmer if any of their farms is in the region
-      if (regionFilter !== ALL_REGIONS) {
-        const regionMatch = farmer.farms.some((f) => f.region?.trim() === regionFilter)
+      if (effectiveRegion !== ALL_REGIONS) {
+        const regionMatch = farmer.farms.some((f) => f.region?.trim() === effectiveRegion)
         if (!regionMatch) return false
       }
 
       return true
     })
-  }, [farmers, searchQuery, regionFilter])
+  }, [farmers, searchQuery, effectiveRegion])
 
   if (loading) {
     return (
@@ -149,7 +146,7 @@ export default function FarmerDirectoryPage() {
           />
         </div>
         {regions.length > 0 && (
-          <Select value={regionFilter} onValueChange={setRegionFilter}>
+          <Select value={effectiveRegion} onValueChange={setRegionFilter}>
             <SelectTrigger className="sm:w-56">
               <div className="flex items-center gap-2 min-w-0">
                 <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
