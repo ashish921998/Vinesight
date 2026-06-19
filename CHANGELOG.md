@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3.1] - 2026-06-19
+
+### Fixed
+
+- Landing page no longer calls `router.replace` on an unmounted component. The post-login redirect effect now re-checks a mount flag after the `resolveModuleHome` await, matching the guard already in the OAuth callback — so navigating away during the membership query can't fire a redirect on a stale component.
+
 ## [0.1.3.0] - 2026-06-19
 
 ### Changed
