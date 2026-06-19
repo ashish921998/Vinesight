@@ -31,11 +31,15 @@ import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
 import * as Sentry from '@sentry/nextjs'
 import posthog from 'posthog-js'
 
+// Sentinel for the "All regions" option. Uses a non-region-like value so it can't
+// collide with a real farm region (e.g. a region literally named "all").
+const ALL_REGIONS = '__all__'
+
 export default function FarmerDirectoryPage() {
   const [farmers, setFarmers] = useState<FarmerWithFarms[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [regionFilter, setRegionFilter] = useState('all')
+  const [regionFilter, setRegionFilter] = useState(ALL_REGIONS)
   const [access, setAccess] = useState<ConsultantAccess | null>(null)
 
   useEffect(() => {
@@ -71,7 +75,8 @@ export default function FarmerDirectoryPage() {
     const set = new Set<string>()
     for (const farmer of farmers) {
       for (const farm of farmer.farms) {
-        if (farm.region?.trim()) set.add(farm.region.trim())
+        const region = farm.region?.trim()
+        if (region && region !== ALL_REGIONS) set.add(region)
       }
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b))
@@ -89,7 +94,7 @@ export default function FarmerDirectoryPage() {
       }
 
       // Region filter — keep the farmer if any of their farms is in the region
-      if (regionFilter !== 'all') {
+      if (regionFilter !== ALL_REGIONS) {
         const regionMatch = farmer.farms.some((f) => f.region?.trim() === regionFilter)
         if (!regionMatch) return false
       }
@@ -143,7 +148,7 @@ export default function FarmerDirectoryPage() {
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All regions</SelectItem>
+              <SelectItem value={ALL_REGIONS}>All regions</SelectItem>
               {regions.map((region) => (
                 <SelectItem key={region} value={region}>
                   {region}
