@@ -5,8 +5,25 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Users, Search, Sprout, User, Phone, Mail, Loader2, ChevronRight } from 'lucide-react'
+import {
+  Users,
+  Search,
+  Sprout,
+  User,
+  Phone,
+  Mail,
+  Loader2,
+  ChevronRight,
+  MapPin
+} from 'lucide-react'
 import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
 import { getFarmerClients, type FarmerWithFarms } from '@/lib/consultant-query-service'
 import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
@@ -14,10 +31,15 @@ import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
 import * as Sentry from '@sentry/nextjs'
 import posthog from 'posthog-js'
 
+// Sentinel for the "All regions" option. Uses a non-region-like value so it can't
+// collide with a real farm region (e.g. a region literally named "all").
+const ALL_REGIONS = '__all__'
+
 export default function FarmerDirectoryPage() {
   const [farmers, setFarmers] = useState<FarmerWithFarms[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [regionFilter, setRegionFilter] = useState(ALL_REGIONS)
   const [access, setAccess] = useState<ConsultantAccess | null>(null)
 
   useEffect(() => {
@@ -48,6 +70,24 @@ export default function FarmerDirectoryPage() {
     }
   }
 
+  // Unique regions across all farmers' farms, for the region filter dropdown.
+  const regions = useMemo(() => {
+    const set = new Set<string>()
+    for (const farmer of farmers) {
+      for (const farm of farmer.farms) {
+        const region = farm.region?.trim()
+        if (region && region !== ALL_REGIONS) set.add(region)
+      }
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b))
+  }, [farmers])
+
+  // Derive the effective region during render: if the selected region is no
+  // longer present (e.g. the only farmer in it was removed or reassigned), fall
+  // back to "all" so the list never gets stuck on an empty, unrecoverable state.
+  const effectiveRegion =
+    regionFilter === ALL_REGIONS || regions.includes(regionFilter) ? regionFilter : ALL_REGIONS
+
   // Filtered farmers
   const filteredFarmers = useMemo(() => {
     return farmers.filter((farmer) => {
@@ -59,9 +99,15 @@ export default function FarmerDirectoryPage() {
         if (!nameMatch && !farmMatch) return false
       }
 
+      // Region filter — keep the farmer if any of their farms is in the region
+      if (effectiveRegion !== ALL_REGIONS) {
+        const regionMatch = farmer.farms.some((f) => f.region?.trim() === effectiveRegion)
+        if (!regionMatch) return false
+      }
+
       return true
     })
-  }, [farmers, searchQuery])
+  }, [farmers, searchQuery, effectiveRegion])
 
   if (loading) {
     return (
@@ -99,6 +145,24 @@ export default function FarmerDirectoryPage() {
             className="pl-9"
           />
         </div>
+        {regions.length > 0 && (
+          <Select value={effectiveRegion} onValueChange={setRegionFilter}>
+            <SelectTrigger className="sm:w-56">
+              <div className="flex items-center gap-2 min-w-0">
+                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <SelectValue placeholder="All regions" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_REGIONS}>All regions</SelectItem>
+              {regions.map((region) => (
+                <SelectItem key={region} value={region}>
+                  {region}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* Results */}

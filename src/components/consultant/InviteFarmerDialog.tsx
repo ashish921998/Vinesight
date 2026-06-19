@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { UserPlus, Copy, Check, MessageCircle, Send, Loader2, RefreshCw } from 'lucide-react'
-import { normalizePhone } from '@/lib/phone'
+import { normalizePhone, toIndianNationalDigits } from '@/lib/phone'
 import posthog from 'posthog-js'
 
 interface InviteResult {
@@ -53,9 +53,10 @@ export function InviteFarmerDialog({ organizationId, trigger }: InviteFarmerDial
     : ''
 
   const handleCreate = async () => {
-    const normalized = normalizePhone(phone)
+    // `phone` holds the 10-digit national number; the +91 country code is fixed in the UI.
+    const normalized = normalizePhone(`+91${phone}`)
     if (!normalized) {
-      toast.error('Enter a valid phone number')
+      toast.error('Enter a valid 10-digit mobile number')
       return
     }
 
@@ -143,24 +144,31 @@ export function InviteFarmerDialog({ organizationId, trigger }: InviteFarmerDial
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="invite-phone">Phone number</Label>
-              {/* type=tel stays free-form, but strip anything that isn't a digit, +, or
-                  space as it's typed so letters can't be entered. normalizePhone still
-                  validates and cleans the value on submit. */}
-              <Input
-                id="invite-phone"
-                type="tel"
-                inputMode="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/[^\d+\s]/g, ''))}
-                placeholder="e.g. 98765 43210"
-              />
+              {/* +91 is a fixed, non-editable prefix; the input takes only the 10-digit
+                  national number. toIndianNationalDigits keeps it digits-only and strips a
+                  redundant 91/0 if the user pastes a full number, so the prefix never doubles up. */}
+              <div className="flex">
+                <span className="inline-flex items-center rounded-l-md border border-r-0 border-input bg-muted px-3 text-sm text-muted-foreground">
+                  +91
+                </span>
+                <Input
+                  id="invite-phone"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  className="rounded-l-none"
+                  value={phone}
+                  onChange={(e) => setPhone(toIndianNationalDigits(e.target.value))}
+                  placeholder="98765 43210"
+                />
+              </div>
               <p className="text-xs text-muted-foreground">
-                Indian numbers default to +91. Include the country code for other countries.
+                Enter the 10-digit Indian mobile number, without the +91 country code.
               </p>
             </div>
             <Button
               onClick={handleCreate}
-              disabled={submitting || !phone.trim()}
+              disabled={submitting || !normalizePhone(`+91${phone}`)}
               className="w-full gap-2"
             >
               {submitting ? (
