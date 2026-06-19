@@ -3,6 +3,7 @@
 import { useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import { resolveModuleHome } from '@/lib/auth/module-home'
 
 function AuthCallbackContent() {
   const router = useRouter()
@@ -43,8 +44,10 @@ function AuthCallbackContent() {
           if (data?.session) {
             // Successfully exchanged code for session
             // Add a small delay to ensure the auth state is properly set
+            const home = await resolveModuleHome(data.session.user.id)
+            if (!isMounted) return
             redirectTimer = setTimeout(() => {
-              router.push('/dashboard')
+              router.push(home)
             }, 500)
             return
           }
@@ -64,8 +67,10 @@ function AuthCallbackContent() {
         if (data?.user) {
           // User is authenticated, redirect to dashboard
           // Add a small delay to ensure the auth state is properly set
+          const home = await resolveModuleHome(data.user.id)
+          if (!isMounted) return
           redirectTimer = setTimeout(() => {
-            router.push('/dashboard')
+            router.push(home)
           }, 500)
           return
         }

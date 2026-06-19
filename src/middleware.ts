@@ -1,13 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { FARMER_HOME, ORG_HOME } from '@/lib/auth/homes'
 
 // Module routing. Users who belong to an organization (a row in organization_members)
 // live in the consultant module; everyone else — farmers — lives in the farmer module.
 // Middleware is the SINGLE authority that performs these redirects, and each role is only
 // ever sent to its own home, so the two modules can never ping-pong.
-const FARMER_HOME = '/dashboard'
-const ORG_HOME = '/consultant'
+// FARMER_HOME / ORG_HOME are imported above from @/lib/auth/homes so the edge
+// middleware and the client resolver share one source of truth.
 
 // Farmer-module route roots. Org members who hit any of these are sent to ORG_HOME.
 // The farmer module is frozen, so this list is stable; add new farmer routes here.

@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { VALIDATION } from '@/lib/constants'
 import { Loader2, Building2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { resolveModuleHome } from '@/lib/auth/module-home'
 
 function generateSlug(name: string): string {
   return name
@@ -50,7 +51,7 @@ export default function OrganizationSignupPage() {
   // Redirect if user is logged in
   useEffect(() => {
     if (user && user.email_confirmed_at) {
-      router.push('/dashboard')
+      resolveModuleHome(user.id).then((home) => router.push(home))
     }
   }, [user, router])
 

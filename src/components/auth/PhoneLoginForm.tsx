@@ -11,7 +11,7 @@ import { toast } from 'sonner'
 import posthog from 'posthog-js'
 
 interface PhoneLoginFormProps {
-  onSuccess: () => void
+  onSuccess: (userId?: string) => void | Promise<void>
 }
 
 /**
@@ -50,7 +50,7 @@ export function PhoneLoginForm({ onSuccess }: PhoneLoginFormProps) {
     const result = await verifyPhoneOtp({ phone: e164, token })
     posthog.capture('login_submitted', { method: 'phone', success: result.success })
     if (result.success) {
-      onSuccess()
+      await onSuccess(result.user?.id)
     }
   }
 
