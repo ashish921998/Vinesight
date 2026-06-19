@@ -15,7 +15,11 @@ const tabs = [
  * reachable. Assignments is an owner/admin tool, so the bar only appears when
  * the viewer can manage the whole org — agronomists see the Team page unchanged.
  */
-export function TeamTabs({ canViewAllFarmers }: { canViewAllFarmers: boolean }) {
+interface TeamTabsProps {
+  canViewAllFarmers: boolean
+}
+
+export function TeamTabs({ canViewAllFarmers }: TeamTabsProps) {
   const pathname = usePathname()
 
   if (!canViewAllFarmers) return null

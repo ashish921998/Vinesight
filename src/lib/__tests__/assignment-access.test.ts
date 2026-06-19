@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { assertAssigneeIsAgronomist, resolveInviteAssignee } from '../assignment-access'
+import { assertAssigneeIsAgronomist, resolveInviteAssignee } from '@/lib/assignment-access'
 
 // The helper takes an admin Supabase client and runs:
 //   from('organization_members').select('role').eq().eq().maybeSingle()

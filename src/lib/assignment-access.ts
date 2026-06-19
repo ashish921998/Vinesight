@@ -30,6 +30,9 @@ export async function assertAssigneeIsAgronomist(
     .maybeSingle()
 
   if (error) {
+    // Surface the underlying fault server-side; the caller only sees the 500. Mirrors
+    // resolveInviteAssignee and the inline checks this helper replaced.
+    console.error('Error verifying assigned agronomist role:', error)
     return { ok: false, error: 'Failed to verify assigned agronomist', status: 500 }
   }
 
