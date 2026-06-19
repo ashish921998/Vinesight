@@ -19,8 +19,12 @@ Assignment, Enrolment, Farmer, Farm).
 - Assignment plumbing works end-to-end: `assign/route.ts`, `consultant-query-service.ts`
   (`getFarmerClients`/`validateFarmerClient`), `farm-access.ts` rule 3, and RLS.
 - `/consultant/team/assignments/page.tsx` is **fully built but orphaned** — no link reaches it.
-- Live DB: 2 orgs; `test-org` has 1 owner + 1 agronomist + 1 active client (already assigned to
-  the agronomist); `test-orgs` is empty. 203 farms, only 1 enrolled Client. **No bad data.**
+- Live DB: 2 orgs; `test-org` has 1 owner + 1 agronomist + 1 active client; `test-orgs` is empty.
+  203 farms, only 1 enrolled Client.
+  - **Correction (superseded):** this first pass reported "no bad data", but a later check found
+    that one active client was assigned to the **owner** (left by the old self-join RPC), not the
+    agronomist — i.e. one row violated the new invariant. `202606190001` backfills it to Unassigned
+    before the trigger enforces. See ADR-0001 (Consequences) and `202606190002`.
 
 ---
 
@@ -87,8 +91,12 @@ existing agronomist assignment must still validate.
 
 - **`src/lib/__tests__/assignment-access.test.ts`** (new) — agronomist → ok; owner/admin →
   rejected; null → ok; non-member → rejected.
-- Extend invite-accept coverage: owner-inviter ⇒ `assigned_to = null`; agronomist-inviter ⇒
-  `assigned_to = inviter`.
+- Invite-accept assignee rule: the inviter-role decision was extracted to `resolveInviteAssignee`
+  (in `assignment-access.ts`) and unit-tested there — owner/admin-inviter ⇒ `null`;
+  agronomist-inviter ⇒ inviter; null / non-member / lookup-error ⇒ `null`.
+  - **Follow-up (deferred):** full route-level integration tests for `POST /api/invite/accept`
+    (large mock surface: session, rate-limit, token claim, concurrent reads). The role decision
+    itself is now covered by the helper tests above, so this is hardening, not a gap in the rule.
 - Existing `farm-access.test.ts` / `consultant-query-service.test.ts` should stay green.
 
 ## Step 7 — Verify

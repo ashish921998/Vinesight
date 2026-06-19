@@ -20,10 +20,14 @@ security definer
 set search_path = public
 as $$
 begin
-  -- Only validate when assigned_to is actually being set to a non-null value.
-  -- An UPDATE that doesn't change assigned_to (or sets it to NULL, e.g. the
-  -- unassign action or the FK ON DELETE SET NULL cascade) is always allowed.
-  if tg_op = 'UPDATE' and new.assigned_to is not distinct from old.assigned_to then
+  -- Re-validate whenever the assignee OR the owning organization changes — either can
+  -- break "assignee is an agronomist in THIS org" (e.g. moving the client to another org
+  -- while keeping the old org's agronomist). Skip only when BOTH are unchanged, so a
+  -- status/updated_at-only write, an unassign (assigned_to -> NULL), or the FK
+  -- ON DELETE SET NULL cascade still costs no role lookup.
+  if tg_op = 'UPDATE'
+     and new.assigned_to is not distinct from old.assigned_to
+     and new.organization_id is not distinct from old.organization_id then
     return new;
   end if;
 
@@ -69,6 +73,6 @@ where oc.assigned_to is not null
 drop trigger if exists trg_assignment_targets_agronomist on public.organization_clients;
 
 create trigger trg_assignment_targets_agronomist
-  before insert or update of assigned_to on public.organization_clients
+  before insert or update of assigned_to, organization_id on public.organization_clients
   for each row
   execute function public.assert_organization_client_assignee_is_agronomist();
