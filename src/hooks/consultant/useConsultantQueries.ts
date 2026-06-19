@@ -83,11 +83,19 @@ export function useFarmerFarms(farmerId: string, enabled = true) {
   })
 }
 
-export function useFarmDetail(farmId: number | null, enabled = true) {
+export function useFarmDetail(
+  farmId: number | null,
+  enabled = true,
+  access: ConsultantAccess | null | undefined = null
+) {
+  const canLoad = Boolean(farmId != null && enabled && access)
+
   return useQuery({
-    queryKey: farmId != null ? consultantKeys.farmDetail(farmId) : ['consultant', 'farm', 'disabled'],
+    queryKey: canLoad
+      ? consultantKeys.farmDetail(farmId as number, access!.organizationId, farmerScope(access!))
+      : ['consultant', 'farm', 'disabled', farmId],
     queryFn: () => getFarmDetail(farmId as number),
-    enabled: Boolean(farmId != null && enabled)
+    enabled: canLoad
   })
 }
 

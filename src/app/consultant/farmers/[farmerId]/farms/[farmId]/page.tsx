@@ -38,15 +38,16 @@ export default function ConsultantFarmPage() {
 
   const [soilTests, setSoilTests] = useState<LabTestRecord[]>([])
   const [petioleTests, setPetioleTests] = useState<LabTestRecord[]>([])
+  const [labTestsFarmId, setLabTestsFarmId] = useState<number | null>(null)
   const [labTestsLoading, setLabTestsLoading] = useState(false)
 
   const accessQuery = useConsultantAccess()
   const access = accessQuery.data ?? null
   const validationQuery = useValidatedFarmerClient(access, farmerId)
   const isValidClient = validationQuery.data?.isValid ?? false
-  const farmQuery = useFarmDetail(farmId, isValidClient)
+  const farmQuery = useFarmDetail(farmId, isValidClient, access)
   const profileQuery = useFarmerProfile(farmerId, isValidClient)
-  const farm = farmQuery.data?.user_id === farmerId ? farmQuery.data : null
+  const farm = isValidClient && farmQuery.data?.user_id === farmerId ? farmQuery.data : null
   const farmerName = profileQuery.data?.full_name || 'Farmer'
 
   useEffect(() => {
@@ -62,13 +63,20 @@ export default function ConsultantFarmPage() {
   }, [accessQuery.error, validationQuery.error, farmQuery.error, profileQuery.error, farmerId, farmId])
 
   useEffect(() => {
-    if (!farmId || !isValidClient || !farm) return
+    if (!farmId || !isValidClient || !farm) {
+      setSoilTests([])
+      setPetioleTests([])
+      setLabTestsFarmId(null)
+      setLabTestsLoading(false)
+      return
+    }
 
     let cancelled = false
 
     async function loadLabTests() {
       try {
         setLabTestsLoading(true)
+        setLabTestsFarmId(null)
         const [soilTestsData, petioleTestsData] = await Promise.all([
           SupabaseService.getSoilTestRecords(farmId as number),
           SupabaseService.getPetioleTestRecords(farmId as number)
@@ -77,8 +85,12 @@ export default function ConsultantFarmPage() {
         if (cancelled) return
         setSoilTests((soilTestsData || []) as LabTestRecord[])
         setPetioleTests((petioleTestsData || []) as LabTestRecord[])
+        setLabTestsFarmId(farm.id)
       } catch (error) {
         if (cancelled) return
+        setSoilTests([])
+        setPetioleTests([])
+        setLabTestsFarmId(null)
         console.error('Error loading lab tests:', error)
         toast.error(error instanceof Error ? error.message : 'Failed to load lab tests')
       } finally {
@@ -115,12 +127,15 @@ export default function ConsultantFarmPage() {
     return <FarmNotFound farmerId={farmerId} />
   }
 
+  const visibleSoilTests = labTestsFarmId === farm.id ? soilTests : []
+  const visiblePetioleTests = labTestsFarmId === farm.id ? petioleTests : []
+
   return (
     <div className="space-y-6">
       <FarmHeader farm={farm} farmerId={farmerId} farmerName={farmerName} />
       <FarmInfoCard farm={farm} farmerName={farmerName} />
       <SoilPropertiesCard farm={farm} />
-      <LabTestsSection petioleTests={petioleTests} soilTests={soilTests} />
+      <LabTestsSection petioleTests={visiblePetioleTests} soilTests={visibleSoilTests} />
     </div>
   )
 }
