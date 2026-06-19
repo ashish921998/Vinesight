@@ -18,6 +18,7 @@ import {
   Search,
   Sprout,
   User,
+  UserX,
   Phone,
   Mail,
   Loader2,
@@ -27,6 +28,7 @@ import {
 import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
 import { getFarmerClients, type FarmerWithFarms } from '@/lib/consultant-query-service'
 import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
+import { JoinCodeCard } from '@/components/consultant/JoinCodeCard'
 import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
 import * as Sentry from '@sentry/nextjs'
 import posthog from 'posthog-js'
@@ -40,6 +42,7 @@ export default function FarmerDirectoryPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [regionFilter, setRegionFilter] = useState(ALL_REGIONS)
+  const [unassignedOnly, setUnassignedOnly] = useState(false)
   const [access, setAccess] = useState<ConsultantAccess | null>(null)
 
   useEffect(() => {
@@ -88,6 +91,22 @@ export default function FarmerDirectoryPage() {
   const effectiveRegion =
     regionFilter === ALL_REGIONS || regions.includes(regionFilter) ? regionFilter : ALL_REGIONS
 
+  // Count of org clients with no agronomist assigned. Only meaningful for
+  // owner/admin, whose directory includes the whole org; agronomists only ever
+  // see their own assigned farmers, so the control below is gated on access.
+  const unassignedCount = useMemo(
+    () => farmers.filter((farmer) => !farmer.assigned_to).length,
+    [farmers]
+  )
+
+  // Owner/admin only, and only worth showing when there's at least one.
+  const showUnassignedFilter = Boolean(access?.canViewAllFarmers) && unassignedCount > 0
+
+  // The toggle can only be active while its control is visible — otherwise an
+  // agronomist (or a state where the count drops to 0) could be stuck filtering
+  // by a control they can't see or unset.
+  const effectiveUnassignedOnly = showUnassignedFilter && unassignedOnly
+
   // Filtered farmers
   const filteredFarmers = useMemo(() => {
     return farmers.filter((farmer) => {
@@ -105,9 +124,14 @@ export default function FarmerDirectoryPage() {
         if (!regionMatch) return false
       }
 
+      // Unassigned filter — restrict to farmers with no agronomist assigned
+      if (effectiveUnassignedOnly && farmer.assigned_to) {
+        return false
+      }
+
       return true
     })
-  }, [farmers, searchQuery, effectiveRegion])
+  }, [farmers, searchQuery, effectiveRegion, effectiveUnassignedOnly])
 
   if (loading) {
     return (
@@ -133,6 +157,8 @@ export default function FarmerDirectoryPage() {
         </div>
         {access && <InviteFarmerDialog organizationId={access.organizationId} />}
       </div>
+
+      <JoinCodeCard />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -162,6 +188,23 @@ export default function FarmerDirectoryPage() {
               ))}
             </SelectContent>
           </Select>
+        )}
+        {showUnassignedFilter && (
+          <Badge
+            asChild
+            variant={effectiveUnassignedOnly ? 'default' : 'outline'}
+            className="h-9 px-3"
+          >
+            <button
+              type="button"
+              onClick={() => setUnassignedOnly((prev) => !prev)}
+              aria-pressed={effectiveUnassignedOnly}
+              className="cursor-pointer"
+            >
+              <UserX />
+              Unassigned ({unassignedCount})
+            </button>
+          </Badge>
         )}
       </div>
 

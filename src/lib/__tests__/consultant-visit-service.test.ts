@@ -14,7 +14,9 @@ function ownerAccess(): ConsultantAccess {
     organizationId: 'org-1',
     role: 'owner',
     canViewAllFarmers: true,
-    isAgronomist: false
+    isAgronomist: false,
+    organizationName: null,
+    joinCode: null
   }
 }
 
@@ -24,7 +26,9 @@ function agronomistAccess(userId = 'agro-1'): ConsultantAccess {
     organizationId: 'org-1',
     role: 'agronomist',
     canViewAllFarmers: false,
-    isAgronomist: true
+    isAgronomist: true,
+    organizationName: null,
+    joinCode: null
   }
 }
 

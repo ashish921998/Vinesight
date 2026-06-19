@@ -11,9 +11,31 @@ export const roleLabels: Record<ConsultantRole, string> = {
 export interface ConsultantAccess {
   userId: string
   organizationId: string
+  organizationName: string | null
+  joinCode: string | null
   role: ConsultantRole
   canViewAllFarmers: boolean
   isAgronomist: boolean
+}
+
+/** Shape of the embedded `organizations(name, slug)` selection. */
+interface EmbeddedOrganization {
+  name: string | null
+  slug: string | null
+}
+
+/**
+ * The PostgREST embed for a many-to-one relationship is a single record, but the
+ * generated types can surface it as either an object or a single-element array.
+ * Normalize defensively to one record (or null).
+ */
+function normalizeEmbeddedOrganization(
+  organizations: EmbeddedOrganization | EmbeddedOrganization[] | null
+): EmbeddedOrganization | null {
+  if (!organizations) {
+    return null
+  }
+  return Array.isArray(organizations) ? (organizations[0] ?? null) : organizations
 }
 
 /**
@@ -35,7 +57,7 @@ export async function getConsultantAccess(): Promise<ConsultantAccess | null> {
   // Deterministic: one org per user for V1
   const { data: membership, error: memberError } = await supabase
     .from('organization_members')
-    .select('organization_id, role, is_owner')
+    .select('organization_id, role, is_owner, organizations(name, slug)')
     .eq('user_id', user.id)
     .order('joined_at', { ascending: true })
     .limit(1)
@@ -55,9 +77,13 @@ export async function getConsultantAccess(): Promise<ConsultantAccess | null> {
 
   const canViewAllFarmers = role === 'owner' || role === 'admin'
 
+  const organization = normalizeEmbeddedOrganization(membership.organizations)
+
   return {
     userId: user.id,
     organizationId: membership.organization_id,
+    organizationName: organization?.name ?? null,
+    joinCode: organization?.slug ?? null,
     role,
     canViewAllFarmers,
     isAgronomist: role === 'agronomist'
