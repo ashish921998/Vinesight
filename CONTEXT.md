@@ -37,9 +37,19 @@ The link from a Client to a single Agronomist, created by an Owner or Admin. Det
 Farmers an Agronomist can access.
 _Avoid_: mapping, allocation
 
+**Join code**:
+The Organization's public code a Farmer enters in the app to self-join as a Client.
+_Avoid_: slug (the technical column name), invite code (reserved for staff email invites)
+
 **Enrolment**:
-Bringing a Farmer into an Organization as a Client (e.g. via invitation).
+Bringing a Farmer into an Organization as a Client. Two forms: **Self-join** (Farmer enters the
+Join code) and **Invite** (consultant sends a phone invite to a new Farmer). Every Enrolment
+lands the Client **Unassigned** — an Owner/Admin then makes the Assignment.
 _Avoid_: onboarding, registration
+
+**Self-join**:
+Farmer-initiated Enrolment: the Farmer joins an Organization by entering its Join code.
+_Avoid_: signup (that's account creation, a separate step)
 
 ## Farming
 

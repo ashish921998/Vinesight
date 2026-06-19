@@ -51,3 +51,8 @@ three routes for friendly error messages.
   the newly-surfaced Team → Assignments tab provides, so the loop stays closed.
 - No backfill: the only existing assignment in the production database already targets the
   Agronomist, so it satisfies the new invariant.
+- The farmer Self-join RPC `join_organization_by_slug` previously assigned new Clients to the
+  org owner — which this trigger rejects. It is brought under version control and changed to land
+  Self-joined Clients **Unassigned** (`assigned_to = null`), shipping in the same migration set so
+  the trigger never exists without a compatible RPC. See ADR-0002 and
+  `202606190002_join_organization_by_slug_unassigned.sql`.
