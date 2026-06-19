@@ -31,19 +31,25 @@ export interface NormalizedPhone {
  * code or trunk 0 so the user doesn't end up with a doubled prefix:
  *  - a "91…" value over 10 digits -> the 91 country code is dropped.
  *  - a "0…" value over 10 digits   -> the trunk 0 is dropped.
- * Both are only stripped when the value is longer than 10 digits, so a genuine 10-digit
- * mobile that happens to start with "91" (or contains a 0) is left untouched. Stripping is
- * length-driven rather than pinned to an exact count, so a paste with extra trailing digits
- * (e.g. "+91 98765 432100") still has its prefix removed instead of slipping through.
+ * Prefixes are stripped in a loop, so combined or repeated prefixes (e.g. a trunk-plus-country
+ * "0919876543210", or a doubled "+91 +91 98765 43210" paste) are fully unwound rather than
+ * leaving a country code embedded in the result. Stripping only runs while the value is longer
+ * than 10 digits, so a genuine 10-digit mobile that happens to start with "91" (or contains a 0)
+ * is left untouched, and it's length-driven rather than pinned to an exact count so a paste with
+ * extra trailing digits still has its prefix removed instead of slipping through.
  * The result is always digits only, capped at 10.
  */
 export function toIndianNationalDigits(input: string): string {
   let digits = (input || '').replace(/\D/g, '')
 
-  if (digits.length > 10 && digits.startsWith(DEFAULT_COUNTRY_CODE)) {
-    digits = digits.slice(2)
-  } else if (digits.length > 10 && digits.startsWith('0')) {
-    digits = digits.slice(1)
+  while (digits.length > 10) {
+    if (digits.startsWith('0')) {
+      digits = digits.slice(1)
+    } else if (digits.startsWith(DEFAULT_COUNTRY_CODE)) {
+      digits = digits.slice(2)
+    } else {
+      break
+    }
   }
 
   return digits.slice(0, 10)

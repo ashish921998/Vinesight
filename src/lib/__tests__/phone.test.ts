@@ -94,6 +94,16 @@ describe('toIndianNationalDigits', () => {
     expect(toIndianNationalDigits('9123456789')).toBe('9123456789')
   })
 
+  it('unwinds a combined trunk-0-plus-91 prefix (T-Rex finding)', () => {
+    // "0919876543210" -> would otherwise strip only the 0 and yield a wrong "9198765432".
+    expect(toIndianNationalDigits('0919876543210')).toBe('9876543210')
+    expect(toIndianNationalDigits('+091 98765 43210')).toBe('9876543210')
+  })
+
+  it('unwinds a doubled 91 country-code paste', () => {
+    expect(toIndianNationalDigits('+91 +91 98765 43210')).toBe('9876543210')
+  })
+
   it('returns an empty string for empty input', () => {
     expect(toIndianNationalDigits('')).toBe('')
   })
