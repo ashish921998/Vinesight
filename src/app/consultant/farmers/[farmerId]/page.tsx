@@ -85,7 +85,14 @@ export default function FarmerProfilePage() {
       extra: { farmerId }
     })
     toast.error(error instanceof Error ? error.message : 'Failed to load farmer profile')
-  }, [accessQuery.error, validationQuery.error, farmerQuery.error, farmsQuery.error, visitsQuery.error, farmerId])
+  }, [
+    accessQuery.error,
+    validationQuery.error,
+    farmerQuery.error,
+    farmsQuery.error,
+    visitsQuery.error,
+    farmerId
+  ])
 
   useEffect(() => {
     if (!access || !farmerQuery.data || !farmsQuery.data || !visitsQuery.data) return

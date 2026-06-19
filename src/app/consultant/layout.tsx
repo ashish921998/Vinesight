@@ -79,12 +79,7 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
   // 'loading' → checking access; 'ok' → admitted; 'denied' → not a consultant;
   // 'error' → couldn’t verify (transient). Kept distinct so an outage isn’t shown
   // to a valid consultant as an authorization denial.
-  const {
-    data: access,
-    isPending,
-    isError,
-    error
-  } = useConsultantAccess()
+  const { data: access, isPending, isError, error } = useConsultantAccess()
   const accessState = getConsultantAccessState(isPending, isError && !access, access)
 
   useEffect(() => {

@@ -51,7 +51,8 @@ export default function ConsultantFarmPage() {
   const farmerName = profileQuery.data?.full_name || 'Farmer'
 
   useEffect(() => {
-    const error = accessQuery.error ?? validationQuery.error ?? farmQuery.error ?? profileQuery.error
+    const error =
+      accessQuery.error ?? validationQuery.error ?? farmQuery.error ?? profileQuery.error
     if (!error) return
 
     console.error('Error loading farm data:', error)
@@ -60,7 +61,14 @@ export default function ConsultantFarmPage() {
       extra: { farmerId, farmId }
     })
     toast.error(error instanceof Error ? error.message : 'Failed to load farm data')
-  }, [accessQuery.error, validationQuery.error, farmQuery.error, profileQuery.error, farmerId, farmId])
+  }, [
+    accessQuery.error,
+    validationQuery.error,
+    farmQuery.error,
+    profileQuery.error,
+    farmerId,
+    farmId
+  ])
 
   useEffect(() => {
     if (!farmId || !isValidClient || !farm) {
@@ -85,7 +93,7 @@ export default function ConsultantFarmPage() {
         if (cancelled) return
         setSoilTests((soilTestsData || []) as LabTestRecord[])
         setPetioleTests((petioleTestsData || []) as LabTestRecord[])
-        setLabTestsFarmId(farm.id)
+        setLabTestsFarmId(farm!.id)
       } catch (error) {
         if (cancelled) return
         setSoilTests([])
@@ -244,16 +252,12 @@ function SoilPropertiesCard({ farm }: { farm: FarmDetail }) {
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Bulk Density</p>
-            <p className="font-medium">
-              {farm.bulk_density ? `${farm.bulk_density} g/ml` : 'N/A'}
-            </p>
+            <p className="font-medium">{farm.bulk_density ? `${farm.bulk_density} g/ml` : 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">CEC</p>
             <p className="font-medium">
-              {farm.cation_exchange_capacity
-                ? `${farm.cation_exchange_capacity} meq/100g`
-                : 'N/A'}
+              {farm.cation_exchange_capacity ? `${farm.cation_exchange_capacity} meq/100g` : 'N/A'}
             </p>
           </div>
           <div>

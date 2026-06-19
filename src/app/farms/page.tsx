@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Plus, Trash2, Edit, Sprout, MapPin, MoreVertical, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { SupabaseService } from '@/lib/supabase-service'
+import { useCreateFarm, useDeleteFarm, useFarms, useUpdateFarm } from '@/hooks/farms/useFarmQueries'
 import { Farm } from '@/types/types'
 import { FarmDataSubmit } from '@/components/farm-details/forms/FarmModal'
 import Link from 'next/link'
@@ -20,46 +20,40 @@ import {
 import { capitalize } from '@/lib/utils'
 
 export default function FarmsPage() {
-  const [farms, setFarms] = useState<Farm[]>([])
-  const [loading, setLoading] = useState(true)
-  const [submitLoading, setSubmitLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [editingFarm, setEditingFarm] = useState<Farm | null>(null)
 
-  useEffect(() => {
-    loadFarms()
-  }, [])
+  const farmsQuery = useFarms()
+  const createFarm = useCreateFarm()
+  const updateFarm = useUpdateFarm()
+  const deleteFarm = useDeleteFarm()
 
-  const loadFarms = async () => {
-    try {
-      setLoading(true)
-      const farmList = await SupabaseService.getAllFarms()
-      setFarms(farmList)
-    } catch (error) {
-      console.error('Error loading farms:', error)
-    } finally {
-      setLoading(false)
+  const farms = farmsQuery.data ?? []
+  const loading = farmsQuery.isPending
+  const submitLoading = createFarm.isPending || updateFarm.isPending
+
+  useEffect(() => {
+    if (farmsQuery.error) {
+      console.error('Error loading farms:', farmsQuery.error)
+      toast.error(
+        farmsQuery.error instanceof Error ? farmsQuery.error.message : 'Failed to load farms'
+      )
     }
-  }
+  }, [farmsQuery.error])
 
   const handleSubmit = async (farmData: FarmDataSubmit) => {
     try {
-      setSubmitLoading(true)
-
       if (editingFarm) {
-        await SupabaseService.updateFarm(editingFarm.id!, farmData)
+        await updateFarm.mutateAsync({ id: editingFarm.id!, updates: farmData })
       } else {
-        await SupabaseService.createFarm(farmData)
+        await createFarm.mutateAsync(farmData)
       }
 
-      await loadFarms()
       closeModal()
     } catch (error) {
       console.error('Error saving farm:', error)
       toast.error(getFarmSaveErrorMessage(error))
       throw error // Re-throw to let modal handle the error
-    } finally {
-      setSubmitLoading(false)
     }
   }
 
@@ -80,8 +74,7 @@ export default function FarmsPage() {
       )
     ) {
       try {
-        await SupabaseService.deleteFarm(id)
-        await loadFarms()
+        await deleteFarm.mutateAsync(id)
       } catch (error) {
         console.error('Error deleting farm:', error)
       }
