@@ -99,10 +99,7 @@ export function useFarmDetail(
   })
 }
 
-export function useFarmerVisits(
-  access: ConsultantAccess | null | undefined,
-  farmerId: string
-) {
+export function useFarmerVisits(access: ConsultantAccess | null | undefined, farmerId: string) {
   return useQuery({
     queryKey: access
       ? consultantKeys.farmerVisits(farmerId, access.organizationId, farmerScope(access))

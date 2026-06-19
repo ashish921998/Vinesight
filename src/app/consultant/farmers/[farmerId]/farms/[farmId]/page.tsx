@@ -1,191 +1,1495 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState, useEffect, useCallback, useMemo, Fragment } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell
+} from '@/components/ui/table'
 import {
   ArrowLeft,
+  ChevronRight,
+  ChevronDown,
   Loader2,
   MapPin,
   Grape,
-  Calendar,
   TestTube,
   Leaf,
   FileImage,
-  ExternalLink
+  ExternalLink,
+  Check,
+  Plus,
+  Trash2,
+  Send,
+  History,
+  FlaskConical,
+  ClipboardList
 } from 'lucide-react'
-import Image from 'next/image'
 import { toast } from 'sonner'
-import * as Sentry from '@sentry/nextjs'
 import type { LabTestRecord } from '@/types/lab-tests'
-import type { FarmDetail } from '@/lib/consultant-query-service'
+import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
 import {
-  useConsultantAccess,
-  useFarmDetail,
-  useFarmerProfile,
-  useValidatedFarmerClient
-} from '@/hooks/consultant/useConsultantQueries'
+  validateFarmerClient,
+  getFarmDetail,
+  type FarmDetail
+} from '@/lib/consultant-query-service'
+import { getVisitsForFarmer, type Visit } from '@/lib/consultant-visit-service'
+import { RecordVisitDialog } from '@/components/consultant/RecordVisitDialog'
+import { VisitHistory } from '@/components/consultant/VisitHistory'
 import { SupabaseService } from '@/lib/supabase-service'
+import {
+  FertilizerPlanService,
+  type FertilizerPlanWithItems,
+  type FertilizerPlanItem
+} from '@/lib/fertilizer-plan-service'
+import {
+  getTriageItems,
+  updateTriageReview,
+  type TriageItem
+} from '@/lib/consultant-triage-service'
+
+// ---------------------------------------------------------------------------
+// Configurable annual soil baseline (decision: compact baseline, replaceable).
+// To swap EC for a different property, edit this array only.
+// ---------------------------------------------------------------------------
+const SOIL_BASELINE_KEYS: string[] = ['ph', 'ec', 'nitrogen', 'phosphorus', 'potassium']
+
+const COMPACT_VISIT_LIMIT = 4
+
+interface ParamRange {
+  min: number
+  max: number
+  /** Full-scale min/max used to position the marker on the track. */
+  scaleMin: number
+  scaleMax: number
+  unit?: string
+}
+
+// Annual soil target ranges (configurable baseline).
+const SOIL_RANGES: Record<string, ParamRange> = {
+  ph: { min: 6.5, max: 7.5, scaleMin: 5.5, scaleMax: 8.5, unit: '' },
+  ec: { min: 0.5, max: 1.5, scaleMin: 0, scaleMax: 3, unit: 'dS/m' },
+  nitrogen: { min: 140, max: 280, scaleMin: 0, scaleMax: 400, unit: 'kg/ha' },
+  phosphorus: { min: 30, max: 60, scaleMin: 0, scaleMax: 100, unit: 'kg/ha' },
+  potassium: { min: 140, max: 280, scaleMin: 0, scaleMax: 400, unit: 'kg/ha' }
+}
+
+// Petiole target ranges (drives status colour and the optimal zone on the bar).
+// Ranges match the bloom-stage standards on the lab petiole analysis report.
+const PETIOLE_RANGES: Record<string, ParamRange> = {
+  total_nitrogen: { min: 1.01, max: 1.21, scaleMin: 0, scaleMax: 3, unit: '%' },
+  nitrate_nitrogen: { min: 700, max: 1000, scaleMin: 0, scaleMax: 2500, unit: 'mg/kg' },
+  ammonical_nitrogen: { min: 300, max: 600, scaleMin: 0, scaleMax: 1200, unit: 'mg/kg' },
+  phosphorus: { min: 0.31, max: 0.51, scaleMin: 0, scaleMax: 1.2, unit: '%' },
+  potassium: { min: 1.51, max: 2.51, scaleMin: 0, scaleMax: 6, unit: '%' },
+  calcium: { min: 0.81, max: 1.51, scaleMin: 0, scaleMax: 4, unit: '%' },
+  magnesium: { min: 0.25, max: 0.51, scaleMin: 0, scaleMax: 2, unit: '%' },
+  sulphur: { min: 0.15, max: 0.51, scaleMin: 0, scaleMax: 1.2, unit: '%' },
+  iron: { min: 80, max: 120, scaleMin: 0, scaleMax: 300, unit: 'mg/kg' },
+  manganese: { min: 40, max: 100, scaleMin: 0, scaleMax: 200, unit: 'mg/kg' },
+  zinc: { min: 30, max: 60, scaleMin: 0, scaleMax: 120, unit: 'mg/kg' },
+  copper: { min: 5, max: 15, scaleMin: 0, scaleMax: 40, unit: 'mg/kg' },
+  boron: { min: 30, max: 50, scaleMin: 0, scaleMax: 120, unit: 'mg/kg' },
+  molybdenum: { min: 0.25, max: 0.51, scaleMin: 0, scaleMax: 1, unit: 'mg/kg' },
+  sodium: { min: 0.01, max: 0.51, scaleMin: 0, scaleMax: 1.2, unit: '%' },
+  chloride: { min: 0.05, max: 0.25, scaleMin: 0, scaleMax: 0.6, unit: '%' }
+}
+
+// Petiole parameter groups, mirroring the lab report layout. Order defines the
+// display order in the comparison grid; the grid shows every parameter that
+// has a value in at least one report.
+const PETIOLE_PARAM_GROUPS: { label: string; keys: string[] }[] = [
+  {
+    label: 'Major Nutrients',
+    keys: ['total_nitrogen', 'nitrate_nitrogen', 'ammonical_nitrogen', 'phosphorus', 'potassium']
+  },
+  {
+    label: 'Secondary Nutrients',
+    keys: ['calcium', 'magnesium', 'sulphur']
+  },
+  {
+    label: 'Micro Nutrients',
+    keys: ['iron', 'manganese', 'zinc', 'copper', 'boron', 'molybdenum']
+  },
+  {
+    label: 'Other',
+    keys: ['sodium', 'chloride']
+  }
+]
+
+const PLAN_ITEM_UNIT_OPTIONS = ['kg/acre', 'g/acre', 'L/acre', 'ml/acre', 'ppm']
+
+interface DraftItem {
+  id: string
+  fertilizer_name: string
+  quantity: string
+  unit: string
+  application_method: string
+  // Optional tag tracking which flagged nutrient this row was seeded from.
+  nutrient?: string
+}
+
+function newDraftItem(): DraftItem {
+  return {
+    id: crypto.randomUUID(),
+    fertilizer_name: '',
+    quantity: '',
+    unit: 'kg/acre',
+    application_method: 'Soil application'
+  }
+}
+
+function draftFromPlanItem(item: FertilizerPlanItem): DraftItem {
+  return {
+    id: item.id,
+    fertilizer_name: item.fertilizer_name,
+    quantity: String(item.quantity ?? ''),
+    unit: item.unit || 'kg/acre',
+    application_method: item.application_method || 'Soil application'
+  }
+}
+
+// Default recommendations shown as chips in the Workbench "Needs attention" bar.
+const NUTRIENT_RECOMMENDATIONS: Record<string, Partial<DraftItem>> = {
+  total_nitrogen: {
+    fertilizer_name: 'Urea',
+    quantity: '25',
+    unit: 'kg/acre',
+    application_method: 'Drip fertigation'
+  },
+  potassium: {
+    fertilizer_name: '13:0:45 (Potassium Nitrate)',
+    quantity: '3',
+    unit: 'kg/acre',
+    application_method: 'Drip fertigation'
+  },
+  magnesium: {
+    fertilizer_name: 'Magnesium Sulphate',
+    quantity: '200',
+    unit: 'g/acre',
+    application_method: 'Foliar spray'
+  },
+  zinc: {
+    fertilizer_name: 'Zinc Sulphate',
+    quantity: '150',
+    unit: 'g/acre',
+    application_method: 'Foliar spray'
+  },
+  boron: {
+    fertilizer_name: 'Boron 20%',
+    quantity: '100',
+    unit: 'g/acre',
+    application_method: 'Foliar spray'
+  },
+  calcium: {
+    fertilizer_name: 'Calcium Nitrate',
+    quantity: '200',
+    unit: 'g/acre',
+    application_method: 'Foliar spray'
+  },
+  phosphorus: {
+    fertilizer_name: '19:19:19 (NPK)',
+    quantity: '2.5',
+    unit: 'kg/acre',
+    application_method: 'Drip fertigation'
+  },
+  iron: {
+    fertilizer_name: 'Ferrous Sulphate',
+    quantity: '100',
+    unit: 'g/acre',
+    application_method: 'Foliar spray'
+  },
+  manganese: {
+    fertilizer_name: 'Manganese Sulphate',
+    quantity: '100',
+    unit: 'g/acre',
+    application_method: 'Foliar spray'
+  },
+  copper: {
+    fertilizer_name: 'Copper Sulphate',
+    quantity: '50',
+    unit: 'g/acre',
+    application_method: 'Foliar spray'
+  },
+  sulphur: {
+    fertilizer_name: 'Sulphur 90% WDG',
+    quantity: '100',
+    unit: 'g/acre',
+    application_method: 'Foliar spray'
+  },
+  nitrate_nitrogen: {
+    fertilizer_name: 'Calcium Nitrate',
+    quantity: '25',
+    unit: 'kg/acre',
+    application_method: 'Drip fertigation'
+  },
+  ammonical_nitrogen: {
+    fertilizer_name: 'Ammonium Sulphate',
+    quantity: '25',
+    unit: 'kg/acre',
+    application_method: 'Drip fertigation'
+  }
+}
 
 export default function ConsultantFarmPage() {
   const params = useParams()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const farmerId = params.farmerId as string
   const rawFarmId = parseInt(params.farmId as string, 10)
   const farmId = isNaN(rawFarmId) ? null : rawFarmId
+  const reviewIdFromUrl = searchParams.get('reviewId')
 
+  const [loading, setLoading] = useState(true)
+  const [farm, setFarm] = useState<FarmDetail | null>(null)
   const [soilTests, setSoilTests] = useState<LabTestRecord[]>([])
   const [petioleTests, setPetioleTests] = useState<LabTestRecord[]>([])
-  const [labTestsFarmId, setLabTestsFarmId] = useState<number | null>(null)
-  const [labTestsLoading, setLabTestsLoading] = useState(false)
+  const [farmerName, setFarmerName] = useState<string>('')
+  const [access, setAccess] = useState<ConsultantAccess | null>(null)
+  const [visits, setVisits] = useState<Visit[]>([])
+  const [pendingReview, setPendingReview] = useState<TriageItem | null>(null)
+  const [previousPlan, setPreviousPlan] = useState<FertilizerPlanWithItems | null>(null)
+  const [showAllVisits, setShowAllVisits] = useState(false)
 
-  const accessQuery = useConsultantAccess()
-  const access = accessQuery.data ?? null
-  const validationQuery = useValidatedFarmerClient(access, farmerId)
-  const isValidClient = validationQuery.data?.isValid ?? false
-  const farmQuery = useFarmDetail(farmId, isValidClient, access)
-  const profileQuery = useFarmerProfile(farmerId, isValidClient)
-  const farm = isValidClient && farmQuery.data?.user_id === farmerId ? farmQuery.data : null
-  const farmerName = profileQuery.data?.full_name || 'Farmer'
+  // Plan editor state
+  const [planTitle, setPlanTitle] = useState('')
+  const [planNote, setPlanNote] = useState('')
+  const [draftItems, setDraftItems] = useState<DraftItem[]>([newDraftItem()])
+  const [removedIds, setRemovedIds] = useState<string[]>([])
+  const [savingPlan, setSavingPlan] = useState(false)
+  const [hasExistingPlan, setHasExistingPlan] = useState(false)
 
-  useEffect(() => {
-    const error = accessQuery.error ?? validationQuery.error ?? farmQuery.error ?? profileQuery.error
-    if (!error) return
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true)
 
-    console.error('Error loading farm data:', error)
-    Sentry.captureException(error, {
-      tags: { context: 'loadFarmDetail' },
-      extra: { farmerId, farmId }
-    })
-    toast.error(error instanceof Error ? error.message : 'Failed to load farm data')
-  }, [accessQuery.error, validationQuery.error, farmQuery.error, profileQuery.error, farmerId, farmId])
+      const accessResult = await getConsultantAccess()
+      if (!accessResult) {
+        toast.error('Not authenticated')
+        return
+      }
+      setAccess(accessResult)
 
-  useEffect(() => {
-    if (!farmId || !isValidClient || !farm) {
-      setSoilTests([])
-      setPetioleTests([])
-      setLabTestsFarmId(null)
-      setLabTestsLoading(false)
-      return
-    }
+      const validation = await validateFarmerClient(accessResult, farmerId)
+      if (!validation.isValid) {
+        toast.error('Farmer not found or not authorized')
+        router.push('/consultant/farmers')
+        return
+      }
 
-    let cancelled = false
+      if (farmId === null) {
+        toast.error('Invalid farm ID')
+        router.push(`/consultant/farmers/${farmerId}`)
+        return
+      }
 
-    async function loadLabTests() {
-      try {
-        setLabTestsLoading(true)
-        setLabTestsFarmId(null)
-        const [soilTestsData, petioleTestsData] = await Promise.all([
-          SupabaseService.getSoilTestRecords(farmId as number),
-          SupabaseService.getPetioleTestRecords(farmId as number)
+      const farmData = await getFarmDetail(farmId)
+      if (!farmData || farmData.user_id !== farmerId) {
+        toast.error('Farm not found or does not belong to this farmer')
+        router.push(`/consultant/farmers/${farmerId}`)
+        return
+      }
+
+      setFarm(farmData)
+
+      const [soilTestsData, petioleTestsData, profile, allVisits, plans, triageItems] =
+        await Promise.all([
+          SupabaseService.getSoilTestRecords(farmId),
+          SupabaseService.getPetioleTestRecords(farmId),
+          supabaseGetFarmerProfile(farmerId),
+          getVisitsForFarmer(accessResult, farmerId),
+          FertilizerPlanService.getPlansByFarm(farmId),
+          getTriageItems(accessResult, { farmId })
         ])
 
-        if (cancelled) return
-        setSoilTests((soilTestsData || []) as LabTestRecord[])
-        setPetioleTests((petioleTestsData || []) as LabTestRecord[])
-        setLabTestsFarmId(farm.id)
-      } catch (error) {
-        if (cancelled) return
-        setSoilTests([])
-        setPetioleTests([])
-        setLabTestsFarmId(null)
-        console.error('Error loading lab tests:', error)
-        toast.error(error instanceof Error ? error.message : 'Failed to load lab tests')
-      } finally {
-        if (!cancelled) setLabTestsLoading(false)
+      setSoilTests((soilTestsData || []) as LabTestRecord[])
+      setPetioleTests((petioleTestsData || []) as LabTestRecord[])
+      setFarmerName(profile?.full_name || 'Farmer')
+      setVisits(allVisits.filter((v) => v.farmId === farmId))
+      setPreviousPlan(plans[0] ?? null)
+
+      // Resolve the Petiole Review this page is opening on. Priority:
+      //   1. explicit ?reviewId= from the Command Center deep-link;
+      //   2. newest pending review for this farm;
+      //   3. none (page opens on the latest completed review / read mode).
+      let resolvedReview: TriageItem | null = null
+      if (reviewIdFromUrl) {
+        resolvedReview = triageItems.find((t) => t.id === reviewIdFromUrl) ?? null
+      }
+      if (!resolvedReview) {
+        resolvedReview =
+          triageItems.find((t) => t.status === 'pending' || t.status === 'in_review') ?? null
+      }
+      setPendingReview(resolvedReview)
+
+      // Seed the plan editor from the latest plan when one exists.
+      if (plans[0]) {
+        setPlanTitle(plans[0].title)
+        setPlanNote(plans[0].notes ?? '')
+        setDraftItems(
+          plans[0].items.length > 0 ? plans[0].items.map(draftFromPlanItem) : [newDraftItem()]
+        )
+      }
+    } catch (error) {
+      console.error('Error loading farm data:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to load farm data')
+    } finally {
+      setLoading(false)
+    }
+  }, [farmerId, farmId, router, reviewIdFromUrl])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  // Keep the editor's plan mode in sync with the loaded plan.
+  useEffect(() => {
+    setHasExistingPlan(previousPlan !== null)
+  }, [previousPlan])
+
+  const sortedSoilTests = useMemo(
+    () => [...soilTests].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    [soilTests]
+  )
+  const sortedPetioleTests = useMemo(
+    () => [...petioleTests].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    [petioleTests]
+  )
+
+  // Identify the petiole test the review is anchored to, plus the previous one
+  // for comparison. If no pending review, default to the most recent test.
+  const reviewTest = useMemo(() => {
+    if (pendingReview?.petioleTestId != null) {
+      const match = sortedPetioleTests.find((t) => t.id === pendingReview.petioleTestId)
+      if (match) return match
+    }
+    return sortedPetioleTests[0]
+  }, [pendingReview, sortedPetioleTests])
+
+  const latestSoil = sortedSoilTests[0]
+
+  // Flagged nutrients from the current review report, surfaced in the Workbench bar.
+  const abnormalNutrients = useMemo(() => {
+    if (!reviewTest) return []
+    const parameters = reviewTest.parameters || {}
+    const result: {
+      key: string
+      label: string
+      value: number
+      range: ParamRange
+      status: 'low' | 'high'
+    }[] = []
+    for (const key of Object.keys(parameters)) {
+      const value = parameters[key]
+      const range = PETIOLE_RANGES[key]
+      if (typeof value === 'number' && range) {
+        if (value < range.min) {
+          result.push({ key, label: formatParamKey(key), value, range, status: 'low' })
+        } else if (value > range.max) {
+          result.push({ key, label: formatParamKey(key), value, range, status: 'high' })
+        }
       }
     }
+    return result.sort((a, b) => a.label.localeCompare(b.label))
+  }, [reviewTest])
 
-    loadLabTests()
-
-    return () => {
-      cancelled = true
-    }
-  }, [farmId, farm, isValidClient])
-
-  const loading =
-    accessQuery.isPending ||
-    validationQuery.isPending ||
-    (isValidClient &&
-      farmId != null &&
-      (farmQuery.isPending || profileQuery.isPending || labTestsLoading))
+  const hasPendingReview =
+    pendingReview?.status === 'pending' || pendingReview?.status === 'in_review'
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading farm data...</p>
+          <p className="text-sm text-muted-foreground">Loading farm workspace...</p>
         </div>
       </div>
     )
   }
 
-  if (!farm) {
-    return <FarmNotFound farmerId={farmerId} />
-  }
-
-  const visibleSoilTests = labTestsFarmId === farm.id ? soilTests : []
-  const visiblePetioleTests = labTestsFarmId === farm.id ? petioleTests : []
-
-  return (
-    <div className="space-y-6">
-      <FarmHeader farm={farm} farmerId={farmerId} farmerName={farmerName} />
-      <FarmInfoCard farm={farm} farmerName={farmerName} />
-      <SoilPropertiesCard farm={farm} />
-      <LabTestsSection petioleTests={visiblePetioleTests} soilTests={visibleSoilTests} />
-    </div>
-  )
-}
-
-function FarmNotFound({ farmerId }: { farmerId: string }) {
-  return (
-    <div className="space-y-6">
-      <Button asChild variant="ghost" size="sm" className="flex items-center gap-2 -ml-2">
-        <Link href={`/consultant/farmers/${farmerId}`}>
+  if (!farm || farmId === null) {
+    return (
+      <div className="space-y-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push(`/consultant/farmers/${farmerId}`)}
+          className="flex items-center gap-2 -ml-2"
+        >
           <ArrowLeft className="h-4 w-4" />
           Back to Farmer
-        </Link>
-      </Button>
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Farm Not Found</h2>
-          <p className="text-muted-foreground">
+        </Button>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <MapPin className="h-10 w-10 text-muted-foreground mb-3" />
+          <h2 className="text-base font-semibold">Farm not found</h2>
+          <p className="mt-1 text-sm text-muted-foreground max-w-sm">
             This farm could not be found or does not belong to this farmer.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+    )
+  }
+
+  const visibleVisits = showAllVisits ? visits : visits.slice(0, COMPACT_VISIT_LIMIT)
+
+  // -- Plan editor handlers -------------------------------------------------
+
+  const updateDraftItem = (id: string, patch: Partial<DraftItem>) => {
+    setDraftItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)))
+  }
+
+  const addDraftItem = () => {
+    setDraftItems((prev) => [...prev, newDraftItem()])
+  }
+
+  const removeDraftItem = (id: string) => {
+    setDraftItems((prev) => {
+      const next = prev.filter((item) => item.id !== id)
+      return next.length > 0 ? next : [newDraftItem()]
+    })
+    // Track items removed from an existing plan so we can delete them on save.
+    if (previousPlan?.items.some((i) => i.id === id)) {
+      setRemovedIds((prev) => [...prev, id])
+    }
+  }
+
+  // Toggle a flagged-nutrient chip in the Workbench "Needs attention" bar.
+  // If the nutrient is already addressed, remove its seeded row. Otherwise,
+  // seed a new plan row with the default recommendation for that nutrient.
+  const toggleNutrientChip = (nutrientKey: string) => {
+    setDraftItems((prev) => {
+      const existing = prev.find((item) => item.nutrient === nutrientKey)
+      if (existing) {
+        const next = prev.filter((item) => item.nutrient !== nutrientKey)
+        return next.length > 0 ? next : [newDraftItem()]
+      }
+      const recommendation = NUTRIENT_RECOMMENDATIONS[nutrientKey]
+      return [
+        ...prev,
+        {
+          ...newDraftItem(),
+          ...recommendation,
+          nutrient: nutrientKey
+        }
+      ]
+    })
+  }
+
+  const handleSendOrSavePlan = async () => {
+    if (!access || farmId === null) return
+
+    const validItems = draftItems.filter((i) => i.fertilizer_name.trim() !== '')
+    if (validItems.length === 0) {
+      toast.error('Add at least one fertilizer item before sending the plan')
+      return
+    }
+
+    setSavingPlan(true)
+    try {
+      const title = planTitle.trim() || `Plan for ${farm.name}`
+
+      if (hasExistingPlan && previousPlan) {
+        // Save changes to the existing plan (no draft state - edits go live).
+        await FertilizerPlanService.updatePlan(previousPlan.id, {
+          title,
+          notes: planNote.trim() || undefined
+        })
+
+        // Reconcile items: delete removed, update existing, add new.
+        await Promise.all(removedIds.map((id) => FertilizerPlanService.deletePlanItem(id)))
+
+        const existingItemIds = new Set(previousPlan.items.map((i) => i.id))
+
+        let addedCount = 0
+        for (const draft of validItems) {
+          if (existingItemIds.has(draft.id)) {
+            await FertilizerPlanService.updatePlanItem(draft.id, {
+              fertilizer_name: draft.fertilizer_name.trim(),
+              quantity: parseFloat(draft.quantity) || 0,
+              unit: draft.unit,
+              application_method: draft.application_method || null
+            })
+          } else {
+            await FertilizerPlanService.addPlanItem(previousPlan.id, {
+              fertilizer_name: draft.fertilizer_name.trim(),
+              quantity: parseFloat(draft.quantity) || 0,
+              unit: draft.unit,
+              application_method: draft.application_method || undefined
+            })
+            addedCount++
+          }
+        }
+
+        // Reload the plan so the editor reflects the persisted state.
+        const refreshed = await FertilizerPlanService.getPlanById(previousPlan.id)
+        if (refreshed) {
+          setPreviousPlan(refreshed)
+          setDraftItems(
+            refreshed.items.length > 0 ? refreshed.items.map(draftFromPlanItem) : [newDraftItem()]
+          )
+        }
+        setRemovedIds([])
+        toast.success(
+          `Plan updated${addedCount > 0 ? ` (${addedCount} new item${addedCount > 1 ? 's' : ''})` : ''}`
+        )
+      } else {
+        // First plan: create + send. Linked to the source review when present.
+        const created = await FertilizerPlanService.createPlan({
+          farm_id: farmId,
+          organization_id: access.organizationId,
+          title,
+          notes: planNote.trim() || undefined,
+          items: validItems.map((draft) => ({
+            fertilizer_name: draft.fertilizer_name.trim(),
+            quantity: parseFloat(draft.quantity) || 0,
+            unit: draft.unit,
+            application_method: draft.application_method || undefined
+          }))
+        })
+
+        // Mark the Petiole Review as reviewed now that a plan is published.
+        if (pendingReview) {
+          try {
+            await updateTriageReview(access, pendingReview.id, {
+              status: 'reviewed',
+              recommendation: title
+            })
+            setPendingReview((prev) => (prev ? { ...prev, status: 'reviewed' } : null))
+          } catch (err) {
+            console.error('Failed to mark review as reviewed:', err)
+            // Non-blocking: the plan is already sent to the farmer.
+          }
+        }
+
+        setPreviousPlan(created)
+        setHasExistingPlan(true)
+        setDraftItems(
+          created.items.length > 0 ? created.items.map(draftFromPlanItem) : [newDraftItem()]
+        )
+        toast.success('Plan sent to farmer')
+      }
+    } catch (error) {
+      console.error('Failed to save plan:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to save plan')
+    } finally {
+      setSavingPlan(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <header className="pb-5 border-b border-border">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push(`/consultant/farmers/${farmerId}`)}
+          className="flex items-center gap-1.5 -ml-2 text-muted-foreground hover:text-foreground mb-2"
+        >
+          <ArrowLeft className="h-3 w-3" />
+          {farmerName}
+          <ChevronRight className="h-3 w-3" />
+          <span className="text-foreground/70">Farm</span>
+        </Button>
+
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-semibold tracking-tight">{farm.name}</h1>
+              {hasPendingReview ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/40 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  New report to review
+                </span>
+              ) : reviewTest ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                  <Check className="h-3 w-3" />
+                  Reviewed
+                </span>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1.5 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-3 w-3 text-zinc-400" />
+                {farm.region || 'No region'}
+              </span>
+              {farm.area && (
+                <>
+                  <span className="text-border">·</span>
+                  <span className="tabular-nums">{farm.area} acres</span>
+                </>
+              )}
+              {farm.crop_variety && (
+                <>
+                  <span className="text-border">·</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Grape className="h-3 w-3 text-purple-600" />
+                    {farm.crop_variety}
+                  </span>
+                </>
+              )}
+              {farm.date_of_pruning && (
+                <>
+                  <span className="text-border">·</span>
+                  <span className="tabular-nums">
+                    Pruned{' '}
+                    {new Date(farm.date_of_pruning).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </>
+              )}
+              {reviewTest?.date && (
+                <>
+                  <span className="text-border">·</span>
+                  <span className="tabular-nums">
+                    Sample{' '}
+                    {new Date(reviewTest.date).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {access && farmId !== null && (
+            <RecordVisitDialog
+              access={access}
+              farmerId={farmerId}
+              farms={[{ id: farmId, name: farm.name }]}
+              defaultFarmId={farmId}
+              onRecorded={(visit) => setVisits((prev) => [visit, ...prev])}
+            />
+          )}
+        </div>
+      </header>
+
+      {/* No petiole test state */}
+      {!reviewTest ? (
+        <NoReportState
+          soilTestsCount={sortedSoilTests.length}
+          petioleTestsCount={sortedPetioleTests.length}
+        />
+      ) : (
+        <div className="space-y-4">
+          {/* Workbench bridge: persistent flagged-nutrient chips that seed plan rows */}
+          {abnormalNutrients.length > 0 && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50/60 dark:bg-amber-950/20 p-3 border-l-4 border-l-amber-400">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <div className="flex items-center gap-2 shrink-0">
+                  <FlaskConical className="h-4 w-4 text-amber-600" />
+                  <span className="text-xs font-semibold text-amber-900 dark:text-amber-100">
+                    Needs attention
+                  </span>
+                  <span className="text-[11px] text-amber-700 dark:text-amber-400">
+                    {
+                      abnormalNutrients.filter(
+                        (n) => !draftItems.some((item) => item.nutrient === n.key)
+                      ).length
+                    }{' '}
+                    of {abnormalNutrients.length} unaddressed
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {abnormalNutrients.map((n) => {
+                    const addressed = draftItems.some((item) => item.nutrient === n.key)
+                    return (
+                      <button
+                        key={n.key}
+                        onClick={() => toggleNutrientChip(n.key)}
+                        className={`group inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                          addressed
+                            ? 'border-border bg-muted text-muted-foreground'
+                            : 'border-amber-300 bg-white dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 hover:border-amber-500'
+                        }`}
+                      >
+                        {n.label}{' '}
+                        <span className="tabular-nums">{formatValue(n.value, n.range)}</span>
+                        <span className="text-amber-500">{n.status === 'low' ? '↓' : '↑'}</span>
+                        {addressed ? (
+                          <span className="inline-flex items-center gap-1 text-emerald-600">
+                            <Check className="h-3 w-3" />
+                            in plan
+                          </span>
+                        ) : (
+                          <span className="text-amber-400 group-hover:text-amber-600">+ plan</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="flex items-center gap-3 text-[11px] text-muted-foreground ml-auto">
+                  {latestSoil && (
+                    <span className="inline-flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      Soil: all optimal
+                    </span>
+                  )}
+                  <span className="text-border">·</span>
+                  <span>Prev plan: {previousPlan?.items.length ?? 0} items</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Two live panes: evidence (left) + prescription (right), co-visible */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+            {/* LEFT (50%): Evidence - read to understand, scroll freely */}
+            <div className="space-y-3">
+              <PetioleComparison
+                reports={sortedPetioleTests}
+                currentReportId={reviewTest?.id ?? null}
+                ranges={PETIOLE_RANGES}
+                paramGroups={PETIOLE_PARAM_GROUPS}
+              />
+
+              <Collapsible>
+                <div className="rounded-lg border border-border bg-card overflow-hidden">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2.5 hover:bg-muted/30 transition-colors">
+                    <SectionLabel>Previous fertilizer plan</SectionLabel>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-4 pb-4">
+                    <PreviousPlanPanel plan={previousPlan} />
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+
+              <Collapsible>
+                <div className="rounded-lg border border-border bg-card overflow-hidden">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2.5 hover:bg-muted/30 transition-colors">
+                    <SectionLabel>Soil background</SectionLabel>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-4 pb-4">
+                    <SoilBackgroundPanel
+                      test={latestSoil}
+                      tests={sortedSoilTests}
+                      farm={farm}
+                      ranges={SOIL_RANGES}
+                      baselineKeys={SOIL_BASELINE_KEYS}
+                    />
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+
+              <CollapsibleHistory
+                soilTests={sortedSoilTests}
+                petioleTests={sortedPetioleTests}
+                visits={visibleVisits}
+                allVisitsCount={visits.length}
+                showAllVisits={showAllVisits}
+                onToggleVisits={() => setShowAllVisits((v) => !v)}
+              />
+            </div>
+
+            {/* RIGHT (5/12): Prescription - sticky, always visible while reading evidence */}
+            <aside className="lg:sticky lg:top-6 space-y-3">
+              <PlanEditorPanel
+                note={planNote}
+                onNoteChange={setPlanNote}
+                items={draftItems}
+                onUpdateItem={updateDraftItem}
+                onAddItem={addDraftItem}
+                onRemoveItem={removeDraftItem}
+                onSave={handleSendOrSavePlan}
+                saving={savingPlan}
+                hasExistingPlan={hasExistingPlan}
+                abnormalCount={abnormalNutrients.length}
+              />
+            </aside>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-function FarmHeader({
-  farm,
-  farmerId,
-  farmerName
+// ===========================================================================
+// Sub-components
+// ===========================================================================
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      {children}
+    </h2>
+  )
+}
+
+function formatParamKey(key: string): string {
+  const labels: Record<string, string> = {
+    ph: 'pH',
+    ec: 'EC',
+    nitrogen: 'Nitrogen',
+    phosphorus: 'Phosphorus',
+    potassium: 'Potassium',
+    total_nitrogen: 'Total Nitrogen',
+    nitrate_nitrogen: 'Nitrate-N',
+    ammonical_nitrogen: 'Ammonical-N',
+    calcium: 'Calcium',
+    magnesium: 'Magnesium',
+    sulphur: 'Sulphur',
+    iron: 'Iron',
+    manganese: 'Manganese',
+    zinc: 'Zinc',
+    copper: 'Copper',
+    boron: 'Boron',
+    molybdenum: 'Molybdenum',
+    sodium: 'Sodium',
+    chloride: 'Chloride'
+  }
+  return labels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function getStatus(value: number, range: ParamRange): 'optimal' | 'low' | 'high' {
+  if (value < range.min) return 'low'
+  if (value > range.max) return 'high'
+  return 'optimal'
+}
+
+function NoReportState({
+  soilTestsCount,
+  petioleTestsCount
 }: {
-  farm: FarmDetail
-  farmerId: string
-  farmerName: string
+  soilTestsCount: number
+  petioleTestsCount: number
 }) {
   return (
-    <div className="space-y-2">
-      <Button asChild variant="ghost" size="sm" className="flex items-center gap-2 -ml-2">
-        <Link href={`/consultant/farmers/${farmerId}`}>
-          <ArrowLeft className="h-4 w-4" />
-          Back to {farmerName}
-        </Link>
-      </Button>
-      <div className="flex items-center gap-3">
-        <Grape className="h-8 w-8 text-purple-600" />
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">{farm.name}</h1>
-          <p className="text-muted-foreground flex items-center gap-1">
-            <MapPin className="h-4 w-4" />
-            {farm.region}
+    <div className="rounded-lg border border-dashed border-border p-12 flex flex-col items-center justify-center text-center">
+      <div className="flex items-center gap-2 mb-3">
+        <FlaskConical className="h-6 w-6 text-muted-foreground/40" />
+        <Leaf className="h-6 w-6 text-muted-foreground/40" />
+      </div>
+      <h2 className="text-base font-semibold">No petiole report to review</h2>
+      <p className="mt-1 text-sm text-muted-foreground max-w-md">
+        When the farmer uploads a petiole report, it will appear here for review.
+        {soilTestsCount > 0 || petioleTestsCount > 0
+          ? ` There ${soilTestsCount + petioleTestsCount === 1 ? 'is' : 'are'} ${
+              soilTestsCount + petioleTestsCount
+            } existing test${soilTestsCount + petioleTestsCount === 1 ? '' : 's'} on record.`
+          : ''}
+      </p>
+    </div>
+  )
+}
+
+// -- Stage 1: Petiole Comparison (Excel-style grid) -----------------------
+
+function PetioleComparison({
+  reports,
+  currentReportId,
+  ranges,
+  paramGroups
+}: {
+  reports: LabTestRecord[]
+  currentReportId?: number | null
+  ranges: Record<string, ParamRange>
+  paramGroups: { label: string; keys: string[] }[]
+}) {
+  const sortedReports = useMemo(
+    () =>
+      [...reports]
+        .filter((r) => r.parameters && Object.keys(r.parameters).length > 0)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    [reports]
+  )
+
+  const currentId = currentReportId ?? sortedReports[0]?.id ?? null
+
+  // Flatten the group keys while preserving group membership for rendering.
+  const groupedRows = paramGroups
+    .map((g) => ({
+      label: g.label,
+      keys: g.keys.filter((k) =>
+        sortedReports.some((r) => {
+          const v = r.parameters?.[k]
+          return v !== undefined && v !== null && v !== ''
+        })
+      )
+    }))
+    .filter((g) => g.keys.length > 0)
+
+  const totalParams = groupedRows.reduce((acc, g) => acc + g.keys.length, 0)
+
+  // Count abnormal cells across all reports so the consultant gets a heads-up.
+  const abnormalCounts = useMemo(() => {
+    const counts = new Map<number, number>()
+    for (const r of sortedReports) {
+      let n = 0
+      for (const g of groupedRows) {
+        for (const k of g.keys) {
+          const v = r.parameters?.[k]
+          const range = ranges[k]
+          if (typeof v === 'number' && range) {
+            const st = getStatus(v, range)
+            if (st !== 'optimal') n++
+          }
+        }
+      }
+      counts.set(r.id ?? -1, n)
+    }
+    return counts
+  }, [sortedReports, groupedRows, ranges])
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-baseline justify-between gap-2 flex-wrap">
+        <SectionLabel>Petiole comparison</SectionLabel>
+        {totalParams > 0 && (
+          <span className="text-[11px] text-muted-foreground">
+            {sortedReports.length} report{sortedReports.length !== 1 ? 's' : ''} · {totalParams}{' '}
+            parameters
+          </span>
+        )}
+      </div>
+
+      {sortedReports.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          No parameter values were extracted from this report.
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="bg-muted/40">
+                <th className="sticky left-0 z-10 bg-muted/40 px-3 py-2 text-left align-bottom text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border min-w-[140px]">
+                  Parameter
+                </th>
+                {sortedReports.map((r) => {
+                  const isCurrent = (r.id ?? null) === currentId
+                  const abnormal = abnormalCounts.get(r.id ?? -1) ?? 0
+                  return (
+                    <th
+                      key={r.id ?? `${r.date}-${Math.random()}`}
+                      className={`px-3 py-2 text-center align-bottom border-b border-l border-border min-w-[110px] ${
+                        isCurrent ? 'bg-primary/5' : ''
+                      }`}
+                    >
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="tabular-nums text-[11px] font-semibold text-foreground">
+                          {new Date(r.date).toLocaleDateString(undefined, {
+                            day: '2-digit',
+                            month: 'short'
+                          })}
+                        </span>
+                        <span className="tabular-nums text-[10px] text-muted-foreground">
+                          {new Date(r.date).toLocaleDateString(undefined, {
+                            year: 'numeric'
+                          })}
+                        </span>
+                        {isCurrent && (
+                          <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary-foreground">
+                            Current
+                          </span>
+                        )}
+                        {!isCurrent && abnormal > 0 && (
+                          <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+                            {abnormal} flag{abnormal !== 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                  )
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {groupedRows.map((group, gi) => (
+                <Fragment key={group.label}>
+                  <tr>
+                    <td
+                      colSpan={sortedReports.length + 1}
+                      className={`sticky left-0 bg-muted/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border ${
+                        gi === 0 ? '' : 'border-t'
+                      }`}
+                    >
+                      {group.label}
+                    </td>
+                  </tr>
+                  {group.keys.map((key) => {
+                    const range = ranges[key]
+                    return (
+                      <tr key={key} className="group hover:bg-muted/20">
+                        <td className="sticky left-0 z-10 bg-card group-hover:bg-muted/20 px-3 py-1.5 text-left text-[12px] font-medium text-foreground border-b border-border">
+                          <div className="flex flex-col">
+                            <span>{formatParamKey(key)}</span>
+                            {range && (
+                              <span className="text-[10px] text-muted-foreground tabular-nums">
+                                {range.min}-{range.max} {range.unit}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        {sortedReports.map((r) => {
+                          const raw = r.parameters?.[key]
+                          const isCurrent = (r.id ?? null) === currentId
+                          const isNumeric = typeof raw === 'number'
+                          const status = isNumeric && range ? getStatus(raw, range) : 'optimal'
+                          const display = isNumeric
+                            ? formatValue(raw, range)
+                            : raw != null && raw !== ''
+                              ? String(raw)
+                              : '-'
+                          return (
+                            <td
+                              key={r.id ?? `${r.date}-${key}`}
+                              className={`px-3 py-1.5 text-center border-b border-l border-border tabular-nums text-[12px] font-medium ${cellClasses(
+                                status,
+                                isCurrent
+                              )}`}
+                              title={
+                                isNumeric && range
+                                  ? `${formatParamKey(key)}: ${raw} (target ${range.min}-${range.max})`
+                                  : undefined
+                              }
+                            >
+                              {display}
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    )
+                  })}
+                </Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1">
+          <span className="h-2.5 w-2.5 rounded-sm bg-amber-200 dark:bg-amber-900/50" />
+          Below target
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="h-2.5 w-2.5 rounded-sm bg-rose-200 dark:bg-rose-900/50" />
+          Above target
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="h-2.5 w-2.5 rounded-sm bg-primary/10 ring-1 ring-primary/30" />
+          Current report
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="h-2.5 w-2.5 rounded-sm bg-card ring-1 ring-border" />
+          Within target
+        </span>
+      </div>
+
+      {sortedReports[0]?.notes && (
+        <div className="rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/10 p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-500 mb-0.5">
+            Lab note (latest report)
+          </p>
+          <p className="text-xs text-muted-foreground leading-relaxed">{sortedReports[0].notes}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function formatValue(value: number, _range: ParamRange | undefined): string {
+  const magnitude = Math.abs(value)
+  const decimals = magnitude >= 100 ? 0 : magnitude >= 10 ? 1 : 2
+  return value.toFixed(decimals)
+}
+
+function cellClasses(status: 'optimal' | 'low' | 'high', isCurrent: boolean): string {
+  const statusBg =
+    status === 'low'
+      ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200'
+      : status === 'high'
+        ? 'bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-200'
+        : ''
+  const currentRing = isCurrent ? 'ring-1 ring-inset ring-primary/30' : ''
+  return `${statusBg} ${currentRing}`.trim()
+}
+
+// -- Stage 2: Previous Plan ------------------------------------------------
+
+function PreviousPlanPanel({ plan }: { plan: FertilizerPlanWithItems | null }) {
+  return (
+    <div className="space-y-3">
+      <SectionLabel>Previous fertilizer plan</SectionLabel>
+      {!plan ? (
+        <div className="rounded-lg border border-dashed border-border p-8 flex flex-col items-center justify-center text-center">
+          <ClipboardList className="h-6 w-6 text-muted-foreground/40 mb-2" />
+          <p className="text-sm font-medium text-muted-foreground">No previous plan</p>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">
+            This will be the first fertilizer plan for this farm
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-border overflow-hidden bg-card">
+          <div className="px-4 py-2.5 border-b border-border/50 bg-muted/20">
+            <p className="text-sm font-semibold">{plan.title}</p>
+            <p className="text-[11px] text-muted-foreground tabular-nums mt-0.5">
+              Created{' '}
+              {new Date(plan.created_at).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+              })}
+            </p>
+          </div>
+
+          <div className="divide-y divide-border/40">
+            {plan.items.map((item, idx) => (
+              <div key={item.id} className="px-4 py-2.5 flex items-baseline gap-3">
+                <span className="text-[10px] font-semibold text-muted-foreground/60 tabular-nums w-4 shrink-0">
+                  {idx + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{item.fertilizer_name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    <span className="tabular-nums">
+                      {item.quantity} {item.unit}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {plan.notes && (
+            <div className="px-4 py-2.5 border-t border-border/50 bg-muted/10">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">
+                Message to farmer
+              </p>
+              <p className="text-xs text-foreground/90 leading-relaxed">{plan.notes}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// -- Stage 3: Soil Background ---------------------------------------------
+
+function SoilBackgroundPanel({
+  test,
+  tests,
+  farm,
+  ranges,
+  baselineKeys
+}: {
+  test: LabTestRecord | undefined
+  tests: LabTestRecord[]
+  farm: FarmDetail
+  ranges: Record<string, ParamRange>
+  baselineKeys: string[]
+}) {
+  const [showAllSoil, setShowAllSoil] = useState(false)
+  const parameters = test?.parameters || {}
+  const baselineRows = baselineKeys
+    .filter((k) => parameters[k] !== undefined && parameters[k] !== null)
+    .map((key) => {
+      const value = parameters[key]
+      const range = ranges[key]
+      const isNumeric = typeof value === 'number'
+      const status = isNumeric && range ? getStatus(value as number, range) : 'optimal'
+      return { paramKey: key, value, range, isNumeric, status }
+    })
+
+  const allKeys = Object.keys(parameters).filter(
+    (k) => parameters[k] !== undefined && parameters[k] !== null
+  )
+  const extraKeys = allKeys.filter((k) => !baselineKeys.includes(k))
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-baseline justify-between">
+        <SectionLabel>Soil background</SectionLabel>
+        {test?.date && (
+          <span className="text-[11px] text-muted-foreground tabular-nums">
+            Tested{' '}
+            {new Date(test.date).toLocaleDateString(undefined, {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric'
+            })}
+            {tests.length > 1 && (
+              <span className="text-muted-foreground/70 ml-1">· {tests.length} reports</span>
+            )}
+          </span>
+        )}
+      </div>
+
+      {!test ? (
+        <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          <TestTube className="h-5 w-5 text-muted-foreground/40 mx-auto mb-2" />
+          No soil test on record. Soil context will appear here once a report is uploaded.
+        </div>
+      ) : (
+        <>
+          {/* Configurable baseline strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {baselineRows.map((row) => (
+              <SoilBaselineCard key={row.paramKey} {...row} />
+            ))}
+          </div>
+
+          {/* Farm-level soil facts */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <SoilFact label="Texture" value={farm.soil_texture_class} />
+            <SoilFact
+              label="CEC"
+              value={
+                farm.cation_exchange_capacity != null
+                  ? `${farm.cation_exchange_capacity} meq/100g`
+                  : null
+              }
+            />
+            <SoilFact
+              label="Bulk density"
+              value={farm.bulk_density != null ? `${farm.bulk_density} g/ml` : null}
+            />
+            <SoilFact
+              label="Water retention"
+              value={farm.soil_water_retention != null ? `${farm.soil_water_retention} mm/m` : null}
+            />
+          </div>
+
+          {/* Expandable complete soil results */}
+          {extraKeys.length > 0 && (
+            <div>
+              <button
+                onClick={() => setShowAllSoil((v) => !v)}
+                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                <ChevronDown
+                  className={`h-3 w-3 transition-transform ${showAllSoil ? 'rotate-180' : ''}`}
+                />
+                {showAllSoil ? 'Hide full results' : `View all soil results (${extraKeys.length})`}
+              </button>
+              {showAllSoil && (
+                <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {extraKeys.map((key) => (
+                    <div key={key} className="rounded-md border border-border/60 bg-card px-3 py-2">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                        {formatParamKey(key)}
+                      </p>
+                      <p className="text-sm font-semibold tabular-nums mt-0.5">
+                        {typeof parameters[key] === 'number'
+                          ? (parameters[key] as number).toFixed(2)
+                          : String(parameters[key])}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {test.report_storage_path && <ReportLink path={test.report_storage_path} />}
+        </>
+      )}
+    </div>
+  )
+}
+
+function SoilBaselineCard({
+  paramKey,
+  value,
+  range,
+  isNumeric,
+  status
+}: {
+  paramKey: string
+  value: number | string
+  range: ParamRange | undefined
+  isNumeric: boolean
+  status: 'optimal' | 'low' | 'high'
+}) {
+  const statusColor =
+    status === 'low'
+      ? 'text-amber-700 dark:text-amber-500'
+      : status === 'high'
+        ? 'text-rose-700 dark:text-rose-500'
+        : 'text-emerald-700 dark:text-emerald-500'
+
+  return (
+    <div className="rounded-md border border-border/60 bg-card px-3 py-2">
+      <div className="flex items-baseline justify-between">
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+          {formatParamKey(paramKey)}
+        </p>
+        {isNumeric && range && status !== 'optimal' && (
+          <span className={`text-[9px] font-semibold uppercase ${statusColor}`}>
+            {status === 'low' ? 'Low' : 'High'}
+          </span>
+        )}
+      </div>
+      <p className="text-base font-bold tabular-nums mt-0.5">
+        {isNumeric ? (value as number).toFixed(2) : String(value)}
+        {range?.unit ? (
+          <span className="text-[10px] font-normal text-muted-foreground ml-1">{range.unit}</span>
+        ) : null}
+      </p>
+      {isNumeric && range && (
+        <p className="text-[10px] text-muted-foreground tabular-nums mt-0.5">
+          Target {range.min}-{range.max}
+        </p>
+      )}
+    </div>
+  )
+}
+
+function SoilFact({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2">
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
+      <p
+        className={`text-sm font-medium mt-0.5 ${
+          value ? 'text-foreground' : 'text-muted-foreground/50 italic'
+        }`}
+      >
+        {value || 'Not set'}
+      </p>
+    </div>
+  )
+}
+
+// -- Stage 4: Plan Editor -------------------------------------------------
+
+function PlanEditorPanel({
+  note,
+  onNoteChange,
+  items,
+  onUpdateItem,
+  onAddItem,
+  onRemoveItem,
+  onSave,
+  saving,
+  hasExistingPlan,
+  abnormalCount
+}: {
+  note: string
+  onNoteChange: (v: string) => void
+  items: DraftItem[]
+  onUpdateItem: (id: string, patch: Partial<DraftItem>) => void
+  onAddItem: () => void
+  onRemoveItem: (id: string) => void
+  onSave: () => void
+  saving: boolean
+  hasExistingPlan: boolean
+  abnormalCount: number
+}) {
+  const addressedCount = items.filter((item) => item.nutrient).length
+  const allAddressed = abnormalCount > 0 && addressedCount === abnormalCount
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-baseline justify-between">
+        <SectionLabel>
+          {hasExistingPlan ? 'Edit fertilizer plan' : 'New fertilizer plan'}
+        </SectionLabel>
+        {abnormalCount > 0 && (
+          <span
+            className={`text-[11px] font-medium ${
+              allAddressed ? 'text-emerald-600' : 'text-amber-700'
+            }`}
+          >
+            Addresses {addressedCount} of {abnormalCount} flagged
+          </span>
+        )}
+      </div>
+
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
+        {/* Items table - full width */}
+        <div className="px-4 pt-3 pb-1 flex items-center justify-between">
+          <Label className="text-xs">Fertilizer items</Label>
+          <span className="text-[11px] text-muted-foreground/70 tabular-nums">
+            {items.length} {items.length === 1 ? 'item' : 'items'}
+          </span>
+        </div>
+        <Table className="text-sm">
+          <TableHeader>
+            <TableRow className="border-b border-border hover:bg-transparent">
+              <TableHead className="h-auto py-2 px-2 text-center w-8 text-[11px] font-medium text-muted-foreground">
+                #
+              </TableHead>
+              <TableHead className="h-auto py-2 px-2 text-left text-[11px] font-medium text-muted-foreground">
+                Fertilizer
+              </TableHead>
+              <TableHead className="h-auto py-2 px-2 text-right w-24 text-[11px] font-medium text-muted-foreground">
+                Qty
+              </TableHead>
+              <TableHead className="h-auto py-2 px-1.5 text-left w-24 text-[11px] font-medium text-muted-foreground">
+                Unit
+              </TableHead>
+              <TableHead className="h-auto py-2 px-2 text-center w-12 text-[11px] font-medium text-muted-foreground">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((item, idx) => (
+              <PlanItemRow
+                key={item.id}
+                item={item}
+                index={idx}
+                onUpdate={(patch) => onUpdateItem(item.id, patch)}
+                onRemove={() => onRemoveItem(item.id)}
+              />
+            ))}
+          </TableBody>
+        </Table>
+        <div className="p-4 pt-2">
+          <Button variant="outline" size="sm" onClick={onAddItem} className="w-full border-dashed">
+            <Plus className="h-3.5 w-3.5" />
+            Add item
+          </Button>
+        </div>
+
+        {/* Message to farmer */}
+        <div className="px-4 pb-3 space-y-1.5">
+          <Label htmlFor="plan-note" className="text-xs">
+            Message to farmer
+          </Label>
+          <Input
+            id="plan-note"
+            value={note}
+            onChange={(e) => onNoteChange(e.target.value)}
+            placeholder="Short note the farmer will see with this plan"
+            className="h-9"
+          />
+        </div>
+
+        {/* Action footer */}
+        <div className="px-4 pb-4 pt-1 flex flex-col gap-1.5 border-t border-border/60 mt-1">
+          <Button onClick={onSave} disabled={saving} className="w-full h-10">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {hasExistingPlan ? 'Save changes' : 'Send plan'}
+          </Button>
+          <p className="text-[11px] text-muted-foreground text-center">
+            {hasExistingPlan
+              ? 'Changes are sent to the farmer immediately after saving.'
+              : 'The farmer will see this plan as soon as you send it.'}
           </p>
         </div>
       </div>
@@ -193,375 +1497,291 @@ function FarmHeader({
   )
 }
 
-function FarmInfoCard({ farm, farmerName }: { farm: FarmDetail; farmerName: string }) {
+function PlanItemRow({
+  item,
+  index,
+  onUpdate,
+  onRemove
+}: {
+  item: DraftItem
+  index: number
+  onUpdate: (patch: Partial<DraftItem>) => void
+  onRemove: () => void
+}) {
+  const [confirmRemove, setConfirmRemove] = useState(false)
+
+  const handleRemove = () => {
+    if (!confirmRemove) {
+      setConfirmRemove(true)
+      setTimeout(() => setConfirmRemove(false), 3000)
+      return
+    }
+    onRemove()
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Farm Details</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">Variety</p>
-            <p className="font-medium">{farm.crop_variety || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Area</p>
-            <p className="font-medium">{farm.area ? `${farm.area} acres` : 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Last Pruning</p>
-            <p className="font-medium flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" />
-              {farm.date_of_pruning ? new Date(farm.date_of_pruning).toLocaleDateString() : 'N/A'}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Owner</p>
-            <p className="font-medium">{farmerName}</p>
-          </div>
+    <TableRow className="border-b border-border/50 last:border-0 hover:bg-muted/30">
+      <TableCell className="p-0 py-2 px-2 text-center align-middle">
+        <span className="text-[11px] text-muted-foreground tabular-nums">{index + 1}</span>
+      </TableCell>
+      <TableCell className="p-0 py-1.5 px-2 align-middle">
+        <div className="flex flex-col gap-1">
+          {item.nutrient && (
+            <span className="inline-flex w-fit items-center rounded bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold px-1.5 py-0.5">
+              {formatParamKey(item.nutrient)}
+            </span>
+          )}
+          <Input
+            value={item.fertilizer_name}
+            onChange={(e) => onUpdate({ fertilizer_name: e.target.value })}
+            placeholder="Fertilizer name"
+            className="h-8 text-sm px-2"
+          />
         </div>
-      </CardContent>
-    </Card>
+      </TableCell>
+      <TableCell className="p-0 py-1.5 px-2 align-middle">
+        <Input
+          type="number"
+          value={item.quantity}
+          onChange={(e) => onUpdate({ quantity: e.target.value })}
+          placeholder="0"
+          className="h-8 text-sm tabular-nums text-right px-2"
+        />
+      </TableCell>
+      <TableCell className="p-0 py-1.5 px-1.5 align-middle">
+        <Select value={item.unit} onValueChange={(v) => onUpdate({ unit: v })}>
+          <SelectTrigger size="sm" className="text-sm px-2">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PLAN_ITEM_UNIT_OPTIONS.map((u) => (
+              <SelectItem key={u} value={u}>
+                {u}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </TableCell>
+      <TableCell className="p-0 py-1.5 px-2 align-middle">
+        <div className="flex items-center justify-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-7 w-7 ${
+              confirmRemove
+                ? 'text-destructive hover:bg-destructive/10'
+                : 'text-muted-foreground hover:text-destructive'
+            }`}
+            onClick={handleRemove}
+            title={confirmRemove ? 'Click again to remove' : 'Remove item'}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
   )
 }
 
-function SoilPropertiesCard({ farm }: { farm: FarmDetail }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <TestTube className="h-5 w-5 text-amber-600" />
-          Soil Properties
-        </CardTitle>
-        <CardDescription>Physical and chemical soil characteristics</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">Texture Class</p>
-            <p className="font-medium">{farm.soil_texture_class || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Bulk Density</p>
-            <p className="font-medium">
-              {farm.bulk_density ? `${farm.bulk_density} g/ml` : 'N/A'}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">CEC</p>
-            <p className="font-medium">
-              {farm.cation_exchange_capacity
-                ? `${farm.cation_exchange_capacity} meq/100g`
-                : 'N/A'}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Water Retention</p>
-            <p className="font-medium">
-              {farm.soil_water_retention ? `${farm.soil_water_retention} mm/m` : 'N/A'}
-            </p>
-          </div>
-        </div>
+// -- Quick-reference sidebar ----------------------------------------------
 
-        {(farm.sand_percentage || farm.silt_percentage || farm.clay_percentage) && (
-          <div className="mt-6">
-            <p className="text-sm font-medium text-muted-foreground mb-3">Soil Composition</p>
-            <div className="grid grid-cols-3 gap-4">
-              <SoilCompositionValue
-                label="Sand"
-                value={farm.sand_percentage}
-                className="bg-amber-50 text-amber-700"
-                labelClassName="text-amber-600"
-              />
-              <SoilCompositionValue
-                label="Silt"
-                value={farm.silt_percentage}
-                className="bg-stone-100 text-stone-700"
-                labelClassName="text-stone-600"
-              />
-              <SoilCompositionValue
-                label="Clay"
-                value={farm.clay_percentage}
-                className="bg-orange-50 text-orange-700"
-                labelClassName="text-orange-600"
-              />
+// -- Collapsed history ----------------------------------------------------
+
+function CollapsibleHistory({
+  soilTests,
+  petioleTests,
+  visits,
+  allVisitsCount,
+  showAllVisits,
+  onToggleVisits
+}: {
+  soilTests: LabTestRecord[]
+  petioleTests: LabTestRecord[]
+  visits: Visit[]
+  allVisitsCount: number
+  showAllVisits: boolean
+  onToggleVisits: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const totalTests = soilTests.length + petioleTests.length
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <CollapsibleTrigger className="px-4 py-3 flex items-center justify-between w-full hover:bg-muted/30 transition-colors">
+          <span className="flex items-center gap-2 text-sm font-medium">
+            <History className="h-4 w-4 text-muted-foreground" />
+            History
+            <span className="text-xs font-normal text-muted-foreground">
+              {totalTests} tests · {allVisitsCount} visits
+            </span>
+          </span>
+          <ChevronDown
+            className={`h-4 w-4 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`}
+          />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="px-4 pb-4 pt-1 space-y-5 border-t border-border">
+            <HistoryTable soilTests={soilTests} petioleTests={petioleTests} />
+            <div className="space-y-2">
+              <div className="flex items-baseline justify-between">
+                <SectionLabel>Visit history</SectionLabel>
+                {allVisitsCount > COMPACT_VISIT_LIMIT && (
+                  <button
+                    onClick={onToggleVisits}
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    {showAllVisits ? 'Show less' : `See all ${allVisitsCount} visits`}
+                  </button>
+                )}
+              </div>
+              <VisitHistory visits={visits} />
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
   )
 }
 
-function SoilCompositionValue({
-  className,
-  label,
-  labelClassName,
-  value
+function HistoryTable({
+  soilTests,
+  petioleTests
 }: {
-  className: string
-  label: string
-  labelClassName: string
-  value: number | null
-}) {
-  return (
-    <div className={`rounded-lg p-3 text-center ${className}`}>
-      <p className="text-2xl font-bold">{value ?? '-'}%</p>
-      <p className={`text-sm ${labelClassName}`}>{label}</p>
-    </div>
-  )
-}
-
-function LabTestsSection({
-  petioleTests,
-  soilTests
-}: {
-  petioleTests: LabTestRecord[]
   soilTests: LabTestRecord[]
+  petioleTests: LabTestRecord[]
 }) {
+  const allTests = useMemo(() => {
+    return [
+      ...soilTests.map((t) => ({ ...t, _type: 'soil' as const })),
+      ...petioleTests.map((t) => ({ ...t, _type: 'petiole' as const }))
+    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  }, [soilTests, petioleTests])
+
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Lab Test Analysis</h2>
-
-      <Tabs defaultValue="soil" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="soil" className="flex items-center gap-2">
-            <TestTube className="h-4 w-4" />
-            Soil Tests ({soilTests.length})
-          </TabsTrigger>
-          <TabsTrigger value="petiole" className="flex items-center gap-2">
-            <Leaf className="h-4 w-4" />
-            Petiole Tests ({petioleTests.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="soil" className="space-y-4">
-          <TestList
-            emptyIcon="soil"
-            emptyText="No soil test records found for this farm."
-            emptyTitle="No Soil Tests"
-            tests={soilTests}
-            type="soil"
-          />
-        </TabsContent>
-
-        <TabsContent value="petiole" className="space-y-4">
-          <TestList
-            emptyIcon="petiole"
-            emptyText="No petiole test records found for this farm."
-            emptyTitle="No Petiole Tests"
-            tests={petioleTests}
-            type="petiole"
-          />
-        </TabsContent>
-      </Tabs>
+    <div>
+      <SectionLabel>All reports</SectionLabel>
+      <div className="mt-2 divide-y divide-border rounded-lg border border-border">
+        {allTests.map((test) => (
+          <div
+            key={`${test._type}-${test.id}`}
+            className="flex items-center justify-between gap-3 py-2.5 px-3 hover:bg-muted/20"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              {test._type === 'soil' ? (
+                <TestTube className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              ) : (
+                <Leaf className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              )}
+              <div className="min-w-0">
+                <p className="text-sm font-medium capitalize">{test._type} test</p>
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {new Date(test.date).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                  <span className="mx-1">·</span>
+                  {Object.keys(test.parameters || {}).length} parameters
+                </p>
+              </div>
+            </div>
+            {test.report_storage_path ? (
+              <ReportLink path={test.report_storage_path} compact />
+            ) : (
+              <span className="text-xs text-muted-foreground/40">No report</span>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
-function TestList({
-  emptyIcon,
-  emptyText,
-  emptyTitle,
-  tests,
-  type
-}: {
-  emptyIcon: 'soil' | 'petiole'
-  emptyText: string
-  emptyTitle: string
-  tests: LabTestRecord[]
-  type: 'soil' | 'petiole'
-}) {
-  const EmptyIcon = emptyIcon === 'soil' ? TestTube : Leaf
+// -- Shared bits ----------------------------------------------------------
 
-  if (tests.length === 0) {
+function ReportLink({ path, compact }: { path: string; compact?: boolean }) {
+  const { url, loading } = useReportUrl(path)
+
+  if (loading) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <EmptyIcon className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">{emptyTitle}</h3>
-          <p className="text-muted-foreground">{emptyText}</p>
-        </CardContent>
-      </Card>
+      <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        Loading
+      </span>
+    )
+  }
+
+  if (!url) return null
+
+  if (compact) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary hover:underline"
+      >
+        <FileImage className="h-3 w-3" />
+        Report
+        <ExternalLink className="h-2.5 w-2.5" />
+      </a>
     )
   }
 
   return (
-    <div className="grid gap-4">
-      {tests.map((test) => (
-        <TestCard key={test.id} test={test} type={type} />
-      ))}
-    </div>
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+    >
+      <FileImage className="h-3.5 w-3.5" />
+      View soil report
+      <ExternalLink className="h-3 w-3" />
+    </a>
   )
 }
 
-function TestCard({ test, type }: { test: LabTestRecord; type: 'soil' | 'petiole' }) {
-  const [reportUrl, setReportUrl] = useState<string | null>(null)
-  const [loadingReport, setLoadingReport] = useState(false)
+function useReportUrl(path?: string | null): { url: string | null; loading: boolean } {
+  const [url, setUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  const loadReportUrl = useCallback(async () => {
-    if (!test.report_storage_path || reportUrl) return
-
-    setLoadingReport(true)
+  const fetchUrl = useCallback(async () => {
+    if (!path || url) return
+    setLoading(true)
     try {
       const response = await fetch('/api/test-reports/signed-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: test.report_storage_path })
+        body: JSON.stringify({ path })
       })
-
       if (response.ok) {
         const { signedUrl } = await response.json()
-        setReportUrl(signedUrl)
-      } else {
-        const body = await response.text().catch(() => null)
-        console.warn(`Failed to load report signed URL (${response.status}):`, body)
+        setUrl(signedUrl)
       }
     } catch (error) {
       console.error('Error loading report:', error)
     } finally {
-      setLoadingReport(false)
+      setLoading(false)
     }
-  }, [test.report_storage_path, reportUrl])
+  }, [path, url])
 
   useEffect(() => {
-    if (test.report_storage_path) {
-      loadReportUrl()
-    }
-  }, [test.report_storage_path, loadReportUrl])
+    if (path) fetchUrl()
+  }, [path, fetchUrl])
 
-  const parameters = test.parameters || {}
-  const paramKeys = Object.keys(parameters)
+  return { url, loading }
+}
 
-  const keyParams =
-    type === 'soil'
-      ? ['ph', 'ec', 'nitrogen', 'phosphorus', 'potassium']
-      : ['total_nitrogen', 'nitrate_nitrogen', 'phosphorus', 'potassium', 'calcium']
-
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-lg flex items-center gap-2">
-              {type === 'soil' ? (
-                <TestTube className="h-5 w-5 text-amber-600" />
-              ) : (
-                <Leaf className="h-5 w-5 text-green-600" />
-              )}
-              {type === 'soil' ? 'Soil Test' : 'Petiole Test'}
-            </CardTitle>
-            <CardDescription className="flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" />
-              {new Date(test.date).toLocaleDateString()}
-            </CardDescription>
-          </div>
-          {test.report_storage_path && reportUrl && (
-            <Button variant="outline" size="sm" asChild>
-              <a href={reportUrl} target="_blank" rel="noopener noreferrer">
-                <FileImage className="h-4 w-4 mr-1" />
-                View Report
-                <ExternalLink className="h-3 w-3 ml-1" />
-              </a>
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
-        {/* Key Parameters */}
-        <div className="mb-4">
-          <p className="text-sm font-medium text-muted-foreground mb-2">Key Parameters</p>
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-            {keyParams.map((key) => {
-              const value = parameters[key]
-              if (value === undefined) return null
-              return (
-                <div key={key} className="bg-muted/50 rounded-lg p-2 text-center">
-                  <p className="text-xs text-muted-foreground capitalize">
-                    {key.replace(/_/g, ' ')}
-                  </p>
-                  <p className="font-semibold">
-                    {typeof value === 'number' ? value.toFixed(2) : value}
-                  </p>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* All Parameters */}
-        {paramKeys.length > 0 && (
-          <details className="group">
-            <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
-              View all {paramKeys.length} parameters
-            </summary>
-            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-              {paramKeys.map((key) => (
-                <div key={key} className="flex justify-between bg-muted/30 rounded px-2 py-1">
-                  <span className="text-muted-foreground capitalize">{key.replace(/_/g, ' ')}</span>
-                  <span className="font-medium">
-                    {typeof parameters[key] === 'number'
-                      ? parameters[key].toFixed(2)
-                      : parameters[key]}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </details>
-        )}
-
-        {/* Report Preview */}
-        {test.report_storage_path && (
-          <div className="mt-4 pt-4 border-t">
-            <p className="text-sm font-medium text-muted-foreground mb-2">Report Preview</p>
-            {loadingReport ? (
-              <div className="flex items-center justify-center h-32 bg-muted/30 rounded-lg">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : reportUrl ? (
-              <div className="relative aspect-[3/2] max-h-48 overflow-hidden rounded-lg border bg-muted/30">
-                {test.report_storage_path.endsWith('.pdf') ? (
-                  <div className="flex flex-col items-center justify-center h-full">
-                    <FileImage className="h-8 w-8 text-muted-foreground mb-2" />
-                    <a
-                      href={reportUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-primary hover:underline"
-                    >
-                      Open PDF Report
-                    </a>
-                  </div>
-                ) : (
-                  <div className="relative w-full h-full">
-                    <Image
-                      src={reportUrl}
-                      alt="Test Report"
-                      fill
-                      className="object-contain cursor-pointer"
-                      onClick={() => window.open(reportUrl, '_blank')}
-                      unoptimized
-                    />
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-32 bg-muted/30 rounded-lg">
-                <p className="text-sm text-muted-foreground">Report preview unavailable</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Notes */}
-        {test.notes && (
-          <div className="mt-4 pt-4 border-t">
-            <p className="text-sm font-medium text-muted-foreground mb-1">Notes</p>
-            <p className="text-sm">{test.notes}</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
+// Inline helper to fetch farmer profile for the farm page header.
+async function supabaseGetFarmerProfile(farmerId: string) {
+  const { getTypedSupabaseClient } = await import('@/lib/supabase')
+  const supabase = await getTypedSupabaseClient()
+  const { data } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', farmerId)
+    .maybeSingle()
+  return data
 }

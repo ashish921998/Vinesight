@@ -281,7 +281,9 @@ export default function FarmerDirectoryPage() {
                       <PaidToggleButton
                         clientRecordId={farmer.clientRecordId}
                         isPaid={farmer.isPaid}
-                        onChange={(isPaid) => updateCachedPaymentStatus(farmer.clientRecordId, isPaid)}
+                        onChange={(isPaid) =>
+                          updateCachedPaymentStatus(farmer.clientRecordId, isPaid)
+                        }
                       />
                     </div>
                     <Badge variant="secondary" className="hidden sm:flex items-center gap-1">

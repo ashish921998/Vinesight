@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppDownloadBadge, type AppDownloadLink } from '@/components/AppDownloadBadge'
+import { Reveal, RevealItem } from '@/components/landing/Reveal'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { getLastRoute } from '@/lib/route-persistence'
 import { resolveModuleHome } from '@/lib/auth/module-home'
@@ -134,7 +135,7 @@ function PhoneFrame({
 }) {
   return (
     <div
-      className={`relative rounded-[2.25rem] border border-border bg-card p-2 shadow-[0_24px_60px_-24px_rgba(47,58,68,0.35)] ${className}`}
+      className={`relative rounded-[2.25rem] border border-border bg-card p-2 shadow-[0_24px_60px_-24px_rgba(47,58,68,0.35)] transition-transform duration-500 ease-out hover:-translate-y-1 ${className}`}
       style={{ width }}
     >
       <Image
@@ -169,7 +170,7 @@ export default function LandingPage() {
         router.replace(targetRoute)
       }
       // Redirect stays client-side by design (localStorage last-route + middleware redirect-loop
-      // avoidance — see the render-gate note below); the flash this rule warns about is already
+      // avoidance - see the render-gate note below); the flash this rule warns about is already
       // prevented by that gate.
       // react-doctor-disable-next-line react-doctor/nextjs-no-client-side-redirect, nextjs-no-client-side-redirect -- justified above
       void resolveTargetRoute()
@@ -197,7 +198,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/85 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Image
@@ -230,10 +231,11 @@ export default function LandingPage() {
       </header>
 
       <main className="w-full overflow-hidden">
+        {/* HERO - asymmetric split, copy left / phones right */}
         <section className="max-w-6xl mx-auto px-4 pt-16 pb-20 md:pt-24 md:pb-24">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-            <div className="lg:col-span-7 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <h2 className="text-4xl md:text-5xl lg:text-[48px] font-extrabold leading-[1.1] tracking-tight mb-6">
+            <div className="lg:col-span-7">
+              <h2 className="text-4xl md:text-5xl lg:text-[44px] font-extrabold leading-[1.08] tracking-tight mb-6">
                 Every grape farm you source from, <span className="text-accent">in one place.</span>
               </h2>
               <p className="text-muted-foreground text-lg md:text-xl leading-relaxed mb-9 max-w-[540px]">
@@ -259,7 +261,7 @@ export default function LandingPage() {
                 </a>
               </div>
             </div>
-            <div className="lg:col-span-5 flex justify-center lg:justify-end motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-6 duration-700">
+            <div className="lg:col-span-5 flex justify-center lg:justify-end">
               <div className="flex items-start">
                 <PhoneFrame
                   src="/screenshots/dashboard.png"
@@ -280,33 +282,46 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* PROOF STRIP - asymmetric editorial, hairline-divided, not 3 identical cards */}
         <section className="border-y border-border bg-secondary">
-          <div className="max-w-6xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
-            {proofPoints.map((point) => {
-              const Icon = point.icon
-              return (
-                <div key={point.title} className="flex items-start gap-4">
-                  <div className="size-10 shrink-0 rounded-lg bg-accent/10 text-accent flex items-center justify-center">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm mb-1">{point.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {point.description}
-                    </p>
-                  </div>
-                </div>
-              )
-            })}
+          <div className="max-w-6xl mx-auto px-4 py-10">
+            <ol className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
+              {proofPoints.map((point, index) => {
+                const Icon = point.icon
+                return (
+                  <RevealItem
+                    key={point.title}
+                    delay={index * 0.08}
+                    className={`flex items-start gap-4 ${
+                      index > 0 ? 'md:border-l md:border-border md:pl-6' : ''
+                    }`}
+                  >
+                    <div className="size-10 shrink-0 rounded-lg bg-accent/10 text-accent flex items-center justify-center">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm mb-1">{point.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {point.description}
+                      </p>
+                    </div>
+                  </RevealItem>
+                )
+              })}
+            </ol>
           </div>
         </section>
 
+        {/* HOW IT WORKS - numbered steps, motivated scroll reveal */}
         <section className="max-w-6xl mx-auto px-4 py-20 md:py-24">
-          <h3 className="text-3xl font-bold tracking-tight mb-12">How it works</h3>
+          <Reveal>
+            <h3 className="text-3xl font-bold tracking-tight mb-12">How it works</h3>
+          </Reveal>
           <div className="space-y-10">
             {workflowSteps.map((step, index) => (
-              <div
+              <Reveal
                 key={step.title}
+                delay={index * 0.06}
                 className="grid grid-cols-[64px_1fr] sm:grid-cols-[96px_1fr] gap-4 sm:gap-8 items-start"
               >
                 <div className="text-5xl sm:text-6xl font-extrabold text-accent/25 leading-none select-none">
@@ -318,60 +333,63 @@ export default function LandingPage() {
                     {step.description}
                   </p>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </section>
 
+        {/* VISIBILITY - vertical stack with single top headline (kills split-header ban) */}
         <section className="bg-secondary border-y border-border">
-          <div className="max-w-6xl mx-auto px-4 py-20 md:py-24">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
-              <div className="lg:col-span-4">
-                <h3 className="text-3xl font-bold tracking-tight mb-4">
-                  One view of advisory, compliance, and crop status
-                </h3>
-                <p className="text-muted-foreground text-base leading-relaxed">
-                  Your agronomists and your growers work in the same system, so the records build
-                  themselves as the season runs.
-                </p>
-              </div>
-              <div className="lg:col-span-8 divide-y divide-border">
-                {visibilityGroups.map((group) => {
-                  const Icon = group.icon
-                  return (
-                    <div
-                      key={group.title}
-                      className="py-7 first:pt-0 last:pb-0 grid grid-cols-1 sm:grid-cols-[240px_1fr] gap-3 sm:gap-8"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Icon className="h-5 w-5 text-accent shrink-0" />
-                        <h4 className="font-bold text-base">{group.title}</h4>
-                      </div>
-                      <ul className="space-y-2.5">
-                        {group.items.map((item) => (
-                          <li
-                            key={item}
-                            className="flex gap-3 items-start text-sm text-muted-foreground"
-                          >
-                            <CheckCircle className="text-accent h-4 w-4 shrink-0 mt-0.5" />
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
+          <div className="max-w-3xl mx-auto px-4 py-20 md:py-24">
+            <Reveal className="mb-12">
+              <h3 className="text-3xl font-bold tracking-tight mb-4">
+                One view of advisory, compliance, and crop status
+              </h3>
+              <p className="text-muted-foreground text-base leading-relaxed max-w-[560px]">
+                Your agronomists and your growers work in the same system, so the records build
+                themselves as the season runs.
+              </p>
+            </Reveal>
+            <div className="divide-y divide-border">
+              {visibilityGroups.map((group, index) => {
+                const Icon = group.icon
+                return (
+                  <Reveal
+                    key={group.title}
+                    delay={index * 0.08}
+                    className="py-7 first:pt-0 last:pb-0"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <Icon className="h-5 w-5 text-accent shrink-0" />
+                      <h4 className="font-bold text-base">{group.title}</h4>
                     </div>
-                  )
-                })}
-              </div>
+                    <ul className="space-y-2.5 sm:pl-8">
+                      {group.items.map((item) => (
+                        <li
+                          key={item}
+                          className="flex gap-3 items-start text-sm text-muted-foreground"
+                        >
+                          <CheckCircle className="text-accent h-4 w-4 shrink-0 mt-0.5" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </Reveal>
+                )
+              })}
             </div>
           </div>
         </section>
 
+        {/* COMPARISON - 2-col, balanced weight. The contrast IS the story. */}
         <section className="max-w-6xl mx-auto px-4 py-20 md:py-24">
-          <h3 className="text-3xl font-bold tracking-tight mb-10">
-            From WhatsApp and Excel to one system
-          </h3>
+          <Reveal className="mb-10">
+            <h3 className="text-3xl font-bold tracking-tight">
+              From WhatsApp and Excel to one system
+            </h3>
+          </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-card p-8 rounded-xl border border-border">
+            <Reveal className="bg-card p-8 rounded-xl border border-border">
               <div className="flex items-center gap-3 mb-6">
                 <XCircle className="text-muted-foreground h-6 w-6" />
                 <h4 className="font-bold text-lg text-muted-foreground">Today</h4>
@@ -384,8 +402,11 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-            </div>
-            <div className="bg-accent/5 p-8 rounded-xl border border-accent/30">
+            </Reveal>
+            <Reveal
+              delay={0.08}
+              className="bg-accent/5 p-8 rounded-xl border border-accent/30 shadow-[0_24px_60px_-32px_rgba(111,143,94,0.45)]"
+            >
               <div className="flex items-center gap-3 mb-6">
                 <CheckCircle className="text-accent h-6 w-6" />
                 <h4 className="font-bold text-lg text-accent">With VineSight</h4>
@@ -398,14 +419,28 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
           </div>
         </section>
 
+        {/* FIELD APP - phones LEFT, copy RIGHT. Breaks the hero's zigzag repetition. */}
         <section className="bg-secondary border-y border-border" id="field-app">
           <div className="max-w-6xl mx-auto px-4 py-20 md:py-24">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-              <div className="lg:col-span-6">
+              <div className="lg:col-span-6 order-1 flex justify-center lg:justify-start gap-6">
+                <PhoneFrame
+                  src="/screenshots/workers-wages.png"
+                  alt="VineSight workers screen showing daily attendance and wage totals in rupees"
+                  width={230}
+                />
+                <PhoneFrame
+                  src="/screenshots/irrigation-calculator.png"
+                  alt="VineSight MAD calculator computing maximum allowable deficit from root depth and water retention"
+                  width={230}
+                  className="hidden sm:block mt-10"
+                />
+              </div>
+              <div className="lg:col-span-6 order-2">
                 <h3 className="text-3xl font-bold tracking-tight mb-4">
                   The app your growers actually use
                 </h3>
@@ -419,39 +454,29 @@ export default function LandingPage() {
                   ))}
                 </div>
               </div>
-              <div className="lg:col-span-6 flex justify-center lg:justify-end gap-6">
-                <PhoneFrame
-                  src="/screenshots/workers-wages.png"
-                  alt="VineSight workers screen showing daily attendance and wage totals in rupees"
-                  width={230}
-                />
-                <PhoneFrame
-                  src="/screenshots/irrigation-calculator.png"
-                  alt="VineSight MAD calculator computing maximum allowable deficit from root depth and water retention"
-                  width={230}
-                  className="hidden sm:block mt-10"
-                />
-              </div>
             </div>
           </div>
         </section>
 
+        {/* FINAL CTA */}
         <section className="max-w-xl mx-auto px-4 py-20 md:py-24 text-center">
-          <h3 className="text-3xl font-bold tracking-tight mb-4">
-            See it on your own grower network
-          </h3>
-          <p className="text-muted-foreground text-base mb-8 leading-relaxed">
-            A 30-minute walkthrough with your farms and workflows. Pilot deployments available for
-            exporters, cooperatives, and wine producers worldwide.
-          </p>
-          <a
-            className="bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-accent-foreground text-lg font-bold px-8 py-4 rounded-lg shadow-lg shadow-accent/25 w-full sm:w-auto inline-block"
-            href={DEMO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Book a demo
-          </a>
+          <Reveal>
+            <h3 className="text-3xl font-bold tracking-tight mb-4">
+              See it on your own grower network
+            </h3>
+            <p className="text-muted-foreground text-base mb-8 leading-relaxed">
+              A 30-minute walkthrough with your farms and workflows. Pilot deployments available for
+              exporters, cooperatives, and wine producers worldwide.
+            </p>
+            <a
+              className="bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-accent-foreground text-lg font-bold px-8 py-4 rounded-lg shadow-lg shadow-accent/25 w-full sm:w-auto inline-block"
+              href={DEMO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Book a demo
+            </a>
+          </Reveal>
         </section>
       </main>
       <footer className="border-t border-border">

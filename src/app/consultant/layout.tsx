@@ -79,12 +79,7 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
   // 'loading' → checking access; 'ok' → admitted; 'denied' → not a consultant;
   // 'error' → couldn’t verify (transient). Kept distinct so an outage isn’t shown
   // to a valid consultant as an authorization denial.
-  const {
-    data: access,
-    isPending,
-    isError,
-    error
-  } = useConsultantAccess()
+  const { data: access, isPending, isError, error } = useConsultantAccess()
   const accessState = getConsultantAccessState(isPending, isError && !access, access)
 
   useEffect(() => {
@@ -153,7 +148,7 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
         {/* Sidebar */}
         <aside
           className={cn(
-            'border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200 flex flex-col',
+            'border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200 flex flex-col sticky top-0 h-screen overflow-hidden',
             collapsed ? 'w-20' : 'w-72'
           )}
         >

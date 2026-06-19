@@ -42,6 +42,8 @@ interface RecordVisitDialogProps {
   farmerId: string
   /** Farms belonging to this farmer, for the optional farm selector. */
   farms: { id: number; name: string }[]
+  /** Pre-select this farm in the selector (e.g. when opened from a farm page). */
+  defaultFarmId?: number
   onRecorded?: (visit: Visit) => void
 }
 
@@ -57,13 +59,21 @@ function todayLocal(): string {
   return new Date(d.getTime() - off * 60_000).toISOString().slice(0, 10)
 }
 
-export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: RecordVisitDialogProps) {
+export function RecordVisitDialog({
+  access,
+  farmerId,
+  farms,
+  defaultFarmId,
+  onRecorded
+}: RecordVisitDialogProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [recommendations, setRecommendations] = useState<VisitableRecommendation[]>([])
 
   const [visitDate, setVisitDate] = useState(todayLocal())
-  const [farmId, setFarmId] = useState<string>('none')
+  const [farmId, setFarmId] = useState<string>(
+    defaultFarmId != null ? String(defaultFarmId) : 'none'
+  )
   const [summary, setSummary] = useState('')
   const [drafts, setDrafts] = useState<Record<string, FollowupDraft>>({})
   const createVisitMutation = useCreateVisit(access, farmerId)
@@ -71,11 +81,11 @@ export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: Recor
 
   const reset = useCallback(() => {
     setVisitDate(todayLocal())
-    setFarmId('none')
+    setFarmId(defaultFarmId != null ? String(defaultFarmId) : 'none')
     setSummary('')
     setDrafts({})
     setRecommendations([])
-  }, [])
+  }, [defaultFarmId])
 
   const loadRecommendations = useCallback(async () => {
     try {
