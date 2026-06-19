@@ -18,36 +18,26 @@ interface JoinCodeCardProps {
 }
 
 export function JoinCodeCard({ access: providedAccess = null }: JoinCodeCardProps = {}) {
-  const [access, setAccess] = useState<ConsultantAccess | null>(providedAccess)
-  const [loading, setLoading] = useState(providedAccess === null)
-  const [error, setError] = useState(false)
+  // Only the fallback fetch owns state. When the parent supplies access we read
+  // it directly, so the prop is never mirrored into state.
+  const [fetchedAccess, setFetchedAccess] = useState<ConsultantAccess | null>(null)
+  const [fetchLoading, setFetchLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
 
   useEffect(() => {
-    // Reuse the parent's access when it has it; only fetch as a fallback.
-    if (providedAccess !== null) {
-      setAccess(providedAccess)
-      setLoading(false)
-      setError(false)
-      return
-    }
+    // Parent already has access — skip the redundant round-trip entirely.
+    if (providedAccess !== null) return
 
     let active = true
     const load = async () => {
       try {
         const currentAccess = await getConsultantAccess()
-        if (active) {
-          setAccess(currentAccess)
-          setError(false)
-        }
+        if (active) setFetchedAccess(currentAccess)
       } catch (err) {
         console.error('Failed to load join code:', err)
-        if (active) {
-          setError(true)
-        }
+        if (active) setFetchError(true)
       } finally {
-        if (active) {
-          setLoading(false)
-        }
+        if (active) setFetchLoading(false)
       }
     }
     load()
@@ -55,6 +45,12 @@ export function JoinCodeCard({ access: providedAccess = null }: JoinCodeCardProp
       active = false
     }
   }, [providedAccess])
+
+  // Derive the effective state: a parent-provided access is authoritative and is
+  // never loading or errored; otherwise fall back to the fetch result.
+  const access = providedAccess ?? fetchedAccess
+  const loading = providedAccess === null && fetchLoading
+  const error = providedAccess === null && fetchError
 
   if (loading) {
     return (
