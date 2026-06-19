@@ -82,6 +82,15 @@ export default function FarmerDirectoryPage() {
     return Array.from(set).sort((a, b) => a.localeCompare(b))
   }, [farmers])
 
+  // Reset a stale region filter when the selected region is no longer present
+  // (e.g. the only farmer in that region was removed or reassigned), otherwise
+  // the list would stay filtered to zero rows with no obvious way to recover.
+  useEffect(() => {
+    if (regionFilter !== ALL_REGIONS && !regions.includes(regionFilter)) {
+      setRegionFilter(ALL_REGIONS)
+    }
+  }, [regions, regionFilter])
+
   // Filtered farmers
   const filteredFarmers = useMemo(() => {
     return farmers.filter((farmer) => {
