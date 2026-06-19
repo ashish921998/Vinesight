@@ -11,6 +11,7 @@ import { PasswordInput } from '@/components/ui/password-input'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { VALIDATION } from '@/lib/constants'
+import { isValidEmail } from '@/lib/validation'
 import { Loader2, Building2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { resolveModuleHome } from '@/lib/auth/module-home'
@@ -38,6 +39,7 @@ export default function OrganizationSignupPage() {
   const [orgName, setOrgName] = useState('')
   const [orgSlug, setOrgSlug] = useState('')
 
+  const [emailError, setEmailError] = useState<string | null>(null)
   const [showError, setShowError] = useState(false)
   const [creatingOrg, setCreatingOrg] = useState(false)
 
@@ -87,6 +89,12 @@ export default function OrganizationSignupPage() {
     ) {
       return
     }
+
+    if (!isValidEmail(trimmedEmail)) {
+      setEmailError('Please enter a valid email address')
+      return
+    }
+    setEmailError(null)
 
     if (password !== confirmPassword) {
       return
@@ -240,10 +248,15 @@ export default function OrganizationSignupPage() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value.trim())}
+                  onChange={(e) => {
+                    setEmail(e.target.value.trim())
+                    if (emailError) setEmailError(null)
+                  }}
                   required
+                  aria-invalid={!!emailError}
                   placeholder="john@acme-agri.com"
                 />
+                {emailError && <p className="text-xs text-red-600">{emailError}</p>}
               </div>
 
               <PasswordInput

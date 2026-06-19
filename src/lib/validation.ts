@@ -47,6 +47,13 @@ export const encodeForHTML = (str: string): string => {
     .replace(/\//g, '&#x2F;')
 }
 
+// Practical email format check. Browsers only validate type="email" loosely (and not
+// at all when a value is pasted/programmatically set), so we re-check before submit to
+// surface a clear field-level error instead of an opaque auth provider failure.
+export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+export const isValidEmail = (email: string): boolean => EMAIL_REGEX.test(email.trim())
+
 // Farm validation schema with enhanced security
 export const FarmSchema = z
   .object({
