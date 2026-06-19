@@ -1,0 +1,58 @@
+src/app/auth/callback/page.tsx
+  s_6d7b4e2f6a1f40::t_5eabc5f6597d65 6,47,50,70,73
+  s_3f92503d070f83::t_865144eaa41031 71
+  s_3f92503d070f83::t_cefc334af8a6cd 48
+src/app/page.tsx
+  s_6d7b4e2f6a1f40::t_57933197a833b3 161-162
+  s_3f92503d070f83::t_7d634fb22bccb8 10-11
+  s_6d7b4e2f6a1f40::t_5eabc5f6597d65 160,163-164,169
+src/lib/auth/homes.ts
+  s_3f92503d070f83::t_2bb21b6ad6519c 1-13
+src/app/auth/verify-otp/page.tsx
+  s_6d7b4e2f6a1f40::t_ddf32217bfb903 10
+src/middleware.ts
+  s_3f92503d070f83::t_714de8d395fd28 10-11
+  s_3f92503d070f83::t_62ea07e14d048c 4
+src/app/signup/org/page.tsx
+  s_6d7b4e2f6a1f40::t_5eabc5f6597d65 16,54
+src/lib/auth/module-home.ts
+  s_3f92503d070f83::t_88fe97d7f79b94 2
+  s_6d7b4e2f6a1f40::t_5eabc5f6597d65 1,3-28
+src/components/auth/PhoneLoginForm.tsx
+  s_6d7b4e2f6a1f40::t_6e8c2b30a5638a 14,53
+src/app/login/page.tsx
+  s_3f92503d070f83::t_67b1e65a6088ab 5
+  s_6d7b4e2f6a1f40::t_6e8c2b30a5638a 149-150,153-156
+  s_3f92503d070f83::t_a665ba27161777 78-79
+  s_3f92503d070f83::t_063a4ccc0bdc17 151-152
+  s_6d7b4e2f6a1f40::t_5eabc5f6597d65 32,47-48,51,82
+  s_6d7b4e2f6a1f40::t_ddf32217bfb903 80-81
+  s_3f92503d070f83::t_80a2a5df457ede 14-15
+  s_3f92503d070f83::t_fbd13772bf5667 35-41,43,46,49-50
+src/components/auth/SignupForm.tsx
+  s_6d7b4e2f6a1f40::t_5eabc5f6597d65 13,41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "ff35c335c9faaef35acb3f1f267b0682601abed4",
+  "prompts": {},
+  "sessions": {
+    "s_3f92503d070f83": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bce4af8a-0fc9-4842-982b-203f9aacc224",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_6d7b4e2f6a1f40": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019edb6a-0f9f-7650-89c4-1b7b93bc5536",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
