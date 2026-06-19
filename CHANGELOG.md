@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4.0] - 2026-06-19
+
+### Added
+
+- Consultants can onboard existing farmers with a join code. A new card on both the Command Center and Client Farmers pages shows the organization's join code with one-tap "Copy code" and "Copy invite message" actions.
+- Owners and admins can spot farmers who self-joined the organization but have no agronomist yet: an "Unassigned (N)" filter on the farmer directory and a nudge card on the workspace overview, both linking straight to assignments.
+- A dedicated Assignment screen for consultants to assign farmers to agronomists.
+
+### Changed
+
+- Farmer assignments now target agronomists only, enforced in both the database and the assignment UI.
+- Signup phone entry uses a separate country-code and number field, and signup email addresses are now validated.
+
+### Fixed
+
+- The copied farmer invite message now points to the correct "Join your consultant" step in the mobile app's Settings (it previously said "Connect to consultant", which doesn't exist there).
+- The join-code card reuses the consultant access its parent page already loaded instead of refetching — removing a duplicate request and a second loading flash — and now shows an explicit error on a failed load instead of a misleading "no join code is set up" message.
+
 ## [0.1.3.1] - 2026-06-19
 
 ### Fixed
