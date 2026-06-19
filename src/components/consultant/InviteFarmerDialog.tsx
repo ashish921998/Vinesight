@@ -168,7 +168,7 @@ export function InviteFarmerDialog({ organizationId, trigger }: InviteFarmerDial
             </div>
             <Button
               onClick={handleCreate}
-              disabled={submitting || phone.length !== 10}
+              disabled={submitting || !normalizePhone(`+91${phone}`)}
               className="w-full gap-2"
             >
               {submitting ? (
