@@ -1,0 +1,19 @@
+src/app/page.tsx
+  s_3f92503d070f83::t_37b1aeea1f2ed7 159,163-167,176-178
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "7caf560a3043c1dd5f7c1948f1643cdbf6e63456",
+  "prompts": {},
+  "sessions": {
+    "s_3f92503d070f83": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bce4af8a-0fc9-4842-982b-203f9aacc224",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
