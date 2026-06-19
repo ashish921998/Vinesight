@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoginButton } from '@/components/auth/LoginButton'
 import { PasswordInput } from '@/components/ui/password-input'
 import { VALIDATION } from '@/lib/constants'
+import { resolveModuleHome } from '@/lib/auth/module-home'
 import posthog from 'posthog-js'
 
 export default function SignupForm() {
@@ -37,7 +38,7 @@ export default function SignupForm() {
   // Redirect if user is already logged in and email is confirmed
   useEffect(() => {
     if (user && user.email_confirmed_at) {
-      router.push('/dashboard')
+      resolveModuleHome(user.id).then((home) => router.push(home))
     }
   }, [user, router])
 

@@ -2,7 +2,7 @@
 
 import type React from 'react'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoginButton } from '@/components/auth/LoginButton'
 import { PhoneLoginForm } from '@/components/auth/PhoneLoginForm'
 import { PasswordInput } from '@/components/ui/password-input'
+import { resolveModuleHome } from '@/lib/auth/module-home'
+import { FARMER_HOME } from '@/lib/auth/homes'
 import posthog from 'posthog-js'
 
 function LoginPageContent() {
@@ -27,13 +29,26 @@ function LoginPageContent() {
   const redirectTo = (() => {
     const param = searchParams.get('redirect')
     if (param && param.startsWith('/') && !param.startsWith('//')) return param
-    return '/dashboard'
+    return null
   })()
 
+  // Login can redirect from three places — the auth-state effect below, the
+  // email submit handler, and the phone onSuccess — because signInWithEmail and
+  // verifyPhoneOtp both flip `user`, which re-fires this effect. The once-guard
+  // collapses them to a single resolveModuleHome lookup and a single router.push
+  // so a login never fires two parallel membership queries or double-pushes.
+  const redirectHandledRef = useRef(false)
+
   useEffect(() => {
+    if (redirectHandledRef.current) return
     // Email/Google users confirm via email; phone-OTP users confirm via SMS.
     if (user && (user.email_confirmed_at || user.phone_confirmed_at)) {
-      router.push(redirectTo)
+      redirectHandledRef.current = true
+      if (redirectTo) {
+        router.push(redirectTo)
+      } else {
+        resolveModuleHome(user.id).then((home) => router.push(home))
+      }
     }
   }, [user, router, redirectTo])
 
@@ -60,8 +75,11 @@ function LoginPageContent() {
 
     posthog.capture('login_submitted', { method: 'email', success: result.success })
 
-    if (result.success) {
-      router.push(redirectTo)
+    if (result.success && !redirectHandledRef.current) {
+      redirectHandledRef.current = true
+      const home =
+        redirectTo || (result.user ? await resolveModuleHome(result.user.id) : FARMER_HOME)
+      router.push(home)
     }
   }
 
@@ -128,7 +146,14 @@ function LoginPageContent() {
           </div>
 
           {method === 'phone' ? (
-            <PhoneLoginForm onSuccess={() => router.push(redirectTo)} />
+            <PhoneLoginForm
+              onSuccess={async (userId) => {
+                if (redirectHandledRef.current) return
+                redirectHandledRef.current = true
+                const home = redirectTo || (userId ? await resolveModuleHome(userId) : FARMER_HOME)
+                router.push(home)
+              }}
+            />
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>

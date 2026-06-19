@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation'
 import { AppDownloadBadge, type AppDownloadLink } from '@/components/AppDownloadBadge'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { getLastRoute } from '@/lib/route-persistence'
+import { resolveModuleHome } from '@/lib/auth/module-home'
+import { ORG_HOME } from '@/lib/auth/homes'
 import {
   BarChart3,
   CheckCircle,
@@ -155,12 +157,16 @@ export default function LandingPage() {
   useEffect(() => {
     if (!loading && user) {
       const lastRoute = getLastRoute()
-      const targetRoute = lastRoute || '/dashboard'
+      const resolveTargetRoute = async () => {
+        const moduleHome = await resolveModuleHome(user.id)
+        const targetRoute = moduleHome === ORG_HOME ? ORG_HOME : lastRoute || moduleHome
+        router.replace(targetRoute)
+      }
       // Redirect stays client-side by design (localStorage last-route + middleware redirect-loop
       // avoidance — see the render-gate note below); the flash this rule warns about is already
       // prevented by that gate.
       // react-doctor-disable-next-line react-doctor/nextjs-no-client-side-redirect, nextjs-no-client-side-redirect -- justified above
-      router.replace(targetRoute)
+      void resolveTargetRoute()
     }
   }, [loading, user, router])
 

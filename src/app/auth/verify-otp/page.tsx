@@ -7,42 +7,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Mail, CheckCircle, RefreshCw, ArrowLeft } from 'lucide-react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
-import { createClient } from '@/lib/supabase'
+import { resolveModuleHome } from '@/lib/auth/module-home'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-
-const FARMER_HOME = '/dashboard'
-const ORG_HOME = '/consultant'
-
-/**
- * Resolve the user's module home the same way the middleware does: by checking
- * organization_members. This replaces the old `orgSlug` URL-parameter heuristic,
- * which could send a farmer to /consultant when the URL happened to carry an
- * `org` param (shared link, stale history, etc.) — even if they have no real
- * org membership.
- */
-async function resolveModuleHome(userId: string): Promise<string> {
-  try {
-    const supabase = createClient()
-    const { data: membership, error } = await supabase
-      .from('organization_members')
-      .select('user_id')
-      .eq('user_id', userId)
-      .limit(1)
-      .maybeSingle()
-    if (error) {
-      console.error('resolveModuleHome: failed to check organization_members', error)
-      return FARMER_HOME
-    }
-    return membership ? ORG_HOME : FARMER_HOME
-  } catch (err) {
-    console.error('resolveModuleHome: unexpected error checking organization_members', err)
-    // On a transient error we can't safely decide the module. Fall back to the
-    // farmer home — the middleware will bounce a real org member to /consultant.
-    return FARMER_HOME
-  }
-}
 
 function VerifyOtpContent() {
   const [loading, setLoading] = useState(false)
