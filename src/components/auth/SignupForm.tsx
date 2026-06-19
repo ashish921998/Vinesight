@@ -11,6 +11,7 @@ import { LoginButton } from '@/components/auth/LoginButton'
 import { PasswordInput } from '@/components/ui/password-input'
 import { VALIDATION } from '@/lib/constants'
 import { resolveModuleHome } from '@/lib/auth/module-home'
+import { isValidEmail } from '@/lib/validation'
 import posthog from 'posthog-js'
 
 export default function SignupForm() {
@@ -19,6 +20,7 @@ export default function SignupForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
   const [showError, setShowError] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [needsOtpVerification, setNeedsOtpVerification] = useState(false)
@@ -67,6 +69,12 @@ export default function SignupForm() {
     if (!trimmedFirstName || !trimmedLastName || !trimmedEmail || !password || !confirmPassword) {
       return
     }
+
+    if (!isValidEmail(trimmedEmail)) {
+      setEmailError('Please enter a valid email address')
+      return
+    }
+    setEmailError(null)
 
     if (password !== confirmPassword) {
       return
@@ -183,11 +191,16 @@ export default function SignupForm() {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value.trim())}
+                onChange={(e) => {
+                  setEmail(e.target.value.trim())
+                  if (emailError) setEmailError(null)
+                }}
                 required
+                aria-invalid={!!emailError}
                 className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                 placeholder="Enter your email"
               />
+              {emailError && <p className="mt-1 text-xs text-red-600">{emailError}</p>}
             </div>
 
             <div>
