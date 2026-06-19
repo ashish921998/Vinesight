@@ -158,7 +158,7 @@ export default function FarmerDirectoryPage() {
         {access && <InviteFarmerDialog organizationId={access.organizationId} />}
       </div>
 
-      <JoinCodeCard />
+      <JoinCodeCard access={access} />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">

@@ -102,7 +102,7 @@ export default function ConsultantOverviewPage() {
         <InviteFarmerDialog organizationId={access.organizationId} />
       </div>
 
-      <JoinCodeCard />
+      <JoinCodeCard access={access} />
 
       {/* Owner/admin nudge: farmers who self-joined the org but have no
           agronomist yet. unassignedCount is non-null only for canViewAllFarmers. */}

@@ -9,20 +9,41 @@ import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-acc
 import { buildJoinMessage } from '@/lib/join-message'
 import posthog from 'posthog-js'
 
-export function JoinCodeCard() {
-  const [access, setAccess] = useState<ConsultantAccess | null>(null)
-  const [loading, setLoading] = useState(true)
+interface JoinCodeCardProps {
+  /**
+   * Consultant access already loaded by the parent page. When provided, the card
+   * reuses it instead of issuing its own `getConsultantAccess()` round-trip.
+   */
+  access?: ConsultantAccess | null
+}
+
+export function JoinCodeCard({ access: providedAccess = null }: JoinCodeCardProps = {}) {
+  const [access, setAccess] = useState<ConsultantAccess | null>(providedAccess)
+  const [loading, setLoading] = useState(providedAccess === null)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
+    // Reuse the parent's access when it has it; only fetch as a fallback.
+    if (providedAccess !== null) {
+      setAccess(providedAccess)
+      setLoading(false)
+      setError(false)
+      return
+    }
+
     let active = true
     const load = async () => {
       try {
         const currentAccess = await getConsultantAccess()
         if (active) {
           setAccess(currentAccess)
+          setError(false)
         }
-      } catch (error) {
-        console.error('Failed to load join code:', error)
+      } catch (err) {
+        console.error('Failed to load join code:', err)
+        if (active) {
+          setError(true)
+        }
       } finally {
         if (active) {
           setLoading(false)
@@ -33,7 +54,7 @@ export function JoinCodeCard() {
     return () => {
       active = false
     }
-  }, [])
+  }, [providedAccess])
 
   if (loading) {
     return (
@@ -43,6 +64,14 @@ export function JoinCodeCard() {
           Loading your join code…
         </CardContent>
       </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Couldn’t load your join code. Please refresh to try again.
+      </p>
     )
   }
 
