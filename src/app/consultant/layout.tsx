@@ -19,7 +19,11 @@ import {
   UsersRound
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ConsultantAccess, getConsultantAccess, roleLabels } from '@/lib/consultant-access'
+import { roleLabels } from '@/lib/consultant-access'
+import {
+  getConsultantAccessState,
+  useConsultantAccess
+} from '@/hooks/consultant/useConsultantQueries'
 import posthog from 'posthog-js'
 import { toast } from 'sonner'
 
@@ -75,36 +79,34 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
   // 'loading' → checking access; 'ok' → admitted; 'denied' → not a consultant;
   // 'error' → couldn’t verify (transient). Kept distinct so an outage isn’t shown
   // to a valid consultant as an authorization denial.
-  const [accessState, setAccessState] = useState<'loading' | 'ok' | 'denied' | 'error'>('loading')
-  const [access, setAccess] = useState<ConsultantAccess | null>(null)
+  const {
+    data: access,
+    isPending,
+    isError,
+    error
+  } = useConsultantAccess()
+  const accessState = getConsultantAccessState(isPending, isError, access)
 
   useEffect(() => {
-    async function checkAccess() {
-      try {
-        const access = await getConsultantAccess()
-
-        if (!access) {
-          toast.error('Access denied. Consultant team members only.')
-          setAccessState('denied')
-          return
-        }
-
-        setAccess(access)
-        setAccessState('ok')
-        posthog.identify(access.userId, {
-          role: access.role,
-          org_id: access.organizationId,
-          can_view_all_farmers: access.canViewAllFarmers
-        })
-      } catch (error) {
-        console.error('Access check failed:', error)
-        toast.error('Unable to verify consultant access. Please try again.')
-        setAccessState('error')
-      }
+    if (accessState === 'denied') {
+      toast.error('Access denied. Consultant team members only.')
+      return
     }
 
-    checkAccess()
-  }, [])
+    if (accessState === 'error') {
+      console.error('Access check failed:', error)
+      toast.error('Unable to verify consultant access. Please try again.')
+      return
+    }
+
+    if (!access) return
+
+    posthog.identify(access.userId, {
+      role: access.role,
+      org_id: access.organizationId,
+      can_view_all_farmers: access.canViewAllFarmers
+    })
+  }, [access, accessState, error])
 
   if (accessState === 'loading') {
     return (

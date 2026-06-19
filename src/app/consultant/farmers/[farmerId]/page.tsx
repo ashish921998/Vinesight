@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect } from 'react'
+import type { ReactNode } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,15 +23,14 @@ import {
   MinusCircle,
   XCircle
 } from 'lucide-react'
-import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
 import {
-  validateFarmerClient,
-  getFarmerProfile,
-  getFarmerFarms,
-  type FarmerFarm
-} from '@/lib/consultant-query-service'
+  useConsultantAccess,
+  useFarmerFarms,
+  useFarmerProfile,
+  useFarmerVisits,
+  useValidatedFarmerClient
+} from '@/hooks/consultant/useConsultantQueries'
 import {
-  getVisitsForFarmer,
   followedStatusLabels,
   type Visit,
   type FollowedStatus
@@ -40,83 +40,58 @@ import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
 import * as Sentry from '@sentry/nextjs'
 import posthog from 'posthog-js'
 
-interface FarmerProfile {
-  id: string
-  full_name: string | null
-  email: string | null
-  phone: string | null
-}
-
 export default function FarmerProfilePage() {
   const params = useParams()
   const farmerId = params.farmerId as string
 
-  const [farmer, setFarmer] = useState<FarmerProfile | null>(null)
-  const [farms, setFarms] = useState<FarmerFarm[]>([])
-  const [loading, setLoading] = useState(true)
-  const [notFound, setNotFound] = useState(false)
-  const [access, setAccess] = useState<ConsultantAccess | null>(null)
-  const [clientRecordId, setClientRecordId] = useState<string | null>(null)
-  const [isPaid, setIsPaid] = useState(false)
-  const [visits, setVisits] = useState<Visit[]>([])
+  const accessQuery = useConsultantAccess()
+  const access = accessQuery.data ?? null
+  const validationQuery = useValidatedFarmerClient(access, farmerId)
+  const validation = validationQuery.data
+  const isValidClient = validation?.isValid ?? false
+  const farmerQuery = useFarmerProfile(farmerId, isValidClient)
+  const farmsQuery = useFarmerFarms(farmerId, isValidClient)
+  const visitsQuery = useFarmerVisits(isValidClient ? access : null, farmerId)
 
-  const loadFarmerProfile = useCallback(async () => {
-    try {
-      setLoading(true)
-      setNotFound(false)
-
-      const currentAccess = await getConsultantAccess()
-      if (!currentAccess) {
-        toast.error('Not authenticated')
-        return
-      }
-      setAccess(currentAccess)
-
-      // Validate farmer is an active client of the organization
-      // Validate agronomist assignment if current user is agronomist
-      const validation = await validateFarmerClient(currentAccess, farmerId)
-      if (!validation.isValid) {
-        setNotFound(true)
-        return
-      }
-      setClientRecordId(validation.clientRecordId)
-      setIsPaid(validation.isPaid)
-
-      const [profile, farmsData, visitsData] = await Promise.all([
-        getFarmerProfile(farmerId),
-        getFarmerFarms(farmerId),
-        getVisitsForFarmer(currentAccess, farmerId)
-      ])
-
-      if (!profile) {
-        setNotFound(true)
-        return
-      }
-
-      setFarmer(profile)
-      setFarms(farmsData)
-      setVisits(visitsData)
-      posthog.capture('consultant_farmer_profile_viewed', {
-        farmer_id: farmerId,
-        org_id: currentAccess.organizationId,
-        role: currentAccess.role,
-        farm_count: farmsData.length,
-        visit_count: visitsData.length
-      })
-    } catch (error) {
-      Sentry.captureException(error, {
-        tags: { context: 'loadFarmerProfile' },
-        extra: { farmerId }
-      })
-      toast.error(error instanceof Error ? error.message : 'Failed to load farmer profile')
-    } finally {
-      setLoading(false)
-    }
-  }, [farmerId])
+  const farmer = farmerQuery.data ?? null
+  const farms = farmsQuery.data ?? []
+  const visits = visitsQuery.data ?? []
+  const loading =
+    accessQuery.isPending ||
+    validationQuery.isPending ||
+    (isValidClient && (farmerQuery.isPending || farmsQuery.isPending || visitsQuery.isPending))
+  const notFound =
+    (!accessQuery.isPending && !accessQuery.isError && !access) ||
+    validation?.isValid === false ||
+    (isValidClient && farmerQuery.isSuccess && !farmer)
 
   useEffect(() => {
-    loadFarmerProfile()
-  }, [loadFarmerProfile])
+    const error =
+      accessQuery.error ??
+      validationQuery.error ??
+      farmerQuery.error ??
+      farmsQuery.error ??
+      visitsQuery.error
+    if (!error) return
+
+    Sentry.captureException(error, {
+      tags: { context: 'loadFarmerProfile' },
+      extra: { farmerId }
+    })
+    toast.error(error instanceof Error ? error.message : 'Failed to load farmer profile')
+  }, [accessQuery.error, validationQuery.error, farmerQuery.error, farmsQuery.error, visitsQuery.error, farmerId])
+
+  useEffect(() => {
+    if (!access || !farmerQuery.data || !farmsQuery.data || !visitsQuery.data) return
+
+    posthog.capture('consultant_farmer_profile_viewed', {
+      farmer_id: farmerId,
+      org_id: access.organizationId,
+      role: access.role,
+      farm_count: farmsQuery.data.length,
+      visit_count: visitsQuery.data.length
+    })
+  }, [access, farmerId, farmerQuery.data, farmsQuery.data, visitsQuery.data])
 
   if (loading) {
     return (
@@ -184,12 +159,11 @@ export default function FarmerProfilePage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {clientRecordId && (
+          {validation?.clientRecordId && (
             <PaidToggleButton
-              clientRecordId={clientRecordId}
-              isPaid={isPaid}
+              clientRecordId={validation.clientRecordId}
+              isPaid={validation.isPaid}
               size="default"
-              onChange={setIsPaid}
             />
           )}
           {access && (
@@ -197,7 +171,6 @@ export default function FarmerProfilePage() {
               access={access}
               farmerId={farmerId}
               farms={farms.map((f) => ({ id: f.id, name: f.name }))}
-              onRecorded={(visit) => setVisits((prev) => [visit, ...prev])}
             />
           )}
         </div>
@@ -257,7 +230,7 @@ export default function FarmerProfilePage() {
   )
 }
 
-const followedStatusIcon: Record<FollowedStatus, React.ReactNode> = {
+const followedStatusIcon: Record<FollowedStatus, ReactNode> = {
   followed: <CheckCircle2 className="h-4 w-4 text-green-600" />,
   partially_followed: <MinusCircle className="h-4 w-4 text-amber-600" />,
   not_followed: <XCircle className="h-4 w-4 text-red-600" />

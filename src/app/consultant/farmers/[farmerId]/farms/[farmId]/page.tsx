@@ -19,12 +19,12 @@ import {
 import Image from 'next/image'
 import { toast } from 'sonner'
 import type { LabTestRecord } from '@/types/lab-tests'
-import { getConsultantAccess } from '@/lib/consultant-access'
 import {
-  validateFarmerClient,
-  getFarmDetail,
-  type FarmDetail
-} from '@/lib/consultant-query-service'
+  useConsultantAccess,
+  useFarmDetail,
+  useFarmerProfile,
+  useValidatedFarmerClient
+} from '@/hooks/consultant/useConsultantQueries'
 import { SupabaseService } from '@/lib/supabase-service'
 
 export default function ConsultantFarmPage() {
@@ -34,67 +34,86 @@ export default function ConsultantFarmPage() {
   const rawFarmId = parseInt(params.farmId as string, 10)
   const farmId = isNaN(rawFarmId) ? null : rawFarmId
 
-  const [loading, setLoading] = useState(true)
-  const [farm, setFarm] = useState<FarmDetail | null>(null)
   const [soilTests, setSoilTests] = useState<LabTestRecord[]>([])
   const [petioleTests, setPetioleTests] = useState<LabTestRecord[]>([])
-  const [farmerName, setFarmerName] = useState<string>('')
+  const [labTestsLoading, setLabTestsLoading] = useState(false)
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true)
+  const accessQuery = useConsultantAccess()
+  const access = accessQuery.data ?? null
+  const validationQuery = useValidatedFarmerClient(access, farmerId)
+  const isValidClient = validationQuery.data?.isValid ?? false
+  const farmQuery = useFarmDetail(farmId, isValidClient)
+  const profileQuery = useFarmerProfile(farmerId, isValidClient)
+  const farm = farmQuery.data ?? null
+  const farmerName = profileQuery.data?.full_name || 'Farmer'
 
-      const access = await getConsultantAccess()
-      if (!access) {
-        toast.error('Not authenticated')
-        return
-      }
+  useEffect(() => {
+    if (farmId !== null) return
 
-      // Validate farmer belongs to org through organization_clients
-      const validation = await validateFarmerClient(access, farmerId)
-      if (!validation.isValid) {
-        toast.error('Farmer not found or not authorized')
-        router.push('/consultant/farmers')
-        return
-      }
-
-      // Validate farm belongs to farmer through farms.user_id
-      if (farmId === null) {
-        toast.error('Invalid farm ID')
-        router.push(`/consultant/farmers/${farmerId}`)
-        return
-      }
-
-      const farmData = await getFarmDetail(farmId)
-      if (!farmData || farmData.user_id !== farmerId) {
-        toast.error('Farm not found or does not belong to this farmer')
-        router.push(`/consultant/farmers/${farmerId}`)
-        return
-      }
-
-      setFarm(farmData)
-
-      // Fetch lab test records that are already safe to display
-      const [soilTestsData, petioleTestsData, profile] = await Promise.all([
-        SupabaseService.getSoilTestRecords(farmId),
-        SupabaseService.getPetioleTestRecords(farmId),
-        supabaseGetFarmerProfile(farmerId)
-      ])
-
-      setSoilTests((soilTestsData || []) as LabTestRecord[])
-      setPetioleTests((petioleTestsData || []) as LabTestRecord[])
-      setFarmerName(profile?.full_name || 'Farmer')
-    } catch (error) {
-      console.error('Error loading farm data:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to load farm data')
-    } finally {
-      setLoading(false)
-    }
+    toast.error('Invalid farm ID')
+    router.push(`/consultant/farmers/${farmerId}`)
   }, [farmerId, farmId, router])
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    if (!validationQuery.data || validationQuery.data.isValid) return
+
+    toast.error('Farmer not found or not authorized')
+    router.push('/consultant/farmers')
+  }, [router, validationQuery.data])
+
+  useEffect(() => {
+    if (!farmQuery.isSuccess || !farmId) return
+
+    if (!farmQuery.data || farmQuery.data.user_id !== farmerId) {
+      toast.error('Farm not found or does not belong to this farmer')
+      router.push(`/consultant/farmers/${farmerId}`)
+    }
+  }, [farmerId, farmId, farmQuery.data, farmQuery.isSuccess, router])
+
+  useEffect(() => {
+    const error = accessQuery.error ?? validationQuery.error ?? farmQuery.error ?? profileQuery.error
+    if (!error) return
+
+    console.error('Error loading farm data:', error)
+    toast.error(error instanceof Error ? error.message : 'Failed to load farm data')
+  }, [accessQuery.error, validationQuery.error, farmQuery.error, profileQuery.error])
+
+  useEffect(() => {
+    if (!farmId || !isValidClient || !farm || farm.user_id !== farmerId) return
+
+    let cancelled = false
+
+    async function loadLabTests() {
+      try {
+        setLabTestsLoading(true)
+        const [soilTestsData, petioleTestsData] = await Promise.all([
+          SupabaseService.getSoilTestRecords(farmId as number),
+          SupabaseService.getPetioleTestRecords(farmId as number)
+        ])
+
+        if (cancelled) return
+        setSoilTests((soilTestsData || []) as LabTestRecord[])
+        setPetioleTests((petioleTestsData || []) as LabTestRecord[])
+      } catch (error) {
+        if (cancelled) return
+        console.error('Error loading lab tests:', error)
+        toast.error(error instanceof Error ? error.message : 'Failed to load lab tests')
+      } finally {
+        if (!cancelled) setLabTestsLoading(false)
+      }
+    }
+
+    loadLabTests()
+
+    return () => {
+      cancelled = true
+    }
+  }, [farmerId, farmId, farm, isValidClient])
+
+  const loading =
+    accessQuery.isPending ||
+    validationQuery.isPending ||
+    (isValidClient && (farmQuery.isPending || profileQuery.isPending || labTestsLoading))
 
   if (loading) {
     return (
@@ -480,16 +499,4 @@ function TestCard({ test, type }: { test: LabTestRecord; type: 'soil' | 'petiole
       </CardContent>
     </Card>
   )
-}
-
-// Inline helper to fetch farmer profile for the farm page header
-async function supabaseGetFarmerProfile(farmerId: string) {
-  const { getTypedSupabaseClient } = await import('@/lib/supabase')
-  const supabase = await getTypedSupabaseClient()
-  const { data } = await supabase
-    .from('profiles')
-    .select('full_name')
-    .eq('id', farmerId)
-    .maybeSingle()
-  return data
 }

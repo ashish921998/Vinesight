@@ -33,7 +33,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { Loader2, UserPlus, Users, Mail, Copy, Trash2, Clock } from 'lucide-react'
-import { getConsultantAccess, roleLabels, type ConsultantAccess } from '@/lib/consultant-access'
+import { roleLabels } from '@/lib/consultant-access'
+import { useConsultantAccess } from '@/hooks/consultant/useConsultantQueries'
 import posthog from 'posthog-js'
 import {
   listOrgMembers,
@@ -59,7 +60,8 @@ async function copyLink(token: string) {
 }
 
 export default function TeamSettingsPage() {
-  const [access, setAccess] = useState<ConsultantAccess | null>(null)
+  const accessQuery = useConsultantAccess()
+  const access = accessQuery.data ?? null
   const [members, setMembers] = useState<OrgMember[]>([])
   const [invites, setInvites] = useState<PendingInvite[]>([])
   const [loading, setLoading] = useState(true)
@@ -83,18 +85,20 @@ export default function TeamSettingsPage() {
   const isAdmin = access?.canViewAllFarmers ?? false
 
   useEffect(() => {
-    loadTeam()
-  }, [])
+    if (accessQuery.isPending) return
+    if (!access) {
+      if (accessQuery.isError) toast.error('Not authenticated')
+      setLoading(false)
+      return
+    }
+    loadTeam(access)
+  }, [access, accessQuery.isError, accessQuery.isPending])
 
-  const loadTeam = async () => {
+  const loadTeam = async (currentAccess = access) => {
+    if (!currentAccess) return
+
     try {
       setLoading(true)
-      const currentAccess = await getConsultantAccess()
-      if (!currentAccess) {
-        toast.error('Not authenticated')
-        return
-      }
-      setAccess(currentAccess)
 
       const orgId = currentAccess.organizationId
       const memberRows = await listOrgMembers(orgId)

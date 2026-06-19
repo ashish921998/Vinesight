@@ -1,0 +1,115 @@
+'use client'
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
+import { consultantKeys } from '@/lib/consultant-query-keys'
+import {
+  getFarmerClients,
+  getFarmerFarms,
+  getFarmerProfile,
+  getFarmDetail,
+  validateFarmerClient
+} from '@/lib/consultant-query-service'
+import {
+  createVisit,
+  getVisitsForFarmer,
+  type CreateVisitInput
+} from '@/lib/consultant-visit-service'
+
+export type ConsultantAccessState = 'loading' | 'ok' | 'denied' | 'error'
+
+export function getConsultantAccessState(
+  isPending: boolean,
+  isError: boolean,
+  access: ConsultantAccess | null | undefined
+): ConsultantAccessState {
+  if (isPending) return 'loading'
+  if (isError) return 'error'
+  return access ? 'ok' : 'denied'
+}
+
+function farmerScope(access: ConsultantAccess) {
+  return access.canViewAllFarmers ? 'all' : access.userId
+}
+
+export function useConsultantAccess(enabled = true) {
+  return useQuery({
+    queryKey: consultantKeys.access(),
+    queryFn: getConsultantAccess,
+    enabled
+  })
+}
+
+export function useFarmerClients(access: ConsultantAccess | null | undefined) {
+  return useQuery({
+    queryKey: access
+      ? consultantKeys.farmers(access.organizationId, farmerScope(access))
+      : ['consultant', 'farmers', 'disabled'],
+    queryFn: () => getFarmerClients(access as ConsultantAccess),
+    enabled: Boolean(access)
+  })
+}
+
+export function useValidatedFarmerClient(
+  access: ConsultantAccess | null | undefined,
+  farmerId: string
+) {
+  return useQuery({
+    queryKey: access
+      ? ['consultant', 'farmer', farmerId, 'validation', access.organizationId, farmerScope(access)]
+      : ['consultant', 'farmer', farmerId, 'validation', 'disabled'],
+    queryFn: () => validateFarmerClient(access as ConsultantAccess, farmerId),
+    enabled: Boolean(access && farmerId)
+  })
+}
+
+export function useFarmerProfile(farmerId: string, enabled = true) {
+  return useQuery({
+    queryKey: consultantKeys.farmerProfile(farmerId),
+    queryFn: () => getFarmerProfile(farmerId),
+    enabled: Boolean(farmerId && enabled)
+  })
+}
+
+export function useFarmerFarms(farmerId: string, enabled = true) {
+  return useQuery({
+    queryKey: consultantKeys.farmerFarms(farmerId),
+    queryFn: () => getFarmerFarms(farmerId),
+    enabled: Boolean(farmerId && enabled)
+  })
+}
+
+export function useFarmDetail(farmId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: farmId != null ? consultantKeys.farmDetail(farmId) : ['consultant', 'farm', 'disabled'],
+    queryFn: () => getFarmDetail(farmId as number),
+    enabled: Boolean(farmId != null && enabled)
+  })
+}
+
+export function useFarmerVisits(
+  access: ConsultantAccess | null | undefined,
+  farmerId: string
+) {
+  return useQuery({
+    queryKey: consultantKeys.farmerVisits(farmerId),
+    queryFn: () => getVisitsForFarmer(access as ConsultantAccess, farmerId),
+    enabled: Boolean(access && farmerId)
+  })
+}
+
+export function useCreateVisit(access: ConsultantAccess | null | undefined, farmerId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: CreateVisitInput) => {
+      if (!access) {
+        throw new Error('Consultant access is required to record a visit')
+      }
+      return createVisit(access, input)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: consultantKeys.farmerVisits(farmerId) })
+    }
+  })
+}

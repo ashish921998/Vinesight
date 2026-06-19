@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/sheet'
 import { toast } from 'sonner'
 import { Search, Loader2, ClipboardList, ChevronRight, FlaskConical } from 'lucide-react'
-import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
+import { useConsultantAccess } from '@/hooks/consultant/useConsultantQueries'
 import posthog from 'posthog-js'
 import {
   getTriageItems,
@@ -87,9 +87,10 @@ function formatDate(value: string | null) {
 }
 
 export default function TriagePage() {
+  const accessQuery = useConsultantAccess()
+  const access = accessQuery.data ?? null
   const [items, setItems] = useState<TriageItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [access, setAccess] = useState<ConsultantAccess | null>(null)
 
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -109,18 +110,20 @@ export default function TriagePage() {
   const [formReviewNotes, setFormReviewNotes] = useState('')
 
   useEffect(() => {
-    loadTriage()
-  }, [])
+    if (accessQuery.isPending) return
+    if (!access) {
+      if (accessQuery.isError) toast.error('Not authenticated')
+      setLoading(false)
+      return
+    }
+    loadTriage(access)
+  }, [access, accessQuery.isError, accessQuery.isPending])
 
-  const loadTriage = async () => {
+  const loadTriage = async (currentAccess = access) => {
+    if (!currentAccess) return
+
     try {
       setLoading(true)
-      const currentAccess = await getConsultantAccess()
-      if (!currentAccess) {
-        toast.error('Not authenticated')
-        return
-      }
-      setAccess(currentAccess)
       const data = await getTriageItems(currentAccess)
       setItems(data)
       posthog.capture('consultant_triage_viewed', {

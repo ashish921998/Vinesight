@@ -11,6 +11,7 @@ import './globals.css'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { MotionConfigProvider } from '@/components/providers/MotionConfigProvider'
 import { AuthProvider } from '@/components/providers/AuthProvider'
+import { QueryProvider } from '@/components/providers/QueryProvider'
 import { SentryErrorBoundary } from '@/components/SentryErrorBoundary'
 import { Suspense } from 'react'
 import { GlobalAuthErrorHandler } from '@/components/auth/GlobalAuthErrorHandler'
@@ -163,14 +164,16 @@ export default function RootLayout({
               </div>
             }
           >
-            <GlobalAuthErrorHandler />
-            <AuthProvider>
-              <MotionConfigProvider>
-                <I18nProvider>
-                  <LayoutContent>{children}</LayoutContent>
-                </I18nProvider>
-              </MotionConfigProvider>
-            </AuthProvider>
+            <QueryProvider>
+              <GlobalAuthErrorHandler />
+              <AuthProvider>
+                <MotionConfigProvider>
+                  <I18nProvider>
+                    <LayoutContent>{children}</LayoutContent>
+                  </I18nProvider>
+                </MotionConfigProvider>
+              </AuthProvider>
+            </QueryProvider>
           </Suspense>
         </SentryErrorBoundary>
         <GoogleAnalytics />

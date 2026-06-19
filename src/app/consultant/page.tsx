@@ -1,15 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { ArrowRight, ClipboardList, Loader2, UserPlus, Users } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ConsultantAccess, getConsultantAccess, roleLabels } from '@/lib/consultant-access'
-import { getFarmerClients } from '@/lib/consultant-query-service'
+import { roleLabels } from '@/lib/consultant-access'
 import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
 import { JoinCodeCard } from '@/components/consultant/JoinCodeCard'
+import { useConsultantAccess, useFarmerClients } from '@/hooks/consultant/useConsultantQueries'
 
 const workspaceLinks = [
   {
@@ -29,47 +29,24 @@ const workspaceLinks = [
 ]
 
 export default function ConsultantOverviewPage() {
-  const [access, setAccess] = useState<ConsultantAccess | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [accessError, setAccessError] = useState(false)
-  // Active org clients with no agronomist assigned. Only loaded for owner/admin
-  // (canViewAllFarmers); null until/unless that count has been resolved.
-  const [unassignedCount, setUnassignedCount] = useState<number | null>(null)
+  const accessQuery = useConsultantAccess()
+  const access = accessQuery.data ?? null
+  const farmerAccess = access?.canViewAllFarmers ? access : null
+  const farmersQuery = useFarmerClients(farmerAccess)
 
   useEffect(() => {
-    async function loadAccess() {
-      try {
-        const result = await getConsultantAccess()
-        if (!result) {
-          setAccessError(true)
-          return
-        }
-        setAccess(result)
-
-        // Owner/admin only: surface farmers who self-joined the org but have no
-        // agronomist yet. getFarmerClients already scopes to active clients, so
-        // counting !assigned_to over its result is the unassigned count.
-        if (result.canViewAllFarmers) {
-          try {
-            const clients = await getFarmerClients(result)
-            setUnassignedCount(clients.filter((client) => !client.assigned_to).length)
-          } catch (clientError) {
-            // The count is a non-critical nudge; never block the workspace on it.
-            console.error('Failed to load unassigned farmer count:', clientError)
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load consultant access:', error)
-        setAccessError(true)
-      } finally {
-        setLoading(false)
-      }
+    if (farmersQuery.error) {
+      // The count is a non-critical nudge; never block the workspace on it.
+      console.error('Failed to load unassigned farmer count:', farmersQuery.error)
     }
+  }, [farmersQuery.error])
 
-    loadAccess()
-  }, [])
+  const unassignedCount = useMemo(() => {
+    if (!access?.canViewAllFarmers || !farmersQuery.data) return null
+    return farmersQuery.data.filter((client) => !client.assigned_to).length
+  }, [access?.canViewAllFarmers, farmersQuery.data])
 
-  if (loading) {
+  if (accessQuery.isPending) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -77,7 +54,7 @@ export default function ConsultantOverviewPage() {
     )
   }
 
-  if (accessError || !access) {
+  if (accessQuery.isError || !access) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <p className="text-sm text-muted-foreground">
