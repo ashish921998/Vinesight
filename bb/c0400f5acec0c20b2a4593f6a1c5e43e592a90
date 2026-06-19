@@ -1,0 +1,23 @@
+CHANGELOG.md
+  s_3f92503d070f83::t_309bf67d86b9f3 5-10
+VERSION
+  s_3f92503d070f83::t_3b799112bb1e28 1
+package.json
+  s_3f92503d070f83::t_3d30eea46b1157 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "bbc0400f5acec0c20b2a4593f6a1c5e43e592a90",
+  "prompts": {},
+  "sessions": {
+    "s_3f92503d070f83": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bce4af8a-0fc9-4842-982b-203f9aacc224",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
