@@ -49,8 +49,13 @@ three routes for friendly error messages.
   row it checks.
 - Owner/Admin-invited Farmers now require an explicit assignment step. That step is exactly what
   the newly-surfaced Team → Assignments tab provides, so the loop stays closed.
-- No backfill: the only existing assignment in the production database already targets the
-  Agronomist, so it satisfies the new invariant.
+- A one-time backfill (in `202606190001`, run before the trigger is created) resets any
+  pre-existing assignment that isn't an Agronomist to **Unassigned**. We initially believed the
+  sole production assignment already targeted the Agronomist and that no backfill was needed; in
+  fact a Self-join through the old owner-assigning `join_organization_by_slug` had left one Client
+  assigned to the **Owner**, which the new invariant rejects. The backfill nulls `assigned_to` for
+  such rows (preserving `assigned_by`, which records who enrolled the Farmer) so the table is
+  compliant and the Unassigned signal is trustworthy from the first deploy.
 - The farmer Self-join RPC `join_organization_by_slug` previously assigned new Clients to the
   org owner — which this trigger rejects. It is brought under version control and changed to land
   Self-joined Clients **Unassigned** (`assigned_to = null`), shipping in the same migration set so

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { validateUserSession } from '@/lib/auth-utils'
 import { globalRateLimiter } from '@/lib/validation'
+import { resolveInviteAssignee } from '@/lib/assignment-access'
 
 // Binds an invited farmer to the inviting organization as an active client. Called from the
 // invited-farmer signup page right after the farmer verifies the OTP sent to their phone.
@@ -257,23 +258,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'Linked to organization' })
     }
 
-    // An Assignment may only ever target an agronomist. Inherit the inviter as the
-    // assigned agronomist only when they actually hold that role; an owner/admin invite
-    // lands the client Unassigned so the assignment screen's "Unassigned" signal stays
-    // trustworthy (see docs/adr/0001-assignment-targets-agronomist.md). assigned_by still
-    // records who enrolled them, regardless of role. A DB trigger backstops this.
-    let assignedAgronomist: string | null = null
-    if (invite.invited_by) {
-      const { data: inviterMembership } = await admin
-        .from('organization_members')
-        .select('role')
-        .eq('organization_id', invite.organization_id)
-        .eq('user_id', invite.invited_by)
-        .maybeSingle()
-      if (inviterMembership?.role === 'agronomist') {
-        assignedAgronomist = invite.invited_by
-      }
-    }
+    // An Assignment may only ever target an agronomist: inherit the inviter only when they
+    // hold that role, else land the client Unassigned so the assignment screen's "Unassigned"
+    // signal stays trustworthy. assigned_by still records who enrolled them, regardless of
+    // role. Shared with the assign/add-client paths and backstopped by a DB trigger. See
+    // docs/adr/0001-assignment-targets-agronomist.md.
+    const assignedAgronomist = await resolveInviteAssignee(
+      admin,
+      invite.organization_id,
+      invite.invited_by
+    )
 
     const { error: clientError } = await admin.from('organization_clients').insert({
       organization_id: invite.organization_id,

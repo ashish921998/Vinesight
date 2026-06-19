@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { assertAssigneeIsAgronomist } from '../assignment-access'
+import { assertAssigneeIsAgronomist, resolveInviteAssignee } from '../assignment-access'
 
 // The helper takes an admin Supabase client and runs:
 //   from('organization_members').select('role').eq().eq().maybeSingle()
@@ -62,5 +62,48 @@ describe('assertAssigneeIsAgronomist', () => {
       error: 'Failed to verify assigned agronomist',
       status: 500
     })
+  })
+})
+
+describe('resolveInviteAssignee', () => {
+  it('returns null for a missing inviter without hitting the database', async () => {
+    const { client, maybeSingle } = adminReturning({ data: null, error: null })
+
+    expect(await resolveInviteAssignee(client, 'org-1', null)).toBeNull()
+    expect(maybeSingle).not.toHaveBeenCalled()
+  })
+
+  it('inherits the inviter when they hold the agronomist role', async () => {
+    const { client } = adminReturning({ data: { role: 'agronomist' }, error: null })
+
+    expect(await resolveInviteAssignee(client, 'org-1', 'agro-1')).toBe('agro-1')
+  })
+
+  it('lands Unassigned when the inviter is an owner', async () => {
+    const { client } = adminReturning({ data: { role: 'owner' }, error: null })
+
+    expect(await resolveInviteAssignee(client, 'org-1', 'owner-1')).toBeNull()
+  })
+
+  it('lands Unassigned when the inviter is an admin', async () => {
+    const { client } = adminReturning({ data: { role: 'admin' }, error: null })
+
+    expect(await resolveInviteAssignee(client, 'org-1', 'admin-1')).toBeNull()
+  })
+
+  it('lands Unassigned when the inviter is not a member of the organization', async () => {
+    const { client } = adminReturning({ data: null, error: null })
+
+    expect(await resolveInviteAssignee(client, 'org-1', 'stranger')).toBeNull()
+  })
+
+  it('fails safe to Unassigned when the role lookup errors', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { client } = adminReturning({ data: null, error: { message: 'db down' } })
+
+    expect(await resolveInviteAssignee(client, 'org-1', 'agro-1')).toBeNull()
+    expect(errorSpy).toHaveBeenCalled()
+
+    errorSpy.mockRestore()
   })
 })

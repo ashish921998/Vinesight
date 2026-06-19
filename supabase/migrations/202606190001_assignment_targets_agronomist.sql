@@ -46,6 +46,26 @@ $$;
 
 revoke all on function public.assert_organization_client_assignee_is_agronomist() from public;
 
+-- One-time reconciliation, run before the trigger starts enforcing. Any assignment
+-- that predates this invariant is reset to Unassigned so the table is already
+-- compliant on deploy and the "Unassigned" signal the app relies on is trustworthy
+-- from the first day. The known offender is the old out-of-band
+-- join_organization_by_slug, which assigned every farmer Self-join to the org OWNER
+-- (see ADR-0002 / 202606190002); that left a production client assigned to a
+-- non-agronomist, which the trigger below would otherwise reject on the next write.
+-- Only assigned_to is nulled: assigned_by records WHO enrolled the farmer (provenance),
+-- not who advises them, and the trigger constrains only assigned_to.
+update public.organization_clients oc
+set assigned_to = null
+where oc.assigned_to is not null
+  and not exists (
+    select 1
+    from public.organization_members m
+    where m.organization_id = oc.organization_id
+      and m.user_id = oc.assigned_to
+      and m.role = 'agronomist'
+  );
+
 drop trigger if exists trg_assignment_targets_agronomist on public.organization_clients;
 
 create trigger trg_assignment_targets_agronomist

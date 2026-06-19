@@ -43,3 +43,39 @@ export async function assertAssigneeIsAgronomist(
 
   return { ok: true }
 }
+
+/**
+ * Resolve the Assignment target when a Farmer accepts an invite. The inviter is
+ * inherited as the assigned Agronomist only when they actually hold the
+ * `agronomist` role; an Owner/Admin invite (or any case we can't confirm) lands
+ * the Client **Unassigned** (`null`), to be assigned deliberately from
+ * Team → Assignments. Null always satisfies the assignment trigger, so this fails
+ * safe to Unassigned rather than blocking the accept. `assigned_by` is tracked
+ * separately by the caller — it records who enrolled the Farmer regardless of role.
+ * See docs/adr/0001-assignment-targets-agronomist.md.
+ */
+export async function resolveInviteAssignee(
+  admin: SupabaseClient<Database>,
+  organizationId: string,
+  invitedBy: string | null | undefined
+): Promise<string | null> {
+  if (!invitedBy) {
+    return null
+  }
+
+  const { data, error } = await admin
+    .from('organization_members')
+    .select('role')
+    .eq('organization_id', organizationId)
+    .eq('user_id', invitedBy)
+    .maybeSingle()
+
+  if (error) {
+    // Non-fatal: we couldn't confirm the inviter's role, so land Unassigned. The
+    // farmer is still linked; an Owner/Admin can assign them from Team → Assignments.
+    console.error('Error resolving invite assignee role:', error)
+    return null
+  }
+
+  return data?.role === 'agronomist' ? invitedBy : null
+}
