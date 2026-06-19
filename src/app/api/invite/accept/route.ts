@@ -251,16 +251,34 @@ export async function POST(request: NextRequest) {
     // Token claimed — link the farmer to the org. An already-active client of this org is a
     // benign duplicate/leftover-token re-accept: leave their row (and its assignment) intact
     // instead of re-asserting it, so a stray invite can't silently reassign them to a different
-    // staff member. Only a brand-new client gets a row, assigned to whoever sent the invite.
-    // (A deactivated row was already refused above, so existingClient is undefined or active.)
+    // staff member. Only a brand-new client gets a row. (A deactivated row was already refused
+    // above, so existingClient is undefined or active.)
     if (existingClient?.status === 'active') {
       return NextResponse.json({ success: true, message: 'Linked to organization' })
+    }
+
+    // An Assignment may only ever target an agronomist. Inherit the inviter as the
+    // assigned agronomist only when they actually hold that role; an owner/admin invite
+    // lands the client Unassigned so the assignment screen's "Unassigned" signal stays
+    // trustworthy (see docs/adr/0001-assignment-targets-agronomist.md). assigned_by still
+    // records who enrolled them, regardless of role. A DB trigger backstops this.
+    let assignedAgronomist: string | null = null
+    if (invite.invited_by) {
+      const { data: inviterMembership } = await admin
+        .from('organization_members')
+        .select('role')
+        .eq('organization_id', invite.organization_id)
+        .eq('user_id', invite.invited_by)
+        .maybeSingle()
+      if (inviterMembership?.role === 'agronomist') {
+        assignedAgronomist = invite.invited_by
+      }
     }
 
     const { error: clientError } = await admin.from('organization_clients').insert({
       organization_id: invite.organization_id,
       client_user_id: userId,
-      assigned_to: invite.invited_by ?? null,
+      assigned_to: assignedAgronomist,
       assigned_by: invite.invited_by ?? null,
       status: 'active'
     })

@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { z } from 'zod'
 import type { Database } from '@/types/database'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { assertAssigneeIsAgronomist } from '@/lib/assignment-access'
 
 // P0: Validate input schema
 const AddClientSchema = z.object({
@@ -137,24 +138,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // An Assignment may only target an agronomist (this previously checked org
+    // membership only). Shared with the assign + invite-accept paths and
+    // backstopped by a DB trigger.
     if (assignedTo) {
-      const { data: assigneeMembership, error: assigneeMembershipError } = await getSupabaseAdmin()
-        .from('organization_members')
-        .select('id')
-        .eq('organization_id', organizationId)
-        .eq('user_id', assignedTo)
-        .maybeSingle()
-
-      if (assigneeMembershipError) {
-        console.error('Error checking assigned agronomist membership:', assigneeMembershipError)
-        return NextResponse.json({ error: 'Failed to verify assigned agronomist' }, { status: 500 })
-      }
-
-      if (!assigneeMembership) {
-        return NextResponse.json(
-          { error: 'Assigned agronomist must belong to the organization' },
-          { status: 400 }
-        )
+      const assigneeCheck = await assertAssigneeIsAgronomist(
+        getSupabaseAdmin(),
+        organizationId,
+        assignedTo
+      )
+      if (!assigneeCheck.ok) {
+        return NextResponse.json({ error: assigneeCheck.error }, { status: assigneeCheck.status })
       }
     }
 

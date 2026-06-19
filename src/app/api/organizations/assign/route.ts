@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { z } from 'zod'
 import type { Database } from '@/types/database'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { assertAssigneeIsAgronomist } from '@/lib/assignment-access'
 
 const AssignSchema = z.object({
   organizationId: z.string().uuid(),
@@ -75,33 +76,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // If assigning to an agronomist, verify they belong to the organization
-    // and actually hold the agronomist role (not just any member).
+    // If assigning to an agronomist, verify they belong to the organization and
+    // actually hold the agronomist role (not just any member). Shared with the
+    // invite-accept and add-client paths and backstopped by a DB trigger.
     if (agronomistUserId) {
-      const { data: assigneeMembership, error: assigneeMembershipError } = await getSupabaseAdmin()
-        .from('organization_members')
-        .select('id, role')
-        .eq('organization_id', organizationId)
-        .eq('user_id', agronomistUserId)
-        .maybeSingle()
-
-      if (assigneeMembershipError) {
-        console.error('Error checking assigned agronomist membership:', assigneeMembershipError)
-        return NextResponse.json({ error: 'Failed to verify assigned agronomist' }, { status: 500 })
-      }
-
-      if (!assigneeMembership) {
-        return NextResponse.json(
-          { error: 'Assigned agronomist must belong to the organization' },
-          { status: 400 }
-        )
-      }
-
-      if (assigneeMembership.role !== 'agronomist') {
-        return NextResponse.json(
-          { error: 'Assigned user must have the agronomist role' },
-          { status: 400 }
-        )
+      const assigneeCheck = await assertAssigneeIsAgronomist(
+        getSupabaseAdmin(),
+        organizationId,
+        agronomistUserId
+      )
+      if (!assigneeCheck.ok) {
+        return NextResponse.json({ error: assigneeCheck.error }, { status: assigneeCheck.status })
       }
     }
 
