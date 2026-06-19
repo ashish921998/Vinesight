@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3.0] - 2026-06-19
+
+### Changed
+
+- Post-login redirects resolve the signed-in user's module home from `organization_members` (the same source as middleware) instead of hardcoding `/dashboard`, so organization members land on `/consultant` directly from login, signup, the OAuth callback, verify-OTP, and the landing page. The logic lives in a shared `resolveModuleHome` helper.
+- Module-home routes (`FARMER_HOME` / `ORG_HOME`) are now defined once in `@/lib/auth/homes` and imported by both the edge middleware and the client resolver, so the two runtimes can't drift.
+
+### Fixed
+
+- Login no longer double-resolves the module home or double-pushes its route. A once-guard collapses the three redirect paths (auth-state effect, email submit, phone onSuccess) into a single lookup and a single navigation.
+- The OAuth callback no longer leaks a redirect timer if the component unmounts while the membership query is in flight; the `resolveModuleHome` awaits now re-check the mount flag before scheduling, matching the sibling awaits.
+
 ## [0.1.2.0] - 2026-06-18
 
 ### Changed
