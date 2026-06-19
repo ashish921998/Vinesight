@@ -44,9 +44,11 @@ three routes for friendly error messages.
 
 ## Consequences
 
-- The trigger does a cross-table role lookup on every `assigned_to` write; it runs
-  `SECURITY DEFINER` with a pinned `search_path` so RLS on `organization_members` can't hide the
-  row it checks.
+- The trigger does a cross-table role lookup whenever `assigned_to` **or** `organization_id`
+  changes — moving a Client to another Organization must re-validate the existing assignee against
+  the new Org, so the trigger fires on both columns (and skips the lookup only when both are
+  unchanged). It runs `SECURITY DEFINER` with a pinned `search_path` so RLS on
+  `organization_members` can't hide the row it checks.
 - Owner/Admin-invited Farmers now require an explicit assignment step. That step is exactly what
   the newly-surfaced Team → Assignments tab provides, so the loop stays closed.
 - A one-time backfill (in `202606190001`, run before the trigger is created) resets any
