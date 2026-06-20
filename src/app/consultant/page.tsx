@@ -20,7 +20,10 @@ const REVIEW_PREVIEW_LIMIT = 5
 
 function formatReviewDate(value: string | null) {
   if (!value) return '—'
-  const date = new Date(value)
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value)
+  const date = dateOnly
+    ? new Date(Number(value.slice(0, 4)), Number(value.slice(5, 7)) - 1, Number(value.slice(8, 10)))
+    : new Date(value)
   if (Number.isNaN(date.getTime())) return '—'
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
@@ -156,6 +159,10 @@ export default function ConsultantOverviewPage() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
+          ) : reviewsQuery.isError ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Couldn&apos;t load reports to review. Please refresh.
+            </p>
           ) : previewReviews.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
               No pending reports. New petiole uploads from your farmers will appear here.

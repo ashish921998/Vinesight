@@ -26,21 +26,25 @@ function startOfDay(d: Date) {
   return x
 }
 
-function dayBucket(dateStr: string): string {
+function dayBucket(dateStr: string): { key: string; label: string } {
   const date = new Date(dateStr)
   const today = startOfDay(new Date())
   const yesterday = new Date(today)
   yesterday.setDate(today.getDate() - 1)
   const target = startOfDay(date)
+  const key = target.toISOString().slice(0, 10)
 
-  if (target.getTime() === today.getTime()) return 'Today'
-  if (target.getTime() === yesterday.getTime()) return 'Yesterday'
+  if (target.getTime() === today.getTime()) return { key, label: 'Today' }
+  if (target.getTime() === yesterday.getTime()) return { key, label: 'Yesterday' }
 
-  return date.toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric'
-  })
+  return {
+    key,
+    label: date.toLocaleDateString(undefined, {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
 }
 
 function initials(name: string | null | undefined): string {
@@ -81,12 +85,12 @@ export function VisitHistory({ visits }: { visits: Visit[] }) {
     (a, b) => new Date(b.visitDate).getTime() - new Date(a.visitDate).getTime()
   )
 
-  const groups: { label: string; items: Visit[] }[] = []
+  const groups: { key: string; label: string; items: Visit[] }[] = []
   for (const v of sorted) {
     const bucket = dayBucket(v.visitDate)
     const last = groups[groups.length - 1]
-    if (last && last.label === bucket) last.items.push(v)
-    else groups.push({ label: bucket, items: [v] })
+    if (last && last.key === bucket.key) last.items.push(v)
+    else groups.push({ ...bucket, items: [v] })
   }
 
   return (
@@ -101,7 +105,7 @@ export function VisitHistory({ visits }: { visits: Visit[] }) {
       <div className="relative space-y-6">
         <div className="absolute left-[15px] top-2 bottom-2 w-px bg-border" aria-hidden />
         {groups.map((group) => (
-          <div key={group.label} className="space-y-3">
+          <div key={group.key} className="space-y-3">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80 pl-10">
               {group.label}
             </p>

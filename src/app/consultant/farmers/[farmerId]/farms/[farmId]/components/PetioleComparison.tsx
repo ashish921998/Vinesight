@@ -26,6 +26,10 @@ export function PetioleComparison({
   )
 
   const currentId = currentReportId ?? sortedReports[0]?.id ?? null
+  const reportKeys = useMemo(
+    () => sortedReports.map((r, i) => (r.id != null ? `id:${r.id}` : `fallback:${r.date}:${i}`)),
+    [sortedReports]
+  )
 
   // Flatten the group keys while preserving group membership for rendering.
   const groupedRows = paramGroups
@@ -44,8 +48,8 @@ export function PetioleComparison({
 
   // Count abnormal cells across all reports so the consultant gets a heads-up.
   const abnormalCounts = useMemo(() => {
-    const counts = new Map<number, number>()
-    for (const r of sortedReports) {
+    const counts = new Map<string, number>()
+    sortedReports.forEach((r, i) => {
       let n = 0
       for (const g of groupedRows) {
         for (const k of g.keys) {
@@ -57,10 +61,10 @@ export function PetioleComparison({
           }
         }
       }
-      counts.set(r.id ?? -1, n)
-    }
+      counts.set(reportKeys[i], n)
+    })
     return counts
-  }, [sortedReports, groupedRows, ranges])
+  }, [sortedReports, groupedRows, ranges, reportKeys])
 
   return (
     <div className="space-y-3">
@@ -86,12 +90,13 @@ export function PetioleComparison({
                 <th className="sticky left-0 z-10 bg-muted/40 px-3 py-2 text-left align-bottom text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border min-w-[140px]">
                   Parameter
                 </th>
-                {sortedReports.map((r) => {
+                {sortedReports.map((r, i) => {
                   const isCurrent = (r.id ?? null) === currentId
-                  const abnormal = abnormalCounts.get(r.id ?? -1) ?? 0
+                  const reportKey = reportKeys[i]
+                  const abnormal = abnormalCounts.get(reportKey) ?? 0
                   return (
                     <th
-                      key={r.id ?? String(r.date)}
+                      key={reportKey}
                       className={`px-3 py-2 text-center align-bottom border-b border-l border-border min-w-[110px] ${
                         isCurrent ? 'bg-primary/5' : ''
                       }`}
@@ -151,7 +156,7 @@ export function PetioleComparison({
                             )}
                           </div>
                         </td>
-                        {sortedReports.map((r) => {
+                        {sortedReports.map((r, i) => {
                           const raw = r.parameters?.[key]
                           const isCurrent = (r.id ?? null) === currentId
                           const isNumeric = typeof raw === 'number'
@@ -163,7 +168,7 @@ export function PetioleComparison({
                               : '-'
                           return (
                             <td
-                              key={r.id ?? `${r.date}-${key}`}
+                              key={`${reportKeys[i]}:${key}`}
                               className={`px-3 py-1.5 text-center border-b border-l border-border tabular-nums text-[12px] font-medium ${cellClasses(
                                 status,
                                 isCurrent

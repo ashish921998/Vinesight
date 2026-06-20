@@ -43,7 +43,7 @@ export default function ConsultantFarmPage() {
   const farmerId = params.farmerId as string
   const rawFarmId = parseInt(params.farmId as string, 10)
   const farmId = isNaN(rawFarmId) ? null : rawFarmId
-  const reviewIdFromUrl = searchParams.get('reviewId')
+  const [initialReviewId] = useState(() => searchParams.get('reviewId'))
 
   const [loading, setLoading] = useState(true)
   const [farm, setFarm] = useState<FarmDetail | null>(null)
@@ -115,8 +115,8 @@ export default function ConsultantFarmPage() {
       //   2. newest pending review for this farm;
       //   3. none (page opens on the latest completed review / read mode).
       let resolvedReview: TriageItem | null = null
-      if (reviewIdFromUrl) {
-        resolvedReview = triageItems.find((t) => t.id === reviewIdFromUrl) ?? null
+      if (initialReviewId) {
+        resolvedReview = triageItems.find((t) => t.id === initialReviewId) ?? null
       }
       if (!resolvedReview) {
         resolvedReview =
@@ -137,7 +137,7 @@ export default function ConsultantFarmPage() {
     } finally {
       setLoading(false)
     }
-  }, [farmerId, farmId, router, reviewIdFromUrl])
+  }, [farmerId, farmId, router, initialReviewId])
 
   useEffect(() => {
     loadData()

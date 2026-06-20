@@ -47,7 +47,11 @@ export function PlanEditorPanel({
   hasExistingPlan: boolean
   abnormalCount: number
 }) {
-  const addressedCount = items.filter((item) => item.nutrient).length
+  const addressedNutrients = new Set<string>()
+  for (const item of items) {
+    if (item.nutrient) addressedNutrients.add(item.nutrient)
+  }
+  const addressedCount = addressedNutrients.size
   const allAddressed = abnormalCount > 0 && addressedCount === abnormalCount
 
   return (

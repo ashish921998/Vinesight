@@ -94,6 +94,7 @@ export function SoilBackgroundPanel({
             <div>
               <button
                 type="button"
+                aria-expanded={showAllSoil}
                 onClick={() => setShowAllSoil((v) => !v)}
                 className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
               >
