@@ -1,0 +1,41 @@
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/PetioleComparison.tsx
+  s_8ad672066c24df::t_79f329cc05bfb2 48
+  s_8ad672066c24df::t_64a1facf09f971 35-39,45-47,49-50
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/page.tsx
+  s_4b8316449b69dd::t_51ff49421a61a8 3-4,8,27,29,43-47,70-84,86,139-140
+src/app/consultant/farmers/[farmerId]/page.tsx
+  s_4b8316449b69dd::t_62dff686c33ebc 14,17-19,24-25,146,148
+src/app/consultant/farmers/[farmerId]/components/useFarmerProfileData.ts
+  s_4b8316449b69dd::t_4ab376a86cc417 1-115
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/usePlanEditor.ts
+  s_4b8316449b69dd::t_642cfac53a9d85 15
+  s_4b8316449b69dd::t_552b87385f0d35 1-14,16-260
+src/app/consultant/farmers/[farmerId]/components/FarmerSummaryStrip.tsx
+  s_4b8316449b69dd::t_cbaae5d2a6f760 1-52
+src/app/consultant/farmers/[farmerId]/components/FarmerFarmsTable.tsx
+  s_4b8316449b69dd::t_8fad50feb94c83 1-125
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "248f89e6d7e17ce39d39f0cbcc40805532c6bbef",
+  "prompts": {},
+  "sessions": {
+    "s_4b8316449b69dd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a4c4e818-2ede-471d-8fcc-ececaff51e6f",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_8ad672066c24df": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "308086e4-c339-48f8-b221-0e1757cea246",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
