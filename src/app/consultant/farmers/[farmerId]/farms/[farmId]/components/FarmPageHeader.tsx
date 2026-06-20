@@ -33,7 +33,7 @@ export function FarmPageHeader({
   access: ConsultantAccess | null
   reviewTest?: LabTestRecord | undefined
   hasPendingReview: boolean
-  onVisitRecorded: (visit: Visit) => void
+  onVisitRecorded?: (visit: Visit) => void
 }) {
   return (
     <header className="pb-5 border-b border-border">

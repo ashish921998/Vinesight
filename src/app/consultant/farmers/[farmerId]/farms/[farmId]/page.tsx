@@ -1,21 +1,30 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import type { LabTestRecord } from '@/types/lab-tests'
-import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
-import {
-  validateFarmerClient,
-  getFarmDetail,
-  type FarmDetail
-} from '@/lib/consultant-query-service'
-import { getVisitsForFarmer, type Visit } from '@/lib/consultant-visit-service'
 import { VisitHistory } from '@/components/consultant/VisitHistory'
-import { SupabaseService } from '@/lib/supabase-service'
-import { FertilizerPlanService, type FertilizerPlanWithItems } from '@/lib/fertilizer-plan-service'
-import { getTriageItems, type TriageItem } from '@/lib/consultant-triage-service'
+import {
+  FertilizerPlanService,
+  type FertilizerPlanWithItems,
+  type PlanItemInput
+} from '@/lib/fertilizer-plan-service'
+import type { TriageItem } from '@/lib/consultant-triage-service'
+import { consultantKeys } from '@/lib/consultant-query-keys'
+import {
+  farmerScope,
+  useConsultantAccess,
+  useFarmDetail,
+  useFarmLabTests,
+  useFarmerProfile,
+  useFarmerVisits,
+  useFarmPlans,
+  useFarmTriage,
+  useValidatedFarmerClient
+} from '@/hooks/consultant/useConsultantQueries'
 
 import { FarmPageHeader } from './components/FarmPageHeader'
 import { FarmPageLoading, FarmPageNotFound } from './components/FarmPageStates'
@@ -29,7 +38,16 @@ import {
   draftFromPlanItem,
   newDraftItem
 } from './components/farm-config'
-import { formatParamKey, supabaseGetFarmerProfile } from './components/farm-helpers'
+import { formatParamKey } from './components/farm-helpers'
+
+interface StoredPlanDraft {
+  note: string
+  items: DraftItem[]
+}
+
+const EMPTY_LAB_TESTS: LabTestRecord[] = []
+const EMPTY_TRIAGE_ITEMS: TriageItem[] = []
+const EMPTY_PLANS: FertilizerPlanWithItems[] = []
 
 export default function ConsultantFarmPage() {
   const params = useParams()
@@ -38,110 +56,71 @@ export default function ConsultantFarmPage() {
   const farmerId = params.farmerId as string
   const rawFarmId = parseInt(params.farmId as string, 10)
   const farmId = isNaN(rawFarmId) ? null : rawFarmId
-  const [initialReviewId] = useState(() => searchParams.get('reviewId'))
+  const initialReviewId = searchParams.get('reviewId')
+  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(initialReviewId)
+  const queryClient = useQueryClient()
 
-  const [loading, setLoading] = useState(true)
-  const [farm, setFarm] = useState<FarmDetail | null>(null)
-  const [soilTests, setSoilTests] = useState<LabTestRecord[]>([])
-  const [petioleTests, setPetioleTests] = useState<LabTestRecord[]>([])
-  const [farmerName, setFarmerName] = useState<string>('')
-  const [access, setAccess] = useState<ConsultantAccess | null>(null)
-  const [visits, setVisits] = useState<Visit[]>([])
-  const [pendingReview, setPendingReview] = useState<TriageItem | null>(null)
-  const [previousPlan, setPreviousPlan] = useState<FertilizerPlanWithItems | null>(null)
+  const accessQuery = useConsultantAccess()
+  const access = accessQuery.data
+  const validationQuery = useValidatedFarmerClient(access, farmerId)
+  const isAuthorizedFarmer = validationQuery.data?.isValid === true
+  const farmQuery = useFarmDetail(farmId, isAuthorizedFarmer, access)
+  const farm = farmQuery.data ?? null
+  const isExpectedFarm = Boolean(farm && farm.user_id === farmerId)
+  const profileQuery = useFarmerProfile(farmerId, isExpectedFarm)
+  const visitsQuery = useFarmerVisits(isExpectedFarm ? access : null, farmerId)
+  const labTestsQuery = useFarmLabTests(farmId, isExpectedFarm)
+  const plansQuery = useFarmPlans(farmId, isExpectedFarm)
+  const triageQuery = useFarmTriage(access, farmId, isExpectedFarm)
+
+  const soilTests = labTestsQuery.data?.soilTests ?? EMPTY_LAB_TESTS
+  const petioleTests = labTestsQuery.data?.petioleTests ?? EMPTY_LAB_TESTS
+  const farmerName = profileQuery.data?.full_name || 'Farmer'
+  const visits = (visitsQuery.data ?? []).filter((visit) => visit.farmId === farmId)
+  const triageItems = triageQuery.data ?? EMPTY_TRIAGE_ITEMS
+  const plans = plansQuery.data ?? EMPTY_PLANS
+  const previousPlan = plans[0] ?? null
 
   // Plan editor state
   const [planNote, setPlanNote] = useState('')
   const [draftItems, setDraftItems] = useState<DraftItem[]>([newDraftItem()])
-  const [savingPlan, setSavingPlan] = useState(false)
-  const [hasExistingPlan, setHasExistingPlan] = useState(false)
+  const [draftDirty, setDraftDirty] = useState(false)
+  const initializedDraftKeyRef = useRef<string | null>(null)
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true)
-
-      const accessResult = await getConsultantAccess()
-      if (!accessResult) {
-        toast.error('Not authenticated')
-        return
-      }
-      setAccess(accessResult)
-
-      const validation = await validateFarmerClient(accessResult, farmerId)
-      if (!validation.isValid) {
-        toast.error('Farmer not found or not authorized')
-        router.push('/consultant/farmers')
-        return
-      }
-
-      if (farmId === null) {
-        toast.error('Invalid farm ID')
-        router.push(`/consultant/farmers/${farmerId}`)
-        return
-      }
-
-      const farmData = await getFarmDetail(farmId)
-      if (!farmData || farmData.user_id !== farmerId) {
-        toast.error('Farm not found or does not belong to this farmer')
-        router.push(`/consultant/farmers/${farmerId}`)
-        return
-      }
-
-      setFarm(farmData)
-
-      const [soilTestsData, petioleTestsData, profile, allVisits, plans, triageItems] =
-        await Promise.all([
-          SupabaseService.getSoilTestRecords(farmId),
-          SupabaseService.getPetioleTestRecords(farmId),
-          supabaseGetFarmerProfile(farmerId),
-          getVisitsForFarmer(accessResult, farmerId),
-          FertilizerPlanService.getPlansByFarm(farmId),
-          getTriageItems(accessResult, { farmId })
-        ])
-
-      setSoilTests((soilTestsData || []) as LabTestRecord[])
-      setPetioleTests((petioleTestsData || []) as LabTestRecord[])
-      setFarmerName(profile?.full_name || 'Farmer')
-      setVisits(allVisits.filter((v) => v.farmId === farmId))
-      setPreviousPlan(plans[0] ?? null)
-
-      // Resolve the Petiole Review this page is opening on. Priority:
-      //   1. explicit ?reviewId= from the Command Center deep-link;
-      //   2. newest pending review for this farm;
-      //   3. none (page opens on the latest completed review / read mode).
-      let resolvedReview: TriageItem | null = null
-      if (initialReviewId) {
-        resolvedReview = triageItems.find((t) => t.id === initialReviewId) ?? null
-      }
-      if (!resolvedReview) {
-        resolvedReview =
-          triageItems.find((t) => t.status === 'pending' || t.status === 'in_review') ?? null
-      }
-      setPendingReview(resolvedReview)
-
-      // Seed the plan editor from the latest plan when one exists.
-      if (plans[0]) {
-        setPlanNote(plans[0].notes ?? '')
-        setDraftItems(
-          plans[0].items.length > 0 ? plans[0].items.map(draftFromPlanItem) : [newDraftItem()]
-        )
-      }
-    } catch (error) {
-      console.error('Error loading farm data:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to load farm data')
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    if (farmId === null) {
+      toast.error('Invalid farm ID')
+      router.replace(`/consultant/farmers/${farmerId}`)
     }
-  }, [farmerId, farmId, router, initialReviewId])
+  }, [farmId, farmerId, router])
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    if (validationQuery.data && !validationQuery.data.isValid) {
+      toast.error('Farmer not found or not authorized')
+      router.replace('/consultant/farmers')
+    }
+  }, [router, validationQuery.data])
 
-  // Keep the editor's plan mode in sync with the loaded plan.
   useEffect(() => {
-    setHasExistingPlan(previousPlan !== null)
-  }, [previousPlan])
+    if (farmQuery.isSuccess && (!farm || farm.user_id !== farmerId)) {
+      toast.error('Farm not found or does not belong to this farmer')
+      router.replace(`/consultant/farmers/${farmerId}`)
+    }
+  }, [farm, farmQuery.isSuccess, farmerId, router])
+
+  useEffect(() => {
+    if (!triageQuery.isSuccess) return
+    if (selectedReviewId && triageItems.some((item) => item.id === selectedReviewId)) return
+    const review = triageItems.find(
+      (item) => item.status === 'pending' || item.status === 'in_review'
+    )
+    setSelectedReviewId(review?.id ?? null)
+  }, [selectedReviewId, triageItems, triageQuery.isSuccess])
+
+  const pendingReview = useMemo<TriageItem | null>(() => {
+    if (!selectedReviewId) return null
+    return triageItems.find((item) => item.id === selectedReviewId) ?? null
+  }, [selectedReviewId, triageItems])
 
   const sortedSoilTests = useMemo(
     () => [...soilTests].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
@@ -185,6 +164,133 @@ export default function ConsultantFarmPage() {
 
   const hasPendingReview =
     pendingReview?.status === 'pending' || pendingReview?.status === 'in_review'
+  const hasExistingPlan = previousPlan !== null
+  const draftStorageKey =
+    farmId === null ? null : `consultant-plan-draft:${farmId}:${selectedReviewId ?? 'ad-hoc'}`
+
+  useEffect(() => {
+    if (!draftStorageKey || !plansQuery.isSuccess || !triageQuery.isSuccess) return
+    if (initializedDraftKeyRef.current === draftStorageKey) return
+
+    let storedDraft: StoredPlanDraft | null = null
+    try {
+      const stored = sessionStorage.getItem(draftStorageKey)
+      if (stored) {
+        const parsed = JSON.parse(stored) as Partial<StoredPlanDraft>
+        if (typeof parsed.note === 'string' && Array.isArray(parsed.items)) {
+          storedDraft = { note: parsed.note, items: parsed.items }
+        }
+      }
+    } catch {
+      sessionStorage.removeItem(draftStorageKey)
+    }
+
+    if (storedDraft) {
+      setPlanNote(storedDraft.note)
+      setDraftItems(storedDraft.items.length > 0 ? storedDraft.items : [newDraftItem()])
+    } else {
+      setPlanNote(previousPlan?.notes ?? '')
+      setDraftItems(
+        previousPlan?.items.length ? previousPlan.items.map(draftFromPlanItem) : [newDraftItem()]
+      )
+    }
+    setDraftDirty(false)
+    initializedDraftKeyRef.current = draftStorageKey
+  }, [draftStorageKey, plansQuery.isSuccess, previousPlan, triageQuery.isSuccess])
+
+  useEffect(() => {
+    if (!draftDirty || !draftStorageKey) return
+    if (initializedDraftKeyRef.current !== draftStorageKey) return
+
+    const draft: StoredPlanDraft = { note: planNote, items: draftItems }
+    sessionStorage.setItem(draftStorageKey, JSON.stringify(draft))
+  }, [draftDirty, draftItems, draftStorageKey, planNote])
+
+  const savePlanMutation = useMutation({
+    mutationFn: async (items: PlanItemInput[]) => {
+      if (!access || farmId === null || !farm) throw new Error('Farm is unavailable')
+      const title = `Plan for ${farm.name}`
+
+      if (previousPlan) {
+        const plan = await FertilizerPlanService.updatePlanAtomic({
+          planId: previousPlan.id,
+          title,
+          notes: planNote.trim() || undefined,
+          items
+        })
+        return { plan, action: 'updated' as const, reviewId: null }
+      }
+
+      if (pendingReview) {
+        const plan = await FertilizerPlanService.sendPlan({
+          reviewId: pendingReview.id,
+          title,
+          notes: planNote.trim() || undefined,
+          items
+        })
+        return { plan, action: 'sent' as const, reviewId: pendingReview.id }
+      }
+
+      const plan = await FertilizerPlanService.createPlan({
+        farm_id: farmId,
+        organization_id: access.organizationId,
+        title,
+        notes: planNote.trim() || undefined,
+        items
+      })
+      return { plan, action: 'saved' as const, reviewId: null }
+    },
+    onSuccess: ({ plan, action, reviewId }) => {
+      if (farmId !== null) {
+        queryClient.setQueryData<FertilizerPlanWithItems[]>(
+          consultantKeys.farmPlans(farmId),
+          (current = []) => [plan, ...current.filter((item) => item.id !== plan.id)]
+        )
+      }
+
+      if (reviewId && access && farmId !== null) {
+        const farmTriageKey = consultantKeys.farmTriage(
+          farmId,
+          access.organizationId,
+          farmerScope(access)
+        )
+        queryClient.setQueryData<TriageItem[]>(farmTriageKey, (current = []) =>
+          current.map((item) =>
+            item.id === reviewId ? { ...item, status: 'reviewed' as const } : item
+          )
+        )
+        queryClient.invalidateQueries({ queryKey: farmTriageKey })
+        queryClient.invalidateQueries({ queryKey: ['consultant', 'reviewQueue'] })
+      }
+
+      setPlanNote(plan.notes ?? '')
+      setDraftItems(plan.items.length > 0 ? plan.items.map(draftFromPlanItem) : [newDraftItem()])
+      setDraftDirty(false)
+      if (draftStorageKey) sessionStorage.removeItem(draftStorageKey)
+      toast.success(
+        action === 'updated'
+          ? 'Plan updated'
+          : action === 'sent'
+            ? 'Plan sent to farmer'
+            : 'Plan saved'
+      )
+    },
+    onError: (error) => {
+      console.error('Failed to save plan:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to save plan')
+    }
+  })
+
+  const loading =
+    accessQuery.isPending ||
+    (Boolean(access) && validationQuery.isPending) ||
+    (isAuthorizedFarmer && farmQuery.isPending) ||
+    (isExpectedFarm &&
+      (profileQuery.isPending ||
+        visitsQuery.isPending ||
+        labTestsQuery.isPending ||
+        plansQuery.isPending ||
+        triageQuery.isPending))
 
   if (loading) {
     return <FarmPageLoading />
@@ -197,14 +303,17 @@ export default function ConsultantFarmPage() {
   // -- Plan editor handlers -------------------------------------------------
 
   const updateDraftItem = (id: string, patch: Partial<DraftItem>) => {
+    setDraftDirty(true)
     setDraftItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)))
   }
 
   const addDraftItem = () => {
+    setDraftDirty(true)
     setDraftItems((prev) => [...prev, newDraftItem()])
   }
 
   const removeDraftItem = (id: string) => {
+    setDraftDirty(true)
     setDraftItems((prev) => {
       const next = prev.filter((item) => item.id !== id)
       return next.length > 0 ? next : [newDraftItem()]
@@ -229,83 +338,14 @@ export default function ConsultantFarmPage() {
       return
     }
 
-    setSavingPlan(true)
-    try {
-      const title = `Plan for ${farm.name}`
-
-      if (hasExistingPlan && previousPlan) {
-        // Atomic edit: title/notes + full item replacement in one transaction
-        // (RPC update_fertilizer_plan). Prevents a failed edit from leaving
-        // some items changed and others stale.
-        const refreshed = await FertilizerPlanService.updatePlanAtomic({
-          planId: previousPlan.id,
-          title,
-          notes: planNote.trim() || undefined,
-          items: validItems.map((draft) => ({
-            fertilizer_name: draft.fertilizer_name.trim(),
-            quantity: draft.quantity,
-            unit: draft.unit,
-            application_method: draft.application_method || undefined
-          }))
-        })
-
-        setPreviousPlan(refreshed)
-        setDraftItems(
-          refreshed.items.length > 0 ? refreshed.items.map(draftFromPlanItem) : [newDraftItem()]
-        )
-        toast.success('Plan updated')
-      } else if (pendingReview) {
-        // First plan linked to a Petiole Review: create + send atomically via the
-        // send_fertilizer_plan RPC, which sets petiole_triage_id and flips the
-        // review to 'reviewed' in one transaction. A plan can never reach the
-        // farmer while its review stays pending in the queue.
-        const created = await FertilizerPlanService.sendPlan({
-          reviewId: pendingReview.id,
-          title,
-          notes: planNote.trim() || undefined,
-          items: validItems.map((draft) => ({
-            fertilizer_name: draft.fertilizer_name.trim(),
-            quantity: draft.quantity,
-            unit: draft.unit,
-            application_method: draft.application_method || undefined
-          }))
-        })
-
-        setPendingReview((prev) => (prev ? { ...prev, status: 'reviewed' } : null))
-        setPreviousPlan(created)
-        setHasExistingPlan(true)
-        setDraftItems(
-          created.items.length > 0 ? created.items.map(draftFromPlanItem) : [newDraftItem()]
-        )
-        toast.success('Plan sent to farmer')
-      } else {
-        // Ad-hoc plan with no source review (no pendingReview on this farm).
-        const created = await FertilizerPlanService.createPlan({
-          farm_id: farmId,
-          organization_id: access.organizationId,
-          title,
-          notes: planNote.trim() || undefined,
-          items: validItems.map((draft) => ({
-            fertilizer_name: draft.fertilizer_name.trim(),
-            quantity: draft.quantity,
-            unit: draft.unit,
-            application_method: draft.application_method || undefined
-          }))
-        })
-
-        setPreviousPlan(created)
-        setHasExistingPlan(true)
-        setDraftItems(
-          created.items.length > 0 ? created.items.map(draftFromPlanItem) : [newDraftItem()]
-        )
-        toast.success('Plan saved')
-      }
-    } catch (error) {
-      console.error('Failed to save plan:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to save plan')
-    } finally {
-      setSavingPlan(false)
-    }
+    savePlanMutation.mutate(
+      validItems.map((draft) => ({
+        fertilizer_name: draft.fertilizer_name.trim(),
+        quantity: draft.quantity,
+        unit: draft.unit,
+        application_method: draft.application_method || undefined
+      }))
+    )
   }
 
   return (
@@ -315,10 +355,9 @@ export default function ConsultantFarmPage() {
         farmerName={farmerName}
         farm={farm}
         farmId={farmId}
-        access={access}
+        access={access ?? null}
         reviewTest={reviewTest}
         hasPendingReview={hasPendingReview}
-        onVisitRecorded={(visit) => setVisits((prev) => [visit, ...prev])}
       />
 
       {!reviewTest ? (
@@ -353,13 +392,16 @@ export default function ConsultantFarmPage() {
               abnormalNutrients={abnormalNutrients}
               draftItems={draftItems}
               planNote={planNote}
-              savingPlan={savingPlan}
+              savingPlan={savePlanMutation.isPending}
               hasExistingPlan={hasExistingPlan}
               previousPlan={previousPlan}
               onUpdateItem={updateDraftItem}
               onAddItem={addDraftItem}
               onRemoveItem={removeDraftItem}
-              onNoteChange={setPlanNote}
+              onNoteChange={(value) => {
+                setDraftDirty(true)
+                setPlanNote(value)
+              }}
               onSave={handleSendOrSavePlan}
             />
           </TabsContent>
