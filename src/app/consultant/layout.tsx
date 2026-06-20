@@ -135,7 +135,7 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
         {/* Sidebar */}
         <aside
           className={cn(
-            'border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200 flex flex-col sticky top-0 h-screen overflow-hidden',
+            'border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200 flex flex-col sticky top-0 h-screen overflow-x-hidden overflow-y-auto',
             collapsed ? 'w-20' : 'w-72'
           )}
         >

@@ -64,7 +64,7 @@ _Avoid_: plot, field, vineyard, block
 
 **Fertilizer Plan**:
 The structured recommendation an Agronomist gives for a Farm after reviewing its current and
-previous test results and prior advice. It records what to apply, how much, when, how often, and
+previous test results and prior advice. It records what to apply, how much, when, and
 by which method, together with a short explanation for the Farmer.
 _Avoid_: free-text recommendation, prescription
 

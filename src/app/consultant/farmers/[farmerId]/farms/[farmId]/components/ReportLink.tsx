@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ExternalLink, FileImage, Loader2 } from 'lucide-react'
 
 export function ReportLink({
@@ -44,32 +44,35 @@ function useReportUrl(
   const [signedUrl, setSignedUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const fetchUrl = useCallback(async () => {
-    if (!path || signedUrl) return
-    setLoading(true)
-    try {
-      const response = await fetch('/api/test-reports/signed-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path })
-      })
-      if (response.ok) {
-        const { signedUrl: signed } = await response.json()
-        setSignedUrl(signed)
-      }
-    } catch (error) {
-      console.error('Error loading report:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [path, signedUrl])
-
   useEffect(() => {
-    if (path) fetchUrl()
-  }, [path, fetchUrl])
+    if (!path) {
+      setSignedUrl(null)
+      return
+    }
 
-  // A storage path must be signed; otherwise fall back to a legacy direct
-  // report_url (already openable, no signing or fetch needed).
+    let cancelled = false
+    setLoading(true)
+    setSignedUrl(null)
+
+    fetch('/api/test-reports/signed-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path })
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject()))
+      .then(({ signedUrl: signed }) => {
+        if (!cancelled) setSignedUrl(signed)
+      })
+      .catch((error) => console.error('Error loading report:', error))
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [path])
+
   const url = path ? signedUrl : (fallbackUrl ?? null)
   return { url, loading: path ? loading : false }
 }

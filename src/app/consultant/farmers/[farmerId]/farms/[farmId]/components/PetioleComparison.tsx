@@ -91,7 +91,7 @@ export function PetioleComparison({
                   const abnormal = abnormalCounts.get(r.id ?? -1) ?? 0
                   return (
                     <th
-                      key={r.id ?? `${r.date}-${Math.random()}`}
+                      key={r.id ?? String(r.date)}
                       className={`px-3 py-2 text-center align-bottom border-b border-l border-border min-w-[110px] ${
                         isCurrent ? 'bg-primary/5' : ''
                       }`}
