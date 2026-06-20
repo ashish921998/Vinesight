@@ -1,0 +1,19 @@
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/page.tsx
+  s_150badefc6c302::t_addc3ab50261a7 331,334,340
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "fe69a6acb989ab8c808c8423aa324daaf24d4951",
+  "prompts": {},
+  "sessions": {
+    "s_150badefc6c302": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ee46a-1fa5-79a0-9693-ba560b5c85c6",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
