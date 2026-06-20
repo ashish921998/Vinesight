@@ -1,0 +1,79 @@
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/PreviousPlanPanel.tsx
+  s_06db6e97ebac5f::t_8702b211ece583 1-61
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/HistoryTable.tsx
+  s_06db6e97ebac5f::t_a7c630bf790860 1-53
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/FarmPageStates.tsx
+  s_06db6e97ebac5f::t_6075876b56488c 1-56
+src/lib/document-service.ts
+  s_a74ebe90cc82a1::t_45455228015cd7 72
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/FarmPageHeader.tsx
+  s_06db6e97ebac5f::t_0aed068805a3dc 1-136
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/NoReportState.tsx
+  s_06db6e97ebac5f::t_f8cfa2afb8d88a 1-27
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/FarmReportFiles.tsx
+  s_06db6e97ebac5f::t_af193815ab7d54 1-123
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/ReportLink.tsx
+  s_06db6e97ebac5f::t_d8b80c1eeb6044 1-75
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/farm-config.ts
+  s_06db6e97ebac5f::t_792e8591770425 1-182
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/SoilBackgroundPanel.tsx
+  s_06db6e97ebac5f::t_ed369e6b9f0a43 1-3,5-192
+  s_06db6e97ebac5f::t_46b3704e61701f 4
+src/app/consultant/farmers/[farmerId]/page.tsx
+  s_36db5ee8313a8d::t_2cc78bc5b2ad16 48-53,55-58,60-77,79-82,84-99,104-106,108,110
+  s_36db5ee8313a8d::t_ed999f58539f66 100-103,111-112
+  s_36db5ee8313a8d::t_32080710b9c9f3 3
+src/components/consultant/VisitHistory.tsx
+  s_36db5ee8313a8d::t_648d3e10eddf1f 54-56
+  s_36db5ee8313a8d::t_d63920b101376a 148
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/farm-helpers.ts
+  s_06db6e97ebac5f::t_f7fb09b4c7476a 1-25,27-75
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/SectionLabel.tsx
+  s_06db6e97ebac5f::t_e4278b855119c2 1-7
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/PetioleComparison.tsx
+  s_06db6e97ebac5f::t_cab67e0da387d0 1-221
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/PlanEditorPanel.tsx
+  s_06db6e97ebac5f::t_c01843630ae31e 1-232
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/ReviewPlanTab.tsx
+  s_06db6e97ebac5f::t_82d416a6809f0c 1-141
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/page.tsx
+  s_36db5ee8313a8d::t_2cf968c558d25d 293,304-319,321-325,327,329,337,348
+  s_36db5ee8313a8d::t_955896e557c39d 264-266,271-275
+  s_a74ebe90cc82a1::t_6e055fc8343d47 284-288,290-292,294-296,299-303
+  s_06db6e97ebac5f::t_6da37d03ccafb2 3,6,18,21-26,28-37,193,196,215,219,360-369,377-405,407,409-413,415-416
+  s_36db5ee8313a8d::t_037f7c6ef42454 19
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/NeedsAttentionBar.tsx
+  s_06db6e97ebac5f::t_0d28155c7f4e50 1-57,59-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "997db27f88685168a60f3771b87939934b6c05ad",
+  "prompts": {},
+  "sessions": {
+    "s_06db6e97ebac5f": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "76a6742d-4e0e-4a08-92ee-8a768dad8efb",
+        "model": "custom:GLM-5.2-0"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_36db5ee8313a8d": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "f7b2c3c1-352d-4ec6-b043-4f341c80c677",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_a74ebe90cc82a1": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "8c582da3-8093-4f4e-ba1a-ba843389dd99",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
