@@ -233,29 +233,42 @@ export class DocumentService {
     const supabase = this.getServiceClient()
     const testTypes: ('soil' | 'petiole')[] = ['soil', 'petiole']
 
+    const PAGE_SIZE = 100
     const files: Omit<TestReportFile, 'signedUrl'>[] = []
     for (const testType of testTypes) {
       const prefix = `${testType}/${farmId}`
-      const { data, error } = await supabase.storage
-        .from(TEST_REPORT_BUCKET)
-        .list(prefix, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } })
-
-      if (error) {
-        throw new Error(`Failed to list ${testType} reports: ${error.message}`)
-      }
-
-      for (const obj of data ?? []) {
-        // `list` can return folder placeholders with a null id — skip them.
-        if (!obj.id) continue
-        const metadata = (obj.metadata ?? {}) as { size?: number; mimetype?: string }
-        files.push({
-          path: `${prefix}/${obj.name}`,
-          filename: obj.name,
-          testType,
-          mimeType: metadata.mimetype ?? null,
-          sizeBytes: typeof metadata.size === 'number' ? metadata.size : null,
-          uploadedAt: obj.created_at ?? null
+      // A farm can accumulate many reports per test type over time, and the
+      // storage API caps each response at `limit`. Page through with `offset`
+      // until a short page comes back so older reports aren't silently dropped.
+      let offset = 0
+      for (;;) {
+        const { data, error } = await supabase.storage.from(TEST_REPORT_BUCKET).list(prefix, {
+          limit: PAGE_SIZE,
+          offset,
+          sortBy: { column: 'created_at', order: 'desc' }
         })
+
+        if (error) {
+          throw new Error(`Failed to list ${testType} reports: ${error.message}`)
+        }
+
+        const page = data ?? []
+        for (const obj of page) {
+          // `list` can return folder placeholders with a null id — skip them.
+          if (!obj.id) continue
+          const metadata = (obj.metadata ?? {}) as { size?: number; mimetype?: string }
+          files.push({
+            path: `${prefix}/${obj.name}`,
+            filename: obj.name,
+            testType,
+            mimeType: metadata.mimetype ?? null,
+            sizeBytes: typeof metadata.size === 'number' ? metadata.size : null,
+            uploadedAt: obj.created_at ?? null
+          })
+        }
+
+        if (page.length < PAGE_SIZE) break
+        offset += PAGE_SIZE
       }
     }
 

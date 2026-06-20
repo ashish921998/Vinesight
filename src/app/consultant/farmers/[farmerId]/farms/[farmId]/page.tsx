@@ -210,32 +210,49 @@ export default function ConsultantFarmPage() {
     mutationFn: async (items: PlanItemInput[]) => {
       if (!access || farmId === null || !farm) throw new Error('Farm is unavailable')
       const title = `Plan for ${farm.name}`
+      const notes = planNote.trim() || undefined
 
+      // If we're working within a pending review, the plan must belong to THAT
+      // review: update the review's existing plan in place, or send a new one
+      // (which also flips the review to 'reviewed'). Reaching for the farm's
+      // newest plan here would overwrite a prior review's plan and leave the
+      // current review stuck pending — petiole_triage_id is what ties them.
+      if (pendingReview) {
+        const reviewPlan = plans.find((plan) => plan.petiole_triage_id === pendingReview.id) ?? null
+        if (reviewPlan) {
+          const plan = await FertilizerPlanService.updatePlanAtomic({
+            planId: reviewPlan.id,
+            title,
+            notes,
+            items
+          })
+          return { plan, action: 'updated' as const, reviewId: null }
+        }
+        const plan = await FertilizerPlanService.sendPlan({
+          reviewId: pendingReview.id,
+          title,
+          notes,
+          items
+        })
+        return { plan, action: 'sent' as const, reviewId: pendingReview.id }
+      }
+
+      // No review in flight: edit the farm's latest plan in place, or create one.
       if (previousPlan) {
         const plan = await FertilizerPlanService.updatePlanAtomic({
           planId: previousPlan.id,
           title,
-          notes: planNote.trim() || undefined,
+          notes,
           items
         })
         return { plan, action: 'updated' as const, reviewId: null }
-      }
-
-      if (pendingReview) {
-        const plan = await FertilizerPlanService.sendPlan({
-          reviewId: pendingReview.id,
-          title,
-          notes: planNote.trim() || undefined,
-          items
-        })
-        return { plan, action: 'sent' as const, reviewId: pendingReview.id }
       }
 
       const plan = await FertilizerPlanService.createPlan({
         farm_id: farmId,
         organization_id: access.organizationId,
         title,
-        notes: planNote.trim() || undefined,
+        notes,
         items
       })
       return { plan, action: 'saved' as const, reviewId: null }

@@ -62,15 +62,3 @@ export function formatFileSize(bytes: number | null): string | null {
   if (mb >= 1) return `${mb.toFixed(1)} MB`
   return `${Math.max(1, Math.round(bytes / 1024))} KB`
 }
-
-// Inline helper to fetch farmer profile for the farm page header.
-export async function supabaseGetFarmerProfile(farmerId: string) {
-  const { getTypedSupabaseClient } = await import('@/lib/supabase')
-  const supabase = await getTypedSupabaseClient()
-  const { data } = await supabase
-    .from('profiles')
-    .select('full_name')
-    .eq('id', farmerId)
-    .maybeSingle()
-  return data
-}
