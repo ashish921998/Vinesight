@@ -1,0 +1,21 @@
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/NeedsAttentionBar.tsx
+  s_6dbfc672eb8925::t_60f6b02579e8ea 26-29,36,39,47,49,53,55,65,67
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/PetioleComparison.tsx
+  s_6dbfc672eb8925::t_9fc9ce06288203 148-152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "3ddb160a1d08573b3fadfd07fa00ed792f9cfaab",
+  "prompts": {},
+  "sessions": {
+    "s_6dbfc672eb8925": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "9e0ac401-5ef5-4f45-9265-cda60ce58cb5",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
