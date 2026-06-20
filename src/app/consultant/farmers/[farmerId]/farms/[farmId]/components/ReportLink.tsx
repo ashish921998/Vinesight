@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useReducer } from 'react'
 import { ExternalLink, FileImage, Loader2 } from 'lucide-react'
 
 export function ReportLink({
@@ -41,18 +41,23 @@ function useReportUrl(
   path?: string | null,
   fallbackUrl?: string | null
 ): { url: string | null; loading: boolean } {
-  const [signedUrl, setSignedUrl] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [state, dispatch] = useReducer(
+    (
+      current: { signedUrl: string | null; loading: boolean },
+      patch: Partial<{ signedUrl: string | null; loading: boolean }>
+    ) => ({ ...current, ...patch }),
+    { signedUrl: null, loading: false }
+  )
+  const { signedUrl, loading } = state
 
   useEffect(() => {
     if (!path) {
-      setSignedUrl(null)
+      dispatch({ signedUrl: null, loading: false })
       return
     }
 
     let cancelled = false
-    setLoading(true)
-    setSignedUrl(null)
+    dispatch({ loading: true, signedUrl: null })
 
     fetch('/api/test-reports/signed-url', {
       method: 'POST',
@@ -61,11 +66,11 @@ function useReportUrl(
     })
       .then((response) => (response.ok ? response.json() : Promise.reject()))
       .then(({ signedUrl: signed }) => {
-        if (!cancelled) setSignedUrl(signed)
+        if (!cancelled) dispatch({ signedUrl: signed })
       })
       .catch((error) => console.error('Error loading report:', error))
       .finally(() => {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) dispatch({ loading: false })
       })
 
     return () => {

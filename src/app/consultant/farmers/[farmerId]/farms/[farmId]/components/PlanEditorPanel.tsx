@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Loader2, Plus, Send, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -157,18 +157,18 @@ function PlanItemRow({
   onRemove: () => void
 }) {
   const [confirmRemove, setConfirmRemove] = useState(false)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
+    if (!confirmRemove) return
+    const timeout = setTimeout(() => setConfirmRemove(false), 3000)
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      clearTimeout(timeout)
     }
-  }, [])
+  }, [confirmRemove])
 
   const handleRemove = () => {
     if (!confirmRemove) {
       setConfirmRemove(true)
-      timeoutRef.current = setTimeout(() => setConfirmRemove(false), 3000)
       return
     }
     onRemove()

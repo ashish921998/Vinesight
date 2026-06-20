@@ -93,6 +93,7 @@ export function SoilBackgroundPanel({
           {extraKeys.length > 0 && (
             <div>
               <button
+                type="button"
                 onClick={() => setShowAllSoil((v) => !v)}
                 className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
               >

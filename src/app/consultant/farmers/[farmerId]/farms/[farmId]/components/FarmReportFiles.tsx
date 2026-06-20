@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useReducer } from 'react'
 import { ExternalLink, Leaf, Loader2, TestTube } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { TestReportFile } from '@/lib/document-service'
@@ -11,25 +11,29 @@ import { formatFileSize, prettyReportName } from './farm-helpers'
 // here (not per test record) because uploads aren't reliably linked back onto
 // a record — see the History tab. Each opens its signed URL in a new tab.
 export function FarmReportFiles({ farmId }: { farmId: number }) {
-  const [files, setFiles] = useState<TestReportFile[] | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const [state, dispatch] = useReducer(
+    (
+      current: { files: TestReportFile[] | null; loading: boolean; error: boolean },
+      patch: Partial<{ files: TestReportFile[] | null; loading: boolean; error: boolean }>
+    ) => ({ ...current, ...patch }),
+    { files: null, loading: true, error: false }
+  )
+  const { files, loading, error } = state
 
   useEffect(() => {
     let active = true
-    setLoading(true)
-    setError(false)
+    dispatch({ loading: true, error: false })
     fetch(`/api/test-reports/list?farmId=${farmId}`)
       .then(async (res) => {
         if (!res.ok) throw new Error('Failed to load report files')
         const json = await res.json()
-        if (active) setFiles((json.files as TestReportFile[]) ?? [])
+        if (active) dispatch({ files: (json.files as TestReportFile[]) ?? [] })
       })
       .catch(() => {
-        if (active) setError(true)
+        if (active) dispatch({ error: true })
       })
       .finally(() => {
-        if (active) setLoading(false)
+        if (active) dispatch({ loading: false })
       })
     return () => {
       active = false
@@ -87,12 +91,12 @@ export function FarmReportFiles({ farmId }: { farmId: number }) {
                             year: 'numeric'
                           })
                         : 'Unknown date'}
-                      {size && (
+                      {size ? (
                         <>
                           <span className="mx-1">·</span>
                           {size}
                         </>
-                      )}
+                      ) : null}
                     </p>
                   </div>
                 </div>
@@ -105,6 +109,7 @@ export function FarmReportFiles({ farmId }: { farmId: number }) {
                   </Button>
                 ) : (
                   <Button
+                    type="button"
                     variant="outline"
                     size="sm"
                     disabled

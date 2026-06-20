@@ -47,6 +47,7 @@ export function NeedsAttentionBar({
             const addressed = draftItems.some((item) => item.nutrient === n.key)
             return (
               <button
+                type="button"
                 key={n.key}
                 onClick={() => onToggleNutrient(n.key)}
                 className={`group inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
