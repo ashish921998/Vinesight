@@ -17,6 +17,9 @@ import {
   type CreateVisitInput
 } from '@/lib/consultant-visit-service'
 import { getTriageItems } from '@/lib/consultant-triage-service'
+import { SupabaseService } from '@/lib/supabase-service'
+import { FertilizerPlanService } from '@/lib/fertilizer-plan-service'
+import type { LabTestRecord } from '@/types/lab-tests'
 
 export type ConsultantAccessState = 'loading' | 'ok' | 'denied' | 'error'
 
@@ -96,6 +99,48 @@ export function useFarmDetail(
       ? consultantKeys.farmDetail(farmId as number, access!.organizationId, farmerScope(access!))
       : ['consultant', 'farm', 'disabled', farmId],
     queryFn: () => getFarmDetail(farmId as number),
+    enabled: canLoad
+  })
+}
+
+export function useFarmLabTests(farmId: number | null, enabled = true) {
+  return useQuery({
+    queryKey:
+      farmId != null ? consultantKeys.farmLabTests(farmId) : ['consultant', 'farm', 'labTests'],
+    queryFn: async () => {
+      const [soilTests, petioleTests] = await Promise.all([
+        SupabaseService.getSoilTestRecords(farmId as number),
+        SupabaseService.getPetioleTestRecords(farmId as number)
+      ])
+      return {
+        soilTests: (soilTests ?? []) as LabTestRecord[],
+        petioleTests: (petioleTests ?? []) as LabTestRecord[]
+      }
+    },
+    enabled: Boolean(farmId != null && enabled)
+  })
+}
+
+export function useFarmPlans(farmId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: farmId != null ? consultantKeys.farmPlans(farmId) : ['consultant', 'farm', 'plans'],
+    queryFn: () => FertilizerPlanService.getPlansByFarm(farmId as number),
+    enabled: Boolean(farmId != null && enabled)
+  })
+}
+
+export function useFarmTriage(
+  access: ConsultantAccess | null | undefined,
+  farmId: number | null,
+  enabled = true
+) {
+  const canLoad = Boolean(access && farmId != null && enabled)
+
+  return useQuery({
+    queryKey: canLoad
+      ? consultantKeys.farmTriage(farmId as number, access!.organizationId, farmerScope(access!))
+      : ['consultant', 'farm', farmId, 'triage', 'disabled'],
+    queryFn: () => getTriageItems(access as ConsultantAccess, { farmId: farmId as number }),
     enabled: canLoad
   })
 }

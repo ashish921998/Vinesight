@@ -5,6 +5,11 @@ export const consultantKeys = {
   farmerFarms: (farmerId: string) => ['consultant', 'farmer', farmerId, 'farms'] as const,
   farmDetail: (farmId: number, orgId: string, scope: string) =>
     ['consultant', 'farm', farmId, 'detail', orgId, scope] as const,
+  farmLabTests: (farmId: number) => ['consultant', 'farm', farmId, 'labTests'] as const,
+  farmPlans: (farmId: number) => ['consultant', 'farm', farmId, 'plans'] as const,
+  farmTriage: (farmId: number, orgId: string, scope: string) =>
+    ['consultant', 'farm', farmId, 'triage', orgId, scope] as const,
+  farmReportFiles: (farmId: number) => ['consultant', 'farm', farmId, 'reportFiles'] as const,
   farmerValidation: (farmerId: string, orgId: string, scope: string) =>
     ['consultant', 'farmer', farmerId, 'validation', orgId, scope] as const,
   farmerVisits: (farmerId: string, orgId: string, scope: string) =>
