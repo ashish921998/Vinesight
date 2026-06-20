@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { History } from 'lucide-react'
 import { toast } from 'sonner'
 import type { LabTestRecord } from '@/types/lab-tests'
 import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
@@ -329,11 +328,18 @@ export default function ConsultantFarmPage() {
         />
       ) : (
         <Tabs defaultValue="review">
-          <TabsList>
-            <TabsTrigger value="review">Review &amp; plan</TabsTrigger>
-            <TabsTrigger value="history" className="gap-1.5">
-              <History className="h-4 w-4" />
-              History
+          <TabsList className="h-auto w-full justify-start gap-6 rounded-none border-b border-border bg-transparent p-0">
+            <TabsTrigger
+              value="review"
+              className="-mb-px h-11 rounded-none border-b-2 border-transparent px-1 text-sm font-medium shadow-none transition-colors hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+            >
+              Review &amp; plan
+            </TabsTrigger>
+            <TabsTrigger
+              value="history"
+              className="-mb-px h-11 rounded-none border-b-2 border-transparent px-1 text-sm font-medium shadow-none transition-colors hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+            >
+              Farm history
             </TabsTrigger>
           </TabsList>
 
