@@ -25,8 +25,6 @@ import { type DraftItem, PLAN_ITEM_UNIT_OPTIONS } from './farm-config'
 import { formatParamKey } from './farm-helpers'
 
 export function PlanEditorPanel({
-  title,
-  onTitleChange,
   note,
   onNoteChange,
   items,
@@ -38,8 +36,6 @@ export function PlanEditorPanel({
   hasExistingPlan,
   abnormalCount
 }: {
-  title: string
-  onTitleChange: (v: string) => void
   note: string
   onNoteChange: (v: string) => void
   items: DraftItem[]
@@ -72,20 +68,6 @@ export function PlanEditorPanel({
       </div>
 
       <div className="rounded-lg border border-border bg-card overflow-hidden">
-        {/* Plan title */}
-        <div className="px-4 pt-3 pb-2 space-y-1.5">
-          <Label htmlFor="plan-title" className="text-xs">
-            Plan title
-          </Label>
-          <Input
-            id="plan-title"
-            value={title}
-            onChange={(e) => onTitleChange(e.target.value)}
-            placeholder="e.g. Spring fertilizer plan…"
-            className="h-9"
-          />
-        </div>
-
         {/* Items table - full width */}
         <div className="px-4 pt-3 pb-1 flex items-center justify-between">
           <Label className="text-xs">Fertilizer items</Label>

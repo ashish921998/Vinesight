@@ -56,7 +56,6 @@ export default function ConsultantFarmPage() {
   const [previousPlan, setPreviousPlan] = useState<FertilizerPlanWithItems | null>(null)
 
   // Plan editor state
-  const [planTitle, setPlanTitle] = useState('')
   const [planNote, setPlanNote] = useState('')
   const [draftItems, setDraftItems] = useState<DraftItem[]>([newDraftItem()])
   const [savingPlan, setSavingPlan] = useState(false)
@@ -127,7 +126,6 @@ export default function ConsultantFarmPage() {
 
       // Seed the plan editor from the latest plan when one exists.
       if (plans[0]) {
-        setPlanTitle(plans[0].title)
         setPlanNote(plans[0].notes ?? '')
         setDraftItems(
           plans[0].items.length > 0 ? plans[0].items.map(draftFromPlanItem) : [newDraftItem()]
@@ -278,7 +276,7 @@ export default function ConsultantFarmPage() {
 
     setSavingPlan(true)
     try {
-      const title = planTitle.trim() || `Plan for ${farm.name}`
+      const title = `Plan for ${farm.name}`
 
       if (hasExistingPlan && previousPlan) {
         // Atomic edit: title/notes + full item replacement in one transaction
@@ -393,7 +391,6 @@ export default function ConsultantFarmPage() {
               abnormalNutrients={abnormalNutrients}
               soilFlags={soilFlags}
               draftItems={draftItems}
-              planTitle={planTitle}
               planNote={planNote}
               savingPlan={savingPlan}
               hasExistingPlan={hasExistingPlan}
@@ -402,7 +399,6 @@ export default function ConsultantFarmPage() {
               onUpdateItem={updateDraftItem}
               onAddItem={addDraftItem}
               onRemoveItem={removeDraftItem}
-              onTitleChange={setPlanTitle}
               onNoteChange={setPlanNote}
               onSave={handleSendOrSavePlan}
             />
