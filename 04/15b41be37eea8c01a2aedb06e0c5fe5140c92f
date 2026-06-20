@@ -1,0 +1,33 @@
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/farm-helpers.ts
+  s_150badefc6c302::t_78b8421c4b8f97 6
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/page.tsx
+  s_150badefc6c302::t_b339fb025bdf4a 33
+  s_150badefc6c302::t_8701423c344190 24
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/ReviewPlanTab.tsx
+  s_150badefc6c302::t_78b8421c4b8f97 67-76,78,90,111-124,128
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/farm-config.ts
+  s_150badefc6c302::t_78b8421c4b8f97 7-14,29
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/SoilBackgroundPanel.tsx
+  s_150badefc6c302::t_78b8421c4b8f97 5,9,11,26,29-32,34-35,38-40,42,57-73,75-93,95-101,107-109,111,113-114,117-118,120-131,133-135,137-147,149,153,155-159,164-165,168-173,177,192,194,196-197,206,208,210-211,215-219,237-239,241
+  s_150badefc6c302::t_6fc2f3889291e8 43-54,102,104,182-183,190,200-205,209,221-225,227
+  s_150badefc6c302::t_8701423c344190 167
+  s_150badefc6c302::t_f98dd23917bf09 136
+  s_150badefc6c302::t_2b428c0f21b241 150-151
+  s_150badefc6c302::t_eba0e7ce37ebd4 115-116,119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "0415b41be37eea8c01a2aedb06e0c5fe5140c92f",
+  "prompts": {},
+  "sessions": {
+    "s_150badefc6c302": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ee46a-1fa5-79a0-9693-ba560b5c85c6",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
