@@ -1,0 +1,19 @@
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/page.tsx
+  s_fda8ca1fee2426::t_e9d86851fdd800 279
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "3090cdbf8a49823b8f867be0a5c0610757e9478c",
+  "prompts": {},
+  "sessions": {
+    "s_fda8ca1fee2426": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "abdf94cf-04ca-4c3f-85e9-14f182232b5f",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
