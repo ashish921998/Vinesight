@@ -1,0 +1,23 @@
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/page.tsx
+  s_8ad672066c24df::t_452df7262781dc 221
+  s_8ad672066c24df::t_01e73d8c10c7d3 213,215-220,222-232,234,237,240-243,245,248,255
+src/lib/document-service.ts
+  s_8ad672066c24df::t_90aee835ebddbd 236,240-244,251-253,255-271
+  s_8ad672066c24df::t_452df7262781dc 245-249
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "483f172ca78b8e7020a85232bb513b52dd74d989",
+  "prompts": {},
+  "sessions": {
+    "s_8ad672066c24df": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "308086e4-c339-48f8-b221-0e1757cea246",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
