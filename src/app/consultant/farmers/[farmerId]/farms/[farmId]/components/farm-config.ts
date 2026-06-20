@@ -4,7 +4,14 @@ import type { FertilizerPlanItem } from '@/lib/fertilizer-plan-service'
 // Configurable annual soil baseline (decision: compact baseline, replaceable).
 // To swap EC for a different property, edit this array only.
 // ---------------------------------------------------------------------------
-export const SOIL_BASELINE_KEYS: string[] = ['ph', 'ec', 'nitrogen', 'phosphorus', 'potassium']
+export const SOIL_BASELINE_KEYS: string[] = [
+  'ph',
+  'ec',
+  'organic_carbon',
+  'nitrogen',
+  'phosphorus',
+  'potassium'
+]
 
 export interface ParamRange {
   min: number
@@ -19,6 +26,7 @@ export interface ParamRange {
 export const SOIL_RANGES: Record<string, ParamRange> = {
   ph: { min: 6.5, max: 7.5, scaleMin: 5.5, scaleMax: 8.5, unit: '' },
   ec: { min: 0.5, max: 1.5, scaleMin: 0, scaleMax: 3, unit: 'dS/m' },
+  organic_carbon: { min: 1.01, max: 3, scaleMin: 0, scaleMax: 5, unit: '%' },
   nitrogen: { min: 140, max: 280, scaleMin: 0, scaleMax: 400, unit: 'kg/ha' },
   phosphorus: { min: 30, max: 60, scaleMin: 0, scaleMax: 100, unit: 'kg/ha' },
   potassium: { min: 140, max: 280, scaleMin: 0, scaleMax: 400, unit: 'kg/ha' }

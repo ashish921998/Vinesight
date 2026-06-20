@@ -34,7 +34,6 @@ export function ReviewPlanTab({
   latestSoil,
   farm,
   abnormalNutrients,
-  soilFlags,
   draftItems,
   planNote,
   savingPlan,
@@ -52,7 +51,6 @@ export function ReviewPlanTab({
   latestSoil: LabTestRecord | undefined
   farm: FarmDetail
   abnormalNutrients: AbnormalNutrient[]
-  soilFlags: { count: number; evaluated: number }
   draftItems: DraftItem[]
   planNote: string
   savingPlan: boolean
@@ -66,10 +64,18 @@ export function ReviewPlanTab({
 }) {
   return (
     <div className="space-y-4">
+      {/* Soil is decision evidence, so it stays visible above both halves of
+      the workspace instead of being buried below the previous plan. */}
+      <SoilBackgroundPanel
+        test={latestSoil}
+        tests={sortedSoilTests}
+        farm={farm}
+        ranges={SOIL_RANGES}
+        baselineKeys={SOIL_BASELINE_KEYS}
+      />
+
       {/* Workspace: petiole comparison (left) + the plan column (right).
-      The right column — new plan, previous plan, soil background — is
-      pinned, so all the planning context stays in view while the
-      consultant reads the comparison. */}
+      The right column keeps the active and previous prescriptions together. */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* LEFT: Evidence — the petiole comparison table */}
         <div className="space-y-3">
@@ -81,9 +87,7 @@ export function ReviewPlanTab({
           />
         </div>
 
-        {/* RIGHT: the new plan, with the previous plan and soil context
-        stacked beneath it and pinned, so both stay in view while the
-        consultant reads the comparison on the left. */}
+        {/* RIGHT: the active plan and the previous prescription. */}
         <aside>
           <div className="lg:sticky lg:top-6 space-y-3">
             <PlanEditorPanel
@@ -101,34 +105,27 @@ export function ReviewPlanTab({
 
             {/* Previous plan — directly under the new plan for at-a-glance
             comparison of what was prescribed last cycle. */}
-            <Collapsible defaultOpen>
+            <Collapsible>
               <div className="rounded-lg border border-border bg-card overflow-hidden">
                 <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2.5 hover:bg-muted/30 transition-colors [&[data-state=open]>svg]:rotate-180">
-                  <SectionLabel>Previous fertilizer plan</SectionLabel>
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-left">
+                    <SectionLabel>Previous fertilizer plan</SectionLabel>
+                    {previousPlan && (
+                      <span className="text-[11px] text-muted-foreground tabular-nums">
+                        {previousPlan.items.length}{' '}
+                        {previousPlan.items.length === 1 ? 'item' : 'items'} ·{' '}
+                        {new Date(previousPlan.created_at).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    )}
+                  </div>
                   <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
                 </CollapsibleTrigger>
                 <CollapsibleContent className="px-4 pb-4">
                   <PreviousPlanPanel plan={previousPlan} />
-                </CollapsibleContent>
-              </div>
-            </Collapsible>
-
-            {/* Soil background — kept in the planning column so soil context
-            is readable alongside the petiole comparison. */}
-            <Collapsible>
-              <div className="rounded-lg border border-border bg-card overflow-hidden">
-                <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2.5 hover:bg-muted/30 transition-colors [&[data-state=open]>svg]:rotate-180">
-                  <SectionLabel>Soil background</SectionLabel>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="px-4 pb-4">
-                  <SoilBackgroundPanel
-                    test={latestSoil}
-                    tests={sortedSoilTests}
-                    farm={farm}
-                    ranges={SOIL_RANGES}
-                    baselineKeys={SOIL_BASELINE_KEYS}
-                  />
                 </CollapsibleContent>
               </div>
             </Collapsible>

@@ -21,18 +21,16 @@ import { getTriageItems, type TriageItem } from '@/lib/consultant-triage-service
 import { FarmPageHeader } from './components/FarmPageHeader'
 import { FarmPageLoading, FarmPageNotFound } from './components/FarmPageStates'
 import { NoReportState } from './components/NoReportState'
-import { ReviewPlanTab } from './components/ReviewPlanTab'
+import { ReviewPlanTab, type AbnormalNutrient } from './components/ReviewPlanTab'
 import { HistoryTable } from './components/HistoryTable'
 import { FarmReportFiles } from './components/FarmReportFiles'
 import {
   type DraftItem,
   PETIOLE_RANGES,
-  SOIL_BASELINE_KEYS,
-  SOIL_RANGES,
   draftFromPlanItem,
   newDraftItem
 } from './components/farm-config'
-import { formatParamKey, getStatus, supabaseGetFarmerProfile } from './components/farm-helpers'
+import { formatParamKey, supabaseGetFarmerProfile } from './components/farm-helpers'
 
 export default function ConsultantFarmPage() {
   const params = useParams()
@@ -166,24 +164,6 @@ export default function ConsultantFarmPage() {
   }, [pendingReview, sortedPetioleTests])
 
   const latestSoil = sortedSoilTests[0]
-
-  // Evaluate the latest soil report against the baseline ranges so the status
-  // chip reflects the actual values instead of a fixed "all optimal".
-  const soilFlags = useMemo(() => {
-    const parameters = latestSoil?.parameters
-    if (!parameters) return { count: 0, evaluated: 0 }
-    let count = 0
-    let evaluated = 0
-    for (const key of SOIL_BASELINE_KEYS) {
-      const value = parameters[key]
-      const range = SOIL_RANGES[key]
-      if (typeof value === 'number' && range) {
-        evaluated++
-        if (getStatus(value, range) !== 'optimal') count++
-      }
-    }
-    return { count, evaluated }
-  }, [latestSoil])
 
   // Flagged nutrients from the current review report, surfaced in the Workbench bar.
   const abnormalNutrients = useMemo<AbnormalNutrient[]>(() => {
@@ -365,7 +345,6 @@ export default function ConsultantFarmPage() {
               latestSoil={latestSoil}
               farm={farm}
               abnormalNutrients={abnormalNutrients}
-              soilFlags={soilFlags}
               draftItems={draftItems}
               planNote={planNote}
               savingPlan={savingPlan}

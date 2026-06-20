@@ -3,6 +3,7 @@ import type { ParamRange } from './farm-config'
 const PARAM_LABELS: Record<string, string> = {
   ph: 'pH',
   ec: 'EC',
+  organic_carbon: 'Organic Carbon',
   nitrogen: 'Nitrogen',
   phosphorus: 'Phosphorus',
   potassium: 'Potassium',
