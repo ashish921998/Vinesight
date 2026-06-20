@@ -328,16 +328,16 @@ export default function ConsultantFarmPage() {
         />
       ) : (
         <Tabs defaultValue="review">
-          <TabsList className="h-auto w-full justify-start gap-6 rounded-none border-b border-border bg-transparent p-0">
+          <TabsList className="inline-grid h-11 grid-cols-2 gap-1 rounded-lg border border-border bg-muted/40 p-1">
             <TabsTrigger
               value="review"
-              className="-mb-px h-11 rounded-none border-b-2 border-transparent px-1 text-sm font-medium shadow-none transition-colors hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+              className="h-9 min-w-36 rounded-md px-4 text-sm font-medium transition-colors hover:text-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm"
             >
               Review &amp; plan
             </TabsTrigger>
             <TabsTrigger
               value="history"
-              className="-mb-px h-11 rounded-none border-b-2 border-transparent px-1 text-sm font-medium shadow-none transition-colors hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+              className="h-9 min-w-36 rounded-md px-4 text-sm font-medium transition-colors hover:text-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm"
             >
               Farm history
             </TabsTrigger>
