@@ -1,4 +1,5 @@
 import { getTypedSupabaseClient } from '@/lib/supabase'
+import type { Json } from '@/types/database'
 
 export interface FertilizerPlan {
   id: string
@@ -7,6 +8,8 @@ export interface FertilizerPlan {
   organization_id: string
   title: string
   notes: string | null
+  /** The Petiole Review this plan was produced for (null for ad-hoc plans). */
+  petiole_triage_id: string | null
   created_at: string
   updated_at: string
 }
@@ -29,20 +32,37 @@ export interface FertilizerPlanWithItems extends FertilizerPlan {
   items: FertilizerPlanItem[]
 }
 
+export interface PlanItemInput {
+  application_date?: string
+  fertilizer_name: string
+  quantity: number
+  unit?: string
+  application_method?: string
+  application_frequency?: number
+  notes?: string
+}
+
 export interface CreatePlanInput {
   farm_id: number
   organization_id: string
   title: string
   notes?: string
-  items: {
-    application_date?: string
-    fertilizer_name: string
-    quantity: number
-    unit?: string
-    application_method?: string
-    application_frequency?: number
-    notes?: string
-  }[]
+  items: PlanItemInput[]
+}
+
+export interface SendPlanInput {
+  /** The Petiole Review this plan completes; scope is derived from it server-side. */
+  reviewId: string
+  title: string
+  notes?: string
+  items: PlanItemInput[]
+}
+
+export interface UpdatePlanInput {
+  planId: string
+  title: string
+  notes?: string
+  items: PlanItemInput[]
 }
 
 export class FertilizerPlanService {
@@ -99,6 +119,49 @@ export class FertilizerPlanService {
     }
 
     return { ...plan, items } as FertilizerPlanWithItems
+  }
+
+  // Atomically send a plan for a Petiole Review: create plan + items AND mark
+  // the review 'reviewed', in a single DB transaction (RPC send_fertilizer_plan).
+  // Scope (org, farm, farmer) is derived from the review server-side; this is the
+  // only correct path for a review's first plan — a plan can never reach the
+  // farmer while its review stays pending in the queue.
+  static async sendPlan(input: SendPlanInput): Promise<FertilizerPlanWithItems> {
+    const supabase = await getTypedSupabaseClient()
+
+    const { data: planId, error } = await supabase.rpc('send_fertilizer_plan', {
+      p_review_id: input.reviewId,
+      p_title: input.title,
+      p_notes: input.notes ?? null,
+      p_items: input.items as unknown as Json
+    })
+
+    if (error) throw error
+    if (!planId) throw new Error('Plan was not created')
+
+    const plan = await this.getPlanById(planId as string)
+    if (!plan) throw new Error('Plan was created but could not be loaded')
+    return plan
+  }
+
+  // Atomically edit a plan: update title/notes and fully replace its items in a
+  // single transaction (RPC update_fertilizer_plan). Prevents a failed edit from
+  // leaving some items changed and others stale.
+  static async updatePlanAtomic(input: UpdatePlanInput): Promise<FertilizerPlanWithItems> {
+    const supabase = await getTypedSupabaseClient()
+
+    const { error } = await supabase.rpc('update_fertilizer_plan', {
+      p_plan_id: input.planId,
+      p_title: input.title,
+      p_notes: input.notes ?? null,
+      p_items: input.items as unknown as Json
+    })
+
+    if (error) throw error
+
+    const plan = await this.getPlanById(input.planId)
+    if (!plan) throw new Error('Plan was updated but could not be loaded')
+    return plan
   }
 
   // Get all plans for a farm

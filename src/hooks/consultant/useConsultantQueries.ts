@@ -16,6 +16,7 @@ import {
   getVisitsForFarmer,
   type CreateVisitInput
 } from '@/lib/consultant-visit-service'
+import { getTriageItems } from '@/lib/consultant-triage-service'
 
 export type ConsultantAccessState = 'loading' | 'ok' | 'denied' | 'error'
 
@@ -106,6 +107,21 @@ export function useFarmerVisits(access: ConsultantAccess | null | undefined, far
       : ['consultant', 'farmer', farmerId, 'visits', 'disabled'],
     queryFn: () => getVisitsForFarmer(access as ConsultantAccess, farmerId),
     enabled: Boolean(access && farmerId)
+  })
+}
+
+// Pending Petiole Reviews across the consultant's scope, newest first — the
+// work-item feed for the Command Center "Reports to Review" panel.
+export function useReviewQueue(access: ConsultantAccess | null | undefined) {
+  return useQuery({
+    queryKey: access
+      ? consultantKeys.reviewQueue(access.organizationId, farmerScope(access))
+      : ['consultant', 'reviewQueue', 'disabled'],
+    queryFn: async () => {
+      const items = await getTriageItems(access as ConsultantAccess)
+      return items.filter((t) => t.status === 'pending' || t.status === 'in_review')
+    },
+    enabled: Boolean(access)
   })
 }
 

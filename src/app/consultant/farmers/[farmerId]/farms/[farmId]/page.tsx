@@ -2,7 +2,16 @@
 
 import { useState, useEffect, useCallback, useMemo, Fragment } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator
+} from '@/components/ui/breadcrumb'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,9 +30,8 @@ import {
   TableHead,
   TableCell
 } from '@/components/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  ArrowLeft,
-  ChevronRight,
   ChevronDown,
   Loader2,
   MapPin,
@@ -42,6 +50,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { LabTestRecord } from '@/types/lab-tests'
+import type { TestReportFile } from '@/lib/document-service'
 import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
 import {
   validateFarmerClient,
@@ -68,8 +77,6 @@ import {
 // To swap EC for a different property, edit this array only.
 // ---------------------------------------------------------------------------
 const SOIL_BASELINE_KEYS: string[] = ['ph', 'ec', 'nitrogen', 'phosphorus', 'potassium']
-
-const COMPACT_VISIT_LIMIT = 4
 
 interface ParamRange {
   min: number
@@ -264,7 +271,6 @@ export default function ConsultantFarmPage() {
   const [visits, setVisits] = useState<Visit[]>([])
   const [pendingReview, setPendingReview] = useState<TriageItem | null>(null)
   const [previousPlan, setPreviousPlan] = useState<FertilizerPlanWithItems | null>(null)
-  const [showAllVisits, setShowAllVisits] = useState(false)
 
   // Plan editor state
   const [planTitle, setPlanTitle] = useState('')
@@ -383,6 +389,24 @@ export default function ConsultantFarmPage() {
 
   const latestSoil = sortedSoilTests[0]
 
+  // Evaluate the latest soil report against the baseline ranges so the status
+  // chip reflects the actual values instead of a fixed "all optimal".
+  const soilFlags = useMemo(() => {
+    const parameters = latestSoil?.parameters
+    if (!parameters) return { count: 0, evaluated: 0 }
+    let count = 0
+    let evaluated = 0
+    for (const key of SOIL_BASELINE_KEYS) {
+      const value = parameters[key]
+      const range = SOIL_RANGES[key]
+      if (typeof value === 'number' && range) {
+        evaluated++
+        if (getStatus(value, range) !== 'optimal') count++
+      }
+    }
+    return { count, evaluated }
+  }, [latestSoil])
+
   // Flagged nutrients from the current review report, surfaced in the Workbench bar.
   const abnormalNutrients = useMemo(() => {
     if (!reviewTest) return []
@@ -425,15 +449,25 @@ export default function ConsultantFarmPage() {
   if (!farm || farmId === null) {
     return (
       <div className="space-y-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push(`/consultant/farmers/${farmerId}`)}
-          className="flex items-center gap-2 -ml-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Farmer
-        </Button>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/consultant/farmers">Farmers</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href={`/consultant/farmers/${farmerId}`}>Farmer</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Not found</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <MapPin className="h-10 w-10 text-muted-foreground mb-3" />
           <h2 className="text-base font-semibold">Farm not found</h2>
@@ -444,8 +478,6 @@ export default function ConsultantFarmPage() {
       </div>
     )
   }
-
-  const visibleVisits = showAllVisits ? visits : visits.slice(0, COMPACT_VISIT_LIMIT)
 
   // -- Plan editor handlers -------------------------------------------------
 
@@ -595,17 +627,25 @@ export default function ConsultantFarmPage() {
     <div className="space-y-6">
       {/* Header */}
       <header className="pb-5 border-b border-border">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push(`/consultant/farmers/${farmerId}`)}
-          className="flex items-center gap-1.5 -ml-2 text-muted-foreground hover:text-foreground mb-2"
-        >
-          <ArrowLeft className="h-3 w-3" />
-          {farmerName}
-          <ChevronRight className="h-3 w-3" />
-          <span className="text-foreground/70">Farm</span>
-        </Button>
+        <Breadcrumb className="mb-2">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/consultant/farmers">Farmers</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href={`/consultant/farmers/${farmerId}`}>{farmerName}</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{farm.name}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
@@ -691,135 +731,163 @@ export default function ConsultantFarmPage() {
         />
       ) : (
         <div className="space-y-4">
-          {/* Workbench bridge: persistent flagged-nutrient chips that seed plan rows */}
-          {abnormalNutrients.length > 0 && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50/60 dark:bg-amber-950/20 p-3 border-l-4 border-l-amber-400">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <div className="flex items-center gap-2 shrink-0">
-                  <FlaskConical className="h-4 w-4 text-amber-600" />
-                  <span className="text-xs font-semibold text-amber-900 dark:text-amber-100">
-                    Needs attention
-                  </span>
-                  <span className="text-[11px] text-amber-700 dark:text-amber-400">
-                    {
-                      abnormalNutrients.filter(
-                        (n) => !draftItems.some((item) => item.nutrient === n.key)
-                      ).length
-                    }{' '}
-                    of {abnormalNutrients.length} unaddressed
-                  </span>
+          <Tabs defaultValue="review">
+            <TabsList>
+              <TabsTrigger value="review">Review &amp; plan</TabsTrigger>
+              <TabsTrigger value="history" className="gap-1.5">
+                <History className="h-4 w-4" />
+                History
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="review" className="mt-4 space-y-4">
+              {/* Workbench bridge: persistent flagged-nutrient chips that seed plan rows */}
+              {abnormalNutrients.length > 0 && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50/60 dark:bg-amber-950/20 p-3 border-l-4 border-l-amber-400">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <div className="flex items-center gap-2 shrink-0">
+                      <FlaskConical className="h-4 w-4 text-amber-600" />
+                      <span className="text-xs font-semibold text-amber-900 dark:text-amber-100">
+                        Needs attention
+                      </span>
+                      <span className="text-[11px] text-amber-700 dark:text-amber-400">
+                        {
+                          abnormalNutrients.filter(
+                            (n) => !draftItems.some((item) => item.nutrient === n.key)
+                          ).length
+                        }{' '}
+                        of {abnormalNutrients.length} unaddressed
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {abnormalNutrients.map((n) => {
+                        const addressed = draftItems.some((item) => item.nutrient === n.key)
+                        return (
+                          <button
+                            key={n.key}
+                            onClick={() => toggleNutrientChip(n.key)}
+                            className={`group inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                              addressed
+                                ? 'border-border bg-muted text-muted-foreground'
+                                : 'border-amber-300 bg-white dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 hover:border-amber-500'
+                            }`}
+                          >
+                            {n.label}{' '}
+                            <span className="tabular-nums">{formatValue(n.value, n.range)}</span>
+                            <span className="text-amber-500">{n.status === 'low' ? '↓' : '↑'}</span>
+                            {addressed ? (
+                              <span className="inline-flex items-center gap-1 text-emerald-600">
+                                <Check className="h-3 w-3" />
+                                in plan
+                              </span>
+                            ) : (
+                              <span className="text-amber-400 group-hover:text-amber-600">
+                                + plan
+                              </span>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground ml-auto">
+                      {latestSoil && soilFlags.evaluated > 0 && (
+                        <span className="inline-flex items-center gap-1">
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              soilFlags.count === 0 ? 'bg-emerald-500' : 'bg-amber-500'
+                            }`}
+                          />
+                          {soilFlags.count === 0
+                            ? 'Soil: all optimal'
+                            : `Soil: ${soilFlags.count} flag${soilFlags.count === 1 ? '' : 's'}`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Workspace: petiole comparison (left) + the plan column (right).
+              The right column — new plan, previous plan, soil background — is
+              pinned, so all the planning context stays in view while the
+              consultant reads the comparison. */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {/* LEFT: Evidence — the petiole comparison table */}
+                <div className="space-y-3">
+                  <PetioleComparison
+                    reports={sortedPetioleTests}
+                    currentReportId={reviewTest?.id ?? null}
+                    ranges={PETIOLE_RANGES}
+                    paramGroups={PETIOLE_PARAM_GROUPS}
+                  />
                 </div>
 
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {abnormalNutrients.map((n) => {
-                    const addressed = draftItems.some((item) => item.nutrient === n.key)
-                    return (
-                      <button
-                        key={n.key}
-                        onClick={() => toggleNutrientChip(n.key)}
-                        className={`group inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                          addressed
-                            ? 'border-border bg-muted text-muted-foreground'
-                            : 'border-amber-300 bg-white dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 hover:border-amber-500'
-                        }`}
-                      >
-                        {n.label}{' '}
-                        <span className="tabular-nums">{formatValue(n.value, n.range)}</span>
-                        <span className="text-amber-500">{n.status === 'low' ? '↓' : '↑'}</span>
-                        {addressed ? (
-                          <span className="inline-flex items-center gap-1 text-emerald-600">
-                            <Check className="h-3 w-3" />
-                            in plan
-                          </span>
-                        ) : (
-                          <span className="text-amber-400 group-hover:text-amber-600">+ plan</span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-
-                <div className="flex items-center gap-3 text-[11px] text-muted-foreground ml-auto">
-                  {latestSoil && (
-                    <span className="inline-flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      Soil: all optimal
-                    </span>
-                  )}
-                  <span className="text-border">·</span>
-                  <span>Prev plan: {previousPlan?.items.length ?? 0} items</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Two live panes: evidence (left) + prescription (right), co-visible */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-            {/* LEFT (50%): Evidence - read to understand, scroll freely */}
-            <div className="space-y-3">
-              <PetioleComparison
-                reports={sortedPetioleTests}
-                currentReportId={reviewTest?.id ?? null}
-                ranges={PETIOLE_RANGES}
-                paramGroups={PETIOLE_PARAM_GROUPS}
-              />
-
-              <Collapsible>
-                <div className="rounded-lg border border-border bg-card overflow-hidden">
-                  <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2.5 hover:bg-muted/30 transition-colors">
-                    <SectionLabel>Previous fertilizer plan</SectionLabel>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="px-4 pb-4">
-                    <PreviousPlanPanel plan={previousPlan} />
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-
-              <Collapsible>
-                <div className="rounded-lg border border-border bg-card overflow-hidden">
-                  <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2.5 hover:bg-muted/30 transition-colors">
-                    <SectionLabel>Soil background</SectionLabel>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="px-4 pb-4">
-                    <SoilBackgroundPanel
-                      test={latestSoil}
-                      tests={sortedSoilTests}
-                      farm={farm}
-                      ranges={SOIL_RANGES}
-                      baselineKeys={SOIL_BASELINE_KEYS}
+                {/* RIGHT: the new plan, with the previous plan and soil context
+                stacked beneath it and pinned, so both stay in view while the
+                consultant reads the comparison on the left. */}
+                <aside>
+                  <div className="lg:sticky lg:top-6 space-y-3">
+                    <PlanEditorPanel
+                      note={planNote}
+                      onNoteChange={setPlanNote}
+                      items={draftItems}
+                      onUpdateItem={updateDraftItem}
+                      onAddItem={addDraftItem}
+                      onRemoveItem={removeDraftItem}
+                      onSave={handleSendOrSavePlan}
+                      saving={savingPlan}
+                      hasExistingPlan={hasExistingPlan}
+                      abnormalCount={abnormalNutrients.length}
                     />
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
 
-              <CollapsibleHistory
-                soilTests={sortedSoilTests}
-                petioleTests={sortedPetioleTests}
-                visits={visibleVisits}
-                allVisitsCount={visits.length}
-                showAllVisits={showAllVisits}
-                onToggleVisits={() => setShowAllVisits((v) => !v)}
-              />
-            </div>
+                    {/* Previous plan — directly under the new plan for at-a-glance
+                    comparison of what was prescribed last cycle. */}
+                    <Collapsible defaultOpen>
+                      <div className="rounded-lg border border-border bg-card overflow-hidden">
+                        <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2.5 hover:bg-muted/30 transition-colors [&[data-state=open]>svg]:rotate-180">
+                          <SectionLabel>Previous fertilizer plan</SectionLabel>
+                          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="px-4 pb-4">
+                          <PreviousPlanPanel plan={previousPlan} />
+                        </CollapsibleContent>
+                      </div>
+                    </Collapsible>
 
-            {/* RIGHT (5/12): Prescription - sticky, always visible while reading evidence */}
-            <aside className="lg:sticky lg:top-6 space-y-3">
-              <PlanEditorPanel
-                note={planNote}
-                onNoteChange={setPlanNote}
-                items={draftItems}
-                onUpdateItem={updateDraftItem}
-                onAddItem={addDraftItem}
-                onRemoveItem={removeDraftItem}
-                onSave={handleSendOrSavePlan}
-                saving={savingPlan}
-                hasExistingPlan={hasExistingPlan}
-                abnormalCount={abnormalNutrients.length}
-              />
-            </aside>
-          </div>
+                    {/* Soil background — kept in the planning column so soil context
+                    is readable alongside the petiole comparison. */}
+                    <Collapsible>
+                      <div className="rounded-lg border border-border bg-card overflow-hidden">
+                        <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2.5 hover:bg-muted/30 transition-colors [&[data-state=open]>svg]:rotate-180">
+                          <SectionLabel>Soil background</SectionLabel>
+                          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="px-4 pb-4">
+                          <SoilBackgroundPanel
+                            test={latestSoil}
+                            tests={sortedSoilTests}
+                            farm={farm}
+                            ranges={SOIL_RANGES}
+                            baselineKeys={SOIL_BASELINE_KEYS}
+                          />
+                        </CollapsibleContent>
+                      </div>
+                    </Collapsible>
+                  </div>
+                </aside>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-4">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-5">
+                {farmId !== null && <FarmReportFiles farmId={farmId} />}
+                <HistoryTable soilTests={sortedSoilTests} petioleTests={sortedPetioleTests} />
+                <VisitHistory visits={visits} />
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       )}
     </div>
@@ -1133,7 +1201,6 @@ function cellClasses(status: 'optimal' | 'low' | 'high', isCurrent: boolean): st
 function PreviousPlanPanel({ plan }: { plan: FertilizerPlanWithItems | null }) {
   return (
     <div className="space-y-3">
-      <SectionLabel>Previous fertilizer plan</SectionLabel>
       {!plan ? (
         <div className="rounded-lg border border-dashed border-border p-8 flex flex-col items-center justify-center text-center">
           <ClipboardList className="h-6 w-6 text-muted-foreground/40 mb-2" />
@@ -1222,22 +1289,19 @@ function SoilBackgroundPanel({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-baseline justify-between">
-        <SectionLabel>Soil background</SectionLabel>
-        {test?.date && (
-          <span className="text-[11px] text-muted-foreground tabular-nums">
-            Tested{' '}
-            {new Date(test.date).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric'
-            })}
-            {tests.length > 1 && (
-              <span className="text-muted-foreground/70 ml-1">· {tests.length} reports</span>
-            )}
-          </span>
-        )}
-      </div>
+      {test?.date && (
+        <span className="block text-[11px] text-muted-foreground tabular-nums">
+          Tested{' '}
+          {new Date(test.date).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          })}
+          {tests.length > 1 && (
+            <span className="text-muted-foreground/70 ml-1">· {tests.length} reports</span>
+          )}
+        </span>
+      )}
 
       {!test ? (
         <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
@@ -1253,8 +1317,8 @@ function SoilBackgroundPanel({
             ))}
           </div>
 
-          {/* Farm-level soil facts */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {/* Farm-level soil facts (2x2 — reads cleaner in the narrower column) */}
+          <div className="grid grid-cols-2 gap-2">
             <SoilFact label="Texture" value={farm.soil_texture_class} />
             <SoilFact
               label="CEC"
@@ -1305,7 +1369,9 @@ function SoilBackgroundPanel({
             </div>
           )}
 
-          {test.report_storage_path && <ReportLink path={test.report_storage_path} />}
+          {(test.report_storage_path || test.report_url) && (
+            <ReportLink storagePath={test.report_storage_path} directUrl={test.report_url} />
+          )}
         </>
       )}
     </div>
@@ -1587,63 +1653,6 @@ function PlanItemRow({
 
 // -- Collapsed history ----------------------------------------------------
 
-function CollapsibleHistory({
-  soilTests,
-  petioleTests,
-  visits,
-  allVisitsCount,
-  showAllVisits,
-  onToggleVisits
-}: {
-  soilTests: LabTestRecord[]
-  petioleTests: LabTestRecord[]
-  visits: Visit[]
-  allVisitsCount: number
-  showAllVisits: boolean
-  onToggleVisits: () => void
-}) {
-  const [open, setOpen] = useState(false)
-  const totalTests = soilTests.length + petioleTests.length
-
-  return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <div className="rounded-lg border border-border bg-card overflow-hidden">
-        <CollapsibleTrigger className="px-4 py-3 flex items-center justify-between w-full hover:bg-muted/30 transition-colors">
-          <span className="flex items-center gap-2 text-sm font-medium">
-            <History className="h-4 w-4 text-muted-foreground" />
-            History
-            <span className="text-xs font-normal text-muted-foreground">
-              {totalTests} tests · {allVisitsCount} visits
-            </span>
-          </span>
-          <ChevronDown
-            className={`h-4 w-4 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`}
-          />
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="px-4 pb-4 pt-1 space-y-5 border-t border-border">
-            <HistoryTable soilTests={soilTests} petioleTests={petioleTests} />
-            <div className="space-y-2">
-              <div className="flex items-baseline justify-between">
-                <SectionLabel>Visit history</SectionLabel>
-                {allVisitsCount > COMPACT_VISIT_LIMIT && (
-                  <button
-                    onClick={onToggleVisits}
-                    className="text-xs font-medium text-primary hover:underline"
-                  >
-                    {showAllVisits ? 'Show less' : `See all ${allVisitsCount} visits`}
-                  </button>
-                )}
-              </div>
-              <VisitHistory visits={visits} />
-            </div>
-          </div>
-        </CollapsibleContent>
-      </div>
-    </Collapsible>
-  )
-}
-
 function HistoryTable({
   soilTests,
   petioleTests
@@ -1660,37 +1669,30 @@ function HistoryTable({
 
   return (
     <div>
-      <SectionLabel>All reports</SectionLabel>
+      <SectionLabel>Test records</SectionLabel>
       <div className="mt-2 divide-y divide-border rounded-lg border border-border">
         {allTests.map((test) => (
           <div
             key={`${test._type}-${test.id}`}
-            className="flex items-center justify-between gap-3 py-2.5 px-3 hover:bg-muted/20"
+            className="flex items-center gap-2.5 py-2.5 px-3 hover:bg-muted/20"
           >
-            <div className="flex items-center gap-2.5 min-w-0">
-              {test._type === 'soil' ? (
-                <TestTube className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              ) : (
-                <Leaf className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              )}
-              <div className="min-w-0">
-                <p className="text-sm font-medium capitalize">{test._type} test</p>
-                <p className="text-xs text-muted-foreground tabular-nums">
-                  {new Date(test.date).toLocaleDateString(undefined, {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                  <span className="mx-1">·</span>
-                  {Object.keys(test.parameters || {}).length} parameters
-                </p>
-              </div>
-            </div>
-            {test.report_storage_path ? (
-              <ReportLink path={test.report_storage_path} compact />
+            {test._type === 'soil' ? (
+              <TestTube className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             ) : (
-              <span className="text-xs text-muted-foreground/40">No report</span>
+              <Leaf className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             )}
+            <div className="min-w-0">
+              <p className="text-sm font-medium capitalize">{test._type} test</p>
+              <p className="text-xs text-muted-foreground tabular-nums">
+                {new Date(test.date).toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+                <span className="mx-1">·</span>
+                {Object.keys(test.parameters || {}).length} parameters
+              </p>
+            </div>
           </div>
         ))}
       </div>
@@ -1698,10 +1700,146 @@ function HistoryTable({
   )
 }
 
+// -- Report files (storage-backed) ---------------------------------------
+
+// Uploaded report filenames are prefixed with an upload timestamp
+// (e.g. "1768741676670-kabade-...pdf"); strip it for display.
+function prettyReportName(filename: string): string {
+  return filename.replace(/^\d+-/, '')
+}
+
+function formatFileSize(bytes: number | null): string | null {
+  if (!bytes || bytes <= 0) return null
+  const mb = bytes / (1024 * 1024)
+  if (mb >= 1) return `${mb.toFixed(1)} MB`
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`
+}
+
+// Lists the actual report PDFs in storage for this farm. Files are surfaced
+// here (not per test record) because uploads aren't reliably linked back onto
+// a record — see the History tab. Each opens its signed URL in a new tab.
+function FarmReportFiles({ farmId }: { farmId: number }) {
+  const [files, setFiles] = useState<TestReportFile[] | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    setLoading(true)
+    setError(false)
+    fetch(`/api/test-reports/list?farmId=${farmId}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Failed to load report files')
+        const json = await res.json()
+        if (active) setFiles((json.files as TestReportFile[]) ?? [])
+      })
+      .catch(() => {
+        if (active) setError(true)
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [farmId])
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between">
+        <SectionLabel>Report files</SectionLabel>
+        {files && files.length > 0 && (
+          <span className="text-xs text-muted-foreground tabular-nums">{files.length} files</span>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="mt-2 flex items-center gap-2 rounded-lg border border-border px-3 py-6 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Loading report files…
+        </div>
+      ) : error ? (
+        <div className="mt-2 rounded-lg border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
+          Couldn’t load report files. Try refreshing.
+        </div>
+      ) : !files || files.length === 0 ? (
+        <div className="mt-2 rounded-lg border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
+          No uploaded report files for this farm yet.
+        </div>
+      ) : (
+        <div className="mt-2 divide-y divide-border rounded-lg border border-border">
+          {files.map((file) => {
+            const size = formatFileSize(file.sizeBytes)
+            return (
+              <div
+                key={file.path}
+                className="flex items-center justify-between gap-3 py-2.5 px-3 hover:bg-muted/20"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {file.testType === 'soil' ? (
+                    <TestTube className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  ) : (
+                    <Leaf className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {prettyReportName(file.filename)}
+                    </p>
+                    <p className="text-xs text-muted-foreground tabular-nums">
+                      <span className="capitalize">{file.testType}</span>
+                      <span className="mx-1">·</span>
+                      {file.uploadedAt
+                        ? new Date(file.uploadedAt).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })
+                        : 'Unknown date'}
+                      {size && (
+                        <>
+                          <span className="mx-1">·</span>
+                          {size}
+                        </>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                {file.signedUrl ? (
+                  <Button asChild variant="outline" size="sm" className="h-7 shrink-0 gap-1.5">
+                    <a href={file.signedUrl} target="_blank" rel="noopener noreferrer">
+                      Open PDF
+                      <ExternalLink className="size-3" />
+                    </a>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    className="h-7 shrink-0 gap-1.5 border-dashed text-muted-foreground/60"
+                  >
+                    Unavailable
+                  </Button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // -- Shared bits ----------------------------------------------------------
 
-function ReportLink({ path, compact }: { path: string; compact?: boolean }) {
-  const { url, loading } = useReportUrl(path)
+function ReportLink({
+  storagePath,
+  directUrl
+}: {
+  storagePath?: string | null
+  directUrl?: string | null
+}) {
+  const { url, loading } = useReportUrl(storagePath, directUrl)
 
   if (loading) {
     return (
@@ -1713,21 +1851,6 @@ function ReportLink({ path, compact }: { path: string; compact?: boolean }) {
   }
 
   if (!url) return null
-
-  if (compact) {
-    return (
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary hover:underline"
-      >
-        <FileImage className="h-3 w-3" />
-        Report
-        <ExternalLink className="h-2.5 w-2.5" />
-      </a>
-    )
-  }
 
   return (
     <a
@@ -1743,12 +1866,15 @@ function ReportLink({ path, compact }: { path: string; compact?: boolean }) {
   )
 }
 
-function useReportUrl(path?: string | null): { url: string | null; loading: boolean } {
-  const [url, setUrl] = useState<string | null>(null)
+function useReportUrl(
+  path?: string | null,
+  fallbackUrl?: string | null
+): { url: string | null; loading: boolean } {
+  const [signedUrl, setSignedUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const fetchUrl = useCallback(async () => {
-    if (!path || url) return
+    if (!path || signedUrl) return
     setLoading(true)
     try {
       const response = await fetch('/api/test-reports/signed-url', {
@@ -1757,21 +1883,24 @@ function useReportUrl(path?: string | null): { url: string | null; loading: bool
         body: JSON.stringify({ path })
       })
       if (response.ok) {
-        const { signedUrl } = await response.json()
-        setUrl(signedUrl)
+        const { signedUrl: signed } = await response.json()
+        setSignedUrl(signed)
       }
     } catch (error) {
       console.error('Error loading report:', error)
     } finally {
       setLoading(false)
     }
-  }, [path, url])
+  }, [path, signedUrl])
 
   useEffect(() => {
     if (path) fetchUrl()
   }, [path, fetchUrl])
 
-  return { url, loading }
+  // A storage path must be signed; otherwise fall back to a legacy direct
+  // report_url (already openable, no signing or fetch needed).
+  const url = path ? signedUrl : (fallbackUrl ?? null)
+  return { url, loading: path ? loading : false }
 }
 
 // Inline helper to fetch farmer profile for the farm page header.

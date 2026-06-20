@@ -2,14 +2,28 @@
 
 import { useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ClipboardList, Loader2, UserPlus, Users } from 'lucide-react'
+import { ArrowRight, ChevronRight, FlaskConical, Loader2, UserPlus, Users } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { roleLabels } from '@/lib/consultant-access'
 import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
 import { JoinCodeCard } from '@/components/consultant/JoinCodeCard'
-import { useConsultantAccess, useFarmerClients } from '@/hooks/consultant/useConsultantQueries'
+import {
+  useConsultantAccess,
+  useFarmerClients,
+  useReviewQueue
+} from '@/hooks/consultant/useConsultantQueries'
+
+// Newest pending Petiole Reviews surfaced directly in the Command Center.
+const REVIEW_PREVIEW_LIMIT = 5
+
+function formatReviewDate(value: string | null) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+}
 
 const workspaceLinks = [
   {
@@ -18,13 +32,6 @@ const workspaceLinks = [
     href: '/consultant/farmers',
     action: 'Open farmers',
     icon: Users
-  },
-  {
-    title: 'Triage Queue',
-    description: 'Review petiole issues for active farmers in your consultant scope.',
-    href: '/consultant/triage',
-    action: 'Open triage',
-    icon: ClipboardList
   }
 ]
 
@@ -33,6 +40,10 @@ export default function ConsultantOverviewPage() {
   const access = accessQuery.data ?? null
   const farmerAccess = access?.canViewAllFarmers ? access : null
   const farmersQuery = useFarmerClients(farmerAccess)
+  const reviewsQuery = useReviewQueue(access)
+
+  const reviews = reviewsQuery.data ?? []
+  const previewReviews = reviews.slice(0, REVIEW_PREVIEW_LIMIT)
 
   useEffect(() => {
     if (farmersQuery.error) {
@@ -40,6 +51,12 @@ export default function ConsultantOverviewPage() {
       console.error('Failed to load unassigned farmer count:', farmersQuery.error)
     }
   }, [farmersQuery.error])
+
+  useEffect(() => {
+    if (reviewsQuery.error) {
+      console.error('Failed to load review queue:', reviewsQuery.error)
+    }
+  }, [reviewsQuery.error])
 
   const unassignedCount = useMemo(() => {
     if (!access?.canViewAllFarmers || !farmersQuery.data) return null
@@ -112,6 +129,79 @@ export default function ConsultantOverviewPage() {
             All farmers are assigned to an agronomist.
           </p>
         ))}
+
+      {/* Command Center: newest pending Petiole Reviews as work items. Each
+          deep-links into the Farm workspace for that exact review. */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <FlaskConical className="h-5 w-5" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">Reports to Review</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Newest petiole reports awaiting a fertilizer plan
+              </p>
+            </div>
+          </div>
+          {reviews.length > 0 && (
+            <Badge variant="secondary" className="tabular-nums">
+              {reviews.length} pending
+            </Badge>
+          )}
+        </CardHeader>
+        <CardContent>
+          {reviewsQuery.isPending ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : previewReviews.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              No pending reports. New petiole uploads from your farmers will appear here.
+            </p>
+          ) : (
+            <ul className="divide-y">
+              {previewReviews.map((review) => (
+                <li key={review.id}>
+                  <Link
+                    href={`/consultant/farmers/${review.clientUserId}/farms/${review.farmId}?reviewId=${review.id}`}
+                    className="flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-md hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">
+                        {review.farmerName || 'Unknown farmer'}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {review.farmName || 'Farm'} · Sampled {formatReviewDate(review.testDate)}
+                      </p>
+                    </div>
+                    {review.status === 'in_review' && (
+                      <Badge variant="outline" className="shrink-0">
+                        In progress
+                      </Badge>
+                    )}
+                    <span className="shrink-0 text-xs font-medium text-primary inline-flex items-center gap-0.5">
+                      Review
+                      <ChevronRight className="h-4 w-4" />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          {reviews.length > REVIEW_PREVIEW_LIMIT && (
+            <div className="pt-3">
+              <Button asChild variant="ghost" size="sm" className="w-full">
+                <Link href="/consultant/triage">
+                  See all {reviews.length} reports
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
         {workspaceLinks.map((item) => {

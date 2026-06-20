@@ -2428,6 +2428,7 @@ export type Database = {
           organization_id: string
           title: string
           notes: string | null
+          petiole_triage_id: string | null
           created_at: string
           updated_at: string
         }
@@ -2438,6 +2439,7 @@ export type Database = {
           organization_id: string
           title: string
           notes?: string | null
+          petiole_triage_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -2448,6 +2450,7 @@ export type Database = {
           organization_id?: string
           title?: string
           notes?: string | null
+          petiole_triage_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -2464,6 +2467,13 @@ export type Database = {
             columns: ['organization_id']
             isOneToOne: false
             referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'fertilizer_plans_petiole_triage_id_fkey'
+            columns: ['petiole_triage_id']
+            isOneToOne: true
+            referencedRelation: 'petiole_triage'
             referencedColumns: ['id']
           }
         ]
@@ -2523,6 +2533,44 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      send_fertilizer_plan: {
+        Args: {
+          p_review_id: string
+          p_title: string
+          p_notes: string | null
+          p_items: Json
+        }
+        Returns: string
+      }
+      update_fertilizer_plan: {
+        Args: {
+          p_plan_id: string
+          p_title: string
+          p_notes: string | null
+          p_items: Json
+        }
+        Returns: string
+      }
+      get_farmer_recommendations: {
+        Args: { p_farm_id?: number | null }
+        Returns: {
+          id: string
+          farm_id: number
+          farm_name: string
+          petiole_test_id: number | null
+          status: string
+          severity: string | null
+          classification: string | null
+          summary: string | null
+          recommendation: string | null
+          reviewed_by_name: string | null
+          test_date: string | null
+          reviewed_at: string | null
+          created_at: string | null
+          updated_at: string | null
+          fertilizer_plan: Json | null
+        }[]
+      }
       accept_organization_invite: {
         Args: {
           p_user_id: string

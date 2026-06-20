@@ -76,7 +76,7 @@ export function VisitHistory({ visits }: { visits: Visit[] }) {
     )
   }
 
-  const sorted = [...visits].sort(
+  const sorted = visits.toSorted(
     (a, b) => new Date(b.visitDate).getTime() - new Date(a.visitDate).getTime()
   )
 

@@ -4,19 +4,16 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
 import {
-  ArrowLeft,
-  Loader2,
-  User,
-  Mail,
-  Phone,
-  Sprout,
-  MapPin,
-  IndianRupee,
-  CircleAlert
-} from 'lucide-react'
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator
+} from '@/components/ui/breadcrumb'
+import { toast } from 'sonner'
+import { Loader2, User, Mail, Phone, Sprout, MapPin, IndianRupee, CircleAlert } from 'lucide-react'
 import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
 import {
   validateFarmerClient,
@@ -127,12 +124,19 @@ export default function FarmerProfilePage() {
   if (notFound || !farmer) {
     return (
       <div className="space-y-6">
-        <Link href="/consultant/farmers">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Farmers
-          </Button>
-        </Link>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/consultant/farmers">Farmers</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Not found</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
         <Card>
           <CardContent className="p-12 text-center">
             <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -148,13 +152,20 @@ export default function FarmerProfilePage() {
 
   return (
     <div className="space-y-8">
-      {/* Back button */}
-      <Link href="/consultant/farmers" className="inline-block">
-        <Button variant="ghost" size="sm">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Farmers
-        </Button>
-      </Link>
+      {/* Breadcrumb */}
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/consultant/farmers">Farmers</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{farmer.full_name || 'Unknown Farmer'}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       {/* Farmer profile header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

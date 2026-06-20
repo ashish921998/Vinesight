@@ -8,5 +8,7 @@ export const consultantKeys = {
   farmerValidation: (farmerId: string, orgId: string, scope: string) =>
     ['consultant', 'farmer', farmerId, 'validation', orgId, scope] as const,
   farmerVisits: (farmerId: string, orgId: string, scope: string) =>
-    ['consultant', 'farmer', farmerId, 'visits', orgId, scope] as const
+    ['consultant', 'farmer', farmerId, 'visits', orgId, scope] as const,
+  reviewQueue: (orgId: string, scope: string) =>
+    ['consultant', 'reviewQueue', orgId, scope] as const
 }

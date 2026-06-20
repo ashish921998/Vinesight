@@ -30,6 +30,16 @@ export interface ReportUploadResult {
   publicUrl: string
 }
 
+export interface TestReportFile {
+  path: string
+  filename: string
+  testType: 'soil' | 'petiole'
+  mimeType: string | null
+  sizeBytes: number | null
+  uploadedAt: string | null
+  signedUrl: string | null
+}
+
 type UploadFile = File | (Blob & { name?: string })
 
 export class DocumentService {
@@ -209,5 +219,73 @@ export class DocumentService {
     if (error) {
       throw new Error(`Failed to delete report: ${error.message}`)
     }
+  }
+
+  /**
+   * List every uploaded report file for a farm, across both test types, with a
+   * signed URL for each. Files live under `{soil|petiole}/{farmId}/…`. Used to
+   * surface report PDFs that exist in storage but were never linked back onto a
+   * test record (report_storage_path is null on the row).
+   */
+  static async listTestReports(
+    farmId: number,
+    expiresInSeconds = 60 * 60 * 24
+  ): Promise<TestReportFile[]> {
+    await this.ensureBucket()
+    const supabase = this.getServiceClient()
+    const testTypes: ('soil' | 'petiole')[] = ['soil', 'petiole']
+
+    const files: Omit<TestReportFile, 'signedUrl'>[] = []
+    for (const testType of testTypes) {
+      const prefix = `${testType}/${farmId}`
+      const { data, error } = await supabase.storage
+        .from(TEST_REPORT_BUCKET)
+        .list(prefix, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } })
+
+      if (error) {
+        throw new Error(`Failed to list ${testType} reports: ${error.message}`)
+      }
+
+      for (const obj of data ?? []) {
+        // `list` can return folder placeholders with a null id — skip them.
+        if (!obj.id) continue
+        const metadata = (obj.metadata ?? {}) as { size?: number; mimetype?: string }
+        files.push({
+          path: `${prefix}/${obj.name}`,
+          filename: obj.name,
+          testType,
+          mimeType: metadata.mimetype ?? null,
+          sizeBytes: typeof metadata.size === 'number' ? metadata.size : null,
+          uploadedAt: obj.created_at ?? null
+        })
+      }
+    }
+
+    if (files.length === 0) return []
+
+    // Newest upload first, interleaving both test types.
+    files.sort((a, b) => {
+      const ta = a.uploadedAt ? new Date(a.uploadedAt).getTime() : 0
+      const tb = b.uploadedAt ? new Date(b.uploadedAt).getTime() : 0
+      return tb - ta
+    })
+
+    const { data: signed, error: signError } = await supabase.storage
+      .from(TEST_REPORT_BUCKET)
+      .createSignedUrls(
+        files.map((f) => f.path),
+        expiresInSeconds
+      )
+
+    if (signError) {
+      throw new Error(`Failed to sign report URLs: ${signError.message}`)
+    }
+
+    const urlByPath = new Map<string, string>()
+    for (const item of signed ?? []) {
+      if (item.path && item.signedUrl) urlByPath.set(item.path, item.signedUrl)
+    }
+
+    return files.map((f) => ({ ...f, signedUrl: urlByPath.get(f.path) ?? null }))
   }
 }
