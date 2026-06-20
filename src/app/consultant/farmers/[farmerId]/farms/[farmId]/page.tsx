@@ -132,7 +132,11 @@ export default function ConsultantFarmPage() {
 
   const hasPendingReview =
     pendingReview?.status === 'pending' || pendingReview?.status === 'in_review'
-  const hasExistingPlan = previousPlan !== null
+  const reviewPlan = pendingReview
+    ? (plans.find((plan) => plan.petiole_triage_id === pendingReview.id) ?? null)
+    : null
+  const displayPreviousPlan = reviewPlan ?? previousPlan
+  const hasExistingPlan = pendingReview ? reviewPlan !== null : previousPlan !== null
   const draftStorageKey =
     farmId === null ? null : `consultant-plan-draft:${farmId}:${selectedReviewId ?? 'ad-hoc'}`
 
@@ -236,7 +240,7 @@ export default function ConsultantFarmPage() {
               planNote={planNote}
               savingPlan={savingPlan}
               hasExistingPlan={hasExistingPlan}
-              previousPlan={previousPlan}
+              previousPlan={displayPreviousPlan}
               onUpdateItem={updateDraftItem}
               onAddItem={addDraftItem}
               onRemoveItem={removeDraftItem}
