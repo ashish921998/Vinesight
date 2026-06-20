@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useReducer } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { ExternalLink, FileImage, Loader2 } from 'lucide-react'
+import { consultantKeys } from '@/lib/consultant-query-keys'
 
 export function ReportLink({
   storagePath,
@@ -37,47 +38,33 @@ export function ReportLink({
   )
 }
 
+async function fetchSignedReportUrl(path: string): Promise<string> {
+  const response = await fetch('/api/test-reports/signed-url', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path })
+  })
+  if (!response.ok) throw new Error('Failed to load report URL')
+  const { signedUrl } = (await response.json()) as { signedUrl?: string | null }
+  return signedUrl ?? ''
+}
+
 function useReportUrl(
   path?: string | null,
   fallbackUrl?: string | null
 ): { url: string | null; loading: boolean } {
-  const [state, dispatch] = useReducer(
-    (
-      current: { signedUrl: string | null; loading: boolean },
-      patch: Partial<{ signedUrl: string | null; loading: boolean }>
-    ) => ({ ...current, ...patch }),
-    { signedUrl: null, loading: false }
-  )
-  const { signedUrl, loading } = state
+  const { data: signedUrl, isPending } = useQuery({
+    queryKey: consultantKeys.reportSignedUrl(path ?? ''),
+    queryFn: () => fetchSignedReportUrl(path as string),
+    enabled: Boolean(path),
+    staleTime: 10 * 60_000,
+    retry: false
+  })
 
-  useEffect(() => {
-    if (!path) {
-      dispatch({ signedUrl: null, loading: false })
-      return
-    }
+  // No path to sign: fall back to the direct URL (or nothing) without fetching.
+  if (!path) {
+    return { url: fallbackUrl ?? null, loading: false }
+  }
 
-    let cancelled = false
-    dispatch({ loading: true, signedUrl: null })
-
-    fetch('/api/test-reports/signed-url', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ path })
-    })
-      .then((response) => (response.ok ? response.json() : Promise.reject()))
-      .then(({ signedUrl: signed }) => {
-        if (!cancelled) dispatch({ signedUrl: signed })
-      })
-      .catch((error) => console.error('Error loading report:', error))
-      .finally(() => {
-        if (!cancelled) dispatch({ loading: false })
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [path])
-
-  const url = path ? signedUrl : (fallbackUrl ?? null)
-  return { url, loading: path ? loading : false }
+  return { url: signedUrl || null, loading: isPending }
 }

@@ -10,6 +10,7 @@ export const consultantKeys = {
   farmTriage: (farmId: number, orgId: string, scope: string) =>
     ['consultant', 'farm', farmId, 'triage', orgId, scope] as const,
   farmReportFiles: (farmId: number) => ['consultant', 'farm', farmId, 'reportFiles'] as const,
+  reportSignedUrl: (path: string) => ['consultant', 'report', 'signedUrl', path] as const,
   farmerValidation: (farmerId: string, orgId: string, scope: string) =>
     ['consultant', 'farmer', farmerId, 'validation', orgId, scope] as const,
   farmerVisits: (farmerId: string, orgId: string, scope: string) =>

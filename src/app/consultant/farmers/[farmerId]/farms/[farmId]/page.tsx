@@ -123,11 +123,11 @@ export default function ConsultantFarmPage() {
   }, [selectedReviewId, triageItems])
 
   const sortedSoilTests = useMemo(
-    () => [...soilTests].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    () => soilTests.toSorted((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     [soilTests]
   )
   const sortedPetioleTests = useMemo(
-    () => [...petioleTests].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    () => petioleTests.toSorted((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     [petioleTests]
   )
 
