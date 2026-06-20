@@ -1090,6 +1090,10 @@ CREATE TABLE fertilizer_plans (
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
   notes TEXT,
+  -- The Petiole Review this plan was produced for (see migration 202606200001).
+  -- At most one plan per review (enforced by idx_fertilizer_plans_unique_triage).
+  -- FK added via ALTER below, since petiole_triage is created after this table.
+  petiole_triage_id UUID,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -1169,6 +1173,12 @@ CREATE INDEX idx_organization_members_org_user ON organization_members(organizat
 -- Note: no separate (organization_id, client_user_id) index — the UNIQUE(organization_id,
 -- client_user_id) constraint on organization_clients already provides one (see migration 0005).
 CREATE INDEX idx_fertilizer_plans_org_farm ON fertilizer_plans(organization_id, farm_id);
+CREATE INDEX idx_fertilizer_plans_petiole_triage_id ON fertilizer_plans(petiole_triage_id);
+CREATE INDEX idx_fertilizer_plans_farm_created ON fertilizer_plans(farm_id, created_at DESC);
+CREATE UNIQUE INDEX idx_fertilizer_plans_unique_triage ON fertilizer_plans(petiole_triage_id) WHERE petiole_triage_id IS NOT NULL;
+ALTER TABLE fertilizer_plans
+  ADD CONSTRAINT fertilizer_plans_petiole_triage_id_fkey
+  FOREIGN KEY (petiole_triage_id) REFERENCES petiole_triage(id) ON DELETE SET NULL;
 CREATE INDEX idx_fertilizer_plan_items_plan_date ON fertilizer_plan_items(plan_id, application_date);
 
 

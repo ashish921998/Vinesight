@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useReducer } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -42,6 +42,8 @@ interface RecordVisitDialogProps {
   farmerId: string
   /** Farms belonging to this farmer, for the optional farm selector. */
   farms: { id: number; name: string }[]
+  /** Pre-select this farm in the selector (e.g. when opened from a farm page). */
+  defaultFarmId?: number
   onRecorded?: (visit: Visit) => void
 }
 
@@ -57,32 +59,95 @@ function todayLocal(): string {
   return new Date(d.getTime() - off * 60_000).toISOString().slice(0, 10)
 }
 
-export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: RecordVisitDialogProps) {
+interface VisitFormState {
+  visitDate: string
+  farmId: string
+  summary: string
+  drafts: Record<string, FollowupDraft>
+}
+
+type VisitFormAction =
+  | { type: 'reset'; defaultFarmId: number | undefined }
+  | { type: 'setVisitDate'; value: string }
+  | { type: 'setFarmId'; value: string }
+  | { type: 'setSummary'; value: string }
+  | { type: 'setStatus'; triageId: string; status: FollowedStatus }
+  | { type: 'setNote'; triageId: string; note: string }
+  | { type: 'setDrafts'; drafts: Record<string, FollowupDraft> }
+
+function initVisitForm(defaultFarmId: number | undefined): VisitFormState {
+  return {
+    visitDate: todayLocal(),
+    farmId: defaultFarmId != null ? String(defaultFarmId) : 'none',
+    summary: '',
+    drafts: {}
+  }
+}
+
+function visitFormReducer(state: VisitFormState, action: VisitFormAction): VisitFormState {
+  switch (action.type) {
+    case 'reset':
+      return initVisitForm(action.defaultFarmId)
+    case 'setVisitDate':
+      return { ...state, visitDate: action.value }
+    case 'setFarmId':
+      return { ...state, farmId: action.value }
+    case 'setSummary':
+      return { ...state, summary: action.value }
+    case 'setStatus':
+      return {
+        ...state,
+        drafts: {
+          ...state.drafts,
+          [action.triageId]: { ...state.drafts[action.triageId], status: action.status }
+        }
+      }
+    case 'setNote':
+      return {
+        ...state,
+        drafts: {
+          ...state.drafts,
+          [action.triageId]: { ...state.drafts[action.triageId], note: action.note }
+        }
+      }
+    case 'setDrafts':
+      return { ...state, drafts: action.drafts }
+    default:
+      return state
+  }
+}
+
+export function RecordVisitDialog({
+  access,
+  farmerId,
+  farms,
+  defaultFarmId,
+  onRecorded
+}: RecordVisitDialogProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [recommendations, setRecommendations] = useState<VisitableRecommendation[]>([])
 
-  const [visitDate, setVisitDate] = useState(todayLocal())
-  const [farmId, setFarmId] = useState<string>('none')
-  const [summary, setSummary] = useState('')
-  const [drafts, setDrafts] = useState<Record<string, FollowupDraft>>({})
+  // Visit form fields are conceptually one unit (date, farm, summary, per-rec
+  // follow-ups), so they live in a single reducer instead of four useStates —
+  // one logical update (e.g. reset) becomes a single state transition.
+  const [form, dispatchForm] = useReducer(visitFormReducer, defaultFarmId, initVisitForm)
   const createVisitMutation = useCreateVisit(access, farmerId)
   const submitting = createVisitMutation.isPending
 
   const reset = useCallback(() => {
-    setVisitDate(todayLocal())
-    setFarmId('none')
-    setSummary('')
-    setDrafts({})
-    setRecommendations([])
-  }, [])
+    dispatchForm({ type: 'reset', defaultFarmId })
+  }, [defaultFarmId])
 
   const loadRecommendations = useCallback(async () => {
     try {
       setLoading(true)
       const recs = await getVisitableRecommendations(access, farmerId)
       setRecommendations(recs)
-      setDrafts(Object.fromEntries(recs.map((r) => [r.triageId, { status: '', note: '' }])))
+      dispatchForm({
+        type: 'setDrafts',
+        drafts: Object.fromEntries(recs.map((r) => [r.triageId, { status: '', note: '' }]))
+      })
     } catch (err) {
       Sentry.captureException(err, {
         tags: { context: 'getVisitableRecommendations' },
@@ -104,16 +169,16 @@ export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: Recor
   }
 
   const setStatus = (triageId: string, status: FollowedStatus) => {
-    setDrafts((prev) => ({ ...prev, [triageId]: { ...prev[triageId], status } }))
+    dispatchForm({ type: 'setStatus', triageId, status })
   }
   const setNote = (triageId: string, note: string) => {
-    setDrafts((prev) => ({ ...prev, [triageId]: { ...prev[triageId], note } }))
+    dispatchForm({ type: 'setNote', triageId, note })
   }
 
-  const verifiedCount = Object.values(drafts).filter((d) => d.status !== '').length
+  const verifiedCount = Object.values(form.drafts).filter((d) => d.status !== '').length
 
   const handleSubmit = async () => {
-    const followups = Object.entries(drafts)
+    const followups = Object.entries(form.drafts)
       .filter(([, d]) => d.status !== '')
       .map(([triageId, d]) => ({
         triageId,
@@ -121,7 +186,7 @@ export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: Recor
         note: d.note
       }))
 
-    if (followups.length === 0 && !summary.trim()) {
+    if (followups.length === 0 && !form.summary.trim()) {
       toast.error('Verify at least one recommendation or add a visit note')
       return
     }
@@ -129,21 +194,21 @@ export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: Recor
     try {
       const visit = await createVisitMutation.mutateAsync({
         farmerId,
-        farmId: farmId === 'none' ? null : Number(farmId),
-        visitDate,
-        summary,
+        farmId: form.farmId === 'none' ? null : Number(form.farmId),
+        visitDate: form.visitDate,
+        summary: form.summary,
         followups
       })
       posthog.capture('consultant_visit_recorded', {
         farmer_id: farmerId,
-        farm_scoped: farmId !== 'none',
+        farm_scoped: form.farmId !== 'none',
         total_recommendations: recommendations.length,
         recommendations_verified: followups.length,
         followed_count: followups.filter((f) => f.followedStatus === 'followed').length,
         partially_followed_count: followups.filter((f) => f.followedStatus === 'partially_followed')
           .length,
         not_followed_count: followups.filter((f) => f.followedStatus === 'not_followed').length,
-        has_summary: summary.trim().length > 0,
+        has_summary: form.summary.trim().length > 0,
         role: access.role
       })
       toast.success('Visit recorded')
@@ -182,15 +247,18 @@ export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: Recor
               <Input
                 id="visit-date"
                 type="date"
-                value={visitDate}
+                value={form.visitDate}
                 max={todayLocal()}
-                onChange={(e) => setVisitDate(e.target.value)}
+                onChange={(e) => dispatchForm({ type: 'setVisitDate', value: e.target.value })}
               />
             </div>
             {farms.length > 0 && (
               <div className="space-y-2">
                 <Label htmlFor="visit-farm">Farm (optional)</Label>
-                <Select value={farmId} onValueChange={setFarmId}>
+                <Select
+                  value={form.farmId}
+                  onValueChange={(value) => dispatchForm({ type: 'setFarmId', value })}
+                >
                   <SelectTrigger id="visit-farm">
                     <SelectValue placeholder="Select a farm" />
                   </SelectTrigger>
@@ -231,7 +299,7 @@ export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: Recor
             ) : (
               <div className="space-y-3">
                 {recommendations.map((rec) => {
-                  const draft = drafts[rec.triageId]
+                  const draft = form.drafts[rec.triageId]
                   return (
                     <div key={rec.triageId} className="rounded-lg border p-3">
                       <div className="flex flex-wrap items-center gap-2">
@@ -279,8 +347,8 @@ export function RecordVisitDialog({ access, farmerId, farms, onRecorded }: Recor
             <Label htmlFor="visit-summary">Visit notes (optional)</Label>
             <Textarea
               id="visit-summary"
-              value={summary}
-              onChange={(e) => setSummary(e.target.value)}
+              value={form.summary}
+              onChange={(e) => dispatchForm({ type: 'setSummary', value: e.target.value })}
               placeholder="Overall observations from this visit"
               rows={3}
             />

@@ -61,3 +61,15 @@ _Avoid_: grower, user, cultivator
 **Farm**:
 A vineyard belonging to a Farmer, with its own soil profile, crop variety, and records.
 _Avoid_: plot, field, vineyard, block
+
+**Fertilizer Plan**:
+The structured recommendation an Agronomist gives for a Farm after reviewing its current and
+previous test results and prior advice. It records what to apply, how much, when, and
+by which method, together with a short explanation for the Farmer.
+_Avoid_: free-text recommendation, prescription
+
+**Petiole Review**:
+The Agronomist's review of a newly uploaded petiole report for a Farm, using the previous petiole
+report, previous Fertilizer Plan, and annual soil context to prepare the next Fertilizer Plan.
+Pending Petiole Reviews appear as work items in the Consultant module's Command Center.
+_Avoid_: triage, issue, case

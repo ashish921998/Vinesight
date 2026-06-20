@@ -10,9 +10,7 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
-  ClipboardCheck,
   ClipboardList,
-  FileText,
   LayoutDashboard,
   Settings,
   Sprout,
@@ -62,29 +60,13 @@ const navItems = [
   }
 ]
 
-const upcomingItems = [
-  {
-    label: 'Plans',
-    icon: ClipboardCheck
-  },
-  {
-    label: 'Templates',
-    icon: FileText
-  }
-]
-
 export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   // 'loading' → checking access; 'ok' → admitted; 'denied' → not a consultant;
   // 'error' → couldn’t verify (transient). Kept distinct so an outage isn’t shown
   // to a valid consultant as an authorization denial.
-  const {
-    data: access,
-    isPending,
-    isError,
-    error
-  } = useConsultantAccess()
+  const { data: access, isPending, isError, error } = useConsultantAccess()
   const accessState = getConsultantAccessState(isPending, isError && !access, access)
 
   useEffect(() => {
@@ -153,7 +135,7 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
         {/* Sidebar */}
         <aside
           className={cn(
-            'border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200 flex flex-col',
+            'border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200 flex flex-col sticky top-0 h-screen overflow-x-hidden overflow-y-auto',
             collapsed ? 'w-20' : 'w-72'
           )}
         >
@@ -259,37 +241,6 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
                         </span>
                       )}
                     </Link>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div>
-              {!collapsed && (
-                <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wide text-sidebar-foreground/60">
-                  Coming Next
-                </p>
-              )}
-              <div className="space-y-1">
-                {upcomingItems.map((item) => {
-                  const Icon = item.icon
-
-                  return (
-                    <div
-                      key={item.label}
-                      className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/45"
-                      aria-disabled="true"
-                    >
-                      <Icon className="h-5 w-5 flex-shrink-0" />
-                      {!collapsed && (
-                        <span className="flex min-w-0 flex-1 items-center justify-between gap-3">
-                          <span className="truncate">{item.label}</span>
-                          <span className="rounded-full bg-sidebar-accent px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sidebar-foreground/60">
-                            Soon
-                          </span>
-                        </span>
-                      )}
-                    </div>
                   )
                 })}
               </div>
