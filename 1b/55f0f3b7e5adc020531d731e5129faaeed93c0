@@ -1,0 +1,20 @@
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/SoilBackgroundPanel.tsx
+  s_150badefc6c302::t_f89d538eff7ec9 4,59-60,63,79-82,85,89,200-201,205-227,229-230,234,247,255-291
+  s_150badefc6c302::t_57ea4de8b1fb04 86,202-204
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "1b55f0f3b7e5adc020531d731e5129faaeed93c0",
+  "prompts": {},
+  "sessions": {
+    "s_150badefc6c302": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ee46a-1fa5-79a0-9693-ba560b5c85c6",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
