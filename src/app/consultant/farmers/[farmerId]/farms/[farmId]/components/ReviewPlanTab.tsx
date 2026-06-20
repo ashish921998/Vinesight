@@ -32,7 +32,6 @@ export function ReviewPlanTab({
   savingPlan,
   hasExistingPlan,
   previousPlan,
-  onToggleNutrient,
   onUpdateItem,
   onAddItem,
   onRemoveItem,
@@ -51,7 +50,6 @@ export function ReviewPlanTab({
   savingPlan: boolean
   hasExistingPlan: boolean
   previousPlan: FertilizerPlanWithItems | null
-  onToggleNutrient: (nutrientKey: string) => void
   onUpdateItem: (id: string, patch: Partial<DraftItem>) => void
   onAddItem: () => void
   onRemoveItem: (id: string) => void
@@ -63,7 +61,6 @@ export function ReviewPlanTab({
       <NeedsAttentionBar
         abnormalNutrients={abnormalNutrients}
         draftItems={draftItems}
-        onToggleNutrient={onToggleNutrient}
         soilFlags={latestSoil ? soilFlags : { count: 0, evaluated: 0 }}
       />
 

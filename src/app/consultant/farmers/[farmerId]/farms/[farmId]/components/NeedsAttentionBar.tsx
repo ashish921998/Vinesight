@@ -15,15 +15,17 @@ export interface AbnormalNutrient {
 export function NeedsAttentionBar({
   abnormalNutrients,
   draftItems,
-  onToggleNutrient,
   soilFlags
 }: {
   abnormalNutrients: AbnormalNutrient[]
   draftItems: DraftItem[]
-  onToggleNutrient: (nutrientKey: string) => void
   soilFlags: { count: number; evaluated: number }
 }) {
   if (abnormalNutrients.length === 0) return null
+
+  const unaddressedCount = abnormalNutrients.filter(
+    (n) => !draftItems.some((item) => item.nutrient === n.key)
+  ).length
 
   return (
     <div className="rounded-lg border border-amber-200 bg-amber-50/60 dark:bg-amber-950/20 p-3 border-l-4 border-l-amber-400">
@@ -31,14 +33,10 @@ export function NeedsAttentionBar({
         <div className="flex items-center gap-2 shrink-0">
           <FlaskConical className="h-4 w-4 text-amber-600" />
           <span className="text-xs font-semibold text-amber-900 dark:text-amber-100">
-            Needs attention
+            Unaddressed lab flags
           </span>
           <span className="text-[11px] text-amber-700 dark:text-amber-400">
-            {
-              abnormalNutrients.filter((n) => !draftItems.some((item) => item.nutrient === n.key))
-                .length
-            }{' '}
-            of {abnormalNutrients.length} unaddressed
+            {unaddressedCount} of {abnormalNutrients.length} need plan coverage
           </span>
         </div>
 
@@ -46,16 +44,15 @@ export function NeedsAttentionBar({
           {abnormalNutrients.map((n) => {
             const addressed = draftItems.some((item) => item.nutrient === n.key)
             return (
-              <button
-                type="button"
+              <a
                 key={n.key}
-                aria-pressed={addressed}
-                onClick={() => onToggleNutrient(n.key)}
+                href={`#petiole-param-${n.key}`}
                 className={`group inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
                   addressed
                     ? 'border-border bg-muted text-muted-foreground'
-                    : 'border-amber-300 bg-white dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 hover:border-amber-500'
+                    : 'border-amber-300 bg-white dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 hover:border-amber-500 hover:bg-amber-50'
                 }`}
+                aria-label={`View ${n.label} in petiole comparison`}
               >
                 {n.label} <span className="tabular-nums">{formatValue(n.value, n.range)}</span>
                 <span className="text-amber-500">{n.status === 'low' ? '↓' : '↑'}</span>
@@ -65,9 +62,9 @@ export function NeedsAttentionBar({
                     in plan
                   </span>
                 ) : (
-                  <span className="text-amber-400 group-hover:text-amber-600">+ plan</span>
+                  <span className="text-amber-500 group-hover:text-amber-700">view evidence</span>
                 )}
-              </button>
+              </a>
             )
           })}
         </div>

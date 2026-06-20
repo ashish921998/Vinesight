@@ -26,7 +26,6 @@ import { HistoryTable } from './components/HistoryTable'
 import { FarmReportFiles } from './components/FarmReportFiles'
 import {
   type DraftItem,
-  NUTRIENT_RECOMMENDATIONS,
   PETIOLE_RANGES,
   SOIL_BASELINE_KEYS,
   SOIL_RANGES,
@@ -234,28 +233,6 @@ export default function ConsultantFarmPage() {
     })
   }
 
-  // Toggle a flagged-nutrient chip in the Workbench "Needs attention" bar.
-  // If the nutrient is already addressed, remove its seeded row. Otherwise,
-  // seed a new plan row with the default recommendation for that nutrient.
-  const toggleNutrientChip = (nutrientKey: string) => {
-    setDraftItems((prev) => {
-      const existing = prev.find((item) => item.nutrient === nutrientKey)
-      if (existing) {
-        const next = prev.filter((item) => item.nutrient !== nutrientKey)
-        return next.length > 0 ? next : [newDraftItem()]
-      }
-      const recommendation = NUTRIENT_RECOMMENDATIONS[nutrientKey]
-      return [
-        ...prev,
-        {
-          ...newDraftItem(),
-          ...recommendation,
-          nutrient: nutrientKey
-        }
-      ]
-    })
-  }
-
   const handleSendOrSavePlan = async () => {
     if (!access || farmId === null) return
 
@@ -395,7 +372,6 @@ export default function ConsultantFarmPage() {
               savingPlan={savingPlan}
               hasExistingPlan={hasExistingPlan}
               previousPlan={previousPlan}
-              onToggleNutrient={toggleNutrientChip}
               onUpdateItem={updateDraftItem}
               onAddItem={addDraftItem}
               onRemoveItem={removeDraftItem}

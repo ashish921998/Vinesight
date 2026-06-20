@@ -145,7 +145,11 @@ export function PetioleComparison({
                   {group.keys.map((key) => {
                     const range = ranges[key]
                     return (
-                      <tr key={key} className="group hover:bg-muted/20">
+                      <tr
+                        key={key}
+                        id={`petiole-param-${key}`}
+                        className="group scroll-mt-6 hover:bg-muted/20 target:bg-amber-50/70 dark:target:bg-amber-950/20"
+                      >
                         <td className="sticky left-0 z-10 bg-card group-hover:bg-muted/20 px-3 py-1.5 text-left text-[12px] font-medium text-foreground border-b border-border">
                           <div className="flex flex-col">
                             <span>{formatParamKey(key)}</span>
