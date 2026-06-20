@@ -1,0 +1,29 @@
+src/app/consultant/page.tsx
+  s_f7fd4a5f17e692::t_95549b7456e8dc 55-60
+src/components/consultant/VisitHistory.tsx
+  s_72908038e47c6f::t_60ae5a2e84439b 79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "261e738f93b8297d73d110f5fef6a7f965b3837a",
+  "prompts": {},
+  "sessions": {
+    "s_72908038e47c6f": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "5eee641b-1eb6-44c6-9caf-1f2b8507b1b5",
+        "model": "custom:GLM-5.2-0"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_f7fd4a5f17e692": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ee07d-e271-71b1-beed-42f25820b07b",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
