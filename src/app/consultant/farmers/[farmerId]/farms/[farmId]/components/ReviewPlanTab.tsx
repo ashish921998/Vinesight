@@ -28,6 +28,7 @@ export function ReviewPlanTab({
   abnormalNutrients,
   soilFlags,
   draftItems,
+  planTitle,
   planNote,
   savingPlan,
   hasExistingPlan,
@@ -36,6 +37,7 @@ export function ReviewPlanTab({
   onUpdateItem,
   onAddItem,
   onRemoveItem,
+  onTitleChange,
   onNoteChange,
   onSave
 }: {
@@ -47,6 +49,7 @@ export function ReviewPlanTab({
   abnormalNutrients: AbnormalNutrient[]
   soilFlags: { count: number; evaluated: number }
   draftItems: DraftItem[]
+  planTitle: string
   planNote: string
   savingPlan: boolean
   hasExistingPlan: boolean
@@ -55,6 +58,7 @@ export function ReviewPlanTab({
   onUpdateItem: (id: string, patch: Partial<DraftItem>) => void
   onAddItem: () => void
   onRemoveItem: (id: string) => void
+  onTitleChange: (v: string) => void
   onNoteChange: (v: string) => void
   onSave: () => void
 }) {
@@ -88,6 +92,8 @@ export function ReviewPlanTab({
         <aside>
           <div className="lg:sticky lg:top-6 space-y-3">
             <PlanEditorPanel
+              title={planTitle}
+              onTitleChange={onTitleChange}
               note={planNote}
               onNoteChange={onNoteChange}
               items={draftItems}

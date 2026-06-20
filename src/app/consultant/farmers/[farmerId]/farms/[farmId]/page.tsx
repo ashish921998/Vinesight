@@ -393,6 +393,7 @@ export default function ConsultantFarmPage() {
               abnormalNutrients={abnormalNutrients}
               soilFlags={soilFlags}
               draftItems={draftItems}
+              planTitle={planTitle}
               planNote={planNote}
               savingPlan={savingPlan}
               hasExistingPlan={hasExistingPlan}
@@ -401,6 +402,7 @@ export default function ConsultantFarmPage() {
               onUpdateItem={updateDraftItem}
               onAddItem={addDraftItem}
               onRemoveItem={removeDraftItem}
+              onTitleChange={setPlanTitle}
               onNoteChange={setPlanNote}
               onSave={handleSendOrSavePlan}
             />
