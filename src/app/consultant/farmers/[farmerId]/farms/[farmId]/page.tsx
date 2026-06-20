@@ -33,7 +33,6 @@ import {
   newDraftItem
 } from './components/farm-config'
 import { formatParamKey, getStatus, supabaseGetFarmerProfile } from './components/farm-helpers'
-import type { AbnormalNutrient } from './components/NeedsAttentionBar'
 
 export default function ConsultantFarmPage() {
   const params = useParams()

@@ -6,18 +6,26 @@ import type { LabTestRecord } from '@/types/lab-tests'
 import type { FarmDetail } from '@/lib/consultant-query-service'
 import type { FertilizerPlanWithItems } from '@/lib/fertilizer-plan-service'
 import { SectionLabel } from './SectionLabel'
-import { NeedsAttentionBar, type AbnormalNutrient } from './NeedsAttentionBar'
 import { PetioleComparison } from './PetioleComparison'
 import { PlanEditorPanel } from './PlanEditorPanel'
 import { PreviousPlanPanel } from './PreviousPlanPanel'
 import { SoilBackgroundPanel } from './SoilBackgroundPanel'
 import {
   type DraftItem,
+  ParamRange,
   PETIOLE_PARAM_GROUPS,
   PETIOLE_RANGES,
   SOIL_BASELINE_KEYS,
   SOIL_RANGES
 } from './farm-config'
+
+export interface AbnormalNutrient {
+  key: string
+  label: string
+  value: number
+  range: ParamRange
+  status: 'low' | 'high'
+}
 
 export function ReviewPlanTab({
   reviewTest,
@@ -58,12 +66,6 @@ export function ReviewPlanTab({
 }) {
   return (
     <div className="space-y-4">
-      <NeedsAttentionBar
-        abnormalNutrients={abnormalNutrients}
-        draftItems={draftItems}
-        soilFlags={latestSoil ? soilFlags : { count: 0, evaluated: 0 }}
-      />
-
       {/* Workspace: petiole comparison (left) + the plan column (right).
       The right column — new plan, previous plan, soil background — is
       pinned, so all the planning context stays in view while the
