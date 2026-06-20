@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, TestTube } from 'lucide-react'
+import { Check, ChevronDown, TestTube } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import type { LabTestRecord } from '@/types/lab-tests'
 import type { FarmDetail } from '@/lib/consultant-query-service'
@@ -56,11 +56,11 @@ export function SoilBackgroundPanel({
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <section className="overflow-hidden rounded-lg border border-border bg-card">
-        <div className="flex min-h-12 flex-wrap items-center justify-between gap-3 px-4 py-2.5">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 px-4 py-2.5">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <SectionLabel>Soil background</SectionLabel>
             {test?.date && (
-              <span className="text-[11px] text-muted-foreground tabular-nums">
+              <span className="border-l border-border pl-3 text-[11px] text-muted-foreground tabular-nums">
                 Sampled{' '}
                 {new Date(test.date).toLocaleDateString(undefined, {
                   month: 'short',
@@ -76,16 +76,17 @@ export function SoilBackgroundPanel({
             <div className="flex items-center gap-3">
               {baselineRows.length > 0 && (
                 <span
-                  className={`text-[11px] font-medium ${
-                    abnormalCount > 0 ? 'text-amber-700' : 'text-emerald-700'
+                  className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-semibold ${
+                    abnormalCount > 0
+                      ? 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300'
+                      : 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300'
                   }`}
                 >
-                  {abnormalCount > 0
-                    ? `${abnormalCount} outside target`
-                    : 'Baseline values in range'}
+                  {abnormalCount === 0 && <Check className="h-3 w-3" />}
+                  {abnormalCount > 0 ? `${abnormalCount} outside target` : 'Baseline in range'}
                 </span>
               )}
-              <CollapsibleTrigger className="inline-flex h-9 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-primary hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&[data-state=open]>svg]:rotate-180">
+              <CollapsibleTrigger className="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-md border border-border bg-card px-3 text-xs font-medium text-primary shadow-sm hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&[data-state=open]>svg]:rotate-180">
                 {open ? 'Hide details' : 'Soil details'}
                 <ChevronDown className="h-3.5 w-3.5 transition-transform" />
               </CollapsibleTrigger>
@@ -196,17 +197,41 @@ function SoilMetric({
         ? 'bg-indigo-50 text-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300'
         : 'bg-card text-foreground'
 
+  if (wide) {
+    return (
+      <div
+        className={`grid min-w-0 gap-3 px-4 py-3 sm:grid-cols-[88px_96px_88px_minmax(220px,1fr)] sm:items-center sm:gap-5 ${statusStyles}`}
+      >
+        <span className="text-xs font-medium text-muted-foreground">
+          {formatParamKey(paramKey)}
+        </span>
+        <p className="font-mono text-lg font-semibold leading-none tabular-nums">
+          {isNumeric ? formatValue(value as number, range) : String(value)}
+          {range?.unit && (
+            <span className="ml-1 font-sans text-[10px] font-normal text-muted-foreground">
+              {range.unit}
+            </span>
+          )}
+        </p>
+        {isNumeric && range && (
+          <span className="w-fit rounded-full border border-current/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide">
+            {status === 'low' ? 'Low' : status === 'high' ? 'High' : 'Optimal'}
+          </span>
+        )}
+        {isNumeric && range && (
+          <SoilRangeTrack value={value as number} range={range} status={status} />
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div
-      className={`min-w-0 px-3 py-2.5 ${statusStyles} ${
-        wide ? 'flex flex-wrap items-center gap-x-6 gap-y-1 sm:px-4' : ''
-      }`}
-    >
-      <div className={`flex items-center justify-between gap-2 ${wide ? 'min-w-40' : ''}`}>
+    <div className={`min-w-0 px-3 py-2.5 ${statusStyles}`}>
+      <div className="flex items-center justify-between gap-2">
         <span className="truncate text-[10px] font-medium text-muted-foreground">
           {formatParamKey(paramKey)}
         </span>
-        {isNumeric && range && !wide && (
+        {isNumeric && range && (
           <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide">
             {status === 'low' ? 'Low' : status === 'high' ? 'High' : 'Optimal'}
           </span>
@@ -218,16 +243,52 @@ function SoilMetric({
           <span className="ml-1 text-[10px] font-normal text-muted-foreground">{range.unit}</span>
         )}
       </p>
-      {isNumeric && range && wide && (
-        <span className="text-[9px] font-semibold uppercase tracking-wide">
-          {status === 'low' ? 'Low' : status === 'high' ? 'High' : 'Optimal'}
-        </span>
-      )}
       {isNumeric && range && (
-        <p className={`${wide ? '' : 'mt-0.5'} text-[9px] text-muted-foreground tabular-nums`}>
+        <p className="mt-0.5 text-[9px] text-muted-foreground tabular-nums">
           Target {range.min}-{range.max}
         </p>
       )}
+    </div>
+  )
+}
+
+function SoilRangeTrack({
+  value,
+  range,
+  status
+}: {
+  value: number
+  range: ParamRange
+  status: 'optimal' | 'low' | 'high'
+}) {
+  const span = range.scaleMax - range.scaleMin
+  const toPercent = (number: number) =>
+    Math.min(100, Math.max(0, ((number - range.scaleMin) / span) * 100))
+  const targetStart = toPercent(range.min)
+  const targetWidth = toPercent(range.max) - targetStart
+  const markerPosition = toPercent(value)
+  const markerColor =
+    status === 'low' ? 'bg-amber-700' : status === 'high' ? 'bg-indigo-700' : 'bg-emerald-700'
+
+  return (
+    <div className="min-w-0 sm:pl-2">
+      <div className="mb-1.5 flex items-center justify-between gap-3 text-[9px] text-muted-foreground tabular-nums">
+        <span>Target range</span>
+        <span className="font-medium text-foreground">
+          {range.min}-{range.max}
+          {range.unit ? ` ${range.unit}` : ''}
+        </span>
+      </div>
+      <div className="relative h-1.5 rounded-full bg-muted">
+        <span
+          className="absolute inset-y-0 rounded-full bg-emerald-200 dark:bg-emerald-900/70"
+          style={{ left: `${targetStart}%`, width: `${targetWidth}%` }}
+        />
+        <span
+          className={`absolute top-1/2 h-3 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-card ${markerColor}`}
+          style={{ left: `${markerPosition}%` }}
+        />
+      </div>
     </div>
   )
 }
