@@ -69,7 +69,7 @@ export class DocumentService {
     }
 
     const supabase = this.getServiceClient()
-    const { data, error } = await supabase.storage.getBucket(TEST_REPORT_BUCKET)
+    const { error } = await supabase.storage.getBucket(TEST_REPORT_BUCKET)
 
     if (error) {
       const storageError = error as unknown as SupabaseStorageError
@@ -99,8 +99,6 @@ export class DocumentService {
           `Failed to verify test reports bucket: ${message || 'Unknown storage error'}`
         )
       }
-    } else if (data) {
-      // ...
     }
 
     this.bucketEnsured = true

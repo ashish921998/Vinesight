@@ -51,8 +51,9 @@ function initials(name: string | null | undefined): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-function timeLabel(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString(undefined, {
+function timeLabel(createdAt: string | null): string | null {
+  if (!createdAt) return null
+  return new Date(createdAt).toLocaleTimeString(undefined, {
     hour: 'numeric',
     minute: '2-digit'
   })
@@ -144,7 +145,7 @@ function VisitEntry({ visit }: { visit: Visit }) {
             )}
           </p>
           <time className="text-xs tabular-nums text-muted-foreground">
-            {timeLabel(visit.visitDate)}
+            {timeLabel(visit.createdAt)}
           </time>
         </div>
 

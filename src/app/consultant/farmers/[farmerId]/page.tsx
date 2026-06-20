@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
@@ -45,60 +45,73 @@ export default function FarmerProfilePage() {
   const [clientRecordId, setClientRecordId] = useState<string | null>(null)
   const [isPaid, setIsPaid] = useState(false)
 
-  const loadFarmerProfile = useCallback(async () => {
-    try {
-      setLoading(true)
-      setNotFound(false)
+  useEffect(() => {
+    // Guard against stale loads when [farmerId] changes without remounting
+    // (App Router preserves the [farmerId] segment component). If a newer
+    // navigation fires before this load resolves, bail before any setState so
+    // farmer A's data can never overwrite farmer B's.
+    let stale = false
 
-      const currentAccess = await getConsultantAccess()
-      if (!currentAccess) {
-        toast.error('Not authenticated')
-        return
+    const load = async () => {
+      try {
+        setLoading(true)
+        setNotFound(false)
+
+        const currentAccess = await getConsultantAccess()
+        if (stale) return
+        if (!currentAccess) {
+          toast.error('Not authenticated')
+          return
+        }
+        setAccess(currentAccess)
+
+        // Validate farmer is an active client of the organization
+        // Validate agronomist assignment if current user is agronomist
+        const validation = await validateFarmerClient(currentAccess, farmerId)
+        if (stale) return
+        if (!validation.isValid) {
+          setNotFound(true)
+          return
+        }
+        setClientRecordId(validation.clientRecordId)
+        setIsPaid(validation.isPaid)
+
+        const [profile, farmsData] = await Promise.all([
+          getFarmerProfile(farmerId),
+          getFarmerFarms(farmerId)
+        ])
+
+        if (stale) return
+        if (!profile) {
+          setNotFound(true)
+          return
+        }
+
+        setFarmer(profile)
+        setFarms(farmsData)
+        posthog.capture('consultant_farmer_profile_viewed', {
+          farmer_id: farmerId,
+          org_id: currentAccess.organizationId,
+          role: currentAccess.role,
+          farm_count: farmsData.length
+        })
+      } catch (error) {
+        if (stale) return
+        Sentry.captureException(error, {
+          tags: { context: 'loadFarmerProfile' },
+          extra: { farmerId }
+        })
+        toast.error(error instanceof Error ? error.message : 'Failed to load farmer profile')
+      } finally {
+        if (!stale) setLoading(false)
       }
-      setAccess(currentAccess)
+    }
 
-      // Validate farmer is an active client of the organization
-      // Validate agronomist assignment if current user is agronomist
-      const validation = await validateFarmerClient(currentAccess, farmerId)
-      if (!validation.isValid) {
-        setNotFound(true)
-        return
-      }
-      setClientRecordId(validation.clientRecordId)
-      setIsPaid(validation.isPaid)
-
-      const [profile, farmsData] = await Promise.all([
-        getFarmerProfile(farmerId),
-        getFarmerFarms(farmerId)
-      ])
-
-      if (!profile) {
-        setNotFound(true)
-        return
-      }
-
-      setFarmer(profile)
-      setFarms(farmsData)
-      posthog.capture('consultant_farmer_profile_viewed', {
-        farmer_id: farmerId,
-        org_id: currentAccess.organizationId,
-        role: currentAccess.role,
-        farm_count: farmsData.length
-      })
-    } catch (error) {
-      Sentry.captureException(error, {
-        tags: { context: 'loadFarmerProfile' },
-        extra: { farmerId }
-      })
-      toast.error(error instanceof Error ? error.message : 'Failed to load farmer profile')
-    } finally {
-      setLoading(false)
+    load()
+    return () => {
+      stale = true
     }
   }, [farmerId])
-
-  useEffect(() => {
-    loadFarmerProfile()
-  }, [loadFarmerProfile])
 
   // Aggregate unique regions for the summary metric strip. Computed unconditionally
   // to satisfy the rules-of-hooks (early returns happen below).
