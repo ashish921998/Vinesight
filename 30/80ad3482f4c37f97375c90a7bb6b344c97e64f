@@ -1,0 +1,26 @@
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/PlanEditorPanel.tsx
+  s_fda8ca1fee2426::t_f6a7c1815a1874 28-29,41-42
+  s_fda8ca1fee2426::t_ff9ef87b553cf7 75-83,85-88
+  s_fda8ca1fee2426::t_ac8ae85663fc8e 84
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/ReviewPlanTab.tsx
+  s_fda8ca1fee2426::t_d385434f03b1b5 31,40,52,61
+  s_fda8ca1fee2426::t_d3ff4377584f80 95-96
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/page.tsx
+  s_fda8ca1fee2426::t_5cf328183f661e 396,405
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "3080ad3482f4c37f97375c90a7bb6b344c97e64f",
+  "prompts": {},
+  "sessions": {
+    "s_fda8ca1fee2426": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "abdf94cf-04ca-4c3f-85e9-14f182232b5f",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
