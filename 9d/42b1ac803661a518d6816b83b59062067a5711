@@ -1,0 +1,29 @@
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/PetioleComparison.tsx
+  s_fda8ca1fee2426::t_be512c03400165 94
+CONTEXT.md
+  s_fda8ca1fee2426::t_7ce5597af3385d 67
+src/app/consultant/layout.tsx
+  s_fda8ca1fee2426::t_3edbc3a05d1097 138
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/ReportLink.tsx
+  s_fda8ca1fee2426::t_02891683859efd 47-53,55-68,71-74
+  s_fda8ca1fee2426::t_e0b5abcf64e1c9 3
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/PlanEditorPanel.tsx
+  s_fda8ca1fee2426::t_f3a2366f6f00f6 160-166,171
+  s_fda8ca1fee2426::t_5b4cb3fc27aebd 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "9d42b1ac803661a518d6816b83b59062067a5711",
+  "prompts": {},
+  "sessions": {
+    "s_fda8ca1fee2426": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "abdf94cf-04ca-4c3f-85e9-14f182232b5f",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
