@@ -1,0 +1,27 @@
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/NeedsAttentionBar.tsx
+  s_d2b95b29e87001::t_83fb3de452b321 50
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/ReportLink.tsx
+  s_d2b95b29e87001::t_477eebf2420158 3,44-51,55,60,69,73
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/FarmReportFiles.tsx
+  s_d2b95b29e87001::t_70a3a6f17b6add 3,14-21,25,30,33,36,94,99,112
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/SoilBackgroundPanel.tsx
+  s_d2b95b29e87001::t_0c0ccf84454058 96
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/PlanEditorPanel.tsx
+  s_d2b95b29e87001::t_391f273885cd80 3,162-163,165,167
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "bea941f4d001921bdaf2ed23d460fdb834b4624c",
+  "prompts": {},
+  "sessions": {
+    "s_d2b95b29e87001": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "28454b56-ae87-4628-9d55-c551bd05d01d",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
