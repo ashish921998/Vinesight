@@ -1,0 +1,30 @@
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/page.tsx
+  s_150badefc6c302::t_4b68cdff116476 257-260
+  s_150badefc6c302::t_11d45d4a03d5fe 48-50,76-77,80-81,112-113,117
+  s_150badefc6c302::t_ad09bd89f068e2 194,271-275
+  s_150badefc6c302::t_55d9b8c516065c 10-14,167-193,195-251,261,263-270,276-293,306,311,316,341-348
+  s_150badefc6c302::t_d6344c82afdc5f 395,401-404
+  s_150badefc6c302::t_602676ce9e0fcb 358
+  s_150badefc6c302::t_95bac605fb798d 252-256,262
+  s_150badefc6c302::t_36103941a187a5 3,5,15-27,41-47,59-75,78-79,82,87-88,90-95,97-100,102,105-109,114-116,118-123
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/FarmPageHeader.tsx
+  s_150badefc6c302::t_d6344c82afdc5f 36
+src/app/consultant/farmers/[farmerId]/farms/[farmId]/components/FarmReportFiles.tsx
+  s_150badefc6c302::t_be934687587dfb 3,7,11-18,23-33,39,44,49-61,63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "5e42841d6cdd1ce23469ae81c4c8db90d5ae1627",
+  "prompts": {},
+  "sessions": {
+    "s_150badefc6c302": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ee46a-1fa5-79a0-9693-ba560b5c85c6",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
