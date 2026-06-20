@@ -1,21 +1,13 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef } from 'react'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState, useMemo, useRef } from 'react'
+import { useParams, useSearchParams, redirect } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { toast } from 'sonner'
 import type { LabTestRecord } from '@/types/lab-tests'
 import { VisitHistory } from '@/components/consultant/VisitHistory'
-import {
-  FertilizerPlanService,
-  type FertilizerPlanWithItems,
-  type PlanItemInput
-} from '@/lib/fertilizer-plan-service'
+import type { FertilizerPlanWithItems } from '@/lib/fertilizer-plan-service'
 import type { TriageItem } from '@/lib/consultant-triage-service'
-import { consultantKeys } from '@/lib/consultant-query-keys'
 import {
-  farmerScope,
   useConsultantAccess,
   useFarmDetail,
   useFarmLabTests,
@@ -32,18 +24,9 @@ import { NoReportState } from './components/NoReportState'
 import { ReviewPlanTab, type AbnormalNutrient } from './components/ReviewPlanTab'
 import { HistoryTable } from './components/HistoryTable'
 import { FarmReportFiles } from './components/FarmReportFiles'
-import {
-  type DraftItem,
-  PETIOLE_RANGES,
-  draftFromPlanItem,
-  newDraftItem
-} from './components/farm-config'
+import { PETIOLE_RANGES } from './components/farm-config'
 import { formatParamKey } from './components/farm-helpers'
-
-interface StoredPlanDraft {
-  note: string
-  items: DraftItem[]
-}
+import { usePlanEditor } from './components/usePlanEditor'
 
 const EMPTY_LAB_TESTS: LabTestRecord[] = []
 const EMPTY_TRIAGE_ITEMS: TriageItem[] = []
@@ -51,14 +34,17 @@ const EMPTY_PLANS: FertilizerPlanWithItems[] = []
 
 export default function ConsultantFarmPage() {
   const params = useParams()
-  const router = useRouter()
   const searchParams = useSearchParams()
   const farmerId = params.farmerId as string
   const rawFarmId = parseInt(params.farmId as string, 10)
   const farmId = isNaN(rawFarmId) ? null : rawFarmId
   const initialReviewId = searchParams.get('reviewId')
   const [selectedReviewId, setSelectedReviewId] = useState<string | null>(initialReviewId)
-  const queryClient = useQueryClient()
+  // Last triage snapshot we reconciled the review selection against. Held in a
+  // ref because it is never rendered — it only gates the selection correction
+  // below — so a useState here would force a pointless second render every time
+  // the triage list changes.
+  const reconciledTriageRef = useRef<TriageItem[] | null>(null)
 
   const accessQuery = useConsultantAccess()
   const access = accessQuery.data
@@ -81,41 +67,23 @@ export default function ConsultantFarmPage() {
   const plans = plansQuery.data ?? EMPTY_PLANS
   const previousPlan = plans[0] ?? null
 
-  // Plan editor state
-  const [planNote, setPlanNote] = useState('')
-  const [draftItems, setDraftItems] = useState<DraftItem[]>([newDraftItem()])
-  const [draftDirty, setDraftDirty] = useState(false)
-  const initializedDraftKeyRef = useRef<string | null>(null)
-
-  useEffect(() => {
-    if (farmId === null) {
-      toast.error('Invalid farm ID')
-      router.replace(`/consultant/farmers/${farmerId}`)
+  // Reconcile the selected review against the latest triage list. Done during
+  // render (not in an effect) so picking the review doesn't chain into an extra
+  // render: the selection is settled before the page commits. We keep the
+  // current selection if it's still a real triage item; otherwise fall back to
+  // the first pending review (or none). Pattern:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  if (triageQuery.isSuccess && triageItems !== reconciledTriageRef.current) {
+    reconciledTriageRef.current = triageItems
+    const currentIsValid =
+      Boolean(selectedReviewId) && triageItems.some((item) => item.id === selectedReviewId)
+    if (!currentIsValid) {
+      const nextReview = triageItems.find(
+        (item) => item.status === 'pending' || item.status === 'in_review'
+      )
+      setSelectedReviewId(nextReview?.id ?? null)
     }
-  }, [farmId, farmerId, router])
-
-  useEffect(() => {
-    if (validationQuery.data && !validationQuery.data.isValid) {
-      toast.error('Farmer not found or not authorized')
-      router.replace('/consultant/farmers')
-    }
-  }, [router, validationQuery.data])
-
-  useEffect(() => {
-    if (farmQuery.isSuccess && (!farm || farm.user_id !== farmerId)) {
-      toast.error('Farm not found or does not belong to this farmer')
-      router.replace(`/consultant/farmers/${farmerId}`)
-    }
-  }, [farm, farmQuery.isSuccess, farmerId, router])
-
-  useEffect(() => {
-    if (!triageQuery.isSuccess) return
-    if (selectedReviewId && triageItems.some((item) => item.id === selectedReviewId)) return
-    const review = triageItems.find(
-      (item) => item.status === 'pending' || item.status === 'in_review'
-    )
-    setSelectedReviewId(review?.id ?? null)
-  }, [selectedReviewId, triageItems, triageQuery.isSuccess])
+  }
 
   const pendingReview = useMemo<TriageItem | null>(() => {
     if (!selectedReviewId) return null
@@ -168,134 +136,25 @@ export default function ConsultantFarmPage() {
   const draftStorageKey =
     farmId === null ? null : `consultant-plan-draft:${farmId}:${selectedReviewId ?? 'ad-hoc'}`
 
-  useEffect(() => {
-    if (!draftStorageKey || !plansQuery.isSuccess || !triageQuery.isSuccess) return
-    if (initializedDraftKeyRef.current === draftStorageKey) return
-
-    let storedDraft: StoredPlanDraft | null = null
-    try {
-      const stored = sessionStorage.getItem(draftStorageKey)
-      if (stored) {
-        const parsed = JSON.parse(stored) as Partial<StoredPlanDraft>
-        if (typeof parsed.note === 'string' && Array.isArray(parsed.items)) {
-          storedDraft = { note: parsed.note, items: parsed.items }
-        }
-      }
-    } catch {
-      sessionStorage.removeItem(draftStorageKey)
-    }
-
-    if (storedDraft) {
-      setPlanNote(storedDraft.note)
-      setDraftItems(storedDraft.items.length > 0 ? storedDraft.items : [newDraftItem()])
-    } else {
-      setPlanNote(previousPlan?.notes ?? '')
-      setDraftItems(
-        previousPlan?.items.length ? previousPlan.items.map(draftFromPlanItem) : [newDraftItem()]
-      )
-    }
-    setDraftDirty(false)
-    initializedDraftKeyRef.current = draftStorageKey
-  }, [draftStorageKey, plansQuery.isSuccess, previousPlan, triageQuery.isSuccess])
-
-  useEffect(() => {
-    if (!draftDirty || !draftStorageKey) return
-    if (initializedDraftKeyRef.current !== draftStorageKey) return
-
-    const draft: StoredPlanDraft = { note: planNote, items: draftItems }
-    sessionStorage.setItem(draftStorageKey, JSON.stringify(draft))
-  }, [draftDirty, draftItems, draftStorageKey, planNote])
-
-  const savePlanMutation = useMutation({
-    mutationFn: async (items: PlanItemInput[]) => {
-      if (!access || farmId === null || !farm) throw new Error('Farm is unavailable')
-      const title = `Plan for ${farm.name}`
-      const notes = planNote.trim() || undefined
-
-      // If we're working within a pending review, the plan must belong to THAT
-      // review: update the review's existing plan in place, or send a new one
-      // (which also flips the review to 'reviewed'). Reaching for the farm's
-      // newest plan here would overwrite a prior review's plan and leave the
-      // current review stuck pending — petiole_triage_id is what ties them.
-      if (pendingReview) {
-        const reviewPlan = plans.find((plan) => plan.petiole_triage_id === pendingReview.id) ?? null
-        if (reviewPlan) {
-          const plan = await FertilizerPlanService.updatePlanAtomic({
-            planId: reviewPlan.id,
-            title,
-            notes,
-            items
-          })
-          return { plan, action: 'updated' as const, reviewId: null }
-        }
-        const plan = await FertilizerPlanService.sendPlan({
-          reviewId: pendingReview.id,
-          title,
-          notes,
-          items
-        })
-        return { plan, action: 'sent' as const, reviewId: pendingReview.id }
-      }
-
-      // No review in flight: edit the farm's latest plan in place, or create one.
-      if (previousPlan) {
-        const plan = await FertilizerPlanService.updatePlanAtomic({
-          planId: previousPlan.id,
-          title,
-          notes,
-          items
-        })
-        return { plan, action: 'updated' as const, reviewId: null }
-      }
-
-      const plan = await FertilizerPlanService.createPlan({
-        farm_id: farmId,
-        organization_id: access.organizationId,
-        title,
-        notes,
-        items
-      })
-      return { plan, action: 'saved' as const, reviewId: null }
-    },
-    onSuccess: ({ plan, action, reviewId }) => {
-      if (farmId !== null) {
-        queryClient.setQueryData<FertilizerPlanWithItems[]>(
-          consultantKeys.farmPlans(farmId),
-          (current = []) => [plan, ...current.filter((item) => item.id !== plan.id)]
-        )
-      }
-
-      if (reviewId && access && farmId !== null) {
-        const farmTriageKey = consultantKeys.farmTriage(
-          farmId,
-          access.organizationId,
-          farmerScope(access)
-        )
-        queryClient.setQueryData<TriageItem[]>(farmTriageKey, (current = []) =>
-          current.map((item) =>
-            item.id === reviewId ? { ...item, status: 'reviewed' as const } : item
-          )
-        )
-        queryClient.invalidateQueries({ queryKey: farmTriageKey })
-        queryClient.invalidateQueries({ queryKey: ['consultant', 'reviewQueue'] })
-      }
-
-      setPlanNote(plan.notes ?? '')
-      setDraftItems(plan.items.length > 0 ? plan.items.map(draftFromPlanItem) : [newDraftItem()])
-      setDraftDirty(false)
-      if (draftStorageKey) sessionStorage.removeItem(draftStorageKey)
-      toast.success(
-        action === 'updated'
-          ? 'Plan updated'
-          : action === 'sent'
-            ? 'Plan sent to farmer'
-            : 'Plan saved'
-      )
-    },
-    onError: (error) => {
-      console.error('Failed to save plan:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to save plan')
-    }
+  const {
+    planNote,
+    draftItems,
+    savingPlan,
+    updateDraftItem,
+    addDraftItem,
+    removeDraftItem,
+    onNoteChange,
+    sendOrSavePlan
+  } = usePlanEditor({
+    access: access ?? null,
+    farmId,
+    farm,
+    pendingReview,
+    previousPlan,
+    plans,
+    draftStorageKey,
+    plansReady: plansQuery.isSuccess,
+    triageReady: triageQuery.isSuccess
   })
 
   const loading =
@@ -313,56 +172,22 @@ export default function ConsultantFarmPage() {
     return <FarmPageLoading />
   }
 
-  if (!farm || farmId === null) {
+  // Authorization & validity guards. Evaluated during render (not in an effect)
+  // so an invalid farm or unauthorized access never commits the page before the
+  // browser navigates away — no flash of the wrong UI, no broken back-button.
+  // redirect() throws, terminating this render.
+  if (validationQuery.data && !validationQuery.data.isValid) {
+    redirect('/consultant/farmers')
+  }
+  if (farmId === null) {
+    redirect(`/consultant/farmers/${farmerId}`)
+  }
+  if (farmQuery.isSuccess && (!farm || farm.user_id !== farmerId)) {
+    redirect(`/consultant/farmers/${farmerId}`)
+  }
+
+  if (!farm) {
     return <FarmPageNotFound farmerId={farmerId} />
-  }
-
-  // -- Plan editor handlers -------------------------------------------------
-
-  const updateDraftItem = (id: string, patch: Partial<DraftItem>) => {
-    setDraftDirty(true)
-    setDraftItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)))
-  }
-
-  const addDraftItem = () => {
-    setDraftDirty(true)
-    setDraftItems((prev) => [...prev, newDraftItem()])
-  }
-
-  const removeDraftItem = (id: string) => {
-    setDraftDirty(true)
-    setDraftItems((prev) => {
-      const next = prev.filter((item) => item.id !== id)
-      return next.length > 0 ? next : [newDraftItem()]
-    })
-  }
-
-  const handleSendOrSavePlan = async () => {
-    if (!access || farmId === null) return
-
-    const validItems = draftItems
-      .filter((i) => i.fertilizer_name.trim() !== '')
-      .map((i) => ({ ...i, quantity: parseFloat(i.quantity) || 0 }))
-    if (validItems.length === 0) {
-      toast.error('Add at least one fertilizer item before sending the plan')
-      return
-    }
-    const invalidQuantity = validItems.find((i) => i.quantity <= 0)
-    if (invalidQuantity) {
-      toast.error(
-        `Enter a quantity greater than zero for "${invalidQuantity.fertilizer_name.trim()}"`
-      )
-      return
-    }
-
-    savePlanMutation.mutate(
-      validItems.map((draft) => ({
-        fertilizer_name: draft.fertilizer_name.trim(),
-        quantity: draft.quantity,
-        unit: draft.unit,
-        application_method: draft.application_method || undefined
-      }))
-    )
   }
 
   return (
@@ -409,23 +234,20 @@ export default function ConsultantFarmPage() {
               abnormalNutrients={abnormalNutrients}
               draftItems={draftItems}
               planNote={planNote}
-              savingPlan={savePlanMutation.isPending}
+              savingPlan={savingPlan}
               hasExistingPlan={hasExistingPlan}
               previousPlan={previousPlan}
               onUpdateItem={updateDraftItem}
               onAddItem={addDraftItem}
               onRemoveItem={removeDraftItem}
-              onNoteChange={(value) => {
-                setDraftDirty(true)
-                setPlanNote(value)
-              }}
-              onSave={handleSendOrSavePlan}
+              onNoteChange={onNoteChange}
+              onSave={sendOrSavePlan}
             />
           </TabsContent>
 
           <TabsContent value="history" className="mt-4">
             <div className="rounded-lg border border-border bg-card p-4 space-y-5">
-              {farmId !== null && <FarmReportFiles farmId={farmId} />}
+              <FarmReportFiles farmId={farmId} />
               <HistoryTable soilTests={sortedSoilTests} petioleTests={sortedPetioleTests} />
               <VisitHistory visits={visits} />
             </div>

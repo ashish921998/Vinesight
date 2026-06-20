@@ -32,17 +32,22 @@ export function PetioleComparison({
   )
 
   // Flatten the group keys while preserving group membership for rendering.
-  const groupedRows = paramGroups
-    .map((g) => ({
-      label: g.label,
-      keys: g.keys.filter((k) =>
+  // Flatten the group keys while preserving group membership for rendering.
+  const groupedRows = useMemo<{ label: string; keys: string[] }[]>(() => {
+    const rows: { label: string; keys: string[] }[] = []
+    for (const group of paramGroups) {
+      const keys = group.keys.filter((k) =>
         sortedReports.some((r) => {
           const v = r.parameters?.[k]
           return v !== undefined && v !== null && v !== ''
         })
       )
-    }))
-    .filter((g) => g.keys.length > 0)
+      if (keys.length > 0) {
+        rows.push({ label: group.label, keys })
+      }
+    }
+    return rows
+  }, [paramGroups, sortedReports])
 
   const totalParams = groupedRows.reduce((acc, g) => acc + g.keys.length, 0)
 

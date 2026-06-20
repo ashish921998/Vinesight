@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -14,14 +14,17 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { Search, Loader2, ClipboardList, ChevronRight } from 'lucide-react'
-import { useConsultantAccess } from '@/hooks/consultant/useConsultantQueries'
+import { useConsultantAccess, useTriageItems } from '@/hooks/consultant/useConsultantQueries'
 import posthog from 'posthog-js'
 import {
-  getTriageItems,
   TRIAGE_STATUSES,
   type TriageItem,
   type TriageStatus
 } from '@/lib/consultant-triage-service'
+
+// Stable empty list so `counts`/`filteredItems` keep a stable reference before
+// the triage query resolves, instead of getting a fresh [] every render.
+const EMPTY_ITEMS: TriageItem[] = []
 
 // User-facing labels. Note `reviewed` surfaces as "Completed" — we never expose
 // the internal status term to consultants.
@@ -57,43 +60,39 @@ function formatDate(value: string | null) {
 export default function ReportsToReviewPage() {
   const accessQuery = useConsultantAccess()
   const access = accessQuery.data ?? null
-  const [items, setItems] = useState<TriageItem[]>([])
-  const [loading, setLoading] = useState(true)
+  // Triage data lives in the query cache (pending/error/data come from the
+  // hook), so there's no `items`/`loading` useState mirrored from a fetch
+  // effect — that pattern read as derived state and rendered twice per load.
+  const triageQuery = useTriageItems(access)
+  const items = triageQuery.data ?? EMPTY_ITEMS
 
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('open')
 
-  const loadReports = useCallback(
-    async (currentAccess = access) => {
-      if (!currentAccess) return
-      try {
-        setLoading(true)
-        const data = await getTriageItems(currentAccess)
-        setItems(data)
-        posthog.capture('consultant_reports_to_review_viewed', {
-          org_id: currentAccess.organizationId,
-          role: currentAccess.role,
-          item_count: data.length
-        })
-      } catch (error) {
-        console.error('Failed to load reports:', error)
-        toast.error('Failed to load reports to review')
-      } finally {
-        setLoading(false)
-      }
-    },
-    [access]
-  )
+  // Surface auth + fetch failures once each (side-effects only — never setState
+  // — so this does not reintroduce derived state).
+  useEffect(() => {
+    if (accessQuery.isError) toast.error('Not authenticated')
+  }, [accessQuery.isError])
 
   useEffect(() => {
-    if (accessQuery.isPending) return
-    if (!access) {
-      if (accessQuery.isError) toast.error('Not authenticated')
-      setLoading(false)
-      return
-    }
-    loadReports(access)
-  }, [access, accessQuery.isError, accessQuery.isPending, loadReports])
+    if (triageQuery.isError) toast.error('Failed to load reports to review')
+  }, [triageQuery.isError])
+
+  // Fire the "viewed" analytics event once per resolved scope when the first
+  // batch of data lands (not on every background refetch).
+  const capturedScopeRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!triageQuery.isSuccess || !access) return
+    const scopeKey = `${access.organizationId}:${access.role}`
+    if (capturedScopeRef.current === scopeKey) return
+    capturedScopeRef.current = scopeKey
+    posthog.capture('consultant_reports_to_review_viewed', {
+      org_id: access.organizationId,
+      role: access.role,
+      item_count: triageQuery.data?.length ?? 0
+    })
+  }, [triageQuery.isSuccess, triageQuery.data, access])
 
   const counts = useMemo(() => {
     let pending = 0
@@ -123,6 +122,10 @@ export default function ReportsToReviewPage() {
       return true
     })
   }, [items, statusFilter, searchQuery])
+
+  // Busy while access is resolving or the triage query is still loading.
+  // Derived directly from the query states during render.
+  const loading = accessQuery.isPending || (Boolean(access) && triageQuery.isPending)
 
   if (loading) {
     return (

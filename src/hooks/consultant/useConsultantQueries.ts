@@ -17,6 +17,7 @@ import {
   type CreateVisitInput
 } from '@/lib/consultant-visit-service'
 import { getTriageItems } from '@/lib/consultant-triage-service'
+import { listOrgMembers, listPendingInvites } from '@/lib/team-service'
 import { SupabaseService } from '@/lib/supabase-service'
 import { FertilizerPlanService } from '@/lib/fertilizer-plan-service'
 import type { LabTestRecord } from '@/types/lab-tests'
@@ -166,6 +167,41 @@ export function useReviewQueue(access: ConsultantAccess | null | undefined) {
       const items = await getTriageItems(access as ConsultantAccess)
       return items.filter((t) => t.status === 'pending' || t.status === 'in_review')
     },
+    enabled: Boolean(access)
+  })
+}
+
+// Every triage item in the consultant's scope (all statuses) — drives the
+// "Reports to Review" page counts + filters. Replaces a manual
+// useEffect+fetch+setState that flagged as derived state.
+export function useTriageItems(access: ConsultantAccess | null | undefined) {
+  return useQuery({
+    queryKey: access
+      ? consultantKeys.triageItems(access.organizationId, farmerScope(access))
+      : ['consultant', 'triageItems', 'disabled'],
+    queryFn: () => getTriageItems(access as ConsultantAccess),
+    enabled: Boolean(access)
+  })
+}
+
+// Organization members (everyone). Replaces a manual fetch on the team pages.
+export function useOrgMembers(access: ConsultantAccess | null | undefined) {
+  return useQuery({
+    queryKey: access
+      ? consultantKeys.orgMembers(access.organizationId)
+      : ['consultant', 'orgMembers', 'disabled'],
+    queryFn: () => listOrgMembers((access as ConsultantAccess).organizationId),
+    enabled: Boolean(access)
+  })
+}
+
+// Pending member invitations (admins only — RLS returns [] for others).
+export function usePendingInvites(access: ConsultantAccess | null | undefined) {
+  return useQuery({
+    queryKey: access
+      ? consultantKeys.pendingInvites(access.organizationId)
+      : ['consultant', 'pendingInvites', 'disabled'],
+    queryFn: () => listPendingInvites((access as ConsultantAccess).organizationId),
     enabled: Boolean(access)
   })
 }

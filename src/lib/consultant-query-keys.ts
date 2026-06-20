@@ -16,5 +16,9 @@ export const consultantKeys = {
   farmerVisits: (farmerId: string, orgId: string, scope: string) =>
     ['consultant', 'farmer', farmerId, 'visits', orgId, scope] as const,
   reviewQueue: (orgId: string, scope: string) =>
-    ['consultant', 'reviewQueue', orgId, scope] as const
+    ['consultant', 'reviewQueue', orgId, scope] as const,
+  triageItems: (orgId: string, scope: string) =>
+    ['consultant', 'triageItems', orgId, scope] as const,
+  orgMembers: (orgId: string) => ['consultant', 'orgMembers', orgId] as const,
+  pendingInvites: (orgId: string) => ['consultant', 'pendingInvites', orgId] as const
 }

@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,59 +20,49 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { Loader2, Lock, Search, UserCog, Users } from 'lucide-react'
-import { useConsultantAccess, useFarmerClients } from '@/hooks/consultant/useConsultantQueries'
+import {
+  useConsultantAccess,
+  useFarmerClients,
+  useOrgMembers
+} from '@/hooks/consultant/useConsultantQueries'
 import { type FarmerWithFarms } from '@/lib/consultant-query-service'
-import { listOrgMembers, type OrgMember } from '@/lib/team-service'
+import { type OrgMember } from '@/lib/team-service'
+import { consultantKeys } from '@/lib/consultant-query-keys'
 import { TeamTabs } from '@/components/consultant/TeamTabs'
 import posthog from 'posthog-js'
+
+// Stable empty defaults so derived memos keep a stable reference before the
+// queries resolve.
+const EMPTY_FARMERS: FarmerWithFarms[] = []
+const EMPTY_MEMBERS: OrgMember[] = []
 
 export default function FarmerAssignmentsPage() {
   const accessQuery = useConsultantAccess()
   const access = accessQuery.data ?? null
   const farmerAccess = access?.canViewAllFarmers ? access : null
   const farmersQuery = useFarmerClients(farmerAccess)
-  const [members, setMembers] = useState<OrgMember[]>([])
-  const [loading, setLoading] = useState(true)
+  // Members (the assignment targets) live in the query cache. Admins load
+  // them; agronomists get a read-only view and don't need them. No
+  // `loading`/`members` useState mirrored from a fetch effect — pending/error/
+  // data come straight from the hook.
+  const membersQuery = useOrgMembers(farmerAccess)
+  const members = membersQuery.data ?? EMPTY_MEMBERS
+  const queryClient = useQueryClient()
   const [submitting, setSubmitting] = useState(false)
 
   const [targetAgronomist, setTargetAgronomist] = useState<string>('')
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
-  const loadData = useCallback(
-    async (currentAccess = access) => {
-      if (!currentAccess) return
-
-      try {
-        setLoading(true)
-
-        // Agronomists are read-only here; skip the heavier loads.
-        if (!currentAccess.canViewAllFarmers) {
-          return
-        }
-
-        const memberData = await listOrgMembers(currentAccess.organizationId)
-        setMembers(memberData)
-        setSelected(new Set())
-      } catch (error) {
-        console.error('Failed to load assignments:', error)
-        toast.error(error instanceof Error ? error.message : 'Failed to load assignments')
-      } finally {
-        setLoading(false)
-      }
-    },
-    [access]
-  )
+  // Surface auth + member-fetch failures once each (side-effects only, never
+  // setState, so this does not reintroduce derived state).
+  useEffect(() => {
+    if (accessQuery.isError) toast.error('Not authenticated')
+  }, [accessQuery.isError])
 
   useEffect(() => {
-    if (accessQuery.isPending) return
-    if (!access) {
-      if (accessQuery.isError) toast.error('Not authenticated')
-      setLoading(false)
-      return
-    }
-    loadData(access)
-  }, [access, accessQuery.isError, accessQuery.isPending, loadData])
+    if (membersQuery.isError) toast.error('Failed to load assignments')
+  }, [membersQuery.isError])
 
   // Only agronomists can be assignment targets.
   const agronomists = useMemo(() => members.filter((m) => m.role === 'agronomist'), [members])
@@ -91,7 +82,7 @@ export default function FarmerAssignmentsPage() {
     return memberNameById.get(farmer.assigned_to) || 'Assigned'
   }
 
-  const farmers = farmersQuery.data ?? []
+  const farmers = farmersQuery.data ?? EMPTY_FARMERS
 
   const filteredFarmers = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -175,8 +166,9 @@ export default function FarmerAssignmentsPage() {
       if (refreshedFarmers.error) {
         throw refreshedFarmers.error
       }
-      const refreshedMembers = await listOrgMembers(access.organizationId)
-      setMembers(refreshedMembers)
+      await queryClient.invalidateQueries({
+        queryKey: consultantKeys.orgMembers(access.organizationId)
+      })
       setSelected(new Set())
     } catch (error) {
       console.error('Assignment failed:', error)
@@ -186,7 +178,12 @@ export default function FarmerAssignmentsPage() {
     }
   }
 
-  if (loading || (Boolean(access?.canViewAllFarmers) && farmersQuery.isPending)) {
+  // Busy while access is resolving or the members query is still loading
+  // (admins only). Derived directly from the query states during render.
+  const busy =
+    accessQuery.isPending || (Boolean(access?.canViewAllFarmers) && membersQuery.isPending)
+
+  if (busy || (Boolean(access?.canViewAllFarmers) && farmersQuery.isPending)) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">

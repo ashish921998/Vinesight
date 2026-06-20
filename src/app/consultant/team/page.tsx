@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -34,15 +35,20 @@ import {
 import { toast } from 'sonner'
 import { Loader2, UserPlus, Users, Mail, Copy, Trash2, Clock } from 'lucide-react'
 import { roleLabels } from '@/lib/consultant-access'
-import { useConsultantAccess } from '@/hooks/consultant/useConsultantQueries'
-import posthog from 'posthog-js'
+import { consultantKeys } from '@/lib/consultant-query-keys'
 import {
-  listOrgMembers,
-  listPendingInvites,
-  type OrgMember,
-  type PendingInvite
-} from '@/lib/team-service'
+  useConsultantAccess,
+  useOrgMembers,
+  usePendingInvites
+} from '@/hooks/consultant/useConsultantQueries'
+import posthog from 'posthog-js'
+import { type OrgMember, type PendingInvite } from '@/lib/team-service'
 import { TeamTabs } from '@/components/consultant/TeamTabs'
+
+// Stable empty lists so derived memos keep a stable reference before the
+// queries resolve.
+const EMPTY_MEMBERS: OrgMember[] = []
+const EMPTY_INVITES: PendingInvite[] = []
 
 type InviteRole = 'admin' | 'agronomist'
 
@@ -62,9 +68,16 @@ async function copyLink(token: string) {
 export default function TeamSettingsPage() {
   const accessQuery = useConsultantAccess()
   const access = accessQuery.data ?? null
-  const [members, setMembers] = useState<OrgMember[]>([])
-  const [invites, setInvites] = useState<PendingInvite[]>([])
-  const [loading, setLoading] = useState(true)
+  const isAdmin = access?.canViewAllFarmers ?? false
+  // Members/invites live in the query cache; pending/error/data come from the
+  // hooks instead of a `loading` useState mirrored from a fetch effect (which
+  // flagged as derived state). Invites only load for admins, matching the old
+  // canViewAllFarmers gate inside loadTeam.
+  const membersQuery = useOrgMembers(access)
+  const invitesQuery = usePendingInvites(isAdmin ? access : null)
+  const members = membersQuery.data ?? EMPTY_MEMBERS
+  const invites = invitesQuery.data ?? EMPTY_INVITES
+  const queryClient = useQueryClient()
 
   // Invite dialog state
   const [inviteOpen, setInviteOpen] = useState(false)
@@ -82,68 +95,42 @@ export default function TeamSettingsPage() {
   const [memberToRemove, setMemberToRemove] = useState<OrgMember | null>(null)
   const [removing, setRemoving] = useState(false)
 
-  const isAdmin = access?.canViewAllFarmers ?? false
-
-  const loadTeam = useCallback(
-    async (currentAccess = access) => {
-      if (!currentAccess) return
-
-      try {
-        setLoading(true)
-
-        const orgId = currentAccess.organizationId
-        const memberRows = await listOrgMembers(orgId)
-        setMembers(memberRows)
-        posthog.capture('consultant_team_viewed', {
-          org_id: orgId,
-          role: currentAccess.role,
-          member_count: memberRows.length
-        })
-
-        if (currentAccess.canViewAllFarmers) {
-          const inviteRows = await listPendingInvites(orgId)
-          setInvites(inviteRows)
-        }
-      } catch (error) {
-        console.error('Failed to load team:', error)
-        toast.error(error instanceof Error ? error.message : 'Failed to load team')
-      } finally {
-        setLoading(false)
-      }
-    },
-    [access]
-  )
+  // Surface auth + fetch failures once each (side-effects only, never setState).
+  useEffect(() => {
+    if (accessQuery.isError) toast.error('Not authenticated')
+  }, [accessQuery.isError])
 
   useEffect(() => {
-    if (accessQuery.isPending) return
-    if (!access) {
-      setMembers([])
-      setInvites([])
-      if (accessQuery.isError) toast.error('Not authenticated')
-      setLoading(false)
-      return
-    }
-    loadTeam(access)
-  }, [access, accessQuery.isError, accessQuery.isPending, loadTeam])
+    if (membersQuery.isError) toast.error('Failed to load team')
+  }, [membersQuery.isError])
 
-  const reloadMembers = async () => {
-    if (!access) return
-    try {
-      const rows = await listOrgMembers(access.organizationId)
-      setMembers(rows)
-    } catch (error) {
-      console.error('Failed to reload members:', error)
-    }
+  // Fire the "viewed" analytics event once per resolved scope when member data
+  // first lands (not on every background refetch).
+  const capturedScopeRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!membersQuery.isSuccess || !access) return
+    const scopeKey = `${access.organizationId}:${access.role}`
+    if (capturedScopeRef.current === scopeKey) return
+    capturedScopeRef.current = scopeKey
+    posthog.capture('consultant_team_viewed', {
+      org_id: access.organizationId,
+      role: access.role,
+      member_count: membersQuery.data?.length ?? 0
+    })
+  }, [membersQuery.isSuccess, membersQuery.data, access])
+
+  const reloadMembers = () => {
+    if (!access) return Promise.resolve()
+    return queryClient.invalidateQueries({
+      queryKey: consultantKeys.orgMembers(access.organizationId)
+    })
   }
 
-  const reloadInvites = async () => {
-    if (!access) return
-    try {
-      const rows = await listPendingInvites(access.organizationId)
-      setInvites(rows)
-    } catch (error) {
-      console.error('Failed to reload invites:', error)
-    }
+  const reloadInvites = () => {
+    if (!access) return Promise.resolve()
+    return queryClient.invalidateQueries({
+      queryKey: consultantKeys.pendingInvites(access.organizationId)
+    })
   }
 
   const resetInviteForm = () => {
@@ -259,7 +246,14 @@ export default function TeamSettingsPage() {
     }
   }
 
-  if (loading) {
+  // Busy while access is resolving or either team query is still loading.
+  // Derived directly from the query states during render.
+  const busy =
+    accessQuery.isPending ||
+    (Boolean(access) && membersQuery.isPending) ||
+    (isAdmin && invitesQuery.isPending)
+
+  if (busy) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
