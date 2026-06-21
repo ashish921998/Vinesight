@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { ArrowRight, Calendar, Edit, Trash2 } from 'lucide-react'
 import {
   formatGroupedDate,
@@ -192,10 +193,7 @@ export function ActivityFeed({
       return (
         <div className={cn('space-y-3', className)}>
           {[...Array(2)].map((_, index) => (
-            <div
-              key={index}
-              className="h-20 rounded-2xl border border-border/60 bg-muted/20 animate-pulse"
-            />
+            <Skeleton key={index} className="h-20 rounded-2xl" />
           ))}
         </div>
       )
@@ -205,7 +203,7 @@ export function ActivityFeed({
       <div className="space-y-6">
         <Card className="rounded-3xl border border-gray-100 bg-white shadow-sm">
           <CardHeader>
-            <div className="h-4 w-32 rounded bg-slate-200 animate-pulse" />
+            <Skeleton className="h-4 w-32" />
           </CardHeader>
           <CardContent className="space-y-3">
             {[...Array(3)].map((_, index) => (
@@ -213,12 +211,12 @@ export function ActivityFeed({
                 key={index}
                 className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-3"
               >
-                <div className="h-10 w-10 rounded-xl bg-slate-200 animate-pulse" />
+                <Skeleton className="h-10 w-10 rounded-xl" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 w-32 rounded bg-slate-200 animate-pulse" />
-                  <div className="h-3 w-24 rounded bg-slate-100 animate-pulse" />
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="h-3 w-24" />
                 </div>
-                <div className="h-9 w-16 rounded-lg bg-slate-200 animate-pulse" />
+                <Skeleton className="h-9 w-16 rounded-lg" />
               </div>
             ))}
           </CardContent>

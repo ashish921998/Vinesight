@@ -8,6 +8,7 @@ import { LabTestTrendCharts } from '@/components/lab-tests/LabTestTrendCharts'
 import { LabTestComparisonTable } from '@/components/lab-tests/LabTestComparisonTable'
 import { LabTestModal } from '@/components/lab-tests/LabTestModal'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Dialog,
@@ -178,10 +179,29 @@ function LabTestsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading lab tests...</p>
+      <div
+        className="container max-w-7xl mx-auto p-3 sm:p-6 space-y-2 sm:space-y-6"
+        role="status"
+        aria-live="polite"
+      >
+        <span className="sr-only">Loading lab tests...</span>
+        {/* Header */}
+        <div className="space-y-1.5 sm:space-y-3">
+          <Skeleton className="h-8 w-32" />
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-40" />
+            <Skeleton className="h-4 w-72 hidden sm:block" />
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <Skeleton className="h-14 w-full max-w-md rounded-2xl" />
+
+        {/* Content */}
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-xl" />
+          ))}
         </div>
       </div>
     )

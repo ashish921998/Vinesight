@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -756,8 +757,60 @@ export default function WorkersPage() {
 
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen bg-gray-50 pb-20">
+        {/* Header */}
+        <div className="bg-white border-b sticky top-0 z-30">
+          <div className="max-w-4xl mx-auto px-4 py-3">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-9 w-9 rounded-md" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-48" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          {/* Summary Stats */}
+          <Card className="rounded-2xl mb-4">
+            <CardContent className="p-4">
+              <div className="grid grid-cols-2 gap-4">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <Skeleton className="h-9 w-9 rounded-xl" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-7 w-20" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Controls */}
+          <div className="bg-white border rounded-2xl p-4 mb-5">
+            <Skeleton className="h-10 w-full max-w-sm sm:max-w-md mx-auto rounded-full" />
+          </div>
+
+          {/* List */}
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i} className="border-none shadow-sm rounded-3xl">
+                <CardContent className="p-4 sm:p-5">
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-12 w-12 rounded-2xl" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-5 w-32" />
+                      <Skeleton className="h-4 w-40" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
@@ -1205,8 +1258,23 @@ export default function WorkersPage() {
 
                 {/* Tabs */}
                 {loadingWorkerData ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <div className="space-y-4">
+                    <Skeleton className="h-9 w-full rounded-md" />
+                    <div className="space-y-2">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <Card key={i}>
+                          <CardContent className="p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-2">
+                                <Skeleton className="h-4 w-28" />
+                                <Skeleton className="h-5 w-20 rounded-full" />
+                              </div>
+                              <Skeleton className="h-4 w-16" />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <Tabs defaultValue="attendance" className="w-full">

@@ -3,7 +3,8 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Users, User, Wallet, Plus, Pencil, Trash2 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { Users, User, Wallet, Plus, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Worker } from '@/lib/supabase'
 import { formatCurrency, type CurrencyCode } from '@/lib/currency-utils'
@@ -29,8 +30,33 @@ export function WorkersListView({
 }: WorkersListViewProps) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card
+            key={i}
+            className="border-none bg-gradient-to-r from-white to-primary/10 shadow-sm rounded-3xl"
+          >
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-12 w-12 rounded-2xl" />
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Skeleton className="h-9 w-9 rounded-md" />
+                  <Skeleton className="h-9 w-9 rounded-md" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     )
   }

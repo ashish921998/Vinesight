@@ -2,6 +2,7 @@
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { cn } from '@/lib/utils'
 import {
   AlertTriangle,
@@ -77,16 +78,13 @@ export function AlertsSection({ alerts, onAlertAction, loading, className }: Ale
             <AlertTriangle className="h-5 w-5 text-muted-foreground" />
           </div>
           <div className="space-y-2">
-            <div className="h-4 w-32 rounded-full bg-muted/40 animate-pulse" />
-            <div className="h-3 w-24 rounded-full bg-muted/20 animate-pulse" />
+            <Skeleton className="h-4 w-32 rounded-full" />
+            <Skeleton className="h-3 w-24 rounded-full" />
           </div>
         </div>
         <div className="mt-4 space-y-3">
           {Array.from({ length: 3 }).map((_, index) => (
-            <div
-              key={index}
-              className="h-[88px] rounded-2xl border border-border/40 bg-muted/10 animate-pulse"
-            />
+            <Skeleton key={index} className="h-[88px] rounded-2xl" />
           ))}
         </div>
       </div>

@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ChevronRight, FlaskConical, Loader2, UserPlus, Users } from 'lucide-react'
+import { ArrowRight, ChevronRight, FlaskConical, UserPlus, Users } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { roleLabels } from '@/lib/consultant-access'
 import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
 import { JoinCodeCard } from '@/components/consultant/JoinCodeCard'
@@ -68,8 +69,31 @@ export default function ConsultantOverviewPage() {
 
   if (accessQuery.isPending) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-96 max-w-full" />
+          </div>
+          <Skeleton className="h-9 w-32" />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Card key={i} className="border-border/80">
+              <CardHeader className="space-y-3">
+                <Skeleton className="h-10 w-10 rounded-md" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-9 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     )
   }

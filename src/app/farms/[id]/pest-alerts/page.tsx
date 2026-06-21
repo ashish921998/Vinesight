@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { ArrowLeft } from 'lucide-react'
 import { PestAlertDashboard } from '@/components/ai/PestAlertDashboard'
 import { SupabaseService } from '@/lib/supabase-service'
@@ -39,19 +40,20 @@ export default function PestAlertsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50" role="status" aria-live="polite">
+        <span className="sr-only">Loading pest alerts...</span>
         <div className="bg-white shadow-sm border-b">
           <div className="px-4 py-3">
             <div className="flex items-center gap-3">
-              <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
-              <div className="w-48 h-5 bg-gray-200 rounded animate-pulse"></div>
+              <Skeleton className="w-6 h-6" />
+              <Skeleton className="w-48 h-5" />
             </div>
           </div>
         </div>
         <div className="px-4 py-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-20 bg-gray-200 rounded"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
+          <div className="space-y-4">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-32 w-full" />
           </div>
         </div>
       </div>
