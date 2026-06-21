@@ -40,8 +40,10 @@ export default function PestAlertsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50" role="status" aria-live="polite">
-        <span className="sr-only">Loading pest alerts...</span>
+      <div className="min-h-screen bg-gray-50">
+        <output className="sr-only" aria-live="polite">
+          Loading pest alerts...
+        </output>
         <div className="bg-white shadow-sm border-b">
           <div className="px-4 py-3">
             <div className="flex items-center gap-3">

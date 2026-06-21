@@ -179,12 +179,10 @@ function LabTestsPage() {
 
   if (loading) {
     return (
-      <div
-        className="container max-w-7xl mx-auto p-3 sm:p-6 space-y-2 sm:space-y-6"
-        role="status"
-        aria-live="polite"
-      >
-        <span className="sr-only">Loading lab tests...</span>
+      <div className="container max-w-7xl mx-auto p-3 sm:p-6 space-y-2 sm:space-y-6">
+        <output className="sr-only" aria-live="polite">
+          Loading lab tests...
+        </output>
         {/* Header */}
         <div className="space-y-1.5 sm:space-y-3">
           <Skeleton className="h-8 w-32" />
