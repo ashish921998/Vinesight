@@ -5,6 +5,7 @@ import { PortfolioDashboard } from '@/components/dashboard/PortfolioDashboard'
 import { FarmerDashboard } from '@/components/dashboard/FarmerDashboard'
 import { FarmSelector, FarmTabs } from '@/components/dashboard/FarmSelector'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { ArrowLeft, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { capitalize } from '@/lib/utils'
@@ -76,14 +77,14 @@ export default function PortfolioPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="animate-pulse p-4">
-          <div className="h-6 bg-gray-200 rounded w-32 mb-4" />
-          <div className="h-12 bg-gray-200 rounded mb-4" />
+        <div className="p-4">
+          <Skeleton className="h-6 w-32 mb-4" />
+          <Skeleton className="h-12 w-full mb-4" />
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="h-20 bg-gray-200 rounded" />
-            <div className="h-20 bg-gray-200 rounded" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
           </div>
-          <div className="h-64 bg-gray-200 rounded" />
+          <Skeleton className="h-64 w-full" />
         </div>
       </div>
     )

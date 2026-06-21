@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { Skeleton } from '@/components/ui/Skeleton'
 import {
   TrendingUp,
   AlertTriangle,
@@ -208,14 +209,14 @@ export function PortfolioDashboard({ onFarmSelect }: PortfolioDashboardProps) {
   if (loading) {
     return (
       <div className="min-h-screen bg-background p-4">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted/60 rounded w-48" />
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-48" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-muted/60 rounded" />
+              <Skeleton key={i} className="h-24" />
             ))}
           </div>
-          <div className="h-64 bg-muted/60 rounded" />
+          <Skeleton className="h-64" />
         </div>
       </div>
     )

@@ -22,6 +22,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
@@ -684,14 +685,11 @@ export default function FarmLogsPage() {
             <CardContent className="px-3 py-3">
               <div className="space-y-2">
                 {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg h-14 animate-pulse"
-                  >
-                    <div className="w-6 h-6 bg-gray-200 rounded flex-shrink-0" />
+                  <div key={i} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg h-14">
+                    <Skeleton className="w-6 h-6 flex-shrink-0" />
                     <div className="flex-1">
-                      <div className="w-32 h-3 bg-gray-200 rounded mb-1" />
-                      <div className="w-24 h-3 bg-gray-200 rounded" />
+                      <Skeleton className="w-32 h-3 mb-1" />
+                      <Skeleton className="w-24 h-3" />
                     </div>
                   </div>
                 ))}
@@ -951,8 +949,17 @@ export default function FarmLogsPage() {
           </CardHeader>
           <CardContent className="px-2 sm:px-3 pb-3 relative" aria-busy={searchLoading}>
             {searchLoading ? (
-              <div className="flex flex-col items-center justify-center py-12" role="status">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mb-3"></div>
+              <div className="space-y-2" aria-live="polite">
+                <span className="sr-only">Loading activity logs...</span>
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg h-14">
+                    <Skeleton className="w-6 h-6 flex-shrink-0" />
+                    <div className="flex-1">
+                      <Skeleton className="w-32 h-3 mb-1" />
+                      <Skeleton className="w-24 h-3" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : logs.length > 0 ? (
               <LogsList

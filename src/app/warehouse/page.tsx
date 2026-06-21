@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { Package, Plus, AlertCircle, Edit, Trash2, PackagePlus, MoreVertical } from 'lucide-react'
 import { warehouseService } from '@/lib/warehouse-service'
 import { WarehouseItem } from '@/types/types'
@@ -223,19 +224,19 @@ function WarehousePageContent() {
         {loading ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, index) => (
-              <Card key={index} className="border-0 shadow-sm rounded-2xl animate-pulse">
+              <Card key={index} className="border-0 shadow-sm rounded-2xl">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
+                    <Skeleton className="w-12 h-12 rounded-xl" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
                     </div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-gray-100">
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="h-4 bg-gray-200 rounded"></div>
-                      <div className="h-4 bg-gray-200 rounded"></div>
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-full" />
                     </div>
                   </div>
                 </CardContent>

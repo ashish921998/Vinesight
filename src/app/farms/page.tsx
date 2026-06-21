@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { Plus, Trash2, Edit, Sprout, MapPin, MoreVertical, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
@@ -161,36 +162,26 @@ export default function FarmsPage() {
         <div className="px-4 py-4 max-w-md mx-auto">
           <div className="space-y-3 max-w-md mx-auto">
             {loading
-              ? // Modern skeleton loading
+              ? // Skeleton loading
                 Array.from({ length: 3 }).map((_, index) => (
-                  <Card key={index} className="border-0 shadow-sm animate-pulse">
+                  <Card key={index} className="border-0 shadow-sm">
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
+                        <Skeleton className="w-12 h-12 rounded-xl" />
                         <div className="flex-1 space-y-2">
-                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-3 w-1/2" />
                         </div>
-                        <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                        <Skeleton className="w-6 h-6" />
                       </div>
                       <div className="mt-3 pt-3 border-t border-gray-100">
                         <div className="grid grid-cols-2 gap-3">
-                          <div className="text-center">
-                            <div className="h-4 bg-gray-200 rounded w-8 mx-auto mb-1"></div>
-                            <div className="h-2 bg-gray-200 rounded w-12 mx-auto"></div>
-                          </div>
-                          <div className="text-center">
-                            <div className="h-4 bg-gray-200 rounded w-12 mx-auto mb-1"></div>
-                            <div className="h-2 bg-gray-200 rounded w-8 mx-auto"></div>
-                          </div>
-                          <div className="text-center">
-                            <div className="h-4 bg-gray-200 rounded w-10 mx-auto mb-1"></div>
-                            <div className="h-2 bg-gray-200 rounded w-12 mx-auto"></div>
-                          </div>
-                          <div className="text-center">
-                            <div className="h-4 bg-gray-200 rounded w-8 mx-auto mb-1"></div>
-                            <div className="h-2 bg-gray-200 rounded w-12 mx-auto"></div>
-                          </div>
+                          {Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="text-center space-y-1">
+                              <Skeleton className="h-4 w-10 mx-auto" />
+                              <Skeleton className="h-2 w-12 mx-auto" />
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </CardContent>

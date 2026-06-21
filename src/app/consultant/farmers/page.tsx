@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/Skeleton'
 import {
   Select,
   SelectContent,
@@ -14,18 +15,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import {
-  Users,
-  Search,
-  Sprout,
-  User,
-  UserX,
-  Phone,
-  Mail,
-  Loader2,
-  ChevronRight,
-  MapPin
-} from 'lucide-react'
+import { Users, Search, Sprout, User, UserX, Phone, Mail, ChevronRight, MapPin } from 'lucide-react'
 import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
 import { JoinCodeCard } from '@/components/consultant/JoinCodeCard'
 import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
@@ -155,10 +145,39 @@ export default function FarmerDirectoryPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading farmer directory...</p>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-9 w-36" />
+        </div>
+
+        {/* Join code card */}
+        <Skeleton className="h-24 w-full rounded-lg" />
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Skeleton className="h-9 flex-1" />
+          <Skeleton className="h-9 sm:w-56" />
+        </div>
+
+        {/* Farmer list */}
+        <div className="space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="border-0 shadow-sm">
+              <CardContent className="flex items-center gap-3 p-4">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+                <Skeleton className="h-8 w-20" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     )

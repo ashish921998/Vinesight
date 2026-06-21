@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { FarmerDashboard } from '@/components/dashboard/FarmerDashboard'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import posthog from 'posthog-js'
@@ -25,10 +26,36 @@ export default function DashboardPage() {
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="text-muted-foreground mt-4">Loading Dashboard...</p>
+      <div className="min-h-screen bg-background px-4 py-6 space-y-6 sm:px-6 lg:px-10">
+        {/* Header: farm selector + actions */}
+        <div className="space-y-3">
+          <Skeleton className="h-6 w-28 rounded-full" />
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+            <Skeleton className="h-11 w-full rounded-full sm:h-12 sm:w-64" />
+            <div className="flex gap-1.5">
+              <Skeleton className="h-9 flex-1 rounded-full sm:h-11 sm:w-28" />
+              <Skeleton className="h-9 flex-1 rounded-full sm:h-11 sm:w-28" />
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <Skeleton className="h-6 w-24 rounded-full" />
+            <Skeleton className="h-6 w-28 rounded-full" />
+            <Skeleton className="h-6 w-20 rounded-full" />
+          </div>
+        </div>
+
+        {/* Today at a glance: stat tiles */}
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 rounded-2xl" />
+          ))}
+        </div>
+
+        {/* Sections */}
+        <Skeleton className="h-40 w-full rounded-3xl" />
+        <div className="grid gap-4 md:grid-cols-2">
+          <Skeleton className="h-48 w-full rounded-3xl" />
+          <Skeleton className="h-48 w-full rounded-3xl" />
         </div>
       </div>
     )

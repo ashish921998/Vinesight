@@ -37,6 +37,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface Farm {
   id: number
@@ -564,8 +565,14 @@ export function MobileAttendanceView({
 
               {/* Day Grid */}
               {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <div className="grid grid-cols-6 gap-1.5">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="flex flex-col items-center p-2 gap-1">
+                      <Skeleton className="h-2.5 w-6" />
+                      <Skeleton className="h-3 w-3" />
+                      <Skeleton className="h-10 w-10 rounded-lg" />
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="grid grid-cols-6 gap-1.5">
@@ -721,9 +728,22 @@ export function MobileAttendanceView({
           <Card>
             <CardContent className="p-3">
               {calendarLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
+                <>
+                  {/* Weekday Headers */}
+                  <div className="grid grid-cols-7 gap-1 mb-2">
+                    {Array.from({ length: 7 }).map((_, i) => (
+                      <div key={i} className="flex justify-center py-1">
+                        <Skeleton className="h-3 w-6" />
+                      </div>
+                    ))}
+                  </div>
+                  {/* Calendar Days */}
+                  <div className="grid grid-cols-7 gap-1">
+                    {Array.from({ length: 42 }).map((_, i) => (
+                      <Skeleton key={i} className="aspect-square rounded-lg" />
+                    ))}
+                  </div>
+                </>
               ) : (
                 <>
                   {/* Weekday Headers */}

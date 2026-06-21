@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { Skeleton } from '@/components/ui/Skeleton'
 import {
   AlertTriangle,
   Bug,
@@ -119,11 +120,11 @@ export function PestAlertDashboard({
   if (loading) {
     return (
       <div className={`space-y-4 ${className}`}>
-        <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+        <div>
+          <Skeleton className="h-6 w-1/3 mb-4" />
           <div className="space-y-3">
-            <div className="h-20 bg-gray-200 rounded"></div>
-            <div className="h-20 bg-gray-200 rounded"></div>
+            <Skeleton className="h-20" />
+            <Skeleton className="h-20" />
           </div>
         </div>
       </div>
