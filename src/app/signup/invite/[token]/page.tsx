@@ -6,6 +6,9 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Card } from '@/components/ui/card'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { VALIDATION } from '@/lib/constants'
@@ -227,10 +230,13 @@ export default function InvitedFarmerSignupPage() {
           <Link href="/" className="inline-block mb-6">
             <div className="text-foreground text-2xl font-medium font-sans">Vinesight</div>
           </Link>
-          <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm mb-4">
+          <Badge
+            variant="secondary"
+            className="h-auto gap-2 bg-green-100 px-3 py-1 text-green-700 text-sm mb-4 [&>svg]:size-4!"
+          >
             <Sprout className="h-4 w-4" />
             Farmer Invitation
-          </div>
+          </Badge>
           <h1 className="text-foreground text-2xl font-semibold font-sans mb-2">
             {invite.organizationName ? `Join ${invite.organizationName}` : 'Create your account'}
           </h1>
@@ -245,7 +251,7 @@ export default function InvitedFarmerSignupPage() {
           </p>
         </div>
 
-        <div className="bg-card rounded-lg shadow-[0px_0px_0px_1px_rgba(55,50,47,0.08)] p-8">
+        <Card className="p-8">
           {showError && error && (
             <Alert className="mb-4 border-red-200 bg-red-50">
               <AlertDescription className="text-red-800">{error}</AlertDescription>
@@ -255,51 +261,42 @@ export default function InvitedFarmerSignupPage() {
           {mode === 'details' ? (
             <form onSubmit={handleSendOtp} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="firstName"
-                    className="block text-sm font-medium text-card-foreground mb-2"
-                  >
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">
                     First name <span className="text-red-500">*</span>
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     id="firstName"
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value.trimStart())}
                     required
                     maxLength={VALIDATION.MAX_NAME_LENGTH}
-                    className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
+                    className="w-full min-h-[44px]"
                     placeholder="First name"
                   />
                 </div>
-                <div>
-                  <label
-                    htmlFor="lastName"
-                    className="block text-sm font-medium text-card-foreground mb-2"
-                  >
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">
                     Last name <span className="text-red-500">*</span>
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     id="lastName"
                     type="text"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value.trimStart())}
                     required
                     maxLength={VALIDATION.MAX_NAME_LENGTH}
-                    className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
+                    className="w-full min-h-[44px]"
                     placeholder="Last name"
                   />
                 </div>
               </div>
 
-              <div>
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-medium text-card-foreground mb-2"
-                >
+              <div className="space-y-2">
+                <Label htmlFor="phone">
                   Phone number <span className="text-red-500">*</span>
-                </label>
+                </Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -326,13 +323,10 @@ export default function InvitedFarmerSignupPage() {
             </form>
           ) : mode === 'otp' ? (
             <form onSubmit={handleVerify} className="space-y-6">
-              <div>
-                <label
-                  htmlFor="otp"
-                  className="block text-sm font-medium text-card-foreground mb-2"
-                >
+              <div className="space-y-2">
+                <Label htmlFor="otp">
                   Verification code <span className="text-red-500">*</span>
-                </label>
+                </Label>
                 <Input
                   id="otp"
                   type="text"
@@ -362,19 +356,21 @@ export default function InvitedFarmerSignupPage() {
               </Button>
 
               <div className="flex items-center justify-between text-sm">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => {
                     setStep('details')
                     setOtp('')
                     clearError()
                   }}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="h-auto p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
                 >
                   Back
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="link"
                   disabled={busy}
                   onClick={() => {
                     if (normalized) {
@@ -385,10 +381,10 @@ export default function InvitedFarmerSignupPage() {
                       })
                     }
                   }}
-                  className="font-medium text-primary hover:text-primary/80 disabled:opacity-50"
+                  className="h-auto p-0 font-medium"
                 >
                   Resend code
-                </button>
+                </Button>
               </div>
             </form>
           ) : mode === 'join-current' ? (
@@ -421,14 +417,15 @@ export default function InvitedFarmerSignupPage() {
                 )}
               </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 disabled={busy}
                 onClick={() => void signOut()}
-                className="w-full text-center text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
+                className="w-full text-sm text-muted-foreground hover:bg-transparent hover:text-foreground"
               >
                 Use a different account
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="space-y-6">
@@ -470,7 +467,7 @@ export default function InvitedFarmerSignupPage() {
               </Link>
             </p>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   )

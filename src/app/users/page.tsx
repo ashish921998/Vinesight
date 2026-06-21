@@ -6,6 +6,7 @@ import { OrganizationService, type Organization } from '@/lib/organization-servi
 import { getTypedSupabaseClient } from '@/lib/supabase'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
@@ -223,9 +224,9 @@ function UsersPage() {
                     </div>
                   </div>
                   {member.is_owner && (
-                    <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800">
                       Owner
-                    </span>
+                    </Badge>
                   )}
                 </div>
               </CardHeader>

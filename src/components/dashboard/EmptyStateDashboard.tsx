@@ -3,6 +3,8 @@
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { toast } from 'sonner'
 import {
   ArrowRight,
   BookOpen,
@@ -30,7 +32,7 @@ export function EmptyStateDashboard({ onCreateFarm, userName }: EmptyStateDashbo
   }
 
   const handleExploreDemoData = () => {
-    alert('Demo data feature coming soon!')
+    toast('Demo data feature coming soon!')
   }
 
   const quickActions: Array<{
@@ -127,7 +129,7 @@ export function EmptyStateDashboard({ onCreateFarm, userName }: EmptyStateDashbo
 
       <main className="mx-auto max-w-4xl space-y-8 px-3 py-6 sm:px-4 md:px-6 md:py-10">
         <section className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+          <Card className="gap-0 rounded-3xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5 text-primary" />
@@ -161,9 +163,9 @@ export function EmptyStateDashboard({ onCreateFarm, userName }: EmptyStateDashbo
                 </button>
               ))}
             </div>
-          </div>
+          </Card>
 
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+          <Card className="gap-0 rounded-3xl p-6 shadow-sm">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-primary" />
               <h2 className="text-base font-semibold text-foreground">Three simple steps</h2>
@@ -184,10 +186,10 @@ export function EmptyStateDashboard({ onCreateFarm, userName }: EmptyStateDashbo
                 </li>
               ))}
             </ol>
-          </div>
+          </Card>
         </section>
 
-        <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <Card className="gap-0 rounded-3xl p-6 shadow-sm">
           <div className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" />
             <h2 className="text-base font-semibold text-foreground">Need guidance?</h2>
@@ -210,7 +212,7 @@ export function EmptyStateDashboard({ onCreateFarm, userName }: EmptyStateDashbo
               </Button>
             ))}
           </div>
-        </section>
+        </Card>
       </main>
     </div>
   )

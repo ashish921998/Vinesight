@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight, Beaker, Calculator, Droplets, Leaf } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { ETcCalculatorComponent } from '@/components/calculators/ETcCalculator'
 import { LAICalculatorComponent } from '@/components/calculators/LAICalculator'
 import { NutrientCalculatorComponent } from '@/components/calculators/NutrientCalculator'
@@ -103,20 +105,21 @@ export default function CalculatorsPage() {
       <div className="min-h-screen bg-background text-foreground">
         <div className="sticky top-0 z-20 border-b border-border bg-background">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => setSelectedCalculator(null)}
-              className="inline-flex h-12 items-center gap-2 rounded-lg border border-border bg-card px-4 text-meta font-medium text-accent transition hover:border-accent/40 hover:bg-muted"
+              className="h-12 gap-2 rounded-lg text-meta font-medium text-accent hover:border-accent/40 hover:bg-muted"
             >
               <ArrowLeft className="h-4 w-4 text-accent" />
               Back
-            </button>
+            </Button>
             <span className="text-meta text-muted-foreground">Calculators</span>
           </div>
         </div>
 
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6">
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+          <Card className="gap-0 rounded-3xl p-6 shadow-sm">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="space-y-2">
                 <p className="text-meta text-muted-foreground">
@@ -129,11 +132,11 @@ export default function CalculatorsPage() {
                 <Calculator className="h-5 w-5 text-accent" />
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+          <Card className="gap-0 rounded-3xl p-6 shadow-sm">
             <CalculatorComponent />
-          </div>
+          </Card>
         </div>
       </div>
     )
@@ -160,19 +163,20 @@ export default function CalculatorsPage() {
           {categoryOptions.map((category) => {
             const isActive = activeCategory === category
             return (
-              <button
+              <Button
                 key={category}
                 type="button"
+                variant={isActive ? 'default' : 'outline'}
                 onClick={() => setActiveCategory(category)}
                 aria-pressed={isActive}
-                className={`inline-flex h-12 shrink-0 items-center rounded-full border px-4 text-meta font-medium transition ${
+                className={`h-12 shrink-0 rounded-full px-4 text-meta font-medium ${
                   isActive
                     ? 'border-accent bg-accent text-accent-foreground'
-                    : 'border-border bg-card text-accent hover:border-accent/40 hover:bg-accent/10'
+                    : 'text-accent hover:border-accent/40 hover:bg-accent/10'
                 }`}
               >
                 {category}
-              </button>
+              </Button>
             )
           })}
         </div>

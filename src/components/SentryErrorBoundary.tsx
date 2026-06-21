@@ -33,12 +33,12 @@ class SimpleErrorBoundary extends React.Component<{ children: ReactNode }, { has
             <p className="text-muted-foreground mb-4">
               An unexpected error occurred. Please refresh the page.
             </p>
-            <button
+            <Button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-accent text-accent-foreground rounded hover:bg-accent/90"
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
               Refresh Page
-            </button>
+            </Button>
           </div>
         </div>
       )

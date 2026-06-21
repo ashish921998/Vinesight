@@ -10,6 +10,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PasswordInput } from '@/components/ui/password-input'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Card } from '@/components/ui/card'
 import { VALIDATION } from '@/lib/constants'
 import { isValidEmail } from '@/lib/validation'
 import { Loader2, Building2 } from 'lucide-react'
@@ -158,10 +160,13 @@ export default function OrganizationSignupPage() {
           <Link href="/" className="inline-block mb-6">
             <div className="text-foreground text-2xl font-medium font-sans">Vinesight</div>
           </Link>
-          <div className="inline-flex items-center gap-2 bg-accent/10 text-primary px-3 py-1 rounded-full text-sm mb-4">
+          <Badge
+            variant="secondary"
+            className="h-auto gap-2 bg-accent/10 px-3 py-1 text-primary text-sm mb-4 [&>svg]:size-4!"
+          >
             <Building2 className="h-4 w-4" />
             For Organizations
-          </div>
+          </Badge>
           <h1 className="text-foreground text-2xl font-semibold font-sans mb-2">
             Create your organization
           </h1>
@@ -170,7 +175,7 @@ export default function OrganizationSignupPage() {
           </p>
         </div>
 
-        <div className="bg-card rounded-lg shadow-[0px_0px_0px_1px_rgba(55,50,47,0.08)] p-8">
+        <Card className="p-8">
           {showError && error && (
             <Alert className="mb-4 border-red-200 bg-red-50">
               <AlertDescription className="text-red-800">{error}</AlertDescription>
@@ -325,7 +330,7 @@ export default function OrganizationSignupPage() {
               </Link>
             </p>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   )

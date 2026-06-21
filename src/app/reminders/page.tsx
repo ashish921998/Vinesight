@@ -7,6 +7,20 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription
+} from '@/components/ui/dialog'
+import {
   Bell,
   Plus,
   Calendar,
@@ -463,32 +477,38 @@ export default function RemindersPage() {
                       </div>
                       <div>
                         <Label htmlFor="type">Task Type</Label>
-                        <select
-                          id="type"
+                        <Select
                           value={formData.type}
-                          onChange={(e) => handleInputChange('type', e.target.value)}
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          onValueChange={(v) => handleInputChange('type', v)}
                         >
-                          <option value="irrigation">Irrigation</option>
-                          <option value="spray">Spray Treatment</option>
-                          <option value="fertigation">Fertigation</option>
-                          <option value="training">Training/Pruning</option>
-                          <option value="harvest">Harvest</option>
-                          <option value="other">Other</option>
-                        </select>
+                          <SelectTrigger id="type">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="irrigation">Irrigation</SelectItem>
+                            <SelectItem value="spray">Spray Treatment</SelectItem>
+                            <SelectItem value="fertigation">Fertigation</SelectItem>
+                            <SelectItem value="training">Training/Pruning</SelectItem>
+                            <SelectItem value="harvest">Harvest</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label htmlFor="priority">Priority</Label>
-                        <select
-                          id="priority"
+                        <Select
                           value={formData.priority}
-                          onChange={(e) => handleInputChange('priority', e.target.value)}
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          onValueChange={(v) => handleInputChange('priority', v)}
                         >
-                          <option value="low">Low</option>
-                          <option value="medium">Medium</option>
-                          <option value="high">High</option>
-                        </select>
+                          <SelectTrigger id="priority">
+                            <SelectValue placeholder="Select priority" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
@@ -678,24 +698,28 @@ export default function RemindersPage() {
         ) : null}
 
         {/* Template Selector Modal */}
-        {showTemplateSelector && selectedFarm && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-auto">
+        {selectedFarm && (
+          <Dialog open={showTemplateSelector} onOpenChange={setShowTemplateSelector}>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto">
+              <DialogHeader>
+                <DialogTitle>Smart Templates</DialogTitle>
+                <DialogDescription>Choose a pre-defined farming task template</DialogDescription>
+              </DialogHeader>
               <TaskTemplateSelector
                 selectedFarmName={selectedFarm.name}
                 onSelectTemplate={handleTemplateSelect}
                 onCancel={() => setShowTemplateSelector(false)}
               />
-            </div>
-          </div>
+            </DialogContent>
+          </Dialog>
         )}
 
         {/* Notification Settings Modal */}
-        {showNotificationSettings && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <Dialog open={showNotificationSettings} onOpenChange={setShowNotificationSettings}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto">
             <NotificationSettings onClose={() => setShowNotificationSettings(false)} />
-          </div>
-        )}
+          </DialogContent>
+        </Dialog>
       </div>
     </ProtectedRoute>
   )

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   AlertTriangle,
@@ -102,10 +103,10 @@ export default function PrivacyPolicyPage() {
 
       <main className="max-w-5xl mx-auto px-4 py-12 space-y-10">
         <section className="space-y-4 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-semibold text-foreground">
+          <Badge variant="outline" className="mx-auto gap-2 bg-secondary px-3 py-1 font-semibold">
             <Shield className="h-4 w-4 text-primary" />
             Data you own, protected by design
-          </div>
+          </Badge>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Privacy Policy</h1>
           <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
             We collect only what we need to operate VineSight. Your operational data is encrypted,

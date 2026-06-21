@@ -74,10 +74,7 @@ export function TestRecommendations({ recommendations, testType }: TestRecommend
               </h3>
               <div className="space-y-3">
                 {criticalAndHigh.map((rec, idx) => (
-                  <div
-                    key={idx}
-                    className={`rounded-lg border p-4 ${getPriorityColor(rec.priority)}`}
-                  >
+                  <Card key={idx} className={`gap-0 p-4 ${getPriorityColor(rec.priority)}`}>
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">{rec.icon}</span>
                       <div className="flex-1 space-y-2">
@@ -102,7 +99,7 @@ export function TestRecommendations({ recommendations, testType }: TestRecommend
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -117,7 +114,7 @@ export function TestRecommendations({ recommendations, testType }: TestRecommend
               </h3>
               <div className="space-y-3">
                 {savings.map((rec, idx) => (
-                  <div key={idx} className="rounded-lg border p-4 bg-green-50 border-green-200">
+                  <Card key={idx} className="gap-0 p-4 bg-green-50 border-green-200">
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">{rec.icon}</span>
                       <div className="flex-1 space-y-2">
@@ -147,7 +144,7 @@ export function TestRecommendations({ recommendations, testType }: TestRecommend
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -162,10 +159,7 @@ export function TestRecommendations({ recommendations, testType }: TestRecommend
               </summary>
               <div className="space-y-3 mt-3">
                 {moderateAndLow.map((rec, idx) => (
-                  <div
-                    key={idx}
-                    className={`rounded-lg border p-4 ${getPriorityColor(rec.priority)}`}
-                  >
+                  <Card key={idx} className={`gap-0 p-4 ${getPriorityColor(rec.priority)}`}>
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">{rec.icon}</span>
                       <div className="flex-1 space-y-2">
@@ -190,7 +184,7 @@ export function TestRecommendations({ recommendations, testType }: TestRecommend
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </details>
@@ -205,7 +199,7 @@ export function TestRecommendations({ recommendations, testType }: TestRecommend
               </summary>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                 {optimal.map((rec, idx) => (
-                  <div key={idx} className="rounded-lg border p-3 bg-green-50 border-green-200">
+                  <Card key={idx} className="gap-0 p-3 bg-green-50 border-green-200">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">{rec.icon}</span>
                       <div className="flex-1">
@@ -215,7 +209,7 @@ export function TestRecommendations({ recommendations, testType }: TestRecommend
                         <p className="text-xs text-green-800 leading-relaxed">{rec.simple}</p>
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </details>

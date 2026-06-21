@@ -492,9 +492,10 @@ export function MobileAttendanceView({
                 <Label className="text-xs text-muted-foreground shrink-0">Farms:</Label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button
+                    <Button
                       type="button"
-                      className="flex-1 h-9 px-3 text-sm bg-white border rounded-lg text-left hover:bg-gray-50 transition-colors flex items-center justify-between"
+                      variant="outline"
+                      className="flex-1 h-9 px-3 font-normal bg-white text-left flex items-center justify-between"
                     >
                       <span
                         className={
@@ -508,7 +509,7 @@ export function MobileAttendanceView({
                             : `${selectedFarmIds.length} farm${selectedFarmIds.length > 1 ? 's' : ''} selected`}
                       </span>
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </button>
+                    </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-56 p-2" align="start">
                     <div className="space-y-1" role="menu">

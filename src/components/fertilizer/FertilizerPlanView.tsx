@@ -1,6 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { FlaskConical, Calendar } from 'lucide-react'
 import type { FertilizerPlanWithItems } from '@/lib/fertilizer-plan-service'
 
@@ -53,9 +54,9 @@ export function FertilizerPlanView({ plans }: FertilizerPlanViewProps) {
                       </div>
                     </div>
                     {item.application_date && (
-                      <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                      <Badge variant="secondary" className="bg-green-100 text-green-600">
                         {new Date(item.application_date).toLocaleDateString()}
-                      </span>
+                      </Badge>
                     )}
                   </div>
                 ))}

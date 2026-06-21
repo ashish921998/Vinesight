@@ -7,6 +7,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import {
   NotificationService,
   NotificationSettings as INotificationSettings
 } from '@/lib/notification-service'
@@ -209,17 +216,20 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
 
                 <div>
                   <Label htmlFor="daysAdvance">Days in Advance</Label>
-                  <select
-                    id="daysAdvance"
-                    value={settings.daysAdvance}
-                    onChange={(e) => handleSettingChange('daysAdvance', parseInt(e.target.value))}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  <Select
+                    value={String(settings.daysAdvance)}
+                    onValueChange={(v) => handleSettingChange('daysAdvance', parseInt(v))}
                   >
-                    <option value={1}>1 Day</option>
-                    <option value={2}>2 Days</option>
-                    <option value={3}>3 Days</option>
-                    <option value={7}>1 Week</option>
-                  </select>
+                    <SelectTrigger id="daysAdvance">
+                      <SelectValue placeholder="Select days" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 Day</SelectItem>
+                      <SelectItem value="2">2 Days</SelectItem>
+                      <SelectItem value="3">3 Days</SelectItem>
+                      <SelectItem value="7">1 Week</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </>

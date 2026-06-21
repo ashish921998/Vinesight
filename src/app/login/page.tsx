@@ -6,6 +6,10 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoginButton } from '@/components/auth/LoginButton'
@@ -111,7 +115,7 @@ function LoginPageContent() {
         </div>
 
         {/* Login Form */}
-        <div className="bg-card rounded-lg shadow-[0px_0px_0px_1px_rgba(55,50,47,0.08)] p-8">
+        <Card className="p-8">
           {/* Error Alert */}
           {showError && error && (
             <Alert className="mb-4 border-red-200 bg-red-50">
@@ -121,28 +125,22 @@ function LoginPageContent() {
 
           {/* Email / Phone method switch */}
           <div className="mb-6 grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
-            <button
+            <Button
               type="button"
+              variant={method === 'email' ? 'default' : 'ghost'}
               onClick={() => setMethod('email')}
-              className={`rounded-md py-2 text-sm font-medium transition-colors ${
-                method === 'email'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className="py-2 text-sm font-medium"
             >
               Email
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant={method === 'phone' ? 'default' : 'ghost'}
               onClick={() => setMethod('phone')}
-              className={`rounded-md py-2 text-sm font-medium transition-colors ${
-                method === 'phone'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className="py-2 text-sm font-medium"
             >
               Phone
-            </button>
+            </Button>
           </div>
 
           {method === 'phone' ? (
@@ -156,20 +154,15 @@ function LoginPageContent() {
             />
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-card-foreground mb-2"
-                >
-                  Email address
-                </label>
-                <input
+              <div className="space-y-2">
+                <Label htmlFor="email">Email address</Label>
+                <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
+                  className="w-full min-h-[44px]"
                   placeholder="Enter your email"
                 />
               </div>
@@ -187,25 +180,23 @@ function LoginPageContent() {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-muted-foreground">
+                  <Checkbox id="remember-me" />
+                  <Label
+                    htmlFor="remember-me"
+                    className="ml-2 block text-sm font-normal text-muted-foreground"
+                  >
                     Remember me
-                  </label>
+                  </Label>
                 </div>
 
-                <div className="text-sm">
-                  <button
-                    type="button"
-                    onClick={handleForgotPassword}
-                    className="font-medium text-primary hover:text-primary/80"
-                  >
-                    Forgot your password?
-                  </button>
-                </div>
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={handleForgotPassword}
+                  className="h-auto p-0 text-sm font-medium"
+                >
+                  Forgot your password?
+                </Button>
               </div>
 
               <Button type="submit" disabled={loading} className="w-full h-12 px-4">
@@ -261,7 +252,7 @@ function LoginPageContent() {
               Create Account for free
             </Link>
           </p>
-        </div>
+        </Card>
       </div>
     </div>
   )

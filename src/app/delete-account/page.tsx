@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
@@ -179,9 +181,9 @@ export default function DeleteAccountPage() {
                   <label htmlFor="reason" className="text-sm font-medium">
                     Reason for deletion (optional)
                   </label>
-                  <textarea
+                  <Textarea
                     id="reason"
-                    className="w-full min-h-[80px] rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="min-h-[80px]"
                     placeholder="Tell us why you're leaving..."
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
@@ -191,12 +193,10 @@ export default function DeleteAccountPage() {
 
                 <div className="space-y-2">
                   <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={confirmed}
-                      onChange={(e) => setConfirmed(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                      required
+                      onCheckedChange={(checked) => setConfirmed(checked === true)}
+                      className="mt-0.5"
                     />
                     <span className="text-sm text-gray-700">
                       I understand that my account and all associated data will be{' '}
@@ -216,12 +216,13 @@ export default function DeleteAccountPage() {
           <div className="text-center text-sm text-gray-500">
             <p>
               Changed your mind?{' '}
-              <button
+              <Button
+                variant="link"
                 onClick={() => router.push('/settings')}
-                className="text-blue-600 hover:underline"
+                className="h-auto p-0 text-blue-600"
               >
                 Go back to settings
-              </button>
+              </Button>
             </p>
           </div>
         </div>

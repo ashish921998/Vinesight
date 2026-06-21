@@ -18,6 +18,16 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -141,6 +151,11 @@ export default function FarmDetailsPage() {
   const [deletingRecord, setDeletingRecord] = useState<any>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [pendingDateGroupDelete, setPendingDateGroupDelete] = useState<{
+    date: string
+    activities: any[]
+  } | null>(null)
+  const [pendingFarmDelete, setPendingFarmDelete] = useState<number | null>(null)
 
   // Edit mode state for UnifiedDataLogsModal
   const [editModeLogs, setEditModeLogs] = useState<any[]>([])
@@ -1250,15 +1265,14 @@ export default function FarmDetailsPage() {
     }
   }
 
-  // New handler for deleting date groups
-  const handleDeleteDateGroup = async (date: string, activities: any[]) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete all ${activities.length} logs from ${date}? This action cannot be undone.`
-      )
-    ) {
-      return
-    }
+  // New handler for deleting date groups — opens confirmation dialog
+  const handleDeleteDateGroup = (date: string, activities: any[]) => {
+    setPendingDateGroupDelete({ date, activities })
+  }
+
+  const confirmDeleteDateGroup = async () => {
+    if (!pendingDateGroupDelete) return
+    const { activities } = pendingDateGroupDelete
 
     try {
       setIsDeleting(true)
@@ -1298,6 +1312,7 @@ export default function FarmDetailsPage() {
       logger.error('Error deleting date group:', error)
     } finally {
       setIsDeleting(false)
+      setPendingDateGroupDelete(null)
     }
   }
 
@@ -1350,18 +1365,20 @@ export default function FarmDetailsPage() {
     setShowFarmModal(true)
   }
 
-  const handleDeleteFarm = async (farmId: number) => {
-    if (
-      confirm(
-        'Are you sure you want to delete this farm? This will also delete all associated records.'
-      )
-    ) {
-      try {
-        await SupabaseService.deleteFarm(farmId)
-        router.push('/farms') // Navigate back to farms list
-      } catch (error) {
-        logger.error('Error deleting farm:', error)
-      }
+  const handleDeleteFarm = (farmId: number) => {
+    setPendingFarmDelete(farmId)
+  }
+
+  const confirmDeleteFarm = async () => {
+    if (pendingFarmDelete === null) return
+    const farmIdToDelete = pendingFarmDelete
+    try {
+      await SupabaseService.deleteFarm(farmIdToDelete)
+      router.push('/farms') // Navigate back to farms list
+    } catch (error) {
+      logger.error('Error deleting farm:', error)
+    } finally {
+      setPendingFarmDelete(null)
     }
   }
 
@@ -1631,10 +1648,11 @@ export default function FarmDetailsPage() {
             {moduleShortcuts.map((link) => {
               const Icon = link.icon
               return (
-                <button
+                <Button
                   key={link.label}
                   type="button"
-                  className="group flex flex-col items-center gap-1 rounded-xl border border-border/40 bg-card px-1.5 py-2.5 shadow-sm transition active:scale-95 active:shadow-none hover:border-accent/50 hover:bg-accent/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                  variant="ghost"
+                  className="group flex h-auto flex-col items-center gap-1 rounded-xl border border-border/40 bg-card px-1.5 py-2.5 shadow-sm transition active:scale-95 active:shadow-none hover:border-accent/50 hover:bg-accent/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                   onClick={() => router.push(link.href)}
                   aria-label={`Open ${link.label}`}
                 >
@@ -1642,7 +1660,7 @@ export default function FarmDetailsPage() {
                   <span className="text-[10px] font-medium text-foreground w-full text-center truncate">
                     {link.label}
                   </span>
-                </button>
+                </Button>
               )
             })}
           </div>
@@ -2105,6 +2123,62 @@ export default function FarmDetailsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Date Group Confirmation */}
+        <AlertDialog
+          open={pendingDateGroupDelete !== null}
+          onOpenChange={(open) => {
+            if (!open && !isDeleting) setPendingDateGroupDelete(null)
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete logs?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete all {pendingDateGroupDelete?.activities.length} logs
+                from {pendingDateGroupDelete?.date}? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault()
+                  confirmDeleteDateGroup()
+                }}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete Farm Confirmation */}
+        <AlertDialog
+          open={pendingFarmDelete !== null}
+          onOpenChange={(open) => !open && setPendingFarmDelete(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete farm?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this farm? This will also delete all associated
+                records.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDeleteFarm}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Farm Modal (Create/Edit) */}
         <FarmModal
