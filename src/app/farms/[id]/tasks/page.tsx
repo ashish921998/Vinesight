@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -402,8 +403,33 @@ export default function FarmTasksPage() {
             </CardHeader>
             <CardContent className="space-y-3 p-3 sm:p-6">
               {loading ? (
-                <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading tasks…
+                <div className="space-y-3">
+                  <output className="sr-only" aria-live="polite">
+                    Loading tasks...
+                  </output>
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex flex-col gap-2 rounded-lg border border-border/70 bg-white p-3 shadow-sm sm:gap-3 sm:rounded-xl sm:p-4 md:flex-row md:items-center md:justify-between"
+                    >
+                      <div className="flex flex-1 flex-col gap-1.5 sm:gap-2">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <Skeleton className="h-5 w-40" />
+                          <Skeleton className="h-5 w-16 rounded-full" />
+                        </div>
+                        <Skeleton className="h-4 w-3/4" />
+                        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                          <Skeleton className="h-3 w-24" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
+                      </div>
+                      <div className="flex w-full items-center gap-1.5 sm:gap-2 md:w-auto">
+                        <Skeleton className="h-8 flex-1 sm:h-9 sm:w-20 sm:flex-none" />
+                        <Skeleton className="h-8 w-8 sm:h-9 sm:w-9" />
+                        <Skeleton className="h-8 w-8 sm:h-9 sm:w-9" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : filteredTasks.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center sm:px-6 sm:py-10">

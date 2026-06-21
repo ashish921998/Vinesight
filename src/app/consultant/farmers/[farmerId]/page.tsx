@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,7 +11,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from '@/components/ui/breadcrumb'
-import { Loader2, User, Mail, Phone, IndianRupee, CircleAlert } from 'lucide-react'
+import { User, Mail, Phone, IndianRupee, CircleAlert } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
 import { RecordVisitDialog } from '@/components/consultant/RecordVisitDialog'
 import { useFarmerProfileData } from './components/useFarmerProfileData'
@@ -26,10 +27,43 @@ export default function FarmerProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading farmer profile...</p>
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-32" />
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-56" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+          <Skeleton className="h-9 w-32" />
+        </div>
+
+        <div className="space-y-3">
+          <Skeleton className="h-6 w-32" />
+          <Card>
+            <CardContent className="p-8">
+              <Skeleton className="mx-auto h-10 w-10 rounded-full" />
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-3">
+          <Skeleton className="h-6 w-28" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-5 w-2/3" />
+                </CardHeader>
+                <CardContent className="space-y-3 pt-0">
+                  <Skeleton className="h-3 w-1/2" />
+                  <div className="flex justify-end">
+                    <Skeleton className="h-4 w-4" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     )

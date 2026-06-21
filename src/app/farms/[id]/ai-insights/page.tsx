@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
+import { Skeleton } from '@/components/ui/Skeleton'
 import {
   ArrowLeft,
   AlertTriangle,
@@ -368,8 +369,8 @@ export default function AIInsightsPage() {
         <div className="bg-white shadow-sm border-b">
           <div className="px-4 py-3">
             <div className="flex items-center gap-3">
-              <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
-              <div className="w-48 h-5 bg-gray-200 rounded animate-pulse"></div>
+              <Skeleton className="w-6 h-6" />
+              <Skeleton className="w-48 h-5" />
             </div>
           </div>
         </div>
@@ -377,12 +378,12 @@ export default function AIInsightsPage() {
           {/* Stats Cards Skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-lg p-4 animate-pulse">
+              <div key={i} className="bg-white rounded-lg p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                  <Skeleton className="w-10 h-10 rounded-lg" />
                   <div>
-                    <div className="w-12 h-6 bg-gray-200 rounded mb-1"></div>
-                    <div className="w-24 h-4 bg-gray-200 rounded"></div>
+                    <Skeleton className="w-12 h-6 mb-1" />
+                    <Skeleton className="w-24 h-4" />
                   </div>
                 </div>
               </div>
@@ -390,16 +391,16 @@ export default function AIInsightsPage() {
           </div>
 
           {/* Overview Card Skeleton */}
-          <div className="bg-white rounded-lg p-6 mb-6 animate-pulse">
+          <div className="bg-white rounded-lg p-6 mb-6">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-5 h-5 bg-gray-200 rounded"></div>
-              <div className="w-32 h-4 bg-gray-200 rounded"></div>
+              <Skeleton className="w-5 h-5" />
+              <Skeleton className="w-32 h-4" />
             </div>
             <div className="grid grid-cols-3 gap-4 text-center">
               {[1, 2, 3].map((i) => (
                 <div key={i}>
-                  <div className="w-8 h-8 bg-gray-200 rounded mx-auto mb-2"></div>
-                  <div className="w-16 h-3 bg-gray-200 rounded mx-auto"></div>
+                  <Skeleton className="w-8 h-8 mx-auto mb-2" />
+                  <Skeleton className="w-16 h-3 mx-auto" />
                 </div>
               ))}
             </div>
@@ -408,33 +409,30 @@ export default function AIInsightsPage() {
           {/* Tab Skeleton */}
           <div className="flex gap-2 mb-4">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="w-20 h-9 bg-gray-200 rounded animate-pulse"></div>
+              <Skeleton key={i} className="w-20 h-9" />
             ))}
           </div>
 
           {/* Insight Cards Skeleton */}
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="bg-white rounded-lg border border-l-4 border-l-gray-300 animate-pulse"
-              >
+              <div key={i} className="bg-white rounded-lg border border-l-4 border-l-gray-300">
                 <div className="p-4">
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="w-9 h-9 bg-gray-200 rounded-lg"></div>
+                    <Skeleton className="w-9 h-9 rounded-lg" />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-32 h-4 bg-gray-200 rounded"></div>
-                        <div className="w-16 h-5 bg-gray-200 rounded"></div>
+                        <Skeleton className="w-32 h-4" />
+                        <Skeleton className="w-16 h-5" />
                       </div>
-                      <div className="w-48 h-3 bg-gray-200 rounded mb-1"></div>
-                      <div className="w-64 h-3 bg-gray-200 rounded"></div>
+                      <Skeleton className="w-48 h-3 mb-1" />
+                      <Skeleton className="w-64 h-3" />
                     </div>
                   </div>
-                  <div className="w-full h-2 bg-gray-200 rounded mb-3"></div>
+                  <Skeleton className="w-full h-2 mb-3" />
                   <div className="flex gap-2">
-                    <div className="w-24 h-8 bg-gray-200 rounded"></div>
-                    <div className="w-8 h-8 bg-gray-200 rounded"></div>
+                    <Skeleton className="w-24 h-8" />
+                    <Skeleton className="w-8 h-8" />
                   </div>
                 </div>
               </div>

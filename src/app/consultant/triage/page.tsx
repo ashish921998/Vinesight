@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/Skeleton'
 import {
   Select,
   SelectContent,
@@ -13,7 +14,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Search, Loader2, ClipboardList, ChevronRight } from 'lucide-react'
+import { Search, ClipboardList, ChevronRight } from 'lucide-react'
 import { useConsultantAccess, useTriageItems } from '@/hooks/consultant/useConsultantQueries'
 import posthog from 'posthog-js'
 import {
@@ -129,11 +130,44 @@ export default function ReportsToReviewPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading reports...</p>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-28" />
+          <Skeleton className="h-4 w-72" />
         </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="space-y-2 p-4">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-8 w-10" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Skeleton className="h-9 flex-1" />
+          <Skeleton className="h-9 w-full sm:w-[170px]" />
+        </div>
+
+        <Card>
+          <CardContent className="p-0">
+            <ul className="divide-y">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <li key={i} className="flex items-center gap-3 px-4 py-3">
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-3 w-1/4" />
+                  </div>
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-6 w-20" />
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
       </div>
     )
   }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { AlertsSection } from './AlertsSection'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/Skeleton'
 import type { LucideIcon } from 'lucide-react'
 import {
   Select,
@@ -229,10 +230,45 @@ export function FarmerDashboard({ className }: FarmerDashboardProps) {
   // Show loading state
   if (loading || authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
-          <p className="text-muted-foreground mt-4">Loading your dashboard...</p>
+      <div className={cn('relative min-h-screen bg-background pb-10 sm:pb-12', className)}>
+        <div className="px-3 pt-5 pb-6 space-y-5 sm:px-4 sm:pt-6 sm:pb-8 md:px-6 lg:px-10">
+          {/* Header: status badge, farm selector + actions, meta chips */}
+          <div className="space-y-3">
+            <Skeleton className="h-6 w-28 rounded-full" />
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+              <Skeleton className="h-11 w-full rounded-full sm:h-12 sm:w-64" />
+              <div className="flex gap-1.5">
+                <Skeleton className="h-9 flex-1 rounded-full sm:h-11 sm:w-28" />
+                <Skeleton className="h-9 flex-1 rounded-full sm:h-11 sm:w-28" />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <Skeleton className="h-6 w-24 rounded-full" />
+              <Skeleton className="h-6 w-28 rounded-full" />
+              <Skeleton className="h-6 w-20 rounded-full" />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6 px-4 pb-12 md:px-6 lg:px-10">
+          {/* Today at a glance: stat tiles */}
+          <section className="space-y-3">
+            <Skeleton className="h-5 w-40" />
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-28 rounded-2xl" />
+              ))}
+            </div>
+          </section>
+
+          {/* Activity section */}
+          <Skeleton className="h-40 w-full rounded-3xl" />
+
+          {/* Tasks + Alerts */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <Skeleton className="h-48 w-full rounded-3xl" />
+            <Skeleton className="h-48 w-full rounded-3xl" />
+          </div>
         </div>
       </div>
     )

@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import { Loader2 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { format } from 'date-fns'
 import { formatCurrency } from '@/lib/currency-utils'
 import type {
@@ -161,9 +161,47 @@ export function AnalyticsView({
       </Card>
 
       {analyticsLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
+        <>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <Card key={i} className="rounded-2xl border-none bg-white shadow-sm">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-8 w-32" />
+                    <Skeleton className="h-3 w-36" />
+                  </div>
+                  <Skeleton className="h-6 w-14 rounded-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <Card className="border-none rounded-3xl shadow-sm">
+            <CardContent className="space-y-4 p-5">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-40" />
+                  <Skeleton className="h-6 w-56" />
+                </div>
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="rounded-2xl border border-muted p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-28" />
+                        <Skeleton className="h-3 w-36" />
+                      </div>
+                      <Skeleton className="h-5 w-16" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </>
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2">

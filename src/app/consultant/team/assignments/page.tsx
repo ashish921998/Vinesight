@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   Select,
@@ -185,11 +186,48 @@ export default function FarmerAssignmentsPage() {
 
   if (busy || (Boolean(access?.canViewAllFarmers) && farmersQuery.isPending)) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading assignments...</p>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-64" />
         </div>
+
+        {/* Target agronomist picker */}
+        <Card>
+          <CardHeader className="pb-3">
+            <Skeleton className="h-5 w-40" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Skeleton className="h-4 w-64" />
+            <Skeleton className="h-9 w-full sm:w-[320px]" />
+          </CardContent>
+        </Card>
+
+        {/* Farmer list */}
+        <Card>
+          <CardHeader className="pb-3 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-6 w-24" />
+            </div>
+            <Skeleton className="h-9 w-full" />
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                  <Skeleton className="h-4 w-4" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <Skeleton className="h-6 w-20" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
