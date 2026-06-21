@@ -18,6 +18,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
 import { capitalize } from '@/lib/utils'
 
 export default function FarmsPage() {
@@ -26,6 +36,7 @@ export default function FarmsPage() {
   const [submitLoading, setSubmitLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [editingFarm, setEditingFarm] = useState<Farm | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null)
 
   useEffect(() => {
     loadFarms()
@@ -74,18 +85,17 @@ export default function FarmsPage() {
     setShowModal(true)
   }
 
-  const handleDelete = async (id: number) => {
-    if (
-      confirm(
-        'Are you sure you want to delete this farm? This will also delete all associated records.'
-      )
-    ) {
-      try {
-        await SupabaseService.deleteFarm(id)
-        await loadFarms()
-      } catch (error) {
-        console.error('Error deleting farm:', error)
-      }
+  const confirmDelete = async () => {
+    if (pendingDelete === null) return
+    const id = pendingDelete
+    try {
+      await SupabaseService.deleteFarm(id)
+      await loadFarms()
+    } catch (error) {
+      console.error('Error deleting farm:', error)
+      toast.error('Failed to delete farm. Please try again.')
+    } finally {
+      setPendingDelete(null)
     }
   }
 
@@ -235,7 +245,7 @@ export default function FarmsPage() {
                                   <DropdownMenuItem
                                     onClick={(e) => {
                                       e.preventDefault()
-                                      handleDelete(farm.id!)
+                                      setPendingDelete(farm.id!)
                                     }}
                                     className="text-red-600 focus:text-red-600"
                                   >
@@ -313,6 +323,31 @@ export default function FarmsPage() {
           editingFarm={editingFarm}
           isSubmitting={submitLoading}
         />
+
+        {/* Delete Farm Confirmation */}
+        <AlertDialog
+          open={pendingDelete !== null}
+          onOpenChange={(open) => !open && setPendingDelete(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete farm?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this farm? This will also delete all associated
+                records.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </ProtectedRoute>
   )

@@ -33,6 +33,16 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { SoilProfileService } from '@/lib/soil-profile-service'
@@ -186,6 +196,7 @@ export default function SoilProfilingPage() {
   const [activeTab, setActiveTab] = useState<'history' | 'trends'>('history')
   const [editingProfileId, setEditingProfileId] = useState<number | null>(null)
   const [focusedSection, setFocusedSection] = useState<SoilSectionName | null>(null)
+  const [pendingDeleteProfileId, setPendingDeleteProfileId] = useState<number | null>(null)
   const previewUrlsRef = useRef<Record<SoilSectionName, string | null>>({
     top: null,
     bottom: null,
@@ -384,6 +395,19 @@ export default function SoilProfilingPage() {
       toast.error(error instanceof Error ? error.message : 'Failed to save soil profile')
     } finally {
       setSavingProfile(false)
+    }
+  }
+
+  const confirmDeleteProfile = async () => {
+    if (pendingDeleteProfileId === null) return
+    try {
+      await SoilProfileService.deleteProfile(pendingDeleteProfileId)
+      await loadSoilProfiles()
+      toast.success('Profile deleted')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete profile')
+    } finally {
+      setPendingDeleteProfileId(null)
     }
   }
 
@@ -732,8 +756,9 @@ export default function SoilProfilingPage() {
           </label>
           {state.photoPreview && (
             <div className="space-y-2">
-              <button
+              <Button
                 type="button"
+                variant="link"
                 onClick={() =>
                   setSections((prev) => ({
                     ...prev,
@@ -743,10 +768,10 @@ export default function SoilProfilingPage() {
                     }
                   }))
                 }
-                className="text-xs font-semibold text-foreground underline-offset-4 hover:underline"
+                className="h-auto p-0 text-xs font-semibold text-foreground underline-offset-4 hover:underline"
               >
                 {state.showPreview ? 'Hide preview' : 'Show preview'}
-              </button>
+              </Button>
               {state.showPreview && (
                 <div className="aspect-[16/9] w-full overflow-hidden rounded-xl border border-border/60 bg-muted">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -985,27 +1010,16 @@ export default function SoilProfilingPage() {
                                 size="icon"
                                 variant="ghost"
                                 className="h-8 w-8 text-destructive"
-                                onClick={async () => {
-                                  try {
-                                    if (!profile.id) return
-                                    if (!window.confirm('Delete this soil profile?')) return
-                                    await SoilProfileService.deleteProfile(profile.id)
-                                    await loadSoilProfiles()
-                                    toast.success('Profile deleted')
-                                  } catch (error: unknown) {
-                                    toast.error(
-                                      error instanceof Error
-                                        ? error.message
-                                        : 'Failed to delete profile'
-                                    )
-                                  }
+                                onClick={() => {
+                                  if (!profile.id) return
+                                  setPendingDeleteProfileId(profile.id)
                                 }}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
-                              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                              <Badge className="h-auto bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-100">
                                 Avg {average ?? '—'}%
-                              </span>
+                              </Badge>
                             </div>
                           </div>
                           <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
@@ -1167,16 +1181,17 @@ export default function SoilProfilingPage() {
                               Record this section to start a trend.
                             </p>
                           )}
-                          <button
+                          <Button
                             type="button"
+                            variant="link"
                             onClick={() =>
                               setFocusedSection((prev) => (prev === trend.name ? null : trend.name))
                             }
-                            className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary underline-offset-4 hover:underline"
+                            className="mt-3 inline-flex h-auto items-center gap-1 p-0 text-xs font-semibold text-primary underline-offset-4 hover:underline"
                           >
                             {focusedSection === trend.name ? 'Hide details' : 'View details'}
                             <ArrowRight className="h-3 w-3" />
-                          </button>
+                          </Button>
                           {focusedSection === trend.name && (
                             <div className="mt-3 space-y-2 rounded-2xl border border-border/60 bg-muted/40 p-3 text-xs">
                               {sectionHistory[trend.name].length ? (
@@ -1395,18 +1410,19 @@ export default function SoilProfilingPage() {
                                   {formatDisplayValue(averageEc, ' dS/m')}
                                 </p>
                               </div>
-                              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                              <Badge className="h-auto bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-50">
                                 Fusarium {fusariumValue}
-                              </span>
+                              </Badge>
                             </div>
-                            <button
+                            <Button
                               type="button"
+                              variant="link"
                               onClick={() => setActiveTab('history')}
-                              className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary underline-offset-4 hover:underline"
+                              className="mt-3 inline-flex h-auto items-center gap-1 p-0 text-xs font-semibold text-primary underline-offset-4 hover:underline"
                             >
                               View profile
                               <ArrowRight className="h-3 w-3" />
-                            </button>
+                            </Button>
                           </div>
                         )
                       })
@@ -1478,6 +1494,29 @@ export default function SoilProfilingPage() {
               </div>
             </DialogContent>
           </Dialog>
+
+          <AlertDialog
+            open={pendingDeleteProfileId !== null}
+            onOpenChange={(open) => !open && setPendingDeleteProfileId(null)}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this soil profile?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently remove the profile and its recorded sections.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={confirmDeleteProfile}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </ProtectedRoute>

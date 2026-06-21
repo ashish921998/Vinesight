@@ -308,18 +308,19 @@ export function FarmHeader({
                             </div>
                             {onAddFarm && (
                               <div className="sticky bottom-0 border-t border-border bg-popover p-1">
-                                <button
+                                <Button
+                                  variant="ghost"
                                   onClick={(e) => {
                                     e.preventDefault()
                                     onAddFarm()
                                   }}
-                                  className="relative flex w-full cursor-pointer select-none items-center rounded-sm py-3 pl-2 pr-8 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                                  className="relative flex h-auto w-full cursor-pointer select-none items-center justify-start rounded-sm py-3 pl-2 pr-8 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                                 >
                                   <div className="flex items-center gap-3">
                                     <Plus className="h-5 w-5 flex-shrink-0 text-primary" />
                                     <div className="font-medium text-primary">Add New Farm</div>
                                   </div>
-                                </button>
+                                </Button>
                               </div>
                             )}
                           </SelectContent>

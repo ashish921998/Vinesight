@@ -74,17 +74,18 @@ export function PhoneLoginForm({ onSuccess }: PhoneLoginFormProps) {
         <Button type="submit" disabled={loading || token.length < 6} className="w-full h-12">
           {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Verify & sign in'}
         </Button>
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => {
             setStep('phone')
             setToken('')
           }}
-          className="flex items-center justify-center gap-1 w-full text-sm text-muted-foreground hover:text-foreground"
+          className="flex items-center justify-center gap-1 w-full text-sm text-muted-foreground hover:bg-transparent hover:text-foreground"
         >
           <ArrowLeft className="h-3 w-3" />
           Use a different number
-        </button>
+        </Button>
       </form>
     )
   }

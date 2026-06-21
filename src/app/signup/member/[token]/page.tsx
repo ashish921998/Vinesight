@@ -7,7 +7,10 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { PasswordInput } from '@/components/ui/password-input'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Card } from '@/components/ui/card'
 import { Loader2, Building2, Mail } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase'
@@ -257,20 +260,19 @@ export default function InviteAcceptPage() {
             Set a password to finish setting up your account
           </p>
 
-          <div className="bg-card rounded-lg shadow-[0px_0px_0px_1px_rgba(55,50,47,0.08)] p-8">
+          <Card className="p-8">
             <form onSubmit={handleSetPassword} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Email address
-                </label>
+              <div className="space-y-2">
+                <Label htmlFor="member-email">Email address</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input
+                  <Input
+                    id="member-email"
                     type="email"
                     value={invite.email}
                     readOnly
                     disabled
-                    className="w-full pl-9 pr-3 py-2 border border-border rounded-md shadow-sm bg-muted text-muted-foreground cursor-not-allowed focus:outline-none min-h-[44px]"
+                    className="w-full pl-9 min-h-[44px]"
                   />
                 </div>
               </div>
@@ -325,7 +327,7 @@ export default function InviteAcceptPage() {
                 )}
               </Button>
             </form>
-          </div>
+          </Card>
         </div>
       </div>
     )
@@ -337,7 +339,7 @@ export default function InviteAcceptPage() {
     <div className="min-h-screen bg-background flex flex-col justify-center items-center px-4">
       <div className="w-full max-w-md">
         {header}
-        <div className="bg-card rounded-lg shadow-[0px_0px_0px_1px_rgba(55,50,47,0.08)] p-8 text-center space-y-4">
+        <Card className="p-8 text-center space-y-4">
           <Mail className="h-10 w-10 text-primary mx-auto" />
           <p className="text-card-foreground">
             We&apos;ve emailed an invitation to <span className="font-medium">{invite.email}</span>.
@@ -353,7 +355,7 @@ export default function InviteAcceptPage() {
             </Link>{' '}
             to accept.
           </p>
-        </div>
+        </Card>
       </div>
     </div>
   )

@@ -101,8 +101,9 @@ export function FarmSelector({
             <div className="space-y-1">
               {/* Portfolio Option */}
               {showPortfolio && (
-                <button
-                  className={`w-full p-3 text-left rounded-lg border-2 transition-all hover:bg-muted touch-manipulation ${
+                <Button
+                  variant="ghost"
+                  className={`w-full h-auto p-3 justify-start text-left rounded-lg border-2 transition-all hover:bg-muted touch-manipulation ${
                     !selectedFarmId
                       ? 'border-accent/20 bg-accent/10 text-primary'
                       : 'border-transparent'
@@ -121,14 +122,15 @@ export function FarmSelector({
                       </div>
                     </div>
                   </div>
-                </button>
+                </Button>
               )}
 
               {/* Farm Options */}
               {farms.map((farm) => (
-                <button
+                <Button
                   key={farm.id}
-                  className={`w-full p-3 text-left rounded-lg border-2 transition-all hover:bg-muted touch-manipulation ${
+                  variant="ghost"
+                  className={`w-full h-auto p-3 justify-start text-left rounded-lg border-2 transition-all hover:bg-muted touch-manipulation ${
                     selectedFarmId === farm.id
                       ? 'border-accent/20 bg-accent/10 text-primary'
                       : 'border-transparent'
@@ -138,7 +140,7 @@ export function FarmSelector({
                     setIsOpen(false)
                   }}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 w-full">
                     <div
                       className={`w-3 h-3 rounded-full flex-shrink-0 ${getStatusColor(farm.status)}`}
                     />
@@ -165,7 +167,7 @@ export function FarmSelector({
                       </div>
                     </div>
                   </div>
-                </button>
+                </Button>
               ))}
             </div>
           </CardContent>
@@ -219,9 +221,10 @@ export function FarmTabs({
   return (
     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
       {priorityFarms.map((farm) => (
-        <button
+        <Button
           key={farm.id}
-          className={`flex-shrink-0 p-2 rounded-lg border-2 transition-all touch-manipulation ${
+          variant="ghost"
+          className={`flex-shrink-0 h-auto p-2 rounded-lg border-2 transition-all touch-manipulation ${
             selectedFarmId === farm.id
               ? 'border-accent/20 bg-accent/10 text-primary'
               : `${getStatusColor(farm.status)} hover:shadow-md`
@@ -237,7 +240,7 @@ export function FarmTabs({
               <span className="text-xs font-bold">{farm.healthScore}</span>
             </div>
           </div>
-        </button>
+        </Button>
       ))}
     </div>
   )

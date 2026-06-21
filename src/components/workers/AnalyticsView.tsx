@@ -1,6 +1,7 @@
 'use client'
 
 import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -217,9 +218,7 @@ export function AnalyticsView({
                     {formatCurrency(fixedAnalytics.advanceRecovered, currencyPreference)}
                   </p>
                 </div>
-                <div className="rounded-full bg-accent/10 text-primary px-3 py-1 text-xs font-semibold">
-                  Fixed
-                </div>
+                <Badge className="bg-accent/10 text-primary font-semibold">Fixed</Badge>
               </CardContent>
             </Card>
             <Card className="rounded-2xl border-none bg-white shadow-sm">
@@ -236,9 +235,9 @@ export function AnalyticsView({
                     {tempAnalytics.byWorker.reduce((sum, entry) => sum + entry.hours, 0).toFixed(1)}
                   </p>
                 </div>
-                <div className="rounded-full bg-amber-100 text-amber-700 px-3 py-1 text-xs font-semibold">
+                <Badge variant="secondary" className="bg-amber-100 text-amber-700 font-semibold">
                   Temp
-                </div>
+                </Badge>
               </CardContent>
             </Card>
           </div>
@@ -252,9 +251,9 @@ export function AnalyticsView({
                   </p>
                   <h3 className="text-lg font-semibold">Salaries vs. recovered advances</h3>
                 </div>
-                <div className="inline-flex rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-semibold text-primary">
+                <Badge className="border border-accent/20 bg-accent/10 font-semibold text-primary">
                   {fixedAnalytics.byWorker.length} workers
-                </div>
+                </Badge>
               </div>
 
               {fixedAnalytics.byWorker.length === 0 ? (
@@ -262,7 +261,10 @@ export function AnalyticsView({
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
                   {fixedAnalytics.byWorker.map((entry) => (
-                    <div key={entry.worker_id} className="rounded-2xl border border-muted p-3">
+                    <Card
+                      key={entry.worker_id}
+                      className="gap-0 rounded-2xl border-muted py-3 px-3"
+                    >
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-semibold">{entry.worker_name}</p>
@@ -275,7 +277,7 @@ export function AnalyticsView({
                           {formatCurrency(entry.salary, currencyPreference)}
                         </p>
                       </div>
-                    </div>
+                    </Card>
                   ))}
                 </div>
               )}
@@ -401,9 +403,12 @@ export function AnalyticsView({
                   </p>
                   <h3 className="text-lg font-semibold">Payments to short-term labor</h3>
                 </div>
-                <div className="inline-flex rounded-full border border-amber-100 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">
+                <Badge
+                  variant="secondary"
+                  className="border border-amber-100 bg-amber-50 font-semibold text-amber-600"
+                >
                   {tempAnalytics.byWorker.length} workers
-                </div>
+                </Badge>
               </div>
 
               {tempAnalytics.byWorker.length === 0 ? (
@@ -411,7 +416,7 @@ export function AnalyticsView({
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
                   {tempAnalytics.byWorker.map((entry) => (
-                    <div key={entry.name} className="rounded-2xl border border-muted p-3">
+                    <Card key={entry.name} className="gap-0 rounded-2xl border-muted py-3 px-3">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-semibold">{entry.name}</p>
@@ -423,7 +428,7 @@ export function AnalyticsView({
                           {formatCurrency(entry.totalPaid, currencyPreference)}
                         </p>
                       </div>
-                    </div>
+                    </Card>
                   ))}
                 </div>
               )}

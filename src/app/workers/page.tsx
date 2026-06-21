@@ -866,13 +866,16 @@ export default function WorkersPage() {
           <div className="flex flex-wrap items-center gap-3 justify-between">
             <div className="flex rounded-full bg-muted p-1 mx-auto md:mx-0 w-full max-w-sm sm:max-w-md">
               {(['workers', 'attendance', 'analytics'] as const).map((mode) => (
-                <button
+                <Button
                   key={mode}
                   type="button"
+                  variant={viewMode === mode ? 'default' : 'ghost'}
                   onClick={() => setViewMode(mode)}
                   className={cn(
-                    'flex-1 px-4 py-2 text-sm font-medium rounded-full transition text-center',
-                    viewMode === mode ? 'bg-white shadow text-foreground' : 'text-muted-foreground'
+                    'flex-1 rounded-full',
+                    viewMode === mode
+                      ? 'bg-white shadow text-foreground hover:bg-white'
+                      : 'text-muted-foreground'
                   )}
                 >
                   {mode === 'workers'
@@ -880,7 +883,7 @@ export default function WorkersPage() {
                     : mode === 'attendance'
                       ? 'Attendance'
                       : 'Analytics'}
-                </button>
+                </Button>
               ))}
             </div>
             <div className="w-full max-w-sm sm:max-w-md mx-auto sm:mx-0">

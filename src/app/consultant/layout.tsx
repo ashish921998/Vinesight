@@ -111,13 +111,13 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
                 : 'You don’t have access to the organization workspace.'}
             </p>
             {accessState === 'error' ? (
-              <button
-                type="button"
-                className="text-sm underline text-primary"
+              <Button
+                variant="link"
+                className="h-auto p-0 text-sm text-primary"
                 onClick={() => window.location.reload()}
               >
                 Retry
-              </button>
+              </Button>
             ) : (
               <Link href="/dashboard" className="text-sm underline text-primary">
                 Go to dashboard

@@ -37,6 +37,7 @@ import { capitalize } from '@/lib/utils'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { useUserPreferences } from '@/hooks/useUserPreferences'
 import { formatCurrency } from '@/lib/currency-utils'
+import { toast } from 'sonner'
 
 interface RecordData {
   irrigation: any[]
@@ -456,7 +457,7 @@ export default function UnifiedReportsPage() {
       if (process.env.NODE_ENV === 'development') {
         console.error(`Error exporting ${format.toUpperCase()}:`, error)
       }
-      alert(`Failed to export ${format.toUpperCase()}: ${error}`)
+      toast.error(`Failed to export ${format.toUpperCase()}: ${error}`)
     } finally {
       setLoading(false)
     }

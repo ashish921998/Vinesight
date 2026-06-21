@@ -88,10 +88,10 @@ export function JoinCodeCard(props: JoinCodeCardProps = {}) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="rounded-lg border bg-muted/40 p-4">
+        <Card className="gap-0 bg-muted/40 p-4">
           <p className="mb-1 text-xs font-medium text-muted-foreground">Join code</p>
           <p className="font-mono text-2xl font-semibold tracking-wide break-all">{joinCode}</p>
-        </div>
+        </Card>
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button variant="outline" onClick={handleCopyCode} className="gap-2">
