@@ -101,7 +101,7 @@ export default function HelpCenter() {
           </CardHeader>
           <CardContent className="space-y-4 text-slate-700">
             {quickFaqs.map((faq) => (
-              <Card key={faq.question} className="gap-0 border-slate-200 p-4">
+              <Card key={faq.question} className="gap-0 border border-slate-200 p-4">
                 <p className="font-semibold text-slate-900">{faq.question}</p>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">{faq.answer}</p>
               </Card>

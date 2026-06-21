@@ -92,6 +92,7 @@ export default function FarmsPage() {
       await loadFarms()
     } catch (error) {
       console.error('Error deleting farm:', error)
+      toast.error('Failed to delete farm. Please try again.')
     } finally {
       setPendingDelete(null)
     }

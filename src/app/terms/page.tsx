@@ -147,7 +147,10 @@ export default function TermsOfServicePage() {
 
       <main className="max-w-5xl mx-auto px-4 py-12 space-y-10">
         <section className="space-y-4 text-center">
-          <Badge variant="outline" className="mx-auto gap-2 bg-secondary px-3 py-1 font-semibold">
+          <Badge
+            variant="outline"
+            className="mx-auto h-auto gap-2 bg-secondary px-3 py-1 font-semibold"
+          >
             <Scale className="h-4 w-4 text-primary" />
             Clear rules for using VineSight
           </Badge>

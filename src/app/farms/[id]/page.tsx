@@ -1372,13 +1372,16 @@ export default function FarmDetailsPage() {
   const confirmDeleteFarm = async () => {
     if (pendingFarmDelete === null) return
     const farmIdToDelete = pendingFarmDelete
+    setIsDeleting(true)
     try {
       await SupabaseService.deleteFarm(farmIdToDelete)
       router.push('/farms') // Navigate back to farms list
     } catch (error) {
       logger.error('Error deleting farm:', error)
-    } finally {
+      toast.error('Failed to delete farm. Please try again.')
       setPendingFarmDelete(null)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -2158,7 +2161,9 @@ export default function FarmDetailsPage() {
         {/* Delete Farm Confirmation */}
         <AlertDialog
           open={pendingFarmDelete !== null}
-          onOpenChange={(open) => !open && setPendingFarmDelete(null)}
+          onOpenChange={(open) => {
+            if (!open && !isDeleting) setPendingFarmDelete(null)
+          }}
         >
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -2169,12 +2174,16 @@ export default function FarmDetailsPage() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
               <AlertDialogAction
-                onClick={confirmDeleteFarm}
+                onClick={(e) => {
+                  e.preventDefault()
+                  confirmDeleteFarm()
+                }}
+                disabled={isDeleting}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                Delete
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

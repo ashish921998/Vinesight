@@ -220,7 +220,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
                     value={String(settings.daysAdvance)}
                     onValueChange={(v) => handleSettingChange('daysAdvance', parseInt(v))}
                   >
-                    <SelectTrigger id="daysAdvance">
+                    <SelectTrigger id="daysAdvance" className="w-full">
                       <SelectValue placeholder="Select days" />
                     </SelectTrigger>
                     <SelectContent>

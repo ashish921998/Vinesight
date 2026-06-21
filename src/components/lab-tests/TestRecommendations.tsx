@@ -73,8 +73,11 @@ export function TestRecommendations({ recommendations, testType }: TestRecommend
                 Priority Actions
               </h3>
               <div className="space-y-3">
-                {criticalAndHigh.map((rec, idx) => (
-                  <Card key={idx} className={`gap-0 p-4 ${getPriorityColor(rec.priority)}`}>
+                {criticalAndHigh.map((rec) => (
+                  <Card
+                    key={rec.parameter}
+                    className={`gap-0 p-4 ${getPriorityColor(rec.priority)}`}
+                  >
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">{rec.icon}</span>
                       <div className="flex-1 space-y-2">
@@ -113,8 +116,8 @@ export function TestRecommendations({ recommendations, testType }: TestRecommend
                 Cost Savings Opportunities
               </h3>
               <div className="space-y-3">
-                {savings.map((rec, idx) => (
-                  <Card key={idx} className="gap-0 p-4 bg-green-50 border-green-200">
+                {savings.map((rec) => (
+                  <Card key={rec.parameter} className="gap-0 p-4 bg-green-50 border-green-200">
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">{rec.icon}</span>
                       <div className="flex-1 space-y-2">
@@ -158,8 +161,11 @@ export function TestRecommendations({ recommendations, testType }: TestRecommend
                 Monitor These Parameters ({moderateAndLow.length})
               </summary>
               <div className="space-y-3 mt-3">
-                {moderateAndLow.map((rec, idx) => (
-                  <Card key={idx} className={`gap-0 p-4 ${getPriorityColor(rec.priority)}`}>
+                {moderateAndLow.map((rec) => (
+                  <Card
+                    key={rec.parameter}
+                    className={`gap-0 p-4 ${getPriorityColor(rec.priority)}`}
+                  >
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">{rec.icon}</span>
                       <div className="flex-1 space-y-2">
@@ -198,8 +204,8 @@ export function TestRecommendations({ recommendations, testType }: TestRecommend
                 Optimal Parameters ({optimal.length})
               </summary>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                {optimal.map((rec, idx) => (
-                  <Card key={idx} className="gap-0 p-3 bg-green-50 border-green-200">
+                {optimal.map((rec) => (
+                  <Card key={rec.parameter} className="gap-0 p-3 bg-green-50 border-green-200">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">{rec.icon}</span>
                       <div className="flex-1">

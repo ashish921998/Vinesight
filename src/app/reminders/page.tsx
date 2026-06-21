@@ -481,10 +481,11 @@ export default function RemindersPage() {
                           value={formData.type}
                           onValueChange={(v) => handleInputChange('type', v)}
                         >
-                          <SelectTrigger id="type">
+                          <SelectTrigger id="type" className="w-full">
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="note">Note</SelectItem>
                             <SelectItem value="irrigation">Irrigation</SelectItem>
                             <SelectItem value="spray">Spray Treatment</SelectItem>
                             <SelectItem value="fertigation">Fertigation</SelectItem>
@@ -500,7 +501,7 @@ export default function RemindersPage() {
                           value={formData.priority}
                           onValueChange={(v) => handleInputChange('priority', v)}
                         >
-                          <SelectTrigger id="priority">
+                          <SelectTrigger id="priority" className="w-full">
                             <SelectValue placeholder="Select priority" />
                           </SelectTrigger>
                           <SelectContent>
@@ -716,7 +717,11 @@ export default function RemindersPage() {
 
         {/* Notification Settings Modal */}
         <Dialog open={showNotificationSettings} onOpenChange={setShowNotificationSettings}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto" showCloseButton={false}>
+            <DialogHeader className="sr-only">
+              <DialogTitle>Notification Settings</DialogTitle>
+              <DialogDescription>Configure task reminder notifications</DialogDescription>
+            </DialogHeader>
             <NotificationSettings onClose={() => setShowNotificationSettings(false)} />
           </DialogContent>
         </Dialog>

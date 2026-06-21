@@ -314,7 +314,7 @@ export function TaskTemplateSelector({
                         value={formData.priority}
                         onValueChange={(v) => handleInputChange('priority', v)}
                       >
-                        <SelectTrigger id="priority">
+                        <SelectTrigger id="priority" className="w-full">
                           <SelectValue placeholder="Select priority" />
                         </SelectTrigger>
                         <SelectContent>
@@ -347,7 +347,7 @@ export function TaskTemplateSelector({
                             value={formData.frequency || 'weekly'}
                             onValueChange={(v) => handleInputChange('frequency', v)}
                           >
-                            <SelectTrigger id="frequency">
+                            <SelectTrigger id="frequency" className="w-full">
                               <SelectValue placeholder="Select frequency" />
                             </SelectTrigger>
                             <SelectContent>

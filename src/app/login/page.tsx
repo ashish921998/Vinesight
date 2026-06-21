@@ -127,17 +127,21 @@ function LoginPageContent() {
           <div className="mb-6 grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
             <Button
               type="button"
-              variant={method === 'email' ? 'default' : 'ghost'}
+              variant="ghost"
               onClick={() => setMethod('email')}
-              className="py-2 text-sm font-medium"
+              className={`py-2 text-sm font-medium ${
+                method === 'email' ? 'bg-white text-foreground shadow-sm hover:bg-white' : ''
+              }`}
             >
               Email
             </Button>
             <Button
               type="button"
-              variant={method === 'phone' ? 'default' : 'ghost'}
+              variant="ghost"
               onClick={() => setMethod('phone')}
-              className="py-2 text-sm font-medium"
+              className={`py-2 text-sm font-medium ${
+                method === 'phone' ? 'bg-white text-foreground shadow-sm hover:bg-white' : ''
+              }`}
             >
               Phone
             </Button>
