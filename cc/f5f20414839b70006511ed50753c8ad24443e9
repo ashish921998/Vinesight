@@ -1,0 +1,19 @@
+src/app/consultant/page.tsx
+  s_50555352956553::t_7298549cc1fc3e 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "ccf5f20414839b70006511ed50753c8ad24443e9",
+  "prompts": {},
+  "sessions": {
+    "s_50555352956553": {
+      "agent_id": {
+        "tool": "amp",
+        "id": "TU-033caltMkEeE2wX8jznhGM",
+        "model": "unknown"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
