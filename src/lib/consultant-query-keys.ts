@@ -20,5 +20,9 @@ export const consultantKeys = {
   triageItems: (orgId: string, scope: string) =>
     ['consultant', 'triageItems', orgId, scope] as const,
   orgMembers: (orgId: string) => ['consultant', 'orgMembers', orgId] as const,
-  pendingInvites: (orgId: string) => ['consultant', 'pendingInvites', orgId] as const
+  pendingInvites: (orgId: string) => ['consultant', 'pendingInvites', orgId] as const,
+  orgAdherence: (orgId: string, scope: string) =>
+    ['consultant', 'orgAdherence', orgId, scope] as const,
+  orgNutrientStatus: (orgId: string, scope: string) =>
+    ['consultant', 'orgNutrientStatus', orgId, scope] as const
 }
