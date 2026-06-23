@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useQueryClient } from '@tanstack/react-query'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -164,20 +163,23 @@ export default function FarmerDirectoryPage() {
           <Skeleton className="h-9 sm:w-56" />
         </div>
 
-        {/* Farmer list */}
-        <div className="space-y-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="border-0 shadow-sm">
-              <CardContent className="flex items-center gap-3 p-4">
-                <Skeleton className="h-12 w-12 rounded-full" />
+        {/* Worklist table */}
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <div className="border-b border-border bg-secondary/50 px-4 py-2.5">
+            <Skeleton className="h-3 w-40" />
+          </div>
+          <div className="divide-y divide-border">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-3.5">
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-1/3" />
                   <Skeleton className="h-3 w-1/2" />
                 </div>
-                <Skeleton className="h-8 w-20" />
-              </CardContent>
-            </Card>
-          ))}
+                <Skeleton className="h-5 w-20" />
+                <Skeleton className="h-8 w-16" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -188,7 +190,9 @@ export default function FarmerDirectoryPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Farmer Directory</h1>
+          <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground">
+            Farmer Directory
+          </h1>
           <p className="text-muted-foreground">
             {farmers.length} farmer{farmers.length !== 1 ? 's' : ''}{' '}
             {access?.isAgronomist ? 'assigned to you' : 'in your organization'}
@@ -247,74 +251,176 @@ export default function FarmerDirectoryPage() {
         )}
       </div>
 
-      {/* Results */}
+      {/* Results — a dense worklist table, not a card grid (DESIGN.md: tables over
+          cards for any list of work). Mirrors FarmerFarmsTable's structure. */}
       {filteredFarmers.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold">No Farmers Found</h3>
-            <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-              {farmers.length === 0
-                ? 'No farmers are linked to your organization yet.'
-                : 'No farmers match your current filters. Try adjusting your search.'}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border border-border bg-card p-12 text-center">
+          <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="font-serif text-lg font-semibold">No farmers found</h3>
+          <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+            {farmers.length === 0
+              ? 'No farmers are linked to your organization yet.'
+              : 'No farmers match your current filters. Try adjusting your search.'}
+          </p>
+        </div>
       ) : (
-        <div className="space-y-3">
-          {filteredFarmers.map((farmer) => (
-            <Card key={farmer.id} className="relative transition-colors hover:bg-muted/50">
-              {/* The whole row navigates to the farmer detail page. An overlay
-                  link (rather than wrapping the Card) lets the Paid toggle stay
-                  clickable without nesting a <button> inside an <a>. */}
-              <Link
-                href={`/consultant/farmers/${farmer.id}`}
-                aria-label={`View ${farmer.full_name || 'farmer'} details`}
-                className="absolute inset-0 z-0"
-              />
-              <CardHeader className="py-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <User className="h-5 w-5 text-accent flex-shrink-0" />
-                      <span className="truncate">{farmer.full_name || 'Unknown Farmer'}</span>
-                    </CardTitle>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          {/* Header counter + desktop column header */}
+          <div className="border-b border-border bg-secondary/50 px-4 py-2.5">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {filteredFarmers.length} farmer{filteredFarmers.length !== 1 ? 's' : ''}
+              {filteredFarmers.length !== farmers.length ? ` of ${farmers.length}` : ''}
+            </p>
+            <div className="mt-2.5 hidden grid-cols-[1.6fr_1.4fr_1fr_0.8fr_auto] gap-4 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:grid">
+              <div className="flex items-center gap-2">
+                <User className="h-3.5 w-3.5 text-accent" />
+                Farmer
+              </div>
+              <div>Contact</div>
+              <div>Region</div>
+              <div className="text-right">Farms</div>
+              <div className="text-right">Status</div>
+            </div>
+          </div>
+
+          <div className="divide-y divide-border">
+            {filteredFarmers.map((farmer) => {
+              // Distinct regions across this farmer's farms, for the Region column.
+              const farmerRegions = Array.from(
+                new Set(
+                  farmer.farms.map((f) => f.region?.trim()).filter((r): r is string => Boolean(r))
+                )
+              )
+              const regionLabel =
+                farmerRegions.length === 0
+                  ? null
+                  : farmerRegions.length === 1
+                    ? farmerRegions[0]
+                    : `${farmerRegions[0]} +${farmerRegions.length - 1}`
+              const isUnassigned = !farmer.assigned_to
+
+              return (
+                <div key={farmer.id} className="group relative transition-colors hover:bg-accent/5">
+                  {/* The whole row navigates to the farmer detail page. An overlay
+                      link (rather than wrapping the row) lets the Paid toggle stay
+                      clickable without nesting a <button> inside an <a>. */}
+                  <Link
+                    href={`/consultant/farmers/${farmer.id}`}
+                    aria-label={`View ${farmer.full_name || 'farmer'} details`}
+                    className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                  />
+
+                  {/* Desktop: aligned columns */}
+                  <div className="hidden grid-cols-[1.6fr_1.4fr_1fr_0.8fr_auto] items-center gap-4 px-4 py-3.5 sm:grid">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <User className="h-4 w-4 shrink-0 text-accent" />
+                      <span className="truncate font-serif text-sm font-semibold leading-tight group-hover:text-accent transition-colors">
+                        {farmer.full_name || 'Unknown Farmer'}
+                      </span>
+                      {isUnassigned && (
+                        <span className="relative z-10 inline-flex items-center gap-1 rounded-full border border-[var(--nutrient-deficient-border,#f2c27a)] bg-[var(--nutrient-deficient-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--nutrient-deficient)]">
+                          <UserX className="h-3 w-3" />
+                          Unassigned
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0 space-y-0.5 text-sm text-muted-foreground">
+                      {farmer.phone && (
+                        <span className="flex items-center gap-1.5 min-w-0">
+                          <Phone className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate font-mono tabular-nums">{farmer.phone}</span>
+                        </span>
+                      )}
                       {farmer.email && (
-                        <span className="flex items-center gap-1 min-w-0">
+                        <span className="flex items-center gap-1.5 min-w-0">
                           <Mail className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{farmer.email}</span>
                         </span>
                       )}
-                      {farmer.phone && (
-                        <span className="flex items-center gap-1 min-w-0">
-                          <Phone className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{farmer.phone}</span>
-                        </span>
+                      {!farmer.phone && !farmer.email && (
+                        <span className="text-muted-foreground italic">No contact</span>
                       )}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {/* Raised above the overlay so toggling payment never navigates. */}
-                    <div className="relative z-10">
-                      <PaidToggleButton
-                        clientRecordId={farmer.clientRecordId}
-                        isPaid={farmer.isPaid}
-                        onChange={(isPaid) =>
-                          updateCachedPaymentStatus(farmer.clientRecordId, isPaid)
-                        }
-                      />
+                    <div className="truncate text-sm text-foreground">
+                      {regionLabel || <span className="text-muted-foreground italic">Not set</span>}
                     </div>
-                    <Badge variant="secondary" className="hidden sm:flex items-center gap-1">
-                      <Sprout className="h-3 w-3" />
-                      {farmer.farms.length} farm{farmer.farms.length !== 1 ? 's' : ''}
-                    </Badge>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex items-center justify-end gap-1.5 text-sm tabular-nums text-foreground">
+                      <Sprout className="h-3.5 w-3.5 text-accent" />
+                      {farmer.farms.length}
+                    </div>
+                    <div className="flex items-center justify-end gap-2">
+                      {/* Raised above the overlay so toggling payment never navigates. */}
+                      <div className="relative z-10">
+                        <PaidToggleButton
+                          clientRecordId={farmer.clientRecordId}
+                          isPaid={farmer.isPaid}
+                          onChange={(isPaid) =>
+                            updateCachedPaymentStatus(farmer.clientRecordId, isPaid)
+                          }
+                        />
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </div>
+
+                  {/* Mobile: stacked block */}
+                  <div className="px-4 py-3.5 sm:hidden">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <User className="h-4 w-4 shrink-0 text-accent" />
+                        <span className="truncate font-serif text-base font-semibold leading-tight group-hover:text-accent transition-colors">
+                          {farmer.full_name || 'Unknown Farmer'}
+                        </span>
+                      </div>
+                      <div className="relative z-10 flex-shrink-0">
+                        <PaidToggleButton
+                          clientRecordId={farmer.clientRecordId}
+                          isPaid={farmer.isPaid}
+                          onChange={(isPaid) =>
+                            updateCachedPaymentStatus(farmer.clientRecordId, isPaid)
+                          }
+                        />
+                      </div>
+                    </div>
+                    {isUnassigned && (
+                      <span className="relative z-10 mt-1.5 inline-flex items-center gap-1 rounded-full border border-[var(--nutrient-deficient-border,#f2c27a)] bg-[var(--nutrient-deficient-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--nutrient-deficient)]">
+                        <UserX className="h-3 w-3" />
+                        Unassigned
+                      </span>
+                    )}
+                    <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <dt className="text-muted-foreground shrink-0">Region</dt>
+                        <dd className="font-medium truncate">
+                          {regionLabel || (
+                            <span className="text-muted-foreground italic font-normal">
+                              Not set
+                            </span>
+                          )}
+                        </dd>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <dt className="text-muted-foreground shrink-0">Farms</dt>
+                        <dd className="font-medium tabular-nums">{farmer.farms.length}</dd>
+                      </div>
+                      {farmer.phone && (
+                        <div className="flex items-center gap-2 min-w-0">
+                          <dt className="text-muted-foreground shrink-0">Phone</dt>
+                          <dd className="font-mono tabular-nums truncate">{farmer.phone}</dd>
+                        </div>
+                      )}
+                      {farmer.email && (
+                        <div className="flex items-center gap-2 min-w-0">
+                          <dt className="text-muted-foreground shrink-0">Email</dt>
+                          <dd className="font-medium truncate">{farmer.email}</dd>
+                        </div>
+                      )}
+                    </dl>
                   </div>
                 </div>
-              </CardHeader>
-            </Card>
-          ))}
+              )
+            })}
+          </div>
         </div>
       )}
     </div>
