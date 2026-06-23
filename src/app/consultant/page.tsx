@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { ArrowRight, ChevronRight, FlaskConical, UserPlus, Users } from 'lucide-react'
+import { ArrowRight, ChevronRight, FlaskConical, Loader2, UserPlus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { roleLabels } from '@/lib/consultant-access'
 import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
-import { JoinCodeCard } from '@/components/consultant/JoinCodeCard'
+import { CommandCenterDashboard } from '@/components/consultant/dashboard/CommandCenterDashboard'
 import {
   useConsultantAccess,
   useFarmerClients,
@@ -28,16 +28,6 @@ function formatReviewDate(value: string | null) {
   if (Number.isNaN(date.getTime())) return '—'
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
-
-const workspaceLinks = [
-  {
-    title: 'Farmer Directory',
-    description: 'Review client farmers, farm access, and linked lab reports.',
-    href: '/consultant/farmers',
-    action: 'Open farmers',
-    icon: Users
-  }
-]
 
 export default function ConsultantOverviewPage() {
   const accessQuery = useConsultantAccess()
@@ -113,7 +103,7 @@ export default function ConsultantOverviewPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">Consultant Workspace</h1>
+            <h1 className="font-serif text-2xl font-semibold tracking-tight">Overview</h1>
             <Badge variant="secondary">{roleLabels[access.role]}</Badge>
           </div>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
@@ -122,8 +112,6 @@ export default function ConsultantOverviewPage() {
         </div>
         <InviteFarmerDialog organizationId={access.organizationId} />
       </div>
-
-      <JoinCodeCard access={access} />
 
       {/* Owner/admin nudge: farmers who self-joined the org but have no
           agronomist yet. unassignedCount is non-null only for canViewAllFarmers. */}
@@ -157,110 +145,88 @@ export default function ConsultantOverviewPage() {
           </p>
         ))}
 
-      {/* Command Center: newest pending Petiole Reviews as work items. Each
-          deep-links into the Farm workspace for that exact review. */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
-              <FlaskConical className="h-5 w-5" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">Reports to Review</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Newest petiole reports awaiting a fertilizer plan
-              </p>
-            </div>
-          </div>
-          {reviews.length > 0 && (
-            <Badge variant="secondary" className="tabular-nums">
-              {reviews.length} pending
-            </Badge>
-          )}
-        </CardHeader>
-        <CardContent>
-          {reviewsQuery.isPending ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : reviewsQuery.isError ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              Couldn&apos;t load reports to review. Please refresh.
-            </p>
-          ) : previewReviews.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              No pending reports. New petiole uploads from your farmers will appear here.
-            </p>
-          ) : (
-            <ul className="divide-y">
-              {previewReviews.map((review) => (
-                <li key={review.id}>
-                  <Link
-                    href={`/consultant/farmers/${review.clientUserId}/farms/${review.farmId}?reviewId=${review.id}`}
-                    className="flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-md hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">
-                        {review.farmerName || 'Unknown farmer'}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {review.farmName || 'Farm'} · Sampled {formatReviewDate(review.testDate)}
-                      </p>
-                    </div>
-                    {review.status === 'in_review' && (
-                      <Badge variant="outline" className="shrink-0">
-                        In progress
-                      </Badge>
-                    )}
-                    <span className="shrink-0 text-xs font-medium text-primary inline-flex items-center gap-0.5">
-                      Review
-                      <ChevronRight className="h-4 w-4" />
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-          {reviews.length > REVIEW_PREVIEW_LIMIT && (
-            <div className="pt-3">
-              <Button asChild variant="ghost" size="sm" className="w-full">
-                <Link href="/consultant/triage">
-                  See all {reviews.length} reports
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        {workspaceLinks.map((item) => {
-          const Icon = item.icon
-
-          return (
-            <Card key={item.href} className="border-border/80">
-              <CardHeader className="space-y-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
-                  <Icon className="h-5 w-5" />
+      {/* KPI strip + charts wrap the existing review worklist, which is passed
+          in as the `worklist` slot so it sits between the KPIs and the charts. */}
+      <CommandCenterDashboard
+        access={access}
+        worklist={
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  <FlaskConical className="h-5 w-5" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">{item.title}</CardTitle>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p>
+                  <CardTitle className="text-lg">Reports to Review</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Newest petiole reports awaiting a fertilizer plan
+                  </p>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <Button asChild>
-                  <Link href={item.href}>
-                    {item.action}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+              </div>
+              {reviews.length > 0 && (
+                <Badge variant="secondary" className="tabular-nums">
+                  {reviews.length} pending
+                </Badge>
+              )}
+            </CardHeader>
+            <CardContent>
+              {reviewsQuery.isPending ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : reviewsQuery.isError ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  Couldn&apos;t load reports to review. Please refresh.
+                </p>
+              ) : previewReviews.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  No pending reports. New petiole uploads from your farmers will appear here.
+                </p>
+              ) : (
+                <ul className="divide-y">
+                  {previewReviews.map((review) => (
+                    <li key={review.id}>
+                      <Link
+                        href={`/consultant/farmers/${review.clientUserId}/farms/${review.farmId}?reviewId=${review.id}`}
+                        className="flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-md hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">
+                            {review.farmerName || 'Unknown farmer'}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {review.farmName || 'Farm'} · Sampled{' '}
+                            {formatReviewDate(review.testDate)}
+                          </p>
+                        </div>
+                        {review.status === 'in_review' && (
+                          <Badge variant="outline" className="shrink-0">
+                            In progress
+                          </Badge>
+                        )}
+                        <span className="shrink-0 text-xs font-medium text-primary inline-flex items-center gap-0.5">
+                          Review
+                          <ChevronRight className="h-4 w-4" />
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {reviews.length > REVIEW_PREVIEW_LIMIT && (
+                <div className="pt-3">
+                  <Button asChild variant="ghost" size="sm" className="w-full">
+                    <Link href="/consultant/triage">
+                      See all {reviews.length} reports
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        }
+      />
     </div>
   )
 }
