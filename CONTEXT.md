@@ -73,3 +73,28 @@ The Agronomist's review of a newly uploaded petiole report for a Farm, using the
 report, previous Fertilizer Plan, and annual soil context to prepare the next Fertilizer Plan.
 Pending Petiole Reviews appear as work items in the Consultant module's Command Center.
 _Avoid_: triage, issue, case
+
+## Command Center metrics
+
+**Command Center**:
+The Consultant module's landing workspace — the Petiole Review worklist plus at-a-glance metrics
+and charts for the Member's book of Farms, scoped to what the Member may access.
+_Avoid_: dashboard (too generic), home
+
+**Open Reviews**:
+The count of Petiole Reviews still awaiting a verdict (status pending or in review).
+_Avoid_: backlog, queue size
+
+**Review throughput**:
+The number of Petiole Reviews completed per week — how quickly the queue is being cleared.
+_Avoid_: velocity
+
+**Recommendation adherence**:
+The share of a Member's prior recommendations a Farmer actually acted on, captured as visit
+follow-up outcomes (Followed / Partially followed / Not followed).
+_Avoid_: compliance
+
+**Nutrient status**:
+A per-nutrient classification of a Farm's latest petiole values as Deficient / Optimal / Excess,
+judged against bloom-stage norms. The same diverging scale the Farmer sees.
+_Avoid_: deficiency flag
