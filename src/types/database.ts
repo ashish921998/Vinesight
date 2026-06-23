@@ -2636,6 +2636,21 @@ export type Database = {
           updated_at: string | null
         }
       }
+      get_org_followup_adherence: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          followed_status: string
+          total: number
+        }[]
+      }
+      get_org_latest_petiole: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          farm_id: number
+          sample_date: string | null
+          parameters: Json
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

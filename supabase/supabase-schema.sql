@@ -1708,6 +1708,63 @@ $$;
 REVOKE ALL ON FUNCTION set_client_payment_status(UUID, BOOLEAN) FROM public;
 GRANT EXECUTE ON FUNCTION set_client_payment_status(UUID, BOOLEAN) TO authenticated;
 
+-- ----------------------------------------------------------------------------
+-- Command Center dashboard aggregates (see migration 202606230001).
+-- Scoped with can_access_org_client(): owner/admin → org-wide,
+-- agronomist → assigned clients only.
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.get_org_followup_adherence()
+RETURNS TABLE (
+  followed_status TEXT,
+  total BIGINT
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT f.followed_status, COUNT(*)::BIGINT AS total
+  FROM public.visit_recommendation_followups f
+  JOIN public.consultant_visits v
+    ON v.id = f.visit_id
+  WHERE auth.uid() IS NOT NULL
+    AND public.can_access_org_client(v.organization_id, v.client_user_id)
+  GROUP BY f.followed_status;
+$$;
+REVOKE ALL ON FUNCTION public.get_org_followup_adherence() FROM public;
+REVOKE ALL ON FUNCTION public.get_org_followup_adherence() FROM anon;
+GRANT EXECUTE ON FUNCTION public.get_org_followup_adherence() TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.get_org_latest_petiole()
+RETURNS TABLE (
+  farm_id BIGINT,
+  sample_date DATE,
+  parameters JSONB
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT DISTINCT ON (p.farm_id)
+    p.farm_id,
+    p.date AS sample_date,
+    p.parameters AS parameters
+  FROM public.petiole_test_records p
+  JOIN public.farms f
+    ON f.id = p.farm_id
+  JOIN public.organization_clients oc
+    ON oc.client_user_id = f.user_id
+   AND oc.status = 'active'
+  WHERE auth.uid() IS NOT NULL
+    AND p.farm_id IS NOT NULL
+    AND public.can_access_org_client(oc.organization_id, oc.client_user_id)
+  ORDER BY p.farm_id, p.date DESC, p.created_at DESC NULLS LAST;
+$$;
+REVOKE ALL ON FUNCTION public.get_org_latest_petiole() FROM public;
+REVOKE ALL ON FUNCTION public.get_org_latest_petiole() FROM anon;
+GRANT EXECUTE ON FUNCTION public.get_org_latest_petiole() TO authenticated;
+
 -- ============================================================================
 -- END ORGANIZATION / RBAC TABLES
 -- ============================================================================
