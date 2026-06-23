@@ -7,21 +7,29 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { UserMenu } from '@/components/auth/UserMenu'
 import { Button } from '@/components/ui/button'
 import {
-  Building2,
-  ChevronLeft,
-  ChevronRight,
-  ClipboardList,
-  LayoutDashboard,
-  Settings,
-  Sprout,
-  UsersRound
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+  useSidebar
+} from '@/components/ui/sidebar'
+import { Building2, FlaskConical, LayoutDashboard, UserCog, Users } from 'lucide-react'
 import { roleLabels } from '@/lib/consultant-access'
 import {
   getConsultantAccessState,
   useConsultantAccess
 } from '@/hooks/consultant/useConsultantQueries'
+import type { ConsultantAccess } from '@/lib/consultant-access'
 import posthog from 'posthog-js'
 import { toast } from 'sonner'
 
@@ -31,43 +39,132 @@ interface ConsultantLayoutProps {
 
 const navItems = [
   {
-    label: 'Command Center',
+    label: 'Overview',
     href: '/consultant',
     icon: LayoutDashboard,
     description: 'Org overview',
     exact: true
   },
   {
-    label: 'Client Farmers',
+    label: 'Farmers',
     href: '/consultant/farmers',
-    icon: UsersRound,
-    description: 'Directory and reports',
+    icon: Users,
+    description: 'Directory & reports',
     exact: false
   },
   {
-    label: 'Petiole Triage',
+    label: 'Petiole Review',
     href: '/consultant/triage',
-    icon: ClipboardList,
+    icon: FlaskConical,
     description: 'Review queue',
     exact: false
   },
   {
     label: 'Team',
     href: '/consultant/team',
-    icon: Settings,
+    icon: UserCog,
     description: 'Members & assignments',
     exact: false
   }
 ]
 
-export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
+// The active nav item for a pathname, used both for sidebar highlighting and
+// the top-bar section label. Exact items match only their own href; the rest
+// match their href or any sub-route. Reversed so the deepest prefix wins.
+function activeNavItem(pathname: string) {
+  return (
+    navItems.find((item) => pathname === item.href) ??
+    [...navItems].reverse().find((item) => !item.exact && pathname.startsWith(`${item.href}/`))
+  )
+}
+
+// Sidebar internals live in a child so they can read useSidebar() for the
+// collapsed state the UserMenu needs. Must render inside <SidebarProvider>.
+function ConsultantSidebar({ access }: { access: ConsultantAccess | null }) {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
+  const { state } = useSidebar()
+  const collapsed = state === 'collapsed'
+
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="p-3 group-data-[collapsible=icon]:p-2">
+        <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground group-data-[collapsible=icon]:size-8">
+            <Building2 className="h-5 w-5 group-data-[collapsible=icon]:size-4" />
+          </div>
+          <div className="min-w-0 group-data-[collapsible=icon]:hidden">
+            <p className="truncate text-sm font-semibold">Organization Workspace</p>
+            <p className="truncate text-xs text-sidebar-foreground/70">
+              {access ? roleLabels[access.role] : 'Consultant team'}
+            </p>
+          </div>
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navItems.map((item) => {
+                const isActive =
+                  pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`))
+                const Icon = item.icon
+
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.label} size="lg">
+                      <Link href={item.href}>
+                        <Icon className="h-5 w-5 shrink-0" />
+                        <span className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
+                          <span className="truncate font-medium">{item.label}</span>
+                          <span className="truncate text-xs text-sidebar-foreground/60">
+                            {item.description}
+                          </span>
+                        </span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="gap-3 p-3 group-data-[collapsible=icon]:p-2">
+        <div className="group-data-[collapsible=icon]:hidden">
+          <p className="text-xs font-medium text-sidebar-foreground/60">Access Mode</p>
+          <p className="mt-1 text-sm">
+            {access?.canViewAllFarmers ? 'All active client farmers' : 'Assigned farmers only'}
+          </p>
+        </div>
+        <UserMenu collapsed={collapsed} />
+      </SidebarFooter>
+
+      <SidebarRail />
+    </Sidebar>
+  )
+}
+
+export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
   // 'loading' → checking access; 'ok' → admitted; 'denied' → not a consultant;
   // 'error' → couldn’t verify (transient). Kept distinct so an outage isn’t shown
   // to a valid consultant as an authorization denial.
+  const pathname = usePathname()
+  const section = activeNavItem(pathname)
   const { data: access, isPending, isError, error } = useConsultantAccess()
   const accessState = getConsultantAccessState(isPending, isError && !access, access)
+
+  // Persist sidebar collapse across reloads. The shadcn provider writes the
+  // `sidebar_state` cookie but only restores it when a server component seeds
+  // `defaultOpen`; this layout is a client component, so we restore it here
+  // (controlled mode) after mount. Initial render stays expanded to match SSR.
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  useEffect(() => {
+    const match = document.cookie.match(/(?:^|;\s*)sidebar_state=(true|false)/)
+    if (match) setSidebarOpen(match[1] === 'true')
+  }, [])
 
   useEffect(() => {
     if (accessState === 'denied') {
@@ -131,141 +228,25 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
 
   return (
     <ProtectedRoute>
-      <div className="flex min-h-screen bg-background">
-        {/* Sidebar */}
-        <aside
-          className={cn(
-            'border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200 flex flex-col sticky top-0 h-screen overflow-x-hidden overflow-y-auto',
-            collapsed ? 'w-20' : 'w-72'
-          )}
-        >
-          <div className={cn('border-b', collapsed ? 'p-3' : 'p-4')}>
-            <div
-              className={cn(
-                'flex items-center gap-3',
-                collapsed ? 'justify-center' : 'justify-between'
-              )}
-            >
-              <div className={cn('flex min-w-0 items-center gap-3', collapsed && 'min-w-0')}>
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <Building2 className="h-5 w-5" />
-                </div>
-                {!collapsed && (
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">Organization Workspace</p>
-                    <p className="truncate text-xs text-sidebar-foreground/70">
-                      {access ? roleLabels[access.role] : 'Consultant team'}
-                    </p>
-                  </div>
-                )}
-              </div>
-              {!collapsed && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 shrink-0 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  onClick={() => setCollapsed(!collapsed)}
-                  aria-label="Collapse sidebar"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-            {collapsed && (
-              <div className="mt-2 flex justify-center">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  onClick={() => setCollapsed(!collapsed)}
-                  aria-label="Expand sidebar"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {!collapsed && (
-            <div className="space-y-3 border-b px-4 py-3">
-              <div className="rounded-lg bg-sidebar-accent/60 p-3">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <Sprout className="h-4 w-4 text-primary" />
-                  Consultant Ops
-                </div>
-                <p className="mt-1 text-xs leading-5 text-sidebar-foreground/70">
-                  Farmers, test reports, and crop review work scoped by organization access.
-                </p>
-              </div>
-            </div>
-          )}
-
-          <nav className="flex-1 space-y-6 p-3">
-            <div>
-              {!collapsed && (
-                <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wide text-sidebar-foreground/60">
-                  Workspace
-                </p>
-              )}
-              <div className="space-y-1">
-                {navItems.map((item) => {
-                  const isActive =
-                    pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`))
-                  const Icon = item.icon
-
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        'group flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors',
-                        isActive
-                          ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
-                          : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-                      )}
-                    >
-                      <Icon className="h-5 w-5 flex-shrink-0" />
-                      {!collapsed && (
-                        <span className="min-w-0">
-                          <span className="block truncate font-medium">{item.label}</span>
-                          <span
-                            className={cn(
-                              'block truncate text-xs',
-                              isActive
-                                ? 'text-sidebar-accent-foreground/75'
-                                : 'text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground/75'
-                            )}
-                          >
-                            {item.description}
-                          </span>
-                        </span>
-                      )}
-                    </Link>
-                  )
-                })}
-              </div>
-            </div>
-          </nav>
-
-          {!collapsed && (
-            <div className="border-t p-4">
-              <p className="text-xs font-medium text-sidebar-foreground/60">Access Mode</p>
-              <p className="mt-1 text-sm">
-                {access?.canViewAllFarmers ? 'All active client farmers' : 'Assigned farmers only'}
-              </p>
-            </div>
-          )}
-
-          <div className={cn('border-t', collapsed ? 'p-2' : 'p-3')}>
-            <UserMenu collapsed={collapsed} />
-          </div>
-        </aside>
-
-        {/* Main content */}
-        <main className="flex-1 overflow-auto">
-          <div className="p-4 sm:p-6 max-w-6xl mx-auto">{children}</div>
-        </main>
-      </div>
+      <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <ConsultantSidebar access={access ?? null} />
+        {/* min-w-0 lets the flex main shrink below its content's intrinsic
+            width, so wide children (recharts ResponsiveContainer, the KPI grid)
+            reflow instead of overflowing and clipping on the right. */}
+        <SidebarInset className="min-w-0">
+          {/* Top bar — SidebarTrigger toggles the drawer (mobile) or icon-collapse
+              (desktop); ⌘B / Ctrl+B also toggles. The label is the current section
+              (wayfinding), not a repeat of the sidebar's workspace title. */}
+          <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-background/95 px-4 backdrop-blur">
+            <SidebarTrigger className="size-8" />
+            <span className="h-5 w-px bg-border" aria-hidden="true" />
+            <span className="text-sm font-medium text-foreground">
+              {section?.label ?? 'Workspace'}
+            </span>
+          </header>
+          <div className="p-4 sm:p-6 max-w-6xl mx-auto w-full min-w-0">{children}</div>
+        </SidebarInset>
+      </SidebarProvider>
     </ProtectedRoute>
   )
 }
