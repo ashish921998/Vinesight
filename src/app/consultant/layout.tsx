@@ -24,7 +24,15 @@ import {
   SidebarTrigger,
   useSidebar
 } from '@/components/ui/sidebar'
-import { BarChart3, Building2, FlaskConical, LayoutDashboard, UserCog, Users } from 'lucide-react'
+import {
+  BarChart3,
+  Building2,
+  FlaskConical,
+  LayoutDashboard,
+  Sparkles,
+  UserCog,
+  Users
+} from 'lucide-react'
 import { roleLabels } from '@/lib/consultant-access'
 import {
   getConsultantAccessState,
@@ -65,6 +73,13 @@ const navItems = [
     href: '/consultant/analytics',
     icon: BarChart3,
     description: 'Org-wide trends',
+    exact: false
+  },
+  {
+    label: 'Intelligence',
+    href: '/consultant/intelligence',
+    icon: Sparkles,
+    description: 'AI advisory (preview)',
     exact: false
   },
   {
