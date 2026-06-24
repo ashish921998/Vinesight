@@ -72,9 +72,14 @@ const navItems = [
 // the top-bar section label. Exact items match only their own href; the rest
 // match their href or any sub-route. Reversed so the deepest prefix wins.
 function activeNavItem(pathname: string) {
+  // next.config sets skipTrailingSlashRedirect, so a manually-entered or
+  // external "/consultant/" is served as-is (no redirect) and usePathname()
+  // keeps the trailing slash. Strip it (except the root "/") before matching,
+  // otherwise "/consultant/" === "/consultant" is false and nothing highlights.
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
   return (
-    navItems.find((item) => pathname === item.href) ??
-    [...navItems].reverse().find((item) => !item.exact && pathname.startsWith(`${item.href}/`))
+    navItems.find((item) => path === item.href) ??
+    [...navItems].reverse().find((item) => !item.exact && path.startsWith(`${item.href}/`))
   )
 }
 
@@ -84,6 +89,9 @@ function ConsultantSidebar({ access }: { access: ConsultantAccess | null }) {
   const pathname = usePathname()
   const { state } = useSidebar()
   const collapsed = state === 'collapsed'
+  // Single source of truth for "which item is active" — shared with the
+  // top-bar breadcrumb and trailing-slash-normalized in activeNavItem.
+  const active = activeNavItem(pathname)
 
   return (
     <Sidebar collapsible="icon">
@@ -107,8 +115,7 @@ function ConsultantSidebar({ access }: { access: ConsultantAccess | null }) {
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => {
-                const isActive =
-                  pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`))
+                const isActive = active?.href === item.href
                 const Icon = item.icon
 
                 return (

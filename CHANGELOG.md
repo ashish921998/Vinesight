@@ -14,6 +14,12 @@ All notable changes to this project will be documented in this file.
 - **Consultant sidebar rebuilt on the shadcn Sidebar primitive**: collapses to an icon rail (state persists across reloads, `⌘B` to toggle), becomes a slide-in drawer on mobile, shows a section breadcrumb, and gives selected vs hovered rows distinct treatments (soft-sage active, neutral hover). Nav renamed: Command Center → Overview, Petiole Triage → Petiole Review, Client Farmers → Farmers.
 - **Typography migrated to the IBM Plex superfamily** (Plex Sans / Serif / Mono via `next/font`), replacing Montserrat / Merriweather / Source Code Pro and a stray Inter binding.
 
+### Fixed
+
+- The Team Workload panel and the Recommendation-adherence KPI now gate on every query they depend on, so a still-loading or failed clients/adherence fetch shows a loading or "—" state instead of misleading zeros.
+- The nutrient-status chart keeps lab-report ordering when aliasing the British "sulphur" key to "sulfur".
+- Sidebar active-item detection normalizes trailing slashes, so visiting `/consultant/` (not redirected, since `skipTrailingSlashRedirect` is on) still highlights Overview.
+
 ## [0.1.4.0] - 2026-06-19
 
 ### Added
