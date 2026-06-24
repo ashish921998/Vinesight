@@ -17,8 +17,9 @@ interface PaidToggleButtonProps {
 }
 
 /**
- * Single button that toggles a farmer's payment status. Green when paid, amber
- * "Unpaid" otherwise. Optimistic with rollback on failure.
+ * Single button that toggles a farmer's payment status. Uses the diverging
+ * status tokens — optimal-green when paid, deficient-amber "Unpaid" otherwise —
+ * always paired with an icon (never color alone). Optimistic with rollback.
  */
 export function PaidToggleButton({
   clientRecordId,
@@ -66,10 +67,19 @@ export function PaidToggleButton({
       variant={paid ? 'default' : 'outline'}
       onClick={toggle}
       disabled={saving}
-      className={
+      className="gap-1.5"
+      style={
         paid
-          ? 'gap-1.5 bg-green-600 text-white hover:bg-green-700'
-          : 'gap-1.5 border-amber-300 text-amber-700 hover:bg-amber-50'
+          ? {
+              backgroundColor: 'var(--nutrient-optimal)',
+              color: '#fff',
+              borderColor: 'var(--nutrient-optimal)'
+            }
+          : {
+              backgroundColor: 'var(--nutrient-deficient-bg)',
+              color: 'var(--nutrient-deficient)',
+              borderColor: 'var(--nutrient-deficient)'
+            }
       }
     >
       {saving ? (

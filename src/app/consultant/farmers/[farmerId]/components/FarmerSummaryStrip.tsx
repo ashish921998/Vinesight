@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Sprout, IndianRupee, MapPin } from 'lucide-react'
+import { Sprout, IndianRupee, MapPin, CheckCircle2, CircleAlert } from 'lucide-react'
 import type { FarmerFarm } from '@/lib/consultant-query-service'
 
 export function FarmerSummaryStrip({ farms, isPaid }: { farms: FarmerFarm[]; isPaid: boolean }) {
@@ -21,14 +21,22 @@ export function FarmerSummaryStrip({ farms, isPaid }: { farms: FarmerFarm[]; isP
           <Sprout className="h-3.5 w-3.5 text-accent" />
           Farms
         </div>
-        <p className="mt-1 text-2xl font-bold tabular-nums">{farms.length}</p>
+        <p className="mt-1 font-mono text-2xl font-bold tabular-nums">{farms.length}</p>
       </div>
       <div className="rounded-lg border border-border bg-card p-4">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           <IndianRupee className="h-3.5 w-3.5 text-accent" />
           Payment
         </div>
-        <p className={`mt-1 text-sm font-semibold ${isPaid ? 'text-green-700' : 'text-amber-700'}`}>
+        <p
+          className="mt-1 flex items-center gap-1 text-sm font-semibold"
+          style={{ color: isPaid ? 'var(--nutrient-optimal)' : 'var(--nutrient-deficient)' }}
+        >
+          {isPaid ? (
+            <CheckCircle2 className="h-3.5 w-3.5" />
+          ) : (
+            <CircleAlert className="h-3.5 w-3.5" />
+          )}
           {isPaid ? 'Paid' : 'Unpaid'}
         </p>
       </div>

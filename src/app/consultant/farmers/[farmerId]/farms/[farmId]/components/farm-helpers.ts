@@ -39,15 +39,30 @@ export function formatValue(value: number, _range: ParamRange | undefined): stri
   return value.toFixed(decimals)
 }
 
+// Diverging nutrient scale (DESIGN.md): deficient = warm amber, excess = cool
+// indigo — opposite temperatures for opposite failures. Optimal stays neutral so
+// only out-of-range cells draw the eye. Tokens (--nutrient-*) flip for dark mode.
 export function cellClasses(status: 'optimal' | 'low' | 'high', isCurrent: boolean): string {
   const statusBg =
     status === 'low'
-      ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200'
+      ? 'bg-[var(--nutrient-deficient-bg)] text-[var(--nutrient-deficient)]'
       : status === 'high'
-        ? 'bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-200'
+        ? 'bg-[var(--nutrient-excess-bg)] text-[var(--nutrient-excess)]'
         : ''
   const currentRing = isCurrent ? 'ring-1 ring-inset ring-primary/30' : ''
   return `${statusBg} ${currentRing}`.trim()
+}
+
+// Per-cell status marker so the matrix never relies on color alone (DESIGN.md:
+// "never color alone — always pair with a label"). A direction arrow reads as
+// deficient (▾, below range) vs excess (▴, above range); optimal shows nothing.
+export function statusGlyph(status: 'optimal' | 'low' | 'high'): string {
+  return status === 'low' ? '▾' : status === 'high' ? '▴' : ''
+}
+
+/** Screen-reader / title text for a nutrient cell's status. */
+export function statusLabel(status: 'optimal' | 'low' | 'high'): string {
+  return status === 'low' ? 'Deficient' : status === 'high' ? 'Excess' : 'Optimal'
 }
 
 // Uploaded report filenames are prefixed with an upload timestamp

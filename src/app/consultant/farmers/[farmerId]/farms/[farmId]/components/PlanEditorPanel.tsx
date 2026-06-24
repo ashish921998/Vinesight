@@ -62,11 +62,13 @@ export function PlanEditorPanel({
         </SectionLabel>
         {abnormalCount > 0 && (
           <span
-            className={`text-[11px] font-medium ${
-              allAddressed ? 'text-emerald-600' : 'text-amber-700'
-            }`}
+            className="text-[11px] font-medium"
+            style={{
+              color: allAddressed ? 'var(--nutrient-optimal)' : 'var(--nutrient-deficient)'
+            }}
           >
-            Addresses {addressedCount} of {abnormalCount} flagged
+            Addresses <span className="font-mono tabular-nums">{addressedCount}</span> of{' '}
+            <span className="font-mono tabular-nums">{abnormalCount}</span> flagged
           </span>
         )}
       </div>
@@ -136,7 +138,7 @@ export function PlanEditorPanel({
         <div className="px-4 pb-4 pt-1 flex flex-col gap-1.5 border-t border-border/60 mt-1">
           <Button onClick={onSave} disabled={saving} className="w-full h-10">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            {hasExistingPlan ? 'Save changes' : 'Send plan'}
+            {hasExistingPlan ? 'Save changes' : 'Sign & issue plan'}
           </Button>
           <p className="text-[11px] text-muted-foreground text-center">
             {hasExistingPlan
@@ -181,12 +183,14 @@ function PlanItemRow({
   return (
     <TableRow className="border-b border-border/50 last:border-0 hover:bg-muted/30">
       <TableCell className="p-0 py-2 px-2 text-center align-middle">
-        <span className="text-[11px] text-muted-foreground tabular-nums">{index + 1}</span>
+        <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
+          {index + 1}
+        </span>
       </TableCell>
       <TableCell className="p-0 py-1.5 px-2 align-middle">
         <div className="flex flex-col gap-1">
           {item.nutrient && (
-            <span className="inline-flex w-fit items-center rounded bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold px-1.5 py-0.5">
+            <span className="inline-flex w-fit items-center rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] font-semibold text-foreground">
               {formatParamKey(item.nutrient)}
             </span>
           )}
@@ -204,7 +208,7 @@ function PlanItemRow({
           value={item.quantity}
           onChange={(e) => onUpdate({ quantity: e.target.value })}
           placeholder="0"
-          className="h-8 text-sm tabular-nums text-right px-2"
+          className="h-8 font-mono text-sm tabular-nums text-right px-2"
         />
       </TableCell>
       <TableCell className="p-0 py-1.5 px-1.5 align-middle">
