@@ -75,9 +75,13 @@ export function CommandCenterDashboard({
       },
       {
         label: 'Recommendation adherence',
-        value: adherence.followedPct == null ? '—' : `${Math.round(adherence.followedPct)}%`,
-        sub:
-          adherence.total === 0
+        value:
+          adherenceQuery.isError || adherence.followedPct == null
+            ? '—'
+            : `${Math.round(adherence.followedPct)}%`,
+        sub: adherenceQuery.isError
+          ? 'unavailable'
+          : adherence.total === 0
             ? 'no follow-ups yet'
             : `of ${adherence.total} follow-up${adherence.total === 1 ? '' : 's'}`,
         loading: adherenceQuery.isPending
@@ -92,6 +96,7 @@ export function CommandCenterDashboard({
     clientsQuery.isPending,
     adherenceQuery.data,
     adherenceQuery.isPending,
+    adherenceQuery.isError,
     access.canViewAllFarmers
   ])
 
@@ -129,8 +134,8 @@ export function CommandCenterDashboard({
           items={items}
           members={members}
           clients={clients}
-          isLoading={triageQuery.isPending || membersQuery.isPending}
-          isError={triageQuery.isError || membersQuery.isError}
+          isLoading={triageQuery.isPending || membersQuery.isPending || clientsQuery.isPending}
+          isError={triageQuery.isError || membersQuery.isError || clientsQuery.isError}
         />
       )}
     </div>

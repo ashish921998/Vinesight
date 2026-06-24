@@ -147,11 +147,11 @@ export function throughputTotal(points: ThroughputPoint[]): number {
  * PETIOLE_RANGES). All other keys already match. Single-sources the numbers
  * from farm-config; only the sulphur→sulfur alias is applied here.
  */
-const { sulphur: sulphurRange, ...restPetioleRanges } = PETIOLE_RANGES
-const CANONICAL_PETIOLE_RANGES: typeof PETIOLE_RANGES = {
-  ...restPetioleRanges,
-  sulfur: sulphurRange
-}
+// Rename in place (sulphur → sulfur) rather than spread-and-append, so the
+// original PETIOLE_RANGES insertion order — i.e. lab-report order — is kept.
+const CANONICAL_PETIOLE_RANGES: typeof PETIOLE_RANGES = Object.fromEntries(
+  Object.entries(PETIOLE_RANGES).map(([key, range]) => [key === 'sulphur' ? 'sulfur' : key, range])
+)
 
 export interface NutrientStatusRow {
   key: string
