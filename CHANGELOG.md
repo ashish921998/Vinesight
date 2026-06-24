@@ -6,17 +6,18 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- **Command Center dashboard.** The consultant overview page now opens on org-wide KPIs (open reviews, active farmers, recommendation adherence) plus instrument-grade charts: review pipeline by status, incoming severity mix, weekly review throughput, nutrient status across farms (latest petiole test bucketed against bloom-stage norms), and team workload. Backed by two read-only `SECURITY DEFINER` RPCs (`get_org_latest_petiole`, `get_org_followup_adherence`) scoped to the caller's org access.
+- **Consultant Overview is now "Your Practice" — a proactive daily panel.** Instead of a chart wall, the overview opens on an impression band ("what needs attention"), a derived-state **Farmers to contact** call list (farmers gone quiet 30+ days, and reviews completed with no fertilizer plan attached), and a right rail (review-queue pointer, practice snapshot, portfolio nutrient bar). It surfaces who to reach out to — what the reactive review queue is structurally blind to — and the list self-clears as you act. All derived client-side from existing scoped data; no new RPC.
+- **Org-wide Analytics page** at `/consultant/analytics` (new sidebar destination between Petiole Review and Team). A "study the book of farms" surface housing the portfolio charts: nutrient status across farms (latest petiole test bucketed against bloom-stage norms), incoming severity mix, weekly review throughput, review pipeline by status, and recommendation adherence. Instrumented with a page-view event so it can be cut if it goes unused.
+- **Org-wide dashboard data** via two read-only `SECURITY DEFINER` RPCs (`get_org_latest_petiole`, `get_org_followup_adherence`) scoped to the caller's org access.
 
 ### Changed
 
 - **Farmer Directory is now a dense worklist table** instead of a card grid (Farmer · Contact · Region · Farms · Status), matching the "tables over cards" design rule.
-- **Consultant sidebar rebuilt on the shadcn Sidebar primitive**: collapses to an icon rail (state persists across reloads, `⌘B` to toggle), becomes a slide-in drawer on mobile, shows a section breadcrumb, and gives selected vs hovered rows distinct treatments (soft-sage active, neutral hover). Nav renamed: Command Center → Overview, Petiole Triage → Petiole Review, Client Farmers → Farmers.
+- **Consultant sidebar rebuilt on the shadcn Sidebar primitive**: collapses to an icon rail (state persists across reloads, `⌘B` to toggle), becomes a slide-in drawer on mobile, shows a section breadcrumb, and gives selected vs hovered rows distinct treatments (soft-sage active, neutral hover). Nav: Overview · Farmers · Petiole Review · Analytics · Team (renamed from Command Center / Petiole Triage / Client Farmers).
 - **Typography migrated to the IBM Plex superfamily** (Plex Sans / Serif / Mono via `next/font`), replacing Montserrat / Merriweather / Source Code Pro and a stray Inter binding.
 
 ### Fixed
 
-- The Team Workload panel and the Recommendation-adherence KPI now gate on every query they depend on, so a still-loading or failed clients/adherence fetch shows a loading or "—" state instead of misleading zeros.
 - The nutrient-status chart keeps lab-report ordering when aliasing the British "sulphur" key to "sulfur".
 - Sidebar active-item detection normalizes trailing slashes, so visiting `/consultant/` (not redirected, since `skipTrailingSlashRedirect` is on) still highlights Overview.
 
