@@ -16,7 +16,6 @@ import {
 import { toast } from 'sonner'
 import { Users, Search, Sprout, User, UserX, Phone, Mail, ChevronRight, MapPin } from 'lucide-react'
 import { InviteFarmerDialog } from '@/components/consultant/InviteFarmerDialog'
-import { JoinCodeCard } from '@/components/consultant/JoinCodeCard'
 import { PaidToggleButton } from '@/components/consultant/PaidToggleButton'
 import * as Sentry from '@sentry/nextjs'
 import posthog from 'posthog-js'
@@ -154,9 +153,6 @@ export default function FarmerDirectoryPage() {
           <Skeleton className="h-9 w-36" />
         </div>
 
-        {/* Join code card */}
-        <Skeleton className="h-24 w-full rounded-lg" />
-
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
           <Skeleton className="h-9 flex-1" />
@@ -200,8 +196,6 @@ export default function FarmerDirectoryPage() {
         </div>
         {access && <InviteFarmerDialog organizationId={access.organizationId} />}
       </div>
-
-      <JoinCodeCard access={access} />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
