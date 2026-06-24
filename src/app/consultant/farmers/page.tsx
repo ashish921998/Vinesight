@@ -265,7 +265,7 @@ export default function FarmerDirectoryPage() {
               {filteredFarmers.length} farmer{filteredFarmers.length !== 1 ? 's' : ''}
               {filteredFarmers.length !== farmers.length ? ` of ${farmers.length}` : ''}
             </p>
-            <div className="mt-2.5 hidden grid-cols-[1.6fr_1.4fr_1fr_0.8fr_auto] gap-4 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:grid">
+            <div className="mt-2.5 hidden grid-cols-[1.6fr_1.4fr_1fr_4rem_7rem_1rem] gap-4 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:grid">
               <div className="flex items-center gap-2">
                 <User className="h-3.5 w-3.5 text-accent" />
                 Farmer
@@ -274,6 +274,8 @@ export default function FarmerDirectoryPage() {
               <div>Region</div>
               <div className="text-right">Farms</div>
               <div className="text-right">Status</div>
+              {/* Trailing column reserved for the per-row chevron affordance. */}
+              <div aria-hidden="true" />
             </div>
           </div>
 
@@ -305,7 +307,7 @@ export default function FarmerDirectoryPage() {
                   />
 
                   {/* Desktop: aligned columns */}
-                  <div className="hidden grid-cols-[1.6fr_1.4fr_1fr_0.8fr_auto] items-center gap-4 px-4 py-3.5 sm:grid">
+                  <div className="hidden grid-cols-[1.6fr_1.4fr_1fr_4rem_7rem_1rem] items-center gap-4 px-4 py-3.5 sm:grid">
                     <div className="flex items-center gap-2 min-w-0">
                       <User className="h-4 w-4 shrink-0 text-accent" />
                       <span className="truncate font-serif text-sm font-semibold leading-tight group-hover:text-accent transition-colors">
@@ -342,7 +344,7 @@ export default function FarmerDirectoryPage() {
                       <Sprout className="h-3.5 w-3.5 text-accent" />
                       {farmer.farms.length}
                     </div>
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end">
                       {/* Raised above the overlay so toggling payment never navigates. */}
                       <div className="relative z-10">
                         <PaidToggleButton
@@ -353,8 +355,8 @@ export default function FarmerDirectoryPage() {
                           }
                         />
                       </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
 
                   {/* Mobile: stacked block */}

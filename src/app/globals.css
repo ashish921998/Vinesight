@@ -258,24 +258,17 @@
     scroll-behavior: smooth;
     /* Better mobile scrolling performance */
     -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
   }
 
-  /* Allow selection for inputs and text content */
-  input,
-  textarea,
-  [contenteditable='true'],
-  p,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  span {
-    -webkit-user-select: auto;
-    user-select: auto;
+  /* Suppress accidental text selection only on interactive chrome,
+     so body content stays selectable everywhere. */
+  button,
+  [role='button'],
+  nav,
+  .touch-target,
+  .touch-target-large {
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   /* Better tap highlights */

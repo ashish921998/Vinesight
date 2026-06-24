@@ -157,12 +157,6 @@ function ConsultantSidebar({ access }: { access: ConsultantAccess | null }) {
       </SidebarContent>
 
       <SidebarFooter className="gap-3 p-3 group-data-[collapsible=icon]:p-2">
-        <div className="group-data-[collapsible=icon]:hidden">
-          <p className="text-xs font-medium text-sidebar-foreground/60">Access Mode</p>
-          <p className="mt-1 text-sm">
-            {access?.canViewAllFarmers ? 'All active client farmers' : 'Assigned farmers only'}
-          </p>
-        </div>
         <UserMenu collapsed={collapsed} settingsHref="/consultant/settings" />
       </SidebarFooter>
 
