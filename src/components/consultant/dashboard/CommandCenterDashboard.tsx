@@ -104,10 +104,11 @@ export function CommandCenterDashboard({ access }: { access: ConsultantAccess })
   )
 
   // Loading/error roll-ups. Adherence failure degrades gracefully (its finding
-  // just drops out), so it never fails the band. A clients failure also leaves
-  // the band intact, but the call list CAN'T be built without farmer context —
-  // the gone-quiet rows need it to navigate — so a clients error surfaces as a
-  // call-list error rather than a false "all clear" that contradicts the band.
+  // just drops out), so it never fails the band. The call list needs both the
+  // nutrient query (to detect gone-quiet farms) and the clients query (to
+  // navigate to them), so a failure of either surfaces as a call-list error
+  // rather than a false "all clear". nutrient failure also blocks coreReady so
+  // a broken gone-quiet signal never collapses into "All caught up".
   const findingsLoading = triageQuery.isPending || nutrientQuery.isPending || plansQuery.isPending
   const findingsError = triageQuery.isError
   const callListLoading =
@@ -115,11 +116,12 @@ export function CommandCenterDashboard({ access }: { access: ConsultantAccess })
     nutrientQuery.isPending ||
     plansQuery.isPending ||
     clientsQuery.isPending
-  const callListError = triageQuery.isError || clientsQuery.isError
+  const callListError = triageQuery.isError || clientsQuery.isError || nutrientQuery.isError
 
   const coreReady =
     !triageQuery.isPending &&
     !nutrientQuery.isPending &&
+    !nutrientQuery.isError &&
     plansQuery.isSuccess &&
     !clientsQuery.isPending
   const allCaughtUp = coreReady && !findingsError && findings.length === 0 && callList.length === 0
@@ -212,7 +214,8 @@ export function CommandCenterDashboard({ access }: { access: ConsultantAccess })
             quietCount={goneQuiet.length}
             adherencePct={adherence.followedPct}
             isLoading={clientsQuery.isPending || nutrientQuery.isPending}
-            isError={clientsQuery.isError}
+            // nutrient failure makes withDeficiency/quietCount read a misleading 0
+            isError={clientsQuery.isError || nutrientQuery.isError}
           />
           <PortfolioNutrientsBar
             rows={nutrientRows}
