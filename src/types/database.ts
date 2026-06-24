@@ -2029,6 +2029,7 @@ export type Database = {
           id: string
           name: string
           slug: string | null
+          logo_url: string | null
           description: string | null
           metadata: Json | null
           created_by: string | null
@@ -2039,6 +2040,7 @@ export type Database = {
           id?: string
           name: string
           slug?: string | null
+          logo_url?: string | null
           description?: string | null
           metadata?: Json | null
           created_by?: string | null
@@ -2049,6 +2051,7 @@ export type Database = {
           id?: string
           name?: string
           slug?: string | null
+          logo_url?: string | null
           description?: string | null
           metadata?: Json | null
           created_by?: string | null

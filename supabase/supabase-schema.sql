@@ -1010,6 +1010,7 @@ CREATE TABLE organizations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL,
   slug VARCHAR(255) UNIQUE,
+  logo_url TEXT,
   description TEXT,
   metadata JSONB,
   created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,

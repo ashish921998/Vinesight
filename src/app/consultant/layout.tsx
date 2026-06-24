@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { UserMenu } from '@/components/auth/UserMenu'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   Sidebar,
@@ -104,11 +105,20 @@ function ConsultantSidebar({ access }: { access: ConsultantAccess | null }) {
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-3 group-data-[collapsible=icon]:p-2">
         <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground group-data-[collapsible=icon]:size-8">
-            <Building2 className="h-5 w-5 group-data-[collapsible=icon]:size-4" />
-          </div>
+          <Avatar className="h-10 w-10 shrink-0 rounded-lg group-data-[collapsible=icon]:size-8">
+            <AvatarImage
+              src={access?.logoUrl ?? undefined}
+              alt={access?.organizationName ?? 'Organization'}
+              className="object-contain"
+            />
+            <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
+              <Building2 className="h-5 w-5 group-data-[collapsible=icon]:size-4" />
+            </AvatarFallback>
+          </Avatar>
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-            <p className="truncate text-sm font-semibold">Organization Workspace</p>
+            <p className="truncate text-sm font-semibold">
+              {access?.organizationName ?? 'Organization Workspace'}
+            </p>
             <p className="truncate text-xs text-sidebar-foreground/70">
               {access ? roleLabels[access.role] : 'Consultant team'}
             </p>
@@ -153,7 +163,7 @@ function ConsultantSidebar({ access }: { access: ConsultantAccess | null }) {
             {access?.canViewAllFarmers ? 'All active client farmers' : 'Assigned farmers only'}
           </p>
         </div>
-        <UserMenu collapsed={collapsed} />
+        <UserMenu collapsed={collapsed} settingsHref="/consultant/settings" />
       </SidebarFooter>
 
       <SidebarRail />
