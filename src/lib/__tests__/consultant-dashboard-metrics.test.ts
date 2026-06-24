@@ -3,14 +3,22 @@ import type { TriageItem } from '../consultant-triage-service'
 import {
   adherenceSummary,
   avgTimeToReviewDays,
+  buildCallList,
+  buildFindings,
+  farmsWithDeficiency,
   farmsWithPetioleData,
+  goneQuietFarmers,
   nutrientStatusAcrossFarms,
+  oldestOpenReviewDays,
   openReviewCount,
+  reviewedNoPlan,
   severityCounts,
   statusCounts,
   teamWorkload,
   throughputTotal,
-  weeklyThroughput
+  weeklyThroughput,
+  type FarmContactRef,
+  type FarmPetioleSnapshot
 } from '../consultant-dashboard-metrics'
 
 const NOW = new Date('2026-06-23T12:00:00Z')
@@ -141,6 +149,193 @@ describe('adherenceSummary', () => {
 
   it('is null-safe with no data', () => {
     expect(adherenceSummary(null).followedPct).toBeNull()
+  })
+})
+
+describe('goneQuietFarmers', () => {
+  it('flags farms past the threshold, most-overdue first, and skips never-sampled', () => {
+    const farms: FarmPetioleSnapshot[] = [
+      { farmId: 1, sampleDate: '2026-05-14T12:00:00Z', parameters: {} }, // 40d
+      { farmId: 2, sampleDate: '2026-04-24T12:00:00Z', parameters: {} }, // 60d
+      { farmId: 3, sampleDate: '2026-06-13T12:00:00Z', parameters: {} }, // 10d → not quiet
+      { farmId: 4, sampleDate: null, parameters: {} }, // never sampled → skipped
+      { farmId: 5, parameters: {} } // no sampleDate → skipped
+    ]
+    const quiet = goneQuietFarmers(farms, { now: NOW })
+    expect(quiet.map((q) => q.farmId)).toEqual([2, 1])
+    expect(quiet[0]).toMatchObject({ farmId: 2, daysSinceSample: 60 })
+  })
+
+  it('treats the threshold as exclusive (exactly 30d is not quiet)', () => {
+    const farms: FarmPetioleSnapshot[] = [
+      { farmId: 1, sampleDate: '2026-05-24T12:00:00Z', parameters: {} } // exactly 30d
+    ]
+    expect(goneQuietFarmers(farms, { now: NOW })).toHaveLength(0)
+  })
+})
+
+describe('reviewedNoPlan', () => {
+  it('includes reviewed/escalated without a plan; excludes resolved, open, and plan-linked', () => {
+    const items = [
+      mk({ id: 'r1', status: 'reviewed' }),
+      mk({ id: 'r2', status: 'escalated' }),
+      mk({ id: 'r3', status: 'reviewed' }), // has a plan
+      mk({ id: 'r4', status: 'resolved' }), // deliberately closed
+      mk({ id: 'r5', status: 'pending' }),
+      mk({ id: 'r6', status: 'in_review' })
+    ]
+    const out = reviewedNoPlan(items, new Set(['r3']))
+    expect(out.map((o) => o.triageId).sort()).toEqual(['r1', 'r2'])
+  })
+
+  it('projects the row fields the call list needs', () => {
+    const items = [
+      mk({
+        id: 'r1',
+        status: 'reviewed',
+        farmId: 7,
+        clientUserId: 'c9',
+        farmerName: 'Asha',
+        farmName: 'North block'
+      })
+    ]
+    expect(reviewedNoPlan(items, new Set())[0]).toMatchObject({
+      triageId: 'r1',
+      farmId: 7,
+      clientUserId: 'c9',
+      farmerName: 'Asha',
+      farmName: 'North block'
+    })
+  })
+})
+
+describe('oldestOpenReviewDays', () => {
+  it('returns the oldest open item age in days, ignoring completed ones', () => {
+    const items = [
+      mk({ status: 'pending', createdAt: '2026-06-20T12:00:00Z' }), // 3d
+      mk({ status: 'in_review', createdAt: '2026-06-13T12:00:00Z' }), // 10d
+      mk({ status: 'reviewed', createdAt: '2026-01-01T00:00:00Z' }) // ignored
+    ]
+    expect(oldestOpenReviewDays(items, { now: NOW })).toBe(10)
+  })
+
+  it('is null when nothing is open', () => {
+    expect(oldestOpenReviewDays([mk({ status: 'resolved' })], { now: NOW })).toBeNull()
+  })
+})
+
+describe('farmsWithDeficiency', () => {
+  it('counts farms with at least one deficient nutrient', () => {
+    const farms: FarmPetioleSnapshot[] = [
+      { farmId: 1, parameters: { potassium: 1.0 } }, // K deficient → counts
+      { farmId: 2, parameters: { potassium: 2.0 } }, // K optimal
+      { farmId: 3, parameters: { potassium: 3.0, sulfur: 0.1 } }, // K excess but S deficient → counts
+      { farmId: 4, parameters: null }
+    ]
+    expect(farmsWithDeficiency(farms)).toBe(2)
+  })
+})
+
+describe('buildCallList', () => {
+  const index = new Map<number, FarmContactRef>([
+    [1, { clientUserId: 'c1', farmerName: 'Asha', village: 'Niphad', farmName: 'North' }],
+    [2, { clientUserId: 'c2', farmerName: 'Bharat', village: 'Lasalgaon', farmName: 'East' }]
+  ])
+
+  it('orders gone-quiet (most overdue first) before reviewed-no-plan, per-farm grain', () => {
+    const rows = buildCallList(
+      [
+        { farmId: 1, daysSinceSample: 40, sampleDate: 'x' },
+        { farmId: 2, daysSinceSample: 70, sampleDate: 'y' }
+      ],
+      [{ triageId: 't1', farmId: 1, clientUserId: 'c1', farmerName: 'Asha', farmName: 'North' }],
+      index
+    )
+    expect(rows.map((r) => r.key)).toEqual(['quiet:2', 'quiet:1', 'no_plan:t1'])
+    expect(rows[0]).toMatchObject({ reason: 'quiet', farmId: 2, village: 'Lasalgaon' })
+  })
+
+  it('skips gone-quiet with no farmer match but keeps no-plan rows via the triage row', () => {
+    const rows = buildCallList(
+      [{ farmId: 99, daysSinceSample: 50, sampleDate: 'x' }], // not in index → cannot navigate
+      [{ triageId: 't9', farmId: 99, clientUserId: 'c9', farmerName: 'Gone', farmName: 'Plot' }],
+      index
+    )
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ reason: 'no_plan', clientUserId: 'c9', village: null })
+  })
+})
+
+describe('buildFindings', () => {
+  it('orders urgent → attention → positive and embeds counts', () => {
+    const findings = buildFindings({
+      openReviewCount: 4,
+      oldestOpenDays: 9, // ≥7 → urgent
+      goneQuietCount: 2,
+      reviewedNoPlanCount: 1,
+      adherencePct: 85 // ≥70 → positive
+    })
+    expect(findings.map((f) => f.id)).toEqual([
+      'open_reviews',
+      'gone_quiet',
+      'reviewed_no_plan',
+      'adherence'
+    ])
+    expect(findings[0].tone).toBe('urgent')
+    expect(findings[3].tone).toBe('positive')
+  })
+
+  it('suppresses zero-count findings and null adherence', () => {
+    expect(
+      buildFindings({
+        openReviewCount: 0,
+        oldestOpenDays: null,
+        goneQuietCount: 0,
+        reviewedNoPlanCount: 0,
+        adherencePct: null
+      })
+    ).toEqual([])
+  })
+
+  it('keeps adherence as attention (not positive) below the healthy threshold', () => {
+    const findings = buildFindings({
+      openReviewCount: 0,
+      oldestOpenDays: null,
+      goneQuietCount: 0,
+      reviewedNoPlanCount: 0,
+      adherencePct: 40
+    })
+    expect(findings).toHaveLength(1)
+    expect(findings[0]).toMatchObject({ id: 'adherence', tone: 'attention' })
+  })
+
+  it('marks open reviews as attention (not urgent) when the oldest is recent', () => {
+    const findings = buildFindings({
+      openReviewCount: 2,
+      oldestOpenDays: 1,
+      goneQuietCount: 0,
+      reviewedNoPlanCount: 0,
+      adherencePct: null
+    })
+    expect(findings[0]).toMatchObject({ id: 'open_reviews', tone: 'attention' })
+  })
+
+  it('uses singular copy for a single item', () => {
+    const findings = buildFindings({
+      openReviewCount: 1,
+      oldestOpenDays: 0,
+      goneQuietCount: 1,
+      reviewedNoPlanCount: 1,
+      adherencePct: null
+    })
+    const text = (id: string) =>
+      findings
+        .find((f) => f.id === id)!
+        .segments.map((s) => s.text)
+        .join('')
+    expect(text('open_reviews')).toContain('1 report awaiting review')
+    expect(text('gone_quiet')).toContain("1 farmer hasn't sampled")
+    expect(text('reviewed_no_plan')).toContain('1 reviewed report has no plan')
   })
 })
 

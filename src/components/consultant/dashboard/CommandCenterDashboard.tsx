@@ -1,143 +1,226 @@
 'use client'
 
-import { type ReactNode, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { CheckCircle2 } from 'lucide-react'
+import posthog from 'posthog-js'
 import { type ConsultantAccess } from '@/lib/consultant-access'
 import {
   useFarmerClients,
   useOrgAdherence,
-  useOrgMembers,
   useOrgNutrientStatus,
+  useOrgPlanTriageLinks,
   useTriageItems
 } from '@/hooks/consultant/useConsultantQueries'
 import {
   adherenceSummary,
-  avgTimeToReviewDays,
-  openReviewCount
+  buildCallList,
+  buildFindings,
+  farmsWithDeficiency,
+  goneQuietFarmers,
+  nutrientStatusAcrossFarms,
+  oldestOpenReviewDays,
+  openReviewCount,
+  reviewedNoPlan,
+  type CallListRow,
+  type CallReason,
+  type FarmContactRef,
+  type Finding
 } from '@/lib/consultant-dashboard-metrics'
-import { KpiStrip, type KpiTile } from './KpiStrip'
-import { ReviewPipelineChart } from './ReviewPipelineChart'
-import { IncomingSeverityChart } from './IncomingSeverityChart'
-import { ReviewThroughputChart } from './ReviewThroughputChart'
-import { NutrientStatusChart } from './NutrientStatusChart'
-import { TeamWorkloadPanel } from './TeamWorkloadPanel'
+import { ImpressionBand } from './ImpressionBand'
+import { FarmersToContact } from './FarmersToContact'
+import { QueuePointerCard } from './QueuePointerCard'
+import { PracticeSnapshot } from './PracticeSnapshot'
+import { PortfolioNutrientsBar } from './PortfolioNutrientsBar'
 
 /**
- * Command Center analytics layer. Orchestrates the (scoped) queries once and
- * renders: KPI strip → the caller-supplied review worklist → operational charts
- * → nutrient status → team panel (Owner/Admin only). All data auto-scopes to
- * the viewer via the underlying hooks.
+ * The consultant Overview — a proactive daily panel. Complements (does not
+ * duplicate) the reactive Petiole Review queue by surfacing what the queue is
+ * blind to: farmers gone quiet, reviews left without a plan. Everything is
+ * derived client-side from the existing scoped queries; no new RPC.
  */
-export function CommandCenterDashboard({
-  access,
-  worklist
-}: {
-  access: ConsultantAccess
-  worklist?: ReactNode
-}) {
+export function CommandCenterDashboard({ access }: { access: ConsultantAccess }) {
   const triageQuery = useTriageItems(access)
   const clientsQuery = useFarmerClients(access)
   const adherenceQuery = useOrgAdherence(access)
   const nutrientQuery = useOrgNutrientStatus(access)
-  // Members are only needed for the Owner/Admin team panel — skip the fetch otherwise.
-  const membersQuery = useOrgMembers(access.canViewAllFarmers ? access : null)
+  const plansQuery = useOrgPlanTriageLinks(access)
 
-  const items = triageQuery.data ?? []
-  const clients = clientsQuery.data ?? []
-  const members = membersQuery.data ?? []
-  const farms = nutrientQuery.data ?? []
+  const [callListFilter, setCallListFilter] = useState<CallReason | null>(null)
 
-  const tiles: KpiTile[] = useMemo(() => {
-    // Derive from the query data directly (stable refs from React Query) so the
-    // memo doesn't recompute on every render via a fresh `?? []` array.
-    const triageItems = triageQuery.data ?? []
-    const open = openReviewCount(triageItems)
-    const avg = avgTimeToReviewDays(triageItems)
-    const adherence = adherenceSummary(adherenceQuery.data)
-    const farmerCount = clientsQuery.data?.length ?? 0
-    return [
-      {
-        label: 'Open Petiole Reviews',
-        value: triageQuery.isError ? '—' : String(open),
-        sub: 'pending + in review',
-        loading: triageQuery.isPending
-      },
-      {
-        label: 'Avg time to review',
-        value: triageQuery.isError || avg == null ? '—' : `${avg.toFixed(1)} d`,
-        sub: 'last 30 days',
-        loading: triageQuery.isPending
-      },
-      {
-        label: 'Active farmers',
-        value: clientsQuery.isError ? '—' : String(farmerCount),
-        sub: access.canViewAllFarmers ? 'in your organization' : 'assigned to you',
-        loading: clientsQuery.isPending
-      },
-      {
-        label: 'Recommendation adherence',
-        value:
-          adherenceQuery.isError || adherence.followedPct == null
-            ? '—'
-            : `${Math.round(adherence.followedPct)}%`,
-        sub: adherenceQuery.isError
-          ? 'unavailable'
-          : adherence.total === 0
-            ? 'no follow-ups yet'
-            : `of ${adherence.total} follow-up${adherence.total === 1 ? '' : 's'}`,
-        loading: adherenceQuery.isPending
+  // farm_id → farmer/village context, joined from the clients query in memory.
+  const farmIndex = useMemo(() => {
+    const map = new Map<number, FarmContactRef>()
+    for (const client of clientsQuery.data ?? []) {
+      for (const farm of client.farms) {
+        map.set(farm.id, {
+          clientUserId: client.id,
+          farmerName: client.full_name,
+          village: farm.region,
+          farmName: farm.name
+        })
       }
-    ]
-  }, [
-    triageQuery.data,
-    triageQuery.isPending,
-    triageQuery.isError,
-    clientsQuery.data,
-    clientsQuery.isError,
-    clientsQuery.isPending,
-    adherenceQuery.data,
-    adherenceQuery.isPending,
-    adherenceQuery.isError,
-    access.canViewAllFarmers
-  ])
+    }
+    return map
+  }, [clientsQuery.data])
+
+  const goneQuiet = useMemo(() => goneQuietFarmers(nutrientQuery.data ?? []), [nutrientQuery.data])
+
+  // Only trust the reviewed-no-plan diff once the plans actually loaded — an
+  // errored/pending plans query would otherwise flag plans that DO exist.
+  const reviewed = useMemo(() => {
+    if (!plansQuery.isSuccess) return []
+    const planTriageIds = new Set(plansQuery.data)
+    return reviewedNoPlan(triageQuery.data ?? [], planTriageIds)
+  }, [plansQuery.isSuccess, plansQuery.data, triageQuery.data])
+
+  const callList = useMemo(
+    () => buildCallList(goneQuiet, reviewed, farmIndex),
+    [goneQuiet, reviewed, farmIndex]
+  )
+
+  const nutrientRows = useMemo(
+    () => nutrientStatusAcrossFarms(nutrientQuery.data ?? []),
+    [nutrientQuery.data]
+  )
+  const withDeficiency = useMemo(
+    () => farmsWithDeficiency(nutrientQuery.data ?? []),
+    [nutrientQuery.data]
+  )
+
+  const openCount = useMemo(() => openReviewCount(triageQuery.data ?? []), [triageQuery.data])
+  const oldestDays = useMemo(() => oldestOpenReviewDays(triageQuery.data ?? []), [triageQuery.data])
+  const adherence = useMemo(() => adherenceSummary(adherenceQuery.data), [adherenceQuery.data])
+
+  const findings = useMemo(
+    () =>
+      buildFindings({
+        openReviewCount: openCount,
+        oldestOpenDays: oldestDays,
+        goneQuietCount: goneQuiet.length,
+        reviewedNoPlanCount: reviewed.length,
+        adherencePct: adherence.followedPct
+      }),
+    [openCount, oldestDays, goneQuiet.length, reviewed.length, adherence.followedPct]
+  )
+
+  // Loading/error roll-ups. Adherence failure degrades gracefully (its finding
+  // just drops out), so it never fails the band. A clients failure also leaves
+  // the band intact, but the call list CAN'T be built without farmer context —
+  // the gone-quiet rows need it to navigate — so a clients error surfaces as a
+  // call-list error rather than a false "all clear" that contradicts the band.
+  const findingsLoading = triageQuery.isPending || nutrientQuery.isPending || plansQuery.isPending
+  const findingsError = triageQuery.isError
+  const callListLoading =
+    triageQuery.isPending ||
+    nutrientQuery.isPending ||
+    plansQuery.isPending ||
+    clientsQuery.isPending
+  const callListError = triageQuery.isError || clientsQuery.isError
+
+  const coreReady =
+    !triageQuery.isPending &&
+    !nutrientQuery.isPending &&
+    plansQuery.isSuccess &&
+    !clientsQuery.isPending
+  const allCaughtUp = coreReady && !findingsError && findings.length === 0 && callList.length === 0
+
+  const handleScrollToCallList = (filter?: CallReason) => {
+    setCallListFilter(filter ?? null)
+    if (typeof document !== 'undefined') {
+      document
+        .getElementById('farmers-to-contact')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  const handleFindingClick = (finding: Finding) => {
+    posthog.capture('consultant_overview_finding_clicked', {
+      finding_id: finding.id,
+      org_id: access.organizationId,
+      role: access.role
+    })
+  }
+
+  const handleContact = (row: CallListRow) => {
+    posthog.capture(
+      row.reason === 'quiet' ? 'consultant_overview_view_farmer' : 'consultant_overview_issue_plan',
+      {
+        reason: row.reason,
+        farm_id: row.farmId,
+        org_id: access.organizationId,
+        role: access.role
+      }
+    )
+  }
+
+  const handleQueueOpen = () => {
+    posthog.capture('consultant_overview_queue_opened', {
+      org_id: access.organizationId,
+      role: access.role,
+      open_count: openCount
+    })
+  }
 
   return (
     <div className="space-y-4">
-      <KpiStrip tiles={tiles} />
-
-      {worklist}
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ReviewPipelineChart
-          items={items}
-          isLoading={triageQuery.isPending}
-          isError={triageQuery.isError}
-        />
-        <IncomingSeverityChart
-          items={items}
-          isLoading={triageQuery.isPending}
-          isError={triageQuery.isError}
-        />
-        <ReviewThroughputChart
-          items={items}
-          isLoading={triageQuery.isPending}
-          isError={triageQuery.isError}
-        />
-        <NutrientStatusChart
-          farms={farms}
-          isLoading={nutrientQuery.isPending}
-          isError={nutrientQuery.isError}
-        />
-      </div>
-
-      {access.canViewAllFarmers && (
-        <TeamWorkloadPanel
-          items={items}
-          members={members}
-          clients={clients}
-          isLoading={triageQuery.isPending || membersQuery.isPending || clientsQuery.isPending}
-          isError={triageQuery.isError || membersQuery.isError || clientsQuery.isError}
+      {!allCaughtUp && (
+        <ImpressionBand
+          findings={findings}
+          isLoading={findingsLoading}
+          isError={findingsError}
+          onFindingClick={handleFindingClick}
+          onScrollToCallList={handleScrollToCallList}
         />
       )}
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          {allCaughtUp ? (
+            <div className="flex flex-col items-center justify-center rounded-xl bg-card px-6 py-16 text-center text-card-foreground shadow-xs ring-1 ring-foreground/10">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--nutrient-optimal-bg)] text-[var(--nutrient-optimal)]">
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+              <h2 className="mt-4 font-serif text-lg font-semibold">All caught up</h2>
+              <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                No reports waiting and no farmers gone quiet. New petiole uploads and overdue
+                samples will surface here.
+              </p>
+            </div>
+          ) : (
+            <FarmersToContact
+              rows={callList}
+              isLoading={callListLoading}
+              isError={callListError}
+              filter={callListFilter}
+              onClearFilter={() => setCallListFilter(null)}
+              onContact={handleContact}
+            />
+          )}
+        </div>
+
+        <aside className="space-y-4">
+          <QueuePointerCard
+            openCount={openCount}
+            oldestDays={oldestDays}
+            isLoading={triageQuery.isPending}
+            isError={triageQuery.isError}
+            onOpen={handleQueueOpen}
+          />
+          <PracticeSnapshot
+            activeFarmers={clientsQuery.data?.length ?? 0}
+            withDeficiency={withDeficiency}
+            quietCount={goneQuiet.length}
+            adherencePct={adherence.followedPct}
+            isLoading={clientsQuery.isPending || nutrientQuery.isPending}
+            isError={clientsQuery.isError}
+          />
+          <PortfolioNutrientsBar
+            rows={nutrientRows}
+            isLoading={nutrientQuery.isPending}
+            isError={nutrientQuery.isError}
+          />
+        </aside>
+      </div>
     </div>
   )
 }

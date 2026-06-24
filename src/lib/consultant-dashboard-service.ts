@@ -51,6 +51,8 @@ export async function getOrgLatestPetiole(
 
   return (data ?? []).map((row) => ({
     farmId: row.farm_id,
+    // Carry the sample date through so the dashboard can flag gone-quiet farms.
+    sampleDate: row.sample_date ?? null,
     parameters: (row.parameters as Record<string, number | string | null> | null) ?? null
   }))
 }

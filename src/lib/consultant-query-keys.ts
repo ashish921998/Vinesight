@@ -24,5 +24,7 @@ export const consultantKeys = {
   orgAdherence: (orgId: string, scope: string) =>
     ['consultant', 'orgAdherence', orgId, scope] as const,
   orgNutrientStatus: (orgId: string, scope: string) =>
-    ['consultant', 'orgNutrientStatus', orgId, scope] as const
+    ['consultant', 'orgNutrientStatus', orgId, scope] as const,
+  orgPlanLinks: (orgId: string, scope: string) =>
+    ['consultant', 'orgPlanLinks', orgId, scope] as const
 }

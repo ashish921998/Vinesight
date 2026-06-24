@@ -209,6 +209,20 @@ export function useOrgNutrientStatus(access: ConsultantAccess | null | undefined
   })
 }
 
+// Petiole Review IDs that already have a fertilizer plan, across the caller's
+// scope — drives the Overview "reviewed but no plan" detection. Diffed in
+// memory against the triage items; no new RPC.
+export function useOrgPlanTriageLinks(access: ConsultantAccess | null | undefined) {
+  return useQuery({
+    queryKey: access
+      ? consultantKeys.orgPlanLinks(access.organizationId, farmerScope(access))
+      : ['consultant', 'orgPlanLinks', 'disabled'],
+    queryFn: () =>
+      FertilizerPlanService.getPlanTriageIdsByOrg((access as ConsultantAccess).organizationId),
+    enabled: Boolean(access)
+  })
+}
+
 // Organization members (everyone). Replaces a manual fetch on the team pages.
 export function useOrgMembers(access: ConsultantAccess | null | undefined) {
   return useQuery({
