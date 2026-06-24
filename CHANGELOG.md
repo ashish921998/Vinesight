@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0.0] - 2026-06-24
+
+### Added
+
+- **Command Center dashboard.** The consultant overview page now opens on org-wide KPIs (open reviews, active farmers, recommendation adherence) plus instrument-grade charts: review pipeline by status, incoming severity mix, weekly review throughput, nutrient status across farms (latest petiole test bucketed against bloom-stage norms), and team workload. Backed by two read-only `SECURITY DEFINER` RPCs (`get_org_latest_petiole`, `get_org_followup_adherence`) scoped to the caller's org access.
+
+### Changed
+
+- **Farmer Directory is now a dense worklist table** instead of a card grid (Farmer · Contact · Region · Farms · Status), matching the "tables over cards" design rule.
+- **Consultant sidebar rebuilt on the shadcn Sidebar primitive**: collapses to an icon rail (state persists across reloads, `⌘B` to toggle), becomes a slide-in drawer on mobile, shows a section breadcrumb, and gives selected vs hovered rows distinct treatments (soft-sage active, neutral hover). Nav renamed: Command Center → Overview, Petiole Triage → Petiole Review, Client Farmers → Farmers.
+- **Typography migrated to the IBM Plex superfamily** (Plex Sans / Serif / Mono via `next/font`), replacing Montserrat / Merriweather / Source Code Pro and a stray Inter binding.
+
 ## [0.1.4.0] - 2026-06-19
 
 ### Added
