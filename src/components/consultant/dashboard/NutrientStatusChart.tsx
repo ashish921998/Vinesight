@@ -1,5 +1,6 @@
 'use client'
 
+// react-doctor-disable-next-line react-doctor/prefer-dynamic-import, prefer-dynamic-import -- recharts drives above-the-fold dashboard charts on an already route-split page; deferring it only adds a loading flash on the primary view
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import {
   MIN_NUTRIENT_FARMS,
@@ -48,6 +49,7 @@ export function NutrientStatusChart({
       emptyHint={`Needs at least ${MIN_NUTRIENT_FARMS} farms with a petiole test. ${farmCount} so far.`}
       footnote={`Each farm's most recent petiole test, judged against bloom-stage norms — farms sampled at other stages are an approximation. Based on ${farmCount} farm${farmCount === 1 ? '' : 's'}.`}
     >
+      {/* react-doctor-disable-next-line react-doctor/prefer-tag-over-role, prefer-tag-over-role -- role="img"+aria-label is the correct ARIA pattern for an inline SVG chart; <img> needs a src and can't wrap recharts */}
       <div className="w-full" style={{ height: chartHeight }} role="img" aria-label={ariaLabel}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 8, bottom: 0, left: 8 }}>

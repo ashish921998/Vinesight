@@ -1,5 +1,6 @@
 'use client'
 
+// react-doctor-disable-next-line react-doctor/prefer-dynamic-import, prefer-dynamic-import -- recharts drives above-the-fold dashboard charts on an already route-split page; deferring it only adds a loading flash on the primary view
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { type TriageItem } from '@/lib/consultant-triage-service'
 import {
@@ -42,6 +43,7 @@ export function ReviewThroughputChart({
       state={state}
       emptyHint={`Fewer than ${MIN_THROUGHPUT_COMPLETED} reviews completed — the trend fills in as you clear the queue.`}
     >
+      {/* react-doctor-disable-next-line react-doctor/prefer-tag-over-role, prefer-tag-over-role -- role="img"+aria-label is the correct ARIA pattern for an inline SVG chart; <img> needs a src and can't wrap recharts */}
       <div className="h-48 w-full" role="img" aria-label={ariaLabel}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>

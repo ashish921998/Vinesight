@@ -149,6 +149,7 @@ export default function ConsultantOverviewPage() {
           in as the `worklist` slot so it sits between the KPIs and the charts. */}
       <CommandCenterDashboard
         access={access}
+        // react-doctor-disable-next-line react-doctor/jsx-no-jsx-as-prop, jsx-no-jsx-as-prop -- worklist is cheap static card markup rendered once per page; memoizing it adds dep-tracking for no measurable gain
         worklist={
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">

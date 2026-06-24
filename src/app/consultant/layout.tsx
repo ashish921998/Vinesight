@@ -163,6 +163,7 @@ export default function ConsultantLayout({ children }: ConsultantLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   useEffect(() => {
     const match = document.cookie.match(/(?:^|;\s*)sidebar_state=(true|false)/)
+    // react-doctor-disable-next-line react-doctor/no-initialize-state, no-initialize-state -- intentional: initial render stays expanded to match SSR, then restores the cookie client-side; a lazy initializer reading document.cookie would hydration-mismatch
     if (match) setSidebarOpen(match[1] === 'true')
   }, [])
 
