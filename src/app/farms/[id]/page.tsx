@@ -389,6 +389,11 @@ export default function FarmDetailsPage() {
     dayPhotos: File[],
     existingDailyNoteId?: number | null
   ) => {
+    if (!Number.isSafeInteger(farmIdNum) || farmIdNum <= 0) {
+      toast.error('Invalid farm URL. Please open the farm from the farms list.')
+      return
+    }
+
     setIsSubmitting(true)
     try {
       let firstRecordId: number | null = null
@@ -467,7 +472,7 @@ export default function FarmDetailsPage() {
         }
 
         record = await logMutations.irrigation.add.mutateAsync({
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNum,
           date: date,
           duration: duration,
           area: area,
@@ -489,7 +494,7 @@ export default function FarmDetailsPage() {
             const newWaterLevel = currentWaterLevel + waterAdded
 
             await updateFarmMutation.mutateAsync({
-              id: parseInt(farmId),
+              id: farmIdNum,
               updates: {
                 remainingWater: newWaterLevel,
                 waterCalculationUpdatedAt: new Date().toISOString()
@@ -534,7 +539,7 @@ export default function FarmDetailsPage() {
 
         // Handle spray record with chemicals array (new format) or single chemical (old format)
         const sprayData: any = {
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNum,
           date: date,
           chemicals: [],
           area: dashboardData.farm.area,
@@ -593,7 +598,7 @@ export default function FarmDetailsPage() {
 
       case 'harvest':
         record = await logMutations.harvest.add.mutateAsync({
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNum,
           date: date,
           quantity: parseFloat(data.quantity || '0'),
           grade: data.grade || 'Standard',
@@ -606,7 +611,7 @@ export default function FarmDetailsPage() {
 
       case 'expense':
         record = await logMutations.expense.add.mutateAsync({
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNum,
           date: date,
           type: data.type || 'other',
           cost: parseFloat(data.cost || '0'),
@@ -652,7 +657,7 @@ export default function FarmDetailsPage() {
         // Only include area if it's a valid positive number
         const farmArea = dashboardData?.farm?.area
         const payload: any = {
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNum,
           date: date,
           fertilizers: validatedFertilizers,
           notes: data.notes || '',
@@ -771,7 +776,7 @@ export default function FarmDetailsPage() {
         })
 
         record = await logMutations.soilTest.add.mutateAsync({
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNum,
           date,
           parameters: combinedParameters,
           notes: combineNotes.filter(Boolean).join(' | ') || '',
@@ -820,7 +825,7 @@ export default function FarmDetailsPage() {
         pushParameter('ammonical_nitrogen', data.ammonical_nitrogen)
 
         record = await logMutations.petioleTest.add.mutateAsync({
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNum,
           date,
           sample_id: data.sample_id || '',
           parameters,
@@ -872,7 +877,7 @@ export default function FarmDetailsPage() {
         record = await logMutations.irrigation.update.mutateAsync({
           id: originalId,
           updates: {
-            farm_id: parseInt(farmId),
+            farm_id: farmIdNum,
             date: originalDate,
             duration: duration,
             area: area,
@@ -894,7 +899,7 @@ export default function FarmDetailsPage() {
 
         // Handle spray record with chemicals array (new format) or single chemical (old format)
         const sprayData: any = {
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNum,
           date: originalDate,
           chemicals: [],
           area: dashboardData.farm.area,
@@ -955,7 +960,7 @@ export default function FarmDetailsPage() {
         record = await logMutations.harvest.update.mutateAsync({
           id: originalId,
           updates: {
-            farm_id: parseInt(farmId),
+            farm_id: farmIdNum,
             date: originalDate,
             quantity: parseFloat(data.quantity || '0'),
             grade: data.grade || 'Standard',
@@ -974,7 +979,7 @@ export default function FarmDetailsPage() {
         record = await logMutations.expense.update.mutateAsync({
           id: originalId,
           updates: {
-            farm_id: parseInt(farmId),
+            farm_id: farmIdNum,
             date: originalDate,
             type: data.type || 'other',
             cost: parseFloat(data.cost || '0'),
@@ -1031,7 +1036,7 @@ export default function FarmDetailsPage() {
         // Only include area if it's a valid positive number
         const updateFarmArea = dashboardData?.farm?.area
         const updatePayload: any = {
-          farm_id: parseInt(farmId),
+          farm_id: farmIdNum,
           date: originalDate,
           fertilizers: validatedFertilizers,
           notes: data.notes || '',
@@ -1155,7 +1160,7 @@ export default function FarmDetailsPage() {
         record = await logMutations.soilTest.update.mutateAsync({
           id: originalId,
           updates: {
-            farm_id: parseInt(farmId),
+            farm_id: farmIdNum,
             date: originalDate,
             parameters: combinedParameters,
             notes: combineNotes.filter(Boolean).join(' | ') || '',
@@ -1207,7 +1212,7 @@ export default function FarmDetailsPage() {
         record = await logMutations.petioleTest.update.mutateAsync({
           id: originalId,
           updates: {
-            farm_id: parseInt(farmId),
+            farm_id: farmIdNum,
             date: originalDate,
             sample_id: data.sample_id || '',
             parameters,
@@ -1307,13 +1312,19 @@ export default function FarmDetailsPage() {
         }
       }
 
-      await Promise.all(activities.map(deleteActivity))
+      const results = await Promise.allSettled(activities.map(deleteActivity))
+      const failedDeletes = results.filter((result) => result.status === 'rejected')
+
+      if (failedDeletes.length > 0) {
+        throw new Error(`${failedDeletes.length} log deletion failed`)
+      }
+
+      setPendingDateGroupDelete(null)
     } catch (error) {
       logger.error('Error deleting date group:', error)
       toast.error('Failed to delete logs. Please try again.')
     } finally {
       setIsDeleting(false)
-      setPendingDateGroupDelete(null)
     }
   }
 
@@ -1414,8 +1425,12 @@ export default function FarmDetailsPage() {
       }
 
       if (editingFarm) {
+        if (!Number.isSafeInteger(farmIdNum) || farmIdNum <= 0) {
+          throw new Error('Invalid farm URL. Please open the farm from the farms list.')
+        }
+
         // Edit mode: update existing farm (mutation invalidates list/detail/summary)
-        await updateFarmMutation.mutateAsync({ id: parseInt(farmId), updates: farmInput })
+        await updateFarmMutation.mutateAsync({ id: farmIdNum, updates: farmInput })
         setShowFarmModal(false)
         setEditingFarm(null)
       } else {
@@ -2090,7 +2105,7 @@ export default function FarmDetailsPage() {
           }}
           onSubmit={handleDataLogsSubmit}
           isSubmitting={isSubmitting}
-          farmId={parseInt(farmId)}
+          farmId={farmIdNum}
           mode={editMode}
           existingLogs={editModeLogs}
           selectedDate={editModeDate}
