@@ -98,7 +98,10 @@ export default function FarmDetailsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const farmId = params.id as string
-  const farmIdNum = Number.parseInt(farmId, 10)
+  // Strict parse: a loose parseInt would turn "/farms/12abc" into farm 12 and
+  // drive queries/mutations against the wrong farm. NaN disables them instead.
+  const parsedFarmId = Number(farmId)
+  const farmIdNum = Number.isSafeInteger(parsedFarmId) && parsedFarmId > 0 ? parsedFarmId : NaN
   const queryClient = useQueryClient()
 
   // Server state via TanStack Query. The summary is the page's single source of
@@ -425,7 +428,11 @@ export default function FarmDetailsPage() {
         date
       })
 
-      invalidateFarmSummary()
+      // The daily-note/photo util writes through SupabaseService directly (not a
+      // mutation hook), so invalidate both the summary and the records bucket
+      // any logs page reads — matching what the per-log mutations invalidate.
+      queryClient.invalidateQueries({ queryKey: farmKeys.summary(farmIdNum) })
+      queryClient.invalidateQueries({ queryKey: farmKeys.records(farmIdNum) })
       toast.success('Data logs saved successfully')
       setShowDataLogsModal(false)
       setEditModeDayNote(null)
@@ -1305,6 +1312,7 @@ export default function FarmDetailsPage() {
       }
     } catch (error) {
       logger.error('Error deleting date group:', error)
+      toast.error('Failed to delete logs. Please try again.')
     } finally {
       setIsDeleting(false)
       setPendingDateGroupDelete(null)
@@ -1348,6 +1356,7 @@ export default function FarmDetailsPage() {
       setDeletingRecord(null)
     } catch (error) {
       logger.error('Error deleting record:', error)
+      toast.error('Failed to delete record. Please try again.')
     } finally {
       setIsDeleting(false)
     }
