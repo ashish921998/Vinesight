@@ -21,19 +21,21 @@ export function useFarms() {
  * write invalidates `farmKeys.summary(farmId)` so this refetches wholesale.
  */
 export function useDashboardSummary(farmId: number | null) {
+  const hasFarm = farmId != null && Number.isFinite(farmId)
   return useQuery({
-    queryKey: farmId != null ? farmKeys.summary(farmId) : ['farms', 'summary', 'disabled'],
+    queryKey: hasFarm ? farmKeys.summary(farmId as number) : ['farms', 'summary', 'disabled'],
     queryFn: () => SupabaseService.getDashboardSummary(farmId as number),
-    enabled: farmId != null && Number.isFinite(farmId)
+    enabled: hasFarm
   })
 }
 
 /** Agronomist fertilizer plans for a farm. Read-only on this surface. */
 export function useFarmFertilizerPlans(farmId: number | null) {
+  const hasFarm = farmId != null && Number.isFinite(farmId)
   return useQuery({
-    queryKey: farmId != null ? farmKeys.plans(farmId) : ['farms', 'plans', 'disabled'],
+    queryKey: hasFarm ? farmKeys.plans(farmId as number) : ['farms', 'plans', 'disabled'],
     queryFn: () => FertilizerPlanService.getPlansByFarm(farmId as number),
-    enabled: farmId != null && Number.isFinite(farmId)
+    enabled: hasFarm
   })
 }
 
