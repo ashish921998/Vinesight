@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SupabaseService } from '@/lib/supabase-service'
+import { FertilizerPlanService } from '@/lib/fertilizer-plan-service'
 import { farmKeys } from '@/lib/farm-query-keys'
 import type { Farm } from '@/types/types'
 
@@ -11,6 +12,28 @@ export function useFarms() {
   return useQuery({
     queryKey: farmKeys.list(),
     queryFn: () => SupabaseService.getAllFarms()
+  })
+}
+
+/**
+ * Aggregate dashboard payload for the farm detail page (farm, recent activity,
+ * counts, totals, pending tasks). Backed by `getDashboardSummary`; every journal
+ * write invalidates `farmKeys.summary(farmId)` so this refetches wholesale.
+ */
+export function useDashboardSummary(farmId: number | null) {
+  return useQuery({
+    queryKey: farmId != null ? farmKeys.summary(farmId) : ['farms', 'summary', 'disabled'],
+    queryFn: () => SupabaseService.getDashboardSummary(farmId as number),
+    enabled: farmId != null && Number.isFinite(farmId)
+  })
+}
+
+/** Agronomist fertilizer plans for a farm. Read-only on this surface. */
+export function useFarmFertilizerPlans(farmId: number | null) {
+  return useQuery({
+    queryKey: farmId != null ? farmKeys.plans(farmId) : ['farms', 'plans', 'disabled'],
+    queryFn: () => FertilizerPlanService.getPlansByFarm(farmId as number),
+    enabled: farmId != null && Number.isFinite(farmId)
   })
 }
 
@@ -52,6 +75,9 @@ export function useUpdateFarm() {
     onSuccess: (_farm, { id }) => {
       queryClient.invalidateQueries({ queryKey: farmKeys.list() })
       queryClient.invalidateQueries({ queryKey: farmKeys.detail(id) })
+      // Farm edits (incl. the irrigation water-level bump) feed the dashboard
+      // header/readiness, so refresh the summary too.
+      queryClient.invalidateQueries({ queryKey: farmKeys.summary(id) })
     }
   })
 }

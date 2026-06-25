@@ -6,5 +6,6 @@ export const farmKeys = {
   records: (farmId: number) => ['farms', farmId, 'records'] as const,
   tasks: (farmId: number) => ['farms', farmId, 'tasks'] as const,
   labTests: (farmId: number) => ['farms', farmId, 'lab-tests'] as const,
-  soilProfiles: (farmId: number) => ['farms', farmId, 'soil-profiles'] as const
+  soilProfiles: (farmId: number) => ['farms', farmId, 'soil-profiles'] as const,
+  plans: (farmId: number) => ['farms', farmId, 'plans'] as const
 }

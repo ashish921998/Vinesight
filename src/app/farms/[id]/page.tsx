@@ -3,7 +3,18 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { MouseEvent } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { SupabaseService } from '@/lib/supabase-service'
+import { farmKeys } from '@/lib/farm-query-keys'
+import {
+  useFarms,
+  useDashboardSummary,
+  useFarmFertilizerPlans,
+  useCreateFarm,
+  useUpdateFarm,
+  useDeleteFarm
+} from '@/hooks/farms/useFarmQueries'
+import { useFarmLogMutations } from '@/hooks/farms/useFarmLogMutations'
 import { FarmHeader, type FarmWeatherSummary } from '@/components/farm-details/FarmHeader'
 import { ActivityFeed } from '@/components/farm-details/ActivityFeed'
 import { UnifiedDataLogsModal } from '@/components/farm-details/UnifiedDataLogsModal'
@@ -60,7 +71,6 @@ import {
   handleDailyNotesAndPhotosAfterLogs
 } from '@/lib/daily-note-utils'
 import { TasksOverviewCard } from '@/components/tasks/TasksOverviewCard'
-import { FertilizerPlanService, type FertilizerPlanWithItems } from '@/lib/fertilizer-plan-service'
 import { FertilizerPlanView } from '@/components/fertilizer/FertilizerPlanView'
 
 interface DashboardData {
@@ -88,12 +98,29 @@ export default function FarmDetailsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const farmId = params.id as string
+  const farmIdNum = Number.parseInt(farmId, 10)
+  const queryClient = useQueryClient()
 
-  const [dashboardData, setDashboardData] = useState<DashboardData>()
-  const [loading, setLoading] = useState(true)
+  // Server state via TanStack Query. The summary is the page's single source of
+  // truth; every journal write invalidates farmKeys.summary(farmId) so it
+  // refetches wholesale (recent activity, counts, totals, pending tasks).
+  const { data: dashboardData, isLoading: loading } = useDashboardSummary(farmIdNum)
+  const { data: allFarms = [] } = useFarms()
+  const { data: fertilizerPlans = [] } = useFarmFertilizerPlans(farmIdNum)
+
+  // Journal write mutations (add/update/delete for all 8 record types) plus the
+  // farm mutations reused for the in-header switcher and water-level bump.
+  const logMutations = useFarmLogMutations(farmIdNum)
+  const updateFarmMutation = useUpdateFarm()
+  const createFarmMutation = useCreateFarm()
+  const deleteFarmMutation = useDeleteFarm()
+
+  const invalidateFarmSummary = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: farmKeys.summary(farmIdNum) })
+  }, [queryClient, farmIdNum])
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [weatherSummary, setWeatherSummary] = useState<FarmWeatherSummary | null>(null)
-  const [allFarms, setAllFarms] = useState<Farm[]>([])
   const [insightsOpen, setInsightsOpen] = useState(true)
   const [readinessOpen, setReadinessOpen] = useState(true)
   const [labTestSignal, setLabTestSignal] = useState<{
@@ -101,7 +128,6 @@ export default function FarmDetailsPage() {
     message: string
     pill?: string
   } | null>(null)
-  const [fertilizerPlans, setFertilizerPlans] = useState<FertilizerPlanWithItems[]>([])
   const dismissalStorageKey = `field-signal-dismissals:${farmId}`
   const [dismissedSignals, setDismissedSignals] = useState<Record<string, number>>({})
   const updateDismissedSignals = useCallback(
@@ -175,52 +201,6 @@ export default function FarmDetailsPage() {
   const isMobile = useIsMobile()
 
   const { preferences: userPreferences } = useUserPreferences(dashboardData?.farm?.userId)
-
-  const loadDashboardData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const data = await SupabaseService.getDashboardSummary(parseInt(farmId))
-      setDashboardData({
-        ...data,
-        farm: data.farm
-      })
-
-      // Load fertilizer plans for this farm
-      try {
-        const plans = await FertilizerPlanService.getPlansByFarm(parseInt(farmId))
-        setFertilizerPlans(plans)
-      } catch (planError) {
-        // Silently fail - plans might not exist yet
-        logger.debug('No fertilizer plans found:', planError)
-      }
-    } catch (error) {
-      logger.error('Error loading dashboard data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [farmId])
-
-  // Load all farms for farm switcher
-  useEffect(() => {
-    let isMounted = true
-
-    const loadAllFarms = async () => {
-      try {
-        const farms = await SupabaseService.getAllFarms()
-        if (isMounted) {
-          setAllFarms(farms)
-        }
-      } catch (error) {
-        logger.error('Error loading all farms:', error)
-      }
-    }
-
-    loadAllFarms()
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
 
   useEffect(() => {
     if (isMobile) {
@@ -296,12 +276,6 @@ export default function FarmDetailsPage() {
       setDismissedSignals({})
     }
   }, [dismissalStorageKey])
-
-  useEffect(() => {
-    if (farmId) {
-      loadDashboardData()
-    }
-  }, [farmId, loadDashboardData])
 
   // Handle edit parameters from logs page
   useEffect(() => {
@@ -414,7 +388,6 @@ export default function FarmDetailsPage() {
   ) => {
     setIsSubmitting(true)
     try {
-      const farmIdNum = parseFarmId(farmId)
       let firstRecordId: number | null = null
 
       for (let i = 0; i < logs.length; i++) {
@@ -439,7 +412,9 @@ export default function FarmDetailsPage() {
         }
       }
 
-      // Handle daily notes and photos based on whether logs exist
+      // Handle daily notes and photos based on whether logs exist. Log writes
+      // above already invalidated the summary via their mutation hooks; this
+      // covers the notes-only / photo paths that go through the shared util.
       await handleDailyNotesAndPhotosAfterLogs({
         logs,
         dayNotes,
@@ -450,7 +425,7 @@ export default function FarmDetailsPage() {
         date
       })
 
-      await loadDashboardData()
+      invalidateFarmSummary()
       toast.success('Data logs saved successfully')
       setShowDataLogsModal(false)
       setEditModeDayNote(null)
@@ -484,7 +459,7 @@ export default function FarmDetailsPage() {
           throw new Error('Irrigation area must be greater than 0')
         }
 
-        record = await SupabaseService.addIrrigationRecord({
+        record = await logMutations.irrigation.add.mutateAsync({
           farm_id: parseInt(farmId),
           date: date,
           duration: duration,
@@ -506,9 +481,12 @@ export default function FarmDetailsPage() {
             const currentWaterLevel = Number(dashboardData.farm.remainingWater ?? 0)
             const newWaterLevel = currentWaterLevel + waterAdded
 
-            await SupabaseService.updateFarm(parseInt(farmId), {
-              remainingWater: newWaterLevel,
-              waterCalculationUpdatedAt: new Date().toISOString()
+            await updateFarmMutation.mutateAsync({
+              id: parseInt(farmId),
+              updates: {
+                remainingWater: newWaterLevel,
+                waterCalculationUpdatedAt: new Date().toISOString()
+              }
             })
 
             logger.info('Water level updated successfully', {
@@ -602,12 +580,12 @@ export default function FarmDetailsPage() {
               : 'As per label'
         }
 
-        record = await SupabaseService.addSprayRecord(sprayData)
+        record = await logMutations.spray.add.mutateAsync(sprayData)
         break
       }
 
       case 'harvest':
-        record = await SupabaseService.addHarvestRecord({
+        record = await logMutations.harvest.add.mutateAsync({
           farm_id: parseInt(farmId),
           date: date,
           quantity: parseFloat(data.quantity || '0'),
@@ -620,7 +598,7 @@ export default function FarmDetailsPage() {
         break
 
       case 'expense':
-        record = await SupabaseService.addExpenseRecord({
+        record = await logMutations.expense.add.mutateAsync({
           farm_id: parseInt(farmId),
           date: date,
           type: data.type || 'other',
@@ -679,7 +657,7 @@ export default function FarmDetailsPage() {
           payload.area = farmArea
         }
 
-        record = await SupabaseService.addFertigationRecord(payload)
+        record = await logMutations.fertigation.add.mutateAsync(payload)
         break
       }
 
@@ -785,7 +763,7 @@ export default function FarmDetailsPage() {
           }
         })
 
-        record = await SupabaseService.addSoilTestRecord({
+        record = await logMutations.soilTest.add.mutateAsync({
           farm_id: parseInt(farmId),
           date,
           parameters: combinedParameters,
@@ -834,7 +812,7 @@ export default function FarmDetailsPage() {
         pushParameter('nitrate_nitrogen', data.nitrate_nitrogen)
         pushParameter('ammonical_nitrogen', data.ammonical_nitrogen)
 
-        record = await SupabaseService.addPetioleTestRecord({
+        record = await logMutations.petioleTest.add.mutateAsync({
           farm_id: parseInt(farmId),
           date,
           sample_id: data.sample_id || '',
@@ -884,16 +862,19 @@ export default function FarmDetailsPage() {
           throw new Error('Irrigation area must be greater than 0')
         }
 
-        record = await SupabaseService.updateIrrigationRecord(originalId, {
-          farm_id: parseInt(farmId),
-          date: originalDate,
-          duration: duration,
-          area: area,
-          growth_stage: 'Active',
-          moisture_status: 'Good',
-          system_discharge: dashboardData.farm.systemDischarge,
-          notes: data.notes || '',
-          date_of_pruning: dashboardData.farm.dateOfPruning
+        record = await logMutations.irrigation.update.mutateAsync({
+          id: originalId,
+          updates: {
+            farm_id: parseInt(farmId),
+            date: originalDate,
+            duration: duration,
+            area: area,
+            growth_stage: 'Active',
+            moisture_status: 'Good',
+            system_discharge: dashboardData.farm.systemDischarge,
+            notes: data.notes || '',
+            date_of_pruning: dashboardData.farm.dateOfPruning
+          }
         })
         break
       }
@@ -959,34 +940,40 @@ export default function FarmDetailsPage() {
               : 'As per label'
         }
 
-        record = await SupabaseService.updateSprayRecord(originalId, sprayData)
+        record = await logMutations.spray.update.mutateAsync({ id: originalId, updates: sprayData })
         break
       }
 
       case 'harvest':
-        record = await SupabaseService.updateHarvestRecord(originalId, {
-          farm_id: parseInt(farmId),
-          date: originalDate,
-          quantity: parseFloat(data.quantity || '0'),
-          grade: data.grade || 'Standard',
-          price:
-            data.price !== undefined
-              ? parseFloat(data.price.toString())
-              : logEntry.data?.price || 0,
-          buyer: data.buyer !== undefined ? data.buyer : logEntry.data?.buyer || '',
-          notes: data.notes || '',
-          date_of_pruning: dashboardData?.farm?.dateOfPruning
+        record = await logMutations.harvest.update.mutateAsync({
+          id: originalId,
+          updates: {
+            farm_id: parseInt(farmId),
+            date: originalDate,
+            quantity: parseFloat(data.quantity || '0'),
+            grade: data.grade || 'Standard',
+            price:
+              data.price !== undefined
+                ? parseFloat(data.price.toString())
+                : logEntry.data?.price || 0,
+            buyer: data.buyer !== undefined ? data.buyer : logEntry.data?.buyer || '',
+            notes: data.notes || '',
+            date_of_pruning: dashboardData?.farm?.dateOfPruning
+          }
         })
         break
 
       case 'expense':
-        record = await SupabaseService.updateExpenseRecord(originalId, {
-          farm_id: parseInt(farmId),
-          date: originalDate,
-          type: data.type || 'other',
-          cost: parseFloat(data.cost || '0'),
-          remarks: data.notes || '',
-          date_of_pruning: dashboardData?.farm?.dateOfPruning
+        record = await logMutations.expense.update.mutateAsync({
+          id: originalId,
+          updates: {
+            farm_id: parseInt(farmId),
+            date: originalDate,
+            type: data.type || 'other',
+            cost: parseFloat(data.cost || '0'),
+            remarks: data.notes || '',
+            date_of_pruning: dashboardData?.farm?.dateOfPruning
+          }
         })
         break
 
@@ -1049,7 +1036,10 @@ export default function FarmDetailsPage() {
           updatePayload.area = updateFarmArea
         }
 
-        record = await SupabaseService.updateFertigationRecord(originalId, updatePayload)
+        record = await logMutations.fertigation.update.mutateAsync({
+          id: originalId,
+          updates: updatePayload
+        })
         break
       }
 
@@ -1155,20 +1145,23 @@ export default function FarmDetailsPage() {
           }
         })
 
-        record = await SupabaseService.updateSoilTestRecord(originalId, {
-          farm_id: parseInt(farmId),
-          date: originalDate,
-          parameters: combinedParameters,
-          notes: combineNotes.filter(Boolean).join(' | ') || '',
-          report_url: reportMeta?.signedUrl,
-          report_storage_path: reportMeta?.storagePath,
-          report_filename: reportMeta?.filename,
-          report_type: reportMeta?.reportType,
-          extraction_status: reportMeta?.extractionStatus,
-          extraction_error: reportMeta?.extractionError,
-          parsed_parameters: reportMeta?.parsedParameters,
-          raw_notes: reportMeta?.rawNotes ?? undefined,
-          date_of_pruning: dashboardData?.farm?.dateOfPruning
+        record = await logMutations.soilTest.update.mutateAsync({
+          id: originalId,
+          updates: {
+            farm_id: parseInt(farmId),
+            date: originalDate,
+            parameters: combinedParameters,
+            notes: combineNotes.filter(Boolean).join(' | ') || '',
+            report_url: reportMeta?.signedUrl,
+            report_storage_path: reportMeta?.storagePath,
+            report_filename: reportMeta?.filename,
+            report_type: reportMeta?.reportType,
+            extraction_status: reportMeta?.extractionStatus,
+            extraction_error: reportMeta?.extractionError,
+            parsed_parameters: reportMeta?.parsedParameters,
+            raw_notes: reportMeta?.rawNotes ?? undefined,
+            date_of_pruning: dashboardData?.farm?.dateOfPruning
+          }
         })
         break
       }
@@ -1204,21 +1197,24 @@ export default function FarmDetailsPage() {
         pushParameter('nitrate_nitrogen', data.nitrate_nitrogen)
         pushParameter('ammonical_nitrogen', data.ammonical_nitrogen)
 
-        record = await SupabaseService.updatePetioleTestRecord(originalId, {
-          farm_id: parseInt(farmId),
-          date: originalDate,
-          sample_id: data.sample_id || '',
-          parameters,
-          notes: combineNotes.filter(Boolean).join(' | ') || '',
-          report_url: reportMeta?.signedUrl,
-          report_storage_path: reportMeta?.storagePath,
-          report_filename: reportMeta?.filename,
-          report_type: reportMeta?.reportType,
-          extraction_status: reportMeta?.extractionStatus,
-          extraction_error: reportMeta?.extractionError,
-          parsed_parameters: reportMeta?.parsedParameters,
-          raw_notes: reportMeta?.rawNotes ?? undefined,
-          date_of_pruning: dashboardData?.farm?.dateOfPruning
+        record = await logMutations.petioleTest.update.mutateAsync({
+          id: originalId,
+          updates: {
+            farm_id: parseInt(farmId),
+            date: originalDate,
+            sample_id: data.sample_id || '',
+            parameters,
+            notes: combineNotes.filter(Boolean).join(' | ') || '',
+            report_url: reportMeta?.signedUrl,
+            report_storage_path: reportMeta?.storagePath,
+            report_filename: reportMeta?.filename,
+            report_type: reportMeta?.reportType,
+            extraction_status: reportMeta?.extractionStatus,
+            extraction_error: reportMeta?.extractionError,
+            parsed_parameters: reportMeta?.parsedParameters,
+            raw_notes: reportMeta?.rawNotes ?? undefined,
+            date_of_pruning: dashboardData?.farm?.dateOfPruning
+          }
         })
         break
       }
@@ -1282,33 +1278,31 @@ export default function FarmDetailsPage() {
       for (const activity of activities) {
         switch (activity.type) {
           case 'irrigation':
-            await SupabaseService.deleteIrrigationRecord(activity.id)
+            await logMutations.irrigation.remove.mutateAsync(activity.id)
             break
           case 'spray':
-            await SupabaseService.deleteSprayRecord(activity.id)
+            await logMutations.spray.remove.mutateAsync(activity.id)
             break
           case 'harvest':
-            await SupabaseService.deleteHarvestRecord(activity.id)
+            await logMutations.harvest.remove.mutateAsync(activity.id)
             break
           case 'fertigation':
-            await SupabaseService.deleteFertigationRecord(activity.id)
+            await logMutations.fertigation.remove.mutateAsync(activity.id)
             break
           case 'expense':
-            await SupabaseService.deleteExpenseRecord(activity.id)
+            await logMutations.expense.remove.mutateAsync(activity.id)
             break
           case 'soil_test':
-            await SupabaseService.deleteSoilTestRecord(activity.id)
+            await logMutations.soilTest.remove.mutateAsync(activity.id)
             break
           case 'petiole_test':
-            await SupabaseService.deletePetioleTestRecord(activity.id)
+            await logMutations.petioleTest.remove.mutateAsync(activity.id)
             break
           case 'daily_note':
-            await SupabaseService.deleteDailyNote(activity.id)
+            await logMutations.dailyNote.remove.mutateAsync(activity.id)
             break
         }
       }
-
-      await loadDashboardData()
     } catch (error) {
       logger.error('Error deleting date group:', error)
     } finally {
@@ -1325,32 +1319,31 @@ export default function FarmDetailsPage() {
 
       switch (deletingRecord.type) {
         case 'irrigation':
-          await SupabaseService.deleteIrrigationRecord(deletingRecord.id)
+          await logMutations.irrigation.remove.mutateAsync(deletingRecord.id)
           break
         case 'spray':
-          await SupabaseService.deleteSprayRecord(deletingRecord.id)
+          await logMutations.spray.remove.mutateAsync(deletingRecord.id)
           break
         case 'harvest':
-          await SupabaseService.deleteHarvestRecord(deletingRecord.id)
+          await logMutations.harvest.remove.mutateAsync(deletingRecord.id)
           break
         case 'fertigation':
-          await SupabaseService.deleteFertigationRecord(deletingRecord.id)
+          await logMutations.fertigation.remove.mutateAsync(deletingRecord.id)
           break
         case 'expense':
-          await SupabaseService.deleteExpenseRecord(deletingRecord.id)
+          await logMutations.expense.remove.mutateAsync(deletingRecord.id)
           break
         case 'soil_test':
-          await SupabaseService.deleteSoilTestRecord(deletingRecord.id)
+          await logMutations.soilTest.remove.mutateAsync(deletingRecord.id)
           break
         case 'petiole_test':
-          await SupabaseService.deletePetioleTestRecord(deletingRecord.id)
+          await logMutations.petioleTest.remove.mutateAsync(deletingRecord.id)
           break
         case 'daily_note':
-          await SupabaseService.deleteDailyNote(deletingRecord.id)
+          await logMutations.dailyNote.remove.mutateAsync(deletingRecord.id)
           break
       }
 
-      await loadDashboardData()
       setShowDeleteDialog(false)
       setDeletingRecord(null)
     } catch (error) {
@@ -1375,7 +1368,7 @@ export default function FarmDetailsPage() {
     const farmIdToDelete = pendingFarmDelete
     setIsDeleting(true)
     try {
-      await SupabaseService.deleteFarm(farmIdToDelete)
+      await deleteFarmMutation.mutateAsync(farmIdToDelete)
       router.push('/farms') // Navigate back to farms list
     } catch (error) {
       logger.error('Error deleting farm:', error)
@@ -1403,15 +1396,24 @@ export default function FarmDetailsPage() {
     try {
       setFarmSubmitLoading(true)
 
+      // FarmModal submits location fields snake_cased; the Supabase mappers read
+      // camelCase, so normalize here or the saved location is silently dropped.
+      const { location_name, location_source, location_updated_at, ...rest } = farmData
+      const farmInput = {
+        ...rest,
+        locationName: location_name,
+        locationSource: location_source,
+        locationUpdatedAt: location_updated_at
+      }
+
       if (editingFarm) {
-        // Edit mode: update existing farm
-        await SupabaseService.updateFarm(parseInt(farmId), farmData)
-        await loadDashboardData()
+        // Edit mode: update existing farm (mutation invalidates list/detail/summary)
+        await updateFarmMutation.mutateAsync({ id: parseInt(farmId), updates: farmInput })
         setShowFarmModal(false)
         setEditingFarm(null)
       } else {
         // Create mode: add new farm and navigate to it
-        const newFarm = await SupabaseService.createFarm(farmData)
+        const newFarm = await createFarmMutation.mutateAsync(farmInput)
         setShowFarmModal(false)
         setEditingFarm(null)
 
@@ -1689,7 +1691,7 @@ export default function FarmDetailsPage() {
             tasks={dashboardData?.pendingTasks || []}
             farmName={farm?.name ? capitalize(farm.name) : undefined}
             loading={loading}
-            onTasksUpdated={loadDashboardData}
+            onTasksUpdated={invalidateFarmSummary}
             className="border-none bg-transparent p-0 shadow-none"
           />
         </TabsContent>
@@ -2096,7 +2098,13 @@ export default function FarmDetailsPage() {
             isOpen={showWaterCalculationModal}
             onClose={() => setShowWaterCalculationModal(false)}
             farm={dashboardData.farm}
-            onCalculationComplete={loadDashboardData}
+            onCalculationComplete={() => {
+              // Recalculating water mutates the farm record, so refresh the
+              // dashboard summary plus the list/detail caches that show it.
+              queryClient.invalidateQueries({ queryKey: farmKeys.summary(farmIdNum) })
+              queryClient.invalidateQueries({ queryKey: farmKeys.detail(farmIdNum) })
+              queryClient.invalidateQueries({ queryKey: farmKeys.list() })
+            }}
           />
         )}
 
