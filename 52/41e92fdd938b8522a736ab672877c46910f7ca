@@ -1,0 +1,56 @@
+src/lib/supabase-service.ts
+  s_8ab961e7096f54::t_26266079ae7d98 711,716,798,803
+src/components/lab-tests/LabTestsTimeline.tsx
+  s_9d382d003ef6a8::t_0d30a0880c4a51 101
+src/components/lab-tests/LabTestComparisonTable.tsx
+  s_9d382d003ef6a8::t_0d30a0880c4a51 135
+src/actions/search-logs.ts
+  s_8ab961e7096f54::t_26266079ae7d98 215,219-224,227,232
+  s_8ab961e7096f54::t_7ba2d2b359917e 195,204
+  s_8ab961e7096f54::t_daa9d099ec0518 196
+  s_9d382d003ef6a8::t_0d30a0880c4a51 243
+src/lib/ai-service.ts
+  s_8ab961e7096f54::t_7ba2d2b359917e 677
+  s_8ab961e7096f54::t_26266079ae7d98 673-676
+src/lib/lab-test-integration.ts
+  s_8ab961e7096f54::t_26266079ae7d98 466,474-476
+  s_8ab961e7096f54::t_7ba2d2b359917e 451-465,467,470,477
+src/lib/crop-data.ts
+  s_8ab961e7096f54::t_7ba2d2b359917e 227,235
+  s_8ab961e7096f54::t_26266079ae7d98 231-234,244-245,251,255
+src/app/farms/[id]/soil-profiling/page.tsx
+  s_9d382d003ef6a8::t_0d30a0880c4a51 416
+src/app/analytics/page.tsx
+  s_9d382d003ef6a8::t_56601979348dfe 68,98-99,267
+  s_9d382d003ef6a8::t_be66cc73264986 115
+  s_9d382d003ef6a8::t_f81514232ed085 4,36-37,55-67,69-97,100-112,114,122,125,128,254,259,265,376,385,394
+  s_9d382d003ef6a8::t_d7f5579139399b 3
+  s_9d382d003ef6a8::t_09f32c6c6ee2b2 320-327
+  s_9d382d003ef6a8::t_7b80a46df9ea86 328-346
+src/components/lab-tests/LabTestTrendCharts.tsx
+  s_9d382d003ef6a8::t_d8a104eeaca81f 70-71,98-99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.13",
+  "base_commit_sha": "5241e92fdd938b8522a736ab672877c46910f7ca",
+  "prompts": {},
+  "sessions": {
+    "s_8ab961e7096f54": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019efeb4-fa4e-7840-9e5e-1e9102f36383",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    },
+    "s_9d382d003ef6a8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019efeba-747f-7420-b386-2346a40330e4",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
