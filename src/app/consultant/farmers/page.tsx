@@ -31,6 +31,253 @@ import type { FarmerWithFarms } from '@/lib/consultant-query-service'
 // collide with a real farm region (e.g. a region literally named "all").
 const ALL_REGIONS = '__all__'
 
+function DirectorySkeleton() {
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Skeleton className="h-9 w-36" />
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Skeleton className="h-9 flex-1" />
+        <Skeleton className="h-9 sm:w-56" />
+      </div>
+
+      {/* Worklist table */}
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="border-b border-border bg-secondary/50 px-4 py-2.5">
+          <Skeleton className="h-3 w-40" />
+        </div>
+        <div className="divide-y divide-border">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 px-4 py-3.5">
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-8 w-16" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface DirectoryFiltersProps {
+  searchQuery: string
+  onSearchChange: (value: string) => void
+  regions: string[]
+  effectiveRegion: string
+  onRegionChange: (value: string) => void
+  showUnassignedFilter: boolean
+  effectiveUnassignedOnly: boolean
+  onToggleUnassigned: () => void
+  unassignedCount: number
+}
+
+function DirectoryFilters({
+  searchQuery,
+  onSearchChange,
+  regions,
+  effectiveRegion,
+  onRegionChange,
+  showUnassignedFilter,
+  effectiveUnassignedOnly,
+  onToggleUnassigned,
+  unassignedCount
+}: DirectoryFiltersProps) {
+  return (
+    <div className="flex flex-col sm:flex-row gap-3">
+      <div className="relative flex-1">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by farmer or farm name..."
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+      {regions.length > 0 && (
+        <Select value={effectiveRegion} onValueChange={onRegionChange}>
+          <SelectTrigger className="sm:w-56">
+            <div className="flex items-center gap-2 min-w-0">
+              <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <SelectValue placeholder="All regions" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_REGIONS}>All regions</SelectItem>
+            {regions.map((region) => (
+              <SelectItem key={region} value={region}>
+                {region}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+      {showUnassignedFilter && (
+        <Badge
+          asChild
+          variant={effectiveUnassignedOnly ? 'default' : 'outline'}
+          className="h-9 px-3"
+        >
+          <button
+            type="button"
+            onClick={onToggleUnassigned}
+            aria-pressed={effectiveUnassignedOnly}
+            className="cursor-pointer"
+          >
+            <UserX />
+            Unassigned ({unassignedCount})
+          </button>
+        </Badge>
+      )}
+    </div>
+  )
+}
+
+interface FarmerRowProps {
+  farmer: FarmerWithFarms
+  onPaymentChange: (clientRecordId: string, isPaid: boolean) => void
+}
+
+function FarmerRow({ farmer, onPaymentChange }: FarmerRowProps) {
+  // Distinct regions across this farmer's farms, for the Region column.
+  const farmerRegions = Array.from(
+    new Set(farmer.farms.map((f) => f.region?.trim()).filter((r): r is string => Boolean(r)))
+  )
+  const regionLabel =
+    farmerRegions.length === 0
+      ? null
+      : farmerRegions.length === 1
+        ? farmerRegions[0]
+        : `${farmerRegions[0]} +${farmerRegions.length - 1}`
+  const isUnassigned = !farmer.assigned_to
+
+  return (
+    <div className="group relative transition-colors hover:bg-accent/5">
+      {/* The whole row navigates to the farmer detail page. An overlay
+          link (rather than wrapping the row) lets the Paid toggle stay
+          clickable without nesting a <button> inside an <a>. */}
+      <Link
+        href={`/consultant/farmers/${farmer.id}`}
+        aria-label={`View ${farmer.full_name || 'farmer'} details`}
+        className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+      />
+
+      {/* Desktop: aligned columns */}
+      <div className="hidden grid-cols-[1.6fr_1.4fr_1fr_4rem_7rem_1rem] items-center gap-4 px-4 py-3.5 sm:grid">
+        <div className="flex items-center gap-2 min-w-0">
+          <User className="h-4 w-4 shrink-0 text-accent" />
+          <span className="truncate font-serif text-sm font-semibold leading-tight group-hover:text-accent transition-colors">
+            {farmer.full_name || 'Unknown Farmer'}
+          </span>
+          {isUnassigned && (
+            <span className="relative z-10 inline-flex items-center gap-1 rounded-full border border-[var(--nutrient-deficient-border,#f2c27a)] bg-[var(--nutrient-deficient-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--nutrient-deficient)]">
+              <UserX className="h-3 w-3" />
+              Unassigned
+            </span>
+          )}
+        </div>
+        <div className="min-w-0 space-y-0.5 text-sm text-muted-foreground">
+          {farmer.phone && (
+            <span className="flex items-center gap-1.5 min-w-0">
+              <Phone className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate font-mono tabular-nums">{farmer.phone}</span>
+            </span>
+          )}
+          {farmer.email && (
+            <span className="flex items-center gap-1.5 min-w-0">
+              <Mail className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">{farmer.email}</span>
+            </span>
+          )}
+          {!farmer.phone && !farmer.email && (
+            <span className="text-muted-foreground italic">No contact</span>
+          )}
+        </div>
+        <div className="truncate text-sm text-foreground">
+          {regionLabel || <span className="text-muted-foreground italic">Not set</span>}
+        </div>
+        <div className="flex items-center justify-end gap-1.5 text-sm tabular-nums text-foreground">
+          <Sprout className="h-3.5 w-3.5 text-accent" />
+          {farmer.farms.length}
+        </div>
+        <div className="flex items-center justify-end">
+          {/* Raised above the overlay so toggling payment never navigates. */}
+          <div className="relative z-10">
+            <PaidToggleButton
+              clientRecordId={farmer.clientRecordId}
+              isPaid={farmer.isPaid}
+              onChange={(isPaid) => onPaymentChange(farmer.clientRecordId, isPaid)}
+            />
+          </div>
+        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+      </div>
+
+      {/* Mobile: stacked block */}
+      <div className="px-4 py-3.5 sm:hidden">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <User className="h-4 w-4 shrink-0 text-accent" />
+            <span className="truncate font-serif text-base font-semibold leading-tight group-hover:text-accent transition-colors">
+              {farmer.full_name || 'Unknown Farmer'}
+            </span>
+          </div>
+          <div className="relative z-10 flex-shrink-0">
+            <PaidToggleButton
+              clientRecordId={farmer.clientRecordId}
+              isPaid={farmer.isPaid}
+              onChange={(isPaid) => onPaymentChange(farmer.clientRecordId, isPaid)}
+            />
+          </div>
+        </div>
+        {isUnassigned && (
+          <span className="relative z-10 mt-1.5 inline-flex items-center gap-1 rounded-full border border-[var(--nutrient-deficient-border,#f2c27a)] bg-[var(--nutrient-deficient-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--nutrient-deficient)]">
+            <UserX className="h-3 w-3" />
+            Unassigned
+          </span>
+        )}
+        <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <dt className="text-muted-foreground shrink-0">Region</dt>
+            <dd className="font-medium truncate">
+              {regionLabel || (
+                <span className="text-muted-foreground italic font-normal">Not set</span>
+              )}
+            </dd>
+          </div>
+          <div className="flex items-center gap-2">
+            <dt className="text-muted-foreground shrink-0">Farms</dt>
+            <dd className="font-medium tabular-nums">{farmer.farms.length}</dd>
+          </div>
+          {farmer.phone && (
+            <div className="flex items-center gap-2 min-w-0">
+              <dt className="text-muted-foreground shrink-0">Phone</dt>
+              <dd className="font-mono tabular-nums truncate">{farmer.phone}</dd>
+            </div>
+          )}
+          {farmer.email && (
+            <div className="flex items-center gap-2 min-w-0">
+              <dt className="text-muted-foreground shrink-0">Email</dt>
+              <dd className="font-medium truncate">{farmer.email}</dd>
+            </div>
+          )}
+        </dl>
+      </div>
+    </div>
+  )
+}
+
 export default function FarmerDirectoryPage() {
   const queryClient = useQueryClient()
   const trackedViewKeyRef = useRef<string | null>(null)
@@ -142,43 +389,7 @@ export default function FarmerDirectoryPage() {
   })
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-64" />
-          </div>
-          <Skeleton className="h-9 w-36" />
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Skeleton className="h-9 flex-1" />
-          <Skeleton className="h-9 sm:w-56" />
-        </div>
-
-        {/* Worklist table */}
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="border-b border-border bg-secondary/50 px-4 py-2.5">
-            <Skeleton className="h-3 w-40" />
-          </div>
-          <div className="divide-y divide-border">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 px-4 py-3.5">
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-1/3" />
-                  <Skeleton className="h-3 w-1/2" />
-                </div>
-                <Skeleton className="h-5 w-20" />
-                <Skeleton className="h-8 w-16" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
+    return <DirectorySkeleton />
   }
 
   return (
@@ -197,53 +408,17 @@ export default function FarmerDirectoryPage() {
         {access && <InviteFarmerDialog organizationId={access.organizationId} />}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by farmer or farm name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        {regions.length > 0 && (
-          <Select value={effectiveRegion} onValueChange={setRegionFilter}>
-            <SelectTrigger className="sm:w-56">
-              <div className="flex items-center gap-2 min-w-0">
-                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <SelectValue placeholder="All regions" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_REGIONS}>All regions</SelectItem>
-              {regions.map((region) => (
-                <SelectItem key={region} value={region}>
-                  {region}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        {showUnassignedFilter && (
-          <Badge
-            asChild
-            variant={effectiveUnassignedOnly ? 'default' : 'outline'}
-            className="h-9 px-3"
-          >
-            <button
-              type="button"
-              onClick={() => setUnassignedOnly((prev) => !prev)}
-              aria-pressed={effectiveUnassignedOnly}
-              className="cursor-pointer"
-            >
-              <UserX />
-              Unassigned ({unassignedCount})
-            </button>
-          </Badge>
-        )}
-      </div>
+      <DirectoryFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        regions={regions}
+        effectiveRegion={effectiveRegion}
+        onRegionChange={setRegionFilter}
+        showUnassignedFilter={showUnassignedFilter}
+        effectiveUnassignedOnly={effectiveUnassignedOnly}
+        onToggleUnassigned={() => setUnassignedOnly((prev) => !prev)}
+        unassignedCount={unassignedCount}
+      />
 
       {/* Results — a dense worklist table, not a card grid (DESIGN.md: tables over
           cards for any list of work). Mirrors FarmerFarmsTable's structure. */}
@@ -280,142 +455,13 @@ export default function FarmerDirectoryPage() {
           </div>
 
           <div className="divide-y divide-border">
-            {filteredFarmers.map((farmer) => {
-              // Distinct regions across this farmer's farms, for the Region column.
-              const farmerRegions = Array.from(
-                new Set(
-                  farmer.farms.map((f) => f.region?.trim()).filter((r): r is string => Boolean(r))
-                )
-              )
-              const regionLabel =
-                farmerRegions.length === 0
-                  ? null
-                  : farmerRegions.length === 1
-                    ? farmerRegions[0]
-                    : `${farmerRegions[0]} +${farmerRegions.length - 1}`
-              const isUnassigned = !farmer.assigned_to
-
-              return (
-                <div key={farmer.id} className="group relative transition-colors hover:bg-accent/5">
-                  {/* The whole row navigates to the farmer detail page. An overlay
-                      link (rather than wrapping the row) lets the Paid toggle stay
-                      clickable without nesting a <button> inside an <a>. */}
-                  <Link
-                    href={`/consultant/farmers/${farmer.id}`}
-                    aria-label={`View ${farmer.full_name || 'farmer'} details`}
-                    className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-                  />
-
-                  {/* Desktop: aligned columns */}
-                  <div className="hidden grid-cols-[1.6fr_1.4fr_1fr_4rem_7rem_1rem] items-center gap-4 px-4 py-3.5 sm:grid">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <User className="h-4 w-4 shrink-0 text-accent" />
-                      <span className="truncate font-serif text-sm font-semibold leading-tight group-hover:text-accent transition-colors">
-                        {farmer.full_name || 'Unknown Farmer'}
-                      </span>
-                      {isUnassigned && (
-                        <span className="relative z-10 inline-flex items-center gap-1 rounded-full border border-[var(--nutrient-deficient-border,#f2c27a)] bg-[var(--nutrient-deficient-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--nutrient-deficient)]">
-                          <UserX className="h-3 w-3" />
-                          Unassigned
-                        </span>
-                      )}
-                    </div>
-                    <div className="min-w-0 space-y-0.5 text-sm text-muted-foreground">
-                      {farmer.phone && (
-                        <span className="flex items-center gap-1.5 min-w-0">
-                          <Phone className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate font-mono tabular-nums">{farmer.phone}</span>
-                        </span>
-                      )}
-                      {farmer.email && (
-                        <span className="flex items-center gap-1.5 min-w-0">
-                          <Mail className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{farmer.email}</span>
-                        </span>
-                      )}
-                      {!farmer.phone && !farmer.email && (
-                        <span className="text-muted-foreground italic">No contact</span>
-                      )}
-                    </div>
-                    <div className="truncate text-sm text-foreground">
-                      {regionLabel || <span className="text-muted-foreground italic">Not set</span>}
-                    </div>
-                    <div className="flex items-center justify-end gap-1.5 text-sm tabular-nums text-foreground">
-                      <Sprout className="h-3.5 w-3.5 text-accent" />
-                      {farmer.farms.length}
-                    </div>
-                    <div className="flex items-center justify-end">
-                      {/* Raised above the overlay so toggling payment never navigates. */}
-                      <div className="relative z-10">
-                        <PaidToggleButton
-                          clientRecordId={farmer.clientRecordId}
-                          isPaid={farmer.isPaid}
-                          onChange={(isPaid) =>
-                            updateCachedPaymentStatus(farmer.clientRecordId, isPaid)
-                          }
-                        />
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-
-                  {/* Mobile: stacked block */}
-                  <div className="px-4 py-3.5 sm:hidden">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <User className="h-4 w-4 shrink-0 text-accent" />
-                        <span className="truncate font-serif text-base font-semibold leading-tight group-hover:text-accent transition-colors">
-                          {farmer.full_name || 'Unknown Farmer'}
-                        </span>
-                      </div>
-                      <div className="relative z-10 flex-shrink-0">
-                        <PaidToggleButton
-                          clientRecordId={farmer.clientRecordId}
-                          isPaid={farmer.isPaid}
-                          onChange={(isPaid) =>
-                            updateCachedPaymentStatus(farmer.clientRecordId, isPaid)
-                          }
-                        />
-                      </div>
-                    </div>
-                    {isUnassigned && (
-                      <span className="relative z-10 mt-1.5 inline-flex items-center gap-1 rounded-full border border-[var(--nutrient-deficient-border,#f2c27a)] bg-[var(--nutrient-deficient-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--nutrient-deficient)]">
-                        <UserX className="h-3 w-3" />
-                        Unassigned
-                      </span>
-                    )}
-                    <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <dt className="text-muted-foreground shrink-0">Region</dt>
-                        <dd className="font-medium truncate">
-                          {regionLabel || (
-                            <span className="text-muted-foreground italic font-normal">
-                              Not set
-                            </span>
-                          )}
-                        </dd>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <dt className="text-muted-foreground shrink-0">Farms</dt>
-                        <dd className="font-medium tabular-nums">{farmer.farms.length}</dd>
-                      </div>
-                      {farmer.phone && (
-                        <div className="flex items-center gap-2 min-w-0">
-                          <dt className="text-muted-foreground shrink-0">Phone</dt>
-                          <dd className="font-mono tabular-nums truncate">{farmer.phone}</dd>
-                        </div>
-                      )}
-                      {farmer.email && (
-                        <div className="flex items-center gap-2 min-w-0">
-                          <dt className="text-muted-foreground shrink-0">Email</dt>
-                          <dd className="font-medium truncate">{farmer.email}</dd>
-                        </div>
-                      )}
-                    </dl>
-                  </div>
-                </div>
-              )
-            })}
+            {filteredFarmers.map((farmer) => (
+              <FarmerRow
+                key={farmer.id}
+                farmer={farmer}
+                onPaymentChange={updateCachedPaymentStatus}
+              />
+            ))}
           </div>
         </div>
       )}

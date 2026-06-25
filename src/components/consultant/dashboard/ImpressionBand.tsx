@@ -77,13 +77,16 @@ export function ImpressionBand({
               style={{ backgroundColor: `var(${TONE_VAR[finding.tone]})` }}
             />
             <p className="min-w-0 flex-1">
-              {finding.segments.map((segment, i) =>
+              {finding.segments.map((segment) =>
                 segment.mono ? (
-                  <span key={i} className="font-mono font-semibold tabular-nums">
+                  <span
+                    key={`${finding.id}-${segment.text}`}
+                    className="font-mono font-semibold tabular-nums"
+                  >
                     {segment.text}
                   </span>
                 ) : (
-                  <span key={i}>{segment.text}</span>
+                  <span key={`${finding.id}-${segment.text}`}>{segment.text}</span>
                 )
               )}
             </p>

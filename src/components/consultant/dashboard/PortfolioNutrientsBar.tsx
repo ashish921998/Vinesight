@@ -70,11 +70,7 @@ export function PortfolioNutrientsBar({
                 >
                   {row.label}
                 </span>
-                <span
-                  className="flex h-2 flex-1 overflow-hidden rounded-full bg-muted"
-                  role="img"
-                  aria-label={`${row.label}: ${row.deficient} deficient, ${row.optimal} optimal, ${row.excess} excess`}
-                >
+                <span className="flex h-2 flex-1 overflow-hidden rounded-full bg-muted" aria-hidden>
                   {(['deficient', 'optimal', 'excess'] as const).map((bucket) => {
                     const value = row[bucket]
                     if (value === 0) return null
@@ -89,6 +85,9 @@ export function PortfolioNutrientsBar({
                       />
                     )
                   })}
+                </span>
+                <span className="sr-only">
+                  {`${row.label}: ${row.deficient} deficient, ${row.optimal} optimal, ${row.excess} excess`}
                 </span>
                 <span className="w-6 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground">
                   {row.total}

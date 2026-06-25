@@ -31,10 +31,10 @@ const HIGH_PRESSURE_BANDS = [
   { start: 19, end: 21 }
 ]
 
-const MONTH_TICKS = PRESSURE_TIMELINE.filter((p) => p.monthStart).map((p) => ({
-  month: p.label.split(' ')[1],
-  week: p.week
-}))
+const MONTH_TICKS = PRESSURE_TIMELINE.reduce<{ month: string; week: number }[]>((ticks, p) => {
+  if (p.monthStart) ticks.push({ month: p.label.split(' ')[1], week: p.week })
+  return ticks
+}, [])
 
 function PressureBands() {
   return (
