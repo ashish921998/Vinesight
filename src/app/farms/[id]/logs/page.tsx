@@ -1,15 +1,8 @@
 'use client'
 
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useMemo,
-  useTransition,
-  useId
-} from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useId } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -44,7 +37,9 @@ import {
 import { UnifiedDataLogsModal } from '@/components/farm-details/UnifiedDataLogsModal'
 import { EditRecordModal } from '@/components/journal/EditRecordModal'
 
-import { SupabaseService } from '@/lib/supabase-service'
+import { useFarms, useLogs } from '@/hooks/farms/useFarmQueries'
+import { useFarmLogMutations } from '@/hooks/farms/useFarmLogMutations'
+import { farmKeys, type LogFilters } from '@/lib/farm-query-keys'
 import { getActivityDisplayData } from '@/lib/activity-display-utils'
 import { getLogTypeIcon, getLogTypeBgColor, getLogTypeColor } from '@/lib/log-type-config'
 import { cn, capitalize, calculateDaysAfterPruning } from '@/lib/utils'
@@ -68,7 +63,6 @@ import {
   Scissors,
   Droplets
 } from 'lucide-react'
-import { searchLogs } from '@/actions/search-logs'
 import { useUserPreferences } from '@/hooks/useUserPreferences'
 
 /* ---------- Helpers (moved out of component) ---------- */
@@ -243,12 +237,22 @@ export default function FarmLogsPage() {
   const farmId = params.id as string
 
   const [selectedFarm, setSelectedFarm] = useState<string>(farmId)
-  const [farms, setFarms] = useState<Farm[]>([])
-  const [logs, setLogs] = useState<ActivityLog[]>([])
-  const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalLogs, setTotalLogs] = useState(0)
-  const [currentFarm, setCurrentFarm] = useState<Farm | null>(null)
+
+  const queryClient = useQueryClient()
+  const selectedFarmIdNum = Number.parseInt(selectedFarm, 10)
+  const selectedFarmIdValid = Number.isFinite(selectedFarmIdNum)
+
+  // Farm list + the active farm come from the shared cache (no standalone fetch).
+  const farmsQuery = useFarms()
+  const farms = useMemo<Farm[]>(() => farmsQuery.data ?? [], [farmsQuery.data])
+  const currentFarm = useMemo<Farm | null>(
+    () => farms.find((f) => f.id?.toString() === selectedFarm) ?? null,
+    [farms, selectedFarm]
+  )
+
+  // Reused journal mutation hooks: every add/delete invalidates logs + summary.
+  const logMutations = useFarmLogMutations(selectedFarmIdNum)
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState('')
@@ -269,7 +273,6 @@ export default function FarmLogsPage() {
   const [deletingRecord, setDeletingRecord] = useState<ActivityLog | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [searchLoading, setSearchLoading] = useState(false)
 
   const [editingRecord, setEditingRecord] = useState<ActivityLog | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -278,117 +281,61 @@ export default function FarmLogsPage() {
 
   const activityTypeListboxId = useId()
 
+  // debounce filters — these feed the query key, so the list re-fetches when a
+  // debounced value changes rather than via an imperative search call.
+  const debouncedQuery = useDebounced(searchQuery, 300)
+  const debouncedDateFrom = useDebounced(dateFrom, 300)
+  const debouncedDateTo = useDebounced(dateTo, 300)
+  const debouncedActivityTypes = useDebounced(selectedActivityTypes, 300)
+
+  const logFilters = useMemo<LogFilters>(
+    () => ({
+      searchQuery: debouncedQuery,
+      selectedActivityTypes: debouncedActivityTypes,
+      dateFrom: debouncedDateFrom,
+      dateTo: debouncedDateTo,
+      page: currentPage,
+      itemsPerPage
+    }),
+    [
+      debouncedQuery,
+      debouncedActivityTypes,
+      debouncedDateFrom,
+      debouncedDateTo,
+      currentPage,
+      itemsPerPage
+    ]
+  )
+
+  const logsQuery = useLogs(selectedFarmIdValid ? selectedFarmIdNum : null, logFilters)
+  const logs = logsQuery.data?.logs ?? []
+  const totalLogs = logsQuery.data?.totalCount ?? 0
+
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(totalLogs / itemsPerPage)),
     [totalLogs, itemsPerPage]
   )
 
-  // debounce filters
-  const debouncedQuery = useDebounced(searchQuery, 300)
-  const debouncedDateFrom = useDebounced(dateFrom, 300)
-  const debouncedDateTo = useDebounced(dateTo, 300)
-  const debouncedActivityTypes = useDebounced(selectedActivityTypes, 300)
-  const debouncedItemsPerPage = useDebounced(itemsPerPage, 0) // instant, but kept for parity
-
-  // avoid race conditions: requestId increments for each performSearch call
-  const requestIdRef = useRef(0)
-  const isMountedRef = useRef(true)
+  // Surface fetch failures (the imperative version toasted on catch).
   useEffect(() => {
-    isMountedRef.current = true
-    return () => {
-      isMountedRef.current = false
+    if (logsQuery.error) {
+      console.error('Error searching logs:', logsQuery.error)
+      toast.error('Failed to search logs')
     }
-  }, [])
-
-  const [, startTransition] = useTransition()
-
-  const loadFarms = useCallback(async () => {
-    try {
-      const farmsList = await SupabaseService.getAllFarms()
-      setFarms(farmsList)
-      const current = farmsList.find((f) => f.id?.toString() === selectedFarm)
-      setCurrentFarm(current || null)
-    } catch (error) {
-      console.error('Error loading farms:', error)
-    }
-  }, [selectedFarm])
-
-  const performSearch = useCallback(
-    async (page: number = 1) => {
-      if (!selectedFarm) return
-
-      const myRequestId = ++requestIdRef.current
-      try {
-        setSearchLoading(true)
-        const farmIdNum = parseInt(selectedFarm, 10)
-
-        const result = await searchLogs({
-          farmId: farmIdNum,
-          searchQuery: debouncedQuery,
-          selectedActivityTypes: debouncedActivityTypes || [],
-          dateFrom: debouncedDateFrom,
-          dateTo: debouncedDateTo,
-          currentPage: page,
-          itemsPerPage: debouncedItemsPerPage || itemsPerPage
-        })
-
-        // if another request started after this one, ignore this response
-        if (myRequestId !== requestIdRef.current) return
-
-        // update states in a transition so UI remains responsive
-        startTransition(() => {
-          setLogs(result.logs)
-          setTotalLogs(result.totalCount)
-          setCurrentPage(page)
-        })
-      } catch (error) {
-        console.error('Error searching logs:', error)
-        if (isMountedRef.current) toast.error('Failed to search logs')
-      } finally {
-        if (myRequestId === requestIdRef.current) setSearchLoading(false)
-      }
-    },
-    // itemsPerPage is only a fallback when debouncedItemsPerPage is falsy, so only debouncedItemsPerPage is needed
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      selectedFarm,
-      debouncedQuery,
-      debouncedActivityTypes,
-      debouncedDateFrom,
-      debouncedDateTo,
-      debouncedItemsPerPage
-    ]
-  )
-
-  // Load logs on farm change and filter updates
-  useEffect(() => {
-    if (!selectedFarm) return
-
-    const loadLogsOnChange = async () => {
-      try {
-        setLoading(true)
-        await performSearch(1)
-      } catch (error) {
-        console.error('Error loading logs:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadLogsOnChange()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    selectedFarm,
-    debouncedQuery,
-    debouncedActivityTypes,
-    debouncedDateFrom,
-    debouncedDateTo,
-    debouncedItemsPerPage
-  ])
+  }, [logsQuery.error])
 
   useEffect(() => {
-    loadFarms()
-  }, [loadFarms])
+    if (farmsQuery.error) console.error('Error loading farms:', farmsQuery.error)
+  }, [farmsQuery.error])
+
+  // Refresh the logs list + dashboard summary after writes that don't already
+  // flow through the journal mutation hooks (daily-note save, record edit).
+  const invalidateFarmLogs = useCallback(() => {
+    if (!selectedFarmIdValid) return
+    queryClient.invalidateQueries({ queryKey: farmKeys.logs(selectedFarmIdNum) })
+    queryClient.invalidateQueries({ queryKey: farmKeys.summary(selectedFarmIdNum) })
+    queryClient.invalidateQueries({ queryKey: farmKeys.records(selectedFarmIdNum) })
+  }, [queryClient, selectedFarmIdNum, selectedFarmIdValid])
 
   const clearFilters = useCallback(() => {
     setSearchQuery('')
@@ -432,20 +379,22 @@ export default function FarmLogsPage() {
     (page: number) => {
       if (page < 1) return
       if (page > totalPages) return
-      performSearch(page)
+      // currentPage is part of the query key, so this swaps to the page's cache entry.
+      setCurrentPage(page)
       window.scrollTo(0, 0)
     },
-    [performSearch, totalPages]
+    [totalPages]
   )
 
   const handleItemsPerPageChange = useCallback((newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage)
     setCurrentPage(1)
-    // performSearch will be triggered by the debounced watchers
+    // The query re-fetches off the changed key; no imperative search needed.
   }, [])
 
-  /* ---------- saveLogEntry, handleSubmitLogs, edit/delete handlers kept same as your file ---------- */
-  // (I kept these unchanged to avoid touching your domain logic)
+  /* ---------- saveLogEntry / handleSubmitLogs / edit / delete ---------- */
+  // Writes go through the reused journal mutation hooks so each one invalidates
+  // the logs list + dashboard summary; the per-type field mapping is unchanged.
   const saveLogEntry = async (logEntry: any, date: string, dayNotes: string) => {
     const { type, data } = logEntry
     let record
@@ -453,7 +402,7 @@ export default function FarmLogsPage() {
 
     switch (type) {
       case 'irrigation':
-        record = await SupabaseService.addIrrigationRecord({
+        record = await logMutations.irrigation.add.mutateAsync({
           farm_id: farmIdNum,
           date: date,
           duration: parseFloat(data.duration || '0'),
@@ -495,12 +444,12 @@ export default function FarmLogsPage() {
               : 'As per label'
         }
 
-        record = await SupabaseService.addSprayRecord(sprayData)
+        record = await logMutations.spray.add.mutateAsync(sprayData)
         break
       }
 
       case 'harvest':
-        record = await SupabaseService.addHarvestRecord({
+        record = await logMutations.harvest.add.mutateAsync({
           farm_id: farmIdNum,
           date: date,
           quantity: parseFloat(data.quantity || '0'),
@@ -513,7 +462,7 @@ export default function FarmLogsPage() {
         break
 
       case 'expense':
-        record = await SupabaseService.addExpenseRecord({
+        record = await logMutations.expense.add.mutateAsync({
           farm_id: farmIdNum,
           date: date,
           type: data.type || 'other',
@@ -524,7 +473,7 @@ export default function FarmLogsPage() {
         break
 
       case 'fertigation':
-        record = await SupabaseService.addFertigationRecord({
+        record = await logMutations.fertigation.add.mutateAsync({
           farm_id: farmIdNum,
           date: date,
           fertilizers: data.fertilizers,
@@ -534,7 +483,7 @@ export default function FarmLogsPage() {
         break
 
       case 'soil_test':
-        record = await SupabaseService.addSoilTestRecord({
+        record = await logMutations.soilTest.add.mutateAsync({
           farm_id: farmIdNum,
           date,
           parameters: {},
@@ -544,7 +493,7 @@ export default function FarmLogsPage() {
         break
 
       case 'petiole_test':
-        record = await SupabaseService.addPetioleTestRecord({
+        record = await logMutations.petioleTest.add.mutateAsync({
           farm_id: farmIdNum,
           date,
           sample_id: data.sample_id || '',
@@ -589,7 +538,11 @@ export default function FarmLogsPage() {
         date
       })
 
-      await performSearch(1)
+      // Record adds already invalidate via their mutation hooks; this also covers
+      // a daily-note-only save (no record mutation fired) and jumps to page 1 so
+      // the newly added entries are visible.
+      invalidateFarmLogs()
+      setCurrentPage(1)
       setShowUnifiedModal(false)
       setExistingLogsForEdit([])
       setSelectedDate('')
@@ -626,36 +579,38 @@ export default function FarmLogsPage() {
     try {
       setIsDeleting(true)
 
+      // Each remove mutation invalidates the logs list + summary on success.
       switch (deletingRecord.type) {
         case 'irrigation':
-          await SupabaseService.deleteIrrigationRecord(deletingRecord.id)
+          await logMutations.irrigation.remove.mutateAsync(deletingRecord.id)
           break
         case 'spray':
-          await SupabaseService.deleteSprayRecord(deletingRecord.id)
+          await logMutations.spray.remove.mutateAsync(deletingRecord.id)
           break
         case 'harvest':
-          await SupabaseService.deleteHarvestRecord(deletingRecord.id)
+          await logMutations.harvest.remove.mutateAsync(deletingRecord.id)
           break
         case 'fertigation':
-          await SupabaseService.deleteFertigationRecord(deletingRecord.id)
+          await logMutations.fertigation.remove.mutateAsync(deletingRecord.id)
           break
         case 'expense':
-          await SupabaseService.deleteExpenseRecord(deletingRecord.id)
+          await logMutations.expense.remove.mutateAsync(deletingRecord.id)
           break
         case 'soil_test':
-          await SupabaseService.deleteSoilTestRecord(deletingRecord.id)
+          await logMutations.soilTest.remove.mutateAsync(deletingRecord.id)
           break
         case 'petiole_test':
-          await SupabaseService.deletePetioleTestRecord(deletingRecord.id)
+          await logMutations.petioleTest.remove.mutateAsync(deletingRecord.id)
           break
         case 'daily_note':
-          await SupabaseService.deleteDailyNote(deletingRecord.id)
+          await logMutations.dailyNote.remove.mutateAsync(deletingRecord.id)
           break
         default:
           throw new Error(`Unsupported record type: ${deletingRecord.type}`)
       }
 
-      await performSearch(1)
+      // Deleting can empty the current page; reset to page 1 (prior behavior).
+      setCurrentPage(1)
       setShowDeleteDialog(false)
       setDeletingRecord(null)
     } catch (error) {
@@ -666,11 +621,12 @@ export default function FarmLogsPage() {
     } finally {
       setIsDeleting(false)
     }
-  }, [deletingRecord, performSearch])
+  }, [deletingRecord, logMutations])
 
   /* ---------- Render (kept structure same) ---------- */
 
-  if (loading && logs.length === 0) {
+  // isLoading is true only on the first fetch for a key (no cached data yet).
+  if (logsQuery.isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 lg:pb-0">
         <div className="px-4 py-3">
@@ -774,14 +730,20 @@ export default function FarmLogsPage() {
                 <Input
                   placeholder="Search logs by type, notes, chemicals, amounts..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    setCurrentPage(1)
+                  }}
                   className="pl-8 h-9"
                 />
                 {searchQuery && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setSearchQuery('')}
+                    onClick={() => {
+                      setSearchQuery('')
+                      setCurrentPage(1)
+                    }}
                     className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
                   >
                     <X className="h-3 w-3" />
@@ -947,8 +909,26 @@ export default function FarmLogsPage() {
               Green badge with scissors shows days after pruning when log was added
             </div>
           </CardHeader>
-          <CardContent className="px-2 sm:px-3 pb-3 relative" aria-busy={searchLoading}>
-            {searchLoading ? (
+          <CardContent className="px-2 sm:px-3 pb-3 relative" aria-busy={logsQuery.isFetching}>
+            {logs.length > 0 ? (
+              // keepPreviousData keeps the rows mounted across filter/page changes
+              // and post-write refetches; dim them while fetching instead of
+              // swapping to a skeleton, so the list never flashes.
+              <div className={cn('transition-opacity', logsQuery.isFetching && 'opacity-60')}>
+                {logsQuery.isFetching && (
+                  <span className="sr-only" aria-live="polite">
+                    Loading activity logs...
+                  </span>
+                )}
+                <LogsList
+                  logs={logs}
+                  onEdit={handleEditRecord}
+                  onDelete={handleDeleteRecord}
+                  currentFarm={currentFarm}
+                />
+              </div>
+            ) : logsQuery.isFetching ? (
+              // No cached rows yet (e.g. first load for a freshly selected farm).
               <div className="space-y-2" aria-live="polite">
                 <span className="sr-only">Loading activity logs...</span>
                 {[...Array(5)].map((_, i) => (
@@ -961,13 +941,6 @@ export default function FarmLogsPage() {
                   </div>
                 ))}
               </div>
-            ) : logs.length > 0 ? (
-              <LogsList
-                logs={logs}
-                onEdit={handleEditRecord}
-                onDelete={handleDeleteRecord}
-                currentFarm={currentFarm}
-              />
             ) : (
               <div className="text-center py-6 text-gray-500">
                 <CalendarIcon className="h-8 w-8 mx-auto mb-2 text-gray-300" />
@@ -1076,7 +1049,7 @@ export default function FarmLogsPage() {
           }}
           onSubmit={handleSubmitLogs}
           isSubmitting={isSubmitting}
-          farmId={Number.parseInt(selectedFarm, 10)}
+          farmId={selectedFarmIdNum}
           mode={'add'}
           existingLogs={existingLogsForEdit}
           selectedDate={selectedDate}
@@ -1095,7 +1068,8 @@ export default function FarmLogsPage() {
             onSave={() => {
               setShowEditModal(false)
               setEditingRecord(null)
-              performSearch(1) // Reload logs after editing
+              // EditRecordModal performs the update itself; refresh the cached list.
+              invalidateFarmLogs()
             }}
             record={editingRecord as any}
             recordType={
