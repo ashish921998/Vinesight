@@ -148,6 +148,19 @@ describe('signUpWithEmail', () => {
     expect(kit.toast.error).not.toHaveBeenCalled()
   })
 
+  it('treats an explicit empty-string confirmPassword as a mismatch', async () => {
+    const kit = buildDeps({ signUp: vi.fn() })
+
+    const result = await signUpWithEmail(
+      { email: 'a@b.com', password: 'pw', confirmPassword: '' },
+      kit.deps
+    )
+
+    expect(result).toEqual({ success: false, error: 'Passwords do not match' })
+    expect(kit.supabaseAuth.signUp).not.toHaveBeenCalled()
+    expect(kit.toast.error).not.toHaveBeenCalled()
+  })
+
   it('gates on an invalid name, toasts the error, and does not call signUp', async () => {
     const kit = buildDeps({ signUp: vi.fn() })
 
