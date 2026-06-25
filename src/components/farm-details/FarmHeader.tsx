@@ -13,6 +13,7 @@ import {
   Thermometer
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/Skeleton'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -142,10 +143,10 @@ export function FarmHeader({
                     <div className="flex min-w-0 w-full flex-col gap-3">
                       <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:items-start sm:gap-2">
                         {/* Loading skeleton for farm name */}
-                        <div className="h-[48px] w-[200px] animate-pulse rounded-xl bg-muted sm:h-10 sm:w-[300px]" />
+                        <Skeleton className="h-[48px] w-[200px] rounded-xl sm:h-10 sm:w-[300px]" />
                         <div className="flex shrink-0 items-center gap-1 sm:ml-auto sm:hidden">
-                          <div className="h-8 w-14 animate-pulse rounded-full bg-muted" />
-                          <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
+                          <Skeleton className="h-8 w-14 rounded-full" />
+                          <Skeleton className="h-8 w-8 rounded-full" />
                         </div>
                       </div>
                     </div>
@@ -164,11 +165,11 @@ export function FarmHeader({
                 className="flex h-full min-h-[120px] w-full flex-col justify-between rounded-2xl border border-border/60 bg-muted/20 p-3 sm:min-h-[136px] sm:p-3.5"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <div className="h-3 w-20 animate-pulse rounded bg-muted" />
-                  <div className="h-9 w-9 animate-pulse rounded-xl bg-muted sm:h-10 sm:w-10" />
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-9 w-9 rounded-xl sm:h-10 sm:w-10" />
                 </div>
-                <div className="mt-2 h-7 w-16 animate-pulse rounded bg-muted sm:h-8" />
-                <div className="h-3 w-full animate-pulse rounded bg-muted" />
+                <Skeleton className="mt-2 h-7 w-16 sm:h-8" />
+                <Skeleton className="h-3 w-full" />
               </div>
             ))}
           </div>
@@ -307,18 +308,19 @@ export function FarmHeader({
                             </div>
                             {onAddFarm && (
                               <div className="sticky bottom-0 border-t border-border bg-popover p-1">
-                                <button
+                                <Button
+                                  variant="ghost"
                                   onClick={(e) => {
                                     e.preventDefault()
                                     onAddFarm()
                                   }}
-                                  className="relative flex w-full cursor-pointer select-none items-center rounded-sm py-3 pl-2 pr-8 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                                  className="relative flex h-auto w-full cursor-pointer select-none items-center justify-start rounded-sm py-3 pl-2 pr-8 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                                 >
                                   <div className="flex items-center gap-3">
                                     <Plus className="h-5 w-5 flex-shrink-0 text-primary" />
                                     <div className="font-medium text-primary">Add New Farm</div>
                                   </div>
-                                </button>
+                                </Button>
                               </div>
                             )}
                           </SelectContent>

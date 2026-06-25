@@ -1,4 +1,5 @@
 import { getTypedSupabaseClient } from '@/lib/supabase'
+import type { Json } from '@/types/database'
 
 export interface FertilizerPlan {
   id: string
@@ -7,6 +8,8 @@ export interface FertilizerPlan {
   organization_id: string
   title: string
   notes: string | null
+  /** The Petiole Review this plan was produced for (null for ad-hoc plans). */
+  petiole_triage_id: string | null
   created_at: string
   updated_at: string
 }
@@ -29,20 +32,37 @@ export interface FertilizerPlanWithItems extends FertilizerPlan {
   items: FertilizerPlanItem[]
 }
 
+export interface PlanItemInput {
+  application_date?: string
+  fertilizer_name: string
+  quantity: number
+  unit?: string
+  application_method?: string
+  application_frequency?: number
+  notes?: string
+}
+
 export interface CreatePlanInput {
   farm_id: number
   organization_id: string
   title: string
   notes?: string
-  items: {
-    application_date?: string
-    fertilizer_name: string
-    quantity: number
-    unit?: string
-    application_method?: string
-    application_frequency?: number
-    notes?: string
-  }[]
+  items: PlanItemInput[]
+}
+
+export interface SendPlanInput {
+  /** The Petiole Review this plan completes; scope is derived from it server-side. */
+  reviewId: string
+  title: string
+  notes?: string
+  items: PlanItemInput[]
+}
+
+export interface UpdatePlanInput {
+  planId: string
+  title: string
+  notes?: string
+  items: PlanItemInput[]
 }
 
 export class FertilizerPlanService {
@@ -101,6 +121,49 @@ export class FertilizerPlanService {
     return { ...plan, items } as FertilizerPlanWithItems
   }
 
+  // Atomically send a plan for a Petiole Review: create plan + items AND mark
+  // the review 'reviewed', in a single DB transaction (RPC send_fertilizer_plan).
+  // Scope (org, farm, farmer) is derived from the review server-side; this is the
+  // only correct path for a review's first plan — a plan can never reach the
+  // farmer while its review stays pending in the queue.
+  static async sendPlan(input: SendPlanInput): Promise<FertilizerPlanWithItems> {
+    const supabase = await getTypedSupabaseClient()
+
+    const { data: planId, error } = await supabase.rpc('send_fertilizer_plan', {
+      p_review_id: input.reviewId,
+      p_title: input.title,
+      p_notes: input.notes ?? null,
+      p_items: input.items as unknown as Json
+    })
+
+    if (error) throw error
+    if (!planId) throw new Error('Plan was not created')
+
+    const plan = await this.getPlanById(planId as string)
+    if (!plan) throw new Error('Plan was created but could not be loaded')
+    return plan
+  }
+
+  // Atomically edit a plan: update title/notes and fully replace its items in a
+  // single transaction (RPC update_fertilizer_plan). Prevents a failed edit from
+  // leaving some items changed and others stale.
+  static async updatePlanAtomic(input: UpdatePlanInput): Promise<FertilizerPlanWithItems> {
+    const supabase = await getTypedSupabaseClient()
+
+    const { error } = await supabase.rpc('update_fertilizer_plan', {
+      p_plan_id: input.planId,
+      p_title: input.title,
+      p_notes: input.notes ?? null,
+      p_items: input.items as unknown as Json
+    })
+
+    if (error) throw error
+
+    const plan = await this.getPlanById(input.planId)
+    if (!plan) throw new Error('Plan was updated but could not be loaded')
+    return plan
+  }
+
   // Get all plans for a farm
   static async getPlansByFarm(farmId: number): Promise<FertilizerPlanWithItems[]> {
     const supabase = await getTypedSupabaseClient()
@@ -129,6 +192,47 @@ export class FertilizerPlanService {
       ...plan,
       items: (items || []).filter((item) => item.plan_id === plan.id) as FertilizerPlanItem[]
     })) as FertilizerPlanWithItems[]
+  }
+
+  /**
+   * The set of Petiole Review IDs that already have a fertilizer plan in the
+   * given organization. Used by the Overview to detect reviews left without a
+   * plan. NOTE: the `fertilizer_plans` SELECT RLS grants every org member the
+   * whole org's plans, so for a restricted agronomist this returns plan links
+   * org-wide — wider than their assigned-client triage scope. That's safe here
+   * because the result is only ever used as a *suppression set* against the
+   * already-scoped triage list (see `reviewedNoPlan`): an out-of-scope triage
+   * id is never in that list, so a wider plan set can only correctly hide a
+   * has-a-plan row — never fabricate one, and the opaque ids are never shown.
+   * Don't reuse this for a positive "plans issued" count without re-scoping.
+   * Only the `petiole_triage_id` column is selected.
+   */
+  static async getPlanTriageIdsByOrg(organizationId: string): Promise<string[]> {
+    const supabase = await getTypedSupabaseClient()
+
+    // Page through with .range() so the suppression set is never silently
+    // truncated at PostgREST's default 1000-row cap. A missing plan link would
+    // make an already-planned review re-surface as "reviewed but no plan".
+    const PAGE_SIZE = 1000
+    const ids: string[] = []
+    for (let from = 0; ; from += PAGE_SIZE) {
+      const { data, error } = await supabase
+        .from('fertilizer_plans')
+        .select('petiole_triage_id')
+        .eq('organization_id', organizationId)
+        .not('petiole_triage_id', 'is', null)
+        .range(from, from + PAGE_SIZE - 1)
+
+      if (error) throw error
+
+      const page = data ?? []
+      for (const row of page) {
+        if (row.petiole_triage_id != null) ids.push(row.petiole_triage_id)
+      }
+      if (page.length < PAGE_SIZE) break
+    }
+
+    return ids
   }
 
   // Get a single plan by ID

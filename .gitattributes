@@ -1,0 +1,6 @@
+# shadcn/ui primitives are vendored verbatim from the canonical upstream
+# source (added by hand-copying, since the CLI is broken on this Node version).
+# Mark them linguist-vendored so they're excluded from GitHub language stats,
+# collapsed in diffs, and skipped by React Doctor (which always honors
+# linguist-vendored) — they shouldn't be linted as if we authored them.
+src/components/ui/** linguist-vendored

@@ -5,6 +5,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Card } from '@/components/ui/card'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PasswordInput } from '@/components/ui/password-input'
@@ -172,10 +176,13 @@ export default function OrgUserSignupPage() {
           <Link href="/" className="inline-block mb-6">
             <div className="text-foreground text-2xl font-medium font-sans">Vinesight</div>
           </Link>
-          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm mb-4">
+          <Badge
+            variant="secondary"
+            className="h-auto gap-2 bg-blue-100 px-3 py-1 text-blue-700 text-sm mb-4 [&>svg]:size-4!"
+          >
             <Users className="h-4 w-4" />
             Team Member
-          </div>
+          </Badge>
           <h1 className="text-foreground text-2xl font-semibold font-sans mb-2">
             Join {organization.name}
           </h1>
@@ -184,7 +191,7 @@ export default function OrgUserSignupPage() {
           </p>
         </div>
 
-        <div className="bg-card rounded-lg shadow-[0px_0px_0px_1px_rgba(55,50,47,0.08)] p-8">
+        <Card className="p-8">
           {showError && error && (
             <Alert className="mb-4 border-red-200 bg-red-50">
               <AlertDescription className="text-red-800">{error}</AlertDescription>
@@ -193,52 +200,37 @@ export default function OrgUserSignupPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="firstName"
-                  className="block text-sm font-medium text-card-foreground mb-2"
-                >
-                  First name
-                </label>
-                <input
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First name</Label>
+                <Input
                   id="firstName"
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value.trimStart())}
                   required
                   maxLength={VALIDATION.MAX_NAME_LENGTH}
-                  className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
+                  className="w-full min-h-[44px]"
                   placeholder="First name"
                 />
               </div>
-              <div>
-                <label
-                  htmlFor="lastName"
-                  className="block text-sm font-medium text-card-foreground mb-2"
-                >
-                  Last name
-                </label>
-                <input
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last name</Label>
+                <Input
                   id="lastName"
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value.trimStart())}
                   required
                   maxLength={VALIDATION.MAX_NAME_LENGTH}
-                  className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
+                  className="w-full min-h-[44px]"
                   placeholder="Last name"
                 />
               </div>
             </div>
 
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-card-foreground mb-2"
-              >
-                Email address
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="email">Email address</Label>
+              <Input
                 id="email"
                 type="email"
                 value={email}
@@ -248,7 +240,7 @@ export default function OrgUserSignupPage() {
                 }}
                 required
                 aria-invalid={!!emailError}
-                className="w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
+                className="w-full min-h-[44px]"
                 placeholder="Enter your email"
               />
               {emailError && <p className="mt-1 text-xs text-red-600">{emailError}</p>}
@@ -314,7 +306,7 @@ export default function OrgUserSignupPage() {
               Sign in
             </Link>
           </p>
-        </div>
+        </Card>
       </div>
     </div>
   )

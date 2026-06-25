@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { Package, Plus, AlertCircle, Edit, Trash2, PackagePlus, MoreVertical } from 'lucide-react'
 import { warehouseService } from '@/lib/warehouse-service'
 import { WarehouseItem } from '@/types/types'
@@ -20,6 +21,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
 
 export default function WarehousePage() {
   return (
@@ -38,6 +49,7 @@ function WarehousePageContent() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingItem, setEditingItem] = useState<WarehouseItem | null>(null)
   const [addingStockItem, setAddingStockItem] = useState<WarehouseItem | null>(null)
+  const [deletingItem, setDeletingItem] = useState<WarehouseItem | null>(null)
 
   const loadItems = useCallback(async () => {
     try {
@@ -57,17 +69,18 @@ function WarehousePageContent() {
     loadItems()
   }, [loadItems])
 
-  const handleDelete = async (id: number, name: string) => {
-    const sanitizedName = name.replace(/[^a-zA-Z0-9\s]/g, '').trim()
-    if (!confirm(`Are you sure you want to delete "${sanitizedName}"?`)) return
+  const handleConfirmDelete = async () => {
+    if (!deletingItem) return
 
     try {
-      await warehouseService.deleteWarehouseItem(id)
+      await warehouseService.deleteWarehouseItem(deletingItem.id)
       toast.success('Item deleted successfully')
       loadItems()
     } catch (error) {
       console.error('Error deleting item:', error)
       toast.error('Failed to delete item')
+    } finally {
+      setDeletingItem(null)
     }
   }
 
@@ -211,19 +224,19 @@ function WarehousePageContent() {
         {loading ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, index) => (
-              <Card key={index} className="border-0 shadow-sm rounded-2xl animate-pulse">
+              <Card key={index} className="border-0 shadow-sm rounded-2xl">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
+                    <Skeleton className="w-12 h-12 rounded-xl" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
                     </div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-gray-100">
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="h-4 bg-gray-200 rounded"></div>
-                      <div className="h-4 bg-gray-200 rounded"></div>
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-full" />
                     </div>
                   </div>
                 </CardContent>
@@ -313,7 +326,7 @@ function WarehousePageContent() {
                           Edit Item
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => handleDelete(item.id, item.name)}
+                          onClick={() => setDeletingItem(item)}
                           className="text-red-600 focus:text-red-600"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
@@ -423,6 +436,33 @@ function WarehousePageContent() {
           onSave={handleStockAdded}
         />
       )}
+
+      <AlertDialog
+        open={deletingItem !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeletingItem(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete item?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;
+              {(deletingItem?.name ?? '').replace(/[^a-zA-Z0-9\s]/g, '').trim()}
+              &quot;? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

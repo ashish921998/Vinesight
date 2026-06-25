@@ -189,7 +189,7 @@ export function InviteFarmerDialog({ organizationId, trigger }: InviteFarmerDial
             <div className="grid grid-cols-3 gap-2">
               <Button variant="outline" onClick={handleCopy} className="gap-2">
                 {copied ? (
-                  <Check className="h-4 w-4 text-green-600" />
+                  <Check className="h-4 w-4 text-[var(--nutrient-optimal)]" />
                 ) : (
                   <Copy className="h-4 w-4" />
                 )}
@@ -207,7 +207,7 @@ export function InviteFarmerDialog({ organizationId, trigger }: InviteFarmerDial
                     })
                   }
                 >
-                  <MessageCircle className="h-4 w-4 text-green-600" />
+                  <MessageCircle className="h-4 w-4 text-muted-foreground" />
                   WhatsApp
                 </a>
               </Button>

@@ -73,13 +73,15 @@ function AlertCard({ alert, onAlertAction, onDismiss }: AlertCardProps) {
     <Alert className={`${colors.border} ${colors.background} border-l-4 mb-3 shadow-md relative`}>
       {/* Dismiss button */}
       {onDismiss && (
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => onDismiss(alert.id)}
-          className="absolute top-2 right-2 p-1 rounded-full hover:bg-black/10 transition-colors"
+          className="absolute top-2 right-2 h-7 w-7 rounded-full hover:bg-black/10"
           aria-label="Dismiss alert"
         >
           <X className="h-4 w-4 text-gray-500" />
-        </button>
+        </Button>
       )}
 
       <div className="flex items-start gap-3 pr-8">

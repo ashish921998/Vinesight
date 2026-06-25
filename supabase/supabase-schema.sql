@@ -1010,6 +1010,7 @@ CREATE TABLE organizations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL,
   slug VARCHAR(255) UNIQUE,
+  logo_url TEXT,
   description TEXT,
   metadata JSONB,
   created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
@@ -1090,6 +1091,10 @@ CREATE TABLE fertilizer_plans (
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
   notes TEXT,
+  -- The Petiole Review this plan was produced for (see migration 202606200001).
+  -- At most one plan per review (enforced by idx_fertilizer_plans_unique_triage).
+  -- FK added via ALTER below, since petiole_triage is created after this table.
+  petiole_triage_id UUID,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -1169,6 +1174,12 @@ CREATE INDEX idx_organization_members_org_user ON organization_members(organizat
 -- Note: no separate (organization_id, client_user_id) index — the UNIQUE(organization_id,
 -- client_user_id) constraint on organization_clients already provides one (see migration 0005).
 CREATE INDEX idx_fertilizer_plans_org_farm ON fertilizer_plans(organization_id, farm_id);
+CREATE INDEX idx_fertilizer_plans_petiole_triage_id ON fertilizer_plans(petiole_triage_id);
+CREATE INDEX idx_fertilizer_plans_farm_created ON fertilizer_plans(farm_id, created_at DESC);
+CREATE UNIQUE INDEX idx_fertilizer_plans_unique_triage ON fertilizer_plans(petiole_triage_id) WHERE petiole_triage_id IS NOT NULL;
+ALTER TABLE fertilizer_plans
+  ADD CONSTRAINT fertilizer_plans_petiole_triage_id_fkey
+  FOREIGN KEY (petiole_triage_id) REFERENCES petiole_triage(id) ON DELETE SET NULL;
 CREATE INDEX idx_fertilizer_plan_items_plan_date ON fertilizer_plan_items(plan_id, application_date);
 
 
@@ -1697,6 +1708,63 @@ END;
 $$;
 REVOKE ALL ON FUNCTION set_client_payment_status(UUID, BOOLEAN) FROM public;
 GRANT EXECUTE ON FUNCTION set_client_payment_status(UUID, BOOLEAN) TO authenticated;
+
+-- ----------------------------------------------------------------------------
+-- Command Center dashboard aggregates (see migration 202606230001).
+-- Scoped with can_access_org_client(): owner/admin → org-wide,
+-- agronomist → assigned clients only.
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.get_org_followup_adherence()
+RETURNS TABLE (
+  followed_status TEXT,
+  total BIGINT
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT f.followed_status, COUNT(*)::BIGINT AS total
+  FROM public.visit_recommendation_followups f
+  JOIN public.consultant_visits v
+    ON v.id = f.visit_id
+  WHERE auth.uid() IS NOT NULL
+    AND public.can_access_org_client(v.organization_id, v.client_user_id)
+  GROUP BY f.followed_status;
+$$;
+REVOKE ALL ON FUNCTION public.get_org_followup_adherence() FROM public;
+REVOKE ALL ON FUNCTION public.get_org_followup_adherence() FROM anon;
+GRANT EXECUTE ON FUNCTION public.get_org_followup_adherence() TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.get_org_latest_petiole()
+RETURNS TABLE (
+  farm_id BIGINT,
+  sample_date DATE,
+  parameters JSONB
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT DISTINCT ON (p.farm_id)
+    p.farm_id,
+    p.date AS sample_date,
+    p.parameters AS parameters
+  FROM public.petiole_test_records p
+  JOIN public.farms f
+    ON f.id = p.farm_id
+  JOIN public.organization_clients oc
+    ON oc.client_user_id = f.user_id
+   AND oc.status = 'active'
+  WHERE auth.uid() IS NOT NULL
+    AND p.farm_id IS NOT NULL
+    AND public.can_access_org_client(oc.organization_id, oc.client_user_id)
+  ORDER BY p.farm_id, p.date DESC, p.created_at DESC NULLS LAST;
+$$;
+REVOKE ALL ON FUNCTION public.get_org_latest_petiole() FROM public;
+REVOKE ALL ON FUNCTION public.get_org_latest_petiole() FROM anon;
+GRANT EXECUTE ON FUNCTION public.get_org_latest_petiole() TO authenticated;
 
 -- ============================================================================
 -- END ORGANIZATION / RBAC TABLES

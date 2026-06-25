@@ -493,8 +493,9 @@ export function FarmModal({
                       className="mt-1 h-11 w-full"
                       required
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="link"
                       onClick={() => {
                         setIsCustomVariety(false)
                         const varieties = getVarietiesForCrop(formData.crop)
@@ -502,10 +503,10 @@ export function FarmModal({
                           handleInputChange('cropVariety', varieties[0])
                         }
                       }}
-                      className="text-xs text-muted-foreground hover:text-foreground underline"
+                      className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
                     >
                       ← Use predefined variety instead
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>

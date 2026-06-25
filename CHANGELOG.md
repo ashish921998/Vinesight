@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0.0] - 2026-06-24
+
+### Added
+
+- **Consultant Overview is now "Your Practice" — a proactive daily panel.** Instead of a chart wall, the overview opens on an impression band ("what needs attention"), a derived-state **Farmers to contact** call list (farmers gone quiet 30+ days, and reviews completed with no fertilizer plan attached), and a right rail (review-queue pointer, practice snapshot, portfolio nutrient bar). It surfaces who to reach out to — what the reactive review queue is structurally blind to — and the list self-clears as you act. All derived client-side from existing scoped data; no new RPC.
+- **Org-wide Analytics page** at `/consultant/analytics` (new sidebar destination between Petiole Review and Team). A "study the book of farms" surface housing the portfolio charts: nutrient status across farms (latest petiole test bucketed against bloom-stage norms), incoming severity mix, weekly review throughput, review pipeline by status, and recommendation adherence. Instrumented with a page-view event so it can be cut if it goes unused.
+- **Org-wide dashboard data** via two read-only `SECURITY DEFINER` RPCs (`get_org_latest_petiole`, `get_org_followup_adherence`) scoped to the caller's org access.
+
+### Changed
+
+- **Farmer Directory is now a dense worklist table** instead of a card grid (Farmer · Contact · Region · Farms · Status), matching the "tables over cards" design rule.
+- **Consultant sidebar rebuilt on the shadcn Sidebar primitive**: collapses to an icon rail (state persists across reloads, `⌘B` to toggle), becomes a slide-in drawer on mobile, shows a section breadcrumb, and gives selected vs hovered rows distinct treatments (soft-sage active, neutral hover). Nav: Overview · Farmers · Petiole Review · Analytics · Team (renamed from Command Center / Petiole Triage / Client Farmers).
+- **Typography migrated to the IBM Plex superfamily** (Plex Sans / Serif / Mono via `next/font`), replacing Montserrat / Merriweather / Source Code Pro and a stray Inter binding.
+- Removed the sidebar "Access Mode" footer label — it was redundant with the role already shown in the sidebar header, and the directory's own farmer count communicates scope.
+- Text selection is now suppressed only on interactive chrome (buttons, nav, touch targets) instead of the whole body, so report names, emails, and nutrient values stay selectable.
+
+### Fixed
+
+- The nutrient-status chart keeps lab-report ordering when aliasing the British "sulphur" key to "sulfur".
+- Sidebar active-item detection normalizes trailing slashes, so visiting `/consultant/` (not redirected, since `skipTrailingSlashRedirect` is on) still highlights Overview.
+- **Farmer Directory columns now line up with their headers.** The header row and each data row were separate grids sharing an `auto`-width Status column that resolved to different widths (the "Unpaid" button is wider than the "STATUS" label), which knocked Region / Farms / Status out of alignment. Switched the trailing columns to fixed widths so every grid computes identical columns, and gave the row chevron its own column.
+
 ## [0.1.4.0] - 2026-06-19
 
 ### Added

@@ -32,7 +32,7 @@ export function PasswordInput({
     setShowPassword(!showPassword)
   }
 
-  const baseInputClasses = `w-full px-3 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px] pr-10 ${className}`
+  const baseInputClasses = `w-full px-3 py-2 text-base md:text-sm border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px] pr-10 ${className}`
   const errorInputClasses = error ? 'border-red-500 focus:ring-red-500' : ''
 
   return (

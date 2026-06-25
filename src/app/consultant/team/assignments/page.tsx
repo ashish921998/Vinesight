@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   Select,
@@ -19,59 +21,49 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { Loader2, Lock, Search, UserCog, Users } from 'lucide-react'
-import { useConsultantAccess, useFarmerClients } from '@/hooks/consultant/useConsultantQueries'
+import {
+  useConsultantAccess,
+  useFarmerClients,
+  useOrgMembers
+} from '@/hooks/consultant/useConsultantQueries'
 import { type FarmerWithFarms } from '@/lib/consultant-query-service'
-import { listOrgMembers, type OrgMember } from '@/lib/team-service'
+import { type OrgMember } from '@/lib/team-service'
+import { consultantKeys } from '@/lib/consultant-query-keys'
 import { TeamTabs } from '@/components/consultant/TeamTabs'
 import posthog from 'posthog-js'
+
+// Stable empty defaults so derived memos keep a stable reference before the
+// queries resolve.
+const EMPTY_FARMERS: FarmerWithFarms[] = []
+const EMPTY_MEMBERS: OrgMember[] = []
 
 export default function FarmerAssignmentsPage() {
   const accessQuery = useConsultantAccess()
   const access = accessQuery.data ?? null
   const farmerAccess = access?.canViewAllFarmers ? access : null
   const farmersQuery = useFarmerClients(farmerAccess)
-  const [members, setMembers] = useState<OrgMember[]>([])
-  const [loading, setLoading] = useState(true)
+  // Members (the assignment targets) live in the query cache. Admins load
+  // them; agronomists get a read-only view and don't need them. No
+  // `loading`/`members` useState mirrored from a fetch effect — pending/error/
+  // data come straight from the hook.
+  const membersQuery = useOrgMembers(farmerAccess)
+  const members = membersQuery.data ?? EMPTY_MEMBERS
+  const queryClient = useQueryClient()
   const [submitting, setSubmitting] = useState(false)
 
   const [targetAgronomist, setTargetAgronomist] = useState<string>('')
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
-  const loadData = useCallback(
-    async (currentAccess = access) => {
-      if (!currentAccess) return
-
-      try {
-        setLoading(true)
-
-        // Agronomists are read-only here; skip the heavier loads.
-        if (!currentAccess.canViewAllFarmers) {
-          return
-        }
-
-        const memberData = await listOrgMembers(currentAccess.organizationId)
-        setMembers(memberData)
-        setSelected(new Set())
-      } catch (error) {
-        console.error('Failed to load assignments:', error)
-        toast.error(error instanceof Error ? error.message : 'Failed to load assignments')
-      } finally {
-        setLoading(false)
-      }
-    },
-    [access]
-  )
+  // Surface auth + member-fetch failures once each (side-effects only, never
+  // setState, so this does not reintroduce derived state).
+  useEffect(() => {
+    if (accessQuery.isError) toast.error('Not authenticated')
+  }, [accessQuery.isError])
 
   useEffect(() => {
-    if (accessQuery.isPending) return
-    if (!access) {
-      if (accessQuery.isError) toast.error('Not authenticated')
-      setLoading(false)
-      return
-    }
-    loadData(access)
-  }, [access, accessQuery.isError, accessQuery.isPending, loadData])
+    if (membersQuery.isError) toast.error('Failed to load assignments')
+  }, [membersQuery.isError])
 
   // Only agronomists can be assignment targets.
   const agronomists = useMemo(() => members.filter((m) => m.role === 'agronomist'), [members])
@@ -91,7 +83,7 @@ export default function FarmerAssignmentsPage() {
     return memberNameById.get(farmer.assigned_to) || 'Assigned'
   }
 
-  const farmers = farmersQuery.data ?? []
+  const farmers = farmersQuery.data ?? EMPTY_FARMERS
 
   const filteredFarmers = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -175,8 +167,9 @@ export default function FarmerAssignmentsPage() {
       if (refreshedFarmers.error) {
         throw refreshedFarmers.error
       }
-      const refreshedMembers = await listOrgMembers(access.organizationId)
-      setMembers(refreshedMembers)
+      await queryClient.invalidateQueries({
+        queryKey: consultantKeys.orgMembers(access.organizationId)
+      })
       setSelected(new Set())
     } catch (error) {
       console.error('Assignment failed:', error)
@@ -186,13 +179,55 @@ export default function FarmerAssignmentsPage() {
     }
   }
 
-  if (loading || (Boolean(access?.canViewAllFarmers) && farmersQuery.isPending)) {
+  // Busy while access is resolving or the members query is still loading
+  // (admins only). Derived directly from the query states during render.
+  const busy =
+    accessQuery.isPending || (Boolean(access?.canViewAllFarmers) && membersQuery.isPending)
+
+  if (busy || (Boolean(access?.canViewAllFarmers) && farmersQuery.isPending)) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading assignments...</p>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-64" />
         </div>
+
+        {/* Target agronomist picker */}
+        <Card>
+          <CardHeader className="pb-3">
+            <Skeleton className="h-5 w-40" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Skeleton className="h-4 w-64" />
+            <Skeleton className="h-9 w-full sm:w-[320px]" />
+          </CardContent>
+        </Card>
+
+        {/* Farmer list */}
+        <Card>
+          <CardHeader className="pb-3 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-6 w-24" />
+            </div>
+            <Skeleton className="h-9 w-full" />
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                  <Skeleton className="h-4 w-4" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <Skeleton className="h-6 w-20" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -218,7 +253,7 @@ export default function FarmerAssignmentsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Farmer Assignments</h1>
+          <h1 className="font-serif text-2xl font-semibold">Farmer Assignments</h1>
           <p className="text-muted-foreground">Assign farmers to agronomists</p>
         </div>
         <Alert>
@@ -238,7 +273,7 @@ export default function FarmerAssignmentsPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Farmer Assignments</h1>
+        <h1 className="font-serif text-2xl font-semibold">Farmer Assignments</h1>
         <p className="text-muted-foreground">Assign farmers to agronomists in bulk</p>
       </div>
 
@@ -246,7 +281,7 @@ export default function FarmerAssignmentsPage() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <UserCog className="h-4 w-4 text-accent" />
+            <UserCog className="h-4 w-4 text-muted-foreground" />
             Target Agronomist
           </CardTitle>
         </CardHeader>
@@ -280,10 +315,12 @@ export default function FarmerAssignmentsPage() {
         <CardHeader className="pb-3 space-y-3">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <CardTitle className="text-base flex items-center gap-2">
-              <Users className="h-4 w-4 text-accent" />
+              <Users className="h-4 w-4 text-muted-foreground" />
               Farmers
             </CardTitle>
-            <Badge variant="secondary">{selectedCount} selected</Badge>
+            <Badge variant="secondary">
+              <span className="font-mono tabular-nums">{selectedCount}</span> selected
+            </Badge>
           </div>
 
           <div className="relative">
@@ -341,7 +378,8 @@ export default function FarmerAssignmentsPage() {
                           {farmer.full_name || 'Unknown Farmer'}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {farmer.farms.length} farm{farmer.farms.length !== 1 ? 's' : ''}
+                          <span className="font-mono tabular-nums">{farmer.farms.length}</span> farm
+                          {farmer.farms.length !== 1 ? 's' : ''}
                         </div>
                       </div>
                       <Badge

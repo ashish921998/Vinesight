@@ -12,14 +12,21 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { cn } from '@/lib/utils'
 
 interface UserMenuProps {
   collapsed?: boolean
+  /**
+   * Where the Settings item navigates. Defaults to the farmer-side "/settings"
+   * page; the consultant workspace passes its own in-workspace settings route
+   * so consultants aren't dropped onto the farmer Profile page.
+   */
+  settingsHref?: string
 }
 
-export function UserMenu({ collapsed = false }: UserMenuProps) {
+export function UserMenu({ collapsed = false, settingsHref = '/settings' }: UserMenuProps) {
   const { user, signOut } = useSupabaseAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -64,12 +71,13 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
+        <Button
           type="button"
+          variant="ghost"
           aria-label={`User menu for ${displayName}`}
           aria-haspopup="menu"
           className={cn(
-            'group flex w-full items-center rounded-md p-2 text-left text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground',
+            'group flex h-auto w-full items-center justify-start rounded-md p-2 text-left text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground',
             collapsed ? 'justify-center' : 'gap-3'
           )}
         >
@@ -90,7 +98,7 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
               <ChevronsUpDown className="ml-auto h-4 w-4 text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground group-data-[state=open]:text-sidebar-accent-foreground" />
             </>
           )}
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="start" side="top" forceMount>
         <DropdownMenuLabel className="font-normal">
@@ -102,7 +110,7 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push('/settings')}>
+        <DropdownMenuItem onClick={() => router.push(settingsHref)}>
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>

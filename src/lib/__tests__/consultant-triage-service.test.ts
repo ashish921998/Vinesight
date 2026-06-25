@@ -23,7 +23,8 @@ function ownerAccess(): ConsultantAccess {
     canViewAllFarmers: true,
     isAgronomist: false,
     organizationName: null,
-    joinCode: null
+    joinCode: null,
+    logoUrl: null
   }
 }
 
@@ -35,7 +36,8 @@ function adminAccess(): ConsultantAccess {
     canViewAllFarmers: true,
     isAgronomist: false,
     organizationName: null,
-    joinCode: null
+    joinCode: null,
+    logoUrl: null
   }
 }
 
@@ -47,7 +49,8 @@ function agronomistAccess(userId = 'agro-1'): ConsultantAccess {
     canViewAllFarmers: false,
     isAgronomist: true,
     organizationName: null,
-    joinCode: null
+    joinCode: null,
+    logoUrl: null
   }
 }
 

@@ -6,6 +6,7 @@ import { OrganizationService, type Organization } from '@/lib/organization-servi
 import { getTypedSupabaseClient } from '@/lib/supabase'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
@@ -18,7 +19,8 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Users, UserPlus, Copy, Check, Building2, Shield, Leaf } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { Users, UserPlus, Copy, Check, Building2, Shield, Leaf } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface OrgMember {
@@ -106,10 +108,34 @@ function UsersPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
+      <div className="container max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-56" />
+          </div>
+          <Skeleton className="h-9 w-44" />
+        </div>
+
+        {/* Members list */}
+        <div className="grid gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-5 w-5 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-3 w-40" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-32" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     )
@@ -223,9 +249,9 @@ function UsersPage() {
                     </div>
                   </div>
                   {member.is_owner && (
-                    <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800">
                       Owner
-                    </span>
+                    </Badge>
                   )}
                 </div>
               </CardHeader>

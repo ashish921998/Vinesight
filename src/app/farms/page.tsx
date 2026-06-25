@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { Plus, Trash2, Edit, Sprout, MapPin, MoreVertical, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
@@ -17,11 +18,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
 import { capitalize } from '@/lib/utils'
 
 export default function FarmsPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingFarm, setEditingFarm] = useState<Farm | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null)
 
   const farmsQuery = useFarms()
   const createFarm = useCreateFarm()
@@ -67,17 +79,16 @@ export default function FarmsPage() {
     setShowModal(true)
   }
 
-  const handleDelete = async (id: number) => {
-    if (
-      confirm(
-        'Are you sure you want to delete this farm? This will also delete all associated records.'
-      )
-    ) {
-      try {
-        await deleteFarm.mutateAsync(id)
-      } catch (error) {
-        console.error('Error deleting farm:', error)
-      }
+  const confirmDelete = async () => {
+    if (pendingDelete === null) return
+    const id = pendingDelete
+    try {
+      await deleteFarm.mutateAsync(id)
+    } catch (error) {
+      console.error('Error deleting farm:', error)
+      toast.error('Failed to delete farm. Please try again.')
+    } finally {
+      setPendingDelete(null)
     }
   }
 
@@ -144,36 +155,26 @@ export default function FarmsPage() {
         <div className="px-4 py-4 max-w-md mx-auto">
           <div className="space-y-3 max-w-md mx-auto">
             {loading
-              ? // Modern skeleton loading
+              ? // Skeleton loading
                 Array.from({ length: 3 }).map((_, index) => (
-                  <Card key={index} className="border-0 shadow-sm animate-pulse">
+                  <Card key={index} className="border-0 shadow-sm">
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
+                        <Skeleton className="w-12 h-12 rounded-xl" />
                         <div className="flex-1 space-y-2">
-                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-3 w-1/2" />
                         </div>
-                        <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                        <Skeleton className="w-6 h-6" />
                       </div>
                       <div className="mt-3 pt-3 border-t border-gray-100">
                         <div className="grid grid-cols-2 gap-3">
-                          <div className="text-center">
-                            <div className="h-4 bg-gray-200 rounded w-8 mx-auto mb-1"></div>
-                            <div className="h-2 bg-gray-200 rounded w-12 mx-auto"></div>
-                          </div>
-                          <div className="text-center">
-                            <div className="h-4 bg-gray-200 rounded w-12 mx-auto mb-1"></div>
-                            <div className="h-2 bg-gray-200 rounded w-8 mx-auto"></div>
-                          </div>
-                          <div className="text-center">
-                            <div className="h-4 bg-gray-200 rounded w-10 mx-auto mb-1"></div>
-                            <div className="h-2 bg-gray-200 rounded w-12 mx-auto"></div>
-                          </div>
-                          <div className="text-center">
-                            <div className="h-4 bg-gray-200 rounded w-8 mx-auto mb-1"></div>
-                            <div className="h-2 bg-gray-200 rounded w-12 mx-auto"></div>
-                          </div>
+                          {Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="text-center space-y-1">
+                              <Skeleton className="h-4 w-10 mx-auto" />
+                              <Skeleton className="h-2 w-12 mx-auto" />
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </CardContent>
@@ -237,7 +238,7 @@ export default function FarmsPage() {
                                   <DropdownMenuItem
                                     onClick={(e) => {
                                       e.preventDefault()
-                                      handleDelete(farm.id!)
+                                      setPendingDelete(farm.id!)
                                     }}
                                     className="text-red-600 focus:text-red-600"
                                   >
@@ -315,6 +316,31 @@ export default function FarmsPage() {
           editingFarm={editingFarm}
           isSubmitting={submitLoading}
         />
+
+        {/* Delete Farm Confirmation */}
+        <AlertDialog
+          open={pendingDelete !== null}
+          onOpenChange={(open) => !open && setPendingDelete(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete farm?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this farm? This will also delete all associated
+                records.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </ProtectedRoute>
   )

@@ -3,7 +3,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Copy, Loader2, MessageSquareShare } from 'lucide-react'
+import { Copy, MessageSquareShare } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { type ConsultantAccess } from '@/lib/consultant-access'
 import { useConsultantAccess } from '@/hooks/consultant/useConsultantQueries'
 import { buildJoinMessage } from '@/lib/join-message'
@@ -31,9 +32,15 @@ export function JoinCodeCard(props: JoinCodeCardProps = {}) {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Loading your join code…
+        <CardContent className="space-y-4">
+          <div className="space-y-2 rounded-lg border border-border bg-muted/40 p-4">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-8 w-40" />
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Skeleton className="h-9 flex-1" />
+            <Skeleton className="h-9 flex-1" />
+          </div>
         </CardContent>
       </Card>
     )
@@ -88,10 +95,12 @@ export function JoinCodeCard(props: JoinCodeCardProps = {}) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="rounded-lg border bg-muted/40 p-4">
+        <Card className="gap-0 bg-muted/40 p-4">
           <p className="mb-1 text-xs font-medium text-muted-foreground">Join code</p>
-          <p className="font-mono text-2xl font-semibold tracking-wide break-all">{joinCode}</p>
-        </div>
+          <p className="font-mono text-2xl font-semibold tracking-wide tabular-nums break-all">
+            {joinCode}
+          </p>
+        </Card>
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button variant="outline" onClick={handleCopyCode} className="gap-2">

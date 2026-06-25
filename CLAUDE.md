@@ -891,3 +891,10 @@ CREATE POLICY "Users can access context from their conversations" ON ai_conversa
 ---
 
 **Phase 3 establishes VineSight as the definitive AI-powered farming companion that transforms agricultural decision-making through personalized intelligence, predictive capabilities, and community-driven learning.**
+
+## Design System
+
+Always read DESIGN.md before making any visual or UI decisions.
+All font choices, colors, spacing, and aesthetic direction are defined there.
+Do not deviate without explicit user approval.
+In QA mode, flag any code that doesn't match DESIGN.md.
