@@ -142,6 +142,7 @@ export function OrganizationIdentityCard({
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
                   className="hidden"
+                  aria-label="Upload organization logo"
                   onChange={handleLogoSelected}
                 />
               </>
