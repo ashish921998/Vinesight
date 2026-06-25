@@ -6,10 +6,11 @@ import { toast } from 'sonner'
 
 import type { TaskReminder } from '@/types/types'
 import { TodaysTasksSection } from '@/components/dashboard/TodaysTasksSection'
-import { TaskModal } from './TaskModal'
+import { TaskModal } from '@/components/tasks/TaskModal'
 import { SupabaseService } from '@/lib/supabase-service'
 import { farmKeys } from '@/lib/farm-query-keys'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useCompleteFarmTask } from '@/hooks/farms/useFarmQueries'
 
 type TodaysTaskType =
   | 'irrigation'
@@ -60,6 +61,7 @@ export function TasksOverviewCard({
 }: TasksOverviewCardProps) {
   const { user } = useSupabaseAuth()
   const queryClient = useQueryClient()
+  const completeTaskMutation = useCompleteFarmTask(farmId)
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<TaskReminder | null>(null)
   const [fetchingTask, setFetchingTask] = useState(false)
@@ -89,9 +91,11 @@ export function TasksOverviewCard({
     if (!Number.isFinite(numericId)) return
 
     try {
-      await SupabaseService.completeTask(numericId)
+      await completeTaskMutation.mutateAsync(numericId)
       toast.success('Task marked as completed.')
-      await invalidateTaskState()
+      // The hook invalidates tasks + summary; still nudge the parent so its farm
+      // detail refetch (onTasksUpdated) runs too.
+      await notifyRefresh()
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unable to complete the task right now.'
