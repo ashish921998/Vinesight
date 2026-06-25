@@ -10,7 +10,12 @@ const RISK_STYLE: Record<RiskLevel, { bg: string; fg: string; label: string }> =
   high: { bg: '#fde7e0', fg: '#c2410c', label: 'High' }
 }
 
-function RiskChip({ level, disease }: { level: RiskLevel; disease: string }) {
+interface RiskChipProps {
+  level: RiskLevel
+  disease: string
+}
+
+function RiskChip({ level, disease }: RiskChipProps) {
   const s = RISK_STYLE[level]
   return (
     <span

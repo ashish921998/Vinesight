@@ -19,7 +19,12 @@ import {
   SOIL_STATS
 } from '@/lib/consultant-intelligence-demo'
 
-function SectionHeading({ title, sub }: { title: string; sub: string }) {
+interface SectionHeadingProps {
+  title: string
+  sub: string
+}
+
+function SectionHeading({ title, sub }: SectionHeadingProps) {
   return (
     <div className="space-y-1">
       <h2 className="font-serif text-lg font-semibold tracking-tight">{title}</h2>
@@ -93,7 +98,13 @@ function EarlyWarningAlert() {
   )
 }
 
-function MiniStat({ label, value, sub }: { label: string; value: string; sub: string }) {
+interface MiniStatProps {
+  label: string
+  value: string
+  sub: string
+}
+
+function MiniStat({ label, value, sub }: MiniStatProps) {
   return (
     <Card>
       <CardContent className="p-4">
@@ -142,7 +153,11 @@ function FlywheelPanel() {
   )
 }
 
-function Section({ children }: { children: ReactNode }) {
+interface SectionProps {
+  children: ReactNode
+}
+
+function Section({ children }: SectionProps) {
   return <section className="space-y-4">{children}</section>
 }
 
