@@ -192,6 +192,8 @@ export async function searchLogs({
     const q = (searchQuery || '').toLowerCase().trim()
     const hasQuery = q.length > 0
     const hasTypeFilter = Array.isArray(selectedActivityTypes) && selectedActivityTypes.length > 0
+    const selectedActivityTypeSet = hasTypeFilter ? new Set(selectedActivityTypes) : null
+    const queryPattern = hasQuery ? new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) : null
     const normalizedFrom = dateFrom ? normalizeDateToYYYYMMDD(dateFrom) : null
     const normalizedTo = dateTo ? normalizeDateToYYYYMMDD(dateTo) : null
 
@@ -199,7 +201,7 @@ export async function searchLogs({
     const shortlisted: ActivityLog[] = []
     for (const log of combined) {
       // activity type filter
-      if (hasTypeFilter && !selectedActivityTypes.includes(log.type)) continue
+      if (selectedActivityTypeSet && !selectedActivityTypeSet.has(log.type)) continue
 
       // date range (based on activity date)
       if (normalizedFrom || normalizedTo) {
@@ -210,24 +212,24 @@ export async function searchLogs({
       }
 
       // search query filter (if any)
-      if (hasQuery) {
+      if (queryPattern) {
         const notes = (log.notes || '').toLowerCase()
         let matched = false
 
-        if (log.type.toLowerCase().includes(q)) matched = true
-        else if (notes.includes(q)) matched = true
-        else if (log.duration != null && String(log.duration).includes(q)) matched = true
-        else if (log.quantity != null && String(log.quantity).includes(q)) matched = true
-        else if (log.cost != null && String(log.cost).includes(q)) matched = true
-        else if (log.chemical && log.chemical.toLowerCase().includes(q)) matched = true
+        if (queryPattern.test(log.type.toLowerCase())) matched = true
+        else if (queryPattern.test(notes)) matched = true
+        else if (log.duration != null && queryPattern.test(String(log.duration))) matched = true
+        else if (log.quantity != null && queryPattern.test(String(log.quantity))) matched = true
+        else if (log.cost != null && queryPattern.test(String(log.cost))) matched = true
+        else if (log.chemical && queryPattern.test(log.chemical.toLowerCase())) matched = true
         else if (
           Array.isArray(log.chemicals) &&
-          log.chemicals.some((c) => c?.name?.toLowerCase().includes(q))
+          log.chemicals.some((c) => queryPattern.test(c?.name?.toLowerCase() || ''))
         )
           matched = true
         else if (
           Array.isArray(log.fertilizers) &&
-          log.fertilizers.some((f) => f?.name?.toLowerCase().includes(q))
+          log.fertilizers.some((f) => queryPattern.test(f?.name?.toLowerCase() || ''))
         )
           matched = true
 
@@ -238,7 +240,7 @@ export async function searchLogs({
     }
 
     // sort by activity date (newest first) - clone array to avoid mutating originals
-    const sorted = [...shortlisted].sort(
+    const sorted = shortlisted.toSorted(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     )
 

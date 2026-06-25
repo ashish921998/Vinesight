@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import type React from 'react'
+import { useEffect, useReducer } from 'react'
 import { SEOSchema } from '@/components/SEOSchema'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -32,6 +33,8 @@ import { AnalyticsService, AdvancedAnalytics } from '@/lib/analytics-service'
 import { Farm } from '@/types/types'
 import { capitalize } from '@/lib/utils'
 
+type TimeRange = '30d' | '90d' | '1y'
+
 interface AnalyticsData {
   totalFarms: number
   totalArea: number
@@ -49,31 +52,80 @@ interface AnalyticsData {
   }[]
 }
 
+interface AnalyticsPageState {
+  farms: Farm[]
+  selectedFarm: Farm | null
+  analytics: AnalyticsData | null
+  advancedAnalytics: AdvancedAnalytics | null
+  loading: boolean
+  timeRange: TimeRange
+}
+
+type AnalyticsPageAction =
+  | { type: 'loadingStarted' }
+  | { type: 'farmsLoaded'; farms: Farm[] }
+  | { type: 'emptyDataLoaded' }
+  | { type: 'loadFinished' }
+  | { type: 'analyticsLoaded'; analytics: AnalyticsData }
+  | { type: 'advancedAnalyticsLoaded'; advancedAnalytics: AdvancedAnalytics }
+  | { type: 'loadFailed' }
+  | { type: 'timeRangeChanged'; timeRange: TimeRange }
+
+const initialAnalyticsPageState: AnalyticsPageState = {
+  farms: [],
+  selectedFarm: null,
+  analytics: null,
+  advancedAnalytics: null,
+  loading: true,
+  timeRange: '30d'
+}
+
+function analyticsPageReducer(
+  state: AnalyticsPageState,
+  action: AnalyticsPageAction
+): AnalyticsPageState {
+  switch (action.type) {
+    case 'loadingStarted':
+      return { ...state, loading: true }
+    case 'farmsLoaded':
+      return {
+        ...state,
+        farms: action.farms,
+        selectedFarm: state.selectedFarm ?? action.farms[0] ?? null
+      }
+    case 'emptyDataLoaded':
+      return { ...state, analytics: null, advancedAnalytics: null, loading: false }
+    case 'loadFinished':
+      return { ...state, loading: false }
+    case 'analyticsLoaded':
+      return { ...state, analytics: action.analytics }
+    case 'advancedAnalyticsLoaded':
+      return { ...state, advancedAnalytics: action.advancedAnalytics }
+    case 'loadFailed':
+      return { ...state, analytics: null, advancedAnalytics: null, loading: false }
+    case 'timeRangeChanged':
+      return { ...state, timeRange: action.timeRange }
+    default:
+      return state
+  }
+}
+
 export default function AnalyticsPage() {
-  const [farms, setFarms] = useState<Farm[]>([])
-  const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null)
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
-  const [advancedAnalytics, setAdvancedAnalytics] = useState<AdvancedAnalytics | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [timeRange, setTimeRange] = useState<'30d' | '90d' | '1y'>('30d')
+  const [state, dispatch] = useReducer(analyticsPageReducer, initialAnalyticsPageState)
+  const { farms, analytics, advancedAnalytics, loading, timeRange } = state
 
   useEffect(() => {
     loadData()
   }, [timeRange])
 
   const loadData = async () => {
-    setLoading(true)
+    dispatch({ type: 'loadingStarted' })
     try {
       const farmList = await CloudDataService.getAllFarms()
-      setFarms(farmList)
-
-      if (!selectedFarm && farmList.length > 0) {
-        setSelectedFarm(farmList[0])
-      }
+      dispatch({ type: 'farmsLoaded', farms: farmList })
 
       if (farmList.length === 0) {
-        setAnalytics(null)
-        setLoading(false)
+        dispatch({ type: 'emptyDataLoaded' })
         return
       }
 
@@ -199,20 +251,20 @@ export default function AnalyticsPage() {
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 10)
 
-      setAnalytics(analyticsData)
+      dispatch({ type: 'analyticsLoaded', analytics: analyticsData })
 
       // Generate advanced analytics
       try {
         const advanced = await AnalyticsService.generateAdvancedAnalytics(farmList)
-        setAdvancedAnalytics(advanced)
+        dispatch({ type: 'advancedAnalyticsLoaded', advancedAnalytics: advanced })
       } catch (error) {
         console.error('Error generating advanced analytics:', error)
       }
     } catch (error) {
       console.error('Error loading analytics:', error)
-      setAnalytics(null)
+      dispatch({ type: 'loadFailed' })
     } finally {
-      setLoading(false)
+      dispatch({ type: 'loadFinished' })
     }
   }
 
@@ -265,6 +317,33 @@ export default function AnalyticsPage() {
     )
   }
 
+  return renderAnalyticsDashboard({
+    analytics,
+    advancedAnalytics,
+    timeRange,
+    dispatch,
+    formatCurrency,
+    getActivityIcon
+  })
+}
+
+interface AnalyticsDashboardRenderProps {
+  analytics: AnalyticsData
+  advancedAnalytics: AdvancedAnalytics | null
+  timeRange: TimeRange
+  dispatch: React.Dispatch<AnalyticsPageAction>
+  formatCurrency: (value: number) => string
+  getActivityIcon: (type: string) => React.ReactNode
+}
+
+function renderAnalyticsDashboard({
+  analytics,
+  advancedAnalytics,
+  timeRange,
+  dispatch,
+  formatCurrency,
+  getActivityIcon
+}: AnalyticsDashboardRenderProps) {
   return (
     <>
       <SEOSchema
@@ -294,7 +373,7 @@ export default function AnalyticsPage() {
             <Button
               variant={timeRange === '30d' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setTimeRange('30d')}
+              onClick={() => dispatch({ type: 'timeRangeChanged', timeRange: '30d' })}
               className="whitespace-nowrap"
             >
               <span className="hidden sm:inline">30 Days</span>
@@ -303,7 +382,7 @@ export default function AnalyticsPage() {
             <Button
               variant={timeRange === '90d' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setTimeRange('90d')}
+              onClick={() => dispatch({ type: 'timeRangeChanged', timeRange: '90d' })}
               className="whitespace-nowrap"
             >
               <span className="hidden sm:inline">90 Days</span>
@@ -312,7 +391,7 @@ export default function AnalyticsPage() {
             <Button
               variant={timeRange === '1y' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setTimeRange('1y')}
+              onClick={() => dispatch({ type: 'timeRangeChanged', timeRange: '1y' })}
               className="whitespace-nowrap"
             >
               <span className="hidden sm:inline">1 Year</span>

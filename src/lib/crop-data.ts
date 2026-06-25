@@ -224,11 +224,15 @@ export function getRecommendedCropsForRegion(region: string): string[] {
     return POPULAR_CROPS
   }
 
-  const region_lower = region.toLowerCase().trim()
+  const regionLower = region.toLowerCase().trim()
 
   // Check for exact matches and aliases
   for (const [canonicalRegion, aliases] of Object.entries(REGION_ALIASES)) {
-    if (aliases.some((alias) => region_lower.includes(alias))) {
+    const aliasPattern = new RegExp(
+      aliases.map((alias) => alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
+    )
+    const matchingAlias = aliasPattern.test(regionLower)
+    if (matchingAlias) {
       return (
         REGION_CROP_MAPPINGS[canonicalRegion as keyof typeof REGION_CROP_MAPPINGS] || POPULAR_CROPS
       )
@@ -237,21 +241,18 @@ export function getRecommendedCropsForRegion(region: string): string[] {
 
   // Check for partial matches in region names
   for (const [regionKey, crops] of Object.entries(REGION_CROP_MAPPINGS)) {
-    if (region_lower.includes(regionKey)) {
+    const regionPattern = new RegExp(regionKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    if (regionPattern.test(regionLower)) {
       return crops
     }
   }
 
   // Climate-based fallback (very basic for now)
-  if (
-    region_lower.includes('north') ||
-    region_lower.includes('hill') ||
-    region_lower.includes('mountain')
-  ) {
+  if (/north|hill|mountain/.test(regionLower)) {
     return REGION_CROP_MAPPINGS.cool
   }
 
-  if (region_lower.includes('coastal') || region_lower.includes('beach')) {
+  if (/coastal|beach/.test(regionLower)) {
     return ['Mango', 'Coconut', 'Pomegranates']
   }
 

@@ -132,7 +132,7 @@ export function LabTestComparisonTable({ soilTests, petioleTests }: LabTestCompa
   // Render comparison table
   const renderComparisonTable = (tests: LabTestRecord[], params: ParamOption[]) => {
     // Sort tests by date (oldest to newest)
-    const sortedTests = [...tests].sort(
+    const sortedTests = tests.toSorted(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     )
 
