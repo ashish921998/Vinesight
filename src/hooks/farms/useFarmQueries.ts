@@ -5,7 +5,7 @@ import { SupabaseService } from '@/lib/supabase-service'
 import { farmKeys } from '@/lib/farm-query-keys'
 import type { Farm } from '@/types/types'
 
-type FarmCreateInput = Omit<Farm, 'id' | 'created_at' | 'updated_at' | 'user_id'>
+type FarmCreateInput = Omit<Farm, 'id' | 'createdAt' | 'updatedAt' | 'userId'>
 
 export function useFarms() {
   return useQuery({

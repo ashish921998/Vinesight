@@ -47,18 +47,26 @@ export default function FarmsPage() {
   useEffect(() => {
     if (farmsQuery.error) {
       console.error('Error loading farms:', farmsQuery.error)
-      toast.error(
-        farmsQuery.error instanceof Error ? farmsQuery.error.message : 'Failed to load farms'
-      )
+      toast.error('Failed to load farms. Please try again.')
     }
   }, [farmsQuery.error])
 
   const handleSubmit = async (farmData: FarmDataSubmit) => {
     try {
+      // FarmModal submits location fields snake_cased; the Supabase mappers read
+      // camelCase, so normalize here or the saved location is silently dropped.
+      const { location_name, location_source, location_updated_at, ...rest } = farmData
+      const farmInput = {
+        ...rest,
+        locationName: location_name,
+        locationSource: location_source,
+        locationUpdatedAt: location_updated_at
+      }
+
       if (editingFarm) {
-        await updateFarm.mutateAsync({ id: editingFarm.id!, updates: farmData })
+        await updateFarm.mutateAsync({ id: editingFarm.id!, updates: farmInput })
       } else {
-        await createFarm.mutateAsync(farmData)
+        await createFarm.mutateAsync(farmInput)
       }
 
       closeModal()
