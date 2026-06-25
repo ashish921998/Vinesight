@@ -296,9 +296,10 @@ export default function TeamSettingsPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Team</h1>
+          <h1 className="font-serif text-2xl font-semibold">Team</h1>
           <p className="text-muted-foreground">
-            {members.length} member{members.length !== 1 ? 's' : ''} in your organization
+            <span className="font-mono tabular-nums">{members.length}</span> member
+            {members.length !== 1 ? 's' : ''} in your organization
           </p>
         </div>
         {isAdmin && (
@@ -313,7 +314,7 @@ export default function TeamSettingsPage() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Users className="h-5 w-5 text-accent" />
+            <Users className="h-5 w-5 text-muted-foreground" />
             Members
           </CardTitle>
         </CardHeader>
@@ -371,7 +372,7 @@ export default function TeamSettingsPage() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="h-5 w-5 text-accent" />
+              <Clock className="h-5 w-5 text-muted-foreground" />
               Pending invites
             </CardTitle>
           </CardHeader>

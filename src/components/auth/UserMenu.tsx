@@ -18,9 +18,15 @@ import { cn } from '@/lib/utils'
 
 interface UserMenuProps {
   collapsed?: boolean
+  /**
+   * Where the Settings item navigates. Defaults to the farmer-side "/settings"
+   * page; the consultant workspace passes its own in-workspace settings route
+   * so consultants aren't dropped onto the farmer Profile page.
+   */
+  settingsHref?: string
 }
 
-export function UserMenu({ collapsed = false }: UserMenuProps) {
+export function UserMenu({ collapsed = false, settingsHref = '/settings' }: UserMenuProps) {
   const { user, signOut } = useSupabaseAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -104,7 +110,7 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push('/settings')}>
+        <DropdownMenuItem onClick={() => router.push(settingsHref)}>
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>

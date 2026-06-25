@@ -1,12 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import {
-  Geist,
-  Geist_Mono,
-  Montserrat,
-  Merriweather,
-  Source_Code_Pro,
-  Inter
-} from 'next/font/google'
+import { Geist, Geist_Mono, IBM_Plex_Sans, IBM_Plex_Serif, IBM_Plex_Mono } from 'next/font/google'
 import './globals.css'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { MotionConfigProvider } from '@/components/providers/MotionConfigProvider'
@@ -19,8 +12,6 @@ import { Analytics } from '@vercel/analytics/next'
 import { GoogleAnalytics } from '@/components/GoogleAnalytics'
 import dynamic from 'next/dynamic'
 import { SEO_KEYWORDS } from '@/lib/seo-constants'
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
 const LayoutContent = dynamic(
   () => import('@/components/layout/LayoutContent').then((mod) => ({ default: mod.LayoutContent })),
@@ -39,20 +30,24 @@ const geistMono = Geist_Mono({
   subsets: ['latin']
 })
 
-const montserrat = Montserrat({
-  variable: '--font-montserrat',
-  subsets: ['latin']
-})
-
-const merriweather = Merriweather({
-  variable: '--font-merriweather',
+// IBM Plex superfamily — one coherent technical type system per DESIGN.md.
+// Sans for UI/body, Serif (500/600) for names & headings, Mono for all numbers.
+const plexSans = IBM_Plex_Sans({
+  variable: '--font-ibm-plex-sans',
   subsets: ['latin'],
-  weight: ['300', '400', '700', '900']
+  weight: ['400', '500', '600', '700']
 })
 
-const sourceCodePro = Source_Code_Pro({
-  variable: '--font-source-code-pro',
-  subsets: ['latin']
+const plexSerif = IBM_Plex_Serif({
+  variable: '--font-ibm-plex-serif',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700']
+})
+
+const plexMono = IBM_Plex_Mono({
+  variable: '--font-ibm-plex-mono',
+  subsets: ['latin'],
+  weight: ['400', '500', '600']
 })
 
 export const metadata: Metadata = {
@@ -149,10 +144,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${merriweather.variable} ${sourceCodePro.variable} antialiased`}
-      >
+    <html
+      lang="en"
+      className={`${plexSans.variable} ${plexSerif.variable} ${plexMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SentryErrorBoundary>
           <Suspense
             fallback={

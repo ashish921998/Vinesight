@@ -4,7 +4,14 @@ import { Fragment, useMemo } from 'react'
 import type { LabTestRecord } from '@/types/lab-tests'
 import { SectionLabel } from './SectionLabel'
 import { type ParamRange, PETIOLE_PARAM_GROUPS, PETIOLE_RANGES } from './farm-config'
-import { cellClasses, formatParamKey, formatValue, getStatus } from './farm-helpers'
+import {
+  cellClasses,
+  formatParamKey,
+  formatValue,
+  getStatus,
+  statusGlyph,
+  statusLabel
+} from './farm-helpers'
 
 export function PetioleComparison({
   reports,
@@ -107,13 +114,13 @@ export function PetioleComparison({
                       }`}
                     >
                       <div className="flex flex-col items-center gap-0.5">
-                        <span className="tabular-nums text-[11px] font-semibold text-foreground">
+                        <span className="font-mono tabular-nums text-[11px] font-semibold text-foreground">
                           {new Date(r.date).toLocaleDateString(undefined, {
                             day: '2-digit',
                             month: 'short'
                           })}
                         </span>
-                        <span className="tabular-nums text-[10px] text-muted-foreground">
+                        <span className="font-mono tabular-nums text-[10px] text-muted-foreground">
                           {new Date(r.date).toLocaleDateString(undefined, {
                             year: 'numeric'
                           })}
@@ -159,7 +166,7 @@ export function PetioleComparison({
                           <div className="flex flex-col">
                             <span>{formatParamKey(key)}</span>
                             {range && (
-                              <span className="text-[10px] text-muted-foreground tabular-nums">
+                              <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
                                 {range.min}-{range.max} {range.unit}
                               </span>
                             )}
@@ -175,20 +182,31 @@ export function PetioleComparison({
                             : raw != null && raw !== ''
                               ? String(raw)
                               : '-'
+                          const abnormal = isNumeric && range && status !== 'optimal'
                           return (
                             <td
                               key={`${reportKeys[i]}:${key}`}
-                              className={`px-3 py-1.5 text-center border-b border-l border-border tabular-nums text-[12px] font-medium ${cellClasses(
+                              className={`px-3 py-1.5 text-center border-b border-l border-border font-mono tabular-nums text-[12px] font-medium ${cellClasses(
                                 status,
                                 isCurrent
                               )}`}
                               title={
                                 isNumeric && range
-                                  ? `${formatParamKey(key)}: ${raw} (target ${range.min}-${range.max})`
+                                  ? `${formatParamKey(key)}: ${raw} — ${statusLabel(status)} (target ${range.min}-${range.max})`
                                   : undefined
                               }
                             >
-                              {display}
+                              <span className="inline-flex items-center justify-center gap-0.5">
+                                {abnormal && (
+                                  <span aria-hidden className="text-[10px] leading-none">
+                                    {statusGlyph(status)}
+                                  </span>
+                                )}
+                                {display}
+                                {abnormal && (
+                                  <span className="sr-only"> {statusLabel(status)}</span>
+                                )}
+                              </span>
                             </td>
                           )
                         })}
@@ -205,12 +223,24 @@ export function PetioleComparison({
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
         <span className="inline-flex items-center gap-1">
-          <span className="h-2.5 w-2.5 rounded-sm bg-amber-200 dark:bg-amber-900/50" />
-          Below target
+          <span
+            className="h-2.5 w-2.5 rounded-sm"
+            style={{
+              backgroundColor: 'var(--nutrient-deficient-bg)',
+              border: '1px solid var(--nutrient-deficient)'
+            }}
+          />
+          <span aria-hidden>▾</span> Deficient (below target)
         </span>
         <span className="inline-flex items-center gap-1">
-          <span className="h-2.5 w-2.5 rounded-sm bg-rose-200 dark:bg-rose-900/50" />
-          Above target
+          <span
+            className="h-2.5 w-2.5 rounded-sm"
+            style={{
+              backgroundColor: 'var(--nutrient-excess-bg)',
+              border: '1px solid var(--nutrient-excess)'
+            }}
+          />
+          <span aria-hidden>▴</span> Excess (above target)
         </span>
         <span className="inline-flex items-center gap-1">
           <span className="h-2.5 w-2.5 rounded-sm bg-primary/10 ring-1 ring-primary/30" />

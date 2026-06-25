@@ -13,6 +13,7 @@ export interface ConsultantAccess {
   organizationId: string
   organizationName: string | null
   joinCode: string | null
+  logoUrl: string | null
   role: ConsultantRole
   canViewAllFarmers: boolean
   isAgronomist: boolean
@@ -22,6 +23,7 @@ export interface ConsultantAccess {
 interface EmbeddedOrganization {
   name: string | null
   slug: string | null
+  logo_url: string | null
 }
 
 /**
@@ -57,7 +59,7 @@ export async function getConsultantAccess(): Promise<ConsultantAccess | null> {
   // Deterministic: one org per user for V1
   const { data: membership, error: memberError } = await supabase
     .from('organization_members')
-    .select('organization_id, role, is_owner, organizations(name, slug)')
+    .select('organization_id, role, is_owner, organizations(name, slug, logo_url)')
     .eq('user_id', user.id)
     .order('joined_at', { ascending: true })
     .limit(1)
@@ -84,6 +86,7 @@ export async function getConsultantAccess(): Promise<ConsultantAccess | null> {
     organizationId: membership.organization_id,
     organizationName: organization?.name ?? null,
     joinCode: organization?.slug ?? null,
+    logoUrl: organization?.logo_url ?? null,
     role,
     canViewAllFarmers,
     isAgronomist: role === 'agronomist'

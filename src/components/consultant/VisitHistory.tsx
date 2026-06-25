@@ -8,16 +8,19 @@ import {
   type FollowedStatus
 } from '@/lib/consultant-visit-service'
 
+// Status colors come from the design system, not raw Tailwind: followed →
+// optimal-green, partially → deficient-amber, not-followed → critical red
+// (#7f1d1d / bg #fee2e2 per DESIGN.md). Always paired with an icon + label.
 const followedStatusIcon: Record<FollowedStatus, React.ReactNode> = {
-  followed: <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />,
-  partially_followed: <MinusCircle className="h-3.5 w-3.5 text-amber-600" />,
-  not_followed: <XCircle className="h-3.5 w-3.5 text-rose-600" />
+  followed: <CheckCircle2 className="h-3.5 w-3.5 text-[var(--nutrient-optimal)]" />,
+  partially_followed: <MinusCircle className="h-3.5 w-3.5 text-[var(--nutrient-deficient)]" />,
+  not_followed: <XCircle className="h-3.5 w-3.5 text-[#7f1d1d] dark:text-[#f3b2b2]" />
 }
 
 const followedStatusBadgeClass: Record<FollowedStatus, string> = {
-  followed: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400',
-  partially_followed: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400',
-  not_followed: 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400'
+  followed: 'bg-[var(--nutrient-optimal-bg)] text-[var(--nutrient-optimal)]',
+  partially_followed: 'bg-[var(--nutrient-deficient-bg)] text-[var(--nutrient-deficient)]',
+  not_followed: 'bg-[#fee2e2] text-[#7f1d1d] dark:bg-[#3a1c1c] dark:text-[#f3b2b2]'
 }
 
 function startOfDay(d: Date) {

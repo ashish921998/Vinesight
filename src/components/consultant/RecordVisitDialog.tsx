@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/Skeleton'
 import {
   Select,
   SelectContent,
@@ -281,15 +282,19 @@ export function RecordVisitDialog({
               <Label>Recommendation follow-up</Label>
               {recommendations.length > 0 && (
                 <span className="text-xs text-muted-foreground">
-                  {verifiedCount}/{recommendations.length} verified
+                  <span className="font-mono tabular-nums">
+                    {verifiedCount}/{recommendations.length}
+                  </span>{' '}
+                  verified
                 </span>
               )}
             </div>
 
             {loading ? (
-              <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading recommendations…
+              <div className="space-y-2 py-2">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full rounded-lg" />
+                ))}
               </div>
             ) : recommendations.length === 0 ? (
               <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">

@@ -119,14 +119,23 @@ export default function FarmerProfilePage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-2">
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="font-serif text-2xl font-semibold tracking-tight">
               {farmer.full_name || 'Unknown Farmer'}
             </h1>
             {clientRecordId && (
               <span
-                className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${
-                  isPaid ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
-                }`}
+                className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium"
+                style={
+                  isPaid
+                    ? {
+                        backgroundColor: 'var(--nutrient-optimal-bg)',
+                        color: 'var(--nutrient-optimal)'
+                      }
+                    : {
+                        backgroundColor: 'var(--nutrient-deficient-bg)',
+                        color: 'var(--nutrient-deficient)'
+                      }
+                }
                 title={isPaid ? 'Payment status: paid' : 'Payment status: unpaid'}
               >
                 {isPaid ? <IndianRupee className="h-3 w-3" /> : <CircleAlert className="h-3 w-3" />}

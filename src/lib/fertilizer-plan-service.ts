@@ -194,6 +194,47 @@ export class FertilizerPlanService {
     })) as FertilizerPlanWithItems[]
   }
 
+  /**
+   * The set of Petiole Review IDs that already have a fertilizer plan in the
+   * given organization. Used by the Overview to detect reviews left without a
+   * plan. NOTE: the `fertilizer_plans` SELECT RLS grants every org member the
+   * whole org's plans, so for a restricted agronomist this returns plan links
+   * org-wide — wider than their assigned-client triage scope. That's safe here
+   * because the result is only ever used as a *suppression set* against the
+   * already-scoped triage list (see `reviewedNoPlan`): an out-of-scope triage
+   * id is never in that list, so a wider plan set can only correctly hide a
+   * has-a-plan row — never fabricate one, and the opaque ids are never shown.
+   * Don't reuse this for a positive "plans issued" count without re-scoping.
+   * Only the `petiole_triage_id` column is selected.
+   */
+  static async getPlanTriageIdsByOrg(organizationId: string): Promise<string[]> {
+    const supabase = await getTypedSupabaseClient()
+
+    // Page through with .range() so the suppression set is never silently
+    // truncated at PostgREST's default 1000-row cap. A missing plan link would
+    // make an already-planned review re-surface as "reviewed but no plan".
+    const PAGE_SIZE = 1000
+    const ids: string[] = []
+    for (let from = 0; ; from += PAGE_SIZE) {
+      const { data, error } = await supabase
+        .from('fertilizer_plans')
+        .select('petiole_triage_id')
+        .eq('organization_id', organizationId)
+        .not('petiole_triage_id', 'is', null)
+        .range(from, from + PAGE_SIZE - 1)
+
+      if (error) throw error
+
+      const page = data ?? []
+      for (const row of page) {
+        if (row.petiole_triage_id != null) ids.push(row.petiole_triage_id)
+      }
+      if (page.length < PAGE_SIZE) break
+    }
+
+    return ids
+  }
+
   // Get a single plan by ID
   static async getPlanById(planId: string): Promise<FertilizerPlanWithItems | null> {
     const supabase = await getTypedSupabaseClient()

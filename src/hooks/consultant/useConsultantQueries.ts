@@ -17,6 +17,7 @@ import {
   type CreateVisitInput
 } from '@/lib/consultant-visit-service'
 import { getTriageItems } from '@/lib/consultant-triage-service'
+import { getOrgFollowupAdherence, getOrgLatestPetiole } from '@/lib/consultant-dashboard-service'
 import { listOrgMembers, listPendingInvites } from '@/lib/team-service'
 import { SupabaseService } from '@/lib/supabase-service'
 import { FertilizerPlanService } from '@/lib/fertilizer-plan-service'
@@ -180,6 +181,44 @@ export function useTriageItems(access: ConsultantAccess | null | undefined) {
       ? consultantKeys.triageItems(access.organizationId, farmerScope(access))
       : ['consultant', 'triageItems', 'disabled'],
     queryFn: () => getTriageItems(access as ConsultantAccess),
+    enabled: Boolean(access)
+  })
+}
+
+// Recommendation-adherence counts across the consultant's scope — drives the
+// Command Center adherence KPI. Backed by the get_org_followup_adherence RPC.
+export function useOrgAdherence(access: ConsultantAccess | null | undefined) {
+  return useQuery({
+    queryKey: access
+      ? consultantKeys.orgAdherence(access.organizationId, farmerScope(access))
+      : ['consultant', 'orgAdherence', 'disabled'],
+    queryFn: () => getOrgFollowupAdherence(),
+    enabled: Boolean(access)
+  })
+}
+
+// Latest petiole test per accessible farm — drives the nutrient-status chart.
+// Backed by the get_org_latest_petiole RPC; the client buckets values.
+export function useOrgNutrientStatus(access: ConsultantAccess | null | undefined) {
+  return useQuery({
+    queryKey: access
+      ? consultantKeys.orgNutrientStatus(access.organizationId, farmerScope(access))
+      : ['consultant', 'orgNutrientStatus', 'disabled'],
+    queryFn: () => getOrgLatestPetiole(),
+    enabled: Boolean(access)
+  })
+}
+
+// Petiole Review IDs that already have a fertilizer plan, across the caller's
+// scope — drives the Overview "reviewed but no plan" detection. Diffed in
+// memory against the triage items; no new RPC.
+export function useOrgPlanTriageLinks(access: ConsultantAccess | null | undefined) {
+  return useQuery({
+    queryKey: access
+      ? consultantKeys.orgPlanLinks(access.organizationId)
+      : ['consultant', 'orgPlanLinks', 'disabled'],
+    queryFn: () =>
+      FertilizerPlanService.getPlanTriageIdsByOrg((access as ConsultantAccess).organizationId),
     enabled: Boolean(access)
   })
 }

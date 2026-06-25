@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { ExternalLink, Leaf, Loader2, TestTube } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/Skeleton'
 import type { TestReportFile } from '@/lib/document-service'
 import { consultantKeys } from '@/lib/consultant-query-keys'
 import { SectionLabel } from './SectionLabel'
@@ -37,14 +38,21 @@ export function FarmReportFiles({ farmId }: { farmId: number }) {
       <div className="flex items-baseline justify-between">
         <SectionLabel>Report files</SectionLabel>
         {files.length > 0 && (
-          <span className="text-xs text-muted-foreground tabular-nums">{files.length} files</span>
+          <span className="font-mono text-xs text-muted-foreground tabular-nums">
+            {files.length} files
+          </span>
         )}
       </div>
 
       {isPending ? (
-        <div className="mt-2 flex items-center gap-2 rounded-lg border border-border px-3 py-6 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Loading report files…
+        <div className="mt-2 space-y-2 rounded-lg border border-border px-3 py-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Skeleton className="h-4 w-4 rounded" />
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="h-4 w-12" />
+            </div>
+          ))}
         </div>
       ) : isError ? (
         <div className="mt-2 flex flex-col items-center gap-3 rounded-lg border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">

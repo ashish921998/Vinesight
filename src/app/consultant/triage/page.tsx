@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -20,6 +21,7 @@ import posthog from 'posthog-js'
 import {
   TRIAGE_STATUSES,
   type TriageItem,
+  type TriageSeverity,
   type TriageStatus
 } from '@/lib/consultant-triage-service'
 
@@ -51,6 +53,22 @@ function statusVariant(status: TriageStatus) {
   }
 }
 
+const SEVERITY_LABELS: Record<TriageSeverity, string> = {
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+  critical: 'Critical'
+}
+
+// Severity chip on the diverging/status spine, never color alone (always
+// labelled). Only high/critical get tinted; low/medium stay neutral.
+function severityStyle(severity: TriageSeverity): React.CSSProperties | undefined {
+  if (severity === 'critical') return { backgroundColor: '#fee2e2', color: '#7f1d1d' }
+  if (severity === 'high')
+    return { backgroundColor: 'var(--nutrient-deficient-bg)', color: 'var(--nutrient-deficient)' }
+  return undefined
+}
+
 function formatDate(value: string | null) {
   if (!value) return '—'
   const date = new Date(value)
@@ -66,6 +84,7 @@ export default function ReportsToReviewPage() {
   // effect — that pattern read as derived state and rendered twice per load.
   const triageQuery = useTriageItems(access)
   const items = triageQuery.data ?? EMPTY_ITEMS
+  const router = useRouter()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('open')
@@ -136,38 +155,29 @@ export default function ReportsToReviewPage() {
           <Skeleton className="h-4 w-72" />
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="space-y-2 p-4">
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-8 w-10" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Skeleton className="h-5 w-80 max-w-full" />
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <Skeleton className="h-9 flex-1" />
           <Skeleton className="h-9 w-full sm:w-[170px]" />
         </div>
 
-        <Card>
-          <CardContent className="p-0">
-            <ul className="divide-y">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <li key={i} className="flex items-center gap-3 px-4 py-3">
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-1/3" />
-                    <Skeleton className="h-3 w-1/4" />
-                  </div>
-                  <Skeleton className="h-6 w-16" />
-                  <Skeleton className="h-6 w-20" />
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border border-border">
+          <div className="border-b border-border px-4 py-2">
+            <Skeleton className="h-3 w-full max-w-md" />
+          </div>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-4 border-b border-border px-4 py-3 last:border-b-0"
+            >
+              <Skeleton className="h-4 w-1/4" />
+              <Skeleton className="h-4 w-1/5" />
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="ml-auto h-6 w-20" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -176,33 +186,27 @@ export default function ReportsToReviewPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Reports to Review</h1>
+        <h1 className="font-serif text-2xl font-semibold">Reports to Review</h1>
         <p className="text-muted-foreground">
           Petiole reports awaiting a fertilizer plan for{' '}
           {access?.isAgronomist ? 'farmers assigned to you' : 'your organization'}
         </p>
       </div>
 
-      {/* Summary counts */}
-      <div className="grid grid-cols-3 gap-3">
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Pending</p>
-            <p className="text-2xl font-bold">{counts.pending}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">In progress</p>
-            <p className="text-2xl font-bold">{counts.inProgress}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Completed</p>
-            <p className="text-2xl font-bold">{counts.completed}</p>
-          </CardContent>
-        </Card>
+      {/* Header counter — "N reports awaiting judgment" + a compact mono
+          breakdown, instead of a 3-card metric grid (anti-slop). */}
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <p className="text-sm">
+          <span className="font-mono text-lg font-semibold tabular-nums">
+            {counts.pending + counts.inProgress}
+          </span>{' '}
+          report{counts.pending + counts.inProgress === 1 ? '' : 's'} awaiting judgment
+        </p>
+        <p className="text-xs text-muted-foreground">
+          <span className="font-mono tabular-nums">{counts.pending}</span> pending ·{' '}
+          <span className="font-mono tabular-nums">{counts.inProgress}</span> in progress ·{' '}
+          <span className="font-mono tabular-nums">{counts.completed}</span> completed
+        </p>
       </div>
 
       {/* Filters */}
@@ -247,44 +251,73 @@ export default function ReportsToReviewPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            {/* Header row (md+) */}
-            <div className="hidden md:grid grid-cols-[1.5fr_1.2fr_1fr_1fr_auto] gap-3 px-4 py-2 border-b text-xs font-medium text-muted-foreground">
-              <span>Farmer</span>
-              <span>Farm</span>
-              <span>Sampled</span>
-              <span>Status</span>
-              <span />
-            </div>
-            <ul className="divide-y">
-              {filteredItems.map((item) => (
-                <li key={item.id}>
-                  <Link
-                    href={`/consultant/farmers/${item.clientUserId}/farms/${item.farmId}?reviewId=${item.id}`}
-                    className="w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors md:grid md:grid-cols-[1.5fr_1.2fr_1fr_1fr_auto] md:items-center md:gap-3 block"
+        <div className="overflow-x-auto rounded-xl border border-border bg-card">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/40 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <th className="px-4 py-2 font-semibold">Farmer</th>
+                <th className="px-4 py-2 font-semibold">Farm</th>
+                <th className="px-4 py-2 font-semibold">Sampled</th>
+                <th className="px-4 py-2 font-semibold">Severity</th>
+                <th className="px-4 py-2 font-semibold">Status</th>
+                <th className="px-4 py-2 text-right font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filteredItems.map((item) => {
+                const href = `/consultant/farmers/${item.clientUserId}/farms/${item.farmId}?reviewId=${item.id}`
+                return (
+                  <tr
+                    key={item.id}
+                    onClick={() => router.push(href)}
+                    className="cursor-pointer transition-colors hover:bg-muted/50"
                   >
-                    <span className="font-medium block md:truncate">
-                      {item.farmerName || 'Unknown farmer'}
-                    </span>
-                    <span className="text-sm text-muted-foreground block md:truncate">
-                      {item.farmName || '—'}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
+                    <td className="px-4 py-2.5">
+                      <Link
+                        href={href}
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-serif font-medium text-foreground hover:underline"
+                      >
+                        {item.farmerName || 'Unknown farmer'}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{item.farmName || '—'}</td>
+                    <td className="px-4 py-2.5 font-mono tabular-nums text-muted-foreground">
                       {formatDate(item.testDate)}
-                    </span>
-                    <span className="mt-1 md:mt-0">
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {item.severity ? (
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                            item.severity === 'critical' || item.severity === 'high'
+                              ? ''
+                              : 'bg-muted text-muted-foreground'
+                          }`}
+                          style={severityStyle(item.severity)}
+                        >
+                          {SEVERITY_LABELS[item.severity]}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5">
                       <Badge variant={statusVariant(item.status)}>
                         {STATUS_LABELS[item.status]}
                       </Badge>
-                    </span>
-                    <ChevronRight className="hidden md:block h-4 w-4 text-muted-foreground" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+                    </td>
+                    <td className="px-4 py-2.5 text-right">
+                      <span className="inline-flex items-center gap-0.5 text-xs font-medium text-primary">
+                        Review
+                        <ChevronRight className="h-4 w-4" />
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )

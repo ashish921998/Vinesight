@@ -2029,6 +2029,7 @@ export type Database = {
           id: string
           name: string
           slug: string | null
+          logo_url: string | null
           description: string | null
           metadata: Json | null
           created_by: string | null
@@ -2039,6 +2040,7 @@ export type Database = {
           id?: string
           name: string
           slug?: string | null
+          logo_url?: string | null
           description?: string | null
           metadata?: Json | null
           created_by?: string | null
@@ -2049,6 +2051,7 @@ export type Database = {
           id?: string
           name?: string
           slug?: string | null
+          logo_url?: string | null
           description?: string | null
           metadata?: Json | null
           created_by?: string | null
@@ -2635,6 +2638,21 @@ export type Database = {
           created_at: string | null
           updated_at: string | null
         }
+      }
+      get_org_followup_adherence: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          followed_status: string
+          total: number
+        }[]
+      }
+      get_org_latest_petiole: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          farm_id: number
+          sample_date: string | null
+          parameters: Json
+        }[]
       }
     }
     Enums: {

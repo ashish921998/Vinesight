@@ -253,7 +253,7 @@ export default function FarmerAssignmentsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Farmer Assignments</h1>
+          <h1 className="font-serif text-2xl font-semibold">Farmer Assignments</h1>
           <p className="text-muted-foreground">Assign farmers to agronomists</p>
         </div>
         <Alert>
@@ -273,7 +273,7 @@ export default function FarmerAssignmentsPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Farmer Assignments</h1>
+        <h1 className="font-serif text-2xl font-semibold">Farmer Assignments</h1>
         <p className="text-muted-foreground">Assign farmers to agronomists in bulk</p>
       </div>
 
@@ -281,7 +281,7 @@ export default function FarmerAssignmentsPage() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <UserCog className="h-4 w-4 text-accent" />
+            <UserCog className="h-4 w-4 text-muted-foreground" />
             Target Agronomist
           </CardTitle>
         </CardHeader>
@@ -315,10 +315,12 @@ export default function FarmerAssignmentsPage() {
         <CardHeader className="pb-3 space-y-3">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <CardTitle className="text-base flex items-center gap-2">
-              <Users className="h-4 w-4 text-accent" />
+              <Users className="h-4 w-4 text-muted-foreground" />
               Farmers
             </CardTitle>
-            <Badge variant="secondary">{selectedCount} selected</Badge>
+            <Badge variant="secondary">
+              <span className="font-mono tabular-nums">{selectedCount}</span> selected
+            </Badge>
           </div>
 
           <div className="relative">
@@ -376,7 +378,8 @@ export default function FarmerAssignmentsPage() {
                           {farmer.full_name || 'Unknown Farmer'}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {farmer.farms.length} farm{farmer.farms.length !== 1 ? 's' : ''}
+                          <span className="font-mono tabular-nums">{farmer.farms.length}</span> farm
+                          {farmer.farms.length !== 1 ? 's' : ''}
                         </div>
                       </div>
                       <Badge

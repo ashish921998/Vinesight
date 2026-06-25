@@ -42,17 +42,45 @@
   --chart-3: #89a379;
   --chart-4: #1c1c1c;
   --chart-5: #52525b;
-  --sidebar: #f4f4f5;
-  --sidebar-foreground: #1c1c1c;
+  /* ----------------------------------------------------------------------
+     Command Center chart palette (instrument-grade extension, DESIGN.md).
+     Mirrored as hex literals in dashboard/chart-theme.ts — Recharts sets
+     fill/stroke as SVG attributes where var() does not resolve, so charts
+     consume the literals and chips consume these vars.
+     ---------------------------------------------------------------------- */
+  /* Diverging nutrient scale — deficient / optimal / excess (the signature) */
+  --nutrient-deficient: #b54708;
+  --nutrient-deficient-bg: #fff4e5;
+  --nutrient-optimal: #3f7d4c;
+  --nutrient-optimal-bg: #edf7ef;
+  --nutrient-excess: #5b6c9e;
+  --nutrient-excess-bg: #eef1f8;
+  /* Petiole Review severity ramp — low → critical */
+  --severity-low: #3f7d4c;
+  --severity-medium: #b54708;
+  --severity-high: #c2410c;
+  --severity-critical: #7f1d1d;
+  /* Review pipeline status ramp — pending → resolved (+ escalated exception) */
+  --status-pending: #6f7672;
+  --status-in-review: #5b6c9e;
+  --status-reviewed: #89a379;
+  --status-resolved: #3f7d4c;
+  --status-escalated: #7f1d1d;
+  --sidebar: #f3f4f0;
+  --sidebar-foreground: #232a2f;
   --sidebar-primary: #2f3a44;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #6f8f5e;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #e4e4e7;
+  /* Hover = subtle warm neutral. Selected = soft sage (--accent-soft). Kept on
+     separate tokens so a hovered row never looks like the selected row. */
+  --sidebar-accent: #e9ebe5;
+  --sidebar-accent-foreground: #232a2f;
+  --sidebar-active: #dde9d3;
+  --sidebar-active-foreground: #38502e;
+  --sidebar-border: #dfe2dc;
   --sidebar-ring: #6f8f5e;
-  --font-sans: Montserrat, sans-serif;
-  --font-serif: Merriweather, serif;
-  --font-mono: Source Code Pro, monospace;
+  --font-sans: 'IBM Plex Sans', sans-serif;
+  --font-serif: 'IBM Plex Serif', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', monospace;
   /* 4pt-based radii */
   --radius: 8px; /* buttons, inputs */
   --radius-card: 12px; /* cards */
@@ -92,17 +120,37 @@
   --chart-3: #89a379;
   --chart-4: #e6e7e8;
   --chart-5: #c7ccd2;
+  /* Command Center chart palette — dark-mode lifts (DESIGN.md raises the
+     diverging hues for contrast on dark surfaces). */
+  --nutrient-deficient: #f0915a;
+  --nutrient-deficient-bg: #3a2a1c;
+  --nutrient-optimal: #7cc08a;
+  --nutrient-optimal-bg: #1c2a20;
+  --nutrient-excess: #9fb0dd;
+  --nutrient-excess-bg: #1e2433;
+  --severity-low: #7cc08a;
+  --severity-medium: #f0915a;
+  --severity-high: #fb923c;
+  --severity-critical: #e5484d;
+  --status-pending: #9aa0a6;
+  --status-in-review: #9fb0dd;
+  --status-reviewed: #89a379;
+  --status-resolved: #7cc08a;
+  --status-escalated: #e5484d;
   --sidebar: #161d23;
   --sidebar-foreground: #e6e7e8;
   --sidebar-primary: #6f8f5e;
   --sidebar-primary-foreground: #0f1317;
-  --sidebar-accent: #6f8f5e;
-  --sidebar-accent-foreground: #0f1317;
+  /* Hover = subtle dark neutral. Selected = sage-tinted dark with sage text. */
+  --sidebar-accent: #232c30;
+  --sidebar-accent-foreground: #e6e7e8;
+  --sidebar-active: #2b3a26;
+  --sidebar-active-foreground: #9cc08a;
   --sidebar-border: #2a333d;
   --sidebar-ring: #6f8f5e;
-  --font-sans: Montserrat, sans-serif;
-  --font-serif: Merriweather, serif;
-  --font-mono: Source Code Pro, monospace;
+  --font-sans: 'IBM Plex Sans', sans-serif;
+  --font-serif: 'IBM Plex Serif', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', monospace;
   --radius: 8px;
   --radius-card: 12px;
   --radius-chip: 999px;
@@ -147,6 +195,8 @@
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
@@ -173,9 +223,9 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-montserrat), var(--font-geist-sans), sans-serif;
-  --font-mono: var(--font-source-code-pro), var(--font-geist-mono), monospace;
-  --font-serif: var(--font-merriweather), serif;
+  --font-sans: var(--font-ibm-plex-sans), var(--font-geist-sans), sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), var(--font-geist-mono), monospace;
+  --font-serif: var(--font-ibm-plex-serif), Georgia, serif;
 }
 
 @layer base {
@@ -208,24 +258,17 @@
     scroll-behavior: smooth;
     /* Better mobile scrolling performance */
     -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
   }
 
-  /* Allow selection for inputs and text content */
-  input,
-  textarea,
-  [contenteditable='true'],
-  p,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  span {
-    -webkit-user-select: auto;
-    user-select: auto;
+  /* Suppress accidental text selection only on interactive chrome,
+     so body content stays selectable everywhere. */
+  button,
+  [role='button'],
+  nav,
+  .touch-target,
+  .touch-target-large {
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   /* Better tap highlights */
