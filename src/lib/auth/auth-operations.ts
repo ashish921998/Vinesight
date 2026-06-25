@@ -71,8 +71,10 @@ export async function signUpWithEmail(
   const { supabase, toast } = deps
   const { email, password, confirmPassword, firstName, lastName } = params
 
-  // Validate password confirmation if provided
-  if (confirmPassword && password !== confirmPassword) {
+  // Validate password confirmation if provided. Guard against `undefined` (the
+  // "not provided" case) rather than falsiness, so an explicit empty-string
+  // confirmation is still treated as a mismatch instead of silently bypassing.
+  if (confirmPassword !== undefined && password !== confirmPassword) {
     return { success: false, error: 'Passwords do not match' }
   }
 
