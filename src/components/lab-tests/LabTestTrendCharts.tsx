@@ -67,8 +67,8 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
   }
 
   // Prepare soil test data
-  const soilTrendData: TrendData[] = [...soilTests]
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  const soilTrendData: TrendData[] = soilTests
+    .toSorted((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .map((record) => ({
       date: new Date(record.date).toISOString(),
       displayDate: format(new Date(record.date), 'MMM dd, yyyy'),
@@ -95,8 +95,8 @@ export function LabTestTrendCharts({ soilTests, petioleTests }: LabTestTrendChar
     }))
 
   // Prepare petiole test data
-  const petioleTrendData: TrendData[] = [...petioleTests]
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  const petioleTrendData: TrendData[] = petioleTests
+    .toSorted((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .map((record) => ({
       date: new Date(record.date).toISOString(),
       displayDate: format(new Date(record.date), 'MMM dd, yyyy'),

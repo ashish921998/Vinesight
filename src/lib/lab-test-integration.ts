@@ -448,25 +448,33 @@ export function matchExpenseToRecommendation(
   recommendations: Recommendation[]
 ): { matched: boolean; recommendation?: Recommendation } {
   const descLower = expenseDescription.toLowerCase()
+  const trackedProducts = [
+    'lime',
+    'gypsum',
+    'urea',
+    'dap',
+    'mop',
+    'potash',
+    'zinc',
+    'boron',
+    'iron',
+    'calcium',
+    'magnesium',
+    'compost'
+  ]
+  const mentionedProducts = new Set(
+    trackedProducts.filter((product) => new RegExp(product).test(descLower))
+  )
 
   for (const rec of recommendations) {
+    if (mentionedProducts.size === 0) break
     const techLower = rec.technical.toLowerCase()
 
     // Check for product mentions
-    if (
-      (descLower.includes('lime') && techLower.includes('lime')) ||
-      (descLower.includes('gypsum') && techLower.includes('gypsum')) ||
-      (descLower.includes('urea') && techLower.includes('urea')) ||
-      (descLower.includes('dap') && techLower.includes('dap')) ||
-      (descLower.includes('mop') && techLower.includes('mop')) ||
-      (descLower.includes('potash') && techLower.includes('potash')) ||
-      (descLower.includes('zinc') && techLower.includes('zinc')) ||
-      (descLower.includes('boron') && techLower.includes('boron')) ||
-      (descLower.includes('iron') && techLower.includes('iron')) ||
-      (descLower.includes('calcium') && techLower.includes('calcium')) ||
-      (descLower.includes('magnesium') && techLower.includes('magnesium')) ||
-      (descLower.includes('compost') && techLower.includes('compost'))
-    ) {
+    const hasMatchingProduct = trackedProducts.some((product) => {
+      return mentionedProducts.has(product) && new RegExp(product).test(techLower)
+    })
+    if (hasMatchingProduct) {
       return { matched: true, recommendation: rec }
     }
   }

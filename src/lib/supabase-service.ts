@@ -708,12 +708,12 @@ export class SupabaseService {
       const unit = fertilizer.unit.trim()
 
       // Validate unit is one of the allowed values
-      if (!['kg/acre', 'liter/acre'].includes(unit)) {
+      if (!isValidFertigationUnit(unit)) {
         throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre"')
       }
 
       // Assign/store sanitized trimmed value back to object with proper type assertion
-      fertilizer.unit = unit as 'kg/acre' | 'liter/acre'
+      fertilizer.unit = unit
     }
 
     // Validate area if provided
@@ -795,12 +795,12 @@ export class SupabaseService {
         const unit = fertilizer.unit.trim()
 
         // Validate unit is one of the allowed values
-        if (!['kg/acre', 'liter/acre'].includes(unit)) {
+        if (!isValidFertigationUnit(unit)) {
           throw new Error('Fertilizer unit must be either "kg/acre" or "liter/acre"')
         }
 
         // Assign/store sanitized trimmed value back to object with proper type assertion
-        fertilizer.unit = unit as 'kg/acre' | 'liter/acre'
+        fertilizer.unit = unit
       }
     }
 

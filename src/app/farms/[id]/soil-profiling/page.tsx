@@ -413,7 +413,7 @@ export default function SoilProfilingPage() {
 
   const sortedProfiles = useMemo(() => {
     if (!soilProfiles.length) return []
-    return [...soilProfiles].sort((a, b) => {
+    return soilProfiles.toSorted((a, b) => {
       const aDate = a.created_at ? new Date(a.created_at).getTime() : 0
       const bDate = b.created_at ? new Date(b.created_at).getTime() : 0
       return aDate - bDate

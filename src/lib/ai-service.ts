@@ -670,7 +670,11 @@ export class AIService {
 
     // Find matching pattern
     for (const pattern of patterns) {
-      if (pattern.keywords.some((keyword) => lowerMessage.includes(keyword))) {
+      const keywordPattern = new RegExp(
+        pattern.keywords.map((keyword) => keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
+      )
+      const matchingKeyword = keywordPattern.test(lowerMessage)
+      if (matchingKeyword) {
         return pattern.responses[language as keyof typeof pattern.responses] || pattern.responses.en
       }
     }
