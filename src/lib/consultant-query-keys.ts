@@ -25,6 +25,7 @@ export const consultantKeys = {
     ['consultant', 'orgAdherence', orgId, scope] as const,
   orgNutrientStatus: (orgId: string, scope: string) =>
     ['consultant', 'orgNutrientStatus', orgId, scope] as const,
-  orgPlanLinks: (orgId: string, scope: string) =>
-    ['consultant', 'orgPlanLinks', orgId, scope] as const
+  // Keyed on orgId only: the fetch (getPlanTriageIdsByOrg) is org-wide and
+  // ignores farmer scope, so 'assigned' and 'all' callers share one cache entry.
+  orgPlanLinks: (orgId: string) => ['consultant', 'orgPlanLinks', orgId] as const
 }

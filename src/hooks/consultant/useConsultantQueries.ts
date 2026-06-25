@@ -215,7 +215,7 @@ export function useOrgNutrientStatus(access: ConsultantAccess | null | undefined
 export function useOrgPlanTriageLinks(access: ConsultantAccess | null | undefined) {
   return useQuery({
     queryKey: access
-      ? consultantKeys.orgPlanLinks(access.organizationId, farmerScope(access))
+      ? consultantKeys.orgPlanLinks(access.organizationId)
       : ['consultant', 'orgPlanLinks', 'disabled'],
     queryFn: () =>
       FertilizerPlanService.getPlanTriageIdsByOrg((access as ConsultantAccess).organizationId),
