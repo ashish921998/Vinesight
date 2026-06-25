@@ -1,0 +1,21 @@
+src/app/farms/[id]/page.tsx
+  s_0352edfcdd0ce2::t_7850c32fe8deaa 475,497,542,601,614,660,779,828,880,902,963,982,1039,1163,1215,1433,2108
+  s_0352edfcdd0ce2::t_957a27dc35c7bf 1315-1322
+  s_0352edfcdd0ce2::t_36ed1283dd8e20 392-396,1428-1431
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.13",
+  "base_commit_sha": "ba06057c9ebd57ee7fad04379478f9f8869aa5cc",
+  "prompts": {},
+  "sessions": {
+    "s_0352edfcdd0ce2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019efeac-4122-7f42-855d-8f3015fd1ed1",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
