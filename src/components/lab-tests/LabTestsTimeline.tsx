@@ -98,7 +98,7 @@ export function LabTestsTimeline({
     type: 'soil' | 'petiole'
   ): LabTestRecord | undefined => {
     const testsOfType = type === 'soil' ? soilTests : petioleTests
-    const sorted = [...testsOfType].sort(
+    const sorted = testsOfType.toSorted(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     )
     const currentIndex = sorted.findIndex((t) => t.id === currentTest.id)
