@@ -1281,35 +1281,33 @@ export default function FarmDetailsPage() {
     try {
       setIsDeleting(true)
 
-      // Delete each activity in the group
-      for (const activity of activities) {
+      // Delete every activity in the group concurrently — they're independent
+      // records, and each mutation invalidates the summary/records caches so the
+      // post-delete refetch reflects whatever was removed.
+      const deleteActivity = (activity: { type: string; id: number }): Promise<unknown> => {
         switch (activity.type) {
           case 'irrigation':
-            await logMutations.irrigation.remove.mutateAsync(activity.id)
-            break
+            return logMutations.irrigation.remove.mutateAsync(activity.id)
           case 'spray':
-            await logMutations.spray.remove.mutateAsync(activity.id)
-            break
+            return logMutations.spray.remove.mutateAsync(activity.id)
           case 'harvest':
-            await logMutations.harvest.remove.mutateAsync(activity.id)
-            break
+            return logMutations.harvest.remove.mutateAsync(activity.id)
           case 'fertigation':
-            await logMutations.fertigation.remove.mutateAsync(activity.id)
-            break
+            return logMutations.fertigation.remove.mutateAsync(activity.id)
           case 'expense':
-            await logMutations.expense.remove.mutateAsync(activity.id)
-            break
+            return logMutations.expense.remove.mutateAsync(activity.id)
           case 'soil_test':
-            await logMutations.soilTest.remove.mutateAsync(activity.id)
-            break
+            return logMutations.soilTest.remove.mutateAsync(activity.id)
           case 'petiole_test':
-            await logMutations.petioleTest.remove.mutateAsync(activity.id)
-            break
+            return logMutations.petioleTest.remove.mutateAsync(activity.id)
           case 'daily_note':
-            await logMutations.dailyNote.remove.mutateAsync(activity.id)
-            break
+            return logMutations.dailyNote.remove.mutateAsync(activity.id)
+          default:
+            return Promise.resolve()
         }
       }
+
+      await Promise.all(activities.map(deleteActivity))
     } catch (error) {
       logger.error('Error deleting date group:', error)
       toast.error('Failed to delete logs. Please try again.')
