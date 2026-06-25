@@ -22,6 +22,7 @@ import { FarmerFarmsTable } from './components/FarmerFarmsTable'
 export default function FarmerProfilePage() {
   const params = useParams()
   const farmerId = params.farmerId as string
+
   const { farmer, farms, loading, notFound, access, clientRecordId, isPaid, setIsPaid } =
     useFarmerProfileData(farmerId)
 

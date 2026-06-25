@@ -1,16 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import * as Sentry from '@sentry/nextjs'
 import posthog from 'posthog-js'
-import { getConsultantAccess, type ConsultantAccess } from '@/lib/consultant-access'
+import { useQueryClient } from '@tanstack/react-query'
+import { type ConsultantAccess } from '@/lib/consultant-access'
+import { type FarmerFarm } from '@/lib/consultant-query-service'
+import { consultantKeys } from '@/lib/consultant-query-keys'
 import {
-  validateFarmerClient,
-  getFarmerProfile,
-  getFarmerFarms,
-  type FarmerFarm
-} from '@/lib/consultant-query-service'
+  farmerScope,
+  useConsultantAccess,
+  useFarmerFarms,
+  useFarmerProfile,
+  useValidatedFarmerClient
+} from '@/hooks/consultant/useConsultantQueries'
 
 export interface FarmerProfile {
   id: string
@@ -33,83 +37,78 @@ export interface FarmerProfileData {
 /**
  * Loads everything the farmer profile page needs — consultant access, the
  * farmer's organization-client validation (paid status), their profile, and
- * their farms. Lifted out of the page so the page is just rendering.
+ * their farms. Backed by TanStack Query so the data is cached and shared with
+ * the rest of the consultant surface. Lifted out of the page so the page is
+ * just rendering.
  */
 export function useFarmerProfileData(farmerId: string): FarmerProfileData {
-  const [farmer, setFarmer] = useState<FarmerProfile | null>(null)
-  const [farms, setFarms] = useState<FarmerFarm[]>([])
-  const [loading, setLoading] = useState(true)
-  const [notFound, setNotFound] = useState(false)
-  const [access, setAccess] = useState<ConsultantAccess | null>(null)
-  const [clientRecordId, setClientRecordId] = useState<string | null>(null)
-  const [isPaid, setIsPaid] = useState(false)
+  const queryClient = useQueryClient()
 
+  const accessQuery = useConsultantAccess()
+  const access = accessQuery.data ?? null
+
+  const validationQuery = useValidatedFarmerClient(access, farmerId)
+  const validation = validationQuery.data
+  const isValidClient = validation?.isValid ?? false
+
+  const farmerQuery = useFarmerProfile(farmerId, isValidClient)
+  const farmsQuery = useFarmerFarms(farmerId, isValidClient)
+
+  const farmer = (farmerQuery.data ?? null) as FarmerProfile | null
+  const farms = (farmsQuery.data ?? []) as FarmerFarm[]
+  const clientRecordId = validation?.isValid ? validation.clientRecordId : null
+  const isPaid = (validation?.isValid && validation.isPaid) ?? false
+
+  const loading =
+    accessQuery.isPending ||
+    (Boolean(access) && validationQuery.isPending) ||
+    (isValidClient && (farmerQuery.isPending || farmsQuery.isPending))
+  const notFound =
+    (!accessQuery.isPending && !accessQuery.isError && !access) ||
+    validation?.isValid === false ||
+    (isValidClient && farmerQuery.isSuccess && !farmer)
+
+  // Surface load failures from any of the underlying queries once.
   useEffect(() => {
-    // Guard against stale loads when [farmerId] changes without remounting
-    // (App Router preserves the [farmerId] segment component). If a newer
-    // navigation fires before this load resolves, bail before any setState so
-    // farmer A's data can never overwrite farmer B's.
-    let stale = false
+    const error =
+      accessQuery.error ?? validationQuery.error ?? farmerQuery.error ?? farmsQuery.error
+    if (!error) return
 
-    const load = async () => {
-      try {
-        setLoading(true)
-        setNotFound(false)
+    Sentry.captureException(error, {
+      tags: { context: 'loadFarmerProfile' },
+      extra: { farmerId }
+    })
+    toast.error(error instanceof Error ? error.message : 'Failed to load farmer profile')
+  }, [accessQuery.error, validationQuery.error, farmerQuery.error, farmsQuery.error, farmerId])
 
-        const currentAccess = await getConsultantAccess()
-        if (stale) return
-        if (!currentAccess) {
-          toast.error('Not authenticated')
-          return
-        }
-        setAccess(currentAccess)
+  // Fire the profile-viewed event once per (consultant, org, farmer) load.
+  const trackedViewKeyRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!access || !farmerQuery.data || !farmsQuery.data) return
 
-        // Validate farmer is an active client of the organization
-        const validation = await validateFarmerClient(currentAccess, farmerId)
-        if (stale) return
-        if (!validation.isValid) {
-          setNotFound(true)
-          return
-        }
-        setClientRecordId(validation.clientRecordId)
-        setIsPaid(validation.isPaid)
+    const viewKey = `${access.userId}:${access.organizationId}:${farmerId}`
+    if (trackedViewKeyRef.current === viewKey) return
+    trackedViewKeyRef.current = viewKey
 
-        const [profile, farmsData] = await Promise.all([
-          getFarmerProfile(farmerId),
-          getFarmerFarms(farmerId)
-        ])
+    posthog.capture('consultant_farmer_profile_viewed', {
+      farmer_id: farmerId,
+      org_id: access.organizationId,
+      role: access.role,
+      farm_count: farmsQuery.data.length
+    })
+  }, [access, farmerId, farmerQuery.data, farmsQuery.data])
 
-        if (stale) return
-        if (!profile) {
-          setNotFound(true)
-          return
-        }
+  // Optimistically reflect a payment-status change in the validation cache so
+  // the badge/toggle update immediately and stay consistent on revisit.
+  const setIsPaid = (paid: boolean) => {
+    if (!access) return
 
-        setFarmer(profile)
-        setFarms(farmsData)
-        posthog.capture('consultant_farmer_profile_viewed', {
-          farmer_id: farmerId,
-          org_id: currentAccess.organizationId,
-          role: currentAccess.role,
-          farm_count: farmsData.length
-        })
-      } catch (error) {
-        if (stale) return
-        Sentry.captureException(error, {
-          tags: { context: 'loadFarmerProfile' },
-          extra: { farmerId }
-        })
-        toast.error(error instanceof Error ? error.message : 'Failed to load farmer profile')
-      } finally {
-        if (!stale) setLoading(false)
-      }
-    }
-
-    load()
-    return () => {
-      stale = true
-    }
-  }, [farmerId])
+    queryClient.setQueryData(
+      consultantKeys.farmerValidation(farmerId, access.organizationId, farmerScope(access)),
+      (current: typeof validation) =>
+        current && current.isValid ? { ...current, isPaid: paid } : current
+    )
+  }
 
   return { farmer, farms, loading, notFound, access, clientRecordId, isPaid, setIsPaid }
 }

@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useParams, useSearchParams, redirect } from 'next/navigation'
+import * as Sentry from '@sentry/nextjs'
+import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { LabTestRecord } from '@/types/lab-tests'
 import { VisitHistory } from '@/components/consultant/VisitHistory'
@@ -66,6 +68,37 @@ export default function ConsultantFarmPage() {
   const triageItems = triageQuery.data ?? EMPTY_TRIAGE_ITEMS
   const plans = plansQuery.data ?? EMPTY_PLANS
   const previousPlan = plans[0] ?? null
+
+  useEffect(() => {
+    const error =
+      accessQuery.error ??
+      validationQuery.error ??
+      farmQuery.error ??
+      profileQuery.error ??
+      visitsQuery.error ??
+      labTestsQuery.error ??
+      plansQuery.error ??
+      triageQuery.error
+    if (!error) return
+
+    console.error('Error loading farm data:', error)
+    Sentry.captureException(error, {
+      tags: { context: 'loadFarmDetail' },
+      extra: { farmerId, farmId }
+    })
+    toast.error(error instanceof Error ? error.message : 'Failed to load farm data')
+  }, [
+    accessQuery.error,
+    validationQuery.error,
+    farmQuery.error,
+    profileQuery.error,
+    visitsQuery.error,
+    labTestsQuery.error,
+    plansQuery.error,
+    triageQuery.error,
+    farmerId,
+    farmId
+  ])
 
   // Reconcile the selected review against the latest triage list. Done during
   // render (not in an effect) so picking the review doesn't chain into an extra
