@@ -1,0 +1,43 @@
+src/app/farms/[id]/lab-tests/page.tsx
+  s_0fe34ddf6e895e::t_6dca203e2380ea 199-212
+  s_0fe34ddf6e895e::t_99df9ad58dd614 42-44
+  s_0fe34ddf6e895e::t_9c91b5cd57b854 11
+src/components/tasks/TasksOverviewCard.tsx
+  s_0fe34ddf6e895e::t_a8c6e1df27f3f1 64
+  s_0fe34ddf6e895e::t_917deb11fc1e3f 94,96-98
+  s_0fe34ddf6e895e::t_cb7dc0bba9eb94 9,13
+src/hooks/farms/useFarmQueries.ts
+  s_0fe34ddf6e895e::t_344d83dab5a97c 30-35
+  s_0fe34ddf6e895e::t_52a8a8dd303543 45-48
+  s_0fe34ddf6e895e::t_81df0ca34dd47b 58-61
+  s_0fe34ddf6e895e::t_cb31892f6d8934 163,165-166
+  s_0fe34ddf6e895e::t_f1cfbe438500e3 197-200
+  s_0fe34ddf6e895e::t_f7e1d2d7d3fada 115-118
+src/app/farms/[id]/tasks/page.tsx
+  s_0fe34ddf6e895e::t_1e6fec94b316c9 70-73
+  s_0fe34ddf6e895e::t_6ff1e1d21d8478 108-111
+  s_0fe34ddf6e895e::t_4f6a176a7b8790 128-135,137-138,140,143
+  s_0fe34ddf6e895e::t_12d30c2a0901af 263-276
+  s_0fe34ddf6e895e::t_4c78158f9c8708 106
+src/app/farms/[id]/soil-profiling/page.tsx
+  s_0fe34ddf6e895e::t_0c64e46ddf79ef 184-187
+  s_0fe34ddf6e895e::t_68cb9480b26a2c 219
+  s_0fe34ddf6e895e::t_9b13b8737359b8 912-916
+  s_0fe34ddf6e895e::t_491cdc4c698f73 1506-1508,1511,1514
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.13",
+  "base_commit_sha": "b0b07d978987e3244115c63ff50b77ac9827dcf0",
+  "prompts": {},
+  "sessions": {
+    "s_0fe34ddf6e895e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6c9da833-370a-48d8-9283-6327e7d36762",
+        "model": "glm-5.2"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
