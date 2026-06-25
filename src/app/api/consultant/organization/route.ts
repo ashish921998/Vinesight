@@ -8,11 +8,15 @@ import { globalRateLimiter } from '@/lib/validation'
 
 const LOGO_BUCKET = 'org-logos'
 const MAX_LOGO_BYTES = 2 * 1024 * 1024 // 2 MB
+// SVG is deliberately excluded: file.type is client-controlled and the object
+// is served from a public bucket with that content-type, so an SVG would be
+// returned as image/svg+xml and execute embedded <script> on direct URL access
+// (stored XSS). Raster types can't execute. Re-add SVG only behind server-side
+// sanitization.
 const LOGO_EXT_BY_TYPE: Record<string, string> = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
-  'image/webp': 'webp',
-  'image/svg+xml': 'svg'
+  'image/webp': 'webp'
 }
 
 const NameSchema = z.object({ name: z.string().trim().min(1).max(120) })
@@ -143,10 +147,7 @@ export async function POST(request: NextRequest) {
     }
     const ext = LOGO_EXT_BY_TYPE[file.type]
     if (!ext) {
-      return NextResponse.json(
-        { error: 'Logo must be a PNG, JPG, WEBP, or SVG image' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Logo must be a PNG, JPG, or WEBP image' }, { status: 400 })
     }
     if (file.size > MAX_LOGO_BYTES) {
       return NextResponse.json({ error: 'Logo must be 2 MB or smaller' }, { status: 400 })

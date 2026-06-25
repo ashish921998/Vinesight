@@ -135,12 +135,12 @@ export function OrganizationIdentityCard({
                   )}
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  PNG, JPG, WEBP, or SVG · up to 2 MB · a square image works best.
+                  PNG, JPG, or WEBP · up to 2 MB · a square image works best.
                 </p>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  accept="image/png,image/jpeg,image/webp"
                   className="hidden"
                   onChange={handleLogoSelected}
                 />
