@@ -1,12 +1,14 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import type { TaskReminder } from '@/types/types'
 import { TodaysTasksSection } from '@/components/dashboard/TodaysTasksSection'
 import { TaskModal } from './TaskModal'
 import { SupabaseService } from '@/lib/supabase-service'
+import { farmKeys } from '@/lib/farm-query-keys'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 type TodaysTaskType =
@@ -57,6 +59,7 @@ export function TasksOverviewCard({
   onTasksUpdated
 }: TasksOverviewCardProps) {
   const { user } = useSupabaseAuth()
+  const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<TaskReminder | null>(null)
   const [fetchingTask, setFetchingTask] = useState(false)
@@ -73,6 +76,14 @@ export function TasksOverviewCard({
     }
   }
 
+  const invalidateTaskState = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: farmKeys.tasks(farmId) }),
+      queryClient.invalidateQueries({ queryKey: farmKeys.summary(farmId) })
+    ])
+    await notifyRefresh()
+  }
+
   const handleTaskComplete = async (taskId: string) => {
     const numericId = Number.parseInt(taskId, 10)
     if (!Number.isFinite(numericId)) return
@@ -80,7 +91,7 @@ export function TasksOverviewCard({
     try {
       await SupabaseService.completeTask(numericId)
       toast.success('Task marked as completed.')
-      await notifyRefresh()
+      await invalidateTaskState()
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unable to complete the task right now.'
@@ -187,11 +198,11 @@ export function TasksOverviewCard({
         task={selectedTask}
         onSaved={async () => {
           // Toast is already shown by TaskModal, just refresh the list
-          await notifyRefresh()
+          await invalidateTaskState()
         }}
         onDeleted={async () => {
           // Toast is already shown by TaskModal, just refresh the list
-          await notifyRefresh()
+          await invalidateTaskState()
         }}
       />
     </>

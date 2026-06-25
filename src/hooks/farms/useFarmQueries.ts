@@ -3,7 +3,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SupabaseService } from '@/lib/supabase-service'
 import { farmKeys } from '@/lib/farm-query-keys'
+import { SoilProfileService } from '@/lib/soil-profile-service'
 import type { Farm } from '@/types/types'
+import type { LabTestRecord } from '@/types/lab-tests'
+import type { SoilSection } from '@/lib/supabase'
 
 type FarmCreateInput = Omit<Farm, 'id' | 'createdAt' | 'updatedAt' | 'userId'>
 
@@ -63,6 +66,136 @@ export function useDeleteFarm() {
     mutationFn: (id: number) => SupabaseService.deleteFarm(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: farmKeys.list() })
+    }
+  })
+}
+
+export function useFarmTasks(farmId: number | null) {
+  return useQuery({
+    queryKey: farmId != null ? farmKeys.tasks(farmId) : ['farms', 'tasks', 'disabled'],
+    queryFn: () => SupabaseService.getTaskReminders(farmId as number),
+    enabled: farmId != null
+  })
+}
+
+export function useCompleteFarmTask(farmId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (taskId: number) => SupabaseService.completeTask(taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: farmKeys.tasks(farmId) })
+      queryClient.invalidateQueries({ queryKey: farmKeys.summary(farmId) })
+    }
+  })
+}
+
+export function useReopenFarmTask(farmId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (taskId: number) => SupabaseService.reopenTask(taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: farmKeys.tasks(farmId) })
+      queryClient.invalidateQueries({ queryKey: farmKeys.summary(farmId) })
+    }
+  })
+}
+
+export function useDeleteFarmTask(farmId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (taskId: number) => SupabaseService.deleteTask(taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: farmKeys.tasks(farmId) })
+      queryClient.invalidateQueries({ queryKey: farmKeys.summary(farmId) })
+    }
+  })
+}
+
+export function useFarmLabTests(farmId: number | null) {
+  return useQuery({
+    queryKey: farmId != null ? farmKeys.labTests(farmId) : ['farms', 'lab-tests', 'disabled'],
+    queryFn: async () => {
+      const [soilTests, petioleTests] = await Promise.all([
+        SupabaseService.getSoilTestRecords(farmId as number),
+        SupabaseService.getPetioleTestRecords(farmId as number)
+      ])
+
+      return {
+        soilTests: (soilTests || []) as LabTestRecord[],
+        petioleTests: (petioleTests || []) as LabTestRecord[]
+      }
+    },
+    enabled: farmId != null
+  })
+}
+
+export function useDeleteFarmLabTest(farmId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, type }: { id: number; type: 'soil' | 'petiole' }) =>
+      type === 'soil'
+        ? SupabaseService.deleteSoilTestRecord(id)
+        : SupabaseService.deletePetioleTestRecord(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: farmKeys.labTests(farmId) })
+      queryClient.invalidateQueries({ queryKey: farmKeys.summary(farmId) })
+    }
+  })
+}
+
+export function useFarmSoilProfiles(farmId: number | null) {
+  return useQuery({
+    queryKey:
+      farmId != null ? farmKeys.soilProfiles(farmId) : ['farms', 'soil-profiles', 'disabled'],
+    queryFn: () => SoilProfileService.listProfiles(farmId as number),
+    enabled: farmId != null
+  })
+}
+
+export function useSaveFarmSoilProfile(farmId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: {
+      id?: number | null
+      farm_id: number
+      fusarium_pct?: number | null
+      sections: Array<Omit<SoilSection, 'id' | 'profile_id' | 'created_at'>>
+      profileDate: string
+    }) =>
+      input.id
+        ? SoilProfileService.updateProfile({
+            id: input.id,
+            farm_id: input.farm_id,
+            fusarium_pct: input.fusarium_pct,
+            sections: input.sections as SoilSection[],
+            profileDate: input.profileDate
+          })
+        : SoilProfileService.createProfileWithSections({
+            farm_id: input.farm_id,
+            fusarium_pct: input.fusarium_pct,
+            sections: input.sections,
+            profileDate: input.profileDate
+          }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: farmKeys.soilProfiles(farmId) })
+      queryClient.invalidateQueries({ queryKey: farmKeys.summary(farmId) })
+    }
+  })
+}
+
+export function useDeleteFarmSoilProfile(farmId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (profileId: number) => SoilProfileService.deleteProfile(profileId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: farmKeys.soilProfiles(farmId) })
+      queryClient.invalidateQueries({ queryKey: farmKeys.summary(farmId) })
     }
   })
 }
