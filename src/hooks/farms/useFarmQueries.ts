@@ -29,8 +29,9 @@ export function useDashboardSummary(farmId: number | null) {
     queryKey: hasFarm ? farmKeys.summary(farmId as number) : ['farms', 'summary', 'disabled'],
     queryFn: () => {
       // Fail fast: refetch() bypasses `enabled` in React Query v5, so guard explicitly
-      // rather than casting a possible null to number.
-      if (farmId == null) throw new Error('farmId is required')
+      // rather than casting a possible null/NaN to number. farms/[id]/page.tsx passes
+      // NaN (not null) for invalid IDs, so both checks are required.
+      if (farmId == null || !Number.isFinite(farmId)) throw new Error('farmId is required')
       return SupabaseService.getDashboardSummary(farmId)
     },
     enabled: hasFarm
@@ -43,7 +44,8 @@ export function useFarmFertilizerPlans(farmId: number | null) {
   return useQuery({
     queryKey: hasFarm ? farmKeys.plans(farmId as number) : ['farms', 'plans', 'disabled'],
     queryFn: () => {
-      if (farmId == null) throw new Error('farmId is required')
+      // Same NaN-not-null caller contract as useDashboardSummary above.
+      if (farmId == null || !Number.isFinite(farmId)) throw new Error('farmId is required')
       return FertilizerPlanService.getPlansByFarm(farmId)
     },
     enabled: hasFarm
