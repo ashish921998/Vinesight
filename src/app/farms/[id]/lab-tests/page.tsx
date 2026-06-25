@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { SupabaseService } from '@/lib/supabase-service'
+import { useQueryClient } from '@tanstack/react-query'
 import { LabTestsTimeline } from '@/components/lab-tests/LabTestsTimeline'
 import { LabTestTrendCharts } from '@/components/lab-tests/LabTestTrendCharts'
 import { LabTestComparisonTable } from '@/components/lab-tests/LabTestComparisonTable'
@@ -21,17 +21,24 @@ import {
 import { ArrowLeft, Loader2, LineChart, Table2, Droplets } from 'lucide-react'
 import { toast } from 'sonner'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { farmKeys } from '@/lib/farm-query-keys'
+import { useDeleteFarmLabTest, useFarm, useFarmLabTests } from '@/hooks/farms/useFarmQueries'
 import { LabTestRecord } from '@/types/lab-tests'
 
 function LabTestsPage() {
   const params = useParams()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const farmId = parseInt(params.id as string)
-
-  const [loading, setLoading] = useState(true)
-  const [soilTests, setSoilTests] = useState<LabTestRecord[]>([])
-  const [petioleTests, setPetioleTests] = useState<LabTestRecord[]>([])
-  const [farmName, setFarmName] = useState<string>('')
+  const farmIdValid = Number.isFinite(farmId)
+  const queryFarmId = farmIdValid ? farmId : null
+  const labTestsQuery = useFarmLabTests(queryFarmId)
+  const farmQuery = useFarm(queryFarmId)
+  const deleteLabTestMutation = useDeleteFarmLabTest(farmId)
+  const soilTests = labTestsQuery.data?.soilTests ?? []
+  const petioleTests = labTestsQuery.data?.petioleTests ?? []
+  const farmName = farmQuery.data?.name || 'Farm'
+  const loading = labTestsQuery.isPending
 
   // View mode state - initialize with server-safe default
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart')
@@ -60,7 +67,6 @@ function LabTestsPage() {
   const [showAddSoilModal, setShowAddSoilModal] = useState(false)
   const [showAddPetioleModal, setShowAddPetioleModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
   const [deletingTest, setDeletingTest] = useState<{
     test: LabTestRecord
     type: 'soil' | 'petiole'
@@ -72,31 +78,18 @@ function LabTestsPage() {
     type: 'soil' | 'petiole'
   } | null>(null)
 
-  // Load data
-  const loadLabTests = useCallback(async () => {
-    try {
-      setLoading(true)
-
-      const [soilTestsData, petioleTestsData, farmData] = await Promise.all([
-        SupabaseService.getSoilTestRecords(farmId),
-        SupabaseService.getPetioleTestRecords(farmId),
-        SupabaseService.getFarmById(farmId)
-      ])
-
-      setSoilTests((soilTestsData || []) as LabTestRecord[])
-      setPetioleTests((petioleTestsData || []) as LabTestRecord[])
-      setFarmName(farmData?.name || 'Farm')
-    } catch (error) {
-      console.error('Error loading lab tests:', error)
-      toast.error('Failed to load lab tests')
-    } finally {
-      setLoading(false)
-    }
-  }, [farmId])
-
   useEffect(() => {
-    loadLabTests()
-  }, [loadLabTests])
+    if (labTestsQuery.isError) {
+      toast.error('Failed to load lab tests')
+    }
+  }, [labTestsQuery.isError])
+
+  const invalidateLabTestState = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: farmKeys.labTests(farmId) }),
+      queryClient.invalidateQueries({ queryKey: farmKeys.summary(farmId) })
+    ])
+  }
 
   // Handle adding new tests
   const handleAddSoilTest = () => {
@@ -130,25 +123,20 @@ function LabTestsPage() {
     if (!deletingTest || !deletingTest.test.id) return
 
     try {
-      setIsDeleting(true)
-
-      if (deletingTest.type === 'soil') {
-        await SupabaseService.deleteSoilTestRecord(deletingTest.test.id)
-        setSoilTests((prev) => prev.filter((t) => t.id !== deletingTest.test.id))
-        toast.success('Soil test deleted successfully')
-      } else {
-        await SupabaseService.deletePetioleTestRecord(deletingTest.test.id)
-        setPetioleTests((prev) => prev.filter((t) => t.id !== deletingTest.test.id))
-        toast.success('Petiole test deleted successfully')
-      }
-
+      await deleteLabTestMutation.mutateAsync({
+        id: deletingTest.test.id,
+        type: deletingTest.type
+      })
+      toast.success(
+        deletingTest.type === 'soil'
+          ? 'Soil test deleted successfully'
+          : 'Petiole test deleted successfully'
+      )
       setShowDeleteDialog(false)
       setDeletingTest(null)
     } catch (error) {
       console.error('Error deleting test:', error)
       toast.error('Failed to delete test')
-    } finally {
-      setIsDeleting(false)
     }
   }
 
@@ -159,7 +147,7 @@ function LabTestsPage() {
     setEditingTest(null)
 
     // Reload tests to get the latest data
-    await loadLabTests()
+    await invalidateLabTestState()
   }
 
   // Helper to transform LabTestRecord to modal format
@@ -355,12 +343,16 @@ function LabTestsPage() {
             <Button
               variant="outline"
               onClick={() => setShowDeleteDialog(false)}
-              disabled={isDeleting}
+              disabled={deleteLabTestMutation.isPending}
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleConfirmDelete} disabled={isDeleting}>
-              {isDeleting ? (
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleteLabTestMutation.isPending}
+            >
+              {deleteLabTestMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Deleting...

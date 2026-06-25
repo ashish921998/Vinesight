@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -42,6 +43,14 @@ import {
 } from 'lucide-react'
 
 import { SupabaseService } from '@/lib/supabase-service'
+import { farmKeys } from '@/lib/farm-query-keys'
+import {
+  useCompleteFarmTask,
+  useDeleteFarmTask,
+  useFarm,
+  useFarmTasks,
+  useReopenFarmTask
+} from '@/hooks/farms/useFarmQueries'
 import type { TaskReminder } from '@/types/types'
 import { capitalize, cn } from '@/lib/utils'
 import { TaskModal } from '@/components/tasks/TaskModal'
@@ -82,10 +91,19 @@ export default function FarmTasksPage() {
   const farmIdParam = params.id
   const farmId = Number.parseInt(Array.isArray(farmIdParam) ? farmIdParam[0] : farmIdParam, 10)
   const { user } = useSupabaseAuth()
+  const queryClient = useQueryClient()
+  const farmIdValid = Number.isFinite(farmId)
+  const queryFarmId = farmIdValid ? farmId : null
+  const tasksQuery = useFarmTasks(queryFarmId)
+  const farmQuery = useFarm(queryFarmId)
+  const completeTaskMutation = useCompleteFarmTask(farmId)
+  const reopenTaskMutation = useReopenFarmTask(farmId)
+  const deleteTaskMutation = useDeleteFarmTask(farmId)
+  const tasks = tasksQuery.data ?? []
+  const farmName = farmQuery.data?.name ? capitalize(farmQuery.data.name) : ''
+  const loading = tasksQuery.isPending
+  const refreshing = tasksQuery.isFetching && !tasksQuery.isPending
 
-  const [loading, setLoading] = useState(true)
-  const [tasks, setTasks] = useState<TaskReminder[]>([])
-  const [farmName, setFarmName] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
   const [typeFilter, setTypeFilter] = useState<TaskTypeFilter>('all')
@@ -93,50 +111,31 @@ export default function FarmTasksPage() {
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<TaskReminder | null>(null)
   const [taskToDelete, setTaskToDelete] = useState<TaskReminder | null>(null)
-  const [refreshing, setRefreshing] = useState(false)
-
-  const loadTasks = useCallback(async () => {
-    if (!Number.isFinite(farmId)) return
-
-    setLoading(true)
-    try {
-      const [taskList, farm] = await Promise.all([
-        SupabaseService.getTaskReminders(farmId),
-        SupabaseService.getFarmById(farmId)
-      ])
-      setTasks(taskList || [])
-      if (farm?.name) {
-        setFarmName(capitalize(farm.name))
-      }
-    } catch (error) {
-      // Log detailed error for debugging without exposing to user
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Failed to load tasks:', error)
-      }
-      // Show generic error message to user (don't expose internal error details)
-      toast.error('Unable to load tasks for this farm.')
-    } finally {
-      setLoading(false)
-    }
-  }, [farmId])
 
   useEffect(() => {
-    loadTasks()
-  }, [loadTasks])
+    if (tasksQuery.isError) {
+      toast.error('Unable to load tasks for this farm.')
+    }
+  }, [tasksQuery.isError])
 
   const refreshTasks = useCallback(async () => {
-    setRefreshing(true)
-    try {
-      await loadTasks()
-      // Silent refresh - no toast notification
-    } catch (error) {
+    const [tasksResult] = await Promise.all([tasksQuery.refetch(), farmQuery.refetch()])
+
+    if (tasksResult.error) {
       const errorMessage =
-        error instanceof Error ? `Failed to refresh: ${error.message}` : 'Failed to refresh tasks'
+        tasksResult.error instanceof Error
+          ? `Failed to refresh: ${tasksResult.error.message}`
+          : 'Failed to refresh tasks'
       toast.error(errorMessage)
-    } finally {
-      setRefreshing(false)
     }
-  }, [loadTasks])
+  }, [farmQuery, tasksQuery])
+
+  const invalidateTaskState = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: farmKeys.tasks(farmId) }),
+      queryClient.invalidateQueries({ queryKey: farmKeys.summary(farmId) })
+    ])
+  }, [farmId, queryClient])
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
@@ -204,9 +203,8 @@ export default function FarmTasksPage() {
 
   const handleCompleteTask = async (taskId: number) => {
     try {
-      await SupabaseService.completeTask(taskId)
+      await completeTaskMutation.mutateAsync(taskId)
       toast.success('Task marked as completed.')
-      await loadTasks()
     } catch (error) {
       const errorMessage =
         error instanceof Error
@@ -218,9 +216,8 @@ export default function FarmTasksPage() {
 
   const handleReopenTask = async (taskId: number) => {
     try {
-      await SupabaseService.reopenTask(taskId)
+      await reopenTaskMutation.mutateAsync(taskId)
       toast.success('Task moved back to pending.')
-      await loadTasks()
     } catch (error) {
       const errorMessage =
         error instanceof Error
@@ -233,9 +230,8 @@ export default function FarmTasksPage() {
   const handleDeleteTask = async () => {
     if (!taskToDelete) return
     try {
-      await SupabaseService.deleteTask(taskToDelete.id)
+      await deleteTaskMutation.mutateAsync(taskToDelete.id)
       toast.success('Task deleted.')
-      await loadTasks()
     } catch (error) {
       const errorMessage =
         error instanceof Error
@@ -570,7 +566,7 @@ export default function FarmTasksPage() {
         task={selectedTask}
         onSaved={async () => {
           // Toast is already shown by TaskModal, just refresh the list
-          await loadTasks()
+          await invalidateTaskState()
         }}
       />
 

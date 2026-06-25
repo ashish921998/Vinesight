@@ -46,6 +46,11 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { SoilProfileService } from '@/lib/soil-profile-service'
+import {
+  useDeleteFarmSoilProfile,
+  useFarmSoilProfiles,
+  useSaveFarmSoilProfile
+} from '@/hooks/farms/useFarmQueries'
 import type { SoilProfile, SoilSectionName } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
@@ -187,11 +192,9 @@ export default function SoilProfilingPage() {
     left: initialSectionState('left'),
     right: initialSectionState('right')
   })
-  const [soilProfiles, setSoilProfiles] = useState<SoilProfile[]>([])
   const [savingProfile, setSavingProfile] = useState(false)
   const [fusarium, setFusarium] = useState('')
   const [profileDate, setProfileDate] = useState<string>(() => getTodayInputDate())
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const [activeTab, setActiveTab] = useState<'history' | 'trends'>('history')
   const [editingProfileId, setEditingProfileId] = useState<number | null>(null)
@@ -205,23 +208,20 @@ export default function SoilProfilingPage() {
   })
 
   const farmIdValid = Number.isFinite(farmId)
-
-  const loadSoilProfiles = useCallback(async () => {
-    if (!farmIdValid) return
-    try {
-      const profiles = await SoilProfileService.listProfiles(farmId)
-      setSoilProfiles(profiles)
-      if (profiles[0]?.created_at) {
-        setLastUpdated(new Date(profiles[0].created_at).toLocaleDateString())
-      }
-    } catch (error) {
-      console.error('Failed to load soil profiles', error)
-    }
-  }, [farmId, farmIdValid])
+  const queryFarmId = farmIdValid ? farmId : null
+  const soilProfilesQuery = useFarmSoilProfiles(queryFarmId)
+  const saveProfileMutation = useSaveFarmSoilProfile(farmId)
+  const deleteProfileMutation = useDeleteFarmSoilProfile(farmId)
+  const soilProfiles = soilProfilesQuery.data ?? []
+  const lastUpdated = soilProfiles[0]?.created_at
+    ? new Date(soilProfiles[0].created_at).toLocaleDateString()
+    : null
 
   useEffect(() => {
-    void loadSoilProfiles()
-  }, [loadSoilProfiles])
+    if (soilProfilesQuery.isError) {
+      toast.error('Failed to load soil profiles')
+    }
+  }, [soilProfilesQuery.isError])
 
   const revokeObjectUrl = useCallback((url?: string | null) => {
     if (url && url.startsWith('blob:')) {
@@ -361,24 +361,14 @@ export default function SoilProfilingPage() {
         return
       }
 
-      if (editingProfileId) {
-        await SoilProfileService.updateProfile({
-          id: editingProfileId,
-          farm_id: farmId,
-          fusarium_pct: fusarium ? Number.parseFloat(fusarium) : null,
-          sections: payloadSections,
-          profileDate: profileDateISO
-        })
-        toast.success('Soil profile updated')
-      } else {
-        await SoilProfileService.createProfileWithSections({
-          farm_id: farmId,
-          fusarium_pct: fusarium ? Number.parseFloat(fusarium) : null,
-          sections: payloadSections,
-          profileDate: profileDateISO
-        })
-        toast.success('Soil profile saved')
-      }
+      await saveProfileMutation.mutateAsync({
+        id: editingProfileId,
+        farm_id: farmId,
+        fusarium_pct: fusarium ? Number.parseFloat(fusarium) : null,
+        sections: payloadSections,
+        profileDate: profileDateISO
+      })
+      toast.success(editingProfileId ? 'Soil profile updated' : 'Soil profile saved')
       setShowProfileDialog(false)
       setEditingProfileId(null)
       resetPreviewUrls()
@@ -389,7 +379,6 @@ export default function SoilProfilingPage() {
         right: initialSectionState('right')
       })
       setProfileDate(getTodayInputDate())
-      await loadSoilProfiles()
     } catch (error: unknown) {
       console.error('Save profile error', error)
       toast.error(error instanceof Error ? error.message : 'Failed to save soil profile')
@@ -401,8 +390,7 @@ export default function SoilProfilingPage() {
   const confirmDeleteProfile = async () => {
     if (pendingDeleteProfileId === null) return
     try {
-      await SoilProfileService.deleteProfile(pendingDeleteProfileId)
-      await loadSoilProfiles()
+      await deleteProfileMutation.mutateAsync(pendingDeleteProfileId)
       toast.success('Profile deleted')
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Failed to delete profile')
