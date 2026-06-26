@@ -293,7 +293,7 @@ export default function FarmLogsPage() {
       searchQuery: debouncedQuery,
       // Sort + dedupe so semantically identical selections (same types, any
       // order) map to one cache entry instead of spawning redundant fetches.
-      selectedActivityTypes: [...new Set(debouncedActivityTypes)].sort(),
+      selectedActivityTypes: [...new Set(debouncedActivityTypes)].toSorted(),
       dateFrom: debouncedDateFrom,
       dateTo: debouncedDateTo,
       page: currentPage,
@@ -560,11 +560,10 @@ export default function FarmLogsPage() {
       })
 
       // Record adds already invalidate logs/summary/records via their mutation
-      // hooks, so only a pure daily-note save (no record mutation fired) needs an
-      // explicit refresh here — otherwise we'd schedule a second redundant
-      // searchLogs refetch for every add. Jump to page 1 either way so the newly
-      // added entries are visible.
-      if (logsToSave.length === 0) {
+      // hooks, so only direct daily-note writes need an explicit refresh here.
+      // Photo-only saves attach to an existing/new note without changing log rows.
+      const dailyNoteWasWritten = dayNotes.trim().length > 0 || existingDailyNoteId != null
+      if (logsToSave.length === 0 || dailyNoteWasWritten) {
         invalidateFarmLogs()
       }
       setCurrentPage(1)
