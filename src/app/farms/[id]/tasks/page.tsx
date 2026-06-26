@@ -92,8 +92,9 @@ const statusVariants: Record<TaskReminder['status'], string> = {
 export default function FarmTasksPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
-  const farmIdParam = params.id
-  const farmId = Number.parseInt(Array.isArray(farmIdParam) ? farmIdParam[0] : farmIdParam, 10)
+  const farmIdParam = Array.isArray(params.id) ? params.id[0] : params.id
+  const parsedFarmId = Number(farmIdParam)
+  const farmId = Number.isSafeInteger(parsedFarmId) && parsedFarmId > 0 ? parsedFarmId : NaN
   const { user } = useSupabaseAuth()
   const queryClient = useQueryClient()
   const farmIdValid = Number.isFinite(farmId)

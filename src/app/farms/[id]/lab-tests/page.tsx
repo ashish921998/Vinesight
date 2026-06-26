@@ -30,7 +30,8 @@ function LabTestsPage() {
   const params = useParams()
   const router = useRouter()
   const queryClient = useQueryClient()
-  const farmId = parseInt(params.id as string)
+  const parsedFarmId = Number(params.id)
+  const farmId = Number.isSafeInteger(parsedFarmId) && parsedFarmId > 0 ? parsedFarmId : NaN
   const farmIdValid = Number.isFinite(farmId)
   const queryFarmId = farmIdValid ? farmId : null
   const labTestsQuery = useFarmLabTests(queryFarmId)

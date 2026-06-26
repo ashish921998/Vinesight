@@ -90,18 +90,19 @@ export function useFarmFertilizerPlans(farmId: number | null) {
 
 export function useFarm(farmId: number | null) {
   const queryClient = useQueryClient()
+  const hasFarm = farmId != null && Number.isFinite(farmId)
 
   return useQuery({
-    queryKey: farmId != null ? farmKeys.detail(farmId) : ['farms', 'detail', 'disabled'],
+    queryKey: hasFarm ? farmKeys.detail(farmId as number) : ['farms', 'detail', 'disabled'],
     queryFn: () => {
-      if (farmId == null) throw new Error('farmId is required')
+      if (farmId == null || !Number.isFinite(farmId)) throw new Error('farmId is required')
       return SupabaseService.getFarmById(farmId)
     },
-    enabled: farmId != null,
+    enabled: hasFarm,
     // Seed the detail from the farms-list cache so a warm list needs no extra
     // fetch, while a cold deep-link (no list cached) still resolves via queryFn.
     initialData: () => {
-      if (farmId == null) return undefined
+      if (farmId == null || !Number.isFinite(farmId)) return undefined
       const farms = queryClient.getQueryData<Farm[]>(farmKeys.list())
       return farms?.find((farm) => farm.id === farmId)
     },
@@ -148,13 +149,14 @@ export function useDeleteFarm() {
 }
 
 export function useFarmTasks(farmId: number | null) {
+  const hasFarm = farmId != null && Number.isFinite(farmId)
   return useQuery({
-    queryKey: farmId != null ? farmKeys.tasks(farmId) : ['farms', 'tasks', 'disabled'],
+    queryKey: hasFarm ? farmKeys.tasks(farmId as number) : ['farms', 'tasks', 'disabled'],
     queryFn: () => {
-      if (farmId == null) throw new Error('farmId is required')
+      if (farmId == null || !Number.isFinite(farmId)) throw new Error('farmId is required')
       return SupabaseService.getTaskReminders(farmId)
     },
-    enabled: farmId != null
+    enabled: hasFarm
   })
 }
 
@@ -195,10 +197,11 @@ export function useDeleteFarmTask(farmId: number) {
 }
 
 export function useFarmLabTests(farmId: number | null) {
+  const hasFarm = farmId != null && Number.isFinite(farmId)
   return useQuery({
-    queryKey: farmId != null ? farmKeys.labTests(farmId) : ['farms', 'lab-tests', 'disabled'],
+    queryKey: hasFarm ? farmKeys.labTests(farmId as number) : ['farms', 'lab-tests', 'disabled'],
     queryFn: async () => {
-      if (farmId == null) throw new Error('farmId is required')
+      if (farmId == null || !Number.isFinite(farmId)) throw new Error('farmId is required')
       const [soilTests, petioleTests] = await Promise.all([
         SupabaseService.getSoilTestRecords(farmId),
         SupabaseService.getPetioleTestRecords(farmId)
@@ -209,7 +212,7 @@ export function useFarmLabTests(farmId: number | null) {
         petioleTests: (petioleTests || []) as LabTestRecord[]
       }
     },
-    enabled: farmId != null
+    enabled: hasFarm
   })
 }
 
@@ -229,14 +232,16 @@ export function useDeleteFarmLabTest(farmId: number) {
 }
 
 export function useFarmSoilProfiles(farmId: number | null) {
+  const hasFarm = farmId != null && Number.isFinite(farmId)
   return useQuery({
-    queryKey:
-      farmId != null ? farmKeys.soilProfiles(farmId) : ['farms', 'soil-profiles', 'disabled'],
+    queryKey: hasFarm
+      ? farmKeys.soilProfiles(farmId as number)
+      : ['farms', 'soil-profiles', 'disabled'],
     queryFn: () => {
-      if (farmId == null) throw new Error('farmId is required')
+      if (farmId == null || !Number.isFinite(farmId)) throw new Error('farmId is required')
       return SoilProfileService.listProfiles(farmId)
     },
-    enabled: farmId != null
+    enabled: hasFarm
   })
 }
 

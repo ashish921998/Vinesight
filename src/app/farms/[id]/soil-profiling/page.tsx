@@ -188,7 +188,10 @@ const EMPTY_SOIL_PROFILES: SoilProfile[] = []
 export default function SoilProfilingPage() {
   const params = useParams()
   const router = useRouter()
-  const farmId = Number.parseInt(params.id as string, 10)
+  const parsedFarmId = Number(params.id)
+  const farmId = Number.isSafeInteger(parsedFarmId) && parsedFarmId > 0 ? parsedFarmId : NaN
+  const farmIdValid = Number.isFinite(farmId)
+  const queryFarmId = farmIdValid ? farmId : null
 
   const [sections, setSections] = useState<Record<SoilSectionName, SectionState>>({
     top: initialSectionState('top'),
@@ -211,8 +214,6 @@ export default function SoilProfilingPage() {
     right: null
   })
 
-  const farmIdValid = Number.isFinite(farmId)
-  const queryFarmId = farmIdValid ? farmId : null
   const soilProfilesQuery = useFarmSoilProfiles(queryFarmId)
   const saveProfileMutation = useSaveFarmSoilProfile(farmId)
   const deleteProfileMutation = useDeleteFarmSoilProfile(farmId)
