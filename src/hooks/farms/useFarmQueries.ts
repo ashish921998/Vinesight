@@ -3,8 +3,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SupabaseService } from '@/lib/supabase-service'
 import { FertilizerPlanService } from '@/lib/fertilizer-plan-service'
-import { farmKeys } from '@/lib/farm-query-keys'
+import { farmKeys, type LogFilters } from '@/lib/farm-query-keys'
 import { SoilProfileService } from '@/lib/soil-profile-service'
+import { searchLogs } from '@/actions/search-logs'
 import type { Farm } from '@/types/types'
 import type { LabTestRecord } from '@/types/lab-tests'
 import type { SoilSection } from '@/lib/supabase'
@@ -29,6 +30,41 @@ export function useDashboardSummary(farmId: number | null) {
     queryKey: hasFarm ? farmKeys.summary(farmId as number) : ['farms', 'summary', 'disabled'],
     queryFn: () => SupabaseService.getDashboardSummary(farmId as number),
     enabled: hasFarm
+  })
+}
+
+/**
+ * Paginated, filtered farm activity log list (farms/[id]/logs). The active
+ * `filters` are part of the query key, so changing search / type / date / page
+ * swaps to a distinct cache entry rather than imperatively re-fetching. Journal
+ * writes invalidate the filterless `farmKeys.logs(farmId)` prefix, which covers
+ * every filter variant. While paginating/filtering within the *same* farm we
+ * keep the current page visible so the list doesn't flash to skeletons on every
+ * keystroke/page. We deliberately do NOT keep the previous farm's rows when the
+ * farm changes — those rows expose edit/delete actions keyed to the newly
+ * selected farm, so showing stale cross-farm data is a correctness hazard.
+ */
+export function useLogs(farmId: number | null, filters: LogFilters) {
+  const hasFarm = farmId != null && Number.isFinite(farmId)
+  return useQuery({
+    queryKey: hasFarm ? farmKeys.logs(farmId as number, filters) : ['farms', 'logs', 'disabled'],
+    queryFn: () =>
+      searchLogs({
+        farmId: farmId as number,
+        searchQuery: filters.searchQuery,
+        selectedActivityTypes: filters.selectedActivityTypes,
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
+        currentPage: filters.page,
+        itemsPerPage: filters.itemsPerPage
+      }),
+    enabled: hasFarm,
+    placeholderData: (previousData, previousQuery) => {
+      // Only reuse the prior result when it belongs to the same farm; the farmId
+      // lives at index 1 of the `['farms', farmId, 'logs', filters]` key.
+      const previousFarmId = previousQuery?.queryKey?.[1]
+      return previousFarmId === farmId ? previousData : undefined
+    }
   })
 }
 
