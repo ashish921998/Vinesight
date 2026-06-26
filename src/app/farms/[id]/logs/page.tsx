@@ -99,16 +99,6 @@ const formatLogDate = (dateString: string): string => {
 
 // Using calculateDaysAfterPruning from utils with referenceDate parameter
 
-/* ---------- small debounce hook ---------- */
-function useDebounced<T>(value: T, delay = 300) {
-  const [debounced, setDebounced] = useState<T>(value)
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay)
-    return () => clearTimeout(t)
-  }, [value, delay])
-  return debounced
-}
-
 /* ---------- Types ---------- */
 
 interface ActivityLog {
@@ -124,6 +114,35 @@ interface ActivityLog {
   fertilizer?: string
   unit?: string
   created_at: string
+}
+
+interface BuildLogFiltersInput {
+  searchQuery: string
+  selectedActivityTypes: string[]
+  dateFrom: string
+  dateTo: string
+  currentPage: number
+  itemsPerPage: number
+}
+
+function buildLogFilters({
+  searchQuery,
+  selectedActivityTypes,
+  dateFrom,
+  dateTo,
+  currentPage,
+  itemsPerPage
+}: BuildLogFiltersInput): LogFilters {
+  return {
+    searchQuery,
+    // Sort + dedupe so semantically identical selections (same types, any
+    // order) map to one cache entry instead of spawning redundant fetches.
+    selectedActivityTypes: [...new Set(selectedActivityTypes)].toSorted(),
+    dateFrom,
+    dateTo,
+    page: currentPage,
+    itemsPerPage
+  }
 }
 
 const ITEMS_PER_PAGE_OPTIONS = [10, 50, 100]
@@ -236,19 +255,18 @@ export default function FarmLogsPage() {
   const router = useRouter()
   const farmId = params.id as string
 
-  const [selectedFarm, setSelectedFarm] = useState<string>(farmId)
   const [currentPage, setCurrentPage] = useState(1)
 
   const queryClient = useQueryClient()
-  const selectedFarmIdNum = Number.parseInt(selectedFarm, 10)
+  const selectedFarmIdNum = Number.parseInt(farmId, 10)
   const selectedFarmIdValid = Number.isFinite(selectedFarmIdNum)
 
   // Farm list + the active farm come from the shared cache (no standalone fetch).
   const farmsQuery = useFarms()
   const farms = useMemo<Farm[]>(() => farmsQuery.data ?? [], [farmsQuery.data])
   const currentFarm = useMemo<Farm | null>(
-    () => farms.find((f) => f.id?.toString() === selectedFarm) ?? null,
-    [farms, selectedFarm]
+    () => farms.find((f) => f.id?.toString() === farmId) ?? null,
+    [farms, farmId]
   )
 
   // Reused journal mutation hooks: every add/delete invalidates logs + summary.
@@ -280,34 +298,20 @@ export default function FarmLogsPage() {
   const { preferences: userPreferences } = useUserPreferences(currentFarm?.userId)
 
   const activityTypeListboxId = useId()
-
-  // debounce filters — these feed the query key, so the list re-fetches when a
-  // debounced value changes rather than via an imperative search call.
-  const debouncedQuery = useDebounced(searchQuery, 300)
-  const debouncedDateFrom = useDebounced(dateFrom, 300)
-  const debouncedDateTo = useDebounced(dateTo, 300)
-  const debouncedActivityTypes = useDebounced(selectedActivityTypes, 300)
-
-  const logFilters = useMemo<LogFilters>(
-    () => ({
-      searchQuery: debouncedQuery,
-      // Sort + dedupe so semantically identical selections (same types, any
-      // order) map to one cache entry instead of spawning redundant fetches.
-      selectedActivityTypes: [...new Set(debouncedActivityTypes)].toSorted(),
-      dateFrom: debouncedDateFrom,
-      dateTo: debouncedDateTo,
-      page: currentPage,
-      itemsPerPage
-    }),
-    [
-      debouncedQuery,
-      debouncedActivityTypes,
-      debouncedDateFrom,
-      debouncedDateTo,
-      currentPage,
-      itemsPerPage
-    ]
-  )
+  const logFilters = buildLogFilters({
+    // react-doctor-disable-next-line react-doctor/no-event-handler, no-event-handler -- pure query-key input, not effect-driven event logic
+    searchQuery,
+    // react-doctor-disable-next-line react-doctor/no-event-handler, no-event-handler -- pure query-key input, not effect-driven event logic
+    selectedActivityTypes,
+    // react-doctor-disable-next-line react-doctor/no-event-handler, no-event-handler -- pure query-key input, not effect-driven event logic
+    dateFrom,
+    // react-doctor-disable-next-line react-doctor/no-event-handler, no-event-handler -- pure query-key input, not effect-driven event logic
+    dateTo,
+    // react-doctor-disable-next-line react-doctor/no-event-handler, no-event-handler -- pure query-key input, not effect-driven event logic
+    currentPage,
+    // react-doctor-disable-next-line react-doctor/no-event-handler, no-event-handler -- pure query-key input, not effect-driven event logic
+    itemsPerPage
+  })
 
   const logsQuery = useLogs(selectedFarmIdValid ? selectedFarmIdNum : null, logFilters)
   const logs = logsQuery.data?.logs ?? []
@@ -380,18 +384,33 @@ export default function FarmLogsPage() {
     []
   )
 
+  const handleSearchQueryChange = useCallback((value: string) => {
+    setSearchQuery(value)
+    setCurrentPage(1)
+  }, [])
+
+  const handleDateFromChange = useCallback((value: string) => {
+    setDateFrom(value)
+    setCurrentPage(1)
+  }, [])
+
+  const handleDateToChange = useCallback((value: string) => {
+    setDateTo(value)
+    setCurrentPage(1)
+  }, [])
+
   const handleActivityTypeToggle = useCallback((activityType: string, checked: boolean) => {
-    setSelectedActivityTypes((prev) =>
-      checked ? [...prev, activityType] : prev.filter((t) => t !== activityType)
-    )
+    setSelectedActivityTypes((prev) => {
+      const next = checked ? [...prev, activityType] : prev.filter((t) => t !== activityType)
+      return next
+    })
     setCurrentPage(1)
   }, [])
 
   const handleFarmChange = useCallback(
-    (farmId: string) => {
-      setSelectedFarm(farmId)
+    (nextFarmId: string) => {
       setCurrentPage(1)
-      router.push(`/farms/${farmId}/logs`)
+      router.push(`/farms/${nextFarmId}/logs`)
     },
     [router]
   )
@@ -419,7 +438,7 @@ export default function FarmLogsPage() {
   const saveLogEntry = async (logEntry: any, date: string, dayNotes: string) => {
     const { type, data } = logEntry
     let record
-    const farmIdNum = parseFarmId(selectedFarm)
+    const farmIdNum = parseFarmId(farmId)
 
     switch (type) {
       case 'irrigation':
@@ -537,7 +556,7 @@ export default function FarmLogsPage() {
   ) => {
     setIsSubmitting(true)
     try {
-      const farmIdNum = parseFarmId(selectedFarm)
+      const farmIdNum = parseFarmId(farmId)
       let firstRecordId: number | null = null
 
       for (let i = 0; i < logsToSave.length; i++) {
@@ -708,7 +727,7 @@ export default function FarmLogsPage() {
             <CardTitle className="text-base">Select Farm</CardTitle>
           </CardHeader>
           <CardContent className="px-3 pb-3">
-            <Select value={selectedFarm} onValueChange={handleFarmChange}>
+            <Select value={farmId} onValueChange={handleFarmChange}>
               <SelectTrigger className="w-full h-9 sm:h-10">
                 <SelectValue placeholder="Choose a farm" />
               </SelectTrigger>
@@ -728,7 +747,7 @@ export default function FarmLogsPage() {
           </CardContent>
         </Card>
 
-        {/* Search & Filter card (kept same UI but wired to debounced state) */}
+        {/* Search & Filter card */}
         <Card>
           <CardHeader className="pb-2 px-3 pt-3">
             <div className="flex items-center justify-between">
@@ -754,10 +773,7 @@ export default function FarmLogsPage() {
                 <Input
                   placeholder="Search logs by type, notes, chemicals, amounts..."
                   value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value)
-                    setCurrentPage(1)
-                  }}
+                  onChange={(e) => handleSearchQueryChange(e.target.value)}
                   className="pl-8 h-9"
                 />
                 {searchQuery && (
@@ -765,8 +781,7 @@ export default function FarmLogsPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      setSearchQuery('')
-                      setCurrentPage(1)
+                      handleSearchQueryChange('')
                     }}
                     className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
                   >
@@ -870,10 +885,7 @@ export default function FarmLogsPage() {
                     <Input
                       type="date"
                       value={dateFrom}
-                      onChange={(e) => {
-                        setDateFrom(e.target.value)
-                        setCurrentPage(1)
-                      }}
+                      onChange={(e) => handleDateFromChange(e.target.value)}
                       className="h-9"
                       max={dateTo || new Date().toISOString().split('T')[0]}
                     />
@@ -883,10 +895,7 @@ export default function FarmLogsPage() {
                     <Input
                       type="date"
                       value={dateTo}
-                      onChange={(e) => {
-                        setDateTo(e.target.value)
-                        setCurrentPage(1)
-                      }}
+                      onChange={(e) => handleDateToChange(e.target.value)}
                       className="h-9"
                       min={dateFrom}
                       max={new Date().toISOString().split('T')[0]}
