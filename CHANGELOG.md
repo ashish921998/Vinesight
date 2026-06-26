@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0.1] - 2026-06-26
+
+### Fixed
+
+- **Farm logs no longer show the previous farm's rows while switching farms.** `useLogs` kept previous-page data across farm changes via `keepPreviousData`, so the prior farm's rows could render under the newly selected farm's edit/delete actions. The placeholder is now scoped to the same farmId, so it still avoids skeleton flashes during pagination/filtering but never shows cross-farm data.
+- **No second redundant `searchLogs` refetch after adding a record.** Record-add mutations already invalidate the logs cache via their hooks; the logs page fired a second invalidation on every save. It now only invalidates explicitly for a pure daily-note save (no record mutation fired).
+- **Editing a soil/petiole test from the logs page now refreshes lab-test surfaces.** `invalidateFarmLogs` also invalidates `farmKeys.labTests`, so the lab workspace and consultant farm-detail no longer go stale after an `EditRecordModal` update.
+- **Log-fetch error toasts no longer spam on flaky connections.** The error effect is guarded so it toasts once per failure cycle and re-arms after a successful fetch, instead of re-firing for every fresh `Error` from background refetches.
+- **Farm-list load failures are now surfaced.** A failed farms fetch previously only logged to the console, leaving the farm selector silently empty; it now toasts.
+- Activity-type filters are sorted and deduped before entering the query key, so semantically identical selections map to one cache entry instead of spawning redundant fetches.
+
 ## [0.2.0.0] - 2026-06-24
 
 ### Added

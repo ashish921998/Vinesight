@@ -20,21 +20,24 @@ import type {
  * Per the slice's design we use *wholesale* invalidation of the farm summary on
  * every write — this matches the page's previous refetch-everything behavior and
  * keeps the recent-activity / counts / totals aggregate correct. Alongside the
- * summary we also invalidate the relevant `records` / `labTests` bucket so other
- * surfaces (logs page, lab workspace) reading those keys stay fresh. Per-record
- * granular caches are intentionally out of scope.
+ * summary we also invalidate the relevant `records` / `labTests` bucket plus the
+ * filterless `logs` prefix so other surfaces (logs page, lab workspace) reading
+ * those keys stay fresh. Per-record granular caches are intentionally out of
+ * scope.
  */
 
 // Activity/journal records that surface in the logs + activity feed.
 function invalidateRecords(queryClient: QueryClient, farmId: number) {
   queryClient.invalidateQueries({ queryKey: farmKeys.summary(farmId) })
   queryClient.invalidateQueries({ queryKey: farmKeys.records(farmId) })
+  queryClient.invalidateQueries({ queryKey: farmKeys.logs(farmId) })
 }
 
-// Lab analyses (soil + petiole) that surface in the lab workspace.
+// Lab analyses (soil + petiole) that surface in the lab workspace and logs feed.
 function invalidateLabTests(queryClient: QueryClient, farmId: number) {
   queryClient.invalidateQueries({ queryKey: farmKeys.summary(farmId) })
   queryClient.invalidateQueries({ queryKey: farmKeys.labTests(farmId) })
+  queryClient.invalidateQueries({ queryKey: farmKeys.logs(farmId) })
 }
 
 type CreateInput<T> = Omit<T, 'id' | 'created_at'>
