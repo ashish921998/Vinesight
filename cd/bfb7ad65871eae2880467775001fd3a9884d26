@@ -1,0 +1,32 @@
+src/hooks/farms/useFarmQueries.ts
+  s_65e9cbf4d9f4bd::t_51a6b8fb7675ae 57,60,62,65
+  s_65e9cbf4d9f4bd::t_d43b8f6f536897 164,166,168,179
+  s_65e9cbf4d9f4bd::t_b3b0644a817b88 199,201-203,205,208
+  s_65e9cbf4d9f4bd::t_0cbdde3999bf3d 69
+  s_65e9cbf4d9f4bd::t_cc66da2065ab9e 116,118,120,123
+src/app/farms/[id]/tasks/page.tsx
+  s_65e9cbf4d9f4bd::t_c28522a4c6d197 97
+  s_65e9cbf4d9f4bd::t_3f5b0dfb542250 95-96
+src/app/farms/[id]/lab-tests/page.tsx
+  s_65e9cbf4d9f4bd::t_9cce4d5039fa52 34
+  s_65e9cbf4d9f4bd::t_58105f89dd0c2a 33
+src/app/farms/[id]/soil-profiling/page.tsx
+  s_65e9cbf4d9f4bd::t_fd3cf3ea5aebc1 192
+  s_65e9cbf4d9f4bd::t_02ddc985e35cbf 191,193-194
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "cdbfb7ad65871eae2880467775001fd3a9884d26",
+  "prompts": {},
+  "sessions": {
+    "s_65e9cbf4d9f4bd": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "d2c6b276-a854-4d17-8780-a5d1765a81a2",
+        "model": "custom:GLM-5.2-0"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
