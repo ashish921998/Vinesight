@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useMemo, useId } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useId, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -291,7 +291,9 @@ export default function FarmLogsPage() {
   const logFilters = useMemo<LogFilters>(
     () => ({
       searchQuery: debouncedQuery,
-      selectedActivityTypes: debouncedActivityTypes,
+      // Sort + dedupe so semantically identical selections (same types, any
+      // order) map to one cache entry instead of spawning redundant fetches.
+      selectedActivityTypes: [...new Set(debouncedActivityTypes)].sort(),
       dateFrom: debouncedDateFrom,
       dateTo: debouncedDateTo,
       page: currentPage,
@@ -316,17 +318,33 @@ export default function FarmLogsPage() {
     [totalLogs, itemsPerPage]
   )
 
-  // Surface fetch failures (the imperative version toasted on catch).
+  // Surface fetch failures (the imperative version toasted on catch). Guard with
+  // a ref so a background refetch failure (e.g. on window refocus over a flaky
+  // connection) toasts only once per failure cycle and re-arms after a success,
+  // rather than spamming a new toast for every fresh Error instance.
+  const loggedLogsErrorRef = useRef(false)
   useEffect(() => {
-    if (logsQuery.error) {
+    if (logsQuery.isError && !loggedLogsErrorRef.current) {
+      loggedLogsErrorRef.current = true
       console.error('Error searching logs:', logsQuery.error)
       toast.error('Failed to search logs')
+    } else if (logsQuery.isSuccess) {
+      loggedLogsErrorRef.current = false
     }
-  }, [logsQuery.error])
+  }, [logsQuery.isError, logsQuery.isSuccess, logsQuery.error])
 
+  // The farm dropdown depends on this list, so surface a load failure instead of
+  // leaving the user with a silently empty selector. Same once-per-cycle guard.
+  const loggedFarmsErrorRef = useRef(false)
   useEffect(() => {
-    if (farmsQuery.error) console.error('Error loading farms:', farmsQuery.error)
-  }, [farmsQuery.error])
+    if (farmsQuery.isError && !loggedFarmsErrorRef.current) {
+      loggedFarmsErrorRef.current = true
+      console.error('Error loading farms:', farmsQuery.error)
+      toast.error('Failed to load farms')
+    } else if (farmsQuery.isSuccess) {
+      loggedFarmsErrorRef.current = false
+    }
+  }, [farmsQuery.isError, farmsQuery.isSuccess, farmsQuery.error])
 
   // Refresh the logs list + dashboard summary after writes that don't already
   // flow through the journal mutation hooks (daily-note save, record edit).
@@ -335,6 +353,9 @@ export default function FarmLogsPage() {
     queryClient.invalidateQueries({ queryKey: farmKeys.logs(selectedFarmIdNum) })
     queryClient.invalidateQueries({ queryKey: farmKeys.summary(selectedFarmIdNum) })
     queryClient.invalidateQueries({ queryKey: farmKeys.records(selectedFarmIdNum) })
+    // EditRecordModal can update soil/petiole tests, so refresh lab-test surfaces
+    // (lab workspace, consultant farm detail) that read farmKeys.labTests too.
+    queryClient.invalidateQueries({ queryKey: farmKeys.labTests(selectedFarmIdNum) })
   }, [queryClient, selectedFarmIdNum, selectedFarmIdValid])
 
   const clearFilters = useCallback(() => {
@@ -538,10 +559,14 @@ export default function FarmLogsPage() {
         date
       })
 
-      // Record adds already invalidate via their mutation hooks; this also covers
-      // a daily-note-only save (no record mutation fired) and jumps to page 1 so
-      // the newly added entries are visible.
-      invalidateFarmLogs()
+      // Record adds already invalidate logs/summary/records via their mutation
+      // hooks, so only a pure daily-note save (no record mutation fired) needs an
+      // explicit refresh here — otherwise we'd schedule a second redundant
+      // searchLogs refetch for every add. Jump to page 1 either way so the newly
+      // added entries are visible.
+      if (logsToSave.length === 0) {
+        invalidateFarmLogs()
+      }
       setCurrentPage(1)
       setShowUnifiedModal(false)
       setExistingLogsForEdit([])
