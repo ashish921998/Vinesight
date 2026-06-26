@@ -28,7 +28,13 @@ export function useDashboardSummary(farmId: number | null) {
   const hasFarm = farmId != null && Number.isFinite(farmId)
   return useQuery({
     queryKey: hasFarm ? farmKeys.summary(farmId as number) : ['farms', 'summary', 'disabled'],
-    queryFn: () => SupabaseService.getDashboardSummary(farmId as number),
+    queryFn: () => {
+      // Fail fast: refetch() bypasses `enabled` in React Query v5, so guard explicitly
+      // rather than casting a possible null/NaN to number. farms/[id]/page.tsx passes
+      // NaN (not null) for invalid IDs, so both checks are required.
+      if (farmId == null || !Number.isFinite(farmId)) throw new Error('farmId is required')
+      return SupabaseService.getDashboardSummary(farmId)
+    },
     enabled: hasFarm
   })
 }
@@ -73,22 +79,30 @@ export function useFarmFertilizerPlans(farmId: number | null) {
   const hasFarm = farmId != null && Number.isFinite(farmId)
   return useQuery({
     queryKey: hasFarm ? farmKeys.plans(farmId as number) : ['farms', 'plans', 'disabled'],
-    queryFn: () => FertilizerPlanService.getPlansByFarm(farmId as number),
+    queryFn: () => {
+      // Same NaN-not-null caller contract as useDashboardSummary above.
+      if (farmId == null || !Number.isFinite(farmId)) throw new Error('farmId is required')
+      return FertilizerPlanService.getPlansByFarm(farmId)
+    },
     enabled: hasFarm
   })
 }
 
 export function useFarm(farmId: number | null) {
   const queryClient = useQueryClient()
+  const hasFarm = farmId != null && Number.isFinite(farmId)
 
   return useQuery({
-    queryKey: farmId != null ? farmKeys.detail(farmId) : ['farms', 'detail', 'disabled'],
-    queryFn: () => SupabaseService.getFarmById(farmId as number),
-    enabled: farmId != null,
+    queryKey: hasFarm ? farmKeys.detail(farmId as number) : ['farms', 'detail', 'disabled'],
+    queryFn: () => {
+      if (farmId == null || !Number.isFinite(farmId)) throw new Error('farmId is required')
+      return SupabaseService.getFarmById(farmId)
+    },
+    enabled: hasFarm,
     // Seed the detail from the farms-list cache so a warm list needs no extra
     // fetch, while a cold deep-link (no list cached) still resolves via queryFn.
     initialData: () => {
-      if (farmId == null) return undefined
+      if (farmId == null || !Number.isFinite(farmId)) return undefined
       const farms = queryClient.getQueryData<Farm[]>(farmKeys.list())
       return farms?.find((farm) => farm.id === farmId)
     },
@@ -135,10 +149,14 @@ export function useDeleteFarm() {
 }
 
 export function useFarmTasks(farmId: number | null) {
+  const hasFarm = farmId != null && Number.isFinite(farmId)
   return useQuery({
-    queryKey: farmId != null ? farmKeys.tasks(farmId) : ['farms', 'tasks', 'disabled'],
-    queryFn: () => SupabaseService.getTaskReminders(farmId as number),
-    enabled: farmId != null
+    queryKey: hasFarm ? farmKeys.tasks(farmId as number) : ['farms', 'tasks', 'disabled'],
+    queryFn: () => {
+      if (farmId == null || !Number.isFinite(farmId)) throw new Error('farmId is required')
+      return SupabaseService.getTaskReminders(farmId)
+    },
+    enabled: hasFarm
   })
 }
 
@@ -179,12 +197,14 @@ export function useDeleteFarmTask(farmId: number) {
 }
 
 export function useFarmLabTests(farmId: number | null) {
+  const hasFarm = farmId != null && Number.isFinite(farmId)
   return useQuery({
-    queryKey: farmId != null ? farmKeys.labTests(farmId) : ['farms', 'lab-tests', 'disabled'],
+    queryKey: hasFarm ? farmKeys.labTests(farmId as number) : ['farms', 'lab-tests', 'disabled'],
     queryFn: async () => {
+      if (farmId == null || !Number.isFinite(farmId)) throw new Error('farmId is required')
       const [soilTests, petioleTests] = await Promise.all([
-        SupabaseService.getSoilTestRecords(farmId as number),
-        SupabaseService.getPetioleTestRecords(farmId as number)
+        SupabaseService.getSoilTestRecords(farmId),
+        SupabaseService.getPetioleTestRecords(farmId)
       ])
 
       return {
@@ -192,7 +212,7 @@ export function useFarmLabTests(farmId: number | null) {
         petioleTests: (petioleTests || []) as LabTestRecord[]
       }
     },
-    enabled: farmId != null
+    enabled: hasFarm
   })
 }
 
@@ -212,11 +232,16 @@ export function useDeleteFarmLabTest(farmId: number) {
 }
 
 export function useFarmSoilProfiles(farmId: number | null) {
+  const hasFarm = farmId != null && Number.isFinite(farmId)
   return useQuery({
-    queryKey:
-      farmId != null ? farmKeys.soilProfiles(farmId) : ['farms', 'soil-profiles', 'disabled'],
-    queryFn: () => SoilProfileService.listProfiles(farmId as number),
-    enabled: farmId != null
+    queryKey: hasFarm
+      ? farmKeys.soilProfiles(farmId as number)
+      : ['farms', 'soil-profiles', 'disabled'],
+    queryFn: () => {
+      if (farmId == null || !Number.isFinite(farmId)) throw new Error('farmId is required')
+      return SoilProfileService.listProfiles(farmId)
+    },
+    enabled: hasFarm
   })
 }
 

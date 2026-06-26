@@ -8,6 +8,7 @@ import { LabTestTrendCharts } from '@/components/lab-tests/LabTestTrendCharts'
 import { LabTestComparisonTable } from '@/components/lab-tests/LabTestComparisonTable'
 import { LabTestModal } from '@/components/lab-tests/LabTestModal'
 import { Button } from '@/components/ui/button'
+import { Card, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -29,7 +30,8 @@ function LabTestsPage() {
   const params = useParams()
   const router = useRouter()
   const queryClient = useQueryClient()
-  const farmId = parseInt(params.id as string)
+  const parsedFarmId = Number(params.id)
+  const farmId = Number.isSafeInteger(parsedFarmId) && parsedFarmId > 0 ? parsedFarmId : NaN
   const farmIdValid = Number.isFinite(farmId)
   const queryFarmId = farmIdValid ? farmId : null
   const labTestsQuery = useFarmLabTests(queryFarmId)
@@ -38,7 +40,9 @@ function LabTestsPage() {
   const soilTests = labTestsQuery.data?.soilTests ?? []
   const petioleTests = labTestsQuery.data?.petioleTests ?? []
   const farmName = farmQuery.data?.name || 'Farm'
-  const loading = labTestsQuery.isPending
+  // Gate on farmIdValid: a disabled React Query v5 query stays `pending` forever,
+  // so without this an invalid route would render the skeleton indefinitely.
+  const loading = farmIdValid && labTestsQuery.isPending
 
   // View mode state - initialize with server-safe default
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart')
@@ -189,6 +193,20 @@ function LabTestsPage() {
             <Skeleton key={i} className="h-24 w-full rounded-xl" />
           ))}
         </div>
+      </div>
+    )
+  }
+
+  if (!farmIdValid) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <Card className="p-6">
+          <CardTitle className="text-base">Invalid farm</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">Please return and select a farm.</p>
+          <Button className="mt-3" onClick={() => router.push('/farms')}>
+            Back to farms
+          </Button>
+        </Card>
       </div>
     )
   }
