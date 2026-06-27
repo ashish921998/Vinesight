@@ -181,10 +181,17 @@ const formatDateInputValue = (value?: string | null) => {
   return parsed.toISOString().split('T')[0]
 }
 
+// Stable reference so memoized derivations of `soilProfiles` don't recompute every
+// render while the query is still undefined (see `soilProfiles = soilProfilesQuery.data ?? EMPTY_SOIL_PROFILES`).
+const EMPTY_SOIL_PROFILES: SoilProfile[] = []
+
 export default function SoilProfilingPage() {
   const params = useParams()
   const router = useRouter()
-  const farmId = Number.parseInt(params.id as string, 10)
+  const parsedFarmId = Number(params.id)
+  const farmId = Number.isSafeInteger(parsedFarmId) && parsedFarmId > 0 ? parsedFarmId : NaN
+  const farmIdValid = Number.isFinite(farmId)
+  const queryFarmId = farmIdValid ? farmId : null
 
   const [sections, setSections] = useState<Record<SoilSectionName, SectionState>>({
     top: initialSectionState('top'),
@@ -207,12 +214,10 @@ export default function SoilProfilingPage() {
     right: null
   })
 
-  const farmIdValid = Number.isFinite(farmId)
-  const queryFarmId = farmIdValid ? farmId : null
   const soilProfilesQuery = useFarmSoilProfiles(queryFarmId)
   const saveProfileMutation = useSaveFarmSoilProfile(farmId)
   const deleteProfileMutation = useDeleteFarmSoilProfile(farmId)
-  const soilProfiles = soilProfilesQuery.data ?? []
+  const soilProfiles = soilProfilesQuery.data ?? EMPTY_SOIL_PROFILES
   const lastUpdated = soilProfiles[0]?.created_at
     ? new Date(soilProfiles[0].created_at).toLocaleDateString()
     : null
@@ -905,7 +910,11 @@ export default function SoilProfilingPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <TabsContent value="history" className="space-y-3">
-                  {soilProfiles.length === 0 ? (
+                  {soilProfilesQuery.isPending ? (
+                    <div className="space-y-3 rounded-2xl border border-dashed border-amber-200 bg-amber-50/60 p-4 text-sm text-muted-foreground">
+                      <p className="font-semibold text-foreground">Loading soil profiles…</p>
+                    </div>
+                  ) : soilProfiles.length === 0 ? (
                     <div className="space-y-3 rounded-2xl border border-dashed border-amber-200 bg-amber-50/60 p-4 text-sm text-muted-foreground">
                       <p className="font-semibold text-foreground">No soil profiles yet</p>
                       <p>Click “Add profile” above to record your first set.</p>
@@ -1495,12 +1504,15 @@ export default function SoilProfilingPage() {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel disabled={deleteProfileMutation.isPending}>
+                  Cancel
+                </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={confirmDeleteProfile}
+                  disabled={deleteProfileMutation.isPending}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  Delete
+                  {deleteProfileMutation.isPending ? 'Deleting…' : 'Delete'}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

@@ -67,6 +67,10 @@ interface TaskGroupSummary {
   scheduled: number
 }
 
+// Stable reference so memoized derivations of `tasks` don't recompute every render
+// while the query is still undefined (see `tasks = tasksQuery.data ?? EMPTY_TASKS`).
+const EMPTY_TASKS: TaskReminder[] = []
+
 const taskTypeLabels: Record<string, string> = {
   irrigation: 'Irrigation',
   spray: 'Spray',
@@ -88,8 +92,9 @@ const statusVariants: Record<TaskReminder['status'], string> = {
 export default function FarmTasksPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
-  const farmIdParam = params.id
-  const farmId = Number.parseInt(Array.isArray(farmIdParam) ? farmIdParam[0] : farmIdParam, 10)
+  const farmIdParam = Array.isArray(params.id) ? params.id[0] : params.id
+  const parsedFarmId = Number(farmIdParam)
+  const farmId = Number.isSafeInteger(parsedFarmId) && parsedFarmId > 0 ? parsedFarmId : NaN
   const { user } = useSupabaseAuth()
   const queryClient = useQueryClient()
   const farmIdValid = Number.isFinite(farmId)
@@ -99,10 +104,12 @@ export default function FarmTasksPage() {
   const completeTaskMutation = useCompleteFarmTask(farmId)
   const reopenTaskMutation = useReopenFarmTask(farmId)
   const deleteTaskMutation = useDeleteFarmTask(farmId)
-  const tasks = tasksQuery.data ?? []
+  const tasks = tasksQuery.data ?? EMPTY_TASKS
   const farmName = farmQuery.data?.name ? capitalize(farmQuery.data.name) : ''
-  const loading = tasksQuery.isPending
-  const refreshing = tasksQuery.isFetching && !tasksQuery.isPending
+  // Gate on farmIdValid: a disabled React Query v5 query stays `pending` forever,
+  // so without this an invalid route would render the skeleton indefinitely.
+  const loading = farmIdValid && tasksQuery.isPending
+  const refreshing = farmIdValid && tasksQuery.isFetching && !tasksQuery.isPending
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
@@ -119,16 +126,22 @@ export default function FarmTasksPage() {
   }, [tasksQuery.isError])
 
   const refreshTasks = useCallback(async () => {
-    const [tasksResult] = await Promise.all([tasksQuery.refetch(), farmQuery.refetch()])
+    if (!farmIdValid) {
+      toast.error('Invalid farm id')
+      return
+    }
 
-    if (tasksResult.error) {
+    // refetch() bypasses `enabled` in React Query v5, so guard explicitly above and
+    // surface an error from EITHER refetch (the farm refetch result was previously dropped).
+    const [tasksResult, farmResult] = await Promise.all([tasksQuery.refetch(), farmQuery.refetch()])
+
+    const error = tasksResult.error ?? farmResult.error
+    if (error) {
       const errorMessage =
-        tasksResult.error instanceof Error
-          ? `Failed to refresh: ${tasksResult.error.message}`
-          : 'Failed to refresh tasks'
+        error instanceof Error ? `Failed to refresh: ${error.message}` : 'Failed to refresh tasks'
       toast.error(errorMessage)
     }
-  }, [farmQuery, tasksQuery])
+  }, [farmIdValid, farmQuery, tasksQuery])
 
   const invalidateTaskState = useCallback(async () => {
     await Promise.all([
@@ -247,6 +260,20 @@ export default function FarmTasksPage() {
     const unique = new Set(tasks.map((task) => task.type))
     return Array.from(unique)
   }, [tasks])
+
+  if (!farmIdValid) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <Card className="p-6">
+          <CardTitle className="text-base">Invalid farm</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">Please return and select a farm.</p>
+          <Button className="mt-3" onClick={() => router.push('/farms')}>
+            Back to farms
+          </Button>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 sm:pb-8">
