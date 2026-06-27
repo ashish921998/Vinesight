@@ -1,0 +1,19 @@
+.github/workflows/droid-wiki-refresh.yml
+  s_cf0d391a346018::t_926d601399622d 7-13,21-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "4a5ed107c2a186117f6e1f891a8c3a110de7c9d7",
+  "prompts": {},
+  "sessions": {
+    "s_cf0d391a346018": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "84c2270a-ca09-4f65-8dbf-25a6596ca6d4",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Ashish Huddar <ashish.hudar@gmail.com>"
+    }
+  }
+}
