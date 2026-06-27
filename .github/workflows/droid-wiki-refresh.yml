@@ -4,6 +4,13 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: droid-wiki-refresh-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   wiki-refresh:
     runs-on: ubuntu-latest
@@ -11,7 +18,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Factory Droid
-        run: curl -fsSL https://app.factory.ai/cli | sh
+        run: |
+          curl -fsSL https://app.factory.ai/cli | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Generate wiki
         run: droid exec --auto high "/wiki"
