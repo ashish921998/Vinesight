@@ -5,6 +5,7 @@ import { z } from 'zod'
 import type { Database } from '@/types/database'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { globalRateLimiter } from '@/lib/validation'
+import { escapeLikePattern } from '@/lib/org-membership'
 
 // Invitation TTL in days
 const INVITATION_TTL_DAYS = 7
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
     const { data: existingProfile, error: profileError } = await getSupabaseAdmin()
       .from('profiles')
       .select('id, consultant_organization_id')
-      .ilike('email', email)
+      .ilike('email', escapeLikePattern(email))
       .maybeSingle()
 
     if (profileError) {

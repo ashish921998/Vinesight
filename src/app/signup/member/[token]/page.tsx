@@ -6,14 +6,12 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
-import { PasswordInput } from '@/components/ui/password-input'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Loader2, Building2, Mail } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase'
+import { SetPasswordCard } from './SetPasswordCard'
 
 interface InviteDetails {
   email: string
@@ -299,83 +297,17 @@ export default function InviteAcceptPage() {
   // Invited user: set a password to finish joining.
   if (isInvitedUser) {
     return (
-      <div className="min-h-screen bg-background flex flex-col justify-center items-center px-4">
-        <div className="w-full max-w-md">
-          {header}
-          <p className="text-center text-muted-foreground text-base font-normal font-sans -mt-4 mb-6">
-            Set a password to finish setting up your account
-          </p>
-
-          <Card className="p-8">
-            <form onSubmit={handleSetPassword} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="member-email">Email address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="member-email"
-                    type="email"
-                    value={invite.email}
-                    readOnly
-                    disabled
-                    className="w-full pl-9 min-h-[44px]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <PasswordInput
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  placeholder="Create a password"
-                  label="Password"
-                />
-                <p className="mt-1 text-xs text-muted-foreground">Minimum 6 characters</p>
-              </div>
-
-              <div>
-                <PasswordInput
-                  id="confirm-password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  placeholder="Confirm password"
-                  label="Confirm password"
-                  error={
-                    password !== confirmPassword && confirmPassword
-                      ? 'Passwords do not match'
-                      : undefined
-                  }
-                />
-              </div>
-
-              <Button
-                type="submit"
-                disabled={
-                  submitting ||
-                  password.length < 6 ||
-                  password !== confirmPassword ||
-                  !confirmPassword
-                }
-                className="w-full min-h-[48px]"
-              >
-                {submitting ? (
-                  <div className="flex items-center">
-                    <Loader2 className="animate-spin h-5 w-5 mr-2" />
-                    Joining organization…
-                  </div>
-                ) : (
-                  'Set password & join'
-                )}
-              </Button>
-            </form>
-          </Card>
-        </div>
-      </div>
+      <SetPasswordCard
+        header={header}
+        subtitle="Set a password to finish setting up your account"
+        email={invite.email}
+        password={password}
+        onPasswordChange={setPassword}
+        confirmPassword={confirmPassword}
+        onConfirmPasswordChange={setConfirmPassword}
+        submitting={submitting}
+        onSubmit={handleSetPassword}
+      />
     )
   }
 
@@ -383,94 +315,29 @@ export default function InviteAcceptPage() {
   // password and join, no email round-trip. Admin invites still require the emailed flow.
   if (invite.role === 'agronomist') {
     return (
-      <div className="min-h-screen bg-background flex flex-col justify-center items-center px-4">
-        <div className="w-full max-w-md">
-          {header}
-          <p className="text-center text-muted-foreground text-base font-normal font-sans -mt-4 mb-6">
-            Set a password to create your account and join
+      <SetPasswordCard
+        header={header}
+        subtitle="Set a password to create your account and join"
+        email={invite.email}
+        password={password}
+        onPasswordChange={setPassword}
+        confirmPassword={confirmPassword}
+        onConfirmPasswordChange={setConfirmPassword}
+        submitting={submitting}
+        onSubmit={handleClaimAndJoin}
+        footer={
+          <p className="text-center text-sm text-muted-foreground">
+            Already have a VineSight account?{' '}
+            <Link
+              href={`/login?redirect=${encodeURIComponent(`/signup/member/${token}`)}`}
+              className="font-medium text-primary hover:text-primary/80"
+            >
+              Sign in
+            </Link>{' '}
+            to accept.
           </p>
-
-          <Card className="p-8">
-            <form onSubmit={handleClaimAndJoin} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="member-email">Email address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="member-email"
-                    type="email"
-                    value={invite.email}
-                    readOnly
-                    disabled
-                    className="w-full pl-9 min-h-[44px]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <PasswordInput
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  placeholder="Create a password"
-                  label="Password"
-                />
-                <p className="mt-1 text-xs text-muted-foreground">Minimum 6 characters</p>
-              </div>
-
-              <div>
-                <PasswordInput
-                  id="confirm-password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  placeholder="Confirm password"
-                  label="Confirm password"
-                  error={
-                    password !== confirmPassword && confirmPassword
-                      ? 'Passwords do not match'
-                      : undefined
-                  }
-                />
-              </div>
-
-              <Button
-                type="submit"
-                disabled={
-                  submitting ||
-                  password.length < 6 ||
-                  password !== confirmPassword ||
-                  !confirmPassword
-                }
-                className="w-full min-h-[48px]"
-              >
-                {submitting ? (
-                  <div className="flex items-center">
-                    <Loader2 className="animate-spin h-5 w-5 mr-2" />
-                    Joining organization…
-                  </div>
-                ) : (
-                  'Set password & join'
-                )}
-              </Button>
-
-              <p className="text-center text-sm text-muted-foreground">
-                Already have a VineSight account?{' '}
-                <Link
-                  href={`/login?redirect=${encodeURIComponent(`/signup/member/${token}`)}`}
-                  className="font-medium text-primary hover:text-primary/80"
-                >
-                  Sign in
-                </Link>{' '}
-                to accept.
-              </p>
-            </form>
-          </Card>
-        </div>
-      </div>
+        }
+      />
     )
   }
 

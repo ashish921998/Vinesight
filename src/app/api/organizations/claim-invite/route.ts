@@ -2,55 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { globalRateLimiter } from '@/lib/validation'
+import { classifyMembership, findAuthUserIdByEmail } from '@/lib/org-membership'
 
 // Claim an invite directly from the shared link — no email round-trip. The invitee
 // arrives logged-out with only the token, sets a password, and joins. This deliberately
 // trades the email-ownership proof of the emailed flow for link-possession: anyone who
 // holds the link can claim the seat. To bound the blast radius we (a) restrict this path
 // to the `agronomist` role (admins must still use the emailed/verified flow), (b) keep the
-// invite single-use (the accept RPC flips it to `accepted`), and (c) honour the existing
-// expiry + revoke controls. Share the link only over a private channel.
+// invite single-use (the accept RPC consumes it atomically and rejects a claim that didn't
+// win the race — see accept_organization_invite), and (c) honour the existing expiry +
+// revoke controls. Share the link only over a private channel.
 const ClaimInviteSchema = z.object({
   token: z.string().min(1),
   password: z.string().min(6)
 })
-
-// Escape LIKE/ILIKE wildcards so an email is matched literally. `_` and `%` are
-// legal email characters (e.g. john_doe@gmail.com); an unescaped `.ilike('email', email)`
-// would treat `_` as "any char" and resolve a DIFFERENT account — which here would set a
-// password on the wrong user. Backslash is Postgres's default LIKE escape character.
-function escapeLikePattern(value: string): string {
-  return value.replace(/([\\%_])/g, '\\$1')
-}
-
-/**
- * Resolve the auth user id for an email. Invites are always issued via
- * inviteUserByEmail, which creates a confirmed, passwordless auth user with a
- * profile row — so the profiles lookup is the reliable path. The listUsers
- * fallback covers the rare case where no profile row exists yet.
- */
-async function findAuthUserIdByEmail(
-  admin: ReturnType<typeof getSupabaseAdmin>,
-  email: string
-): Promise<string | null> {
-  // Case-insensitive but wildcard-literal exact match on the email.
-  const { data: profile } = await admin
-    .from('profiles')
-    .select('id')
-    .ilike('email', escapeLikePattern(email))
-    .maybeSingle()
-  if (profile?.id) return profile.id
-
-  // Fallback: page through auth users (small project; a few pages at most).
-  for (let page = 1; page <= 10; page++) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 })
-    if (error || !data?.users?.length) break
-    const match = data.users.find((u) => (u.email ?? '').toLowerCase() === email.toLowerCase())
-    if (match) return match.id
-    if (data.users.length < 1000) break
-  }
-  return null
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -133,28 +98,24 @@ export async function POST(request: NextRequest) {
 
       // Already a member of another org? Refuse rather than touch it. The accept RPC enforces
       // single-org too, but checking here returns a clearer message before any mutation.
-      const { data: memberships, error: membershipError } = await admin
-        .from('organization_members')
-        .select('organization_id')
-        .eq('user_id', userId)
-      if (membershipError) {
-        console.error('Error checking memberships during claim:', membershipError)
+      const membership = await classifyMembership(admin, userId, invite.organization_id)
+      if ('error' in membership) {
+        console.error('Error checking memberships during claim:', membership.error)
         return NextResponse.json({ error: 'Failed to verify invitee' }, { status: 500 })
       }
-      if (memberships?.some((m) => m.organization_id === invite.organization_id)) {
+      if (membership.status === 'member-of-target') {
         return NextResponse.json(
           { error: 'You are already a member. Please sign in instead.' },
           { status: 409 }
         )
       }
-      if ((memberships?.length ?? 0) > 0) {
+      if (membership.status === 'member-of-other') {
         return NextResponse.json(
           { error: 'This account already belongs to another organization.' },
           { status: 409 }
         )
       }
-      // Password is set AFTER the join RPC succeeds (below), so a rejected join never leaves a
-      // mutated credential behind.
+      // Password is set only after the join RPC succeeds (below).
     } else {
       // No auth user yet — create one confirmed (no email round-trip).
       const { data: created, error: createError } = await admin.auth.admin.createUser({
@@ -176,8 +137,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Could not complete sign-up' }, { status: 500 })
     }
 
-    // Atomically join: membership + profile + mark invite accepted. The RPC re-guards
-    // role, single-org, and status = 'pending'.
+    // Atomically join: membership + profile + consume invite. The RPC re-guards role and
+    // single-org, and raises if the invite is no longer pending — so a claim that lost a
+    // concurrent race fails here (rpcError) and never reaches the password write below.
     const { error: rpcError } = await admin.rpc('accept_organization_invite', {
       p_user_id: resolvedUserId,
       p_invite_id: invite.id,
