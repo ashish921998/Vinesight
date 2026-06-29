@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0.0] - 2026-06-29
+
+### Added
+
+- **Agronomists can join an organization directly from a shared invite link — no email required.** A new `POST /api/organizations/claim-invite` endpoint lets a logged-out invitee open the link, set a password, and join as an agronomist, sidestepping Supabase's throttled transactional mailer for onboarding. The `/signup/member/[token]` page now renders a "set password & join" form for agronomist invites (admin invites still require the emailed, email-verified flow).
+
+### Changed
+
+- **Team page pending-invites list now shows the invitee's name and a count.** Each pending invite displays the person's full name (falling back to email) plus their email and role, and the section header shows how many invites are outstanding.
+
+### Security
+
+- **Claim-invite only sets a password on an unclaimed, never-signed-in invitee** (`last_sign_in_at` gate) and defers the password write until after the join succeeds, so a shared link can never overwrite the credential of an existing, in-use account or leave a mutated password behind on a rejected join.
+- **Invite-email lookup escapes LIKE wildcards** so addresses containing `_` or `%` match the exact account instead of resolving a different profile.
+
 ## [0.2.0.1] - 2026-06-26
 
 ### Fixed
