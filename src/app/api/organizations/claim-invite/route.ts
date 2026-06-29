@@ -172,8 +172,22 @@ export async function POST(request: NextRequest) {
         email_confirm: true
       })
       if (updateError) {
-        console.error('Error setting password during claim:', updateError)
-        return NextResponse.json({ error: 'Could not set your password' }, { status: 500 })
+        // Irreducible seam: the join already committed (this user is now a member), but the
+        // password write lives in auth.users and can't share the RPC's transaction. Don't delete
+        // the account — they legitimately joined — and don't pretend success. Point them at
+        // password reset so they can finish; the membership is already valid. Logged loudly so
+        // this rare inconsistency is visible.
+        console.error('Claim joined but password write failed (recoverable via reset):', {
+          inviteId: invite.id,
+          updateError
+        })
+        return NextResponse.json(
+          {
+            error:
+              'You’ve joined, but we couldn’t set your password. Use “Forgot password” on the sign-in page to finish.'
+          },
+          { status: 500 }
+        )
       }
     }
 
