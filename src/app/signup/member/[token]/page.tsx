@@ -150,6 +150,52 @@ export default function InviteAcceptPage() {
     setAcceptError(true)
   }
 
+  // Logged-out claim: the invitee arrived with only the shared link (no email session).
+  // Create/confirm their account with a password server-side, then sign them in. Restricted
+  // to agronomist invites by the API; admin invites keep the email/sign-in screen below.
+  const handleClaimAndJoin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!invite || password.length < 6 || password !== confirmPassword || submittingRef.current) {
+      return
+    }
+
+    submittingRef.current = true
+    setSubmitting(true)
+
+    try {
+      const response = await fetch('/api/organizations/claim-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password })
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        toast.error(data.error || 'Could not complete sign-up. Please try again.')
+        submittingRef.current = false
+        setSubmitting(false)
+        return
+      }
+
+      const supabase = createClient()
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: invite.email,
+        password
+      })
+      if (signInError) {
+        // Account + membership exist; only the session failed. Send them to sign in.
+        toast.success('Account created. Please sign in to continue.')
+        router.push(`/login?redirect=${encodeURIComponent('/consultant')}`)
+        return
+      }
+
+      router.push('/consultant')
+    } catch {
+      toast.error('Could not complete sign-up. Please try again.')
+      submittingRef.current = false
+      setSubmitting(false)
+    }
+  }
+
   const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     if (password.length < 6 || password !== confirmPassword || submittingRef.current) return
@@ -333,8 +379,102 @@ export default function InviteAcceptPage() {
     )
   }
 
-  // Not signed in: the invite link establishes the session, so direct visitors are told to use
-  // their email. Existing-account invitees (shared link) sign in and are auto-accepted above.
+  // Not signed in. Agronomist invites can be claimed directly from the shared link: set a
+  // password and join, no email round-trip. Admin invites still require the emailed flow.
+  if (invite.role === 'agronomist') {
+    return (
+      <div className="min-h-screen bg-background flex flex-col justify-center items-center px-4">
+        <div className="w-full max-w-md">
+          {header}
+          <p className="text-center text-muted-foreground text-base font-normal font-sans -mt-4 mb-6">
+            Set a password to create your account and join
+          </p>
+
+          <Card className="p-8">
+            <form onSubmit={handleClaimAndJoin} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="member-email">Email address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="member-email"
+                    type="email"
+                    value={invite.email}
+                    readOnly
+                    disabled
+                    className="w-full pl-9 min-h-[44px]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <PasswordInput
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  placeholder="Create a password"
+                  label="Password"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">Minimum 6 characters</p>
+              </div>
+
+              <div>
+                <PasswordInput
+                  id="confirm-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  placeholder="Confirm password"
+                  label="Confirm password"
+                  error={
+                    password !== confirmPassword && confirmPassword
+                      ? 'Passwords do not match'
+                      : undefined
+                  }
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={
+                  submitting ||
+                  password.length < 6 ||
+                  password !== confirmPassword ||
+                  !confirmPassword
+                }
+                className="w-full min-h-[48px]"
+              >
+                {submitting ? (
+                  <div className="flex items-center">
+                    <Loader2 className="animate-spin h-5 w-5 mr-2" />
+                    Joining organization…
+                  </div>
+                ) : (
+                  'Set password & join'
+                )}
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                Already have a VineSight account?{' '}
+                <Link
+                  href={`/login?redirect=${encodeURIComponent(`/signup/member/${token}`)}`}
+                  className="font-medium text-primary hover:text-primary/80"
+                >
+                  Sign in
+                </Link>{' '}
+                to accept.
+              </p>
+            </form>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  // Admin invite, not signed in: must come through the emailed (verified) link.
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center items-center px-4">
       <div className="w-full max-w-md">

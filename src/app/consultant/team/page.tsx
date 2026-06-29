@@ -374,6 +374,9 @@ export default function TeamSettingsPage() {
             <CardTitle className="text-lg flex items-center gap-2">
               <Clock className="h-5 w-5 text-muted-foreground" />
               Pending invites
+              <span className="font-mono tabular-nums text-muted-foreground">
+                ({invites.length})
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -388,10 +391,17 @@ export default function TeamSettingsPage() {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium truncate">{invite.email}</span>
+                        <span className="font-medium truncate">
+                          {[invite.first_name, invite.last_name].filter(Boolean).join(' ').trim() ||
+                            invite.email}
+                        </span>
                         <Badge variant={invite.role === 'agronomist' ? 'secondary' : 'default'}>
                           {roleLabels[invite.role]}
                         </Badge>
+                      </div>
+                      <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+                        <Mail className="h-3 w-3" />
+                        <span className="truncate">{invite.email}</span>
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">
                         Expires {new Date(invite.expires_at).toLocaleDateString()}
