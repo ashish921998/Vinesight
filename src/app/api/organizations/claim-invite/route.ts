@@ -15,6 +15,14 @@ const ClaimInviteSchema = z.object({
   password: z.string().min(6)
 })
 
+// Escape LIKE/ILIKE wildcards so an email is matched literally. `_` and `%` are
+// legal email characters (e.g. john_doe@gmail.com); an unescaped `.ilike('email', email)`
+// would treat `_` as "any char" and resolve a DIFFERENT account — which here would set a
+// password on the wrong user. Backslash is Postgres's default LIKE escape character.
+function escapeLikePattern(value: string): string {
+  return value.replace(/([\\%_])/g, '\\$1')
+}
+
 /**
  * Resolve the auth user id for an email. Invites are always issued via
  * inviteUserByEmail, which creates a confirmed, passwordless auth user with a
@@ -25,10 +33,11 @@ async function findAuthUserIdByEmail(
   admin: ReturnType<typeof getSupabaseAdmin>,
   email: string
 ): Promise<string | null> {
+  // Case-insensitive but wildcard-literal exact match on the email.
   const { data: profile } = await admin
     .from('profiles')
     .select('id')
-    .ilike('email', email)
+    .ilike('email', escapeLikePattern(email))
     .maybeSingle()
   if (profile?.id) return profile.id
 
@@ -104,9 +113,25 @@ export async function POST(request: NextRequest) {
     const userId = await findAuthUserIdByEmail(admin, email)
 
     if (userId) {
-      // Existing (passwordless) invited account — already a member of another org? Refuse
-      // rather than touch it. The accept RPC enforces single-org too, but checking here lets
-      // us return a clear message before mutating the password.
+      // Account-takeover guard. This endpoint sets a password from a logged-out, link-only
+      // request, so it must only ever touch an UNCLAIMED invited account: created by
+      // inviteUserByEmail (confirmed, passwordless) and never signed in. If the email already
+      // belongs to a real account that has signed in, overwriting its password would be
+      // account takeover — refuse and route them to sign in instead.
+      const { data: existing, error: getUserError } = await admin.auth.admin.getUserById(userId)
+      if (getUserError || !existing?.user) {
+        console.error('Error loading invitee during claim:', getUserError)
+        return NextResponse.json({ error: 'Failed to verify invitee' }, { status: 500 })
+      }
+      if (existing.user.last_sign_in_at) {
+        return NextResponse.json(
+          { error: 'This email already has an account. Please sign in to accept the invite.' },
+          { status: 409 }
+        )
+      }
+
+      // Already a member of another org? Refuse rather than touch it. The accept RPC enforces
+      // single-org too, but checking here returns a clearer message before any mutation.
       const { data: memberships, error: membershipError } = await admin
         .from('organization_members')
         .select('organization_id')
@@ -127,15 +152,8 @@ export async function POST(request: NextRequest) {
           { status: 409 }
         )
       }
-
-      const { error: updateError } = await admin.auth.admin.updateUserById(userId, {
-        password,
-        email_confirm: true
-      })
-      if (updateError) {
-        console.error('Error setting password during claim:', updateError)
-        return NextResponse.json({ error: 'Could not set your password' }, { status: 500 })
-      }
+      // Password is set AFTER the join RPC succeeds (below), so a rejected join never leaves a
+      // mutated credential behind.
     } else {
       // No auth user yet — create one confirmed (no email round-trip).
       const { error: createError } = await admin.auth.admin.createUser({
@@ -152,7 +170,7 @@ export async function POST(request: NextRequest) {
 
     const resolvedUserId = userId ?? (await findAuthUserIdByEmail(admin, email))
     if (!resolvedUserId) {
-      console.error('Could not resolve user id after claim for', email)
+      console.error('Could not resolve user id after claim for invite', invite.id)
       return NextResponse.json({ error: 'Could not complete sign-up' }, { status: 500 })
     }
 
@@ -169,6 +187,20 @@ export async function POST(request: NextRequest) {
     if (rpcError) {
       console.error('Error in accept_organization_invite RPC during claim:', rpcError)
       return NextResponse.json({ error: 'Failed to join organization' }, { status: 500 })
+    }
+
+    // For an existing (unclaimed, never-signed-in) invitee, set the password only now that the
+    // join has succeeded — a rejected join above never reaches here, so it can't leave a mutated
+    // credential. The create path already set the password at account creation.
+    if (userId) {
+      const { error: updateError } = await admin.auth.admin.updateUserById(userId, {
+        password,
+        email_confirm: true
+      })
+      if (updateError) {
+        console.error('Error setting password during claim:', updateError)
+        return NextResponse.json({ error: 'Could not set your password' }, { status: 500 })
+      }
     }
 
     // Client signs in with these credentials next; return the email for convenience.
