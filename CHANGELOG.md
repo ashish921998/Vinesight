@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 
 - **Claim-invite only sets a password on an unclaimed, never-signed-in invitee** (`last_sign_in_at` gate) and defers the password write until after the join succeeds, so a shared link can never overwrite the credential of an existing, in-use account or leave a mutated password behind on a rejected join.
 - **Invite-email lookup escapes LIKE wildcards** so addresses containing `_` or `%` match the exact account instead of resolving a different profile.
+- **Claim-invite rolls back a newly created account if the join fails.** When the claim creates a brand-new auth user and the subsequent join RPC fails (e.g. the invite was claimed concurrently), the orphaned account is deleted instead of being left behind confirmed-but-unjoined.
 
 ## [0.2.0.1] - 2026-06-26
 

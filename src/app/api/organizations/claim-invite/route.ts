@@ -111,6 +111,7 @@ export async function POST(request: NextRequest) {
 
     const email = invite.email.toLowerCase()
     const userId = await findAuthUserIdByEmail(admin, email)
+    let createdUserId: string | null = null
 
     if (userId) {
       // Account-takeover guard. This endpoint sets a password from a logged-out, link-only
@@ -156,19 +157,20 @@ export async function POST(request: NextRequest) {
       // mutated credential behind.
     } else {
       // No auth user yet — create one confirmed (no email round-trip).
-      const { error: createError } = await admin.auth.admin.createUser({
+      const { data: created, error: createError } = await admin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
         user_metadata: { first_name: invite.first_name, last_name: invite.last_name }
       })
-      if (createError) {
+      if (createError || !created?.user) {
         console.error('Error creating user during claim:', createError)
         return NextResponse.json({ error: 'Could not create your account' }, { status: 500 })
       }
+      createdUserId = created.user.id
     }
 
-    const resolvedUserId = userId ?? (await findAuthUserIdByEmail(admin, email))
+    const resolvedUserId = userId ?? createdUserId
     if (!resolvedUserId) {
       console.error('Could not resolve user id after claim for invite', invite.id)
       return NextResponse.json({ error: 'Could not complete sign-up' }, { status: 500 })
@@ -186,6 +188,16 @@ export async function POST(request: NextRequest) {
     })
     if (rpcError) {
       console.error('Error in accept_organization_invite RPC during claim:', rpcError)
+      // Compensating cleanup: if we created the account for THIS claim, remove it so a failed
+      // join (e.g. the invite was claimed concurrently) doesn't strand an orphaned confirmed
+      // account the user never knowingly created. Only the create path is rolled back — the
+      // existing-user path never mutated anything before this point. Best-effort.
+      if (createdUserId) {
+        const { error: cleanupError } = await admin.auth.admin.deleteUser(createdUserId)
+        if (cleanupError) {
+          console.error('Failed to clean up orphaned user after claim failure:', cleanupError)
+        }
+      }
       return NextResponse.json({ error: 'Failed to join organization' }, { status: 500 })
     }
 
