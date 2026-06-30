@@ -521,6 +521,72 @@ export function buildCallList(
   })
 }
 
+export interface FarmerCallGroup {
+  /** Stable key — the farmer's client id. */
+  clientUserId: string
+  farmerName: string | null
+  /** The group's most urgent reason — drives the header dot colour. */
+  topReason: CallReason
+  /**
+   * Quiet farms, most overdue first. Rendered as plain context lines: they all
+   * link to the same farmer page, which the group's single "View farmer" header
+   * already covers, so they carry no per-row CTA.
+   */
+  quietFarms: CallListRow[]
+  /**
+   * Reviewed-no-plan farms. Each keeps its own review-specific "Issue plan"
+   * deep link (the plan builder targets a single farm + review), so these stay
+   * individually actionable rather than folding into the header.
+   */
+  planRows: CallListRow[]
+}
+
+/**
+ * Collapse the per-farm call list to per-farmer groups so a multi-farm farmer
+ * shows once instead of once per flagged farm. Quiet farms fold into context
+ * lines under a single "View farmer" header; reviewed-no-plan farms stay as
+ * their own rows because their CTA can't roll up to the farmer level.
+ *
+ * Group order mirrors the flat list: quiet-led farmers first (most overdue
+ * first), then farmers with only reviewed-no-plan work. Input is assumed to
+ * already be filtered by reason if a filter is active.
+ */
+export function groupCallList(rows: CallListRow[]): FarmerCallGroup[] {
+  const groups = new Map<string, FarmerCallGroup>()
+
+  for (const row of rows) {
+    let group = groups.get(row.clientUserId)
+    if (!group) {
+      group = {
+        clientUserId: row.clientUserId,
+        farmerName: row.farmerName,
+        topReason: row.reason,
+        quietFarms: [],
+        planRows: []
+      }
+      groups.set(row.clientUserId, group)
+    }
+    // Prefer any non-null name we encounter (a no_plan row always has one).
+    if (!group.farmerName && row.farmerName) group.farmerName = row.farmerName
+    if (row.reason === 'quiet') group.quietFarms.push(row)
+    else group.planRows.push(row)
+  }
+
+  const list = [...groups.values()]
+  for (const group of list) {
+    group.quietFarms.sort((a, b) => (b.daysSinceSample ?? 0) - (a.daysSinceSample ?? 0))
+    group.topReason = group.quietFarms.length > 0 ? 'quiet' : 'no_plan'
+  }
+
+  return list.sort((a, b) => {
+    if (REASON_RANK[a.topReason] !== REASON_RANK[b.topReason]) {
+      return REASON_RANK[a.topReason] - REASON_RANK[b.topReason]
+    }
+    // Both quiet-led: the farmer with the most overdue farm comes first.
+    return (b.quietFarms[0]?.daysSinceSample ?? 0) - (a.quietFarms[0]?.daysSinceSample ?? 0)
+  })
+}
+
 // --- Impression band ("What needs attention") --------------------------------
 
 export type FindingTone = 'urgent' | 'attention' | 'positive'

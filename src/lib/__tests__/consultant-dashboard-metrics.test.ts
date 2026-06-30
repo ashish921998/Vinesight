@@ -5,6 +5,7 @@ import {
   avgTimeToReviewDays,
   buildCallList,
   buildFindings,
+  groupCallList,
   farmsWithDeficiency,
   farmsWithPetioleData,
   goneQuietFarmers,
@@ -263,6 +264,56 @@ describe('buildCallList', () => {
     )
     expect(rows).toHaveLength(1)
     expect(rows[0]).toMatchObject({ reason: 'no_plan', clientUserId: 'c9', village: null })
+  })
+})
+
+describe('groupCallList', () => {
+  const index = new Map<number, FarmContactRef>([
+    [1, { clientUserId: 'c1', farmerName: 'Asha', village: 'Niphad', farmName: 'North' }],
+    [2, { clientUserId: 'c1', farmerName: 'Asha', village: 'Lasalgaon', farmName: 'East' }],
+    [3, { clientUserId: 'c2', farmerName: 'Bharat', village: 'Pimpalgaon', farmName: 'West' }]
+  ])
+
+  it('collapses one farmer with two quiet farms into a single group', () => {
+    const rows = buildCallList(
+      [
+        { farmId: 1, daysSinceSample: 159, sampleDate: 'x' },
+        { farmId: 2, daysSinceSample: 228, sampleDate: 'y' }
+      ],
+      [],
+      index
+    )
+    const groups = groupCallList(rows)
+    expect(groups).toHaveLength(1)
+    expect(groups[0]).toMatchObject({ clientUserId: 'c1', farmerName: 'Asha', topReason: 'quiet' })
+    expect(groups[0].planRows).toHaveLength(0)
+    // Most overdue farm sorts first within the group.
+    expect(groups[0].quietFarms.map((f) => f.daysSinceSample)).toEqual([228, 159])
+  })
+
+  it('keeps reviewed-no-plan farms as their own rows while quiet farms fold in', () => {
+    const rows = buildCallList(
+      [{ farmId: 1, daysSinceSample: 40, sampleDate: 'x' }],
+      [{ triageId: 't2', farmId: 2, clientUserId: 'c1', farmerName: 'Asha', farmName: 'East' }],
+      index
+    )
+    const groups = groupCallList(rows)
+    expect(groups).toHaveLength(1)
+    expect(groups[0].quietFarms.map((f) => f.farmId)).toEqual([1])
+    expect(groups[0].planRows.map((f) => f.triageId)).toEqual(['t2'])
+    // A quiet signal still wins the dot colour for a mixed farmer.
+    expect(groups[0].topReason).toBe('quiet')
+  })
+
+  it('orders quiet-led farmers (most overdue first) above no-plan-only farmers', () => {
+    const rows = buildCallList(
+      [{ farmId: 1, daysSinceSample: 50, sampleDate: 'x' }],
+      [{ triageId: 't3', farmId: 3, clientUserId: 'c2', farmerName: 'Bharat', farmName: 'West' }],
+      index
+    )
+    const groups = groupCallList(rows)
+    expect(groups.map((g) => g.clientUserId)).toEqual(['c1', 'c2'])
+    expect(groups[1].topReason).toBe('no_plan')
   })
 })
 

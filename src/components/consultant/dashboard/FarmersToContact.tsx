@@ -5,7 +5,12 @@ import Link from 'next/link'
 import { ChevronRight, Users, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/Skeleton'
-import type { CallListRow, CallReason } from '@/lib/consultant-dashboard-metrics'
+import {
+  groupCallList,
+  type CallListRow,
+  type CallReason,
+  type FarmerCallGroup
+} from '@/lib/consultant-dashboard-metrics'
 
 const VISIBLE_CAP = 10
 
@@ -21,6 +26,10 @@ function rowHref(row: CallListRow): string {
   return `/consultant/farmers/${row.clientUserId}`
 }
 
+function rowLocation(row: CallListRow): string {
+  return [row.village, row.farmName].filter(Boolean).join(' · ') || 'Location unknown'
+}
+
 function reasonDetail(row: CallListRow): string {
   if (row.reason === 'quiet' && row.daysSinceSample != null) {
     return `${row.daysSinceSample}d quiet`
@@ -28,12 +37,122 @@ function reasonDetail(row: CallListRow): string {
   return REASON_META[row.reason].label
 }
 
+function Dot({ reason }: { reason: CallReason }) {
+  return (
+    <span
+      aria-hidden
+      className="h-2 w-2 shrink-0 rounded-full"
+      style={{ backgroundColor: `var(${REASON_META[reason].dotVar})` }}
+    />
+  )
+}
+
+/**
+ * A self-contained, deep-linked row. Used for single-signal farmers (full, with
+ * name + dot) and for each reviewed-no-plan farm under a grouped header
+ * (`inset`, location only — the header already shows the name).
+ */
+function ActionRow({
+  row,
+  onContact,
+  inset
+}: {
+  row: CallListRow
+  onContact: (row: CallListRow) => void
+  inset?: boolean
+}) {
+  const meta = REASON_META[row.reason]
+  return (
+    <Link
+      href={rowHref(row)}
+      onClick={() => onContact(row)}
+      className={`flex items-center gap-3 rounded-md py-2.5 pr-2 transition-colors hover:bg-muted/50 ${
+        inset ? 'pl-7' : 'pl-2'
+      }`}
+    >
+      {!inset && <Dot reason={row.reason} />}
+      <div className="min-w-0 flex-1">
+        {!inset && (
+          <p className="truncate font-serif text-sm font-medium">
+            {row.farmerName || 'Unknown farmer'}
+          </p>
+        )}
+        <p className="truncate text-xs text-muted-foreground">{rowLocation(row)}</p>
+      </div>
+      <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+        {reasonDetail(row)}
+      </span>
+      <span className="inline-flex shrink-0 items-center gap-0.5 text-xs font-medium text-primary">
+        {meta.cta}
+        <ChevronRight className="h-4 w-4" />
+      </span>
+    </Link>
+  )
+}
+
+/**
+ * One farmer's worth of the call list. A single flagged farm renders as a plain
+ * {@link ActionRow}; a multi-farm farmer gets a "View farmer" header with quiet
+ * farms as context lines and each reviewed-no-plan farm as its own inset row.
+ */
+function GroupBlock({
+  group,
+  onContact
+}: {
+  group: FarmerCallGroup
+  onContact: (row: CallListRow) => void
+}) {
+  const total = group.quietFarms.length + group.planRows.length
+
+  // Single signal — no grouping needed; keep the original flat row.
+  if (total === 1) {
+    return <ActionRow row={group.quietFarms[0] ?? group.planRows[0]} onContact={onContact} />
+  }
+
+  // The header's "View farmer" link covers every quiet farm (they share the
+  // farmer page). Fire contact analytics against the most urgent farm.
+  const headerRow = group.quietFarms[0] ?? group.planRows[0]
+  return (
+    <div className="py-1">
+      <Link
+        href={`/consultant/farmers/${group.clientUserId}`}
+        onClick={() => onContact(headerRow)}
+        className="flex items-center gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-muted/50"
+      >
+        <Dot reason={group.topReason} />
+        <p className="min-w-0 flex-1 truncate font-serif text-sm font-medium">
+          {group.farmerName || 'Unknown farmer'}
+        </p>
+        <span className="inline-flex shrink-0 items-center gap-0.5 text-xs font-medium text-primary">
+          View farmer
+          <ChevronRight className="h-4 w-4" />
+        </span>
+      </Link>
+
+      {group.quietFarms.map((farm) => (
+        <div key={farm.key} className="flex items-center gap-3 py-1.5 pl-7 pr-2">
+          <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+            {rowLocation(farm)}
+          </p>
+          <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+            {farm.daysSinceSample}d quiet
+          </span>
+        </div>
+      ))}
+
+      {group.planRows.map((farm) => (
+        <ActionRow key={farm.key} row={farm} onContact={onContact} inset />
+      ))}
+    </div>
+  )
+}
+
 /**
  * The hero call list — the consultant's derived-state "who to reach out to
- * today". Per-farm grain (a multi-farm farmer can appear once per flagged
- * farm). No contact logging: rows are derived and self-clear when the
- * underlying data changes (a new sample, an issued plan). CTAs deep-link to the
- * farmer page or the plan builder for the specific review.
+ * today". Grouped to per-farmer grain: a multi-farm farmer shows once, with its
+ * flagged farms nested beneath. No contact logging: rows are derived and
+ * self-clear when the underlying data changes (a new sample, an issued plan).
+ * CTAs deep-link to the farmer page or the plan builder for the specific review.
  */
 export function FarmersToContact({
   rows,
@@ -52,12 +171,15 @@ export function FarmersToContact({
 }) {
   const [expanded, setExpanded] = useState(false)
 
-  const filtered = useMemo(
-    () => (filter ? rows.filter((r) => r.reason === filter) : rows),
-    [rows, filter]
-  )
-  const visible = expanded ? filtered : filtered.slice(0, VISIBLE_CAP)
-  const hiddenCount = filtered.length - visible.length
+  // Filter by reason first (so a reason filter prunes farms, not whole
+  // farmers), then collapse to per-farmer groups.
+  const groups = useMemo(() => {
+    const filtered = filter ? rows.filter((r) => r.reason === filter) : rows
+    return groupCallList(filtered)
+  }, [rows, filter])
+
+  const visible = expanded ? groups : groups.slice(0, VISIBLE_CAP)
+  const hiddenCount = groups.length - visible.length
 
   return (
     <section
@@ -95,7 +217,7 @@ export function FarmersToContact({
           <p className="py-10 text-center text-sm text-muted-foreground">
             Couldn&apos;t load the call list. Please refresh.
           </p>
-        ) : filtered.length === 0 ? (
+        ) : groups.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground">
             {filter
               ? 'No farmers match this filter.'
@@ -103,40 +225,11 @@ export function FarmersToContact({
           </p>
         ) : (
           <ul className="divide-y">
-            {visible.map((row) => {
-              const meta = REASON_META[row.reason]
-              const location = [row.village, row.farmName].filter(Boolean).join(' · ')
-              return (
-                <li key={row.key}>
-                  <Link
-                    href={rowHref(row)}
-                    onClick={() => onContact(row)}
-                    className="-mx-0 flex items-center gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-muted/50"
-                  >
-                    <span
-                      aria-hidden
-                      className="h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: `var(${meta.dotVar})` }}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-serif text-sm font-medium">
-                        {row.farmerName || 'Unknown farmer'}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {location || 'Location unknown'}
-                      </p>
-                    </div>
-                    <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-                      {reasonDetail(row)}
-                    </span>
-                    <span className="inline-flex shrink-0 items-center gap-0.5 text-xs font-medium text-primary">
-                      {meta.cta}
-                      <ChevronRight className="h-4 w-4" />
-                    </span>
-                  </Link>
-                </li>
-              )
-            })}
+            {visible.map((group) => (
+              <li key={group.clientUserId}>
+                <GroupBlock group={group} onContact={onContact} />
+              </li>
+            ))}
           </ul>
         )}
       </div>
@@ -144,7 +237,7 @@ export function FarmersToContact({
       {!isLoading && !isError && hiddenCount > 0 && (
         <div className="border-t px-2 py-2">
           <Button variant="ghost" size="sm" className="w-full" onClick={() => setExpanded(true)}>
-            See all {filtered.length} flagged farmers
+            See all {groups.length} flagged farmers
           </Button>
         </div>
       )}
