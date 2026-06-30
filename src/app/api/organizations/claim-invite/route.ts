@@ -91,8 +91,12 @@ export async function POST(request: NextRequest) {
         'claim_invite_account_has_password',
         { p_user_id: userId }
       )
-      if (pwError) {
-        console.error('Error checking credential during claim:', pwError)
+      // Fail closed: the function returns NULL when no auth.users row matches (e.g. an orphaned
+      // profile id). NULL means "could not confirm this account is passwordless", which must NOT
+      // be treated as "no password → safe to set one". Refuse instead of proceeding on an
+      // unverified id.
+      if (pwError || hasPassword === null) {
+        console.error('Error checking credential during claim:', pwError, 'invite', invite.id)
         return NextResponse.json({ error: 'Failed to verify invitee' }, { status: 500 })
       }
       if (hasPassword) {
