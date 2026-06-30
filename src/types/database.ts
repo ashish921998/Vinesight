@@ -2585,6 +2585,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      claim_invite_account_has_password: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       decay_context_relevance: {
         Args: Record<PropertyKey, never>
         Returns: undefined

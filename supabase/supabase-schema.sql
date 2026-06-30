@@ -1783,3 +1783,22 @@ INSERT INTO farms (name, region, area, crop, crop_variety, planting_date, vine_s
 ('Pune Valley Farm', 'Pune, Maharashtra', 1.8, 'Grapes', 'Flame Seedless', '2019-11-20', 2.5, 8.0, auth.uid()),
 ('Sangli Export Vineyard', 'Sangli, Maharashtra', 4.2, 'Grapes', 'Red Globe', '2018-12-10', 3.5, 10.0, auth.uid());
 */
+
+-- Credential-presence reader for the claim-invite gate (see migration
+-- 202606300001_claim_invite_password_gate.sql). SECURITY DEFINER so the service role can read
+-- auth.users.encrypted_password without exposing the auth schema; returns only a boolean.
+create or replace function public.claim_invite_account_has_password(p_user_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = ''
+as $$
+  select coalesce(u.encrypted_password, '') <> ''
+  from auth.users u
+  where u.id = p_user_id;
+$$;
+
+revoke all on function public.claim_invite_account_has_password(uuid) from public;
+revoke all on function public.claim_invite_account_has_password(uuid) from anon;
+revoke all on function public.claim_invite_account_has_password(uuid) from authenticated;
+grant execute on function public.claim_invite_account_has_password(uuid) to service_role;

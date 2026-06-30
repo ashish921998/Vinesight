@@ -80,16 +80,22 @@ export async function POST(request: NextRequest) {
 
     if (userId) {
       // Account-takeover guard. This endpoint sets a password from a logged-out, link-only
-      // request, so it must only ever touch an UNCLAIMED invited account: created by
-      // inviteUserByEmail (confirmed, passwordless) and never signed in. If the email already
-      // belongs to a real account that has signed in, overwriting its password would be
-      // account takeover — refuse and route them to sign in instead.
-      const { data: existing, error: getUserError } = await admin.auth.admin.getUserById(userId)
-      if (getUserError || !existing?.user) {
-        console.error('Error loading invitee during claim:', getUserError)
+      // request, so it must only ever touch a PASSWORDLESS account — an unclaimed invite stub
+      // created by inviteUserByEmail. If the email already has a real password, overwriting it
+      // would be account takeover, so refuse and route them to sign in.
+      //
+      // We gate on the actual credential (encrypted_password), NOT last_sign_in_at: opening the
+      // Supabase invite email signs the user in without setting a password, so last_sign_in_at
+      // would falsely block legitimately-passwordless invitees who clicked the email.
+      const { data: hasPassword, error: pwError } = await admin.rpc(
+        'claim_invite_account_has_password',
+        { p_user_id: userId }
+      )
+      if (pwError) {
+        console.error('Error checking credential during claim:', pwError)
         return NextResponse.json({ error: 'Failed to verify invitee' }, { status: 500 })
       }
-      if (existing.user.last_sign_in_at) {
+      if (hasPassword) {
         return NextResponse.json(
           { error: 'This email already has an account. Please sign in to accept the invite.' },
           { status: 409 }
