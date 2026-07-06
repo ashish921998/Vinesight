@@ -26,6 +26,10 @@ export interface FertilizerPlanItem {
   notes: string | null
   sort_order: number
   created_at: string
+  /** Master-catalog product id (Phase W). Null for custom/legacy items — fertilizer_name is the fallback identity. */
+  product_id: number | null
+  /** total | per_acre | per_liter_water (Phase W). Null = infer from the unit string, as before. */
+  quantity_basis: string | null
 }
 
 export interface FertilizerPlanWithItems extends FertilizerPlan {
