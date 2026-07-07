@@ -2494,6 +2494,8 @@ export type Database = {
           notes: string | null
           sort_order: number
           created_at: string
+          product_id: number | null
+          quantity_basis: string | null
         }
         Insert: {
           id?: string
@@ -2507,6 +2509,8 @@ export type Database = {
           notes?: string | null
           sort_order?: number
           created_at?: string
+          product_id?: number | null
+          quantity_basis?: string | null
         }
         Update: {
           id?: string
@@ -2520,6 +2524,8 @@ export type Database = {
           notes?: string | null
           sort_order?: number
           created_at?: string
+          product_id?: number | null
+          quantity_basis?: string | null
         }
         Relationships: [
           {
@@ -2527,6 +2533,13 @@ export type Database = {
             columns: ['plan_id']
             isOneToOne: false
             referencedRelation: 'fertilizer_plans'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'fertilizer_plan_items_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'chemical_products'
             referencedColumns: ['id']
           }
         ]
