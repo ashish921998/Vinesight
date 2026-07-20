@@ -2,15 +2,16 @@ import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
 import type { AuthStateChangeResult, InitialUserResult, SessionDeps } from './types'
 
 /**
- * Resolves the initial authenticated user via `supabase.auth.getUser()` (secure
- * verification). The three cases mirror the original hook behavior:
- *
- * 1. A user is present → return it.
- * 2. `Auth session missing!` / `AuthSessionMissingError` → treated as a logged
- *    out state (NOT an error), returns `{ user: null, error: null }`.
- * 3. Any other error → returns the error message.
+ * How long to wait for `supabase.auth.getUser()` before giving up. On flaky
+ * mobile networks (especially right after the tab resumes from background) this
+ * call can hang indefinitely; without a ceiling, `ProtectedRoute` stays stuck on
+ * its "Loading…" spinner forever. When the timeout fires we fall back to the
+ * logged-out state so the app can render — the `onAuthStateChange` subscription
+ * still delivers the real user if a valid session later resolves.
  */
-export async function resolveInitialUser(deps: SessionDeps): Promise<InitialUserResult> {
+export const INITIAL_USER_TIMEOUT_MS = 8000
+
+async function fetchInitialUser(deps: SessionDeps): Promise<InitialUserResult> {
   const { supabase } = deps
 
   try {
@@ -36,6 +37,45 @@ export async function resolveInitialUser(deps: SessionDeps): Promise<InitialUser
       user: null,
       error: err instanceof Error ? err.message : 'An unexpected error occurred'
     }
+  }
+}
+
+/**
+ * Resolves the initial authenticated user via `supabase.auth.getUser()` (secure
+ * verification), racing it against a timeout. The cases mirror the original hook
+ * behavior:
+ *
+ * 1. A user is present → return it.
+ * 2. `Auth session missing!` / `AuthSessionMissingError` → treated as a logged
+ *    out state (NOT an error), returns `{ user: null, error: null }`.
+ * 3. Any other error → returns the error message.
+ * 4. `getUser()` hangs past `timeoutMs` → returns the logged-out fallback so the
+ *    caller stops loading instead of spinning forever.
+ */
+export async function resolveInitialUser(
+  deps: SessionDeps,
+  timeoutMs: number = INITIAL_USER_TIMEOUT_MS
+): Promise<InitialUserResult> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined
+  const TIMED_OUT = Symbol('getUserTimedOut')
+
+  const timeoutPromise = new Promise<typeof TIMED_OUT>((resolve) => {
+    timeoutId = setTimeout(() => resolve(TIMED_OUT), timeoutMs)
+  })
+
+  try {
+    const result = await Promise.race([fetchInitialUser(deps), timeoutPromise])
+
+    if (result === TIMED_OUT) {
+      console.warn(
+        `Auth getUser() timed out after ${timeoutMs}ms; falling back to logged-out state`
+      )
+      return { user: null, error: null }
+    }
+
+    return result
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId)
   }
 }
 
