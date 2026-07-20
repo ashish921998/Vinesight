@@ -109,6 +109,29 @@ describe('resolveInitialUser', () => {
 
     expect(result).toEqual({ user: null, error: 'An unexpected error occurred' })
   })
+
+  it('falls back to the logged-out state when getUser() hangs past the timeout', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    // getUser() never resolves — simulates a stalled request on flaky mobile networks.
+    const supabase = mockSupabase(() => new Promise(() => {}))
+    const deps: SessionDeps = { supabase, posthog: mockPosthog() }
+
+    const result = await resolveInitialUser(deps, 10)
+
+    expect(result).toEqual({ user: null, error: null })
+    expect(warn).toHaveBeenCalled()
+    warn.mockRestore()
+  })
+
+  it('returns the resolved user when getUser() beats the timeout', async () => {
+    const user = makeUser({ id: 'user-fast' })
+    const supabase = mockSupabase(async () => ({ data: { user }, error: null }))
+    const deps: SessionDeps = { supabase, posthog: mockPosthog() }
+
+    const result = await resolveInitialUser(deps, 10_000)
+
+    expect(result).toEqual({ user, error: null })
+  })
 })
 
 describe('reduceAuthStateChange', () => {
