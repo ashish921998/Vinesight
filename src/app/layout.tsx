@@ -1,5 +1,13 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono, IBM_Plex_Sans, IBM_Plex_Serif, IBM_Plex_Mono } from 'next/font/google'
+import {
+  Geist,
+  Geist_Mono,
+  IBM_Plex_Sans,
+  IBM_Plex_Serif,
+  IBM_Plex_Mono,
+  Archivo,
+  Fragment_Mono
+} from 'next/font/google'
 import './globals.css'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { MotionConfigProvider } from '@/components/providers/MotionConfigProvider'
@@ -48,6 +56,21 @@ const plexMono = IBM_Plex_Mono({
   variable: '--font-ibm-plex-mono',
   subsets: ['latin'],
   weight: ['400', '500', '600']
+})
+
+// Mitti Labs-inspired display + mono fonts.
+// Archivo (expanded feel via wide weight range) replaces TT Hoves Pro Expanded.
+// Fragment Mono for small caps labels and monospace accents.
+const archivo = Archivo({
+  variable: '--font-display',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900']
+})
+
+const fragmentMono = Fragment_Mono({
+  variable: '--font-mono-display',
+  subsets: ['latin'],
+  weight: ['400']
 })
 
 export const metadata: Metadata = {
@@ -146,7 +169,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${plexSans.variable} ${plexSerif.variable} ${plexMono.variable}`}
+      className={`${plexSans.variable} ${plexSerif.variable} ${plexMono.variable} ${archivo.variable} ${fragmentMono.variable}`}
       suppressHydrationWarning
     >
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>

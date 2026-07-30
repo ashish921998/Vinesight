@@ -418,6 +418,233 @@
   }
 }
 
+/* ============================================================
+   Mitti Labs-inspired Design System
+   - Cream backgrounds, dark forest-green sections
+   - Massive display headings with extreme tracking
+   - Fragment Mono small-caps labels
+   - Emil Kowalski-style spring hover states
+   ============================================================ */
+
+/* Landing-page-only tokens (non-destructive to app shell) */
+:root {
+  --mitti-cream: #fdfcef;
+  --mitti-cream-warm: #faf5e8;
+  --mitti-ink: #0a0a0a;
+  --mitti-forest: #102117;
+  --mitti-forest-deep: #0a1510;
+  --mitti-lime: #e5ffb2;
+  --mitti-lime-soft: rgba(229, 255, 178, 0.36);
+  --mitti-blue: #0000ee;
+  --mitti-orange: #ff561c;
+  --mitti-sky: #a6c7de;
+  --mitti-sage: #6f8f5e;
+}
+
+/* Display font utility — Archivo at heavy weight, wide tracking */
+.font-display {
+  font-family: var(--font-display), 'Archivo', 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.font-mono-label {
+  font-family: var(--font-mono-display), 'Fragment Mono', 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+/* Hero text — massive scale with extreme negative tracking (Mitti signature) */
+.mitti-hero-text {
+  font-family: var(--font-display), 'Archivo', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  font-size: clamp(2.8rem, 9vw, 8rem);
+}
+
+/* Section heading — 52-64px with positive tracking (Mitti H2) */
+.mitti-heading {
+  font-family: var(--font-display), 'Archivo', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+}
+
+/* Eyebrow / section label in Fragment Mono small caps */
+.mitti-eyebrow {
+  font-family: var(--font-mono-display), 'Fragment Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--mitti-sage);
+}
+
+/* Cream surface for light sections */
+.mitti-surface-cream {
+  background-color: var(--mitti-cream);
+  color: var(--mitti-ink);
+}
+
+/* Forest surface for dark sections */
+.mitti-surface-forest {
+  background-color: var(--mitti-forest);
+  color: var(--mitti-cream);
+}
+
+/* Lime accent surface */
+.mitti-surface-lime {
+  background-color: var(--mitti-lime);
+  color: var(--mitti-ink);
+}
+
+/* Mitti-style primary button — pill shape, ink-on-cream or cream-on-forest */
+.mitti-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  border-radius: 999px;
+  font-family: var(--font-display), 'Archivo', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  background: var(--mitti-ink);
+  color: var(--mitti-cream);
+  transition:
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.2s ease;
+  will-change: transform;
+}
+.mitti-btn-primary:hover {
+  background: #1a1a1a;
+  transform: scale(1.03);
+}
+.mitti-btn-primary:active {
+  transform: scale(0.97);
+}
+
+/* Mitti-style secondary button — outline pill */
+.mitti-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  border-radius: 999px;
+  font-family: var(--font-display), 'Archivo', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  background: transparent;
+  color: var(--mitti-ink);
+  border: 1px solid rgba(10, 10, 10, 0.15);
+  transition:
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+  will-change: transform;
+}
+.mitti-btn-ghost:hover {
+  border-color: rgba(10, 10, 10, 0.4);
+  background: rgba(10, 10, 10, 0.03);
+  transform: scale(1.03);
+}
+.mitti-btn-ghost:active {
+  transform: scale(0.97);
+}
+
+/* Dark-surface variants */
+.mitti-surface-forest .mitti-btn-primary {
+  background: var(--mitti-cream);
+  color: var(--mitti-forest);
+}
+.mitti-surface-forest .mitti-btn-primary:hover {
+  background: #fff;
+}
+.mitti-surface-forest .mitti-btn-ghost {
+  color: var(--mitti-cream);
+  border-color: rgba(253, 252, 239, 0.2);
+}
+.mitti-surface-forest .mitti-btn-ghost:hover {
+  border-color: rgba(253, 252, 239, 0.5);
+  background: rgba(253, 252, 239, 0.05);
+}
+
+/* Marquee animation for trusted-by strip */
+@keyframes mitti-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.mitti-marquee {
+  display: flex;
+  animation: mitti-marquee 40s linear infinite;
+  will-change: transform;
+}
+.mitti-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Section divider — thin hairline like Mitti */
+.mitti-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(10, 10, 10, 0.08);
+}
+.mitti-surface-forest .mitti-divider {
+  background: rgba(253, 252, 239, 0.08);
+}
+
+/* Card with subtle border and hover lift */
+.mitti-card {
+  border: 1px solid rgba(10, 10, 10, 0.08);
+  border-radius: 16px;
+  padding: 2rem;
+  transition:
+    border-color 0.3s ease,
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.mitti-card:hover {
+  border-color: rgba(10, 10, 10, 0.2);
+  transform: translateY(-4px);
+}
+.mitti-surface-forest .mitti-card {
+  border-color: rgba(253, 252, 239, 0.1);
+}
+.mitti-surface-forest .mitti-card:hover {
+  border-color: rgba(253, 252, 239, 0.25);
+}
+
+/* Large number callout (Mitti-style stat) */
+.mitti-stat-number {
+  font-family: var(--font-display), 'Archivo', sans-serif;
+  font-weight: 700;
+  font-size: clamp(3rem, 6vw, 5rem);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+/* Image/phone container with mitti-style rounding and shadow */
+.mitti-image-frame {
+  border-radius: 20px;
+  overflow: hidden;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.mitti-image-frame:hover {
+  transform: scale(1.02);
+}
+
 /*
  * Accessibility: respect the user's OS-level "reduce motion" preference
  * (WCAG 2.3.3 Animation from Interactions). Collapses CSS-driven animations
