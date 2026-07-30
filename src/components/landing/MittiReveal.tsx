@@ -79,10 +79,15 @@ const staggerChild: Variants = {
 
 export function StaggerGroup({ children, className }: { children: ReactNode; className?: string }) {
   const reduce = useReducedMotion()
+
+  if (reduce) {
+    return <div className={className}>{children}</div>
+  }
+
   return (
     <motion.div
       className={className}
-      variants={reduce ? undefined : staggerParent}
+      variants={staggerParent}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.15 }}
@@ -94,8 +99,13 @@ export function StaggerGroup({ children, className }: { children: ReactNode; cla
 
 export function StaggerChild({ children, className }: { children: ReactNode; className?: string }) {
   const reduce = useReducedMotion()
+
+  if (reduce) {
+    return <div className={className}>{children}</div>
+  }
+
   return (
-    <motion.div className={className} variants={reduce ? undefined : staggerChild}>
+    <motion.div className={className} variants={staggerChild}>
       {children}
     </motion.div>
   )

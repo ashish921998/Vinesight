@@ -164,15 +164,15 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen mitti-surface-cream overflow-hidden">
       {/* ============ HEADER ============ */}
-      <header className="fixed top-0 z-50 w-full">
-        <div
-          className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between"
-          style={{
-            backgroundColor: 'rgba(253, 252, 239, 0.75)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)'
-          }}
-        >
+      <header
+        className="fixed top-0 z-50 w-full"
+        style={{
+          backgroundColor: 'rgba(253, 252, 239, 0.75)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)'
+        }}
+      >
+        <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Image
               src="/logo-mark.png"
@@ -468,7 +468,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Old way */}
-            <Reveal className="rounded-2xl p-8">
+            <Reveal>
               <div
                 className="rounded-2xl p-8 border"
                 style={{
@@ -503,7 +503,7 @@ export default function LandingPage() {
             </Reveal>
 
             {/* With VineSight */}
-            <Reveal delay={0.08} className="rounded-2xl p-8">
+            <Reveal delay={0.08}>
               <div
                 className="rounded-2xl p-8 border"
                 style={{
@@ -545,20 +545,20 @@ export default function LandingPage() {
             {/* Phones left */}
             <ParallaxWrap amount={20}>
               <div className="flex justify-center lg:justify-start gap-4 md:gap-6">
-                <ScaleIn className="hidden sm:block mt-12 mitti-image-frame">
+                <Reveal className="hidden sm:block mt-12 mitti-image-frame">
                   <PhoneFrame
                     src="/screenshots/workers-wages.png"
                     alt="VineSight workers screen"
                     width={220}
                   />
-                </ScaleIn>
-                <ScaleIn delay={0.15} className="mitti-image-frame">
+                </Reveal>
+                <Reveal delay={0.1} className="mitti-image-frame">
                   <PhoneFrame
                     src="/screenshots/irrigation-calculator.png"
                     alt="VineSight irrigation calculator"
                     width={220}
                   />
-                </ScaleIn>
+                </Reveal>
               </div>
             </ParallaxWrap>
 
@@ -644,18 +644,10 @@ export default function LandingPage() {
               </span>
             </div>
             <div className="flex items-center gap-6">
-              <Link
-                className="text-xs hover:text-white transition-colors"
-                style={{ color: 'rgba(253, 252, 239, 0.5)' }}
-                href="/privacy"
-              >
+              <Link className="text-xs transition-colors footer-link" href="/privacy">
                 Privacy Policy
               </Link>
-              <Link
-                className="text-xs hover:text-white transition-colors"
-                style={{ color: 'rgba(253, 252, 239, 0.5)' }}
-                href="/terms"
-              >
+              <Link className="text-xs transition-colors footer-link" href="/terms">
                 Terms of Service
               </Link>
             </div>

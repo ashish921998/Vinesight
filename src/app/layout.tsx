@@ -64,7 +64,8 @@ const plexMono = IBM_Plex_Mono({
 const archivo = Archivo({
   variable: '--font-display',
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800', '900']
+  weight: ['400', '500', '600', '700', '800', '900'],
+  style: ['normal', 'italic']
 })
 
 const fragmentMono = Fragment_Mono({
