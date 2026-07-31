@@ -45,7 +45,11 @@ const proofPoints = [
   },
   {
     title: 'Built for field adoption',
-    description: 'Works offline, in English, हिंदी, and मराठी.',
+    description: (
+      <>
+        Works offline, in English, <span lang="hi">हिंदी</span>, and <span lang="mr">मराठी</span>.
+      </>
+    ),
     icon: Languages
   }
 ]
@@ -162,7 +166,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen mitti-surface-cream overflow-hidden">
+    <div className="min-h-screen mitti-surface-cream">
       {/* ============ HEADER ============ */}
       <header
         className="fixed top-0 z-50 w-full"
