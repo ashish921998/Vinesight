@@ -1,5 +1,12 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono, IBM_Plex_Sans, IBM_Plex_Serif, IBM_Plex_Mono } from 'next/font/google'
+import {
+  Archivo,
+  Geist,
+  Geist_Mono,
+  IBM_Plex_Sans,
+  IBM_Plex_Serif,
+  IBM_Plex_Mono
+} from 'next/font/google'
 import './globals.css'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { MotionConfigProvider } from '@/components/providers/MotionConfigProvider'
@@ -50,6 +57,14 @@ const plexMono = IBM_Plex_Mono({
   weight: ['400', '500', '600']
 })
 
+// Marketing-only display face. Archivo carries a width axis, so the homepage can
+// use the wide/expanded grotesque headline voice without a second font file.
+const archivo = Archivo({
+  variable: '--font-archivo',
+  subsets: ['latin'],
+  axes: ['wdth']
+})
+
 export const metadata: Metadata = {
   title: 'VineSight - Grower Network Management for Grape Exporters',
   description:
@@ -86,7 +101,7 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL('https://vinesight.vercel.app'),
   alternates: {
-    canonical: '/'
+    canonical: 'https://vinesight.vercel.app'
   },
   openGraph: {
     type: 'website',
@@ -146,7 +161,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${plexSans.variable} ${plexSerif.variable} ${plexMono.variable}`}
+      className={`${plexSans.variable} ${plexSerif.variable} ${plexMono.variable} ${archivo.variable}`}
       suppressHydrationWarning
     >
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>

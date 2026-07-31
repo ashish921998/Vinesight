@@ -1,6 +1,6 @@
 'use client'
 
-import { MotionConfig } from 'framer-motion'
+import { domAnimation, LazyMotion, MotionConfig } from 'framer-motion'
 import { ReactNode } from 'react'
 
 /**
@@ -12,5 +12,9 @@ import { ReactNode } from 'react'
  * are handled separately by the media query in globals.css.
  */
 export function MotionConfigProvider({ children }: { children: ReactNode }) {
-  return <MotionConfig reducedMotion="user">{children}</MotionConfig>
+  return (
+    <LazyMotion features={domAnimation} strict>
+      <MotionConfig reducedMotion="user">{children}</MotionConfig>
+    </LazyMotion>
+  )
 }
