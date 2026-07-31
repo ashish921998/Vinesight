@@ -5,21 +5,29 @@ import Image from 'next/image'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppDownloadBadge, type AppDownloadLink } from '@/components/AppDownloadBadge'
-import { Reveal, RevealItem } from '@/components/landing/Reveal'
+import {
+  Reveal,
+  StaggerGroup,
+  StaggerChild,
+  ParallaxWrap,
+  ScaleIn,
+  WordReveal,
+  MagneticButton
+} from '@/components/landing/MittiReveal'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { getLastRoute } from '@/lib/route-persistence'
 import { resolveModuleHome } from '@/lib/auth/module-home'
 import { ORG_HOME } from '@/lib/auth/homes'
 import {
-  BarChart3,
+  ArrowUpRight,
   CheckCircle,
   ClipboardList,
-  Handshake,
   Languages,
   Loader2,
   ShieldCheck,
   Sprout,
-  XCircle
+  BarChart3,
+  Handshake
 } from 'lucide-react'
 
 const DEMO_URL = 'https://calendar.app.google/vq1JzfjiT59v9dAS7'
@@ -48,16 +56,19 @@ const proofPoints = [
 
 const workflowSteps = [
   {
+    number: '01',
     title: 'Onboard your network',
     description:
       'Add your growers under your organization with per-farmer licenses. We help with onboarding and field visits.'
   },
   {
+    number: '02',
     title: 'Growers log from the field',
     description:
       'Sprays, irrigation, labour, and lab samples recorded in seconds, offline if needed, in their own language.'
   },
   {
+    number: '03',
     title: 'You see everything',
     description:
       'Advisory activity, spray records, lab results, and crop status across every farm you source from.'
@@ -120,6 +131,547 @@ const appDownloadLinks: AppDownloadLink[] = [
   }
 ]
 
+const trustedBy = ['Fratelli Fruits', 'Sahyadri Farms', 'Mahagrapes', 'PPF', 'Shramik']
+
+export default function LandingPage() {
+  const router = useRouter()
+  const { user, loading } = useSupabaseAuth()
+
+  useEffect(() => {
+    if (!loading && user) {
+      let isMounted = true
+      const lastRoute = getLastRoute()
+      const resolveTargetRoute = async () => {
+        const moduleHome = await resolveModuleHome(user.id)
+        if (!isMounted) return
+        const targetRoute = moduleHome === ORG_HOME ? ORG_HOME : lastRoute || moduleHome
+        router.replace(targetRoute)
+      }
+      void resolveTargetRoute()
+      return () => {
+        isMounted = false
+      }
+    }
+  }, [loading, user, router])
+
+  if (!loading && user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center mitti-surface-cream">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen mitti-surface-cream">
+      {/* ============ HEADER ============ */}
+      <header
+        className="fixed top-0 z-50 w-full"
+        style={{
+          backgroundColor: 'rgba(253, 252, 239, 0.75)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)'
+        }}
+      >
+        <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Image
+              src="/logo-mark.png"
+              alt="VineSight logo"
+              width={32}
+              height={40}
+              className="h-8 w-7 object-contain"
+              priority
+            />
+            <span className="font-display text-lg font-bold tracking-tight">VineSight</span>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              className="font-display text-sm font-medium px-4 py-2 rounded-full hover:bg-black/[0.04] transition-colors"
+              href="/login"
+            >
+              Log In
+            </Link>
+            <MagneticButton
+              className="mitti-btn-primary text-sm"
+              href={DEMO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Book a demo
+              <ArrowUpRight className="h-4 w-4" />
+            </MagneticButton>
+          </div>
+        </div>
+      </header>
+
+      {/* ============ HERO ============ */}
+      <section className="relative pt-32 pb-20 md:pt-40 md:pb-28">
+        <div className="mx-auto max-w-7xl px-6">
+          {/* Eyebrow */}
+          <Reveal delay={0.1}>
+            <p className="mitti-eyebrow mb-6">Vine to container · Grape export compliance</p>
+          </Reveal>
+
+          {/* Hero heading — word-by-word reveal */}
+          <h1 className="mitti-hero-text mb-8 max-w-5xl">
+            <WordReveal text="Every grape farm" delay={0.3} />
+            <br />
+            <WordReveal text="you source from," delay={0.5} />{' '}
+            <span
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontStyle: 'italic',
+                fontWeight: 600,
+                color: 'var(--mitti-sage)'
+              }}
+            >
+              <WordReveal text="in one place." delay={0.7} />
+            </span>
+          </h1>
+
+          {/* Hero subtitle */}
+          <Reveal delay={1.0}>
+            <p
+              className="text-lg md:text-xl leading-relaxed max-w-2xl mb-10"
+              style={{ color: 'rgba(10, 10, 10, 0.6)' }}
+            >
+              Built for grape exporters, wine producers, and cooperatives worldwide. Growers log
+              sprays, irrigation, and lab results from the field — you see compliance and crop
+              status across every farm.
+            </p>
+          </Reveal>
+
+          {/* CTAs */}
+          <Reveal delay={1.1}>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <MagneticButton
+                className="mitti-btn-primary text-base"
+                href={DEMO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Start your compliance journey
+                <ArrowUpRight className="h-4 w-4" />
+              </MagneticButton>
+              <MagneticButton className="mitti-btn-ghost text-base" href="#field-app">
+                See the field app
+              </MagneticButton>
+            </div>
+          </Reveal>
+
+          {/* Hero phones */}
+          <ScaleIn delay={1.2} className="mt-16 md:mt-20">
+            <div className="flex items-start justify-center gap-4 md:gap-6">
+              <div className="hidden sm:block mt-12 mitti-image-frame">
+                <PhoneFrame
+                  src="/screenshots/dashboard.png"
+                  alt="VineSight farmer app dashboard"
+                  width={238}
+                />
+              </div>
+              <div className="mitti-image-frame relative z-10">
+                <PhoneFrame
+                  src="/screenshots/lab-tests.png"
+                  alt="VineSight lab tests screen"
+                  width={250}
+                />
+              </div>
+            </div>
+          </ScaleIn>
+        </div>
+      </section>
+
+      {/* ============ TRUSTED BY — MARQUEE ============ */}
+      <div className="mitti-divider" />
+      <section className="py-12">
+        <div className="mx-auto max-w-7xl px-6">
+          <Reveal>
+            <p className="mitti-eyebrow text-center mb-8">Trusted by grape exporters worldwide</p>
+          </Reveal>
+          <div className="overflow-hidden relative">
+            <div
+              className="absolute inset-y-0 left-0 w-24 z-10 pointer-events-none"
+              style={{ background: 'linear-gradient(to right, var(--mitti-cream), transparent)' }}
+            />
+            <div
+              className="absolute inset-y-0 right-0 w-24 z-10 pointer-events-none"
+              style={{ background: 'linear-gradient(to left, var(--mitti-cream), transparent)' }}
+            />
+            <div className="mitti-marquee">
+              {[...trustedBy, ...trustedBy, ...trustedBy, ...trustedBy].map((name, i) => (
+                <span
+                  key={i}
+                  className="font-display text-2xl font-semibold whitespace-nowrap px-10"
+                  style={{ color: 'rgba(10, 10, 10, 0.3)' }}
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+      <div className="mitti-divider" />
+
+      {/* ============ PROOF STRIP — STATS ============ */}
+      <section className="py-20 md:py-28">
+        <div className="mx-auto max-w-7xl px-6">
+          <Reveal className="mb-16">
+            <p className="mitti-eyebrow mb-4">Why VineSight</p>
+            <h2 className="mitti-heading max-w-3xl">
+              From scattered WhatsApp logs to one source of truth
+            </h2>
+          </Reveal>
+
+          <StaggerGroup className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            {proofPoints.map((point) => {
+              const Icon = point.icon
+              return (
+                <StaggerChild key={point.title}>
+                  <div className="mitti-card h-full">
+                    <div
+                      className="size-12 rounded-xl flex items-center justify-center mb-5"
+                      style={{ backgroundColor: 'var(--mitti-lime)' }}
+                    >
+                      <Icon className="h-5 w-5" style={{ color: 'var(--mitti-forest)' }} />
+                    </div>
+                    <h3 className="font-display font-bold text-base mb-2">{point.title}</h3>
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{ color: 'rgba(10, 10, 10, 0.55)' }}
+                    >
+                      {point.description}
+                    </p>
+                  </div>
+                </StaggerChild>
+              )
+            })}
+          </StaggerGroup>
+        </div>
+      </section>
+
+      {/* ============ HOW IT WORKS — DARK FOREST SECTION ============ */}
+      <section className="mitti-surface-forest py-20 md:py-32">
+        <div className="mx-auto max-w-7xl px-6">
+          <Reveal className="mb-16">
+            <p className="mitti-eyebrow mb-4" style={{ color: 'var(--mitti-lime)' }}>
+              How it works
+            </p>
+            <h2 className="mitti-heading">Three steps to full network visibility</h2>
+          </Reveal>
+
+          <div className="space-y-0">
+            {workflowSteps.map((step, index) => (
+              <Reveal
+                key={step.number}
+                delay={index * 0.1}
+                className="grid grid-cols-[80px_1fr] md:grid-cols-[120px_1fr] gap-6 md:gap-12 items-start py-8"
+              >
+                <ParallaxWrap amount={15} className="">
+                  <span
+                    className="font-display font-bold select-none block"
+                    style={{
+                      fontSize: 'clamp(3rem, 6vw, 5rem)',
+                      lineHeight: 1,
+                      color: 'rgba(229, 255, 178, 0.25)'
+                    }}
+                  >
+                    {step.number}
+                  </span>
+                </ParallaxWrap>
+                <div className="pt-2 md:pt-4">
+                  <h3 className="font-display font-semibold text-xl md:text-2xl mb-3">
+                    {step.title}
+                  </h3>
+                  <p
+                    className="text-base md:text-lg leading-relaxed max-w-xl"
+                    style={{ color: 'rgba(253, 252, 239, 0.6)' }}
+                  >
+                    {step.description}
+                  </p>
+                </div>
+                {index < workflowSteps.length - 1 && (
+                  <div
+                    className="col-span-2 h-px mt-4"
+                    style={{ backgroundColor: 'rgba(253, 252, 239, 0.08)' }}
+                  />
+                )}
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ VISIBILITY — THREE PILLARS ============ */}
+      <section className="py-20 md:py-32">
+        <div className="mx-auto max-w-7xl px-6">
+          <Reveal className="mb-16 max-w-3xl">
+            <p className="mitti-eyebrow mb-4">Visibility</p>
+            <h2 className="mitti-heading mb-6">
+              One view of advisory, compliance, and crop status
+            </h2>
+            <p className="text-lg leading-relaxed" style={{ color: 'rgba(10, 10, 10, 0.55)' }}>
+              Your agronomists and your growers work in the same system, so the records build
+              themselves as the season runs.
+            </p>
+          </Reveal>
+
+          <StaggerGroup className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {visibilityGroups.map((group) => {
+              const Icon = group.icon
+              return (
+                <StaggerChild key={group.title}>
+                  <div className="mitti-card h-full">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div
+                        className="size-10 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: 'rgba(111, 143, 94, 0.12)' }}
+                      >
+                        <Icon className="h-5 w-5" style={{ color: 'var(--mitti-sage)' }} />
+                      </div>
+                      <h3 className="font-display font-bold text-sm">{group.title}</h3>
+                    </div>
+                    <ul className="space-y-3">
+                      {group.items.map((item) => (
+                        <li
+                          key={item}
+                          className="flex gap-2.5 items-start text-sm"
+                          style={{ color: 'rgba(10, 10, 10, 0.65)' }}
+                        >
+                          <CheckCircle
+                            className="h-4 w-4 shrink-0 mt-0.5"
+                            style={{ color: 'var(--mitti-sage)' }}
+                          />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </StaggerChild>
+              )
+            })}
+          </StaggerGroup>
+        </div>
+      </section>
+
+      {/* ============ COMPARISON — LIME ACCENT SECTION ============ */}
+      <section className="mitti-surface-lime py-20 md:py-28">
+        <div className="mx-auto max-w-7xl px-6">
+          <Reveal className="mb-12">
+            <p className="mitti-eyebrow mb-4" style={{ color: 'var(--mitti-forest)' }}>
+              The difference
+            </p>
+            <h2 className="mitti-heading" style={{ color: 'var(--mitti-forest)' }}>
+              From WhatsApp and Excel to one system
+            </h2>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Old way */}
+            <Reveal>
+              <div
+                className="rounded-2xl p-8 border"
+                style={{
+                  backgroundColor: 'rgba(10, 10, 10, 0.03)',
+                  borderColor: 'rgba(10, 10, 10, 0.08)'
+                }}
+              >
+                <h3
+                  className="font-display font-bold text-lg mb-6"
+                  style={{ color: 'rgba(10, 10, 10, 0.5)' }}
+                >
+                  Today
+                </h3>
+                <ul className="space-y-4">
+                  {comparison.old.map((item) => (
+                    <li
+                      key={item}
+                      className="flex gap-3 items-start"
+                      style={{ color: 'rgba(10, 10, 10, 0.5)' }}
+                    >
+                      <span
+                        className="text-xl leading-none mt-0.5"
+                        style={{ color: 'rgba(10, 10, 10, 0.3)' }}
+                      >
+                        ✕
+                      </span>
+                      <span className="text-base leading-snug">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Reveal>
+
+            {/* With VineSight */}
+            <Reveal delay={0.08}>
+              <div
+                className="rounded-2xl p-8 border"
+                style={{
+                  backgroundColor: 'var(--mitti-cream)',
+                  borderColor: 'rgba(10, 10, 10, 0.12)'
+                }}
+              >
+                <h3
+                  className="font-display font-bold text-lg mb-6"
+                  style={{ color: 'var(--mitti-forest)' }}
+                >
+                  With VineSight
+                </h3>
+                <ul className="space-y-4">
+                  {comparison.with.map((item) => (
+                    <li
+                      key={item}
+                      className="flex gap-3 items-start"
+                      style={{ color: 'var(--mitti-ink)' }}
+                    >
+                      <CheckCircle
+                        className="h-5 w-5 shrink-0 mt-0.5"
+                        style={{ color: 'var(--mitti-sage)' }}
+                      />
+                      <span className="text-base leading-snug">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ============ FIELD APP ============ */}
+      <section id="field-app" className="py-20 md:py-32">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Phones left */}
+            <ParallaxWrap amount={20}>
+              <div className="flex justify-center lg:justify-start gap-4 md:gap-6">
+                <Reveal className="hidden sm:block mt-12 mitti-image-frame">
+                  <PhoneFrame
+                    src="/screenshots/workers-wages.png"
+                    alt="VineSight workers screen"
+                    width={220}
+                  />
+                </Reveal>
+                <Reveal delay={0.1} className="mitti-image-frame">
+                  <PhoneFrame
+                    src="/screenshots/irrigation-calculator.png"
+                    alt="VineSight irrigation calculator"
+                    width={220}
+                  />
+                </Reveal>
+              </div>
+            </ParallaxWrap>
+
+            {/* Copy right */}
+            <div>
+              <Reveal>
+                <p className="mitti-eyebrow mb-4">Field app</p>
+              </Reveal>
+              <Reveal delay={0.1}>
+                <h2 className="mitti-heading mb-6">The app your growers actually use</h2>
+              </Reveal>
+              <Reveal delay={0.15}>
+                <p
+                  className="text-lg leading-relaxed mb-8 max-w-lg"
+                  style={{ color: 'rgba(10, 10, 10, 0.55)' }}
+                >
+                  Simple enough for daily field work: log a spray, mark attendance, or run an
+                  irrigation calculation in seconds. Adoption is our problem, not yours.
+                </p>
+              </Reveal>
+              <Reveal delay={0.2}>
+                <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                  {appDownloadLinks.map((link) => (
+                    <AppDownloadBadge key={link.label} link={link} compact />
+                  ))}
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============ FINAL CTA — DARK FOREST ============ */}
+      <section className="mitti-surface-forest py-20 md:py-32">
+        <div className="mx-auto max-w-3xl px-6 text-center">
+          <Reveal>
+            <p className="mitti-eyebrow mb-6" style={{ color: 'var(--mitti-lime)' }}>
+              Get started
+            </p>
+            <h2 className="mitti-heading mb-6">See it on your own grower network</h2>
+            <p
+              className="text-lg mb-10 leading-relaxed"
+              style={{ color: 'rgba(253, 252, 239, 0.6)' }}
+            >
+              A 30-minute walkthrough with your farms and workflows. Pilot deployments available for
+              exporters, cooperatives, and wine producers worldwide.
+            </p>
+            <MagneticButton
+              className="mitti-btn-primary text-lg"
+              href={DEMO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Book a demo
+              <ArrowUpRight className="h-5 w-5" />
+            </MagneticButton>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ============ FOOTER ============ */}
+      <footer
+        style={{
+          backgroundColor: 'var(--mitti-forest-deep, #0A1510)',
+          color: 'rgba(253, 252, 239, 0.5)'
+        }}
+      >
+        <div className="mx-auto max-w-7xl px-6 py-12">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-2.5">
+              <Image
+                src="/logo-mark.png"
+                alt="VineSight logo"
+                width={28}
+                height={35}
+                className="h-7 w-6 object-contain opacity-60"
+              />
+              <span
+                className="font-display font-bold text-sm"
+                style={{ color: 'rgba(253, 252, 239, 0.8)' }}
+              >
+                VineSight
+              </span>
+            </div>
+            <div className="flex items-center gap-6">
+              <Link className="text-xs transition-colors footer-link" href="/privacy">
+                Privacy Policy
+              </Link>
+              <Link className="text-xs transition-colors footer-link" href="/terms">
+                Terms of Service
+              </Link>
+            </div>
+          </div>
+          <div
+            className="mt-8 pt-8 text-xs text-center"
+            style={{
+              borderTop: '1px solid rgba(253, 252, 239, 0.06)',
+              color: 'rgba(253, 252, 239, 0.3)'
+            }}
+          >
+            © {new Date().getFullYear()} VineSight LLP. All rights reserved.
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+}
+
+/* ---- PhoneFrame helper (kept from original) ---- */
 function PhoneFrame({
   src,
   alt,
@@ -135,7 +687,7 @@ function PhoneFrame({
 }) {
   return (
     <div
-      className={`relative rounded-[2.25rem] border border-border bg-card p-2 shadow-[0_24px_60px_-24px_rgba(47,58,68,0.35)] transition-transform duration-500 ease-out hover:-translate-y-1 ${className}`}
+      className={`relative rounded-[2.25rem] bg-white p-2 shadow-[0_24px_60px_-24px_rgba(10,10,10,0.25)] ${className}`}
       style={{ width }}
     >
       <Image
@@ -147,351 +699,6 @@ function PhoneFrame({
         className="h-auto w-full rounded-[1.75rem] select-none"
         sizes={`${width}px`}
       />
-    </div>
-  )
-}
-
-export default function LandingPage() {
-  const router = useRouter()
-  const { user, loading } = useSupabaseAuth()
-
-  useEffect(() => {
-    if (!loading && user) {
-      let isMounted = true
-      const lastRoute = getLastRoute()
-      const resolveTargetRoute = async () => {
-        const moduleHome = await resolveModuleHome(user.id)
-        // resolveModuleHome is async; if the component unmounts while the
-        // membership query is in flight (back button, fast nav), bail before
-        // calling router.replace on an unmounted component. Mirrors the guard
-        // in src/app/auth/callback/page.tsx.
-        if (!isMounted) return
-        const targetRoute = moduleHome === ORG_HOME ? ORG_HOME : lastRoute || moduleHome
-        router.replace(targetRoute)
-      }
-      // Redirect stays client-side by design (localStorage last-route + middleware redirect-loop
-      // avoidance - see the render-gate note below); the flash this rule warns about is already
-      // prevented by that gate.
-      // react-doctor-disable-next-line react-doctor/nextjs-no-client-side-redirect, nextjs-no-client-side-redirect -- justified above
-      void resolveTargetRoute()
-      return () => {
-        isMounted = false
-      }
-    }
-  }, [loading, user, router])
-
-  // Authenticated visitors are being redirected to their module home by the effect
-  // above. Don't paint the marketing page in that window, or it flashes before the
-  // redirect lands. This stays client-side on purpose: the target comes from
-  // localStorage (getLastRoute), and middleware deliberately leaves the homepage
-  // redirect to the client to avoid dashboard redirect loops (see middleware.ts).
-  if (!loading && user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading...</span>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/85 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Image
-              src="/logo-mark.png"
-              alt="VineSight logo"
-              width={32}
-              height={40}
-              className="h-10 w-8 object-contain"
-              priority
-            />
-            <h1 className="text-primary text-lg font-bold tracking-tight">VineSight</h1>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link
-              className="text-muted-foreground text-sm font-medium hover:text-primary transition-colors px-3 py-2 rounded-lg hover:bg-muted"
-              href="/login"
-            >
-              Log In
-            </Link>
-            <a
-              className="bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-accent-foreground text-sm font-semibold px-4 py-2 rounded-lg shadow-sm"
-              href={DEMO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Book a demo
-            </a>
-          </div>
-        </div>
-      </header>
-
-      <main className="w-full overflow-hidden">
-        {/* HERO - asymmetric split, copy left / phones right */}
-        <section className="max-w-6xl mx-auto px-4 pt-16 pb-20 md:pt-24 md:pb-24">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-            <div className="lg:col-span-7">
-              <h2 className="text-4xl md:text-5xl lg:text-[44px] font-extrabold leading-[1.08] tracking-tight mb-6">
-                Every grape farm you source from, <span className="text-accent">in one place.</span>
-              </h2>
-              <p className="text-muted-foreground text-lg md:text-xl leading-relaxed mb-9 max-w-[540px]">
-                Built for grape exporters, wine producers, and cooperatives worldwide. Growers log
-                sprays, irrigation, and lab results from the field; you see compliance and crop
-                status across every farm.
-              </p>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <a
-                  className="bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-accent-foreground text-base font-semibold px-6 py-3.5 rounded-lg shadow-md text-center inline-flex items-center justify-center gap-2"
-                  href={DEMO_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Book a demo
-                  <span aria-hidden="true">→</span>
-                </a>
-                <a
-                  className="text-accent hover:text-accent/80 transition-colors text-base font-semibold px-2 py-3.5 text-center"
-                  href="#field-app"
-                >
-                  See the field app
-                </a>
-              </div>
-            </div>
-            <div className="lg:col-span-5 flex justify-center lg:justify-end">
-              <div className="flex items-start">
-                <PhoneFrame
-                  src="/screenshots/dashboard.png"
-                  alt="VineSight farmer app dashboard for a vineyard with quick actions for logs, water calculations, lab tests, and weather"
-                  priority
-                  width={238}
-                  className="hidden sm:block mt-10"
-                />
-                <PhoneFrame
-                  src="/screenshots/lab-tests.png"
-                  alt="VineSight lab tests screen showing soil and petiole analysis results with nutrient levels"
-                  priority
-                  width={238}
-                  className="sm:-ml-14 z-10"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* PROOF STRIP - asymmetric editorial, hairline-divided, not 3 identical cards */}
-        <section className="border-y border-border bg-secondary">
-          <div className="max-w-6xl mx-auto px-4 py-10">
-            <ol className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
-              {proofPoints.map((point, index) => {
-                const Icon = point.icon
-                return (
-                  <RevealItem
-                    key={point.title}
-                    delay={index * 0.08}
-                    className={`flex items-start gap-4 ${
-                      index > 0 ? 'md:border-l md:border-border md:pl-6' : ''
-                    }`}
-                  >
-                    <div className="size-10 shrink-0 rounded-lg bg-accent/10 text-accent flex items-center justify-center">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm mb-1">{point.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {point.description}
-                      </p>
-                    </div>
-                  </RevealItem>
-                )
-              })}
-            </ol>
-          </div>
-        </section>
-
-        {/* HOW IT WORKS - numbered steps, motivated scroll reveal */}
-        <section className="max-w-6xl mx-auto px-4 py-20 md:py-24">
-          <Reveal>
-            <h3 className="text-3xl font-bold tracking-tight mb-12">How it works</h3>
-          </Reveal>
-          <div className="space-y-10">
-            {workflowSteps.map((step, index) => (
-              <Reveal
-                key={step.title}
-                delay={index * 0.06}
-                className="grid grid-cols-[64px_1fr] sm:grid-cols-[96px_1fr] gap-4 sm:gap-8 items-start"
-              >
-                <div className="text-5xl sm:text-6xl font-extrabold text-accent/25 leading-none select-none">
-                  {index + 1}
-                </div>
-                <div className="pt-1 sm:pt-2">
-                  <h4 className="font-bold text-xl mb-2">{step.title}</h4>
-                  <p className="text-muted-foreground text-base leading-relaxed max-w-[560px]">
-                    {step.description}
-                  </p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </section>
-
-        {/* VISIBILITY - vertical stack with single top headline (kills split-header ban) */}
-        <section className="bg-secondary border-y border-border">
-          <div className="max-w-3xl mx-auto px-4 py-20 md:py-24">
-            <Reveal className="mb-12">
-              <h3 className="text-3xl font-bold tracking-tight mb-4">
-                One view of advisory, compliance, and crop status
-              </h3>
-              <p className="text-muted-foreground text-base leading-relaxed max-w-[560px]">
-                Your agronomists and your growers work in the same system, so the records build
-                themselves as the season runs.
-              </p>
-            </Reveal>
-            <div className="divide-y divide-border">
-              {visibilityGroups.map((group, index) => {
-                const Icon = group.icon
-                return (
-                  <Reveal
-                    key={group.title}
-                    delay={index * 0.08}
-                    className="py-7 first:pt-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <Icon className="h-5 w-5 text-accent shrink-0" />
-                      <h4 className="font-bold text-base">{group.title}</h4>
-                    </div>
-                    <ul className="space-y-2.5 sm:pl-8">
-                      {group.items.map((item) => (
-                        <li
-                          key={item}
-                          className="flex gap-3 items-start text-sm text-muted-foreground"
-                        >
-                          <CheckCircle className="text-accent h-4 w-4 shrink-0 mt-0.5" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </Reveal>
-                )
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* COMPARISON - 2-col, balanced weight. The contrast IS the story. */}
-        <section className="max-w-6xl mx-auto px-4 py-20 md:py-24">
-          <Reveal className="mb-10">
-            <h3 className="text-3xl font-bold tracking-tight">
-              From WhatsApp and Excel to one system
-            </h3>
-          </Reveal>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Reveal className="bg-card p-8 rounded-xl border border-border">
-              <div className="flex items-center gap-3 mb-6">
-                <XCircle className="text-muted-foreground h-6 w-6" />
-                <h4 className="font-bold text-lg text-muted-foreground">Today</h4>
-              </div>
-              <ul className="space-y-5">
-                {comparison.old.map((item) => (
-                  <li key={item} className="flex gap-3 items-start">
-                    <XCircle className="text-muted-foreground/60 h-5 w-5 shrink-0 mt-0.5" />
-                    <span className="text-base text-muted-foreground leading-snug">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-            <Reveal
-              delay={0.08}
-              className="bg-accent/5 p-8 rounded-xl border border-accent/30 shadow-[0_24px_60px_-32px_rgba(111,143,94,0.45)]"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <CheckCircle className="text-accent h-6 w-6" />
-                <h4 className="font-bold text-lg text-accent">With VineSight</h4>
-              </div>
-              <ul className="space-y-5">
-                {comparison.with.map((item) => (
-                  <li key={item} className="flex gap-3 items-start">
-                    <CheckCircle className="text-accent h-5 w-5 shrink-0 mt-0.5" />
-                    <span className="text-base text-foreground leading-snug">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* FIELD APP - phones LEFT, copy RIGHT. Breaks the hero's zigzag repetition. */}
-        <section className="bg-secondary border-y border-border" id="field-app">
-          <div className="max-w-6xl mx-auto px-4 py-20 md:py-24">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-              <div className="lg:col-span-6 order-1 flex justify-center lg:justify-start gap-6">
-                <PhoneFrame
-                  src="/screenshots/workers-wages.png"
-                  alt="VineSight workers screen showing daily attendance and wage totals in rupees"
-                  width={230}
-                />
-                <PhoneFrame
-                  src="/screenshots/irrigation-calculator.png"
-                  alt="VineSight MAD calculator computing maximum allowable deficit from root depth and water retention"
-                  width={230}
-                  className="hidden sm:block mt-10"
-                />
-              </div>
-              <div className="lg:col-span-6 order-2">
-                <h3 className="text-3xl font-bold tracking-tight mb-4">
-                  The app your growers actually use
-                </h3>
-                <p className="text-muted-foreground text-lg leading-relaxed max-w-[520px] mb-6">
-                  Simple enough for daily field work: log a spray, mark attendance, or run an
-                  irrigation calculation in seconds. Adoption is our problem, not yours.
-                </p>
-                <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-                  {appDownloadLinks.map((link) => (
-                    <AppDownloadBadge key={link.label} link={link} compact />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* FINAL CTA */}
-        <section className="max-w-xl mx-auto px-4 py-20 md:py-24 text-center">
-          <Reveal>
-            <h3 className="text-3xl font-bold tracking-tight mb-4">
-              See it on your own grower network
-            </h3>
-            <p className="text-muted-foreground text-base mb-8 leading-relaxed">
-              A 30-minute walkthrough with your farms and workflows. Pilot deployments available for
-              exporters, cooperatives, and wine producers worldwide.
-            </p>
-            <a
-              className="bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-accent-foreground text-lg font-bold px-8 py-4 rounded-lg shadow-lg shadow-accent/25 w-full sm:w-auto inline-block"
-              href={DEMO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Book a demo
-            </a>
-          </Reveal>
-        </section>
-      </main>
-      <footer className="border-t border-border">
-        <div className="max-w-6xl mx-auto px-4 py-8 text-xs text-muted-foreground">
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6">
-            <p className="sm:mr-auto">© {new Date().getFullYear()} VineSight.</p>
-            <Link className="hover:text-foreground transition-colors" href="/privacy">
-              Privacy Policy
-            </Link>
-            <Link className="hover:text-foreground transition-colors" href="/terms">
-              Terms of Service
-            </Link>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
