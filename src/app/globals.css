@@ -238,6 +238,21 @@
   }
 }
 
+/*
+ * Marquee track for the landing announcement bar. The track renders two
+ * identical copies of its content, so translating by exactly -50% lands copy
+ * two where copy one began: a seamless loop with no reset jump. Used via
+ * animate-[marquee_38s_linear_infinite] in src/components/landing/Marquee.tsx.
+ */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /* Mobile-specific optimizations */
 @layer utilities {
   /* Better touch targets for mobile - glove-friendly */
